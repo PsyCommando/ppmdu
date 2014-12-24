@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "lib\lpng\projects\vstudio\zlib\zlib.vcxproj", "{60F89955-91C6-3A36-8000-13C592FEC2DF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pnglibconf", "lib\lpng\projects\vstudio\pnglibconf\pnglibconf.vcxproj", "{EB33566E-DA7F-4D28-9077-88C0B7C77E35}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "lib\lpng\projects\vstudio\libpng\libpng.vcxproj", "{D6973076-9317-4EF2-A0B8-B7A18AC0713E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{60F89955-91C6-3A36-8000-13C592FEC2DF} = {60F89955-91C6-3A36-8000-13C592FEC2DF}
+		{EB33566E-DA7F-4D28-9077-88C0B7C77E35} = {EB33566E-DA7F-4D28-9077-88C0B7C77E35}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Foundation", "lib\poco\Foundation\Foundation_vs120.vcxproj", "{8164D41D-B053-405B-826C-CF37AC0EF176}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CompilingTheDependencies", "CompilingTheDependencies", "{2C611FB6-BA8C-42F6-81E8-6CE315D3D99D}"
+	ProjectSection(SolutionItems) = preProject
+		CompileDependenciesInfo.txt = CompileDependenciesInfo.txt
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60F89955-91C6-3A36-8000-13C592FEC2DF}.Debug|Win32.ActiveCfg = Debug Library|Win32
+		{60F89955-91C6-3A36-8000-13C592FEC2DF}.Debug|Win32.Build.0 = Debug Library|Win32
+		{60F89955-91C6-3A36-8000-13C592FEC2DF}.Release|Win32.ActiveCfg = Release Library|Win32
+		{60F89955-91C6-3A36-8000-13C592FEC2DF}.Release|Win32.Build.0 = Release Library|Win32
+		{EB33566E-DA7F-4D28-9077-88C0B7C77E35}.Debug|Win32.ActiveCfg = Release|Win32
+		{EB33566E-DA7F-4D28-9077-88C0B7C77E35}.Debug|Win32.Build.0 = Release|Win32
+		{EB33566E-DA7F-4D28-9077-88C0B7C77E35}.Release|Win32.ActiveCfg = Release|Win32
+		{EB33566E-DA7F-4D28-9077-88C0B7C77E35}.Release|Win32.Build.0 = Release|Win32
+		{D6973076-9317-4EF2-A0B8-B7A18AC0713E}.Debug|Win32.ActiveCfg = Debug Library|Win32
+		{D6973076-9317-4EF2-A0B8-B7A18AC0713E}.Debug|Win32.Build.0 = Debug Library|Win32
+		{D6973076-9317-4EF2-A0B8-B7A18AC0713E}.Release|Win32.ActiveCfg = Release Library|Win32
+		{D6973076-9317-4EF2-A0B8-B7A18AC0713E}.Release|Win32.Build.0 = Release Library|Win32
+		{8164D41D-B053-405B-826C-CF37AC0EF176}.Debug|Win32.ActiveCfg = debug_static_mt|Win32
+		{8164D41D-B053-405B-826C-CF37AC0EF176}.Debug|Win32.Build.0 = debug_static_mt|Win32
+		{8164D41D-B053-405B-826C-CF37AC0EF176}.Release|Win32.ActiveCfg = release_static_mt|Win32
+		{8164D41D-B053-405B-826C-CF37AC0EF176}.Release|Win32.Build.0 = release_static_mt|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

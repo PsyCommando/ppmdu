@@ -1,0 +1,138 @@
+=============================================================
+==  Baz the Poochyena's Pokemon Mystery Dungeon Pack Tool  ==
+=============================================================
+Version	   : 0.4
+Written by : Psy_commando
+
+A big thanks to Nerketur for his help !
+
+Changelog since version 0.4:
+----------------------------
+
+
+About:
+------
+This little utility packs / unpacks files into an uncompressed containers / several smaller files
+from the Pokemon Mystery Dungeon 2 : Explorers of Sky / Darkness / Time games. 
+(Only tested on Explorers of sky as of now.. But the format are most likely similar/identical) 
+
+It never locks up to wait for input, even in case of errors. So it can be safely launched 
+from another script or program. 
+
+It was written in C++ with portability and speed in mind. So, it should be very 
+easy to compile it for linux(I haven't tried yet XD). I used the JUCE library to handle non-portable 
+things. And because its license allowed the code to be re-distributed.
+And its not a huge library, like Boost is.. Though, I'll admit, it didn't age too well, since the last
+time I used it.. http://www.juce.com
+
+Be sure when compiling the project yourself that you include juce_core.cpp and juce_core.h to the 
+compilation, or you'll rage for hours, like me...
+
+The reason the code is based around an object, is because eventually, this code will be combined into
+a larger library of code, possibly for editing pack files on the fly, or even for integrating via .dll, or
+.so into utilities coded in other coding languages.. I eventually want to support most formats from
+the game. The next one on the list is the SIR0 format, and the Sprite format.
+
+The sources for my code, and the sources to compile the JUCE classes I use are included in the zip, 
+and whatever isn't from JUCE is free for anyone to use however they want !  
+
+It might still be buggy, so I'd advise people to take their precautions when using it.. MAKE BACKUPS !
+Because its easy to screw up beyond recognition a file by accident.. And, I can't be held responsible 
+if you lose a sprite you worked hours on, because the utility crapped out for some reasons.. So once
+again, MAKE BACKUPS !
+
+*Random Uninteresting Fact:
+The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as hero. 
+He turned out really good after ingesting so many gummies ! And he pretty much carried the team 
+most of the game! XD
+And, I just love Poochyena ! :3 
+So yeah, that's pretty much it..
+
+How to use:
+-----------
+Simply drag and drop a folder containing the files you want to pack onto the executable, and a 
+pack file containing the packed data from the folder will be created. The file has the same name as 
+the folder, but with an additional ".bin" appended.
+
+If you drag and drop a file onto it, it will then unpack the content of the file if possible to a 
+new directory !The folder has the same name as the file, but with "_out" appended.
+
+You can also use the console if you want to.
+
+About "Pack" Files:
+--------------------
+==========================================================================================
+									Structure: 
+==========================================================================================
+
+offset:			length:			endian:				description:
+-------			-------			-------				-----------------------------------
+0x0 			0x4				-					0x00000000
+0x4				0x4				little				NbOfFiles 
+
+0x8 		N = (NbOfFiles * 8)					    FOffsetTable : Table containing the offset and length or each files in the pack file.
+[
+	[
+		0x8		0x4				little				Offset first file
+		0xc		0x4				little				Length first file
+	]
+	[
+		0x10	0x4				little				Offset second file
+		0x14	0x4				little				Length second file
+	]
+	etc...
+]
+
+N + 0x8			0x8				-					End of table marker: 0x00000000 0x00000000
+N + 0x10		varies			-					Padding 0xFFFFFFFF bytes. They're here so the first file is aligned on 16 bytes(*About post-header padding)
+
+FileDataBlock	varies								Its basically all the packed files put one after the other. With padding applied if needed !
+[
+	M			O			-						Data for a file.
+	M + O		0x0-0xE		-						0xFF Padding characters inserted so a file aligns properly on 16 bytes.
+	etc...
+]
+
+
+---------------------------
+*About post-header padding
+---------------------------
+The padding right after the filed offset table is special. 
+Its main purpose is to align the first file on 16 bytes :
+
+FirstFileOffset % 16 = 0
+
+BUT, it also seems to have another use..
+In the pokemon-related sprite data packs, like m_ground.bin, monster.bin, m_attack.bin, there are 3 EXTRA 
+rows(48 bytes) of 0xFFFFFFFF padding. They all have the same number of subfiles, and all of their first subfiles 
+begin on offset 0x1300.. 
+
+When I attempted re-packing the m_ground.bin file, I removed those extra lines. But the result was that
+the rebuilt ROM wouldn't display any pokemon in-game sprites, and would just crash after a while.
+Even re-packing all the files in the "MONSTER" folder from the rom file system to have the same padding lengths and have 
+their first files begin at the same offset didn't fix the issue. 
+
+Thus, I'm wondering if they didn't add those extra 48 bytes of padding for a reason. So that all those 
+files would have the same first file offset? Its probably a relic from re-using so much things from the 
+GBA games.. It might be an hard-coded value in the game's code. But anyhow, it means until we find out how to
+bypass that, we'll be limited in the number of new sprites we can add.. About 9 new sprite files 
+can be added to the FOT before the first file would have its base offset pushed back.. But replacing
+existing sprites is completely doable !
+
+So far it seems rebuilding any other pack files with those 3 extra rows of padding causes no extra problems,
+and ensures all repacked files will work, in the case of PMD:EoS at least.. 
+
+So far I found those files were pack files:
+- dungeon.bin
+- effect.bin
+- m_attack.bin
+- m_ground.bin
+- m_level.bin
+- monster.bin
+
+There may be more, but I haven't seen them yet. Also, its worth noting that, NOT all files with a 
+".bin" extension are pack files ! Or at least they don't use the same structure, and won't be unpacked 
+by this utility. 
+
+
+

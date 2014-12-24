@@ -1,0 +1,74 @@
+===============================================
+==  Baz the Poochyena's PMD:EoS/T/D CompPX  ==
+===============================================
+Version	   : 0.3
+Released   : 2014/11/10
+Written by : psycommando@gmail.com
+
+The entire sourcecode for all my tools that are part of this suite is available here:
+https://ppmd2utilslib.codeplex.com/
+
+Changelog:
+----------
+- 0.1 : Initial release!
+- 0.2 : (2014/11/10) Fixed stupid bug where the size was wrongly predicted and the whole
+                     thing would crash. Used push_backs and memory reservation instead!
+- 0.3 : (2014/12/05) Fixed critical bug where the compressed size written in the AT4PX and PKDPX 
+                     header didn't include the length of the header itself..
+
+License info:
+-------------
+My code and tools are basically public domain / CC0. 
+Free to re-use in any ways you may want to!
+No crappyrights, all wrongs reversed! :3
+
+Well, not including any libraries I'm using that have their own licenses of course!!
+The license for each of these libraries is indicated in their respective header files,
+and they're all isolated in the "libraries" subfolder !
+
+Special Thanks:
+----------------
+A big thanks to Nerketur for his help !
+Thanks to the people from GBATemp and Project Pokemon Forums !
+Many thanks to Zhorken for reversing most of the "PX" compression format!
+https://github.com/Zhorken
+
+About:
+------
+This will turn any files into a PX compressed PKDPX, or AT4PX !
+Provided that, the resulting file's size is 65,535 bytes or less! That's a limitation of the format's
+header, so there is not much we can do about it, short of modifying the game code..
+The original file can be as big as 4,294,967,295 bytes ironically.. Its a very odd design choice they
+went for! But maybe we'll find out in the future whether we can bypass this very small file size
+limitation !
+
+** I'm warning you though that the compression code is far from polished/optimized. Its definitely
+not pretty right now. **
+
+--Random Uninteresting Fact--:
+The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
+He turned out really good after ingesting so many gummies and pretty much carried the team 
+most of the game! XD
+And, I just love that pokemon, so yeah, that's pretty much it..
+
+How to use:
+-----------
+This works just like any other of my utilities, just drag and drop a file to be compressed
+onto it, and it will automatically compress it to a PKDPX by default. If you want to compress it
+into an AT4PX, you have to specify the output filename and make sure it ends with ".at4px".
+
+You can get a better compression ratio by specifying the option "-z" at the command line. But it
+will be slightly slower.
+
+It never locks to wait for input, even in case of errors. So it can be safely launched from another
+script or program. 
+I recommend adding the option "-q" at the commandline if you're running this as part of your own 
+script or program as it will greatly reduce the console output and it will give a good speed-up.
+
+For more details, run the program in a console window without any parameters and the complete readme
+will be displayed!
+
+About AT4PX and PKDPX files:
+----------------------------
+See my thread here for links to my notes and etc: 
+http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes

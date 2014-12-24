@@ -1,0 +1,133 @@
+=================================================
+==  Baz the Poochyena's PMD:EoS/T/D - KaoUtil  ==
+=================================================
+Version	   : 0.21
+Released   : 2014/12/05
+Written by : psycommando@gmail.com
+
+The entire sourcecode for all my tools that are part of this suite is available here:
+https://ppmd2utilslib.codeplex.com/
+
+----------------------------------------------------------------------------------------------------
+Changelog:
+----------------------------------------------------------------------------------------------------
+- 0.1 : Initial release!
+- 0.2 : (2014/12/07) 
+         * Fixed insanely long allocation.
+         * Fixed output path being misinterpreted.
+         * Improved speed.
+         * Added missing readme!
+- 0.21: (2014/12/07)
+         * Added a little hack to fix commandline parameters where the user has escaped a 
+           double quote character by appending a trailing backslash to a directory path.
+           It now looks for paths having a double quote at the end, and fix it automatically.
+
+----------------------------------------------------------------------------------------------------
+License info:
+----------------------------------------------------------------------------------------------------
+My code and tools are basically public domain / CC0. 
+Free to re-use in any ways you may want to!
+No crappyrights, all wrongs reversed! :3
+
+Not including any libraries I'm using that have their own licenses of course!!
+The license for each of these libraries is indicated in their respective header files,
+and they're all isolated in the "libraries" subfolder !
+
+----------------------------------------------------------------------------------------------------
+Special Thanks:
+----------------------------------------------------------------------------------------------------
+-> Many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
+-> A big thanks to Nerketur for his help !
+-> A big thanks to TruePikachu for his help !
+-> A big thanks to Evandixon for his help !
+-> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> ..and anyone else I may have forgotten about !
+
+----------------------------------------------------------------------------------------------------
+About:
+----------------------------------------------------------------------------------------------------
+*WARNING* : Always keep the "pokenames.txt" and "facenames.txt" files in the same folder as 
+            "ppmd_kaoutil.exe" ! They contain the list of names for each pokemons and for each
+            known emotions/potrait ! (Feel free to modify those to your needs though !)
+
+This tool allows to unpack and repack the kaomado.kao file that contains portraits  for all pokemons
+in the game!
+
+It extracts the content of the kaomado file into a directory, containing tons of other sub-directories.
+Each of those sub-directory contains the portraits for a specific pokemon. Each of them has a number
+in its name, which correspond to the index of the pokemon!
+Each of those portraits has a number from 0 to 39 which identify the portrait's slot.
+
+It repacks the whole thing, as long as it follow the same file structure and naming as above.
+Only the numbers in the names for files and folders are required, the name added is only a 
+convenience to help humans figure out what's in there, the program ignores everything in the name but
+the first number it read in it!
+
+By default the program will output and accept 4 bits per pixel, 16 colors PNGs images. 
+Literally the same data format the game uses internally.
+It will also accept 8 bpp PNG images, as long as they got 16 colors, any colors past 16 will be 
+ignored.
+The default image resolution is the same the game uses, 40 x 40. 
+
+As mentioned above you can modify the "pokenames.txt" and "facenames.txt" files to change the name
+that will be appended to the index/slot number for all pokemon, and for all portraits for each 
+pokemon! The list are very simple, the line number, counting the first line as line 0, is the 
+index/slot number that whatever is on the line will be associated with, and suffixed to its 
+index/slot number in its name!
+
+------------------------------
+--Random Uninteresting Fact--:
+------------------------------
+The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
+He turned out really good after ingesting so many gummies and pretty much carried the team 
+most of the game! XD
+And, I just love that pokemon, so yeah, that's pretty much it..
+
+----------------------------------------------------------------------------------------------------
+How to use:
+----------------------------------------------------------------------------------------------------
+This works just like any other of my utilities, just drag and drop a file or folder onto it. Just 
+make sure there are no space in the path or filename, or you'll need to enter it manually at the 
+console!
+
+It never locks to wait for input, even in case of errors. So it can be safely launched from another
+script or program. 
+I recommend adding the option "-q" at the commandline if you're running this as part of your own 
+script or program as it will greatly reduce the console output and it will give a good speed-up.
+
+To sum it up:
+1. Unpack the rom.
+2. Go to the "data/FONT" in the rom data, and locate the file named "kaomado.kao"
+3. Unpack the "kaomado.kao" using the utility.
+4. Make your modification to the images, and directories inside the outputed directory.
+5. Repack the "kaomado.kao".
+6. Overwrite the original kaomado.kao in the extracted rom files.
+7. Repack the rom.
+8. Test your changes!
+
+You can have up to 40 uniquely numbered images, from 0 to 39 per pokemon! 
+That's due to the size of a single entry in the "kaomado.kao" file's table of content being 40 slots! 
+But the game will only use those in certain slots depending on the context!
+
+You can have up to 1,154 uniquely numbered pokemon directories! That's the size of the table of 
+content in the "kaomado.kao" file! 
+
+Entries in the table that have no corresponding folders when repacking the kaomado will be set to 
+null in the table of content! This is why there are 1,154 entries in the ToC, but only 652 directories 
+are unpacked, because it would make a lot of useless empty directory otherwise, AND its an easy and
+intuitive way of telling the program which entries are null/empty in the ToC!
+
+*If you want to add the missing faces to a pokemon to turn it into a proper hero/partner character, 
+I suggest copying over the portraits from bulbasaur, and just overwrite each image with the desired 
+replacement image for the pokemon you're editing! Partner/Hero pokemon need 16 images for their 
+16 emotions. Any missing images will result in no portrait being displayed when the character is 
+supposed to have that emotion pop on-screen!
+
+*For more details, run the program in a console window without any parameters and the complete readme
+will be displayed!
+
+----------------------------------------------------------------------------------------------------
+About kaomado.kao :
+----------------------------------------------------------------------------------------------------
+See my thread here for links to my notes and etc: 
+http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes
