@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp" />
     <ClInclude Include="..\src\ppx_compressor.hpp" />
   </ItemGroup>
   <ItemGroup>

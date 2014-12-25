@@ -147,6 +147,21 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
       <Filter>Header Files\ppmdutils\external formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_BMP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_DataStructures.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_VariousBMPutilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp">
+      <Filter>Header Files\ppmdutils\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -226,6 +241,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
       <Filter>Source Files\ppmdutils\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,0 +1,12 @@
+*.tlog
+*.obj
+*.log
+*.pch
+/lib/lpng/projects/vstudio/libpng/Debug Library
+/lib/lpng/projects/vstudio/libpng/Release Library
+*.sbr
+*.pdb
+*.idb
+/lib_debug
+/lib_release
+*.sdf
