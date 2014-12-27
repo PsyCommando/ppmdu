@@ -49,6 +49,7 @@ dlldata.c
 *.tlb
 *.tli
 *.tlh
+*.tlog
 *.tmp
 *.tmp_proj
 *.log
