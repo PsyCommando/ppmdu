@@ -1,6 +1,7 @@
 #include "rawimg_io.hpp"
 #include "riff_palette.hpp"
 #include <sstream>
+#include <iostream>
 #include <Poco/File.h>
 #include <Poco/Path.h>
 using namespace std;

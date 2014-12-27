@@ -15,6 +15,7 @@ Description:
 #include <cassert>
 #include <sstream>
 #include <fstream>
+#include <iostream>
 #include <Poco/Path.h>
 using namespace ::std;
 using namespace ::pmd2;
