@@ -4,24 +4,32 @@
 rawimg_io.hpp
 2014/12/24
 psycommando@gmail.com
-Description: A very simple custom container for raw image data extracted from the pmd2 games and etc..
+Description: 
+    Function for exporting an image's raw data, to a file directly, long with a riff palette.
+    And some more functions for a very simple custom container for raw image data extracted 
+    from the pmd2 games and etc..
 */
 #include <array>
 #include <cstdint>
+#include <string>
+#include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/utils/utility.hpp>
 
 namespace rawimg_io
 {
 //=====================================================================
 // Constants
 //=====================================================================
-    static const uint32_t RAWIMG_MagicNumber = 0x5052496D; // "PRIm" { 0x50, 0x52, 0x49, 0x6D }
-    static const uint32_t RAWIMG_PAL_id      = 0x50414C20; // "PAL\0x20" { 0x50, 0x41, 0x4C, 0x20 }
-    static const uint32_t RAWIMG_IMG_id      = 0x494D4720; // "IMG\0x20" { 0x49, 0x4D, 0x47, 0x20 }
+    static const std::string RawImg_FileExtension = "ri";       // Raw image file extension
+    static const std::string PRI_FileExtension    = "pri";      // PRI raw image container extension
+    static const uint32_t    PRI_MagicNumber      = 0x5052496D; // "PRIm" { 0x50, 0x52, 0x49, 0x6D }
+    static const uint32_t    PRI_PAL_id           = 0x50414C20; // "PAL\0x20" { 0x50, 0x41, 0x4C, 0x20 }
+    static const uint32_t    PRI_IMG_id           = 0x494D4720; // "IMG\0x20" { 0x49, 0x4D, 0x47, 0x20 }
 
 //=====================================================================
-// Structs
+// Structs for PRI container
 //=====================================================================
-    struct rawimg_header
+    struct pri_header
     {
         uint32_t magicn;     // "PRIm" { 0x50, 0x52, 0x49, 0x6D }
         uint32_t filelength; // total length of the file
@@ -29,7 +37,7 @@ namespace rawimg_io
         uint32_t ptrimg;     // pointer to the image header chunk.
     };
 
-    struct palette_chunk_header
+    struct pri_palette_chunk_header
     {
         uint32_t           palid;      // "PAL\0x20" { 0x50, 0x41, 0x4C, 0x20 }
         uint32_t           offspaldat; // Offset from the beginning of the chunk header where the palette data begins.
@@ -40,7 +48,7 @@ namespace rawimg_io
         //Its always possible to add extra custom data following the chunk header.
     };
 
-    struct image_chunk_header
+    struct pri_image_chunk_header
     {
         //The image is automatically considered indexed if there is a palette chunk!
         //0
@@ -61,6 +69,19 @@ namespace rawimg_io
 //=====================================================================
 // IO Function
 //=====================================================================
+    
+    //Functions for exporting a raw headerless img, along with an accompanying riff palette
+    // "filepath" is the path to the file to be outputed, it should end with an extension-less filename, 
+    // because the file extensions for the palette and rawimg will be appended automatically!
+
+    bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp       & out_indexed, const std::string & filepath, utils::Resolution imgres );
+    bool ExportTo4bppRawImgAndPal(   const gimg::tiled_image_i4bpp & in_indexed,  const std::string & filepath );
+
+    //#TODO: Implement !
+    //Functions for the custom PRI raw image container 
+    // "filepath" is the path to the file to be outputed. You must append the file extension to this path yourselves.
+    //bool ImportFrom4bppPRI( gimg::tiled_image_i4bpp       & out_indexed, const std::string & filepath );
+    //bool ExportTo4bppPRI(   const gimg::tiled_image_i4bpp & in_indexed,  const std::string & filepath );
 };
 
 #endif

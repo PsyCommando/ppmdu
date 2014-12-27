@@ -28,6 +28,13 @@ namespace utils
         inputfile.read(reinterpret_cast<char*>(out_filedata.data()), filesize); //needing to do a cast because streams are dumb and are needing some love
     }
 
+    std::vector<uint8_t> ReadFileToByteVector( const std::string & path )
+    {
+        std::vector<uint8_t> output;
+        ReadFileToByteVector(path, output);
+        return std::move( output );
+    }
+
     /*
     Write the byte vector content straight into a file, with no processing at all.
     Takes the path to the file and a vector with the data as parameters.

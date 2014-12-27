@@ -11,6 +11,8 @@ Description:  Code for the kaomado utility
 #include <ppmdu/utils/library_wide.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
+#include <ppmdu/ext_fmts/rawimg_io.hpp>
+#include <ppmdu/ext_fmts/riff_palette.hpp>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -40,12 +42,13 @@ namespace pkao_util
     static const string OPTION_SET_FACE_NAME_LIST           = "fn";
     static const string OPTION_SET_TOTAL_NB_ENTRIES_KAO_TOC = "n";
     static const string OPTION_SET_EXPORT_TO_RAW_IMG        = "raw";
+    static const string OPTION_SET_EXPORT_TO_BMP            = "bmp";
     static const string OPTION_QUIET                        = "q";
     static const string OPTION_NON_ZEALOUS_STR_SEARCH       = "nz";
 
 
     //Definition of all the possible options for the program!
-    static const array<optionparsing_t, 6> MY_OPTIONS  =
+    static const array<optionparsing_t, 7> MY_OPTIONS  =
     {{
         //Disable console output except errors!
         {
@@ -75,13 +78,19 @@ namespace pkao_util
         { 
             OPTION_SET_EXPORT_TO_RAW_IMG,        
             0,
-            "Will output the images as a raw 4bpp tiled image, preceeded by a RGB24 palette!",
+            "Will output the images as a raw 4bpp tiled \"." + rawimg_io::RawImg_FileExtension + "\" image, along with a \"." + riffpal_io::RIFF_PAL_Filext + "\" 16 colors RIFF palette.",
         },
         //Will make the program skip string search as often as possible
         {
             OPTION_NON_ZEALOUS_STR_SEARCH,
             0,
             "Disable zealous string search! Reduce compression efficiency, in favor of speed!",
+        },
+        //Will output the images as .bmp 4bpp images!
+        {
+            OPTION_SET_EXPORT_TO_BMP,
+            0,
+            "Will output the images as \".bmp\" 4bpp images!",
         },
     }};
 
@@ -96,6 +105,7 @@ namespace pkao_util
         bool           bshouldWriteRawImg;
         bool           bisQuiet;
         bool           bIsZealous;
+        bool           bExportAsBmp;
     };
 
 
@@ -110,7 +120,6 @@ namespace pkao_util
 
         if( !( strfile.good() && strfile.is_open() ) )
         {
-            assert(false);
             std::stringstream strs;
             strs << "ReadStringListFile(): Error: stringlist file is missing or cannot be opened ! Path :\n"
                  << filepath.toString();
@@ -238,6 +247,16 @@ namespace pkao_util
                         <<" specified. Disabling zealous string search!\n";
                 }
             }
+            else if( parsedoption.front().compare(OPTION_SET_EXPORT_TO_BMP) == 0 )
+            {
+                parameters.bExportAsBmp = true;
+                success                 = true;
+                if( !parameters.bisQuiet )
+                {
+                    cout <<"Option " <<OPTION_SET_EXPORT_TO_BMP 
+                        <<" specified. Exporting to 4bpp bitmaps!\n";
+                }
+            }
             else if( parsedoption.front().compare(OPTION_QUIET) == 0 )
             {
                 parameters.bisQuiet = true;
@@ -307,8 +326,26 @@ namespace pkao_util
             }
 
             //Fill up facenames and pokenames 
-            parameters.facenames = ReadStringListFile( facenamefile );
-            parameters.pokenames = ReadStringListFile( pokenamefile );
+            try
+            {
+                parameters.facenames = ReadStringListFile( facenamefile );
+            }
+            catch(exception e)
+            {
+                cerr <<"<!>-Warning: The name list for giving human-readable names to the outputed images is missing or can't be read!\n"
+                     <<e.what() <<"\n";
+            }
+            
+            try
+            {
+                parameters.pokenames = ReadStringListFile( pokenamefile );
+            }
+            catch(exception e)
+            {
+                cerr <<"<!>-Warning: The name list for giving human-readable names to the outputed directories is missing or can't be read!\n"
+                     <<e.what() <<"\n";
+            }
+            
         }
 
         return bsuccess;
@@ -398,8 +435,14 @@ namespace pkao_util
 
             const vector<string> * ppokenames = ( (parameters.pokenames.empty() )? nullptr : &parameters.pokenames );
             const vector<string> * pfacenames = ( (parameters.facenames.empty() )? nullptr : &parameters.facenames );
-            CKaomado::eEXPORT_t    outputTy   = ( (parameters.bshouldWriteRawImg)? CKaomado::eEXPORT_t::EX_RAW : 
-                                                                                   CKaomado::eEXPORT_t::EX_PNG );
+            CKaomado::eEXPORT_t    outputTy;
+
+            if( parameters.bshouldWriteRawImg )
+                outputTy = CKaomado::eEXPORT_t::EX_RAW;
+            else if( parameters.bExportAsBmp )
+                outputTy = CKaomado::eEXPORT_t::EX_BMP;
+            else
+                outputTy   = CKaomado::eEXPORT_t::EX_PNG;
 
             kao.ExportToFolders( outpath.toString(), ppokenames, pfacenames, outputTy, parameters.bisQuiet );
 
@@ -486,6 +529,7 @@ int main( int argc, const char * argv[] )
         false,                              //bshouldWriteRawImg;
         false,                              //bisQuiet
         true,                               //bIsZealous
+        false,                              //bExportAsBmp
     };
 
 	cout << "================================================\n"

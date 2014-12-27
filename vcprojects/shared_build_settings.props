@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+ <PropertyGroup>
+    <LocalDebuggerWorkingDirectory>..\workdir</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <TargetName>$(ProjectName)d</TargetName>
+    <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib_debug;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\src;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(SolutionDir)lib_release;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IntDir>$(Configuration)_$(ProjectName)\</IntDir>
+    <_PropertySheetDisplayName>shared_build_settings</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <ObjectFileName>$(IntDir)/eat2dots/%(RelativeDir)</ObjectFileName>
+      <PreprocessorDefinitions>__WIN32;POCO_STATIC</PreprocessorDefinitions>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>libpng16.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

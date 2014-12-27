@@ -10,3 +10,6 @@
 /lib_debug
 /lib_release
 *.sdf
+/bin
+/lib/poco/Foundation/obj/Foundation/debug_static_mt
+*.opensdf

@@ -5,9 +5,10 @@
 #include <algorithm>
 #include <ppmdu/containers/color.hpp>
 #include <ppmdu/utils/gbyteutils.hpp>
+#include <ppmdu/utils/utility.hpp>
 
 using namespace std;
-
+using namespace utils;
 
 /*
 http://worms2d.info/Palette_file
@@ -31,7 +32,7 @@ Each color consists of 4 bytes holding the following data:
     1-byte blue amount of color
     1-byte "flags" - W:A PAL files always have the 0x00 flag, so no flag is set. 
 */
-namespace utils
+namespace riffpal_io
 {
     using gimg::colorRGB24;
 
@@ -48,10 +49,10 @@ namespace utils
                                                                         RIFF_DATA_CHUNK_SIG_LEN + 
                                                                         4;
 
-    static const array<uint8_t,RIFF_MAGIC_NUMBER_LEN>   RIFF_MAGIC_NUMBER  = { 0x52, 0x49, 0x46, 0x46 }; // "RIFF"
-    static const array<uint8_t,RIFF_PAL_SIG_LEN>        RIFF_PAL_SIG       = { 0x50, 0x41, 0x4C, 0x20 }; // "PAL "
+    static const array<uint8_t,RIFF_MAGIC_NUMBER_LEN>   RIFF_MAGIC_NUMBER   = { 0x52, 0x49, 0x46, 0x46 }; // "RIFF"
+    static const array<uint8_t,RIFF_PAL_SIG_LEN>        RIFF_PAL_SIG        = { 0x50, 0x41, 0x4C, 0x20 }; // "PAL "
     static const array<uint8_t,RIFF_DATA_CHUNK_SIG_LEN> RIFF_DATA_CHUNK_SIG = { 0x64, 0x61, 0x74, 0x61 }; // "data"
-    static const uint16_t RIFF_PAL_VERSION = 0x300;
+    static const uint16_t      RIFF_PAL_VERSION                             = 0x300;
 
 //==================================================================
 // RIFF Palette Tools
@@ -123,12 +124,20 @@ namespace utils
         //#4 - Profits!
     }
 
+    void ExportTo_RIFF_Palette( const std::vector<gimg::colorRGB24> & in_palette, const std::string & outputpath )
+    {
+        vector<uint8_t> output;
+        ExportTo_RIFF_Palette( in_palette, output );
+        WriteByteVectorToFile( outputpath, output );
+    }
+
     //Import a Microsoft RIFF ".pal" file into a RGB24 color palette
-    void ImportFrom_RIFF_Palette( const vector<uint8_t> & in_riffpalette, vector<colorRGB24> & out_palette  )
+    std::vector<gimg::colorRGB24> ImportFrom_RIFF_Palette( const std::vector<uint8_t> & in_riffpalette )
     {
         uint16_t nbcolors = 0;
 
         //#1 - Validate palette
+        std::vector<gimg::colorRGB24>   out_palette;
         vector<uint8_t>::const_iterator foundRiff = find_first_of( in_riffpalette.begin(), in_riffpalette.end(), RIFF_MAGIC_NUMBER.begin(), RIFF_MAGIC_NUMBER.end() );
         vector<uint8_t>::const_iterator foundPal;
         vector<uint8_t>::const_iterator foundDataChunk;
@@ -155,31 +164,62 @@ namespace utils
             throw exception("Invalid RIFF palette!");
 
         //#3 - Populate the palette
-        vector<uint8_t>::const_iterator itcolor = foundDataChunk + 2; //move the iterator to the first color
-
-        for(; out_palette.size() < nbcolors && itcolor != in_riffpalette.end(); ++itcolor )
+        //vector<uint8_t>::const_iterator itcolor = foundDataChunk + 2; //move the iterator to the first color
+        const unsigned int StopAt = (in_riffpalette.size()-3);
+        for( unsigned int i = 0x18; i < StopAt; )
         {
             colorRGB24 tmpcolor;
             //Everything in here is in RGB order, and there is the useless flag byte to skip at the end as well
 
             //Red
-            tmpcolor.red = *itcolor;
+            tmpcolor.red = in_riffpalette[i];
 
             //Green
-            ++itcolor;
-            tmpcolor.green = *itcolor;
+            ++i;
+            tmpcolor.green = in_riffpalette[i];
 
             //Blue
-            ++itcolor;
-            tmpcolor.blue = *itcolor;
+            ++i;
+            tmpcolor.blue = in_riffpalette[i];
 
             //Push the color into the color palette
             out_palette.push_back(tmpcolor);
 
             //Skip on flag byte
-            ++itcolor;
+            i += 2;
         }
 
+        //for(; out_palette.size() < nbcolors && itcolor != in_riffpalette.end(); /*++itcolor*/ )
+        //{
+        //    colorRGB24 tmpcolor;
+        //    //Everything in here is in RGB order, and there is the useless flag byte to skip at the end as well
+
+        //    //Red
+        //    tmpcolor.red = *itcolor;
+
+        //    //Green
+        //    ++itcolor;
+        //    tmpcolor.green = *itcolor;
+
+        //    //Blue
+        //    ++itcolor;
+        //    tmpcolor.blue = *itcolor;
+
+        //    //Push the color into the color palette
+        //    out_palette.push_back(tmpcolor);
+
+        //    //Skip on flag byte
+        //    std::advance( itcolor, 2 );
+        //}
+
+        return std::move( out_palette );
+    }
+
+    std::vector<gimg::colorRGB24> ImportFrom_RIFF_Palette( const std::string & inputpath )
+    {
+        vector<uint8_t>          riffpaldata = ReadFileToByteVector( inputpath );
+        vector<gimg::colorRGB24> output      = ImportFrom_RIFF_Palette( riffpaldata );
+        return std::move(output);
     }
 
 };

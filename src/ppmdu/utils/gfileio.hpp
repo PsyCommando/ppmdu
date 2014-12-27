@@ -19,7 +19,8 @@ namespace utils
             processing at all. Takes the path to the file and a vector to
             put the data as parameters.
     ************************************************************************/
-    void ReadFileToByteVector(const std::string & path, std::vector<uint8_t> & out_filedata);
+    void                 ReadFileToByteVector(const std::string & path, std::vector<uint8_t> & out_filedata);
+    std::vector<uint8_t> ReadFileToByteVector(const std::string & path );
 
     /************************************************************************
         WriteByteVectorToFile
@@ -27,7 +28,7 @@ namespace utils
             processing at all. Takes the path to the file and a vector with
             the data as parameters.
     ************************************************************************/
-    void WriteByteVectorToFile(const std::string & path, const std::vector<uint8_t> & filedata);
+    void WriteByteVectorToFile(const std::string & path, const std::vector<uint8_t> & in_filedata);
 
 };
 
