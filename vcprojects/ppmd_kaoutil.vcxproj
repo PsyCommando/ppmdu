@@ -323,11 +323,14 @@
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)bin\facenames.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)bin\pokenames.txt"
+      <Command>copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokenames.txt"
 
 copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\facenames.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"</Command>
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"
+
+copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -352,11 +355,14 @@ copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.tx
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)bin\facenames.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)bin\pokenames.txt"
+      <Command>copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokenames.txt"
 
 copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\facenames.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"</Command>
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"
+
+copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

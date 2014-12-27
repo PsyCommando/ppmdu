@@ -1,7 +1,7 @@
 =================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - KaoUtil  ==
 =================================================
-Version	   : 0.21
+Version	   : 0.3
 Released   : 2014/12/05
 Written by : psycommando@gmail.com
 
@@ -21,6 +21,17 @@ Changelog:
          * Added a little hack to fix commandline parameters where the user has escaped a 
            double quote character by appending a trailing backslash to a directory path.
            It now looks for paths having a double quote at the end, and fix it automatically.
+- 0.3: (2014/12/27)
+         * Fixed issue with images having smaller than anticipated palette resulting in a 
+           corrupted image in-game.
+         * Fixed poorly explained crash upon not finding the facename and pokename files.
+           It now continues without naming the outputed files, just like it used to!
+         * Added support to import/export 4 bpp *.bmp, and raw 4bpp tiled pixels + RIFF *.pal 
+           color palette. Simply add the switch "-bmp" or "-raw" at the command line for exporting 
+           in that format. During import, the format is automatically detected, and its even possible
+           to mix png, bmp, and raw images together in the same folders !
+         * Re-organized most of the code repository, and folder structure, to make it hopefully
+           easier to copy and work with!
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -29,7 +40,7 @@ My code and tools are basically public domain / CC0.
 Free to re-use in any ways you may want to!
 No crappyrights, all wrongs reversed! :3
 
-Not including any libraries I'm using that have their own licenses of course!!
+This is not including any libraries I'm using that have their own licenses of course!!
 The license for each of these libraries is indicated in their respective header files,
 and they're all isolated in the "libraries" subfolder !
 
@@ -68,6 +79,12 @@ Literally the same data format the game uses internally.
 It will also accept 8 bpp PNG images, as long as they got 16 colors, any colors past 16 will be 
 ignored.
 The default image resolution is the same the game uses, 40 x 40. 
+
+*NEW* The images can now also be 4 bpp bitmaps. Its even possible to work with the raw 4bpp tiled pixels
+      +RIFF palette! Just add "-bmp" or "-raw" to the parameters while extracting, and the program
+      will output to the specified format. Import of either of those 3 formats is automatic,
+      and its possible to mix format together. Putting both png and bmp images in the same folder
+      won't cause any issues whatsoever!
 
 As mentioned above you can modify the "pokenames.txt" and "facenames.txt" files to change the name
 that will be appended to the index/slot number for all pokemon, and for all portraits for each 
