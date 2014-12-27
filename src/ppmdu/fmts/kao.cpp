@@ -2,10 +2,13 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/ext_fmts/png_io.hpp>
 #include <ppmdu/ext_fmts/bmp_io.hpp>
+#include <ppmdu/ext_fmts/rawimg_io.hpp>
+#include <ppmdu/ext_fmts/riff_palette.hpp>
 #include <iostream>
 #include <cassert>
 #include <map>
 #include <sstream>
+#include <utility>
 #include <iomanip>
 #include <ppmdu/fmts/at4px.hpp>
 #include <Poco/DirectoryIterator.h>
@@ -51,6 +54,13 @@ namespace pmd2 { namespace filetypes
 //========================================================================================================
 //  CKaomado
 //========================================================================================================
+    const array<CKaomado::fexthndlr_t, 3> CKaomado::SupportedInputImageTypes =
+    {{
+        { pngio::PNG_FileExtension,        eEXPORT_t::EX_PNG },
+        { bmpio::BMP_FileExtension,        eEXPORT_t::EX_BMP },
+        { rawimg_io::RawImg_FileExtension, eEXPORT_t::EX_RAW },
+    }};
+
 
     CKaomado::CKaomado( unsigned int nbentries, unsigned int nbsubentries )
         :m_nbtocsubentries(nbsubentries), m_tableofcontent(nbentries)/*,
@@ -336,34 +346,63 @@ namespace pmd2 { namespace filetypes
         return std::move( outputbuffer );
     }
 
+    bool CKaomado::isSupportedImageType( const std::string & path )const
+    {
+        Poco::Path imagepath( path );
+        string     imgext     = imagepath.getExtension();
+
+        for( auto & afiletype : SupportedInputImageTypes )
+        {
+            if( imgext.compare( afiletype.extension ) == 0 )
+                return true;
+        }
+        return false;
+    }
+
     //Returns index inserted at!
     vector<kao_toc_entry>::size_type CKaomado::InputAnImageToDataVector( kao_file_wrapper & imagetohandle )
     {
-        data_t palimg;
-        string imagepath = imagetohandle.myfile.path();
-        string imgext    = imagepath.substr(imagepath.length() - 4);
+        data_t     palimg;
+        Poco::Path imagepath( imagetohandle.myfile.path() );
+        string     imgext     = imagepath.getExtension();
+        eEXPORT_t  detectedty = eEXPORT_t::EX_INVALID;
+
+        for( auto & afiletype : SupportedInputImageTypes )
+        {
+            if( imgext.compare( afiletype.extension ) == 0 )
+            {
+                detectedty = afiletype.detectedtype;
+                break;
+            }
+        }
 
         //Proceed to validate the file and find out what to use to handle it!
-        int comparesultPNG = imgext.compare( 0, 
-                                             pngio::PNG_FileExtension.length(), 
-                                             pngio::PNG_FileExtension );
-        int comparesultBMP = imgext.compare( 0, 
-                                             bmpio::BMP_FileExtension.length(), 
-                                             bmpio::BMP_FileExtension );
-        //int comparesultRAW = 
-
-
-        if( comparesultPNG == 0 )
-            pngio::ImportFrom4bppPNG( palimg, imagetohandle.myfile.path() );
-        else if( comparesultBMP == 0 )
-            bmpio::ImportFrom4bppBMP( palimg, imagetohandle.myfile.path() );
-        //else if(  )
-        else
+        switch( detectedty )
         {
-            stringstream strserror;
-            strserror<< "<!>-Error: Image " <<imagepath <<" doesn't look like a BMP or PNG image !";
-            throw std::runtime_error(strserror.str());
-        }
+            case eEXPORT_t::EX_PNG:
+            {
+                pngio::ImportFrom4bppPNG( palimg, imagetohandle.myfile.path() );
+                break;
+            }
+            case eEXPORT_t::EX_BMP:
+            {
+                bmpio::ImportFrom4bppBMP( palimg, imagetohandle.myfile.path() );
+                break;
+            }
+            case eEXPORT_t::EX_RAW:
+            {
+                stringstream pathtoraw;
+                pathtoraw << imagepath.parent().toString() << imagepath.getBaseName();
+                rawimg_io::ImportFrom4bppRawImgAndPal( palimg, pathtoraw.str(), graphics::RES_PORTRAIT );
+                break;
+            }
+            default:
+            {
+                stringstream strserror;
+                strserror<< "<!>-Error: Image " <<imagepath.toString() <<" doesn't look like a BMP, RAW or PNG image !";
+                throw std::runtime_error(strserror.str());
+            }
+        };
 
         m_imgdata.push_back( std::move(palimg) );
         return m_imgdata.size() - 1;
@@ -381,7 +420,8 @@ namespace pmd2 { namespace filetypes
         //#1 - Find all our valid images
         for(; itdir != itdirend; ++itdir ) 
         {
-            if( IsValidFile(*itdir) )
+            //if( IsValidFile(*itdir) )
+            if( isSupportedImageType(itdir->path()) )
                 validImages.push_back(*itdir);
         }
 
@@ -557,8 +597,8 @@ namespace pmd2 { namespace filetypes
 
                 if( exporttype == eEXPORT_t::EX_RAW )
                 {
-                    ss << ".4bp";
-                    OutputRawImageAsTiled( m_imgdata[entry[j]], ss.str(), KAO_PORTRAIT_PIXEL_ORDER_REVERSED );
+                    //Don't append anything! We need only the filename, no extension!
+                    rawimg_io::ExportTo4bppRawImgAndPal( m_imgdata[entry[j]], ss.str() );
                 }
                 else if( exporttype == eEXPORT_t::EX_BMP )
                 {

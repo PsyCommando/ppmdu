@@ -447,6 +447,7 @@ namespace gimg
         ParseTiledImg
             This function parses all 3 types of tiled_image. It only handles the pixels, not the 
             color palettes.
+            Pass it iterators to a container containing raw bytes.
 
             - invertpixelorder : If true, reverse the pixel order on pixels smaller than 
                                  a single byte!
@@ -490,8 +491,8 @@ namespace gimg
             throw std::out_of_range("ParseTiledImg() : Image resolution too big for the amount of data provided !");
         }
 
-        auto               itCur          = itBegByte;
-        unsigned int       cptoutputimg   = 0;  
+        //auto               itCur          = itBegByte;
+        //unsigned int       cptoutputimg   = 0;  
         out_img.setPixelResolution( imgrespixels.width, imgrespixels.height );
 
 
@@ -540,8 +541,8 @@ namespace gimg
 
     /*************************************************************************************************
         WriteTiledImg
-            This function writes all 3 types of tiled_image. It only handles the pixels, not the 
-            color palettes.
+            This function writes all 3 types of tiled_image to their tiled form into the target container. 
+            It only handles the pixels, not the color palettes.
             Its meant to handle pixels that aren't aligned on 8 bits transparently.
 
             - invertpixelorder : If true, reverse the pixel order on pixels smaller than 

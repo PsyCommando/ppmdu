@@ -1,5 +1,6 @@
 #include "bmp_io.hpp"
 #include <EasyBMP/EasyBMP.h>
+#include <ppmdu/utils/library_wide.hpp>
 #include <iostream>
 #include <algorithm>
 using namespace std;
@@ -54,7 +55,7 @@ namespace pmd2{ namespace bmpio
 
         input.ReadFromFile( filepath.c_str() );
 
-        if( input.TellBitDepth() != 4u )
+        if( input.TellBitDepth() != 4 )
         {
             //We don't support anything not 4 bpp !
             //Mention the palette length mismatch
@@ -64,7 +65,7 @@ namespace pmd2{ namespace bmpio
             return false;
         }
 
-        if( input.TellNumberOfColors() <= 16u )
+        if( utils::LibraryWide::getInstance().Data().isVerboseOn() && input.TellNumberOfColors() <= 16 )
         {
             //Mention the palette length mismatch
             cerr <<"\n<!>-Warning: " <<filepath <<" has a different palette length than expected!\n"
@@ -73,7 +74,7 @@ namespace pmd2{ namespace bmpio
         out_indexed.setNbColors( 16u );
 
         //Build palette
-        for( unsigned int i = 0; i < input.TellNumberOfColors(); ++i )
+        for( int i = 0; i < input.TellNumberOfColors(); ++i )
         {
             RGBApixel acolor = input.GetColor(i);
             outpal[i].red   = acolor.Red;
@@ -85,9 +86,9 @@ namespace pmd2{ namespace bmpio
         //Fill the pixels
         out_indexed.setPixelResolution( input.TellWidth(), input.TellHeight() );
 
-        for( unsigned int i = 0; i < input.TellWidth(); ++i )
+        for( int i = 0; i < input.TellWidth(); ++i )
         {
-            for( unsigned int j = 0; j < input.TellHeight(); ++j )
+            for( int j = 0; j < input.TellHeight(); ++j )
             {
                 RGBApixel apixel = input.GetPixel(i,j);
 
@@ -116,19 +117,18 @@ namespace pmd2{ namespace bmpio
     {
         BMP output;
         output.SetBitDepth(4);
-        cerr <<"DEBUG: NB of colors after setting BMP bitdepth to 4 : " << output.TellNumberOfColors() <<"\n";
         assert( in_indexed.getNbColors() == 16 );
 
         //copy palette
-        for( unsigned int i = 0; i < output.TellNumberOfColors(); ++i )
+        for( int i = 0; i < output.TellNumberOfColors(); ++i )
             output.SetColor( i, colorRGB24ToRGBApixel( in_indexed.getPalette()[i] ) );
 
         //Copy image
         output.SetSize( in_indexed.getNbPixelWidth(), in_indexed.getNbPixelHeight() );
 
-        for( unsigned int i = 0; i < output.TellWidth(); ++i )
+        for( int i = 0; i < output.TellWidth(); ++i )
         {
-            for( unsigned int j = 0; j < output.TellHeight(); ++j )
+            for( int j = 0; j < output.TellHeight(); ++j )
             {
                 auto &  refpixel = in_indexed.getPixel( i, j );
                 uint8_t temp     = static_cast<uint8_t>( refpixel.getWholePixelData() );

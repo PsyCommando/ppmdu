@@ -128,6 +128,7 @@ namespace pmd2{ namespace filetypes
 
         enum struct eEXPORT_t
         {
+            EX_INVALID,
             EX_PNG,
             EX_RAW,
             EX_BMP,
@@ -228,12 +229,21 @@ namespace pmd2{ namespace filetypes
                              tocsubentry_t &                                 lastValidEndOffset,
                              uint32_t &                                      offsetWriteatTocSub );
 
+        bool isSupportedImageType( const std::string & path )const;
+
         //Variables
         uint32_t                                   m_nbtocsubentries;
 
         //New stuff
         std::vector<kao_toc_entry>                     m_tableofcontent;
         std::vector<data_t>                            m_imgdata;
+
+        struct fexthndlr_t
+        {
+            const std::string extension;
+            eEXPORT_t         detectedtype;
+        };
+        static const std::array<fexthndlr_t, 3> SupportedInputImageTypes;
     };
 
 

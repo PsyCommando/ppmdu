@@ -1,6 +1,7 @@
 #include "png_io.hpp"
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 #include <png++/png.hpp>
 #include <iostream>
 using namespace std;
@@ -40,8 +41,11 @@ namespace pmd2{ namespace pngio
         if( pngpix_pal_len<_pngimagepixel>::nbcolors != mypalette.size() )
         {
             //Mention the palette length mismatch
-            cerr <<"\n<!>-Warning: " <<filepath <<" has a different palette length than expected!\n"
-                 <<"Fixing and continuing happily..\n";
+            if( utils::LibraryWide::getInstance().Data().isVerboseOn() )
+            {
+                cerr <<"\n<!>-Warning: " <<filepath <<" has a different palette length than expected!\n"
+                     <<"Fixing and continuing happily..\n";
+            }
 
             //Adjust the palette to the appropriate nb of colors
             out_indexed.setNbColors(pngpix_pal_len<_pngimagepixel>::nbcolors);
@@ -50,7 +54,7 @@ namespace pmd2{ namespace pngio
             out_indexed.setNbColors( mypalette.size() );
 
         //Build palette
-        for( unsigned int i = 0; i < outpal.size(); ++i )
+        for( unsigned int i = 0; i < mypalette.size(); ++i )
         {
             outpal[i].red   = mypalette[i].red;
             outpal[i].green = mypalette[i].green;
