@@ -169,7 +169,7 @@ namespace ppmd_packfileutil
             if( !paramTwo.empty() )
                 outputpath = paramTwo;
 
-            if( validoptsfound.front().size() == 2 )
+            if( !validoptsfound.empty() && validoptsfound.front().size() == 2 )
             {
                 stringstream sstr;
                 unsigned int foffset = 0;
