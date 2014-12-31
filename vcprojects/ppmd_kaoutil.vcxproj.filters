@@ -118,6 +118,9 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -248,6 +251,9 @@
       <Filter>EasyBMP</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
   </ItemGroup>

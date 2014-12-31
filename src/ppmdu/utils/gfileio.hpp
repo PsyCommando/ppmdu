@@ -10,9 +10,8 @@ Description: A few utilities to encapsulate writing stuff to files.
 #include <string>
 #include <cstdint>
 
-namespace utils
+namespace utils{ namespace io
 {
-
     /************************************************************************
         ReadFileToByteVector
             Read the file content straight into a byte vector, with no
@@ -30,6 +29,6 @@ namespace utils
     ************************************************************************/
     void WriteByteVectorToFile(const std::string & path, const std::vector<uint8_t> & in_filedata);
 
-};
+};};
 
 #endif

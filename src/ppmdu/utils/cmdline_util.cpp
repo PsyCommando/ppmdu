@@ -364,7 +364,7 @@ namespace utils{ namespace cmdl
     void CommandLineUtility::parseArgs( CArgsParser & argsparse )
     {
         const auto &   refParams = getArgumentsList();
-        vector<string> params = argsparse.getAllFoundParams();
+        vector<string> params    = argsparse.getAllFoundParams();
         //bool           bsuccess = true;
 
         for( unsigned int i = 0; i < refParams.size(); ++i )

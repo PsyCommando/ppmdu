@@ -38,5 +38,11 @@
     <Link>
       <AdditionalDependencies>libpng16.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
+        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
 </Project>

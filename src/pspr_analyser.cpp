@@ -17,6 +17,7 @@
 #include <cassert>
 #include <future>
 #include <thread>
+using namespace ::utils::io;
 using namespace utils::cmdl;
 using namespace std;
 using namespace utils;
@@ -108,7 +109,7 @@ namespace pspr_analyser
         //A lambda wrapper to get over the bug in msvc2012 where a packaged_task can't have a void return value..
         auto lambdaread = [&mycompletion](const std::string & path, std::vector<uint8_t> & out_filedata )->bool
         {
-            utils::ReadFileToByteVector( path, out_filedata );
+            ReadFileToByteVector( path, out_filedata );
             ++(mycompletion.nbcompleted);
             WriteProgressConsole(mycompletion, "Reading files");
             return true;

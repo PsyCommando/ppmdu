@@ -32,7 +32,7 @@ Each color consists of 4 bytes holding the following data:
     1-byte blue amount of color
     1-byte "flags" - W:A PAL files always have the 0x00 flag, so no flag is set. 
 */
-namespace riffpal_io
+namespace utils{ namespace io
 {
     using gimg::colorRGB24;
 
@@ -222,4 +222,4 @@ namespace riffpal_io
         return std::move(output);
     }
 
-};
+};};

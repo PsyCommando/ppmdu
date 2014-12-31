@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 
-namespace pmd2{ namespace pngio
+namespace utils{ namespace io
 {
     //A little helper to know the correct palette length to expect depending the 
     // png++ pixel type!

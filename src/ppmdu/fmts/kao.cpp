@@ -52,18 +52,249 @@ namespace pmd2 { namespace filetypes
     };
 
 //========================================================================================================
+//  KaoParser
+//========================================================================================================
+
+//========================================================================================================
+//  KaoWriter
+//========================================================================================================
+
+    void KaoWriter::Reset()
+    {
+        m_pExportFrom      = nullptr;
+        m_pDestination     = nullptr;
+        m_exportType       = eSUPPORT_IMG_IO::PNG;
+        m_curOffTocSub     = 0;
+        m_lastNullEntryVal = 0;
+        m_imgBuff.resize(0);
+        m_outBuff.resize(0);
+    }
+
+    vector<uint8_t> KaoWriter::operator()( const CKaomado & exportfrom )
+    {
+        Reset();
+        m_pExportFrom = &exportfrom;
+        return WriteToKaomado();
+    }
+
+    //This will export to a kaomado.kao file
+    void KaoWriter::operator()( const CKaomado & exportfrom, const string & exportto )
+    {
+        Reset();
+        m_pExportFrom  = &exportfrom;
+        vector<uint8_t> result = WriteToKaomado();
+
+        //Write to file
+        WriteByteVectorToFile( exportto, result );
+    }
+        
+    //This forces to extract to a folder structure with the specified image type
+    void KaoWriter::operator()( const CKaomado & exportfrom, const string & exportto, eSUPPORT_IMG_IO exporttype )
+    {
+        Reset();
+        m_pExportFrom  = &exportfrom;
+        m_pDestination = &exportto;
+        m_exportType   = exporttype;
+
+        ExportToFolders();
+    }
+
+    void KaoWriter::ExportToFolders()
+    {
+        //#1 - Go through the ToC, and make a sub-folder for each ToC entry
+        //     with its index as name.
+
+        //Make the parent folder
+        utils::DoCreateDirectory( *m_pDestination );
+        
+        if( !m_bQuiet )
+            cout<<"Exporting entries to folder..\n";
+
+        //Make aliases
+        const auto & toc = m_pExportFrom->m_tableofcontent;
+
+        for( tocsz_t i = 1; i < toc.size(); )
+        {
+            //Create the sub-folder name
+            stringstream outfoldernamess;
+            outfoldernamess <<utils::AppendTraillingSlashIfNotThere(*m_pDestination)
+                             <<std::setfill('0') <<std::setw(4) <<std::dec <<i;
+
+            if( m_pFolderNames != nullptr && m_pFolderNames->size() > i && !m_pFolderNames->at(i).empty() )
+                outfoldernamess<< "_" << m_pFolderNames->at(i);
+
+            ExportAToCEntry( toc[i]._portraitsentries, outfoldernamess.str() );
+
+            //Increment counter here, for the completion indicator to work
+            ++i;
+            if( !m_bQuiet )
+                cout<<"\r" << (i*100) / toc.size() <<"%";
+        }
+        if( !m_bQuiet )
+            cout<<"\n";
+    }
+
+    void KaoWriter::ExportAToCEntry( const std::vector<tocsubentry_t> & entry, const string & directoryname )
+    {
+        bool bmadeafolder = false; //Whether we made a folder already for this entry.
+                                   // We're doing it this way, because we don't want to create empty folders 
+                                   // for entry containing only null pointers!
+
+        for( tocsz_t j = 0; j < entry.size(); ++j )
+        {
+            if( CKaomado::isToCSubEntryValid( entry[j] ) ) //If not a dummy/null pointer
+            {
+                stringstream strsOutputPath;
+
+                //Create a folder if we haven't yet
+                if(!bmadeafolder)
+                {
+                    utils::DoCreateDirectory(directoryname);
+                    bmadeafolder = true;
+                }
+
+                strsOutputPath <<utils::AppendTraillingSlashIfNotThere(directoryname) 
+                               <<setfill('0') <<setw(4) <<static_cast<uint32_t>(j); 
+
+                if( m_pSubEntryNames != nullptr && m_pSubEntryNames->size() > j )
+                    strsOutputPath <<"_" << (*m_pSubEntryNames)[j];
+
+                if( m_exportType == eSUPPORT_IMG_IO::RAW )
+                {
+                    //Don't append an extension! We need only the filename!
+                    ExportTo4bppRawImgAndPal( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                }
+                else if( m_exportType == eSUPPORT_IMG_IO::BMP )
+                {
+                    strsOutputPath <<"." << BMP_FileExtension;
+                    ExportTo4bppBMP( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                }
+                else //If all else fail, export to PNG !
+                {
+                    strsOutputPath <<"." << PNG_FileExtension;
+                    ExportTo4bppPNG( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                }
+            }
+        }
+    }
+
+    vector<uint8_t> KaoWriter::WriteToKaomado()
+    {
+        if( m_pExportFrom->m_imgdata.empty() || m_pExportFrom->m_tableofcontent.empty() )
+        {
+            cerr << "<!>-WARNING: KaoWriter::WriteKaomado() : Nothing to write in the output kaomado file!\n";
+            assert(false);
+            return vector<uint8_t>();
+        }
+
+        //#0 - Gather some stats and do some checks
+        const unsigned int  SzToCEntry       = m_pExportFrom->m_nbtocsubentries       * SUBENTRY_SIZE;
+        const unsigned int  Expected_ToC_Len = m_pExportFrom->m_tableofcontent.size() * SzToCEntry;
+        auto                resultlenghts    = m_pExportFrom->EstimateKaoLenAndBiggestImage();
+        const unsigned int  estimatedlength  = resultlenghts.first;
+        unsigned int        szBiggestImg     = resultlenghts.second;
+        unsigned int        curoffsetToc     = 0;
+        unsigned int        cptcompletion    = 0;
+        unsigned int        nbentries        = m_pExportFrom->m_tableofcontent.size();
+
+        //Allocate memory
+        m_imgBuff.reserve( szBiggestImg );
+        m_outBuff.reserve( utils::GetNextInt32DivisibleBy16( estimatedlength ) ); //align on 16 bytes
+
+        //Resize raw output buf to ToC lenght so we can begin inserting data afterwards
+        m_outBuff.resize( Expected_ToC_Len, 0 ); 
+
+        //#2 - Skip the ToC in the output, and begin outputing portraits, writing down their offset as we go.
+        if( !m_bQuiet )
+            cout << "Building kaomado file..\n";
+
+        for( const auto& tocentry : m_pExportFrom->m_tableofcontent )
+        {
+            m_curOffTocSub = curoffsetToc; //Where we'll be writing our next sub-entry
+
+            for( const auto & portrait : tocentry._portraitsentries )
+                WriteAPortrait( portrait );
+
+            curoffsetToc += SzToCEntry; //jump to next ToC entry
+
+            ++cptcompletion;
+            if( !m_bQuiet )
+                cout<<"\r" << (cptcompletion * 100) / nbentries <<"%";
+        }
+        if( !m_bQuiet )
+            cout<<"\n";
+
+        //Align the end of the file on 16 bytes
+        const unsigned int nbpaddingbytes = utils::GetNextInt32DivisibleBy16( m_outBuff.size() ) - m_outBuff.size();
+
+        //Add padding bytes
+        for( int i = 0; i < nbpaddingbytes; ++i )
+            m_outBuff.push_back(COMMON_PADDING_BYTE);
+
+        //Doing this to avoid a copy, and make sure that in case of re-use, the state of our internal vector is still valid!
+        vector<uint8_t> temp;
+        std::swap( m_outBuff, temp );
+
+        //Done, move the vector
+        return std::move( temp );
+    }
+
+    void KaoWriter::WriteAPortrait( const kao_toc_entry::subentry_t & portrait )
+    {
+        //First set both to the last valid end of data offset. "null" them out basically!
+        tocsubentry_t portraitpointer = m_lastNullEntryVal; //The offset from the beginning where we'll insert any new data!
+
+        //Make sure we output a computed file offset for valid entry, and just the entry's value if the pointer value is invalid
+        if( CKaomado::isToCSubEntryValid( portrait ) )
+        {
+            //If we have data to write
+            auto & currentimg = m_pExportFrom->m_imgdata[portrait];
+            portraitpointer   = m_outBuff.size(); //Set the current size as the offset to insert our stuff!
+
+            //#3.1 - Write palette
+            graphics::WriteRawPalette_RGB24_As_RGB24( m_itOutBuffPushBack, currentimg.getPalette().begin(), currentimg.getPalette().end() );
+
+            //Keep track of where the at4px begins
+            auto offsetafterpal = m_outBuff.size();
+
+            //#3.2 - Compress the image
+            unsigned int curimgmaxsz      = (currentimg.getSizeInBits() / 8u) +
+                                            ( (currentimg.getSizeInBits() % 8u != 0)? 1u : 0u); //Add one more just in case we ever overflow a byte (fat chance..)
+            unsigned int curimgszandheadr = curimgmaxsz + at4px_header::HEADER_SZ;
+
+            // Make a raw tiled image
+            m_imgBuff.resize(0);
+            WriteTiledImg( m_itImgBuffPushBack, currentimg, KAO_PORTRAIT_PIXEL_ORDER_REVERSED );
+
+            //#3.3 - Expand the output to at least the raw image's length, then write at4px
+            compression::px_info_header pxinf = CompressToAT4PX( m_imgBuff.begin(), 
+                                                                 m_imgBuff.end(), 
+                                                                 m_itOutBuffPushBack,
+                                                                 compression::ePXCompLevel::LEVEL_3,
+                                                                 m_bZealousStrSearch );
+
+            //Update the last valid end of data offset (We fill any subsequent invalid entry with this value!)
+            m_lastNullEntryVal = - (static_cast<tocsubentry_t>(m_outBuff.size())); //Change the sign to negative too
+        }
+
+        //Write the ToC entry in the space we reserved at the beginning of the output buffer!
+        utils::WriteIntToByteVector( portraitpointer, m_outBuff.begin() + m_curOffTocSub );
+        m_curOffTocSub += sizeof(portraitpointer);
+    }
+
+//========================================================================================================
 //  CKaomado
 //========================================================================================================
-    const array<CKaomado::fexthndlr_t, 3> CKaomado::SupportedInputImageTypes =
-    {{
-        { pngio::PNG_FileExtension,        eEXPORT_t::EX_PNG },
-        { bmpio::BMP_FileExtension,        eEXPORT_t::EX_BMP },
-        { rawimg_io::RawImg_FileExtension, eEXPORT_t::EX_RAW },
-    }};
+    //const array<CKaomado::fexthndlr_t, 3> CKaomado::SupportedInputImageTypes =
+    //{{
+    //    { pngio::PNG_FileExtension,        eSUPPORT_IMG_IO::EX_PNG },
+    //    { bmpio::BMP_FileExtension,        eSUPPORT_IMG_IO::EX_BMP },
+    //    { rawimg_io::RawImg_FileExtension, eSUPPORT_IMG_IO::EX_RAW },
+    //}};
 
 
     CKaomado::CKaomado( unsigned int nbentries, unsigned int nbsubentries )
-        :m_nbtocsubentries(nbsubentries), m_tableofcontent(nbentries)/*,
+        :m_bZealousStrSearch(true),m_nbtocsubentries(nbsubentries), m_tableofcontent(nbentries)/*,
         m_imgdata( nbentries * nbsubentries) */ //This pre-alloc caused the whole thing to hang for several seconds when constructing
     {
         m_tableofcontent.resize(0); //reset the size to 0, without de-allocating
@@ -143,11 +374,6 @@ namespace pmd2 { namespace filetypes
         return utils::ReadIntFromByteVector<tocsubentry_t>( itbegindata );
     }
 
-    bool CKaomado::isToCSubEntryValid( const tocsubentry_t & entry )const
-    {
-        return (entry > 0);
-    }
-
     CKaomado::tocsubentry_t CKaomado::GetInvalidToCEntry()
     {
         return numeric_limits<tocsubentry_t>::min();
@@ -201,7 +427,7 @@ namespace pmd2 { namespace filetypes
         return itrawtocentry;
     }
 
-    pair<uint32_t,uint32_t> CKaomado::EstimateToCLengthAndBiggestImage()const
+    pair<uint32_t,uint32_t> CKaomado::EstimateKaoLenAndBiggestImage()const
     {
         //Estimate kaomado worst case scenario length. (The size as if all images weren't compressed)
         unsigned int estimatedlength = m_tableofcontent.size() * (m_nbtocsubentries * SUBENTRY_SIZE);
@@ -233,12 +459,11 @@ namespace pmd2 { namespace filetypes
                                    std::back_insert_iterator<std::vector<uint8_t>> itoutputpushback,
                                    std::vector<uint8_t> &                          imgbuffer, 
                                    std::back_insert_iterator<std::vector<uint8_t>> itimgbufpushback,
-                                   bool                                            bZealousStringSearchEnabled,
                                    tocsubentry_t &                                 lastvalideendofdataoffset,
                                    uint32_t &                                      offsetWriteatTocSub )
     {
         //First set both to the last valid end of data offset. "null" them out basically!
-        tocsubentry_t portraitpointer    = lastvalideendofdataoffset; //The offset from the beginning where we'll insert any new data!
+        tocsubentry_t portraitpointer = lastvalideendofdataoffset; //The offset from the beginning where we'll insert any new data!
 
         //Make sure we output a computed file offset for valid entry, and just the entry's value if the pointer value is invalid
         if( isToCSubEntryValid( portrait ) )
@@ -253,7 +478,7 @@ namespace pmd2 { namespace filetypes
             //Keep track of where the at4px begins
             auto offsetafterpal = outputbuffer.size();
 
-            //#3.2 - Copy the image into something raw
+            //#3.2 - Compress the image
             unsigned int curimgmaxsz      = (currentimg.getSizeInBits() / 8u) +
                                             ( (currentimg.getSizeInBits() % 8u != 0)? 1u : 0u); //Add one more just in case we ever overflow a byte (fat chance..)
             unsigned int curimgszandheadr = curimgmaxsz + at4px_header::HEADER_SZ;
@@ -264,17 +489,17 @@ namespace pmd2 { namespace filetypes
 
             //#3.3 - Expand the output to at least the raw image's length, then write at4px
             compression::px_info_header pxinf = CompressToAT4PX( imgbuffer.begin(), 
-                                                                    imgbuffer.end(), 
-                                                                    itoutputpushback,
-                                                                    compression::ePXCompLevel::LEVEL_3,
-                                                                    bZealousStringSearchEnabled );
+                                                                 imgbuffer.end(), 
+                                                                 itoutputpushback,
+                                                                 compression::ePXCompLevel::LEVEL_3,
+                                                                 m_bZealousStrSearch );
 
             //Update the last valid end of data offset (We fill any subsequent invalid entry with this value!)
             lastvalideendofdataoffset = - (static_cast<tocsubentry_t>(outputbuffer.size())); //Change the sign to negative too
         }
 
         //Write the ToC entry in the space we reserved at the beginning of the output buffer!
-        utils::WriteIntToByteVector( portraitpointer,    outputbuffer.begin() + offsetWriteatTocSub );
+        utils::WriteIntToByteVector( portraitpointer, outputbuffer.begin() + offsetWriteatTocSub );
         offsetWriteatTocSub += sizeof(portraitpointer);
     }
 
@@ -286,27 +511,25 @@ namespace pmd2 { namespace filetypes
             assert(false);
             return vector<uint8_t>();
         }
+        m_bZealousStrSearch = bZealousStringSearch; //#TODO: maybe do this via accessor ?
 
         //#0 - Gather some stats and do some checks
-        const auto EXPECTED_TOC_LENGTH = m_tableofcontent.size() * (m_nbtocsubentries * SUBENTRY_SIZE);
-
-        //#1 - Estimate kaomado worst case scenario length. (The size as if all images weren't compressed)
-        auto                 resultlenghts      = EstimateToCLengthAndBiggestImage();
-        unsigned int         estimatedlength    = resultlenghts.first;
+        const unsigned int   Expected_ToC_Len   = m_tableofcontent.size() * (m_nbtocsubentries * SUBENTRY_SIZE);
+        auto                 resultlenghts      = EstimateKaoLenAndBiggestImage();
+        const unsigned int   estimatedlength    = resultlenghts.first;
         unsigned int         szBiggestImg       = resultlenghts.second;
-        std::vector<uint8_t> imgbuffer( szBiggestImg, 0 );
+        std::vector<uint8_t> imgbuffer( szBiggestImg, 0 );  //Temp image buff used for decompression. Shared to avoid extra alloc.
         std::vector<uint8_t> outputbuffer( utils::GetNextInt32DivisibleBy16( estimatedlength ), 0 ); //align on 16 bytes
-
         unsigned int         curoffsetToc       = 0;
-        unsigned int         offsetTocEnd       = EXPECTED_TOC_LENGTH;
+        unsigned int         offsetTocEnd       = Expected_ToC_Len;
         unsigned int         cptcompletion      = 0;
         unsigned int         nbentries          = m_tableofcontent.size();
         tocsubentry_t        lastValidEoDOffset = 0; //Used for filling in null entries! All null entries refer to the last valid end of data offset!
         auto                 itimgbufpushback   = std::back_inserter(imgbuffer);
         auto                 itoutputpushback   = std::back_inserter(outputbuffer);
 
-        //Resize to ToC lenght so can begin inserting afterwards
-        outputbuffer.resize(EXPECTED_TOC_LENGTH); 
+        //Resize raw output buf to ToC lenght so we can begin inserting data afterwards
+        outputbuffer.resize(Expected_ToC_Len); 
 
         //#2 - Skip the ToC in the output, and begin outputing portraits, writing down their offset as we go.
         if( !bBeQuiet )
@@ -314,7 +537,7 @@ namespace pmd2 { namespace filetypes
 
         for( auto& tocentry : m_tableofcontent )
         {
-            uint32_t offsetWriteatTocSub = curoffsetToc; //Where we'll be writing our next sub-entrie
+            uint32_t offsetWriteatTocSub = curoffsetToc; //Where we'll be writing our next sub-entry
 
             for( auto & portrait : tocentry._portraitsentries )
             {
@@ -323,7 +546,7 @@ namespace pmd2 { namespace filetypes
                                 itoutputpushback, 
                                 imgbuffer, 
                                 itimgbufpushback, 
-                                bZealousStringSearch, 
+                                //bZealousStringSearch, 
                                 lastValidEoDOffset, 
                                 offsetWriteatTocSub );
             }
@@ -337,7 +560,7 @@ namespace pmd2 { namespace filetypes
             cout<<"\n";
 
         //Align the end of the file on 16 bytes
-        unsigned int nbpaddingbytes = utils::GetNextInt32DivisibleBy16( outputbuffer.size() ) - outputbuffer.size();
+        const unsigned int nbpaddingbytes = utils::GetNextInt32DivisibleBy16( outputbuffer.size() ) - outputbuffer.size();
 
         for( int i = 0; i < nbpaddingbytes; ++i )
             outputbuffer.push_back(COMMON_PADDING_BYTE);
@@ -346,54 +569,54 @@ namespace pmd2 { namespace filetypes
         return std::move( outputbuffer );
     }
 
-    bool CKaomado::isSupportedImageType( const std::string & path )const
-    {
-        Poco::Path imagepath( path );
-        string     imgext     = imagepath.getExtension();
+    //bool CKaomado::isSupportedImageType( const std::string & path )const
+    //{
+    //    Poco::Path imagepath( path );
+    //    string     imgext = imagepath.getExtension();
 
-        for( auto & afiletype : SupportedInputImageTypes )
-        {
-            if( imgext.compare( afiletype.extension ) == 0 )
-                return true;
-        }
-        return false;
-    }
+    //    for( auto & afiletype : SupportedInputImageTypes )
+    //    {
+    //        if( imgext.compare( afiletype.extension ) == 0 )
+    //            return true;
+    //    }
+    //    return false;
+    //}
 
     //Returns index inserted at!
     vector<kao_toc_entry>::size_type CKaomado::InputAnImageToDataVector( kao_file_wrapper & imagetohandle )
     {
         data_t     palimg;
         Poco::Path imagepath( imagetohandle.myfile.path() );
-        string     imgext     = imagepath.getExtension();
-        eEXPORT_t  detectedty = eEXPORT_t::EX_INVALID;
+        //string           imgext     = imagepath.getExtension();
+        //eSUPPORT_IMG_IO detectedty = eSUPPORT_IMG_IO::INVALID;
 
-        for( auto & afiletype : SupportedInputImageTypes )
-        {
-            if( imgext.compare( afiletype.extension ) == 0 )
-            {
-                detectedty = afiletype.detectedtype;
-                break;
-            }
-        }
+        //for( auto & afiletype : SupportedInputImageTypes )
+        //{
+        //    if( imgext.compare( afiletype.extension ) == 0 )
+        //    {
+        //        detectedty = afiletype.type;
+        //        break;
+        //    }
+        //}
 
         //Proceed to validate the file and find out what to use to handle it!
-        switch( detectedty )
+        switch( GetSupportedImageType( imagepath.getFileName() ) )
         {
-            case eEXPORT_t::EX_PNG:
+            case eSUPPORT_IMG_IO::PNG:
             {
-                pngio::ImportFrom4bppPNG( palimg, imagetohandle.myfile.path() );
+                ImportFrom4bppPNG( palimg, imagetohandle.myfile.path() );
                 break;
             }
-            case eEXPORT_t::EX_BMP:
+            case eSUPPORT_IMG_IO::BMP:
             {
-                bmpio::ImportFrom4bppBMP( palimg, imagetohandle.myfile.path() );
+                ImportFrom4bppBMP( palimg, imagetohandle.myfile.path() );
                 break;
             }
-            case eEXPORT_t::EX_RAW:
+            case eSUPPORT_IMG_IO::RAW:
             {
                 stringstream pathtoraw;
                 pathtoraw << imagepath.parent().toString() << imagepath.getBaseName();
-                rawimg_io::ImportFrom4bppRawImgAndPal( palimg, pathtoraw.str(), graphics::RES_PORTRAIT );
+                ImportFrom4bppRawImgAndPal( palimg, pathtoraw.str(), graphics::RES_PORTRAIT );
                 break;
             }
             default:
@@ -408,30 +631,63 @@ namespace pmd2 { namespace filetypes
         return m_imgdata.size() - 1;
     }
 
-    void CKaomado::HandleAFolder( kao_file_wrapper & foldertohandle )
+    void CKaomado::ImportImage( kao_file_wrapper & imagefile, unsigned int tocindex, const string & foldername )
     {
-        Poco::File              & thefolder = foldertohandle.myfile;
-        Poco::DirectoryIterator   itdir(thefolder),
-                                  itdirend;
-        string                    foldername = Poco::Path(thefolder.path()).makeFile().getBaseName();
-        vector<Poco::File>        validImages(DEF_KAO_TOC_ENTRY_NB_PTR);
-        validImages.resize(0);
+        unsigned int datavecindex = 0;
+        Poco::File & animage      = imagefile.myfile; //make an alias
 
-        //#1 - Find all our valid images
-        for(; itdir != itdirend; ++itdir ) 
+        try
         {
-            //if( IsValidFile(*itdir) )
-            if( isSupportedImageType(itdir->path()) )
-                validImages.push_back(*itdir);
+            //Convert the image and store it in our data vector. And get the index in the data vector it is at.
+            datavecindex = InputAnImageToDataVector(imagefile); 
+        }
+        catch(exception e)
+        {
+            cerr <<"\n" <<e.what() <<"\n";
+            return; //We can't guaranty the image came through properly, so abort.
         }
 
-        //#2 - Output diagnosis to console about what files are valid and not
+        Poco::Path   imgpath(animage.path());
+        stringstream sstrimgindex;
+        unsigned int imgindex = 0;
 
+        //Parse index from image name
+        sstrimgindex << imgpath.getBaseName();
+        sstrimgindex >> imgindex;
+
+        //validate the index
+        if( imgindex >= m_tableofcontent.front()._portraitsentries.size() )
+        {
+            stringstream strserror;
+            strserror <<"The index of " <<imgpath.getFileName() <<", in folder name " <<foldername 
+                        <<", exceeds the number of slots available, " <<(m_nbtocsubentries-1) 
+                        <<" !\n"
+                        <<"Please, number the images from 0 to " <<(m_nbtocsubentries-1) <<"!\n";
+            assert(false);
+            throw domain_error( strserror.str() );
+        }
+
+        //Add an entry in the toc refering to the image data we just put in our data vector
+        registerToCEntry( tocindex, imgindex, datavecindex );
+    }
+
+    void CKaomado::ImportDirectory( kao_file_wrapper & foldertohandle )
+    {
+        Poco::DirectoryIterator itdir(foldertohandle.myfile),
+                                itdirend;
+        string                  foldername = Poco::Path(foldertohandle.myfile.path()).makeFile().getBaseName();
+        vector<Poco::File>      validImages(DEF_KAO_TOC_ENTRY_NB_PTR);
+        validImages.resize(0);
+
+
+        //#1 - Validate index value from folder name
         //Use folder names as indexes in the kaomado table, use image file names as toc subentry indexes!
         stringstream strsfoldername;
         unsigned int ToCindex = 0;
+
+        //Parse the ToC index from the foldername
         strsfoldername << foldername;
-        strsfoldername >> ToCindex; //Parse the ToC index from the beginning of the foldername
+        strsfoldername >> ToCindex; 
 
         if( ToCindex >= m_tableofcontent.size() )
         {
@@ -440,45 +696,16 @@ namespace pmd2 { namespace filetypes
             return;
         }
 
-        //#3 - Convert the PNGs to tiled 4bpp images and color palettes
-        for( auto & animage : validImages )
+        //#2 - Find all our valid images
+        for(; itdir != itdirend; ++itdir ) 
         {
-            kao_file_wrapper wrap;
-            wrap.myfile = animage;
-            unsigned int datavecindex = 0;
-
-            try
-            {
-                datavecindex = InputAnImageToDataVector(wrap); //Add image to data vector
-            }
-            catch(exception e)
-            {
-                cerr <<"\n" <<e.what() <<"\n";
-                continue; //skip the rest in case we had issues with this image!
-            }
-
-            //Parse index from image name
-            Poco::Path   imgpath(animage.path());
-            stringstream sstrimgindex;
-            unsigned int imgindex = 0;
-
-            sstrimgindex << imgpath.getBaseName();
-            sstrimgindex >> imgindex;
-
-            //validate
-            if( imgindex >= m_tableofcontent.front()._portraitsentries.size() )
-            {
-                stringstream strserror;
-                strserror <<"The index of " <<imgpath.getFileName() <<", in folder name " <<foldername 
-                          <<", exceeds the number of slots available, " <<(m_nbtocsubentries-1) 
-                          <<" !\n"
-                          <<"Please, number the images from 0 to " <<(m_nbtocsubentries-1) <<"!\n";
-                assert(false);
-                throw domain_error( strserror.str() );
-            }
-
-            registerToCEntry( ToCindex, imgindex, datavecindex );
+            if( IsSupportedImageType( itdir->path() ) )
+                validImages.push_back(*itdir);
         }
+
+        //#3 - Import the images
+        for( auto & animage : validImages )
+            ImportImage( kao_file_wrapper{animage}, ToCindex, foldername );
     }
 
     void CKaomado::BuildFromFolder( std::string & folderpath, bool bBeQuiet )
@@ -515,10 +742,8 @@ namespace pmd2 { namespace filetypes
         unsigned int cptdirs = 0;
         for( Poco::DirectoryIterator ithandledir(folderpath); ithandledir != itdirend; ++ithandledir )
         {
-            //Need to wrap it so we keep the header clean.. It will probably get optimized out anyways by the compiler
-            kao_file_wrapper wrap;
-            wrap.myfile = *ithandledir;
-            HandleAFolder( wrap );
+            //Need to wrap it so we keep the header clean.. It will probably get optimized out by the compiler anyways
+            ImportDirectory( kao_file_wrapper{ (*ithandledir) } );
 
             ++cptdirs;
             if(!bBeQuiet)
@@ -532,7 +757,7 @@ namespace pmd2 { namespace filetypes
     void CKaomado::ExportToFolders( std::string          & folderpath, 
                                     const vector<string> * pfoldernames, 
                                     const vector<string> * psubentrynames,
-                                    eEXPORT_t              exporttype,
+                                    eSUPPORT_IMG_IO        exporttype,
                                     bool                   bBeQuiet )
     {
         //#1 - Go through the ToC, and make a sub-folder for each ToC entry
@@ -552,16 +777,11 @@ namespace pmd2 { namespace filetypes
                              <<std::setfill('0') <<std::setw(4) <<std::dec <<i;
 
             if( pfoldernames != nullptr && pfoldernames->size() > i && !pfoldernames->at(i).empty() )
-            {
                 outfoldernamess<< "_" << pfoldernames->at(i);
-            }
 
-            //Make an alias and exporter
-            string                     outfoldername = outfoldernamess.str();
-            vector<tocsubentry_t>    & curtocentry   = m_tableofcontent[i]._portraitsentries;
+            ExportAToCEntry( m_tableofcontent[i]._portraitsentries, outfoldernamess.str(), psubentrynames, exporttype );
 
-            ExportAToCEntry( m_tableofcontent[i]._portraitsentries, outfoldername, psubentrynames, exporttype );
-
+            //Increment counter here, for the completion indicator to work
             ++i;
             if( !bBeQuiet )
                 cout<<"\r" << (i*100) / m_tableofcontent.size() <<"%";
@@ -573,43 +793,45 @@ namespace pmd2 { namespace filetypes
     void CKaomado::ExportAToCEntry( const vector<tocsubentry_t> & entry, 
                                     const string                & outputfoldername, 
                                     const vector<string>        * psubentrynames,
-                                    eEXPORT_t                     exporttype )
+                                    eSUPPORT_IMG_IO              exporttype )
     {
         bool bmadeafolder = false; //Whether we made a folder already for this entry.
-                                   // We're using it this way, because we don't want to create empty folders!
+                                   // We're doing it this way, because we don't want to create empty folders 
+                                   // for entry containing only null pointers!
 
         for( tocsz_t j = 0; j < entry.size(); ++j )
         {
-            if( isToCSubEntryValid( entry[j] ) ) //If not a dummy value
+            if( isToCSubEntryValid( entry[j] ) ) //If not a dummy/null pointer
             {
+                stringstream strsOutputPath;
+
+                //Create a folder if we haven't yet
                 if(!bmadeafolder)
                 {
                     utils::DoCreateDirectory(outputfoldername);
                     bmadeafolder = true;
                 }
 
-                string       suffix = (psubentrynames!=nullptr && psubentrynames->size() > j )? (*psubentrynames)[j] : string();
-                stringstream ss;
-                ss << utils::AppendTraillingSlashIfNotThere(outputfoldername) << setfill('0') << setw(4)  << static_cast<uint32_t>(j); 
+                strsOutputPath <<utils::AppendTraillingSlashIfNotThere(outputfoldername) 
+                               <<setfill('0') <<setw(4) <<static_cast<uint32_t>(j); 
 
-                if( !suffix.empty() )
-                    ss <<"_" <<suffix;
+                if( psubentrynames != nullptr && psubentrynames->size() > j )
+                    strsOutputPath <<"_" << (*psubentrynames)[j];
 
-                if( exporttype == eEXPORT_t::EX_RAW )
+                if( exporttype == eSUPPORT_IMG_IO::RAW )
                 {
-                    //Don't append anything! We need only the filename, no extension!
-                    rawimg_io::ExportTo4bppRawImgAndPal( m_imgdata[entry[j]], ss.str() );
+                    //Don't append an extension! We need only the filename!
+                    ExportTo4bppRawImgAndPal( m_imgdata[entry[j]], strsOutputPath.str() );
                 }
-                else if( exporttype == eEXPORT_t::EX_BMP )
+                else if( exporttype == eSUPPORT_IMG_IO::BMP )
                 {
-                    ss <<"." << bmpio::BMP_FileExtension;
-                    bmpio::ExportTo4bppBMP( m_imgdata[entry[j]], ss.str() );
+                    strsOutputPath <<"." << BMP_FileExtension;
+                    ExportTo4bppBMP( m_imgdata[entry[j]], strsOutputPath.str() );
                 }
-                else
+                else //If all else fail, export to PNG !
                 {
-                    //If all fail, export to PNG !
-                    ss <<"." << pngio::PNG_FileExtension;
-                    pngio::ExportTo4bppPNG( m_imgdata[entry[j]], ss.str() );
+                    strsOutputPath <<"." << PNG_FileExtension;
+                    ExportTo4bppPNG( m_imgdata[entry[j]], strsOutputPath.str() );
                 }
             }
         }

@@ -16,7 +16,9 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/utility.hpp>
 using namespace std;
+using namespace utils::io;
 using namespace utils;
+
 
 namespace pmd2 { namespace filetypes 
 {
@@ -219,7 +221,7 @@ namespace pmd2 { namespace filetypes
         for( unsigned int cptfiles = 0; itdir != itdirend; ++cptfiles, ++itdir )
         {
             if( lambdavalidfile(*itdir) )
-                utils::ReadFileToByteVector( itdir->path(), m_SubFiles[cptfiles] );
+                ReadFileToByteVector( itdir->path(), m_SubFiles[cptfiles] );
         }
 
     }

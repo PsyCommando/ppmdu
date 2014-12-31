@@ -11,7 +11,7 @@ Description: Utilities for importing and exporting RIFF color palettes.
 #include <vector>
 #include <string>
 
-namespace riffpal_io
+namespace utils{ namespace io
 {
     static const std::string RIFF_PAL_Filext = "pal";
 
@@ -25,6 +25,6 @@ namespace riffpal_io
     //Export
     void ExportTo_RIFF_Palette( const std::vector<gimg::colorRGB24> & in_palette, std::vector<uint8_t> & out_riffpalette );
     void ExportTo_RIFF_Palette( const std::vector<gimg::colorRGB24> & in_palette, const std::string    & outputpath );
-};
+};};
 
 #endif

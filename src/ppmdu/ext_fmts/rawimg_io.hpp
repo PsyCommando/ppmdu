@@ -15,7 +15,7 @@ Description:
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/utils/utility.hpp>
 
-namespace rawimg_io
+namespace utils{ namespace io
 {
 //=====================================================================
 // Constants
@@ -73,15 +73,17 @@ namespace rawimg_io
     //Functions for exporting a raw headerless img, along with an accompanying riff palette
     // "filepath" is the path to the file to be outputed, it should end with an extension-less filename, 
     // because the file extensions for the palette and rawimg will be appended automatically!
-
-    bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp       & out_indexed, const std::string & filepath, utils::Resolution imgres );
-    bool ExportTo4bppRawImgAndPal(   const gimg::tiled_image_i4bpp & in_indexed,  const std::string & filepath );
+    bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp       & out_indexed, 
+                                     const std::string             & filepath, 
+                                     utils::Resolution               imgres );
+    bool ExportTo4bppRawImgAndPal  ( const gimg::tiled_image_i4bpp & in_indexed, 
+                                     const std::string             & filepath );
 
     //#TODO: Implement !
     //Functions for the custom PRI raw image container 
     // "filepath" is the path to the file to be outputed. You must append the file extension to this path yourselves.
     //bool ImportFrom4bppPRI( gimg::tiled_image_i4bpp       & out_indexed, const std::string & filepath );
     //bool ExportTo4bppPRI(   const gimg::tiled_image_i4bpp & in_indexed,  const std::string & filepath );
-};
+};};
 
 #endif

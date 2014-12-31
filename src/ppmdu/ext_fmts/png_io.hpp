@@ -10,16 +10,16 @@ Description: Utilities for importing and exporting PNG images and their palettes
 #include <string>
 
 
-namespace pmd2{ namespace pngio
+namespace utils{ namespace io
 {
     static const std::string PNG_FileExtension = "png";
 
     bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp & out_indexed,
-                                             const std::string       & filepath );
+                            const std::string       & filepath );
 
 
     bool ExportTo4bppPNG( const gimg::tiled_image_i4bpp & in_indexed,
-                                                 const std::string             & filepath );
+                          const std::string             & filepath );
 };};
 
 #endif

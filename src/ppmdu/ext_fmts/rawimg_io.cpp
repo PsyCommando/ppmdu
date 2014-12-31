@@ -5,9 +5,8 @@
 #include <Poco/File.h>
 #include <Poco/Path.h>
 using namespace std;
-using namespace riffpal_io;
 
-namespace rawimg_io
+namespace utils{ namespace io
 {
     //Functions for exporting a raw headerless img, along with an accompanying riff palette
     bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp & out_indexed, const std::string & filepath, utils::Resolution imgres )
@@ -36,7 +35,7 @@ namespace rawimg_io
 
         try
         {
-            vector<uint8_t> imgdat = utils::ReadFileToByteVector( rawimgpath.toString() );
+            vector<uint8_t> imgdat = ReadFileToByteVector( rawimgpath.toString() );
             gimg::ParseTiledImg<gimg::tiled_image_i4bpp>( imgdat.begin(), imgdat.end(), imgres, out_indexed );
             (out_indexed.getPalette()) = ImportFrom_RIFF_Palette( riffpath.toString() );
         }
@@ -63,7 +62,7 @@ namespace rawimg_io
         try
         {
             gimg::WriteTiledImg( itbins, in_indexed );
-            utils::WriteByteVectorToFile( rawimgpath.toString(), outputimage );
+            WriteByteVectorToFile( rawimgpath.toString(), outputimage );
         }
         catch( exception e )
         {
@@ -98,4 +97,4 @@ namespace rawimg_io
         //#TODO: Implement !
         return false;
     }
-};
+};};

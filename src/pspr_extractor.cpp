@@ -16,6 +16,7 @@ using namespace ::pmd2;
 using ::pmd2::graphics::CCharSpriteData;
 using ::pmd2::graphics::sprite_parser;
 //using ::pmd2::graphics::export_8bppTiled_to_png;
+using namespace ::utils::io;
 using ::utils::GetPathWithoutFileExt;
 using ::utils::GetFilenameFromPath;
 using ::utils::GetPathOnly;
@@ -164,7 +165,7 @@ int main( int argc, const char * argv[] )
 
         //Read File to memory
         vector<uint8_t> filedata;
-        utils::ReadFileToByteVector( inputpath, filedata );
+        ReadFileToByteVector( inputpath, filedata );
 
         if( FileIsValidSprite(filedata) ) //Validate
         {

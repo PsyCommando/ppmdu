@@ -18,7 +18,7 @@
 
 #include <ppmdu/utils/cmdline_util.hpp>
 using namespace utils::cmdl;
-
+using namespace utils::io;
 using namespace std;
 using namespace pmd2;
 using namespace pmd2::compression;
@@ -101,13 +101,13 @@ namespace ppx_compress
 
         if( !params.isQuiet )
             cout <<"\nWriting data to : \n" << outputfile.toString() <<"\n\n";
-        utils::WriteByteVectorToFile( outputfile.toString(), compressed );
+        WriteByteVectorToFile( outputfile.toString(), compressed );
     }
 
     void ReadAndCompressFile( const pxcomp_params & params ) // const string & inputpath, const string & outputpath, ePXCompLevel compressionlevel, bool isZealous )
     {
         vector<uint8_t> filedata;
-        utils::ReadFileToByteVector( params.inputpath.toString(), filedata );
+        ReadFileToByteVector( params.inputpath.toString(), filedata );
 
         DoCompress( filedata.begin(), filedata.end(), params ); //params.inputpath.getFileName(), outputpath, compressionlevel, isZealous );
     }

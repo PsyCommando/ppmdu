@@ -9,7 +9,7 @@ Description: Interface for loading bmp files into common containers, encapsulati
 #include <ppmdu/containers/tiled_image.hpp>
 #include <string>
 
-namespace pmd2{ namespace bmpio
+namespace utils{ namespace io
 {
     static const std::string BMP_FileExtension = "bmp";
 

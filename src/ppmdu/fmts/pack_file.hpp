@@ -40,9 +40,7 @@ namespace pmd2 { namespace filetypes
 			:_fileOffset(offset), _fileLength(length)
 		{}
 
-        virtual unsigned int size()const{return ENTRY_LEN;}
-        //virtual uint8_t & operator[](unsigned int index);
-        //virtual const uint8_t & operator[](unsigned int index)const;
+        inline unsigned int size()const{return ENTRY_LEN;}
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
@@ -63,10 +61,8 @@ namespace pmd2 { namespace filetypes
         uint32_t _zeros, 
                  _nbfiles;
 
-        virtual unsigned int size()const{return HEADER_LEN;}
-        //virtual uint8_t & operator[](unsigned int index);
-        //virtual const uint8_t & operator[](unsigned int index)const;
-        bool isValid()const;
+        inline unsigned int size()const{return HEADER_LEN;}
+        bool                isValid()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
@@ -76,16 +72,6 @@ namespace pmd2 { namespace filetypes
 //                                Constants
 //===============================================================================
 
-    //#TODO: Move those to the CPack class !
-    //Pack file format stuff 
-    //static const uint32_t SZ_HEADER_START                 = 0x4; // The number of zeros at the beginning of the pack file header
-    //static const uint8_t     HEADER_START[ SZ_HEADER_START ] =      // The starting Zeros at the beginning of the pack file header
-    //{
-    //    0x00, 0x00, 0x00, 0x00
-    //};
-
-	//static const uint32_t OFFSET_NB_FILES	              = 0x4; // Offset at which the nb of files is stored in the pack file
-    //static const uint32_t SZ_NB_FILES_ENTRY               = 0x4; // The size in bytes of the value holding the nb of files in the pack file header.
 	static const uint32_t OFFSET_TBL_FIRST_ENTRY          = 0x8; // First file's entry in the offset table
     static const uint32_t SZ_OFFSET_TBL_ENTRY             = 0x8; // The size in bytes of one entry in the offset table.
 
@@ -95,47 +81,6 @@ namespace pmd2 { namespace filetypes
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
-
-   // static const uint8_t     PF_PADDING_CHAR   = 0xFF; // Padding character used by the Pack file for padding files and the header
-
-//===============================================================================
-//								CRawFile
-//===============================================================================
-//Container for individual files data. 
-    //class CRawFile
-    //{
-    //public:
-    //    //-------------------------------
-    //    //Constructors & Destructors
-    //    //-------------------------------
-    //    CRawFile( std::vector<uint8_t> * ptrrawdata = nullptr );
-    //    CRawFile( const CRawFile & other );
-    //    CRawFile( CRawFile && other ); //move constructor
-    //    virtual ~CRawFile();
-
-    //    //-------------------------------
-    //    //Operators
-    //    //-------------------------------
-    //    CRawFile& operator=(const CRawFile& other);
-    //    CRawFile& operator=(CRawFile&& other); //move operator
-
-    //    //-------------------------------
-    //    //Accessors
-    //    //-------------------------------
-    //    std::vector<uint8_t> & getRawFileData();
-    //    void setRawDataVector( std::vector<uint8_t> * ptrrawdata );
-    //    uint32_t getFileLength()const;
-
-    //    //-------------------------------
-    //    //Methods
-    //    //-------------------------------
- 
-    //    //Compute the file's padding bytes so it ends on a 16 bytes divisible offset, and the next file starts on a 16 bytes aligned offset! 
-    //    void ComputeFilePaddingBytes( std::vector<uint8_t>& padding )const;
-
-    //private:
-    //    std::unique_ptr< std::vector<uint8_t> > m_pfilerawdata;
-    //};
 
 //===============================================================================
 //								       CPack
@@ -157,7 +102,6 @@ namespace pmd2 { namespace filetypes
 
         //Return the predicted header length. This is also the predicted offset of the first file.
         // IT DOES NOT TAKE INTO ACCOUNT THE FORCED FIRST FILE OFFSET !
-        //uint32_t getCurrentPredictedHeaderLength()const;
         uint32_t getCurrentPredictedHeaderLengthWithForcedOffset()const;
 
         //Whether the first file should be at this offset as much as possible. For special pack files in PMD2. 
@@ -216,22 +160,15 @@ namespace pmd2 { namespace filetypes
         static uint32_t PredictHeaderSize( uint32_t nbsubfiles );
         //Same as above, but this one takes into account ONLY the BARE MINIMUM in terms of header padding.
         static uint32_t PredictHeaderSizeWithPadding( uint32_t nbsubfiles );
-
-        //Used to calculate the size of a packfile header based only on the parameters of the method
-        // It takes into account ONLY the BARE MINIMUM in terms of header padding.
-        //uint32_t CalculateHeaderSizeFromParameters( uint32_t nbsubfiles )const;
-
         //Calculate the expected total filesize from the current object's state
         uint32_t PredictTotalFileSize()const;
         
         
         //------- Raw Reading Pack File Operations --------
-        //Read from the raw bytes of a pack file the number of subfiles in it
-        //uint32_t ReadNbSubFilesFromPackFile      ( types::bytevec_t & filerawdata )const;
         types::constitbyte_t ReadHeader( types::constitbyte_t itbegin, pfheader & out_mahead )const;
 
         //Reads the File Offset Table from the raw pack file data into the object's FOT
-        void     ReadFOTFromPackFile   ( types::constitbyte_t itbegin, unsigned int nbsubfiles );
+        void     ReadFOTFromPackFile( types::constitbyte_t itbegin, unsigned int nbsubfiles );
 
         //Reads subfiles from the raw file data based on what is currently in the object's File Offset Table
         // The iterator must be at the beginning of the entire file's raw data !
@@ -243,7 +180,7 @@ namespace pmd2 { namespace filetypes
         uint32_t CPack::IsPackFileUsingForcedFFOffset( types::constitbyte_t itbeg, unsigned int nbsubfiles )const;
 
         //Opens for copying to the subfile vector a single file. 
-        void     ReadLooseFileToFileDataVector   ( const std::string & inpath, unsigned long long filesize, uint32_t insertatindex );
+        void     ReadLooseFileToFileDataVector( const std::string & inpath, unsigned long long filesize, uint32_t insertatindex );
 
         //------- Raw Writing Pack File Operations --------
 
@@ -256,13 +193,10 @@ namespace pmd2 { namespace filetypes
         //Write a subfile from the subfile vector to the specified file. 
         void WriteSubFileToFile( types::bytevec_t & file, const std::string & path, unsigned int fileindex );
 
-
-
         //-------------------------------
         //Variables
         //-------------------------------
-        uint32_t m_ForcedFirstFileOffset;
-
+        uint32_t                      m_ForcedFirstFileOffset;
         std::vector<fileIndex>        m_OffsetTable;
         std::vector<types::bytevec_t> m_SubFiles;
     };

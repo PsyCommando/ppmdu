@@ -4,7 +4,7 @@
 #include <exception>
 using namespace std;
 
-namespace utils
+namespace utils{ namespace io
 {
     void ReadFileToByteVector(const std::string & path, std::vector<uint8_t> & out_filedata)
     {
@@ -51,4 +51,4 @@ namespace utils
 
         outputfile.write(reinterpret_cast<const char*>(filedata.data()), filedata.size());
     }
-};
+};};

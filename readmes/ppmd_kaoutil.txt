@@ -6,7 +6,7 @@ Released   : 2014/12/05
 Written by : psycommando@gmail.com
 
 The entire sourcecode for all my tools that are part of this suite is available here:
-https://ppmd2utilslib.codeplex.com/
+https://github.com/PsyCommando/ppmdu/
 
 ----------------------------------------------------------------------------------------------------
 Changelog:

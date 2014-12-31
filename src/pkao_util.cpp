@@ -13,6 +13,7 @@ Description:  Code for the kaomado utility
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/ext_fmts/rawimg_io.hpp>
 #include <ppmdu/ext_fmts/riff_palette.hpp>
+#include <ppmdu/ext_fmts/supported_io.hpp>
 #include <sstream>
 #include <iostream>
 #include <string>
@@ -23,9 +24,11 @@ Description:  Code for the kaomado utility
 #include <Poco/File.h>
 #include <Poco/Exception.h>
 using namespace utils::cmdl;
+using namespace utils::io;
 using namespace std;
 using namespace pmd2;
 using namespace utils;
+
 using filetypes::CKaomado;
 
 namespace pkao_util
@@ -34,7 +37,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.21";
+    static const string PVERSION                            = "0.3";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";
@@ -78,7 +81,7 @@ namespace pkao_util
         { 
             OPTION_SET_EXPORT_TO_RAW_IMG,        
             0,
-            "Will output the images as a raw 4bpp tiled \"." + rawimg_io::RawImg_FileExtension + "\" image, along with a \"." + riffpal_io::RIFF_PAL_Filext + "\" 16 colors RIFF palette.",
+            "Will output the images as a raw 4bpp tiled \"." + RawImg_FileExtension + "\" image, along with a \"." + RIFF_PAL_Filext + "\" 16 colors RIFF palette.",
         },
         //Will make the program skip string search as often as possible
         {
@@ -411,18 +414,20 @@ namespace pkao_util
     {
         try
         {
+            Poco::Path outpath = PrepareOutputPath( false, parameters );
+
+            //Construct the byte vector and the kaomado object
             if( !parameters.bisQuiet )
                 cout<<"Allocating..\n";
-            Poco::Path       outpath = PrepareOutputPath( false, parameters );
             CKaomado         kao;
             types::bytevec_t filedata;
 
-            
+            //Read the file to the byte vector
             if( !parameters.bisQuiet )
                 cout<<"Reading file..\n";
-
             ReadFileToByteVector( parameters.inputpath.toString(), filedata );
 
+            //Parse the kaomado
             if( !parameters.bisQuiet )
             {
                 cout << "\nUnpacking file : \n" 
@@ -430,21 +435,22 @@ namespace pkao_util
 		            <<"into:\n" 
                     << "   " <<outpath.toString() <<"\n" <<endl;
             }
-
             kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
 
-            const vector<string> * ppokenames = ( (parameters.pokenames.empty() )? nullptr : &parameters.pokenames );
-            const vector<string> * pfacenames = ( (parameters.facenames.empty() )? nullptr : &parameters.facenames );
-            CKaomado::eEXPORT_t    outputTy;
+            //Then depending on what the user gave us, we convert and output the kaomado data
+            const vector<string> *ppokenames = ( (parameters.pokenames.empty() )? nullptr : &parameters.pokenames );
+            const vector<string> *pfacenames = ( (parameters.facenames.empty() )? nullptr : &parameters.facenames );
+            eSUPPORT_IMG_IO       outputTy;
 
             if( parameters.bshouldWriteRawImg )
-                outputTy = CKaomado::eEXPORT_t::EX_RAW;
+                outputTy = eSUPPORT_IMG_IO::RAW;
             else if( parameters.bExportAsBmp )
-                outputTy = CKaomado::eEXPORT_t::EX_BMP;
+                outputTy = eSUPPORT_IMG_IO::BMP;
             else
-                outputTy   = CKaomado::eEXPORT_t::EX_PNG;
+                outputTy = eSUPPORT_IMG_IO::PNG;
 
-            kao.ExportToFolders( outpath.toString(), ppokenames, pfacenames, outputTy, parameters.bisQuiet );
+            filetypes::KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet );
+            mywriter( kao, outpath.toString(), outputTy );
 
             if( !parameters.bisQuiet )
                 cout << "Done! Deallocating..\n"; 
@@ -484,12 +490,15 @@ namespace pkao_util
             }
 
             kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
-            types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
+            //types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
 
             if( !parameters.bisQuiet )
                 cout<<"Writing to file..\n";
 
-            WriteByteVectorToFile( outpath.toString(), filedata );
+            filetypes::KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet );
+            mywriter( kao, outpath.toString() );
+
+            //WriteByteVectorToFile( outpath.toString(), filedata );
 
 
             if( !parameters.bisQuiet )

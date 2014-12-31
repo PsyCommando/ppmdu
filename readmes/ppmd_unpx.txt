@@ -6,10 +6,11 @@ Released   : 2014/10/02
 Written by : psycommando@gmail.com
 
 The entire sourcecode for all my tools that are part of this suite is available here:
-https://ppmd2utilslib.codeplex.com/
+https://github.com/PsyCommando/ppmdu/
 
+----------------------------------------------------------------------------------------------------
 Changelog:
-----------
+----------------------------------------------------------------------------------------------------
 - 0.1 : Initial release!
 - 0.2 : (2014/11/05)Several improvement were made, mostly in terms of structure.. 
         SIR0+Sprites now have the file extension ".wan" appended to them
@@ -26,23 +27,30 @@ Changelog:
          * Slight performance improvement
          * Added "-q" option to disable console progress output.
 
+----------------------------------------------------------------------------------------------------
 License info:
--------------
+----------------------------------------------------------------------------------------------------
 My code and tools are basically public domain / CC0. 
 Free to re-use in any ways you may want to!
 No crappyrights, all wrongs reversed! :3
 
-Well, not including any libraries I'm using that have their own licenses of course!
+This is not including any libraries I'm using that have their own licenses of course!!
+The license for each of these libraries is indicated in their respective header files,
+and they're all isolated in the "libraries" subfolder !
 
+----------------------------------------------------------------------------------------------------
 Special Thanks:
-----------------
-A big thanks to Nerketur for his help !
-Thanks to the people from GBATemp and Project Pokemon!
-Many thanks to Zhorken for reversing most of the "PX" compression format!
-https://github.com/Zhorken
+----------------------------------------------------------------------------------------------------
+-> Many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
+-> A big thanks to Nerketur for his help !
+-> A big thanks to TruePikachu for his help !
+-> A big thanks to Evandixon for his help !
+-> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> ..and anyone else I may have forgotten about !
 
+----------------------------------------------------------------------------------------------------
 About:
-------
+----------------------------------------------------------------------------------------------------
 A quick little utility for extracting AT4PX and PKDPX compressed files.
 
 It never locks to wait for input, even in case of errors. So it can be safely launched from another
@@ -51,14 +59,17 @@ script or program.
 The source code for all my tools in one can be found over there :
 https://ppmd2utilslib.codeplex.com/
 
+------------------------------
 --Random Uninteresting Fact--:
+------------------------------
 The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
 He turned out really good after ingesting so many gummies and pretty much carried the team 
 most of the game! XD
 And, I just love that pokemon, so yeah, that's pretty much it..
 
+----------------------------------------------------------------------------------------------------
 How to use:
------------
+----------------------------------------------------------------------------------------------------
 Simply drag and drop a compressed AT4PX or PKDPX file onto the executable, and the file's content
 will be extracted in the current working directory.
 
@@ -75,8 +86,8 @@ You can also use the console if you want to.
 The first parameter is the compressed file, while the output is the path where the decompressed 
 data will be outputed to. 
        
-
+----------------------------------------------------------------------------------------------------
 About AT4PX and PKDPX files:
-----------------------------
+----------------------------------------------------------------------------------------------------
 See my thread here for links to my notes and etc: 
 http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes

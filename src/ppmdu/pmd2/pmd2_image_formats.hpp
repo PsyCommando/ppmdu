@@ -33,15 +33,16 @@ namespace pmd2 { namespace graphics
 //==================================================================
 
     //Known Image Resolultions #TODO: Make a table with those
-    static const utils::Resolution RES_INVALID       ={  0,  0 };
-    static const utils::Resolution RES_8x8_SPRITE    ={  8,  8 }; 
-    static const utils::Resolution RES_16x8_SPRITE   ={ 16,  8 }; 
-    static const utils::Resolution RES_16x16_SPRITE  ={ 16, 16 };
-    static const utils::Resolution RES_16x32_SPRITE  ={ 16, 32 };
-    static const utils::Resolution RES_32x32_SPRITE  ={ 32, 32 };
-    static const utils::Resolution RES_PORTRAIT      ={ 40, 40 };
+    static const utils::Resolution RES_INVALID      = {  0,  0 };
+    static const utils::Resolution RES_8x8_SPRITE   = {  8,  8 }; 
+    static const utils::Resolution RES_16x8_SPRITE  = { 16,  8 }; 
+    static const utils::Resolution RES_16x16_SPRITE = { 16, 16 };
+    static const utils::Resolution RES_16x32_SPRITE = { 16, 32 };
+    static const utils::Resolution RES_32x32_SPRITE = { 32, 32 };
+    static const utils::Resolution RES_PORTRAIT     = { 40, 40 };
 
 
+     
     //struct entryrestable
     //{
     //    uint32_t          bytesz;
@@ -67,19 +68,6 @@ namespace pmd2 { namespace graphics
 //==================================================================
 
     /*******************************************************
-        rgb24pal_and_8bpp_tiled
-            A simple utility struct to make things 
-            less confusing than by using std::pairs !
-
-            #REMOVEME: Not used anymore
-    *******************************************************/
-    //struct rgb24pal_and_8bpp_tiled
-    //{
-    //    graphics::rgb24palette_t   _palette;
-    //    graphics::indexed8bppimg_t _8bpp_timg;
-    //};
-
-    /*******************************************************
         RLE_TableEntry
             Simple struct containing the raw data of an
             RLE table in-between the time its stored in 
@@ -100,135 +88,6 @@ namespace pmd2 { namespace graphics
 
         uint32_t & operator[]( unsigned int index );
     };
-
-//==================================================================
-// Image Exporter
-//==================================================================
-
-
-    //#TODO: Write a functor version that takes a folder path
-    //       and output all images converted in that folder!
-
-    /*******************************************************
-        export_8bppTiled_to_png
-            Functor for exporting several 8 bpp indexed
-            tiled image with their palette, to a png image
-            into the same folder.
-
-            Outputed images will be numbered in the order
-            they are handled.
-    *******************************************************/
-    //class export_8bppTiled_to_png
-    //{
-    //public:
-    //    /*
-    //        - outputfolderpath : Sets the export path for the all the images to be exported by the functor.
-    //        - filenameprefix   : Set the prefix to put before the number given to every image as filename.
-    //    */
-    //    export_8bppTiled_to_png( const std::string & outputfolderpath, const std::string & filenamesuffix = "" );
-
-    //    //Handles a struct containing both palette and 8bpp tiled image
-    //    //void operator()( const bitmap8bpp_t & indexed8bppbitmap, const rgb24palette_t & palette );
-
-    //    void operator()(  const indexed8bppimg_t & indexed8bpptiledimg, const rgb24palette_t & palette );
-
-    //    //Handles a struct containing both palette and 8bpp tiled image
-    //    //void operator()( const rgb24pal_and_8bpp_tiled & combopalimg, 
-    //    //                 const std::string             * psuffixoverride = nullptr, 
-    //    //                 const uint32_t                * pnumberoverride = nullptr );
-
-    //private:
-    //    unsigned int m_cptimgname;
-    //    std::string  m_suffix;
-    //    std::string  m_folder;
-    //};
-
-
-    /*******************************************************
-        Export_8bppIndexedBitmapToPNG
-            Exports an indexed 8bpp image to PNG, using the 
-            specified palette. 
-    *******************************************************/
-    void Export_8bppIndexedBitmapToPNG( const bitmap8bpp_t         & indexedimg, 
-                                        const rgb24palette_t       & palette,
-                                        const std::string          & filepath );
-
-//==================================================================
-// Image Importer
-//==================================================================
- 
-    /*******************************************************
-        TODO!
-        Import8bppPNG_To_8bppImgAndPal
-            Imports an indexed 8bpp PNG image to a palette, 
-            and a raw 8bpp bitmap
-    *******************************************************/
-    void importPNG_To_8bppImgAndPal( std::vector<uint8_t> & out_indexedtiled8bppimg,
-                                     rgb24palette_t       & out_palette,
-                                     const std::string    & filepath );
-
-    //void importPNG_To_4bppImgAndPal( indexed4bppimg_t  & out_indexedtiled4bppimg,
-    //                                 rgb24palette_t    & out_palette,
-    //                                 const std::string & filepath );
-
-//==================================================================
-// Image Format Converter
-//==================================================================
-    //unsigned int GetTiledIndexFromUntiledImageCoord( unsigned int x, unsigned int y, unsigned int height ); //#REMOVEME: DEPRECATED since tiled_image container
-
-    /*******************************************************
-        Untile4bpp
-            Untile sprites, portraits, and other tiled 
-            image data. 
-            Takes 4bpp tiled image as input
-    *******************************************************/
-    //void Untile4bpp( unsigned int             width, 
-    //                 unsigned int             height,
-    //                 const indexed8bppimg_t & in_timg, 
-    //                 bitmap8bpp_t           & out_bitmap );
-
-    /*******************************************************
-        Untile8bpp
-            Untile sprites, portraits, and other tiled 
-            image data. 
-            Takes 8bpp tiled image as input
-    *******************************************************/
-    //void Untile8bpp( unsigned int                 width, 
-    //                 unsigned int                 height,
-    //                 const std::vector<uint8_t> & in_timg, 
-    //                 bitmap8bpp_t               & out_bitmap );
-
-
-
-    /*******************************************************
-        Tile8bppBitmap
-            Convert a 8bpp bitmap to a "tiled" sequence of
-            bytes.
-    *******************************************************/
-    //void Tile8bppBitmapTo4bppRaw( const bitmap8bpp_t & bitmap, indexed4bppimg_t & out_timg );
-
-
-
-    /*******************************************************
-        Expand4bppTo8bpp
-            Turns a 4bpp image into a 8bpp one. Simply copy 
-            each nybbles into its own byte!
-    *******************************************************/
-    std::vector<uint8_t> Expand4bppTo8bpp( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend );
-
-    std::vector<uint8_t> Shrink8bppTo4bpp( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend );
-    void Shrink8bppTo4bpp( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend, std::vector<uint8_t> & output );
-
-//==================================================================
-// #TODO: check if those are actually useful!
-//==================================================================
-    //Convert an indexed 8 bits bitmap to a 24 bits RGB bitmap
-    //void ConvertToRGB_24bits_Raw_Bitmap( const std::vector< std::vector<uint8_t> > & in_indexed4bpp_bitmap, 
-    //                                     std::vector< std::vector<colorRGB24> >    & out_24bits_rgb_bitmap );
-
-    ////Convert an indexed 8 bits bitmap to a 24 bits RGB EasyBmp bitmap
-    //void ConvertToRGBA_32bits_Easy_Bitmap( const std::vector< std::vector<uint8_t> > & in_indexed4bpp_bitmap, 
-    //                                       BMP                                       & out_32bits_rgba_bmp );
 
 //==================================================================
 // PMD2 Sprite RLE Functions

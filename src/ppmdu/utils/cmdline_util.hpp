@@ -166,6 +166,8 @@ namespace utils{ namespace cmdl
         void PrintTitle();
 
         // -- Overrides --
+
+        //Those return their implementation specific arguments, options, and extra parameter lists.
         virtual const std::vector<argumentparsing_t> & getArgumentsList()const    = 0;
         virtual const std::vector<optionparsing_t>   & getOptionsList()const      = 0;
         virtual const argumentparsing_t              * getExtraArg()const         = 0; //Returns nullptr if there is no extra arg. Extra args are args preceeded by a "+" character, usually used for handling files in batch !

@@ -5,7 +5,7 @@
 #include <algorithm>
 using namespace std;
 
-namespace pmd2{ namespace bmpio
+namespace utils{ namespace io
 {
     //A little operator to make dealing with finding the color index easier
     inline bool operator==( const RGBApixel & a, const gimg::colorRGB24 & b )

@@ -162,6 +162,9 @@
     <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmd_packfileutil.cpp">
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

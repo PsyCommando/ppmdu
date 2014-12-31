@@ -19,6 +19,7 @@ Description:
 #include <Poco/Path.h>
 using namespace ::std;
 using namespace ::pmd2;
+using namespace ::utils::io;
 using namespace ::utils::cmdl;
 using namespace ::utils;
 
@@ -33,7 +34,7 @@ namespace ppmd_packfileutil
         { ALIGN_FIRST_OFFSET_SYMBOL, 1 }, //Align first entry to forced offset
     };
 
-    static const string OUTPUT_FOLDER_SUFFIX = "_out";
+    static const string OUTPUT_FOLDER_SUFFIX; //= "_out";
     static const string EXE_NAME             = "ppmd_pack.exe";
     static const string PVERSION             = "0.5";
 
@@ -299,12 +300,13 @@ int main( int argc, const char * argv[] )
     }
 
 #ifdef _DEBUG
-#ifdef WIN32
-	system("pause");
-#elif  _linux_
-    char a;
-    std::cin >> a;
-#endif
+    #ifdef WIN32
+	    system("pause");
+    #elif  _linux_
+        char a;
+        cout << "\nPress an alphanumeric key, then enter to quit!\n";
+        std::cin >> a;
+    #endif
 #endif
 
     return result;
