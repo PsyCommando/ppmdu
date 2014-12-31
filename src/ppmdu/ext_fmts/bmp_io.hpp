@@ -15,7 +15,10 @@ namespace utils{ namespace io
 
     //#TODO: Make the return type a "gimg::tiled_image_i4bpp" instead.
     bool ImportFrom4bppBMP( gimg::tiled_image_i4bpp & out_indexed,
-                            const std::string       & filepath );
+                            const std::string       & filepath,
+                            unsigned int              forcedwidth     = 0,
+                            unsigned int              forcedheight    = 0,
+                            bool                      erroronwrongres = false );
 
 
     bool ExportTo4bppBMP( const gimg::tiled_image_i4bpp & in_indexed,

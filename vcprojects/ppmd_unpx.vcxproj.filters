@@ -165,6 +165,9 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppx_extractor.cpp">

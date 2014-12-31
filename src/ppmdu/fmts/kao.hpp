@@ -9,10 +9,6 @@ There is only one known .kao file named "kaomado.kao".
 
 It should be noted that .kao files are headerless.
 
-#TODO: Gotta make sure that we can properly handle ToC entries
-       having a non-default size, once we're sure the game can handle
-       bigger ToC entries.
-
 A big thanks to Zhorken for reversing most of the format!
 https://github.com/Zhorken
 */
@@ -23,10 +19,7 @@ https://github.com/Zhorken
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/ext_fmts/supported_io.hpp>
 #include <vector>
-//#include <memory>
-//#include <thread>
 #include <string>
-//#include <map>
 #include <utility>
 
 using namespace utils::io;
@@ -89,20 +82,48 @@ namespace pmd2{ namespace filetypes
     /********************************************************************************  
         KaoParser
             A functor for loading/importing a kaomado file into a CKaomado object
-            If path is folder it tries to import the folder structure.
-            If path is a kaomado.kao file it imports the file.
+                * If path is folder it tries to import the folder structure.
+                * If path is a kaomado.kao file it imports the file.
     ********************************************************************************/
     class KaoParser
     {
+        typedef kao_toc_entry::subentry_t                         tocsubentry_t;
+        typedef std::vector<kao_toc_entry::subentry_t>::size_type tocsz_t; 
+        static const unsigned int SUBENTRY_SIZE = kao_toc_entry::SUBENTRY_SIZE;
     public:
-        KaoParser()
-            :m_pImportTo(nullptr)
+        KaoParser( bool bequiet = false )
+            :m_pImportTo(nullptr), m_bQuiet(bequiet)
         {}
 
-        CKaomado & operator()( const std::string & importfrom, CKaomado & importto );
+        void operator()( const std::string & importfrom, CKaomado & importto );
+
+    private:
+
+        void                 ParseKaomado();
+        types::constitbyte_t ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, types::constitbyte_t itrawtocentry );
+        uint32_t             GetLenRawPortraitData( types::constitbyte_t itdatabeg, tocsubentry_t entryoffset );
+
+        void ImportFromFolders();
+        void ImportDirectory( kao_file_wrapper & foldertohandle );
+
+        //tocindex   = the toc entry that will contain this subentry
+        //foldername = the name of the parent directory containing the imagefile we're importing.
+        void ImportImage( kao_file_wrapper & imagefile, unsigned int tocindex, const std::string & foldername );
+        
+        //Parse, convert, and insert an image file into the data vector, and return the index it got inserted at!
+        std::vector<kao_toc_entry>::size_type AddImageToDataVector( kao_file_wrapper & imagefile );
 
     private:
         CKaomado * m_pImportTo;
+        bool       m_bQuiet;
+
+        //Temporary variables - Parse Kaomado
+        std::vector<uint8_t>                 m_kaomadoBuff;     //Buffer containing the kaomado file's raw data.
+        std::vector<uint8_t>                 m_imgBuffer;       //Temp buffer for decompressing images
+        std::vector<uint8_t>::const_iterator m_itInBeg;
+
+        //Temporary variables - Parse Folders
+        const std::string                   *m_pInputPath;
     };
 
 
@@ -122,8 +143,11 @@ namespace pmd2{ namespace filetypes
                    const std::vector<std::string> *  psubentrynames   = nullptr,
                    bool                              zealousstrsearch = true, 
                    bool                              bequiet          = false )
-            :m_bZealousStrSearch(zealousstrsearch), m_pExportFrom(nullptr), m_bQuiet(bequiet),
-             m_pFolderNames(pfoldernames), m_pSubEntryNames(psubentrynames),
+            :m_bZealousStrSearch(zealousstrsearch), 
+             m_pExportFrom(nullptr), 
+             m_bQuiet(bequiet),
+             m_pFolderNames(pfoldernames), 
+             m_pSubEntryNames(psubentrynames),
              m_itImgBuffPushBack(std::back_inserter(m_imgBuff)),
              m_itOutBuffPushBack(std::back_inserter(m_outBuff))
         {}
@@ -172,15 +196,11 @@ namespace pmd2{ namespace filetypes
 //==================================================================
 // Classes
 //==================================================================
-    /*
+    /******************************************************************
         CKaomado
-            This object can handle the loading/writing of content 
-            from a kaomado file, along with various other operations.
+            Container for portrait data found in the kaomado.kao file.
 
-            This object is not a throwaway object, and can be 
-            re-used, or used for storage.
-
-    */
+    ******************************************************************/
     class CKaomado
     {
         friend class KaoWriter;
@@ -188,68 +208,15 @@ namespace pmd2{ namespace filetypes
     public:
         //Typedef:
         typedef kao_toc_entry::subentry_t                                             tocsubentry_t;
-        typedef std::vector<kao_toc_entry::subentry_t>::size_type                     tocsz_t; 
+        typedef std::vector<kao_toc_entry::subentry_t>::size_type                     tocsz_t;
         typedef gimg::tiled_indexed_image<gimg::pixel_indexed_4bpp, gimg::colorRGB24> data_t;
 
         static const unsigned int SUBENTRY_SIZE = kao_toc_entry::SUBENTRY_SIZE;
-
-        //enum struct eSUPPORT_IMG_IO
-        //{
-        //    EX_INVALID,
-        //    EX_PNG,
-        //    EX_RAW,
-        //    EX_BMP,
-        //};
-
 
         //When building from scratch
         // Need to specify the initial desired sizes and quantites, to pre-allocate memory. 
         // The internal vectors are still size == 0 after this!
         CKaomado( unsigned int nbentries = DEF_KAO_TOC_NB_ENTRIES, unsigned int nbsubentries = DEF_KAO_TOC_ENTRY_NB_PTR );
-        
-        //--------
-        
-        //Takes an iterator to the beginning of the entire kaomado file data, and one to the end of 
-        // the entire kaomado file data. Return true if it works, and false on failure.
-        bool ReadEntireKaomado( types::constitbyte_t itinbegin, types::constitbyte_t itinend, bool bBeQuiet = false );
-
-        //The object will write its current content to the returned vector (Move constructor make this efficient)
-        // DO NOT USE if the m_data vector is empty. You HAVE to put some data in before. Either manually, or
-        // through "Read_Data" !
-        std::vector<uint8_t> WriteKaomado( bool bBeQuiet = false, bool bZealousStringSearchEnabled = true ); //Move constructor avoid the copy for returning by value!
-
-        //Import content from filestructure
-        /*
-            This is one of the most practical aspect of this class. Rebuilding a kaomado from
-            a directory + file structure.
-            Just give the path to the root folder containing all the entries.
-
-            The directory structure must be the same as what the "ExportToFolders" method exports. 
-
-            Everything must be in uncompressed form(png, or bmp images, or even just raw palettes and raw images)
-        */
-        void BuildFromFolder( std::string & folderpath, bool bBeQuiet = false );
-
-        //Export content to filestructure
-        /*
-            This is one of the most practical aspect of this class. Exporting a kaomado to
-            a directory + file structure.
-
-            Just give the path to the root folder containing all the entries.
-
-            The optional "kaoentrynames" vector is a list of names to give to the folders in addition to their
-            numerical names.
-
-            The resulting folder structure can be easily re-built into a kaomado using the "BuildFromFolder"
-            method.
-
-            Everything must be in uncompressed form(png, or bmp images, or even just raw palettes and raw images)
-        */
-        void ExportToFolders( std::string                    & folderpath, 
-                              const std::vector<std::string> *  pfoldernames   = nullptr, 
-                              const std::vector<std::string> *  psubentrynames = nullptr,
-                              eSUPPORT_IMG_IO                  exporttype     = eSUPPORT_IMG_IO::PNG, 
-                              bool                              bBeQuiet       = false );
 
     private:
         //Write an entry in the toc at the index specified, in the subentry specified. The value written is the data index in the m_imgdata vector
@@ -263,58 +230,19 @@ namespace pmd2{ namespace filetypes
             return (entry > 0);
         }
 
-        //Write all the valid portraits out for a single ToC entry
-        void ExportAToCEntry( const std::vector<tocsubentry_t> & entry, 
-                              const std::string                & outputfoldername, 
-                              const std::vector<std::string>   * psubentrynames,
-                              eSUPPORT_IMG_IO                   exporttype = eSUPPORT_IMG_IO::PNG );
-
-        //Params are entire file begining iterator, iterator of the entry, and a map containing a list of all the unique data
-        // offsets and where they were stored in the data vector.
-        //The buffer passed is to avoid re-allocating each turns !
-        types::constitbyte_t CKaomado::ReadAToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry,
-                                                      types::constitbyte_t                     itbegindata, 
-                                                      types::constitbyte_t                     itrawtocentry, 
-                                                      std::vector<uint8_t>  &                  imagebuffer,
-                                                      bool                                     bBeQuiet = false);
-
-        tocsubentry_t        ReadAToCSubEntry( types::constitbyte_t & itbegindata );
-
-
         //Value1 is toclen, value2 is biggest image len!
         std::pair<uint32_t,uint32_t> EstimateKaoLenAndBiggestImage()const;
-        uint32_t                     CalculateEntryLen( types::constitbyte_t itdatabeg, tocsubentry_t entryoffset );
 
-        void ImportDirectory( kao_file_wrapper & foldertohandle );
-
-        //tocindex   = the toc entry that will contain this subentry
-        //foldername = the name of the parent directory containing the imagefile we're importing.
-        void ImportImage( kao_file_wrapper & imagefile, unsigned int tocindex, const std::string & foldername );
+        //Return the offset where it was added in the data vector
+        std::vector<kao_toc_entry>::size_type AddImageToDataVector( data_t && img ); //moves the image
+        std::vector<kao_toc_entry>::size_type AddImageToDataVector( const data_t & img ); //Copy the image
 
         static tocsubentry_t GetInvalidToCEntry();
 
-        //Parse, convert, and insert an image file into the data vector, and return the index it got inserted at!
-        std::vector<kao_toc_entry>::size_type InputAnImageToDataVector( kao_file_wrapper & foldertohandle );
-
-        void WriteAPortrait( kao_toc_entry::subentry_t &                     portrait,
-                             std::vector<uint8_t> &                          outputbuffer, 
-                             std::back_insert_iterator<std::vector<uint8_t>> itoutputpushback,
-                             std::vector<uint8_t> &                          imgbuffer, 
-                             std::back_insert_iterator<std::vector<uint8_t>> itimgbufpushback,
-                             tocsubentry_t &                                 lastValidEndOffset,
-                             uint32_t &                                      offsetWriteatTocSub );
-
-        //Return whether the file located at the specified path is a supported 
-        // image type for import.
-        //bool isSupportedImageType( const std::string & path )const;
-
         // --- Variables ---
-        bool                        m_bZealousStrSearch; //This is set using the methods for rebuilding the kaomado
         uint32_t                    m_nbtocsubentries;
         std::vector<kao_toc_entry>  m_tableofcontent;
         std::vector<data_t>         m_imgdata;
-
-
     };
 
 

@@ -2,6 +2,7 @@
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/utils/library_wide.hpp>
+#include <ppmdu/utils/handymath.hpp>
 #include <png++/png.hpp>
 #include <iostream>
 using namespace std;
@@ -30,13 +31,29 @@ namespace utils{ namespace io
 // Read an indexed png of a specific bitdepth
 //
     template<class _pngimagepixel>
-        void readPNG_indexed( gimg::tiled_image_i4bpp  & out_indexed, const std::string & filepath)
+        void readPNG_indexed( gimg::tiled_image_i4bpp  & out_indexed, 
+                              const std::string        & filepath,
+                              unsigned int              forcedwidth     = 0,
+                              unsigned int              forcedheight    = 0,
+                              bool                      erroronwrongres = false )
     {
         png::image<_pngimagepixel> input;
         input.read( filepath, png::require_color_space<_pngimagepixel>() );
 
-        const auto & mypalette = input.get_palette();
-        auto       & outpal    = out_indexed.getPalette();
+        const auto & mypalette         = input.get_palette();
+        auto       & outpal            = out_indexed.getPalette();
+        bool         isWrongResolution = false;
+
+        //Only force resolution when we were asked to!
+        if( forcedwidth != 0 && forcedheight != 0 )
+            isWrongResolution = input.get_width() != forcedwidth || input.get_height() != forcedheight;
+        if( erroronwrongres && isWrongResolution )
+        {
+            cerr <<"\n<!>-ERROR: The file : " <<filepath <<" has an unexpected resolution!\n"
+                 <<"             Expected :" <<forcedwidth <<"x" <<forcedheight <<", and got " <<input.get_width() <<"x" <<input.get_height() 
+                 <<"! Skipping!\n";
+            return;
+        }
 
         if( pngpix_pal_len<_pngimagepixel>::nbcolors != mypalette.size() )
         {
@@ -61,12 +78,38 @@ namespace utils{ namespace io
             outpal[i].blue  = mypalette[i].blue;
         }
 
-        //Fill the pixels
-        out_indexed.setPixelResolution( input.get_width(), input.get_height() );
+        //Image Resolution
+        int tiledwidth  = (forcedwidth != 0)?  forcedwidth  : input.get_width();
+        int tiledheight = (forcedheight != 0)? forcedheight : input.get_height();
 
-        for( unsigned int i = 0; i < input.get_width(); ++i )
+        //Make sure the height and width are divisible by the size of the tiles!
+        if( tiledwidth % gimg::tiled_image_i4bpp::tile_t::WIDTH )
+            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  gimg::tiled_image_i4bpp::tile_t::WIDTH );
+
+        if( tiledheight % gimg::tiled_image_i4bpp::tile_t::HEIGHT )
+            tiledheight = CalcClosestHighestDenominator( tiledheight,  gimg::tiled_image_i4bpp::tile_t::HEIGHT );
+
+        //Resize target image
+        out_indexed.setPixelResolution( tiledwidth, tiledheight );
+
+        //If the image we read is not divisible by the dimension of our tiles, 
+        // we have to ensure that we won't got out of bound while copying!
+        unsigned int maxCopyWidth  = out_indexed.getNbPixelWidth();
+        unsigned int maxCopyHeight = out_indexed.getNbPixelHeight();
+
+        if( maxCopyWidth != input.get_width() || maxCopyHeight != input.get_height() )
         {
-            for( unsigned int j = 0; j < input.get_height(); ++j )
+            //Take the smallest resolution, so we don't go out of bound!
+            maxCopyWidth  = std::min( static_cast<unsigned int>(input.get_width()),  maxCopyWidth );
+            maxCopyHeight = std::min( static_cast<unsigned int>(input.get_height()), maxCopyHeight );
+        }
+
+        //Fill the pixels
+        //out_indexed.setPixelResolution( input.get_width(), input.get_height() );
+
+        for( unsigned int i = 0; i < maxCopyWidth; ++i )
+        {
+            for( unsigned int j = 0; j < maxCopyHeight; ++j )
             {
                 out_indexed.getPixel( i, j ) = gimg::pixel_indexed_4bpp::GetAcomponentBitmask(0) & 
                                                static_cast<uint8_t>( input.get_pixel(i,j) );
@@ -77,7 +120,10 @@ namespace utils{ namespace io
 
 
     bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp  & out_indexed,
-                            const std::string        & filepath )
+                            const std::string        & filepath,
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
     {
         bool HasRead_4bpp_failed = false;
 

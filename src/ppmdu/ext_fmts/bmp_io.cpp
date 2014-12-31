@@ -1,6 +1,7 @@
 #include "bmp_io.hpp"
 #include <EasyBMP/EasyBMP.h>
 #include <ppmdu/utils/library_wide.hpp>
+#include <ppmdu/utils/handymath.hpp>
 #include <iostream>
 #include <algorithm>
 using namespace std;
@@ -47,9 +48,13 @@ namespace utils{ namespace io
     }
 
     bool ImportFrom4bppBMP( gimg::tiled_image_i4bpp & out_indexed,
-                            const std::string       & filepath )
+                            const std::string       & filepath,
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres)
     {
         bool   hasWarnedOORPixel = false; //Whether we warned about out of range pixels at least once during the pixel loop! If applicable..
+        bool   isWrongResolution = false;
         BMP    input;
         auto & outpal = out_indexed.getPalette();
 
@@ -62,6 +67,17 @@ namespace utils{ namespace io
             cerr <<"\n<!>-ERROR: The file : " <<filepath <<", is not a 4bpp indexed bmp ! Its in fact " <<input.TellBitDepth() <<"bpp!\n"
                  <<"Next time make sure the bmp file is saved as 4bpp, 16 colors!\n";
 
+            return false;
+        }
+
+        //Only force resolution when we were asked to!
+        if( forcedwidth != 0 && forcedheight != 0 )
+            isWrongResolution = input.TellWidth() != forcedwidth || input.TellHeight() != forcedheight;
+        if( erroronwrongres && isWrongResolution )
+        {
+            cerr <<"\n<!>-ERROR: The file : " <<filepath <<" has an unexpected resolution!\n"
+                 <<"             Expected :" <<forcedwidth <<"x" <<forcedheight <<", and got " <<input.TellWidth() <<"x" <<input.TellHeight() 
+                 <<"! Skipping!\n";
             return false;
         }
 
@@ -83,12 +99,36 @@ namespace utils{ namespace io
             //Alpha is ignored
         }
 
-        //Fill the pixels
-        out_indexed.setPixelResolution( input.TellWidth(), input.TellHeight() );
+        //Image Resolution
+        int tiledwidth  = (forcedwidth != 0)?  forcedwidth  : input.TellWidth();
+        int tiledheight = (forcedheight != 0)? forcedheight : input.TellHeight();
 
-        for( int i = 0; i < input.TellWidth(); ++i )
+        //Make sure the height and width are divisible by the size of the tiles!
+        if( tiledwidth % gimg::tiled_image_i4bpp::tile_t::WIDTH )
+            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  gimg::tiled_image_i4bpp::tile_t::WIDTH );
+
+        if( tiledheight % gimg::tiled_image_i4bpp::tile_t::HEIGHT )
+            tiledheight = CalcClosestHighestDenominator( tiledheight,  gimg::tiled_image_i4bpp::tile_t::HEIGHT );
+
+        //Resize target image
+        out_indexed.setPixelResolution( tiledwidth, tiledheight );
+
+        //If the image we read is not divisible by the dimension of our tiles, 
+        // we have to ensure that we won't got out of bound while copying!
+        int maxCopyWidth  = out_indexed.getNbPixelWidth();
+        int maxCopyHeight = out_indexed.getNbPixelHeight();
+
+        if( maxCopyWidth != input.TellWidth() || maxCopyHeight != input.TellHeight() )
         {
-            for( int j = 0; j < input.TellHeight(); ++j )
+            //Take the smallest resolution, so we don't go out of bound!
+            maxCopyWidth  = std::min( input.TellWidth(),  maxCopyWidth );
+            maxCopyHeight = std::min( input.TellHeight(), maxCopyHeight );
+        }
+
+        //Copy pixels over
+        for( int i = 0; i < maxCopyWidth; ++i )
+        {
+            for( int j = 0; j < maxCopyHeight; ++j )
             {
                 RGBApixel apixel = input.GetPixel(i,j);
 
@@ -110,6 +150,100 @@ namespace utils{ namespace io
 
         return true;
     }
+
+
+
+    //bool ImportFrom4bppBMP( gimg::tiled_image_i4bpp & out_indexed,
+    //                        const std::string       & filepath,
+    //                        unsigned int              forcedwidth,
+    //                        unsigned int              forcedheight,
+    //                        bool                      erroronwrongres )
+    //{
+    //    bool   hasWarnedOORPixel = false; //Whether we warned about out of range pixels at least once during the pixel loop! If applicable..
+    //    bool   isWrongResolution = false;
+    //    BMP    input;
+    //    auto & outpal = out_indexed.getPalette();
+
+
+    //    input.ReadFromFile( filepath.c_str() );
+
+    //    if( input.TellBitDepth() != 4 )
+    //    {
+    //        //We don't support anything not 4 bpp !
+    //        //Mention the palette length mismatch
+    //        cerr <<"\n<!>-ERROR: The file : " <<filepath <<", is not a 4bpp indexed bmp ! Its in fact " <<input.TellBitDepth() <<"bpp!\n"
+    //             <<"Next time make sure the bmp file is saved as 4bpp, 16 colors!\n";
+
+    //        return false;
+    //    }
+
+
+    //    isWrongResolution = input.TellWidth() != forcedwidth || input.TellHeight() != forcedheight;
+
+    //    if( erroronwrongres && isWrongResolution )
+    //    {
+    //        cerr <<"\n<!>-ERROR: The file : " <<filepath <<" has an unexpected resolution!\n"
+    //             <<"             Expected :" <<forcedwidth <<"x" <<forcedheight <<", and got " <<input.TellWidth() <<"x" <<input.TellHeight() 
+    //             <<"! Skipping!\n";
+    //        return false;
+    //    }
+
+    //    if( utils::LibraryWide::getInstance().Data().isVerboseOn() && input.TellNumberOfColors() <= 16 )
+    //    {
+    //        //Mention the palette length mismatch
+    //        cerr <<"\n<!>-Warning: " <<filepath <<" has a different palette length than expected!\n"
+    //             <<"Fixing and continuing happily..\n";
+    //    }
+    //    out_indexed.setNbColors( 16u );
+
+    //    //Build palette
+    //    for( int i = 0; i < input.TellNumberOfColors(); ++i )
+    //    {
+    //        RGBApixel acolor = input.GetColor(i);
+    //        outpal[i].red   = acolor.Red;
+    //        outpal[i].green = acolor.Green;
+    //        outpal[i].blue  = acolor.Blue;
+    //        //Alpha is ignored
+    //    }
+
+    //    //Resize target image
+    //    out_indexed.setPixelResolution( forcedwidth, forcedheight );
+
+    //    int maxCopyWidth  = input.TellWidth();
+    //    int maxCopyHeight = input.TellHeight();
+
+    //    if( isWrongResolution )
+    //    {
+    //        //Take the smallest resolution, so we don't go out of bound!
+    //        maxCopyWidth  = std::min( static_cast<int>(out_indexed.getNbPixelWidth()),  maxCopyWidth );
+    //        maxCopyHeight = std::min( static_cast<int>(out_indexed.getNbPixelHeight()), maxCopyHeight );
+    //    }
+
+    //    //Copy pixels over
+    //    for( int i = 0; i < maxCopyWidth; ++i )
+    //    {
+    //        for( int j = 0; j < maxCopyHeight; ++j )
+    //        {
+    //            RGBApixel apixel = input.GetPixel(i,j);
+
+    //            //First we need to find out what index the color is..
+    //            gimg::colorRGB24::colordata_t colorindex = FindIndexForColor( apixel, outpal );
+
+    //            if( !hasWarnedOORPixel && colorindex == -1 )
+    //            {
+    //                //We got a problem
+    //                cerr <<"\n<!>-Warning: Image " <<filepath <<", has pixels with colors that aren't in the colormap/palette!\n"
+    //                     <<"Defaulting pixels out of range to color 0!\n";
+    //                hasWarnedOORPixel = true;
+    //                colorindex        = 0;
+    //            }
+
+    //            out_indexed.getPixel( i, j ) = colorindex;
+    //        }
+    //    }
+
+    //    return true;
+    //}
 
 
     bool ExportTo4bppBMP( const gimg::tiled_image_i4bpp & in_indexed,

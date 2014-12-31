@@ -37,7 +37,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.3";
+    static const string PVERSION                            = "0.31";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";
@@ -420,12 +420,11 @@ namespace pkao_util
             if( !parameters.bisQuiet )
                 cout<<"Allocating..\n";
             CKaomado         kao;
-            types::bytevec_t filedata;
+            //types::bytevec_t filedata;
 
             //Read the file to the byte vector
-            if( !parameters.bisQuiet )
-                cout<<"Reading file..\n";
-            ReadFileToByteVector( parameters.inputpath.toString(), filedata );
+
+            //ReadFileToByteVector( parameters.inputpath.toString(), filedata );
 
             //Parse the kaomado
             if( !parameters.bisQuiet )
@@ -435,7 +434,9 @@ namespace pkao_util
 		            <<"into:\n" 
                     << "   " <<outpath.toString() <<"\n" <<endl;
             }
-            kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
+
+            filetypes::KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            //kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
 
             //Then depending on what the user gave us, we convert and output the kaomado data
             const vector<string> *ppokenames = ( (parameters.pokenames.empty() )? nullptr : &parameters.pokenames );
@@ -489,7 +490,9 @@ namespace pkao_util
                      << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
+            filetypes::KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+
+            //kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
             //types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
 
             if( !parameters.bisQuiet )

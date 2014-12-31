@@ -121,6 +121,9 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -256,5 +259,8 @@
     <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_kaoutil.txt" />
   </ItemGroup>
 </Project>

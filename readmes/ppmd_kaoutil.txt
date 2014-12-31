@@ -1,7 +1,7 @@
 =================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - KaoUtil  ==
 =================================================
-Version	   : 0.3
+Version	   : 0.31
 Released   : 2014/12/05
 Written by : psycommando@gmail.com
 
@@ -32,6 +32,9 @@ Changelog:
            to mix png, bmp, and raw images together in the same folders !
          * Re-organized most of the code repository, and folder structure, to make it hopefully
            easier to copy and work with!
+- 0.31:(2014/12/31)
+         * Fixed crash on importing PNG and BMP images not divisible by 8, and added code to 
+           automatically extend the image appropriately so its divisible by 8 !
 
 ----------------------------------------------------------------------------------------------------
 License info:

@@ -375,7 +375,7 @@ namespace gimg
 
         inline void copyFrom(const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> * const other) 
         {
-            m_palette = std::vector<pal_color_t>(other.m_palette.begin(), other.m_palette.end());
+            m_palette = std::vector<pal_color_t>(other->m_palette.begin(), other->m_palette.end());
             //Call copyFrom from parent
             tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>::copyFrom( dynamic_cast<const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> * const>(other) );
         }
@@ -467,11 +467,13 @@ namespace gimg
                             _TILED_IMG_T        &out_img,
                             bool                 invertpixelorder = false )
     {
-        //--> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
-        if( invertpixelorder )
+        //--> Inverting pixel order on pixels that overflow over one or several bytes isn't supported right now !! <--
+        if( invertpixelorder && ( ( 8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel() ) != 0 ) )
         {
-            assert( ( 8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel() ) == 0 ); //#TODO: Specialize the temtplate when needed!
+            assert( false ); //#TODO: Specialize the temtplate when needed!
+            throw std::exception( "ParseTiledImg(): Inverting pixel order on pixels that overflow over one or several bytes isn't supported right now !!" );
         }
+
 
         typedef _TILED_IMG_T                  image_t;
         typedef typename image_t::pixel_t     pixel_t;

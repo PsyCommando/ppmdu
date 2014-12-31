@@ -15,7 +15,10 @@ namespace utils{ namespace io
     static const std::string PNG_FileExtension = "png";
 
     bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp & out_indexed,
-                            const std::string       & filepath );
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth     = 0,
+                            unsigned int              forcedheight    = 0,
+                            bool                      erroronwrongres = false );
 
 
     bool ExportTo4bppPNG( const gimg::tiled_image_i4bpp & in_indexed,
