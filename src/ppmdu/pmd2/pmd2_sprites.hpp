@@ -98,8 +98,6 @@ namespace pmd2{ namespace graphics
         uint16_t unknown0,
                  unknown1;
 
-        //uint8_t & operator[](unsigned int index); //access data as an array of bytes
-        //const uint8_t & operator[](unsigned int index)const;
         unsigned int size()const{return DATA_LEN;}
         std::string toString()const;
 

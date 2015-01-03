@@ -24,17 +24,10 @@ namespace pmd2 { namespace filetypes
 //========================================================================================================
 //  Typedefs
 //========================================================================================================
-    //typedef to make things readable
-    typedef map<uint32_t, types::bytevec_szty_t>::const_iterator cmapiter_t;
 
 //========================================================================================================
 //  Utility Functions
 //========================================================================================================
-
-    inline bool IsValidFile( const Poco::File & f ) //A little function for determining valid files
-    { 
-        return f.isFile() && !(f.isHidden()); 
-    }
 
     inline bool IsValidDirectory( const Poco::File & f ) //A little function for determining valid files
     { 

@@ -30,6 +30,7 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
     <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>

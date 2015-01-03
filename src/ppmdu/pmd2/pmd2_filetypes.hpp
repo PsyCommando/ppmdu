@@ -57,10 +57,11 @@ namespace pmd2 { namespace filetypes
         PKDPX_CONTAINER,
         AT4PX_CONTAINER,
         SIR0_CONTAINER,
-        SPRITE_CONTAINER,
+        SPRITE_CONTAINER, //#TODO: Deprecate this !
         COMPRESSED_DATA,    //For the content of PKDPX container, given we can't decompress when analysing
         PACK_CONTAINER,
         KAOMADO_CONTAINER,
+        WAN_SPRITE_CONTAINER,
 
         //#If you add any more, be sure to modify GetContentTypeName
         UNKNOWN_CONTENT,

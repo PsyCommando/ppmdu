@@ -68,7 +68,7 @@ namespace pmd2{ namespace filetypes
         std::string printToHumanReadable();
 
         e_ContentType             _type;        //The type of the ContentBlock
-        std::vector<ContentBlock> _hierarchy;   //Sub-containers / Sub-content. If not containing sub-elements, main contain data from the
+        std::vector<ContentBlock> _hierarchy; //#TODO: DEPRECATE THIS!   //Sub-containers / Sub-content. If not containing sub-elements, main contain data from the
                                                 // other same level elements if its the first analysed!
         types::bytevec_szty_t     _startoffset, //The position the content begins at, including the header
                                   _endoffset;   //The end of the content block, or the end of the whole container if not applicable
@@ -99,9 +99,7 @@ namespace pmd2{ namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        /*virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-                                      types::constitbyte_t   itdataend ) = 0;*/
-        virtual ContentBlock Analyse( const analysis_parameter & parameters ) = 0;
+        virtual ContentBlock Analyse( const analysis_parameter & parameters ) = 0; //#TODO: improve this to give actually useful data!
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.

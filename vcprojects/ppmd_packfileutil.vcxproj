@@ -61,6 +61,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>

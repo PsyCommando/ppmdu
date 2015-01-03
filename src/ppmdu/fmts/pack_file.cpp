@@ -417,29 +417,9 @@ namespace pmd2 { namespace filetypes
                     <<std::setfill('0') <<std::setw(4) <<std::dec <<fileindex
                     << SubfileGetFExtension( file.begin(), file.end() );
 
-        
+        //<<"_offs_0x" 
+        //<<std::setfill('0') <<std::setw(8) <<std::hex << m_OffsetTable[fileindex]._fileOffset
 
-        //itput = std::copy( FILE_PREFIX.begin(), FILE_PREFIX.end(), itput );
-        //outfilename <<std::setfill('0') <<std::setw(4) <<std::dec <<fileindex;
-        
-        //string etemp = outfilename.str();
-
-        //itput = std::copy( etemp.begin(), etemp.end(), itput );
-
-        //(*itput) = '.';
-        //++itput;
-
-        //string fextension = GetAppropriateFileExtension( file.begin(), file.end() );
-        //if( !fextension.empty() )
-        //    itput = std::copy( fextension.begin(), fextension.end(), itput );
-
-        //outfilename <<"file_" <<std::setfill('0') <<std::setw(4) <<std::dec <<fileindex;  //<<"_offs_0x" 
-                    //<<std::setfill('0') <<std::setw(8) <<std::hex << m_OffsetTable[fileindex]._fileOffset;
-
-		//if we have a valid extension append it
-        //string fextension = GetAppropriateFileExtension( file.begin(), file.end() );
-   //     if( !fextension.empty() )
-			//outfilename << "." << fextension;
 
 		//------- 2. Output -------
         WriteByteVectorToFile( outfilename.str(), file ); 

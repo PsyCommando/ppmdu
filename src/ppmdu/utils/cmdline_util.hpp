@@ -45,7 +45,8 @@ namespace utils{ namespace cmdl
         std::string  example;           //An example of this option on the command line
 
         //Function pointers
-        optparsefun_t myOptionParseFun; //Pointer to a function that will parse this option for the program. 
+        std::function<bool(const std::vector<std::string>&)> myOptionParseFun;
+        //optparsefun_t myOptionParseFun; //Pointer to a function that will parse this option for the program. 
                                         //Must return false if it fails to parse !
     };
 
@@ -58,18 +59,19 @@ namespace utils{ namespace cmdl
         int          argumentorder;     //The order this argument should appear on the parameter list. Counting only other parameters, not options. Starts at 0!
         bool         isoptional;        //Whether the absense of the parameter can be tolerated or not. 
         bool         isguaranteedorder; //Whether this parameter is guaranteed appear in this argument order.
-
-        std::string *dependson;         //What other argument needs to be parsed before! Use their "name" field's value. Must refer to a static table, because the pointer is never deleted!
-        int          totaldependson;    //The size of the "dependson" string array.
-
         std::string  name;              //A unique name to identify this argument
         std::string  description;       //Short description
         std::string  example;           //An example of this argument on the command line
 
         //Functions pointers
-        argparsefun_t myParseFun;       //Pointer to a function that will parse this argument for the program. 
+        std::function<bool(const std::string&)> myParseFun; 
+        //argparsefun_t myParseFun;       //Pointer to a function that will parse this argument for the program. 
                                         //Must return false if it fails to parse !
+
+        std::string *dependson;         //What other argument needs to be parsed before! Use their "name" field's value. Must refer to a static table, because the pointer is never deleted!
+        int          totaldependson;    //The size of the "dependson" string array.
     };
+
 
 //===============================================================================================
 // Classes
@@ -149,19 +151,35 @@ namespace utils{ namespace cmdl
     {
     public:
 
-        CommandLineUtility( int argc, const char * argv[] )
-        {
-            CArgsParser parsemyargs( getOptionsList(), argv, argc ); //#TODO: eventually combine CArgParser with this class!
-            parseArgs(parsemyargs);
-            parseOptions(parsemyargs);
-            parseExtraArgs(parsemyargs);
-        }
+        CommandLineUtility()
+        {}
+
+        //CommandLineUtility( int argc, const char * argv[] )
+        //{
+        //    SetArguments(argc, argv);
+        //}
 
         //Destructor
         virtual ~CommandLineUtility()
         {
         }
 
+        //
+        void SetArguments( int argc, const char * argv[], bool noargsprintreadme = true )
+        {
+            if( argc == 1 ) //No args, print the readme then!
+            {
+                if(noargsprintreadme) 
+                    PrintReadme();
+            }
+            else
+            {
+                CArgsParser parsemyargs( getOptionsList(), argv, argc ); //#TODO: eventually combine CArgParser with this class!
+                parseArgs(parsemyargs);
+                parseOptions(parsemyargs);
+                parseExtraArgs(parsemyargs);
+            }
+        }
         void PrintReadme();
         void PrintTitle();
 
@@ -181,7 +199,7 @@ namespace utils{ namespace cmdl
         virtual const std::string                    & getMiscSectionText()const  = 0; //Text for copyrights, credits, thanks, misc..
 
         //Main method
-        virtual int  Main()  = 0;
+        virtual int  Main( int argc, const char * argv[] )  = 0;
 
     protected:
 

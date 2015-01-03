@@ -152,7 +152,7 @@ namespace pmd2{ namespace filetypes
              m_itOutBuffPushBack(std::back_inserter(m_outBuff))
         {}
 
-        //This will export to a kaomado.kao file, but will return the buffer directly
+        //This will export a CKaomado to a "kaomado.kao" file, but will return the buffer directly
         // instead of writing it directly.
         std::vector<uint8_t> operator()( const CKaomado & exportfrom );
 
@@ -221,14 +221,9 @@ namespace pmd2{ namespace filetypes
     private:
         //Write an entry in the toc at the index specified, in the subentry specified. The value written is the data index in the m_imgdata vector
         inline void registerToCEntry( std::size_t tocindex, std::size_t subentryindex, std::size_t dataindex )
-        {
-            m_tableofcontent[tocindex]._portraitsentries[subentryindex] = tocsubentry_t( dataindex);
-        }
+        { m_tableofcontent[tocindex]._portraitsentries[subentryindex] = tocsubentry_t( dataindex); }
 
-        static inline bool isToCSubEntryValid( const tocsubentry_t & entry )
-        {
-            return (entry > 0);
-        }
+        static inline bool isToCSubEntryValid( const tocsubentry_t & entry ) { return (entry > 0); }
 
         //Value1 is toclen, value2 is biggest image len!
         std::pair<uint32_t,uint32_t> EstimateKaoLenAndBiggestImage()const;

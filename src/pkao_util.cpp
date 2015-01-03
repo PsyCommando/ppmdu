@@ -179,8 +179,7 @@ namespace pkao_util
              << "\n"
              << "----------------------------------------------------------\n"
 		     << "Named in honour of Baz, the awesome Poochyena of doom ! :D\n\n"
-		     << "No crappyrights, all wrongs reversed !\n" 
-             << "Sources and specs Included in original package!\n" <<endl;
+		     << "No crappyrights, all wrongs reversed !\n" <<endl;
     }
 
     bool HandleAnOption( const vector<string> & parsedoption, kao_params& parameters, string & facenamefile, string & pokenamefile )

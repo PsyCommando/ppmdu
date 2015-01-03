@@ -61,6 +61,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -117,7 +118,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\pspr_extractor.cpp" />
+    <ClCompile Include="..\src\sprite_util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -271,12 +272,13 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\pspr_extractor.hpp" />
+    <ClInclude Include="..\src\sprite_util.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1088591B-EDBA-4713-926C-C8210D859C47}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ppmd_kaoutil</RootNamespace>
+    <ProjectName>ppmd_spriteutil</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
