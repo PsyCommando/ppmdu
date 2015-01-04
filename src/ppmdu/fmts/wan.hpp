@@ -81,6 +81,16 @@ namespace pmd2 { namespace filetypes
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
+//=============================================================================================
+//  Functions / Functors
+//=============================================================================================
+
+    /*
+    */
+    class Parse_WAN
+    {
+    };
+
 };};
 
 #endif

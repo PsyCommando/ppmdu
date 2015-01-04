@@ -32,7 +32,7 @@ namespace pmd2 { namespace filetypes
         return strs.str();
     }
 
-    std::vector<uint8_t>::iterator sir0_header::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
+    std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
     {
         itwriteto = utils::WriteIntToByteVector( magic,        itwriteto );
         itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );

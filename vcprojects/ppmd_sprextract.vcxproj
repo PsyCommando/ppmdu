@@ -118,7 +118,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sprite_util.cpp" />
+    <ClCompile Include="..\src\gfxcrunch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -161,6 +161,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
@@ -272,13 +273,16 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sprite_util.hpp" />
+    <ClInclude Include="..\src\gfxcrunch.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1088591B-EDBA-4713-926C-C8210D859C47}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ppmd_kaoutil</RootNamespace>
-    <ProjectName>ppmd_spriteutil</ProjectName>
+    <ProjectName>ppmd_gfxcrunch</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

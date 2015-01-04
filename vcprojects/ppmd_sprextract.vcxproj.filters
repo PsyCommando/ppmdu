@@ -165,8 +165,11 @@
     <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sprite_util.hpp">
+    <ClInclude Include="..\src\gfxcrunch.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -257,8 +260,11 @@
     <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sprite_util.cpp">
+    <ClCompile Include="..\src\gfxcrunch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
   </ItemGroup>
 </Project>

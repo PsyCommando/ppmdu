@@ -1,7 +1,7 @@
-#ifndef SPRITE_UTIL_HPP
-#define SPRITE_UTIL_HPP
+#ifndef GFXCRUNCH_HPP
+#define GFXCRUNCH_HPP
 /*
-sprite_util.hpp
+gfxcrunch.hpp
 2014/10/05
 psycommando@gmail.com
 Description: Main code for the Sprite utility !
@@ -9,7 +9,7 @@ Description: Main code for the Sprite utility !
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
 
-namespace sprite_util
+namespace gfx_util
 {
     struct pathwrapper_t;
 
@@ -17,10 +17,10 @@ namespace sprite_util
         CSpriteUtil
             The commandline application that handles pmd2 sprites.
     */
-    class CSpriteUtil : public utils::cmdl::CommandLineUtility
+    class CGfxUtil : public utils::cmdl::CommandLineUtility
     {
     public:
-        static CSpriteUtil & GetInstance();
+        static CGfxUtil & GetInstance();
 
         // -- Overrides --
         //Those return their implementation specific arguments, options, and extra parameter lists.
@@ -41,13 +41,13 @@ namespace sprite_util
     
     private:
         //Constructor stuff
-        CSpriteUtil();
+        CGfxUtil();
         void _Construct();
         //Disable copy and move
-        CSpriteUtil( const CSpriteUtil & );
-        CSpriteUtil( CSpriteUtil && );
-        CSpriteUtil& operator=(const CSpriteUtil&);
-        CSpriteUtil& operator=(const CSpriteUtil&&);
+        CGfxUtil( const CGfxUtil & );
+        CGfxUtil( CGfxUtil && );
+        CGfxUtil& operator=(const CGfxUtil&);
+        CGfxUtil& operator=(const CGfxUtil&&);
 
         //Parsing methods
         bool ParseInputPath  ( const std::string              & path );
@@ -76,18 +76,15 @@ namespace sprite_util
         enum struct eExecMode
         {
             INVALID_Mode,
-            UNPACK_Mode,
-            BUILD_Mode,
+            UNPACK_SPRITE_Mode,
+            BUILD_SPRITE_Mode,
         };
 
         //Program Settings
-        bool            m_bQuiet;       //Whether we should output to console 
-        eExecMode       m_programMode;  //This is set after reading the input path.
+        bool            m_bQuiet;                       //Whether we should output to console 
+        eExecMode       m_execMode;                     //This is set after reading the input path.
         std::unique_ptr<pathwrapper_t> m_pInputPath;    //This is the input path that was parsed 
         std::unique_ptr<pathwrapper_t> m_pOutputPath;   //This is the output path that was parsed
-
-        //Output stream
-
 
     };
 };
