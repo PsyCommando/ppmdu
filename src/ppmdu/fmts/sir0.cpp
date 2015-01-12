@@ -87,26 +87,35 @@ namespace pmd2 { namespace filetypes
         return sir0_head_and_list{ hdr, std::move(encodedptroffsets) };
     }
 
+    //#TODO: Should use a back_inserter here !
     void EncodeSIR0PtrOffsetList( const std::vector<uint32_t> &listoffsetptrs, std::vector<uint8_t> & out_encoded )
     {
         uint32_t offsetSoFar = 0; //used to add up the sum of all the offsets up to the current one
 
         for( const auto & anoffset : listoffsetptrs )
         {
-            uint32_t offsetToEncode = anoffset - offsetSoFar;
+            uint32_t offsetToEncode        = anoffset - offsetSoFar;
+            bool     hasHigherNonZero      = false; //This tells the loop whether it needs to encode null bytes, if at least one higher byte was non-zero
             offsetSoFar = anoffset; //set the value to the latest offset, so we can properly subtract it from the next offset.
 
             //Encode every bytes of the 4 bytes integer we have to
             for( int32_t i = 4; i > 0; --i )
             {
                 uint8_t currentbyte = ( offsetToEncode >> (7 * (i - 1)) ) & 0x7Fu;
-                if( currentbyte != 0 )
+                
+                if( i == 1 ) //the lowest byte to encode is special
                 {
-                    //If its the last byte to chain, leave the highest bit to 0 !
-                    if( i == 1 )
+                    //If its the last byte to append, leave the highest bit to 0 !
+                    if( currentbyte != 0 )
                         out_encoded.push_back( currentbyte );
-                    else
-                        out_encoded.push_back( currentbyte | 0x80u ); //Set the highest bit to 1, to signifie that the next byte must be chained
+                    //If the last byte to append is null, we don't need to append anything
+                    // as the automatic bitshift of the last byte will take care of that
+                }
+                else if( currentbyte != 0 || hasHigherNonZero ) //if any bytes but the lowest one! If not null OR if we have encoded a higher non-null byte before!
+                {
+                    //Set the highest bit to 1, to signifie that the next byte must be appended
+                    out_encoded.push_back( currentbyte | 0x80u ); 
+                    hasHigherNonZero = true;
                 }
             }
         }
@@ -142,6 +151,13 @@ namespace pmd2 { namespace filetypes
             if( (0x80u & curbyte) != 0 )
             {
                 buffer <<= 7u;
+
+                //In case its the last byte to decode, be sure to push it back.
+                if( (itcurbyte + 1) != itlastbyte && *(itcurbyte + 1) == 0 )
+                {
+                    offsetsum += buffer;
+                    decodedptroffsets.push_back(offsetsum);
+                }
             }
             else
             {

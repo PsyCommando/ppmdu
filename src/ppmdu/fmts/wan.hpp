@@ -8,6 +8,7 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 */
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/utils/utility.hpp>
+#include <ppmdu/containers/sprite_data.hpp>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -86,10 +87,55 @@ namespace pmd2 { namespace filetypes
 //=============================================================================================
 
     /*
+        A class to parse a WAN sprite into a SpriteData structure.
+        Because image formats can vary between sprites, 
     */
     class Parse_WAN
     {
+    public:
+        //What particular format the sprite is in!
+        enum struct eSpriteType : short
+        {
+            sprInvalid,
+            spr4bpp,
+            spr8bpp,
+        };
+
+        //Constructor. Pass the data to parse.
+        Parse_WAN( std::vector<uint8_t> rawdata );
+
+        //This is used to determine if the state of the parser is valid or not
+        // Or whether there was a problem while parsing or not.
+        bool isValid()const;
+
+        //Use this to determine which parsing method to use!
+        eSpriteType getSpriteType()const;
+
+        //This parse all images of the sprite as 4bpp!
+        gimg::SpriteData<gimg::tiled_image_i4bpp> ParseAs4bpp();
+        //This parse all images of the sprite as 8bpp!
+        gimg::SpriteData<gimg::tiled_image_i8bpp> ParseAs8bpp();
+
+    private:
+        //Methods
+        void ReadSir0Header();
+        void ReadWanHeader();
+        void ReadPalette();      //
+        void ReadFramesInfo();   // Read the anim frame info block
+        void ReadFramesAs4bpp(); // Reads the actual images data for each frames
+        void ReadFramesAs8bpp(); // Reads the actual images data for each frames
+        void ReadAnimations();   // Reads the animation data
+
+    private:
+        //Variables
+        sir0_header     m_sir0Header;
+        wan_sub_header  m_wanHeader;
+        wan_info_data   m_wanSpriteInfo;
+        wan_frame_data  m_wanFrameDataInfo;
     };
+
+    //A function form of the above, that deals with a file path, instead of the raw data of the file.
+    gimg::SpriteData<gimg::tiled_image_i4bpp> ParseA_4bpp_WAN_Sprite( std::string wanfilepath );
 
 };};
 

@@ -276,6 +276,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_kaoutil.txt" />
+    <Text Include="..\resources\facenames.txt" />
+    <Text Include="..\resources\pokenames.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{67F6DAA9-9544-4279-A417-09AEF1604226}</ProjectGuid>

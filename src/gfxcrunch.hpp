@@ -59,8 +59,8 @@ namespace gfx_util
         int BuildSprite();
 
         //Utility
-        bool isValidInputFile     ( const std::string & path );
-        bool isValidInputDirectory( const std::string & path );
+        bool isValid_WAN_InputFile      ( const std::string & path );
+        bool isValid_WANT_InputDirectory( const std::string & path );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -78,6 +78,10 @@ namespace gfx_util
             INVALID_Mode,
             UNPACK_SPRITE_Mode,
             BUILD_SPRITE_Mode,
+            EXPORT_BGP_Mode,
+            IMPORT_BGP_Mode,
+            EXPORT_WTE_Mode,
+            IMPORT_WTE_Mode,
         };
 
         //Program Settings

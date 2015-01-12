@@ -277,6 +277,8 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
+    <Text Include="..\resources\pokesprites_names.txt" />
+    <Text Include="..\resources\pokesprites_std_anims.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1088591B-EDBA-4713-926C-C8210D859C47}</ProjectGuid>
@@ -331,6 +333,17 @@
     <Lib>
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
+
+copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)pokesprites_names.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokesprites_std_anims.txt"
+
+copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokesprites_std_anims.txt"
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -351,6 +364,17 @@
     <Lib>
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
+
+copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)pokesprites_names.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokesprites_std_anims.txt"
+
+copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokesprites_std_anims.txt"
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

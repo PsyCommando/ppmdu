@@ -266,5 +266,7 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
+    <Text Include="..\resources\pokesprites_names.txt" />
+    <Text Include="..\resources\pokesprites_std_anims.txt" />
   </ItemGroup>
 </Project>
