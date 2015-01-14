@@ -295,6 +295,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             //static_assert( std::numeric_limits<T>::is_integer, "Trying to assign a non-integer to a pixel !" );
             pixeldata = static_cast<pixeldata_t>(val);
             return *this; 
@@ -310,6 +311,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator|=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata |= static_cast<pixeldata_t>(val);
             return *this; 
         }
@@ -321,6 +323,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator&=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata &= static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -332,6 +335,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator^=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata ^= static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -343,6 +347,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator+=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata += static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -354,6 +359,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator-=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata -= static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -365,6 +371,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator*=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata *= static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -376,6 +383,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator/=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata /= static_cast<pixeldata_t>(val);
             return *this;
         }
@@ -387,6 +395,7 @@ namespace gimg
         *************************************************************************************************/
         template<class T> inline pixel<mypixeltrait_t> & operator%=( T val )
         {
+            static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata %= static_cast<pixeldata_t>(val);
             return *this;
         }

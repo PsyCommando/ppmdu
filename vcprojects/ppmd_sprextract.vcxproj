@@ -19,6 +19,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\data formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>

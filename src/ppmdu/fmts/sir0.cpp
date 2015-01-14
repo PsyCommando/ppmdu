@@ -34,7 +34,7 @@ namespace pmd2 { namespace filetypes
 
     std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
     {
-        itwriteto = utils::WriteIntToByteVector( magic,        itwriteto );
+        itwriteto = utils::WriteIntToByteVector( magic,        itwriteto, false );
         itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );
         itwriteto = utils::WriteIntToByteVector( eofptr,       itwriteto );
         itwriteto = utils::WriteIntToByteVector( _null,        itwriteto );
@@ -43,7 +43,7 @@ namespace pmd2 { namespace filetypes
 
     std::vector<uint8_t>::const_iterator sir0_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
     {
-        magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom);
+        magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom, false );
         subheaderptr = utils::ReadIntFromByteVector<decltype(subheaderptr)>(itReadfrom);
         eofptr       = utils::ReadIntFromByteVector<decltype(eofptr)>      (itReadfrom);
         _null        = utils::ReadIntFromByteVector<decltype(_null)>       (itReadfrom);

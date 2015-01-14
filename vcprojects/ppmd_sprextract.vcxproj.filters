@@ -263,6 +263,9 @@
     <ClCompile Include="..\src\gfxcrunch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_gfxcrunch.txt" />

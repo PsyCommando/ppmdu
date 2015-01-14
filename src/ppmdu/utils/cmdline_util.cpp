@@ -102,7 +102,7 @@ namespace utils{ namespace cmdl
     //Returns whether the whole argument array has been scanned for arguments
     bool CArgsParser::hasReachedTheEndOfArgList()const
     {
-        return m_rawcurarg != m_rawargs.end();
+        return m_rawcurarg == m_rawargs.end();
     }
 
     //Takes the index of the option from the option list passed at construction, if its the case!
@@ -167,7 +167,11 @@ namespace utils{ namespace cmdl
         ResetReadPos(); //make sure we're at the beginning
 
         while( !hasReachedTheEndOfArgList() )
-            allparams.push_back( getNextParam() );
+        {
+            auto nextpara = getNextParam();
+            if( nextpara.size() > 0 )
+                allparams.push_back( nextpara );
+        }
 
         m_rawcurarg = itbefore; //restore initial state
         return std::move(allparams); 

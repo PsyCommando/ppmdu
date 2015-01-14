@@ -11,6 +11,7 @@ A bunch of simple tools for doing common tasks when manipulating bytes.
 #include <vector>
 #include <cstdint>
 #include <limits>
+#include <type_traits>
 
 namespace utils 
 {
@@ -103,7 +104,7 @@ namespace utils
             Returns the new pos of the iterator after the operation.
     *********************************************************************************************/
     template<class T, class _outit>
-        _outit WriteIntToByteVector( T val, _outit itout, bool basLittleEndian = true )
+        inline _outit WriteIntToByteVector( T val, _outit itout, bool basLittleEndian = true )
     {
         static_assert( std::numeric_limits<T>::is_integer, "WriteIntToByteVector() : Used another types than an integer!" );
 
@@ -121,7 +122,7 @@ namespace utils
         }
         else
         {
-            for( unsigned int i = (sizeof(T)-1); i >= 0 ; --i, ++itout )
+            for( int i = (sizeof(T)-1); i >= 0 ; --i, ++itout )
                 (*itout) = lambdaShiftAssign( i );
         }
 
@@ -134,7 +135,7 @@ namespace utils
             ** The iterator's passed as input, has its position changed !!
     *********************************************************************************************/
     template<class T, class _init> 
-        T ReadIntFromByteVector( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+        inline T ReadIntFromByteVector( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
     {
         static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromByteVector() : Error, used another types than an integer!" );
         T out_val = 0;
@@ -152,7 +153,7 @@ namespace utils
         }
         else
         {
-            for( unsigned int i = (sizeof(T)-1); i >= 0; --i, ++itin )
+            for( int i = (sizeof(T)-1); i >= 0; --i, ++itin )
                 lambdaShiftBitOr(i);
         }
 
@@ -165,15 +166,44 @@ namespace utils
             As if it was an array.
     *********************************************************************************************/
     template< class T >
-        T ChangeValueOfASingleByte( T containinginteger, uint8_t newvalue, uint32_t byteoffset  )
+        inline T ChangeValueOfASingleByte( T containinginteger, uint8_t newvalue, uint32_t byteoffset  )
     {
+        static_assert( std::is_pod<T>::value, "ChangeValueOfASingleByte(): Tried to change a byte on a non-POD type!!" );
         T mask = 0xFFu,
-            val  = newvalue;
+          val  = newvalue;
 
         mask = (mask << (sizeof(T) - byteoffset) * 8); //Am I over cautious ?
         val  = (val  << (sizeof(T) - byteoffset) * 8);
 
         return ( (val & mask) | containinginteger );
+    }
+
+    /*********************************************************************************************
+        ChangeValueOfASingleBit
+    *********************************************************************************************/
+    template< class T >
+        inline T ChangeValueOfASingleBit( T containinginteger, uint8_t newvalue, uint32_t offsetrighttoleft  )
+    {
+        static_assert( std::is_pod<T>::value, "ChangeValueOfASingleBit(): Tried to change a bit on a non-POD type!!" );
+        if( offsetrighttoleft >= (sizeof(T) * 8) )
+            throw std::overflow_error("ChangeValueOfASingleBit(): Offset too big for integer type specified!");
+
+        //Clean the bit then OR the value!
+        return ( (0x01u & newvalue) << offsetrighttoleft ) | (containinginteger & ( ~(0x01u << offsetrighttoleft) ) );
+    }
+
+    /*********************************************************************************************
+
+    *********************************************************************************************/
+    template< class T >
+        inline T GetBit( T containinginteger, uint32_t offsetrighttoleft  )
+    {
+        static_assert( std::is_pod<T>::value, "GetBit(): Tried to get a bit on a non-POD type!!" );
+        if( offsetrighttoleft >= (sizeof(T) * 8) )
+            throw std::overflow_error("GetBit(): Offset too big for integer type specified!");
+
+        //Isolate, then shift back to position 1 !
+        return (containinginteger & ( (0x01u << offsetrighttoleft) ) ) >> offsetrighttoleft;
     }
 
 //===============================================================================
