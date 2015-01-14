@@ -403,8 +403,9 @@ namespace pmd2{ namespace graphics
                 }
                 else
                 {
-                    //Bad image index ! Sometimes this is acceptable, in the case of 0xFF !
-                    assert(false);
+                    //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
+                    if( m_metaframes[i].image_index != 0xFFFF )
+                        assert(false);
                 }
             }
 

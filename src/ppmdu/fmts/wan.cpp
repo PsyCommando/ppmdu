@@ -289,11 +289,26 @@ namespace pmd2{ namespace filetypes
         ReadSir0Header();
         ReadWanHeader();
 
+        //Get Palette
         out_pal                     = ReadPalette();
+
+        //Named Properties
         out_sprinf.m_nbColorsPerRow = m_paletteInfo.nbcolorsperrow;
+        out_sprinf.m_is256Sprite    = m_wanImgDataInfo.is256Colors;
+        out_sprinf.m_is8WaySprite   = m_wanHeader.is8DirectionSprite;
+        out_sprinf.m_IsMosaicSpr    = m_wanImgDataInfo.isMosaic;
+
+        //Unknowns
         out_sprinf.m_Unk3           = m_paletteInfo.unk3;
         out_sprinf.m_Unk4           = m_paletteInfo.unk4;
         out_sprinf.m_Unk5           = m_paletteInfo.unk5;
+        out_sprinf.m_Unk6           = m_wanAnimInfo.unk6;
+        out_sprinf.m_Unk7           = m_wanAnimInfo.unk7;
+        out_sprinf.m_Unk8           = m_wanAnimInfo.unk8;
+        out_sprinf.m_Unk9           = m_wanAnimInfo.unk9;
+        out_sprinf.m_Unk10          = m_wanAnimInfo.unk10;
+        out_sprinf.m_Unk11          = m_wanImgDataInfo.unk11;
+        out_sprinf.m_Unk12          = m_wanHeader.unk12;
 
         if( m_paletteInfo.nullbytes != 0 )
         {
@@ -301,7 +316,10 @@ namespace pmd2{ namespace filetypes
             assert(false); //The null bytes at the end of the palette info weren't null! WTF do we do now ?
         }
 
+        //Get meta-frames
         out_mfrms = ReadMetaFrames();
+
+        //Get anims
         out_anims = ReadAnimations();
     }
 
