@@ -24,14 +24,18 @@ namespace pmd2 { namespace filetypes
             return AT4PX_FILEX;
         case e_ContentType::SIR0_CONTAINER:
             {
-                if( !result._hierarchy.empty() && (result._hierarchy.front()._type == e_ContentType::SPRITE_CONTAINER) )
-                    return WAN_FILEX; //Deprecate this way of doing things..
-                else
+                //if( !result._hierarchy.empty() && (result._hierarchy.front()._type == e_ContentType::SPRITE_CONTAINER) )
+                //    return WAN_FILEX; //Deprecate this way of doing things..
+                //else
                     return SIR0_FILEX;
             }
         case e_ContentType::WAN_SPRITE_CONTAINER:
-        case e_ContentType::SPRITE_CONTAINER: //#TODO: Deprecate this.
             return WAN_FILEX;
+
+        case e_ContentType::BGP_FILE:
+            return BGP_FILEX;
+        case e_ContentType::WTE_FILE:
+            return WTE_FILEX;
         };
 
         return string();
@@ -43,8 +47,6 @@ namespace pmd2 { namespace filetypes
         //#TODO: Maybe do something a little less reliant on having to change things in several places?
         switch(type)
         {
-        case e_ContentType::SPRITE_CONTAINER: //#TODO: Deprecate this.
-            return "SpriteData";
         case e_ContentType::WAN_SPRITE_CONTAINER:
             return "WAN";
         case e_ContentType::PKDPX_CONTAINER:

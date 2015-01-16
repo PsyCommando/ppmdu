@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Main code for the Sprite utility !
 */
 #include <ppmdu/basetypes.hpp>
+#include <ppmdu/ext_fmts/supported_io.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
 
 namespace gfx_util
@@ -49,18 +50,21 @@ namespace gfx_util
         CGfxUtil& operator=(const CGfxUtil&);
         CGfxUtil& operator=(const CGfxUtil&&);
 
-        //Parsing methods
+        //Parse Arguments
         bool ParseInputPath  ( const std::string              & path );
         bool ParseOutputPath ( const std::string              & path );
-        bool ParseOptionQuiet( const std::vector<std::string> & optdata );
+        //Parse Options
+        bool ParseOptionQuiet       ( const std::vector<std::string> & optdata );
+        bool ParseOptionExportFormat( const std::vector<std::string> & optdata );
 
         //Execution
         int UnpackSprite();
         int BuildSprite();
 
         //Utility
-        bool isValid_WAN_InputFile      ( const std::string & path );
+        bool isValid_WAN_InputFile      ( const std::string & path ); //#REMOVEME
         bool isValid_WANT_InputDirectory( const std::string & path );
+        void DetermineOperationMode();
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -76,19 +80,23 @@ namespace gfx_util
         enum struct eExecMode
         {
             INVALID_Mode,
-            UNPACK_SPRITE_Mode,
-            BUILD_SPRITE_Mode,
-            EXPORT_BGP_Mode,
-            IMPORT_BGP_Mode,
-            EXPORT_WTE_Mode,
-            IMPORT_WTE_Mode,
+            UNPACK_SPRITE_Mode,            //Export a WAN sprite to a directory structure
+            BUILD_SPRITE_Mode,             //Import a WAN sprite from a directory structure
+            EXPORT_BGP_Mode,               //Export a BGP image
+            IMPORT_BGP_Mode,               //Import a BGP image
+            EXPORT_WTE_Mode,               //Export a WTE image
+            IMPORT_WTE_Mode,               //Import a WTE image
+            IMPORT_POKE_SPRITES_PACK_Mode, //Import a pack file, and export all its content
+            EXPORT_POKE_SPRITES_PACK_Mode, //Export a pack file, and export all its content
         };
 
         //Program Settings
-        bool            m_bQuiet;                       //Whether we should output to console 
-        eExecMode       m_execMode;                     //This is set after reading the input path.
+        bool                           m_bQuiet;        //Whether we should output to console 
+        eExecMode                      m_execMode;      //This is set after reading the input path.
         std::unique_ptr<pathwrapper_t> m_pInputPath;    //This is the input path that was parsed 
         std::unique_ptr<pathwrapper_t> m_pOutputPath;   //This is the output path that was parsed
+        utils::io::eSUPPORT_IMG_IO     m_PrefOutFormat; //The image format to use when exporting
+
 
     };
 };

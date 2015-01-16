@@ -46,6 +46,15 @@ namespace gfx_util
 // Utility
 //=================================================================================================
 
+    bool MatchesPokeSpritePackFileName( const std::string & filename )
+    {
+        for( const auto & afilename : pmd2::filetypes::PackedPokemonSpritesFiles )
+        {
+            if( filename.compare( afilename ) == 0 )
+                return true;
+        }
+        return false;
+    }
 
 //=================================================================================================
 //  CGfxUtil
@@ -69,6 +78,9 @@ namespace gfx_util
 //------------------------------------------------
 //  Arguments Info
 //------------------------------------------------
+    /*
+        Data for the automatic argument parser to work with.
+    */
     const vector<argumentparsing_t> CGfxUtil::Arguments_List =
     {{
         //Input Path argument
@@ -104,7 +116,12 @@ namespace gfx_util
 //------------------------------------------------
 //  Options Info
 //------------------------------------------------
-    const vector<optionparsing_t> CGfxUtil::Options_List =
+
+    /*
+        Information on all the switches / options to allow the automated parser 
+        to parse them.
+    */
+    const vector<optionparsing_t> CGfxUtil::Options_List=
     {{
         //Quiet
         {
@@ -113,6 +130,14 @@ namespace gfx_util
             "Disables console progress output.",
             "-q",
             std::bind( &CGfxUtil::ParseOptionQuiet, &GetInstance(), placeholders::_1 ),
+        },
+        //Image Format For Export
+        {
+            "f",
+            1,
+            "Set the image format to use when exporting images to either  raw, png, or bmp. Def: png.",
+            "-f (png,bmp,raw)",
+            std::bind( &CGfxUtil::ParseOptionExportFormat, &GetInstance(), placeholders::_1 ),
         },
     }};
 
@@ -153,62 +178,63 @@ namespace gfx_util
 
     void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
     {
+        static const int NB_Bars       = 25u;
+        static const int TOTAL_PERCENT = 200u;
         while( !shouldstop )
         {
-            unsigned int nbbars = (( (parsingprogress.load() + writingprogress.load()) * 16 ) /200 ); 
-            cout <<"\r[" <<setw(16) <<setfill(' ') <<string( nbbars, '=' ) <<"] " 
-                 <<setw(3) <<setfill(' ') <<(parsingprogress.load() + writingprogress.load()) / 200 <<"%";
+            unsigned int nbbars = ( ( TOTAL_PERCENT - (parsingprogress + writingprogress) ) * NB_Bars ) / TOTAL_PERCENT; 
+            cout <<"\r[" <<setw(NB_Bars) <<setfill(' ') <<string( nbbars, '=' ) <<"] " 
+                 <<setw(3) <<setfill(' ') << ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) <<"%";
 
-            this_thread::sleep_for( chrono::milliseconds(15) );
+            this_thread::sleep_for( chrono::milliseconds(10) );
         }
     }
 
     int CGfxUtil::UnpackSprite()
     {
-        atomic<uint32_t> parsingprogress(0);
-        atomic<uint32_t> writingprogress(0);
-        //atomic<bool>     stopupdateprogress(false);
+        atomic<uint32_t>     parsingprogress(0);
+        atomic<uint32_t>     writingprogress(0);
+        atomic<bool>         stopupdateprogress(false);
+        Poco::File           infileinfo(m_pInputPath->mypath);
+        filetypes::Parse_WAN parser( ReadFileToByteVector( m_pInputPath->mypath.toString() ) );
 
-        filetypes::Parse_WAN             parser( ReadFileToByteVector( m_pInputPath->mypath.toString() ) );
-        //unique_ptr<filetypes::Write_WAN> pWriter = nullptr;
+        uint32_t level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
 
-        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl" <<m_pInputPath->mypath.depth() <<"\n"
+        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<level <<"\n"
              <<"HP:\n";
+
+        auto myfuture = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
 
         auto sprty = parser.getSpriteType();
         if( sprty == filetypes::Parse_WAN::eSpriteType::spr4bpp )
         {
-            auto sprite = parser.ParseAs4bpp();
-            cout<<"\n";
+            auto       sprite = parser.ParseAs4bpp(&parsingprogress);
+            Poco::Path outpath(m_pOutputPath->mypath);
+            outpath.pushDirectory(m_pInputPath->mypath.getBaseName());
+
+            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+            
         }
         else if( sprty == filetypes::Parse_WAN::eSpriteType::spr8bpp )
         {
-            auto sprite = parser.ParseAs8bpp();
-            cout<<"\n";
+            auto       sprite = parser.ParseAs8bpp(&parsingprogress);
+            Poco::Path outpath(m_pOutputPath->mypath);
+            outpath.pushDirectory(m_pInputPath->mypath.getBaseName());
+
+            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
         }
-        //auto myfuture = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
 
-        //if( parser.getSpriteType() == filetypes::Parse_WAN::eSpriteType::spr4bpp )
-        //    pWriter.reset( new filetypes::Write_WAN( parser.ParseAs4bpp(&parsingprogress )) );
-        //else if( parser.getSpriteType() == filetypes::Parse_WAN::eSpriteType::spr8bpp )
-        //    pWriter.reset( new filetypes::Write_WAN( parser.ParseAs8bpp(&parsingprogress )) );
 
-        //Poco::File outputdirectory( m_pOutputPath->mypath );
-        //if( !outputdirectory.exists() )
-        //    outputdirectory.createDirectory();
-
-        //pWriter->WriteUnpacked(outputdirectory.path(), &writingprogress );
-        //assert(false);
-
-        //stopupdateprogress = true;
-        //myfuture.get();
+        stopupdateprogress = true;
+        myfuture.get();
 
         return 0;
     }
 
     int CGfxUtil::BuildSprite()
     {
-        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl" <<m_pInputPath->mypath.depth() <<"\n"
+        Poco::File           infileinfo(m_pInputPath->mypath);
+        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<(m_pInputPath->mypath.depth() + ( infileinfo.getSize() & 0xF )) <<"\n"
              <<"HP:\n";
 
         return 0;
@@ -223,12 +249,12 @@ namespace gfx_util
         //check if path exists
         if( inputfile.exists() )
         {
-            if( inputfile.isFile()           && isValid_WAN_InputFile( path ) )
-                m_execMode = eExecMode::UNPACK_SPRITE_Mode;
-            else if( inputfile.isDirectory() && isValid_WANT_InputDirectory( path ) )
-                m_execMode = eExecMode::BUILD_SPRITE_Mode;
-            else
-                return false; //File does not exist return failure
+            //if( inputfile.isFile()           && isValid_WAN_InputFile( path ) )
+            //    m_execMode = eExecMode::UNPACK_SPRITE_Mode;
+            //else if( inputfile.isDirectory() && isValid_WANT_InputDirectory( path ) )
+            //    m_execMode = eExecMode::BUILD_SPRITE_Mode;
+            //else
+            //    return false; //File does not exist return failure
 
             m_pInputPath-> mypath = inputPath;
             m_pOutputPath->mypath = inputPath;
@@ -243,12 +269,17 @@ namespace gfx_util
         Poco::Path outpath(path);
         bool       success = false;
 
-        if( outpath.isDirectory() && m_execMode == eExecMode::UNPACK_SPRITE_Mode )
-        {
-            m_pOutputPath->mypath = outpath;
-            success = true;
-        }
-        else if( outpath.isFile() && m_execMode == eExecMode::BUILD_SPRITE_Mode )
+        //if( outpath.isDirectory() && m_execMode == eExecMode::UNPACK_SPRITE_Mode )
+        //{
+        //    m_pOutputPath->mypath = outpath;
+        //    success = true;
+        //}
+        //else if( outpath.isFile() && m_execMode == eExecMode::BUILD_SPRITE_Mode )
+        //{
+        //    m_pOutputPath->mypath = outpath;
+        //    success = true;
+        //}
+        if( outpath.isDirectory() ||  outpath.isFile() )
         {
             m_pOutputPath->mypath = outpath;
             success = true;
@@ -257,22 +288,148 @@ namespace gfx_util
         return success;
     }
 
+    void CGfxUtil::DetermineOperationMode()
+    {
+        using namespace pmd2::filetypes;
+       // eExecMode::BUILD_SPRITE_Mode;
+        Poco::File theinput( m_pInputPath->mypath );
+
+        if( theinput.isFile() )
+        {
+            //Working on a file
+            if( theinput.getSize() < 5000000u ) 
+            {
+                //If less than 5mb load it in to run the file format tester
+                vector<uint8_t> tmp = utils::io::ReadFileToByteVector(theinput.path());
+                auto result = CContentHandler::GetInstance().AnalyseContent(analysis_parameter(tmp.begin(), tmp.end(), m_pInputPath->mypath.getExtension() ) );
+
+                if( result._type == e_ContentType::WAN_SPRITE_CONTAINER )
+                {
+                    m_execMode = eExecMode::UNPACK_SPRITE_Mode;
+                }
+                else if( result._type == e_ContentType::PACK_CONTAINER )
+                {
+                    m_execMode = eExecMode::EXPORT_POKE_SPRITES_PACK_Mode;
+                }
+                else if( result._type == e_ContentType::AT4PX_CONTAINER )
+                {
+                }
+                else if( result._type == e_ContentType::PKDPX_CONTAINER )
+                {
+                }
+                else if( result._type == e_ContentType::BGP_FILE )
+                {
+                    m_execMode = eExecMode::EXPORT_BGP_Mode;
+                }
+                else if( result._type == e_ContentType::WTE_FILE )
+                {
+                    m_execMode = eExecMode::EXPORT_WTE_Mode;
+                }
+                else
+                {
+                    assert(false); //crap
+                    m_execMode = eExecMode::INVALID_Mode;
+                    if( !m_bQuiet )
+                        cerr << "No ideas what to do with that input parameter ^^;\n";
+                }
+            }
+            else
+            {
+                //Too big to load.. Use the file extension..
+                assert(false);
+            }
+        }
+        else if( theinput.isDirectory() )
+        {
+            //Working on a directory
+
+            //Check the content and find out what to do
+            Poco::DirectoryIterator diter( theinput );
+            Poco::DirectoryIterator diterend;
+            vector<string> content; //list of the filenames found at the root of the input folder
+
+            //If the folder name matches one of the 3 special sprite pack file names
+            if( MatchesPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() ) )
+            {
+                m_execMode = eExecMode::IMPORT_POKE_SPRITES_PACK_Mode;
+                if( !m_bQuiet )
+                    cerr << "Input folder name matches the name of one of the pokemon sprites pack file!\n"
+                         << "Preparing to convert all sprites directories in the input directory into WAN sprites, and packing them into a pack file!";
+            }
+            
+            //Otherwise, analyse the content of the folder!
+            while( diter != diterend )
+            {
+                content.push_back( Poco::Path( diter->path() ).getFileName() );
+                ++diter;
+            }
+
+            if( AreReqFilesPresent_Sprite( content ) )
+            {
+                //We got all we need to build a sprite !
+                m_execMode = eExecMode::BUILD_SPRITE_Mode;
+                if( !m_bQuiet )
+                    cerr << "Required files to build a sprite found! Get the duct tape ready, we're building a sprite!\n";
+            }
+            else
+            {
+                assert(false); //crap
+                m_execMode = eExecMode::INVALID_Mode;
+                if( !m_bQuiet )
+                    cerr << "No ideas what to do with that input parameter ^^;\n";
+            }
+
+        }
+        else
+        {
+            //Unknown..
+            m_execMode = eExecMode::INVALID_Mode;
+            if( !m_bQuiet )
+                cerr << "No ideas what to do with that input parameter ^^;\n";
+        }
+    }
+
     bool CGfxUtil::ParseOptionQuiet( const vector<string> & optdata )
     {
         //If this is called, we don't need to do any additional validation!
         return m_bQuiet = true;
     }
 
+    bool CGfxUtil::ParseOptionExportFormat( const std::vector<std::string> & optdata )
+    {
+        //First entry is the option symbol
+
+        if( optdata.size() > 1 )
+        {
+            if( optdata[1].compare( "raw" ) == 0 )
+            {
+                m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::RAW;
+            }
+            else if( optdata[1].compare( utils::io::BMP_FileExtension ) == 0 )
+            {
+                m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::BMP;
+            }
+            else
+            {
+                //Fallback to png
+                m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     bool CGfxUtil::isValid_WAN_InputFile( const string & path )
     {
-        Poco::Path pathtovalidate(path);
+        //Poco::Path pathtovalidate(path);
 
         //A very quick and simple first stage check. The true validation will happen later, when its 
         // less time consuming to do so!
-        if( pathtovalidate.getExtension().compare( filetypes::WAN_FILEX ) == 0 )
-            return true;
+        //if( pathtovalidate.getExtension().compare( filetypes::WAN_FILEX ) == 0 )
+        //    return true;
 
-        return false;
+        return true;
     }
 
     bool CGfxUtil::isValid_WANT_InputDirectory( const string & path )
@@ -294,8 +451,7 @@ namespace gfx_util
         try
         {
             SetArguments(argc,argv);
-            cout << "\"" <<m_pInputPath->mypath.getFileName() <<"\" wants to fight!\n"
-                 << "Go Poochyena!\n"
+            cout << "\"" <<m_pInputPath->mypath.getFileName() <<"\" wants to battle!\n"
                  << "Poochyena can't wait to begin!\n";
         }
         catch( Poco::Exception pex )
@@ -316,6 +472,9 @@ namespace gfx_util
         //Exec the operation
         try
         {
+            //Determine Execution mode
+            DetermineOperationMode();
+
             cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
             switch( m_execMode )
             {
@@ -329,7 +488,7 @@ namespace gfx_util
                 }
                 case eExecMode::UNPACK_SPRITE_Mode:
                 {
-                    cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n";
+                    cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
                     returnval = UnpackSprite();
                     cout << "\nIts super-effective!!\n"
                          << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
@@ -342,7 +501,7 @@ namespace gfx_util
                 }
             };
 
-            cout <<"" << "Poochyena used Rest!\nShe went to sleep!\n";
+            cout << "Poochyena used Rest! She went to sleep!\n";
         }
         catch( Poco::Exception pex )
         {
@@ -366,8 +525,8 @@ namespace gfx_util
 //=================================================================================================
 // Main Function
 //=================================================================================================
-void Tests();
-void TestEncode();
+void Test();
+//void TestEncode();
 
 int main( int argc, const char * argv[] )
 {
@@ -375,10 +534,72 @@ int main( int argc, const char * argv[] )
     CGfxUtil & application = CGfxUtil::GetInstance();
     return application.Main(argc,argv);
 
-    //Tests();
+    //Test();
     //TestEncode();
     return 0;
 }
+
+//#include "Poco/DOM/DOMParser.h"
+//#include "Poco/DOM/Document.h"
+//#include "Poco/DOM/NodeIterator.h"
+//#include "Poco/DOM/NodeFilter.h"
+//#include "Poco/DOM/AutoPtr.h"
+//#include "Poco/SAX/InputSource.h"
+//#include "Poco/XML/XMLWriter.h"
+//#include "Poco/SAX/AttributesImpl.h"
+//#include <fstream>
+//
+//void Test()
+//{
+//    typedef Poco::XML::Document PDoc;
+//
+//    std::ifstream in("test.xml");
+//    Poco::XML::InputSource src(in);
+//    Poco::XML::DOMParser parser;
+//    Poco::AutoPtr<PDoc> pDoc = parser.parse(&src);
+//    Poco::XML::NodeIterator it(pDoc, Poco::XML::NodeFilter::SHOW_ALL);
+//    Poco::XML::Node* pNode = it.nextNode();
+//    while (pNode)
+//    {
+//        std::cout<<pNode->nodeName()<<":"<< pNode->nodeValue()<<std::endl;
+//        pNode = it.nextNode();
+//    }
+//
+//
+//    using namespace Poco::XML;
+//
+//    std::ofstream str("test.xml");
+//    XMLWriter     writer(str, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT);
+//    writer.setNewLine("\n");
+//    writer.startDocument();
+//
+//
+//    //AttributesImpl attrs;
+//    //attrs.addAttribute("", "", "a1", "", "v1");
+//    //attrs.addAttribute("", "", "a2", "", "v2");
+//    
+//    //writer.startElement("","","");
+//
+//    writer.startElement("", "animation_data", "");//, attrs);
+//   
+//    AttributesImpl attrs;
+//    attrs.addAttribute("","", "name", "string", "run");
+//
+//    writer.startElement("", "", "group",attrs);
+//
+//    AttributesImpl seqattrs;
+//    seqattrs.addAttribute("","", "name", "string", "Up");
+//
+//    writer.startElement("","","sequence", seqattrs);
+//    writer.endElement("","","sequence");
+//
+//    writer.endElement("", "", "group");
+//
+//    writer.endElement("", "animation_data", "");
+//    writer.endDocument();
+//
+//    system("pause");
+//}
 
 //Encoding/decoding tests
 //#include <ppmdu/fmts/sir0.hpp>

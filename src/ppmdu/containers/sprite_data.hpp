@@ -9,11 +9,13 @@ Description:
 */
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
+#include <ppmdu/ext_fmts/supported_io.hpp>
 #include <vector>
 #include <map>
 #include <cstdint>
 #include <utility>
 #include <algorithm>
+#include <atomic>
 
 //Forward declare for the friendly io modules !
 namespace pmd2{ namespace filetypes{ class Parse_WAN; class Write_WAN; }; };
@@ -23,6 +25,17 @@ namespace pmd2{ namespace graphics
 //=========================================================================================
 //  SpriteAnimationFrame
 //=========================================================================================
+
+    /*
+        sprOffParticle
+            Stores the value of an offset in the offset table.
+    */
+    struct sprOffParticle
+    {
+        int16_t offx = 0;
+        int16_t offy = 0;
+    };
+
     /*
         MetaFrame
             Stores properties for a single frame.
@@ -54,16 +67,13 @@ namespace pmd2{ namespace graphics
             _32x8  = 0x44,  // 01xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
             _8x32  = 0x84,  // 10xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
 
-            _32x16 = 0x48,  // 01xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
-            _16x32 = 0x88,  // 10xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
+            _16x32 = 0x48,  // 01xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
+            _32x16 = 0x88,  // 10xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
 
-            _64x32 = 0x4C,  // 01xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
-            _32x64 = 0x8C,  // 10xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
+            _32x64 = 0x4C,  // 01xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
+            _64x32 = 0x8C,  // 10xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
         };
-        static const unsigned int LENGTH = 10u;  //The length of the meta frame data in raw form!
-
-
-        
+        //static const unsigned int LENGTH = 10u;  //The length of the meta frame data in raw form!
 
         //Pass the raw offsets with their first 2 bits containing the img resolution
         // and get the resolution as a eRes !
@@ -100,8 +110,8 @@ namespace pmd2{ namespace graphics
         //Cleaned up values from file( the Interpreted values below, were removed from those ):
         uint16_t image_index;    //The index of the actual image data in the image data vector
         uint16_t unk0;           //?
-        uint16_t offset_y;       //The frame will be offset this much, ?in absolute coordinates?
-        uint16_t offset_x;       //The frame will be offset this much, ?in absolute coordinates?
+        int16_t  offset_y;       //The frame will be offset this much, ?in absolute coordinates?
+        int16_t  offset_x;       //The frame will be offset this much, ?in absolute coordinates?
         uint16_t unk1;           //Unknown data, stored in last 16 bits integer in the entry for a meta-frame
 
         //Interpreted values:
@@ -159,11 +169,11 @@ namespace pmd2{ namespace graphics
     {
         uint16_t frame_duration   = 0;    //The duration this frame will be displayed 0-0xFFFF
         uint16_t meta_frame_index = 0;  //The index of the meta-frame to be displayed
-        uint16_t spr_offset_x     = 0;      //The offset from the center of the sprite the frame will be drawn at.
-        uint16_t spr_offset_y     = 0;      //The offset from the center of the sprite the frame will be drawn at.
-        uint16_t shadow_offset_x  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
-        uint16_t shadow_offset_y  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
-        static const unsigned int LENGTH = 12u;  //The length of the animation frame data in raw form!
+        int16_t  spr_offset_x     = 0;      //The offset from the center of the sprite the frame will be drawn at.
+        int16_t  spr_offset_y     = 0;      //The offset from the center of the sprite the frame will be drawn at.
+        int16_t  shadow_offset_x  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
+        int16_t  shadow_offset_y  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
+        //static const unsigned int LENGTH = 12u;  //The length of the animation frame data in raw form!
 
         inline bool isNull()const
         {
@@ -271,6 +281,24 @@ namespace pmd2{ namespace graphics
         uint16_t m_IsMosaicSpr    = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
         uint16_t m_Unk11          = 0; //Unknown value.
         uint16_t m_Unk12          = 0; //Unknown value at the end of the file!
+
+        //Constants
+        static const std::string DESC_Unk3;
+        static const std::string DESC_nbColorsPerRow;
+        static const std::string DESC_Unk4;
+        static const std::string DESC_Unk5;
+
+        static const std::string DESC_Unk6;
+        static const std::string DESC_Unk7;
+        static const std::string DESC_Unk8;
+        static const std::string DESC_Unk9;
+        static const std::string DESC_Unk10;
+
+        static const std::string DESC_Is8WaySprite;
+        static const std::string DESC_Is256Sprite;
+        static const std::string DESC_IsMosaicSpr;
+        static const std::string DESC_Unk11;
+        static const std::string DESC_Unk12;
     };
 
 //=========================================================================================
@@ -298,6 +326,13 @@ namespace pmd2{ namespace graphics
         //void     RemoveAFrame( uint32_t index ) //Remove a frame and all its references!
         //{
         //}
+        const std::vector<sprOffParticle>      & getPartOffsets()const{ return m_partOffsets; }
+        const std::vector<img_t>               & getFrames()const{ return m_frames; }
+        const std::multimap<uint32_t,uint32_t> & getMetaRefs()const{return m_metarefs;}
+        const std::vector<MetaFrame>           & getMetaFrames()const{return m_metaframes;}
+        const std::vector<SpriteAnimationGroup>& getAnimGroups()const{return m_animgroups;;}
+        const std::vector<gimg::colorRGB24>    & getPalette()const{ return m_palette;}
+        const SprInfo                          & getSprInfo()const{ return m_common; }
 
     private:
 
@@ -434,7 +469,7 @@ namespace pmd2{ namespace graphics
                         }
                         else
                         {
-                            //Bad meta-frame index ! Sometimes this is acceptable, in the case of 0xFF !
+                            //Bad meta-frame index ! Sometimes this might be acceptable..
                             assert(false);
                         }
                     }
@@ -451,7 +486,62 @@ namespace pmd2{ namespace graphics
         std::vector<SpriteAnimationGroup> m_animgroups;  //Groups containing animation sequences
         std::vector<gimg::colorRGB24>     m_palette;     //The palette for this sprite
         SprInfo                           m_common;      //Common properties about the sprite not affected by template type!
+        std::vector<sprOffParticle>       m_partOffsets; //The particle offsets list
     };
+
+
+//=========================================================================================
+//  SpriteUnpacker
+//=========================================================================================
+    /*
+        Export a sprite to a directory structure, a palette, and several xml data files.
+        -imgtype   : The supported image type to use for exporting the individual frames. 
+        -usexmlpal : If true, the palette will be exported as an xml file, and not a
+                     RIFF palette.
+    */
+    //void Export8bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i8bpp> & srcspr, 
+    //                                  const std::string                         & outpath,
+    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype   = utils::io::eSUPPORT_IMG_IO::PNG,
+    //                                  bool                                        usexmlpal = false);
+    //void Export4bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 
+    //                                  const std::string                         & outpath,
+    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype   = utils::io::eSUPPORT_IMG_IO::PNG,
+    //                                  bool                                        usexmlpal = false);
+
+    /*
+        ExportSpriteToDirectory
+            Call this to export any types of Sprite.a
+            (Used those to hide template dependant low level stuff as much as possible)
+    */
+    template<class _Sprite_T>
+        void ExportSpriteToDirectory( const _Sprite_T            & srcspr, 
+                                      const std::string          & outpath, 
+                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
+                                      bool                         usexmlpal   = false,
+                                      std::atomic<uint32_t>      * progresscnt = nullptr );
+
+//=========================================================================================
+//  SpriteBuilder
+//=========================================================================================
+    /*
+        Import a sprite from the exported structure above !
+    */
+    //SpriteData<gimg::tiled_image_i8bpp> Import8bppSpriteFromDirectory( const std::string & inpath );
+    //SpriteData<gimg::tiled_image_i4bpp> Import4bppSpriteFromDirectory( const std::string & inpath );
+
+
+    //Check if all the required files and subfolders are in the filelist passed as param!
+    // Use this before calling ImportSpriteFromDirectory on the list of the files present
+    // in the dir to make sure everything is ok!
+    bool AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
+
+
+    /*
+        ImportSpriteFromDirectory
+            Call this to import any types of Sprite.
+    */
+    template<class _Sprite_T>
+        _Sprite_T ImportSpriteFromDirectory( const std::string & inpath );
 };};
 
 #endif

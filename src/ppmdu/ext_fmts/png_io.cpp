@@ -28,14 +28,32 @@ namespace utils{ namespace io
 
 
 //
+// Copy from indexed to PNG palette
+//
+    png::palette PalToPngPal( const std::vector<gimg::colorRGB24> & srcpal )
+    {
+        png::palette palette(srcpal.size());
+
+        //copy palette
+        for( unsigned int i = 0; i < palette.size(); ++i )
+        {
+            palette[i].red   = srcpal[i].red;
+            palette[i].green = srcpal[i].green;
+            palette[i].blue  = srcpal[i].blue;
+        }
+
+        return std::move(palette);
+    }
+
+//
 // Read an indexed png of a specific bitdepth
 //
-    template<class _pngimagepixel>
-        void readPNG_indexed( gimg::tiled_image_i4bpp  & out_indexed, 
-                              const std::string        & filepath,
-                              unsigned int              forcedwidth     = 0,
-                              unsigned int              forcedheight    = 0,
-                              bool                      erroronwrongres = false )
+    template<class _pngimagepixel, class _outTImg>
+        void readPNG_indexed( _outTImg          & out_indexed, 
+                              const std::string & filepath,
+                              unsigned int        forcedwidth     = 0,
+                              unsigned int        forcedheight    = 0,
+                              bool                erroronwrongres = false )
     {
         png::image<_pngimagepixel> input;
         input.read( filepath, png::require_color_space<_pngimagepixel>() );
@@ -79,15 +97,15 @@ namespace utils{ namespace io
         }
 
         //Image Resolution
-        int tiledwidth  = (forcedwidth != 0)?  forcedwidth  : input.get_width();
+        int tiledwidth  = (forcedwidth  != 0)? forcedwidth  : input.get_width();
         int tiledheight = (forcedheight != 0)? forcedheight : input.get_height();
 
         //Make sure the height and width are divisible by the size of the tiles!
-        if( tiledwidth % gimg::tiled_image_i4bpp::tile_t::WIDTH )
-            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  gimg::tiled_image_i4bpp::tile_t::WIDTH );
+        if( tiledwidth % _outTImg::tile_t::WIDTH )
+            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  _outTImg::tile_t::WIDTH );
 
-        if( tiledheight % gimg::tiled_image_i4bpp::tile_t::HEIGHT )
-            tiledheight = CalcClosestHighestDenominator( tiledheight,  gimg::tiled_image_i4bpp::tile_t::HEIGHT );
+        if( tiledheight % _outTImg::tile_t::HEIGHT )
+            tiledheight = CalcClosestHighestDenominator( tiledheight,  _outTImg::tile_t::HEIGHT );
 
         //Resize target image
         out_indexed.setPixelResolution( tiledwidth, tiledheight );
@@ -111,13 +129,14 @@ namespace utils{ namespace io
         {
             for( unsigned int j = 0; j < maxCopyHeight; ++j )
             {
-                out_indexed.getPixel( i, j ) = gimg::pixel_indexed_4bpp::GetAcomponentBitmask(0) & 
-                                               static_cast<uint8_t>( input.get_pixel(i,j) );
+                out_indexed.getPixel( i, j ) = _outTImg::pixel_t::GetAcomponentBitmask(0) & static_cast<uint8_t>( input.get_pixel(i,j) );
             }
         }
     }
 
-
+//==============================================================================================
+//  Import/Export from/to 4bpp
+//==============================================================================================
 
     bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp  & out_indexed,
                             const std::string        & filepath,
@@ -161,16 +180,16 @@ namespace utils{ namespace io
                           const std::string              & filepath )
     {
         png::image<png::index_pixel_4> output;
-        png::palette                   palette(in_indexed.getNbColors());
+        //png::palette                   palette(in_indexed.getNbColors());
 
-        //copy palette
-        for( unsigned int i = 0; i < palette.size(); ++i )
-        {
-            palette[i].red   = in_indexed.getPalette()[i].red;
-            palette[i].green = in_indexed.getPalette()[i].green;
-            palette[i].blue  = in_indexed.getPalette()[i].blue;
-        }
-        output.set_palette(palette);
+        ////copy palette
+        //for( unsigned int i = 0; i < palette.size(); ++i )
+        //{
+        //    palette[i].red   = in_indexed.getPalette()[i].red;
+        //    palette[i].green = in_indexed.getPalette()[i].green;
+        //    palette[i].blue  = in_indexed.getPalette()[i].blue;
+        //}
+        output.set_palette( PalToPngPal(in_indexed.getPalette()) );
 
         //Copy image
         output.resize( in_indexed.getNbPixelWidth(), in_indexed.getNbPixelHeight() );
@@ -201,4 +220,100 @@ namespace utils{ namespace io
         }
         return true;
     }
+
+//==============================================================================================
+//  Import/Export from/to 8bpp
+//==============================================================================================
+
+    bool ImportFrom8bppPNG( gimg::tiled_image_i8bpp & out_indexed,
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
+    {
+        try
+        {
+            readPNG_indexed<png::index_pixel>( out_indexed, filepath );
+        }
+        catch( png::error e )
+        {
+            static const uint32_t bpp = gimg::tiled_image_i8bpp::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
+            cerr << "<!>- PNG image is not in " <<bpp <<" bpp format.. Not using a palette would lead to unforseen consequences!\n"
+                 << "     The required input format is an indexed PNG, " <<bpp <<" bits per pixels, "
+                 <<utils::do_exponent_of_2_<bpp>::value  <<" colors !\n";
+            return false;
+        }
+
+        return true;
+    }
+
+
+    bool ExportTo8bppPNG( const gimg::tiled_image_i8bpp & in_indexed,
+                          const std::string             & filepath )
+    {
+        png::image<png::index_pixel> output;
+        output.set_palette( PalToPngPal(in_indexed.getPalette()) );
+
+        //Copy image
+        output.resize( in_indexed.getNbPixelWidth(), in_indexed.getNbPixelHeight() );
+
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+                output.set_pixel( i,j, static_cast<uint8_t>( in_indexed.getPixel( i, j ).getWholePixelData() ) ); //If only one component returns the entire pixel data
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( std::exception e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+
+//================================================================================================
+//  Generic Specializatin
+//================================================================================================
+    template<>
+        bool ExportToPNG( const gimg::tiled_image_i4bpp & in_indexed,
+                          const std::string             & filepath )
+    {
+        return ExportTo4bppPNG( in_indexed, filepath );
+    }
+
+    template<>
+        bool ExportToPNG( const gimg::tiled_image_i8bpp & in_indexed,
+                          const std::string             & filepath )
+    {
+        return ExportTo8bppPNG( in_indexed, filepath );
+    }
+
+    template<>
+        bool ImportFromPNG( gimg::tiled_image_i4bpp & out_indexed,
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
+    {
+        return ImportFrom4bppPNG( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    }
+
+    template<>
+        bool ImportFromPNG( gimg::tiled_image_i8bpp & out_indexed,
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
+    {
+        return ImportFrom8bppPNG( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    }
+
 };};

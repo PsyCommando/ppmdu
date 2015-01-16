@@ -1918,112 +1918,112 @@ namespace pmd2
             sir0_sprite_rule
                 Rule for sprites stored within a SIR0 container.
         */
-        class sir0_sprite_rule : public filetypes::IContentHandlingRule
-        {
-        public:
-            sir0_sprite_rule(){}
-            ~sir0_sprite_rule(){}
+    //    class sir0_sprite_rule : public filetypes::IContentHandlingRule
+    //    {
+    //    public:
+    //        sir0_sprite_rule(){}
+    //        ~sir0_sprite_rule(){}
 
-            //Returns the value from the content type enum to represent what this container contains!
-            virtual e_ContentType getContentType()const;
+    //        //Returns the value from the content type enum to represent what this container contains!
+    //        virtual e_ContentType getContentType()const;
 
-            //Returns an ID number identifying the rule. Its not the index in the storage array,
-            // because rules can me added and removed during exec. Thus the need for unique IDs.
-            //IDs are assigned on registration of the rule by the handler.
-            virtual content_rule_id_t getRuleID()const;
-            virtual void              setRuleID( content_rule_id_t id );
+    //        //Returns an ID number identifying the rule. Its not the index in the storage array,
+    //        // because rules can me added and removed during exec. Thus the need for unique IDs.
+    //        //IDs are assigned on registration of the rule by the handler.
+    //        virtual content_rule_id_t getRuleID()const;
+    //        virtual void              setRuleID( content_rule_id_t id );
 
-            //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
-            //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-            //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-                                          //types::constitbyte_t   itdataend );
-            virtual ContentBlock Analyse( const analysis_parameter& parameters );
+    //        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+    //        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
+    //        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
+    //                                      //types::constitbyte_t   itdataend );
+    //        virtual ContentBlock Analyse( const analysis_parameter& parameters );
 
-            //This method is a quick boolean test to determine quickly if this content handling
-            // rule matches, without in-depth analysis.
-            virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                                   types::constitbyte_t   itdataend,
-                                   const std::string & filext);
+    //        //This method is a quick boolean test to determine quickly if this content handling
+    //        // rule matches, without in-depth analysis.
+    //        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
+    //                               types::constitbyte_t   itdataend,
+    //                               const std::string & filext);
 
-        private:
-            content_rule_id_t m_myID;
-        };
+    //    private:
+    //        content_rule_id_t m_myID;
+    //    };
 
-        //Returns the value from the content type enum to represent what this container contains!
-        e_ContentType sir0_sprite_rule::getContentType()const
-        {
-            return e_ContentType::SPRITE_CONTAINER;
-        }
+    //    //Returns the value from the content type enum to represent what this container contains!
+    //    e_ContentType sir0_sprite_rule::getContentType()const
+    //    {
+    //        return e_ContentType::SPRITE_CONTAINER;
+    //    }
 
-        //Returns an ID number identifying the rule. Its not the index in the storage array,
-        // because rules can me added and removed during exec. Thus the need for unique IDs.
-        //IDs are assigned on registration of the rule by the handler.
-        content_rule_id_t sir0_sprite_rule::getRuleID()const
-        {
-            return m_myID;
-        }
-        void sir0_sprite_rule::setRuleID( content_rule_id_t id )
-        {
-            m_myID = id;
-        }
+    //    //Returns an ID number identifying the rule. Its not the index in the storage array,
+    //    // because rules can me added and removed during exec. Thus the need for unique IDs.
+    //    //IDs are assigned on registration of the rule by the handler.
+    //    content_rule_id_t sir0_sprite_rule::getRuleID()const
+    //    {
+    //        return m_myID;
+    //    }
+    //    void sir0_sprite_rule::setRuleID( content_rule_id_t id )
+    //    {
+    //        m_myID = id;
+    //    }
 
-        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
-        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        ContentBlock sir0_sprite_rule::Analyse( const analysis_parameter& parameters  )
-        {
-            ContentBlock cb;
-            //build our content block info
-            cb._startoffset          = 0;
-            cb._endoffset            = distance( parameters._itparentbeg, parameters._itdataend );
-            cb._rule_id_that_matched = getRuleID();
-            cb._type                 = getContentType();
+    //    //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+    //    //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
+    //    ContentBlock sir0_sprite_rule::Analyse( const analysis_parameter& parameters  )
+    //    {
+    //        ContentBlock cb;
+    //        //build our content block info
+    //        cb._startoffset          = 0;
+    //        cb._endoffset            = distance( parameters._itparentbeg, parameters._itdataend );
+    //        cb._rule_id_that_matched = getRuleID();
+    //        cb._type                 = getContentType();
 
-            //No known sub-content
+    //        //No known sub-content
 
-            return cb;
-        }
+    //        return cb;
+    //    }
 
-        //This method is a quick boolean test to determine quickly if this content handling
-        // rule matches, without in-depth analysis.
-        bool sir0_sprite_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend , const std::string & filext )
-        {
-            //Literally the best check we can do ^^;
-            unsigned int lengthsofar = 0;
-            for( auto itcount = itdatabeg; itcount != itdataend && lengthsofar <= 27u; ++lengthsofar, ++itcount )
+    //    //This method is a quick boolean test to determine quickly if this content handling
+    //    // rule matches, without in-depth analysis.
+    //    bool sir0_sprite_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend , const std::string & filext )
+    //    {
+    //        //Literally the best check we can do ^^;
+    //        unsigned int lengthsofar = 0;
+    //        for( auto itcount = itdatabeg; itcount != itdataend && lengthsofar <= 27u; ++lengthsofar, ++itcount )
 
-            //It can't be longer than 26, if the last field ends up on the line below..
-            // -- -- -- -- -- -- 01 01 01 01 02 02 02 02 03 03
-            // 04 04 AA AA AA AA AA AA AA AA AA AA AA AA AA AA
-            if( lengthsofar > 27u ) //set to 27, in the very unlikely case that it wouldn't be aligned on the field's size..
-            {
-                return false;
-            }
-            else if( lengthsofar == sprite_data_header::DATA_LEN )
-            {
-                return true;
-            }
-            else if( lengthsofar > sprite_data_header::DATA_LEN )
-            {
-                types::constitbyte_t itsearch = itdatabeg;
-                std::advance( itsearch, sprite_data_header::DATA_LEN );
-                return std::all_of( itsearch, itdataend, []( uint8_t val ){ return val == pmd2::filetypes::COMMON_PADDING_BYTE; } );
-            }
+    //        //It can't be longer than 26, if the last field ends up on the line below..
+    //        // -- -- -- -- -- -- 01 01 01 01 02 02 02 02 03 03
+    //        // 04 04 AA AA AA AA AA AA AA AA AA AA AA AA AA AA
+    //        if( lengthsofar > 27u ) //set to 27, in the very unlikely case that it wouldn't be aligned on the field's size..
+    //        {
+    //            return false;
+    //        }
+    //        else if( lengthsofar == sprite_data_header::DATA_LEN )
+    //        {
+    //            return true;
+    //        }
+    //        else if( lengthsofar > sprite_data_header::DATA_LEN )
+    //        {
+    //            types::constitbyte_t itsearch = itdatabeg;
+    //            std::advance( itsearch, sprite_data_header::DATA_LEN );
+    //            return std::all_of( itsearch, itdataend, []( uint8_t val ){ return val == pmd2::filetypes::COMMON_PADDING_BYTE; } );
+    //        }
 
-            return false;
-        }
-    };
+    //        return false;
+    //    }
+    //};
 
     //=========================================================================================================
-    namespace filetypes
-    {
-        //========================================================================================================
-        //  sir0_sprite_rule
-        //========================================================================================================
-            /*
-                sir0_sprite_rule
-                    A small singleton that has for only task to register the at4px_rule!
-            */
-            RuleRegistrator<graphics::sir0_sprite_rule> RuleRegistrator<graphics::sir0_sprite_rule>::s_instance;
-    };
+    //namespace filetypes
+    //{
+    //    //========================================================================================================
+    //    //  sir0_sprite_rule
+    //    //========================================================================================================
+    //        /*
+    //            sir0_sprite_rule
+    //                A small singleton that has for only task to register the at4px_rule!
+    //        */
+    //        RuleRegistrator<graphics::sir0_sprite_rule> RuleRegistrator<graphics::sir0_sprite_rule>::s_instance;
+    //};
 
-};
+};};

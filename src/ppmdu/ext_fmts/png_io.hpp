@@ -14,15 +14,55 @@ namespace utils{ namespace io
 {
     static const std::string PNG_FileExtension = "png";
 
-    bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp & out_indexed,
-                            const std::string       & filepath, 
-                            unsigned int              forcedwidth     = 0,
-                            unsigned int              forcedheight    = 0,
-                            bool                      erroronwrongres = false );
+//==============================================================================================
+//  Import/Export from/to 4bpp
+//==============================================================================================
+    //bool ImportFrom4bppPNG( gimg::tiled_image_i4bpp & out_indexed,
+    //                        const std::string       & filepath, 
+    //                        unsigned int              forcedwidth     = 0,
+    //                        unsigned int              forcedheight    = 0,
+    //                        bool                      erroronwrongres = false );
 
 
-    bool ExportTo4bppPNG( const gimg::tiled_image_i4bpp & in_indexed,
-                          const std::string             & filepath );
+    //bool ExportTo4bppPNG( const gimg::tiled_image_i4bpp & in_indexed,
+    //                      const std::string             & filepath );
+
+//==============================================================================================
+//  Import/Export from/to 8bpp
+//==============================================================================================
+    //bool ImportFrom8bppPNG( gimg::tiled_image_i8bpp & out_indexed,
+    //                        const std::string       & filepath, 
+    //                        unsigned int              forcedwidth     = 0,
+    //                        unsigned int              forcedheight    = 0,
+    //                        bool                      erroronwrongres = false );
+
+
+    //bool ExportTo8bppPNG( const gimg::tiled_image_i8bpp & in_indexed,
+    //                      const std::string             & filepath );
+
+//==============================================================================================
+//  Import/Export from/to ANY !
+//==============================================================================================
+    //Generic Export Functions
+    // Calls the correct function depending on the type of the tiled image!
+    template<class _TImg_t>
+        bool ExportToPNG( const _TImg_t     & in_indexed,
+                          const std::string & filepath );
+
+
+
+    //Generic Import Functions
+    // Calls the correct function depending on the type of the tiled image!
+
+    template<class _TImg_t>
+        bool ImportFromPNG( _TImg_t           & out_indexed,
+                            const std::string & filepath, 
+                            unsigned int        forcedwidth     = 0,
+                            unsigned int        forcedheight    = 0,
+                            bool                erroronwrongres = false );
+
+
+
 };};
 
 #endif

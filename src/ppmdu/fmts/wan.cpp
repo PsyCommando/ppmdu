@@ -14,6 +14,9 @@ using namespace pmd2::graphics;
 
 namespace pmd2{ namespace filetypes
 {
+
+
+
 //=============================================================================================
 //  WAN File Specifics
 //=============================================================================================
@@ -255,12 +258,12 @@ namespace pmd2{ namespace filetypes
 //=============================================================================================
 
     Parse_WAN::Parse_WAN( std::vector<uint8_t> && rawdata, const animnamelst_t * animnames )
-        :m_rawdata(rawdata), m_pANameList(animnames)
+        :m_rawdata(rawdata), m_pANameList(animnames), m_pProgress(nullptr)
     {
     }
 
     Parse_WAN::Parse_WAN( const std::vector<uint8_t> &rawdata, const animnamelst_t * animnames )
-        :m_rawdata(rawdata), m_pANameList(animnames)
+        :m_rawdata(rawdata), m_pANameList(animnames), m_pProgress(nullptr)
     {
     }
 
@@ -281,10 +284,11 @@ namespace pmd2{ namespace filetypes
         return (frmdat.is256Colors == 1 )? eSpriteType::spr8bpp : eSpriteType::spr4bpp;
     }
 
-    void Parse_WAN::DoParse( vector<gimg::colorRGB24>     & out_pal, 
-                             SprInfo                      & out_sprinf,
-                             vector<MetaFrame>            & out_mfrms,
-                             vector<SpriteAnimationGroup> & out_anims )
+    void Parse_WAN::DoParse( vector<gimg::colorRGB24>      & out_pal, 
+                             SprInfo                       & out_sprinf,
+                             vector<MetaFrame>             & out_mfrms,
+                             vector<SpriteAnimationGroup>  & out_anims,
+                             vector<sprOffParticle>        & out_offsets )
     {
         ReadSir0Header();
         ReadWanHeader();
@@ -321,6 +325,14 @@ namespace pmd2{ namespace filetypes
 
         //Get anims
         out_anims = ReadAnimations();
+
+        //Get Offsets
+        out_offsets = ReadParticleOffsets(); 
+
+        if( m_pProgress != nullptr )
+        {
+            m_pProgress->store( m_pProgress->load() + ProgressProp_Other );
+        }
     }
 
 
@@ -339,13 +351,18 @@ namespace pmd2{ namespace filetypes
     vector<gimg::colorRGB24> Parse_WAN::ReadPalette()
     {
         m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptr_palette );
-
         unsigned int             nbcolors = (m_wanImgDataInfo.ptr_palette - m_paletteInfo.ptrpal) / 4;
+        //auto                     itcolread = m_rawdata.begin() + m_paletteInfo.ptrpal;
         vector<gimg::colorRGB24> palettecolors(nbcolors);
-        auto                     itcolread = m_rawdata.begin() + m_paletteInfo.ptrpal;
+        rgbx32_parser myparser(palettecolors.begin());
 
-        for( unsigned int i = 0; i < nbcolors; ++i )
-            itcolread = palettecolors[i].ReadAsRawByte( itcolread );
+            //2 - Read it
+            std::for_each( (m_rawdata.begin() + m_paletteInfo.ptrpal), 
+                           (m_rawdata.begin() + m_wanImgDataInfo.ptr_palette), //The pointer points at the end of the palette
+                           myparser );
+   
+        //for( unsigned int i = 0; i < nbcolors; ++i )
+        //    itcolread = palettecolors[i].ReadAsRawByte( itcolread );
 
         return std::move(palettecolors);
     }
@@ -381,18 +398,6 @@ namespace pmd2{ namespace filetypes
         result.YOffbit5   = utils::GetBit( offyfl, 11u ) > 0;
         result.YOffbit6   = utils::GetBit( offyfl, 10u ) > 0;
 
-        //result.vFlip      = (0x2000 & offxfl) > 0;
-        //result.hFlip      = (0x1000 & offxfl) > 0;
-        //result.XOffbit5   = (0x0800 & offxfl) > 0;
-        //result.XOffbit6   = (0x0400 & offxfl) > 0;
-        //result.XOffbit7   = (0x0200 & offxfl) > 0;
-
-        //y offset flags
-        //result.YOffbit3   = (0x2000 & offyfl) > 0;
-        //result.Mosaic     = (0x1000 & offyfl) > 0;
-        //result.YOffbit5   = (0x0800 & offyfl) > 0;
-        //result.YOffbit6   = (0x0400 & offyfl) > 0;
-
         return result;
     }
 
@@ -416,51 +421,25 @@ namespace pmd2{ namespace filetypes
         auto           itReadOffsetMF = m_rawdata.begin() + m_wanAnimInfo.ptr_metaFrmTable;
         const uint32_t nbMetaFrames   = (offsetEndRefTable - m_wanAnimInfo.ptr_metaFrmTable) / sizeof(uint32_t);
         metaframes.resize(nbMetaFrames);
+        uint32_t progressBefore = 0; //Save a little snapshot of the progress
+        if(m_pProgress!=nullptr)
+        {
+            progressBefore = m_pProgress->load();
+        }
 
         for( unsigned int cptfrm = 0; cptfrm < nbMetaFrames; ++cptfrm )
         {
             uint32_t curptr = utils::ReadIntFromByteVector<uint32_t>( itReadOffsetMF ); //Iterator is incremented automatically!
             metaframes[cptfrm] = ReadAMetaFrame( curptr + m_rawdata.begin() );
+
+            if( m_pProgress != nullptr )
+            {
+                m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (cptfrm+1)) / nbMetaFrames ) );
+            }
         }
 
         return std::move(metaframes);
     }
-
-    //void Parse_WAN::ReadFramesAs4bpp( vector<gimg::tiled_image_i4bpp>   & out_imgs, 
-    //                                  const vector<graphics::MetaFrame> & metafrms, 
-    //                                  const map<uint32_t,uint32_t>      & metarefs )
-    //{
-    //    out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); //ensure capacity
-    //    vector<uint8_t>::const_iterator itfrmptr = m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table;
-
-    //    //Read ptrs in place
-    //    for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
-    //    {
-    //        uint32_t ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
-    //        //Move construtor involved!
-    //        out_imgs[i] = ParseZeroStrippedTImg<gimg::tiled_image_i4bpp>( m_rawdata.begin() + ptrtoimg, 
-    //                                                                      m_rawdata.begin(), 
-    //                                                                      MetaFrame::eResToResolution( metafrms[metarefs.at( i )].resolution ) );
-    //    }
-    //}
-
-    //void Parse_WAN::ReadFramesAs8bpp( vector<gimg::tiled_image_i8bpp>   & out_imgs, 
-    //                                  const vector<graphics::MetaFrame> & metafrms, 
-    //                                  const map<uint32_t,uint32_t>      & metarefs )
-    //{
-    //    out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); //ensure capacity
-    //    vector<uint8_t>::const_iterator itfrmptr = m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table;
-
-    //    //Read ptrs in place
-    //    for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
-    //    {
-    //        uint32_t ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
-    //        //Move construtor involved!
-    //        out_imgs[i] = ParseZeroStrippedTImg<gimg::tiled_image_i8bpp>( m_rawdata.begin() + ptrtoimg, 
-    //                                                                      m_rawdata.begin(), 
-    //                                                                      MetaFrame::eResToResolution( metafrms[metarefs.at( i )].resolution ) );
-    //    }
-    //}
 
     graphics::AnimationSequence Parse_WAN::ReadASequence( vector<uint8_t>::const_iterator itwhere )
     {
@@ -509,6 +488,11 @@ namespace pmd2{ namespace filetypes
         
         //Each group is made of a pointer, and the nb of sequences over there! Some can be null!
         spr_anim_grp_entry entry;
+        uint32_t progressBefore = 0; //Save a little snapshot of the progress
+        if(m_pProgress!=nullptr)
+        {
+            progressBefore = m_pProgress->load();
+        }
 
         for( unsigned int cpgrp = 0; cpgrp < anims.size(); ++cpgrp )
         {
@@ -531,10 +515,52 @@ namespace pmd2{ namespace filetypes
             //Set the group name from the list if applicable!
             if( m_pANameList != nullptr && m_pANameList->size() < cpgrp )
                 anims[cpgrp].group_name = m_pANameList->at(cpgrp).front();
+
+            if( m_pProgress != nullptr )
+            {
+                m_pProgress->store( progressBefore + ( ( ProgressProp_Animations * (cpgrp+1)) / anims.size() ) );
+            }
         }
         
 
         return std::move(anims);
+    }
+
+    vector<sprOffParticle> Parse_WAN::ReadParticleOffsets()
+    {
+        //First, check if we do have a particle offset block ! It can be omitted!
+        if( m_wanAnimInfo.ptr_pOffsetsTable == 0 )
+        {
+            if( m_pProgress != nullptr )
+                m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
+            return vector<sprOffParticle>();
+        }
+
+        //Get the size of the block
+        uint32_t ptrFirstSeq    = utils::ReadIntFromByteVector<uint32_t>(m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable);
+        uint32_t offsetblocklen = ptrFirstSeq - m_wanAnimInfo.ptr_pOffsetsTable;
+
+        vector<sprOffParticle>          offsets( offsetblocklen / 4u ); //2x 16 bit ints per entry
+        vector<uint8_t>::const_iterator itCuroffset  = m_rawdata.begin() + m_wanAnimInfo.ptr_pOffsetsTable;
+        vector<uint8_t>::const_iterator itEndOffsets = m_rawdata.begin() + ptrFirstSeq;
+        uint32_t progressBefore = 0; //Save a little snapshot of the progress
+        if(m_pProgress!=nullptr)
+        {
+            progressBefore = m_pProgress->load();
+        }
+
+        for( unsigned int i = 0; i < offsets.size() && itCuroffset != itEndOffsets; ++i )
+        {
+            offsets[i].offx = utils::ReadIntFromByteVector<uint16_t>(itCuroffset); //Incremented automatically by the function
+            offsets[i].offy = utils::ReadIntFromByteVector<uint16_t>(itCuroffset);
+
+            if( m_pProgress != nullptr )
+            {
+                m_pProgress->store( progressBefore + ( ( ProgressProp_Offsets * (i + 1) ) / offsets.size() ) );
+            }
+        }
+
+        return std::move(offsets);
     }
 
 //=============================================================================================

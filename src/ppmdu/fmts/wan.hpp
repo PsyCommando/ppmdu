@@ -10,6 +10,8 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <ppmdu/containers/color.hpp>
+#include <ppmdu/pmd2/sprite_rle.hpp>
+#include <ppmdu/containers/tiled_image.hpp>
 #include <atomic>
 #include <algorithm>
 
@@ -17,6 +19,8 @@ namespace pmd2 { namespace filetypes
 {
 
     typedef std::vector<std::vector<std::string>> animnamelst_t;
+
+    static const bool WAN_REVERSED_PIX_ORDER = true; //Whether we should read the pixels in reversed bit order, when applicable(4bpp)
 
 //=============================================================================================
 //  WAN Structures
@@ -172,35 +176,54 @@ namespace pmd2 { namespace filetypes
         - imgres       : The resolution of the image to decode !
     */
     template<class _TIMG_t, class _randit>
-        _TIMG_t ParseZeroStrippedTImg( _randit itcomptblbeg, _randit filebeg, utils::Resolution imgres )
+        /*_TIMG_t*/ uint32_t ParseZeroStrippedTImg( _randit itcomptblbeg, 
+                                                _randit filebeg, 
+                                                utils::Resolution imgres, 
+                                                gimg::PixelReaderIterator<_TIMG_t> itinsertat )
     {
         using namespace std;
         using namespace utils;
-
-        _TIMG_t                 myimg( imgres.width, imgres.height );
-        auto                    itinsertat = myimg.begin();
-        zerostrip_table_entry   entry;
+        zerostrip_table_entry entry;
+        uint32_t nb_bytesread = 0;
 
         do
         {
             itcomptblbeg = entry.ReadFromContainer(itcomptblbeg);
 
-            if( !(entry.isNull()) && itinsertat != myimg.end() )
+            if( !(entry.isNull()) /*&& itinsertat != myimg.end()*/ )
             {
                 //Exec the entry!
                 if( entry.pixelsrc == 0  )
-                {
                     std::fill_n( itinsertat, entry.pixamt, 0 );
-                }
                 else
-                {
                     std::copy_n( filebeg + entry.pixelsrc, entry.pixamt, itinsertat );
-                }
+                nb_bytesread += entry.pixamt;
             }
 
-        }while( !(entry.isNull()) && itinsertat != myimg.end() );
+        }while( !(entry.isNull()) /*&& itinsertat != myimg.end()*/ );
+        return nb_bytesread;
+    }
 
-        return std::move( myimg );
+    template<class _randit>
+        std::vector<zerostrip_table_entry> FillZeroStripTable( _randit itcomptblbeg )
+    {
+        using namespace std;
+        using namespace utils;
+        std::vector<zerostrip_table_entry> zerostrtbl;
+        zerostrip_table_entry entry;
+
+        do
+        {
+            itcomptblbeg = entry.ReadFromContainer(itcomptblbeg);
+
+            if( !(entry.isNull()) )
+            {
+                zerostrtbl.push_back( entry );
+            }
+
+        }while( !(entry.isNull()) );
+
+        return std::move(zerostrtbl);
     }
 
     /*
@@ -230,12 +253,14 @@ namespace pmd2 { namespace filetypes
         eSpriteType getSpriteType()const;
 
         template<class TIMG_t>
-            graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr)
+            graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr )
         {
             SpriteData<TIMG_t> sprite;
+
+            m_pProgress = pProgress;
         
             //Parse the common stuff first!
-            DoParse( sprite.m_palette, sprite.m_common, sprite.m_metaframes, sprite.m_animgroups );
+            DoParse( sprite.m_palette, sprite.m_common, sprite.m_metaframes, sprite.m_animgroups, sprite.m_partOffsets );
 
             if( m_wanImgDataInfo.is256Colors == 1 )
             {
@@ -256,7 +281,7 @@ namespace pmd2 { namespace filetypes
 
             //Read images, use meta frames to get proper res, thanks to the refs!
             //ReadFramesAs8bpp( sprite.m_frames, sprite.m_metaframes);
-            ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs );
+            ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette() );
 
             return std::move( sprite );
         }
@@ -280,12 +305,14 @@ namespace pmd2 { namespace filetypes
         void DoParse( std::vector<gimg::colorRGB24>               & out_pal, 
                       graphics::SprInfo                           & out_sprinf,
                       std::vector<graphics::MetaFrame>            & out_mfrms,
-                      std::vector<graphics::SpriteAnimationGroup> & out_anims );
+                      std::vector<graphics::SpriteAnimationGroup> & out_anims,
+                      std::vector<graphics::sprOffParticle>       & out_offsets );
 
         template<class TIMG_t>
             void ReadFrames( std::vector<TIMG_t>                    & out_imgs, 
                              const std::vector<graphics::MetaFrame> & metafrms,
-                             const std::multimap<uint32_t,uint32_t> & metarefs)
+                             const std::multimap<uint32_t,uint32_t> & metarefs,
+                             const std::vector<gimg::colorRGB24>    & pal)
         {
             using namespace std;
             vector<uint8_t>::const_iterator itfrmptr = m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table; //Make iterator to frame pointer table
@@ -293,20 +320,69 @@ namespace pmd2 { namespace filetypes
             //ensure capacity
             out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); 
 
+            uint32_t progressBefore = 0; //Save a little snapshot of the progress
+            if(m_pProgress!=nullptr)
+            {
+                progressBefore = m_pProgress->load();
+            }
+
+            utils::Resolution myres = RES_64x64_SPRITE;   //Default to 64x64
+
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
             {
                 uint32_t          ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
-                utils::Resolution myres    = RES_32x32_SPRITE;   //Default to 32x32
                 auto              itfound  = metarefs.find( i ); //Find if we have a meta-frame pointing to that frame
+                myres = RES_64x64_SPRITE;
+
+                uint32_t totalbyamt = 0;
+                auto zerostrtable = FillZeroStripTable( m_rawdata.begin() + ptrtoimg );
+                for( const auto & entry : zerostrtable )
+                    totalbyamt += entry.pixamt;
+                uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
+                uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
 
                 if( itfound != metarefs.end() )
+                {
                     myres = MetaFrame::eResToResolution( metafrms[itfound->second].resolution );
+                }
+                else
+                {
+                    //This could mean its not animated and we should re-use the value of the meta-frame.
+                    if( metafrms.size() == m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
+                        myres = MetaFrame::eResToResolution( metafrms[i].resolution );
+                    else if( !metafrms.empty() && metafrms.size() < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
+                        myres = MetaFrame::eResToResolution( metafrms[metafrms.size()-1].resolution ); //Take the last valid resolution
+                    else
+                    {
+                        //if( nbPixInBytes == 2048 )
+                        //else if( nbPixInBytes == 512 )
+                        //else if( nbPixInBytes == 256 )
+                        //else if(  nbPixInBytes == 128 )
+                    }
+
+                    //Use the last used resolution if nothing works!...
+                }
+
+                assert( nbPixInBytes == (myres.width * myres.height) );
 
                 //Parse the image with the best resolution we could find!
-                out_imgs[i] = ParseZeroStrippedTImg<TIMG_t>( m_rawdata.begin() + ptrtoimg, 
-                                                             m_rawdata.begin(), 
-                                                             myres );
+                out_imgs[i].setPixelResolution( myres.width, myres.height );
+                gimg::PixelReaderIterator<TIMG_t> myiter( &(out_imgs[i])); 
+
+                uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>( m_rawdata.begin() + ptrtoimg, 
+                                                                       m_rawdata.begin(), 
+                                                                       myres,
+                                                                       myiter);
+
+                //Copy the palette!
+                out_imgs[i].getPalette() = pal;
+
+                //
+                if( m_pProgress != nullptr )
+                {
+                    (*m_pProgress) = progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nb_ptrs_frm_ptrs_table );
+                }
             }
         }
 
@@ -326,6 +402,7 @@ namespace pmd2 { namespace filetypes
         std::vector<graphics::SpriteAnimationGroup> ReadAnimations();   // Reads the animation data
         graphics::AnimationSequence                 ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
         std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex );
+        std::vector<graphics::sprOffParticle>       ReadParticleOffsets();                 
 
     private:
         //Variables
@@ -338,6 +415,12 @@ namespace pmd2 { namespace filetypes
         std::vector<uint8_t>   m_rawdata;
         const animnamelst_t   *m_pANameList; //List of names to give animation groups and its sequences! The first name in the sub-vector is the name of the group! The others are the names of the sequences for that group!
         std::atomic<uint32_t> *m_pProgress;
+
+        static const unsigned int       ProgressProp_Frames     = 40; //% of the job
+        static const unsigned int       ProgressProp_MetaFrames = 20; //% of the job
+        static const unsigned int       ProgressProp_Animations = 20; //% of the job
+        static const unsigned int       ProgressProp_Offsets    = 10; //% of the job
+        static const unsigned int       ProgressProp_Other      = 10; //% of the job
     };
 
     //A function form of the above, that deals with a file path, instead of the raw data of the file.

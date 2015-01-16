@@ -47,25 +47,34 @@ namespace utils{ namespace io
         return -1;
     }
 
-    bool ImportFrom4bppBMP( gimg::tiled_image_i4bpp & out_indexed,
-                            const std::string       & filepath,
-                            unsigned int              forcedwidth,
-                            unsigned int              forcedheight,
-                            bool                      erroronwrongres)
+//
+//
+//
+    template<class _TImg_t>
+        bool ImportBMP( _TImg_t           & out_timg, 
+                        const std::string & filepath, 
+                        unsigned int        forcedwidth, 
+                        unsigned int        forcedheight, 
+                        bool                erroronwrongres )
     {
+        //The max nb of colors possible with that bitdepth!
+        static const unsigned int NB_Colors_Support = utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL>::value;
+        
         bool   hasWarnedOORPixel = false; //Whether we warned about out of range pixels at least once during the pixel loop! If applicable..
         bool   isWrongResolution = false;
         BMP    input;
-        auto & outpal = out_indexed.getPalette();
+        auto & outpal = out_timg.getPalette();
 
         input.ReadFromFile( filepath.c_str() );
 
-        if( input.TellBitDepth() != 4 )
+        if( input.TellBitDepth() != _TImg_t::pixel_t::GetBitsPerPixel() )
         {
-            //We don't support anything not 4 bpp !
+            //We don't support anything with a different bitdepth!
             //Mention the palette length mismatch
-            cerr <<"\n<!>-ERROR: The file : " <<filepath <<", is not a 4bpp indexed bmp ! Its in fact " <<input.TellBitDepth() <<"bpp!\n"
-                 <<"Next time make sure the bmp file is saved as 4bpp, 16 colors!\n";
+            cerr <<"\n<!>-ERROR: The file : " <<filepath <<", is not a " <<_TImg_t::pixel_t::GetBitsPerPixel() 
+                 <<"bpp indexed bmp ! Its in fact " <<input.TellBitDepth() <<"bpp!\n"
+                 <<"Make sure the bmp file is saved as " <<_TImg_t::pixel_t::GetBitsPerPixel() <<"bpp, "
+                 <<NB_Colors_Support << " colors!\n";
 
             return false;
         }
@@ -81,13 +90,14 @@ namespace utils{ namespace io
             return false;
         }
 
-        if( utils::LibraryWide::getInstance().Data().isVerboseOn() && input.TellNumberOfColors() <= 16 )
+
+        if( utils::LibraryWide::getInstance().Data().isVerboseOn() && input.TellNumberOfColors() <= NB_Colors_Support )
         {
             //Mention the palette length mismatch
             cerr <<"\n<!>-Warning: " <<filepath <<" has a different palette length than expected!\n"
                  <<"Fixing and continuing happily..\n";
         }
-        out_indexed.setNbColors( 16u );
+        out_timg.setNbColors( NB_Colors_Support );
 
         //Build palette
         for( int i = 0; i < input.TellNumberOfColors(); ++i )
@@ -100,23 +110,23 @@ namespace utils{ namespace io
         }
 
         //Image Resolution
-        int tiledwidth  = (forcedwidth != 0)?  forcedwidth  : input.TellWidth();
+        int tiledwidth  = (forcedwidth  != 0)? forcedwidth  : input.TellWidth();
         int tiledheight = (forcedheight != 0)? forcedheight : input.TellHeight();
 
         //Make sure the height and width are divisible by the size of the tiles!
-        if( tiledwidth % gimg::tiled_image_i4bpp::tile_t::WIDTH )
-            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  gimg::tiled_image_i4bpp::tile_t::WIDTH );
+        if( tiledwidth % _TImg_t::tile_t::WIDTH )
+            tiledwidth = CalcClosestHighestDenominator( tiledwidth,  _TImg_t::tile_t::WIDTH );
 
-        if( tiledheight % gimg::tiled_image_i4bpp::tile_t::HEIGHT )
-            tiledheight = CalcClosestHighestDenominator( tiledheight,  gimg::tiled_image_i4bpp::tile_t::HEIGHT );
+        if( tiledheight % _TImg_t::tile_t::HEIGHT )
+            tiledheight = CalcClosestHighestDenominator( tiledheight,  _TImg_t::tile_t::HEIGHT );
 
         //Resize target image
-        out_indexed.setPixelResolution( tiledwidth, tiledheight );
+        out_timg.setPixelResolution( tiledwidth, tiledheight );
 
         //If the image we read is not divisible by the dimension of our tiles, 
         // we have to ensure that we won't got out of bound while copying!
-        int maxCopyWidth  = out_indexed.getNbPixelWidth();
-        int maxCopyHeight = out_indexed.getNbPixelHeight();
+        int maxCopyWidth  = out_timg.getNbPixelWidth();
+        int maxCopyHeight = out_timg.getNbPixelHeight();
 
         if( maxCopyWidth != input.TellWidth() || maxCopyHeight != input.TellHeight() )
         {
@@ -144,7 +154,7 @@ namespace utils{ namespace io
                     colorindex        = 0;
                 }
 
-                out_indexed.getPixel( i, j ) = colorindex;
+                out_timg.getPixel( i, j ) = colorindex;
             }
         }
 
@@ -152,18 +162,24 @@ namespace utils{ namespace io
     }
 
 
+//
+//
+//
+
 
     //bool ImportFrom4bppBMP( gimg::tiled_image_i4bpp & out_indexed,
     //                        const std::string       & filepath,
     //                        unsigned int              forcedwidth,
     //                        unsigned int              forcedheight,
-    //                        bool                      erroronwrongres )
+    //                        bool                      erroronwrongres)
+    //{
+    //    return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    //} 
     //{
     //    bool   hasWarnedOORPixel = false; //Whether we warned about out of range pixels at least once during the pixel loop! If applicable..
     //    bool   isWrongResolution = false;
     //    BMP    input;
     //    auto & outpal = out_indexed.getPalette();
-
 
     //    input.ReadFromFile( filepath.c_str() );
 
@@ -172,14 +188,14 @@ namespace utils{ namespace io
     //        //We don't support anything not 4 bpp !
     //        //Mention the palette length mismatch
     //        cerr <<"\n<!>-ERROR: The file : " <<filepath <<", is not a 4bpp indexed bmp ! Its in fact " <<input.TellBitDepth() <<"bpp!\n"
-    //             <<"Next time make sure the bmp file is saved as 4bpp, 16 colors!\n";
+    //             <<"Make sure the bmp file is saved as 4bpp, 16 colors!\n";
 
     //        return false;
     //    }
 
-
-    //    isWrongResolution = input.TellWidth() != forcedwidth || input.TellHeight() != forcedheight;
-
+    //    //Only force resolution when we were asked to!
+    //    if( forcedwidth != 0 && forcedheight != 0 )
+    //        isWrongResolution = input.TellWidth() != forcedwidth || input.TellHeight() != forcedheight;
     //    if( erroronwrongres && isWrongResolution )
     //    {
     //        cerr <<"\n<!>-ERROR: The file : " <<filepath <<" has an unexpected resolution!\n"
@@ -206,17 +222,30 @@ namespace utils{ namespace io
     //        //Alpha is ignored
     //    }
 
+    //    //Image Resolution
+    //    int tiledwidth  = (forcedwidth != 0)?  forcedwidth  : input.TellWidth();
+    //    int tiledheight = (forcedheight != 0)? forcedheight : input.TellHeight();
+
+    //    //Make sure the height and width are divisible by the size of the tiles!
+    //    if( tiledwidth % gimg::tiled_image_i4bpp::tile_t::WIDTH )
+    //        tiledwidth = CalcClosestHighestDenominator( tiledwidth,  gimg::tiled_image_i4bpp::tile_t::WIDTH );
+
+    //    if( tiledheight % gimg::tiled_image_i4bpp::tile_t::HEIGHT )
+    //        tiledheight = CalcClosestHighestDenominator( tiledheight,  gimg::tiled_image_i4bpp::tile_t::HEIGHT );
+
     //    //Resize target image
-    //    out_indexed.setPixelResolution( forcedwidth, forcedheight );
+    //    out_indexed.setPixelResolution( tiledwidth, tiledheight );
 
-    //    int maxCopyWidth  = input.TellWidth();
-    //    int maxCopyHeight = input.TellHeight();
+    //    //If the image we read is not divisible by the dimension of our tiles, 
+    //    // we have to ensure that we won't got out of bound while copying!
+    //    int maxCopyWidth  = out_indexed.getNbPixelWidth();
+    //    int maxCopyHeight = out_indexed.getNbPixelHeight();
 
-    //    if( isWrongResolution )
+    //    if( maxCopyWidth != input.TellWidth() || maxCopyHeight != input.TellHeight() )
     //    {
     //        //Take the smallest resolution, so we don't go out of bound!
-    //        maxCopyWidth  = std::min( static_cast<int>(out_indexed.getNbPixelWidth()),  maxCopyWidth );
-    //        maxCopyHeight = std::min( static_cast<int>(out_indexed.getNbPixelHeight()), maxCopyHeight );
+    //        maxCopyWidth  = std::min( input.TellWidth(),  maxCopyWidth );
+    //        maxCopyHeight = std::min( input.TellHeight(), maxCopyHeight );
     //    }
 
     //    //Copy pixels over
@@ -246,12 +275,13 @@ namespace utils{ namespace io
     //}
 
 
-    bool ExportTo4bppBMP( const gimg::tiled_image_i4bpp & in_indexed,
-                          const std::string             & filepath )
+    template<class _TImg_t>
+        bool ExportBMP( const _TImg_t     & in_indexed,
+                        const std::string & filepath )
     {
         BMP output;
-        output.SetBitDepth(4);
-        assert( in_indexed.getNbColors() == 16 );
+        output.SetBitDepth(_TImg_t::pixel_t::GetBitsPerPixel());
+        assert( in_indexed.getNbColors() == utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL>::value );
 
         //copy palette
         for( int i = 0; i < output.TellNumberOfColors(); ++i )
@@ -286,4 +316,105 @@ namespace utils{ namespace io
         }
         return bsuccess;
     }
+
+    //bool ExportTo4bppBMP( const gimg::tiled_image_i4bpp & in_indexed,
+    //                      const std::string             & filepath )
+    //{
+    //    return ExportBMP(in_indexed,filepath);
+    //}
+    //{
+    //    BMP output;
+    //    output.SetBitDepth(4);
+    //    assert( in_indexed.getNbColors() == 16 );
+
+    //    //copy palette
+    //    for( int i = 0; i < output.TellNumberOfColors(); ++i )
+    //        output.SetColor( i, colorRGB24ToRGBApixel( in_indexed.getPalette()[i] ) );
+
+    //    //Copy image
+    //    output.SetSize( in_indexed.getNbPixelWidth(), in_indexed.getNbPixelHeight() );
+
+    //    for( int i = 0; i < output.TellWidth(); ++i )
+    //    {
+    //        for( int j = 0; j < output.TellHeight(); ++j )
+    //        {
+    //            auto &  refpixel = in_indexed.getPixel( i, j );
+    //            uint8_t temp     = static_cast<uint8_t>( refpixel.getWholePixelData() );
+    //            output.SetPixel( i,j, colorRGB24ToRGBApixel( in_indexed.getPalette()[temp] ) ); //We need to input the color directly thnaks to EasyBMP
+    //        }
+    //    }
+
+    //    bool bsuccess = false;
+    //    try
+    //    {
+    //        bsuccess = output.WriteToFile( filepath.c_str() );
+    //    }
+    //    catch( std::exception e )
+    //    {
+    //        cerr << "<!>- Error outputing image : " << filepath <<"\n"
+    //             << "     Exception details : \n"     
+    //             << "        " <<e.what()  <<"\n";
+
+    //        assert(false);
+    //        bsuccess = false;
+    //    }
+    //    return bsuccess;
+    //}
+
+
+    //bool ImportFrom8bppBMP( gimg::tiled_image_i8bpp & out_indexed,
+    //                        const std::string       & filepath,
+    //                        unsigned int              forcedwidth,
+    //                        unsigned int              forcedheight,
+    //                        bool                      erroronwrongres )
+    //{
+    //    return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    //}
+
+
+    //bool ExportTo8bppBMP( const gimg::tiled_image_i8bpp & in_indexed,
+    //                      const std::string             & filepath )
+    //{
+    //    return ExportBMP(in_indexed,filepath);
+    //}
+
+
+    template<>
+        bool ExportToBMP( const gimg::tiled_image_i4bpp & in_indexed,
+                          const std::string             & filepath )
+    {
+        //return ExportTo4bppBMP( in_indexed, filepath );
+        return ExportBMP(in_indexed,filepath);
+    }
+
+    template<>
+        bool ExportToBMP( const gimg::tiled_image_i8bpp & in_indexed,
+                          const std::string             & filepath )
+    {
+        //return ExportTo8bppBMP( in_indexed, filepath );
+        return ExportBMP(in_indexed,filepath);
+    }
+
+    template<>
+        bool ImportFromBMP( gimg::tiled_image_i4bpp & out_indexed,
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
+    {
+        return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+        //return ImportFrom4bppBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    }
+
+    template<>
+        bool ImportFromBMP( gimg::tiled_image_i8bpp & out_indexed,
+                            const std::string       & filepath, 
+                            unsigned int              forcedwidth,
+                            unsigned int              forcedheight,
+                            bool                      erroronwrongres )
+    {
+        return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+        //return ImportFrom8bppBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
+    }
+
 };};
