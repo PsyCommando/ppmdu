@@ -20,7 +20,8 @@ namespace pmd2 { namespace filetypes
 
     typedef std::vector<std::vector<std::string>> animnamelst_t;
 
-    static const bool WAN_REVERSED_PIX_ORDER = true; //Whether we should read the pixels in reversed bit order, when applicable(4bpp)
+    static const bool         WAN_REVERSED_PIX_ORDER = true; //Whether we should read the pixels in reversed bit order, when applicable(4bpp)
+    static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
 
 //=============================================================================================
 //  WAN Structures
@@ -176,10 +177,10 @@ namespace pmd2 { namespace filetypes
         - imgres       : The resolution of the image to decode !
     */
     template<class _TIMG_t, class _randit>
-        /*_TIMG_t*/ uint32_t ParseZeroStrippedTImg( _randit itcomptblbeg, 
-                                                _randit filebeg, 
-                                                utils::Resolution imgres, 
-                                                gimg::PixelReaderIterator<_TIMG_t> itinsertat )
+        uint32_t ParseZeroStrippedTImg( _randit                            itcomptblbeg, 
+                                        _randit                            filebeg, 
+                                        utils::Resolution                  imgres, 
+                                        gimg::PixelReaderIterator<_TIMG_t> itinsertat )
     {
         using namespace std;
         using namespace utils;
@@ -190,7 +191,7 @@ namespace pmd2 { namespace filetypes
         {
             itcomptblbeg = entry.ReadFromContainer(itcomptblbeg);
 
-            if( !(entry.isNull()) /*&& itinsertat != myimg.end()*/ )
+            if( !(entry.isNull()) )
             {
                 //Exec the entry!
                 if( entry.pixelsrc == 0  )
@@ -200,7 +201,7 @@ namespace pmd2 { namespace filetypes
                 nb_bytesread += entry.pixamt;
             }
 
-        }while( !(entry.isNull()) /*&& itinsertat != myimg.end()*/ );
+        }while( !(entry.isNull()) );
         return nb_bytesread;
     }
 
@@ -260,16 +261,21 @@ namespace pmd2 { namespace filetypes
             m_pProgress = pProgress;
         
             //Parse the common stuff first!
-            DoParse( sprite.m_palette, sprite.m_common, sprite.m_metaframes, sprite.m_animgroups, sprite.m_partOffsets );
+            DoParse( sprite.m_palette, 
+                     sprite.m_common, 
+                     sprite.m_metaframes, 
+                     sprite.m_metafrmsgroups, 
+                     sprite.m_animgroups, 
+                     sprite.m_partOffsets );
 
             if( m_wanImgDataInfo.is256Colors == 1 )
             {
-                if( TIMG_t::pixel_t::GetBitsPerPixel() != 8 )
+                if( TIMG_t::pixel_t::GetBitsPerPixel() != 8 ) //Conversion not supported !
                     throw Ex_Parsing8bppAs4bpp();
             }
             else
             {
-                if( TIMG_t::pixel_t::GetBitsPerPixel() != 4 )
+                if( TIMG_t::pixel_t::GetBitsPerPixel() != 4 ) //Conversion not supported !
                     throw Ex_Parsing4bppAs8bpp();
             }
 
@@ -280,7 +286,6 @@ namespace pmd2 { namespace filetypes
             sprite.RebuildAllReferences();
 
             //Read images, use meta frames to get proper res, thanks to the refs!
-            //ReadFramesAs8bpp( sprite.m_frames, sprite.m_metaframes);
             ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette() );
 
             return std::move( sprite );
@@ -305,6 +310,7 @@ namespace pmd2 { namespace filetypes
         void DoParse( std::vector<gimg::colorRGB24>               & out_pal, 
                       graphics::SprInfo                           & out_sprinf,
                       std::vector<graphics::MetaFrame>            & out_mfrms,
+                      std::vector<graphics::MetaFrameGroup>       & out_mtfgrps,
                       std::vector<graphics::SpriteAnimationGroup> & out_anims,
                       std::vector<graphics::sprOffParticle>       & out_offsets );
 
@@ -315,18 +321,15 @@ namespace pmd2 { namespace filetypes
                              const std::vector<gimg::colorRGB24>    & pal)
         {
             using namespace std;
-            vector<uint8_t>::const_iterator itfrmptr = m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table; //Make iterator to frame pointer table
-
+            vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table); //Make iterator to frame pointer table
+            utils::Resolution               myres          = RES_64x64_SPRITE; //Max as default
+            uint32_t                        progressBefore = 0; 
             //ensure capacity
             out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); 
 
-            uint32_t progressBefore = 0; //Save a little snapshot of the progress
-            if(m_pProgress!=nullptr)
-            {
-                progressBefore = m_pProgress->load();
-            }
-
-            utils::Resolution myres = RES_64x64_SPRITE;   //Default to 64x64
+            //Save a little snapshot of the progress this far
+            if(m_pProgress != nullptr)
+                progressBefore = m_pProgress->load(); 
 
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
@@ -346,23 +349,27 @@ namespace pmd2 { namespace filetypes
                 {
                     myres = MetaFrame::eResToResolution( metafrms[itfound->second].resolution );
                 }
-                else
+                else if( metafrms.front().image_index == 0xFFFF )
                 {
-                    //This could mean its not animated and we should re-use the value of the meta-frame.
-                    if( metafrms.size() == m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
-                        myres = MetaFrame::eResToResolution( metafrms[i].resolution );
-                    else if( !metafrms.empty() && metafrms.size() < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
-                        myres = MetaFrame::eResToResolution( metafrms[metafrms.size()-1].resolution ); //Take the last valid resolution
-                    else
-                    {
-                        //if( nbPixInBytes == 2048 )
-                        //else if( nbPixInBytes == 512 )
-                        //else if( nbPixInBytes == 256 )
-                        //else if(  nbPixInBytes == 128 )
-                    }
-
-                    //Use the last used resolution if nothing works!...
+                    myres = MetaFrame::eResToResolution( metafrms.front().resolution );
                 }
+                //Otherwise default to 64x64
+                //else
+                //{
+                //    //This could mean its not animated and we should re-use the value of the meta-frame.
+                //    if( metafrms.size() == m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
+                //        myres = MetaFrame::eResToResolution( metafrms[i].resolution );
+                //    else if( !metafrms.empty() && metafrms.size() < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
+                //        myres = MetaFrame::eResToResolution( metafrms[metafrms.size()-1].resolution ); //Take the last valid resolution
+                //    else
+                //    {
+                //        //#TODO: Come up with something better !
+                //        //if( nbPixInBytes == 2048 )
+                //        //else if( nbPixInBytes == 512 )
+                //        //else if( nbPixInBytes == 256 )
+                //        //else if(  nbPixInBytes == 128 )
+                //    }
+                //}
 
                 assert( nbPixInBytes == (myres.width * myres.height) );
 
@@ -389,20 +396,30 @@ namespace pmd2 { namespace filetypes
 
         void                                        ReadSir0Header();
         void                                        ReadWanHeader();
-        std::vector<gimg::colorRGB24>               ReadPalette();      //
-        std::vector<graphics::MetaFrame>            ReadMetaFrames();   // Read Meta-Frames
-        graphics::MetaFrame                         ReadAMetaFrame( std::vector<uint8_t>::const_iterator itread );
+        std::vector<gimg::colorRGB24>               ReadPalette();
 
-        //void                                        ReadFramesAs4bpp( std::vector<gimg::tiled_image_i4bpp>   & out_imgs, 
-        //                                                              const std::vector<graphics::MetaFrame> & metafrms,
-        //                                                              const std::map<uint32_t,uint32_t>      & metarefs); // Reads the actual images data for each frames
-        //void                                        ReadFramesAs8bpp( std::vector<gimg::tiled_image_i8bpp>   & out_imgs, 
-        //                                                              const std::vector<graphics::MetaFrame> & metafrms,
-        //                                                              const std::map<uint32_t,uint32_t>      & metarefs); // Reads the actual images data for each frames
-        std::vector<graphics::SpriteAnimationGroup> ReadAnimations();   // Reads the animation data
+        //Read all the meta-frames + meta-frame groups
+        std::vector<graphics::MetaFrame>            ReadMetaFrameGroups( std::vector<graphics::MetaFrameGroup> & out_metafrmgrps );
+
+        //This reads metaframes from a single meta-frame list pointed to by the meta-frame ref table
+        void                                        ReadAMetaFrameGroup( std::vector<graphics::MetaFrameGroup> & out_metafrmgrps,
+                                                                         std::vector<graphics::MetaFrame>      & out_metafrms,
+                                                                         uint32_t                                grpbeg,
+                                                                         uint32_t                                grpend );
+        
+        //Read a single meta-frame
+        graphics::MetaFrame                         ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread );
+
+       std::vector<graphics::SpriteAnimationGroup>  ReadAnimations();   // Reads the animation data
         graphics::AnimationSequence                 ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
         std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex );
-        std::vector<graphics::sprOffParticle>       ReadParticleOffsets();                 
+        std::vector<graphics::sprOffParticle>       ReadParticleOffsets(); 
+
+        template<class _retty>
+            inline _retty ReadOff( uint32_t fileoffset, bool littleendian = true )const
+        {
+            return utils::ReadIntFromByteVector<_retty>( (m_rawdata.begin() + fileoffset), littleendian );
+        }
 
     private:
         //Variables

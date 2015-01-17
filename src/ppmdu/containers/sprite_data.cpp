@@ -21,6 +21,7 @@
 using namespace std;
 //using namespace utils;
 using utils::io::eSUPPORT_IMG_IO;
+using namespace Poco::XML;
 
 
 namespace pmd2{ namespace graphics
@@ -46,6 +47,7 @@ namespace pmd2{ namespace graphics
 
         //Meta-Frames Stuff
         static const string XML_NODE_FRMLST    = "FrameList";
+        static const string XML_NODE_FRMGRP    = "FrameGroup";
         static const string XML_NODE_FRMFRM    = "Frame";
 
         //OffsetList Stuff
@@ -123,6 +125,20 @@ namespace pmd2{ namespace graphics
     }};
 
 
+    /*
+        Used to hold a couple of useful statistics
+    */
+    struct workstatistics
+    {
+        uint32_t propFrames;
+        uint32_t propAnims;
+        uint32_t propMFrames;
+        uint32_t propOffsets;
+
+        uint32_t totalAnimFrms;
+        uint32_t totalAnimSeqs;
+    };
+
 //=============================================================================================
 //  Sprite to XML writer
 //=============================================================================================
@@ -132,7 +148,7 @@ namespace pmd2{ namespace graphics
     public:
         typedef _SPRITE_t sprite_t;
 
-        SpriteToXML( const sprite_t & myspr )
+        SpriteToXML( const sprite_t & myspr)
             :m_inSprite(myspr), m_pProgresscnt(nullptr)
         {
         }
@@ -140,31 +156,50 @@ namespace pmd2{ namespace graphics
         //Write all the data for the Sprite as XML in the
         // specified folder  under ! 
         // -colorpalasxml : if true, will print an xml palette alongside the rest!
-        void WriteXMLFiles( const string & folderpath, bool xmlcolorpal = false, std::atomic<uint32_t> * progresscnt = nullptr ) 
+        void WriteXMLFiles( const string & folderpath, workstatistics stats, bool xmlcolorpal = false, std::atomic<uint32_t> * progresscnt = nullptr ) 
         {
             m_outPath = Poco::Path(folderpath);
             m_pProgresscnt = progresscnt;
+            //m_progressProportion = proportionprogress;
+
+            ////Count the ammount of entries for calculating work
+            //// and for adding statistics to the exported files.
+            //uint32_t totalnbseqs  = 0;
+            //uint32_t totalnbfrms  = 0;
+
+            //for( const auto & agrp : m_inSprite.getAnimGroups() )
+            //{
+            //    if( ! ( agrp.sequences.empty() ) )
+            //    {
+            //        totalnbseqs += agrp.sequences.size();
+            //        for( const auto & aseq : agrp.sequences )
+            //            totalnbfrms += aseq.getNbFrames();
+            //    }
+            //}
+            //
+            ////Gather stats for computing progress proportionally at runtime
+            //const uint32_t amtWorkAnims   = m_inSprite.getAnimGroups().size() + totalnbseqs + totalnbfrms;
+            //const uint32_t amtWorkFrmGrps = m_inSprite.getMetaFrames().size() + m_inSprite.getMetaFrmsGrps().size();
+            //const uint32_t amtWorkOffs    = m_inSprite.getPartOffsets().size();
+            //const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs;
+            ////Get the percentages of work, relative to the total, for each
+            //const float    percentAnims   = ( (static_cast<float>(amtWorkAnims)   * 100.0f) / static_cast<float>(totalwork) );
+            //const float    percentFrmGrps = ( (static_cast<float>(amtWorkFrmGrps) * 100.0f) / static_cast<float>(totalwork) );
+            //const float    percentOffsets = ( (static_cast<float>(amtWorkOffs)    * 100.0f) / static_cast<float>(totalwork) );
+            ////Get the value that each will contribute to the "m_progressProportion" they have to collectively fill
+            //const uint32_t propWorkAnims  = lround(percentAnims    * static_cast<float>(m_progressProportion) / 100.0f);
+            //const uint32_t propFrmGrps    = lround(percentFrmGrps  * static_cast<float>(m_progressProportion) / 100.0f);
+            //const uint32_t propOffsets    = lround(percentOffsets  * static_cast<float>(m_progressProportion) / 100.0f);
 
             WriteProperties();
-            if(m_pProgresscnt != nullptr )
-                (*m_pProgresscnt) += 5;
-            WriteAnimations();
-            if(m_pProgresscnt != nullptr )
-                (*m_pProgresscnt) += 5;
-            WriteMetaFrames();
-            if(m_pProgresscnt != nullptr )
-                (*m_pProgresscnt) += 5;
-            WriteOffsets();
-            if(m_pProgresscnt != nullptr )
-                (*m_pProgresscnt) += 5;
+            WriteAnimations     ( stats.propAnims, stats.totalAnimSeqs, stats.totalAnimFrms );
+            WriteMetaFrameGroups( stats.propMFrames );
+            WriteOffsets        ( stats.propOffsets );
 
-            //Write palette if needed
+
+            //Write xml palette if needed
             if( xmlcolorpal )
-            {
                 WritePalette();
-                if(m_pProgresscnt != nullptr )
-                    (*m_pProgresscnt) += 5;
-            }
         }
 
     private:
@@ -173,8 +208,6 @@ namespace pmd2{ namespace graphics
         //
         void InitWriter( Poco::XML::XMLWriter & writer, const std::string & rootnodename )
         {
-            using namespace Poco::XML;
-            //writer = XMLWriter(strout, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
             writer.setNewLine("\n");
             writer.startDocument();
             writer.startElement( "", "", rootnodename );
@@ -196,6 +229,11 @@ namespace pmd2{ namespace graphics
             return sstr.str();
         }
 
+        void writeComment( XMLWriter & writer, const string & str )
+        {
+            writer.comment( str.c_str(), 0, str.size() );
+        }
+
     private:
         //
         //  Specific Stuff
@@ -203,45 +241,56 @@ namespace pmd2{ namespace graphics
 
         void WriteProperties()
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
-            ofstream  outfile( m_outPath.setFileName(SPRITE_Properties).toString() );
-            XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Properties);
+            ofstream   outfile( outpath.toString() );
+            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
                 
             InitWriter( writer, XML_NODE_SPRPROPS );
             {
                 //Color stuff
-                writer.comment( SprInfo::DESC_Unk3.c_str(), 0, SprInfo::DESC_Unk3.size() );
+                writeComment( writer, SprInfo::DESC_Unk3 );
                 writer.dataElement( "", "", XML_PROP_UNK3,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk3 ) );
-                writer.comment( SprInfo::DESC_nbColorsPerRow.c_str(), 0, SprInfo::DESC_nbColorsPerRow.size() );
+
+                writeComment( writer, SprInfo::DESC_nbColorsPerRow );
                 writer.dataElement( "", "", XML_PROP_COLPERROW, std::to_string( m_inSprite.getSprInfo().m_nbColorsPerRow ) );
-                writer.comment( SprInfo::DESC_Unk4.c_str(), 0, SprInfo::DESC_Unk4.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk4 );
                 writer.dataElement( "", "", XML_PROP_UNK4,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk4 ) );
-                writer.comment( SprInfo::DESC_Unk5.c_str(), 0, SprInfo::DESC_Unk5.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk5 );
                 writer.dataElement( "", "", XML_PROP_UNK5,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk5 ) );
 
                 //Anim Stuff
-                writer.comment( SprInfo::DESC_Unk6.c_str(), 0, SprInfo::DESC_Unk6.size() );
+                writeComment( writer, SprInfo::DESC_Unk6 );
                 writer.dataElement( "", "", XML_PROP_UNK6,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk6 ) );
-                writer.comment( SprInfo::DESC_Unk7.c_str(), 0, SprInfo::DESC_Unk7.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk7 );
                 writer.dataElement( "", "", XML_PROP_UNK7, std::to_string( m_inSprite.getSprInfo().m_Unk7 ) );
-                writer.comment( SprInfo::DESC_Unk8.c_str(), 0, SprInfo::DESC_Unk8.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk8 );
                 writer.dataElement( "", "", XML_PROP_UNK8,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk8 ) );
-                writer.comment( SprInfo::DESC_Unk9.c_str(), 0, SprInfo::DESC_Unk9.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk9 );
                 writer.dataElement( "", "", XML_PROP_UNK9,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk9 ) );
-                writer.comment( SprInfo::DESC_Unk10.c_str(), 0, SprInfo::DESC_Unk10.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk10 );
                 writer.dataElement( "", "", XML_PROP_UNK10,      turnIntToHexStr( m_inSprite.getSprInfo().m_Unk10 ) );
 
                 //Other properties
-                writer.comment( SprInfo::DESC_Is8WaySprite.c_str(), 0, SprInfo::DESC_Is8WaySprite.size() );
+                writeComment( writer, SprInfo::DESC_Is8WaySprite );
                 writer.dataElement( "", "", XML_PROP_IS8W,      std::to_string( m_inSprite.getSprInfo().m_is8WaySprite ) );
-                writer.comment( SprInfo::DESC_Is256Sprite.c_str(), 0, SprInfo::DESC_Is256Sprite.size() );
+
+                writeComment( writer, SprInfo::DESC_Is256Sprite );
                 writer.dataElement( "", "", XML_PROP_IS256COL,  std::to_string( m_inSprite.getSprInfo().m_is256Sprite ) );
-                writer.comment( SprInfo::DESC_IsMosaicSpr.c_str(), 0, SprInfo::DESC_IsMosaicSpr.size() );
+
+                writeComment( writer, SprInfo::DESC_IsMosaicSpr );
                 writer.dataElement( "", "", XML_PROP_ISMOSAICS, std::to_string( m_inSprite.getSprInfo().m_IsMosaicSpr ) );
-                writer.comment( SprInfo::DESC_Unk11.c_str(), 0, SprInfo::DESC_Unk11.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk11 );
                 writer.dataElement( "", "", XML_PROP_UNK11,     turnIntToHexStr( m_inSprite.getSprInfo().m_Unk11 ) );
-                writer.comment( SprInfo::DESC_Unk12.c_str(), 0, SprInfo::DESC_Unk12.size() );
+
+                writeComment( writer, SprInfo::DESC_Unk12 );
                 writer.dataElement( "", "", XML_PROP_UNK12,     turnIntToHexStr( m_inSprite.getSprInfo().m_Unk12 ) );
             }
             DeinitWriter( writer, XML_NODE_SPRPROPS );
@@ -249,12 +298,17 @@ namespace pmd2{ namespace graphics
 
         void WritePalette()
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
-            ofstream  outfile( m_outPath.setFileName(SPRITE_Palette).toString() );
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Palette);
+            ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
             
             InitWriter( writer, XML_NODE_PALLETTE );
+
+            stringstream strs;
+            strs <<"Total nb of color(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getPalette().size();
+            writeComment( writer, strs.str() );
+
             for( const auto & acolor : m_inSprite.getPalette() )
             {
                 writer.startElement("","", XML_NODE_COLOR );
@@ -268,7 +322,6 @@ namespace pmd2{ namespace graphics
 
         void WriteAnimFrame( Poco::XML::XMLWriter & writer, const AnimFrame & curfrm )
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
 
             writer.startElement("","", XML_NODE_ANIMFRM );
@@ -295,19 +348,17 @@ namespace pmd2{ namespace graphics
 
         void WriteAnimSequece( Poco::XML::XMLWriter & writer, const AnimationSequence & aseq )
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
 
-            //Give this sequence a name if we have one to give it!
-            //if( !aseq.getName().empty() )
-            //{
-                AttributesImpl attr;
-                attr.addAttribute("","", XML_ATTR_NAME, "string", aseq.getName() );
-                writer.startElement("","", XML_NODE_ANIMSEQ, attr );
-            //}
-            //else
-            //    writer.startElement("","", XML_NODE_ANIMSEQ );
-                        
+            stringstream strs;
+            strs <<"Sequence contains " <<aseq.getNbFrames()  << " frame(s)";
+            writeComment( writer, strs.str() );
+
+            //Give this sequence a name 
+            AttributesImpl attr;
+            attr.addAttribute("","", XML_ATTR_NAME, "string", aseq.getName() );
+            writer.startElement("","", XML_NODE_ANIMSEQ, attr );
+
             //Write the content of each frame in that sequence
             for( unsigned int cptfrms = 0; cptfrms < aseq.getNbFrames(); ++cptfrms )
                 WriteAnimFrame(writer, aseq.getFrame(cptfrms));
@@ -316,33 +367,51 @@ namespace pmd2{ namespace graphics
         }
 
         //-pAnimNameList : First entry of heach sub-vector is the anim group name, anything after is anim sequence names!
-        void WriteAnimations()
+        void WriteAnimations( uint32_t proportionofwork, uint32_t totalnbseqs, uint32_t totalnbfrms )
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
-            ofstream  outfile( m_outPath.setFileName(SPRITE_Animations).toString() );
-            XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
+            ofstream   outfile( outpath.toString() );
+            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            uint32_t   saveprogress = 0;
+
+            if( m_pProgresscnt != nullptr )
+                saveprogress = m_pProgresscnt->load();
+
+
 
             InitWriter( writer, XML_NODE_ANIMDAT );
+
+            stringstream strs;
+            strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
+            writeComment( writer, strs.str() );
+
+            strs.seekp(0);
+            strs.seekg(0);
+            strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
+            writeComment( writer, strs.str() );
+
+            strs.seekp(0);
+            strs.seekg(0);
+            strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
+            writeComment( writer, strs.str() );
+
             {
-                unsigned int   cptgrp = 0;
-                //AttributesImpl attrname;
-                //attrname.addAttribute("", "", XML_ATTR_NAME, "string", "");
+                unsigned int cptgrp = 0;
 
                 //Write the content of each group
                 for( const auto & animgrp : m_inSprite.getAnimGroups() )
                 {
                     unsigned int cptseq = 0;
 
-                    //Give this group a name if we have one to give it!
-                    //if( !(animgrp.group_name.empty()) )
-                    //{
-                        AttributesImpl attrname;
-                        attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
-                        writer.startElement("","", XML_NODE_ANIMGRP, attrname );
-                    //}
-                    //else
-                    //    writer.startElement("","", XML_NODE_ANIMGRP );
+                    stringstream strsseq;
+                    strsseq <<"Group contains " << animgrp.sequences.size() << " sequence(s)";
+                    writeComment( writer, strsseq.str() );
+
+                    //Give this group a name
+                    AttributesImpl attrname;
+                    attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
+                    writer.startElement("","", XML_NODE_ANIMGRP, attrname );
 
                     //Write the content of each sequences in that group
                     for( const auto & aseq : animgrp.sequences )
@@ -353,76 +422,180 @@ namespace pmd2{ namespace graphics
 
                     writer.endElement("","", XML_NODE_ANIMGRP );
                     ++cptgrp;
+
+                    if( m_pProgresscnt != nullptr )
+                    {
+                        uint32_t prog = ( ( proportionofwork * cptgrp ) / m_inSprite.getAnimGroups().size() );
+                        m_pProgresscnt->store( saveprogress + prog );
+                    }
                 }
             }
             DeinitWriter( writer, XML_NODE_ANIMDAT );
         }
 
-
-
-        void WriteMetaFrames()
+        void WriteMetaFrameGroups( uint32_t proportionofwork )
         {
-            using namespace Poco::XML;
             using namespace xmlstrings;
-            ofstream  outfile( m_outPath.setFileName(SPRITE_Frames).toString() );
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Frames);
+            ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
-            
+
+            uint32_t saveprogress = 0;
+
+            if( m_pProgresscnt != nullptr )
+                saveprogress = m_pProgresscnt->load();
+
             InitWriter( writer, XML_NODE_FRMLST );
+
+            stringstream strs;
+            strs <<"Total nb of group(s)      : " <<setw(4) <<setfill(' ') <<m_inSprite.getMetaFrmsGrps().size();
+            writeComment( writer, strs.str() );
+
+            strs.seekp(0);
+            strs.seekg(0);
+            strs <<"Total nb of meta-frame(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getMetaFrames().size();
+            writeComment( writer, strs.str() );
+
+            for( unsigned int i = 0; i < m_inSprite.getMetaFrmsGrps().size(); ++i )
             {
-                for( const auto & aframe : m_inSprite.getMetaFrames() )
-                {
-                    writer.startElement("","", XML_NODE_FRMFRM );
-                    {
-                        writer.dataElement( "", "", XML_PROP_FRMINDEX, to_string( aframe.image_index ) );
-                        writer.dataElement( "", "", XML_PROP_UNK0,     turnIntToHexStr( aframe.unk0 ) );
-                        writer.dataElement( "", "", XML_PROP_OFFSETY,  to_string( aframe.offset_y ) );
-                        writer.dataElement( "", "", XML_PROP_OFFSETX,  to_string( aframe.offset_x ) );
-                        writer.dataElement( "", "", XML_PROP_UNK1,     turnIntToHexStr( aframe.unk1 ) );
+                const auto & agroup = m_inSprite.getMetaFrmsGrps()[i];
+                WriteAMetaFrameGroup( writer, agroup );
 
-                        writer.startElement("","", XML_NODE_RES );
-                        {
-                            auto resolution = MetaFrame::eResToResolution(aframe.resolution);
-                            writer.dataElement( "", "", XML_PROP_WIDTH,  to_string( resolution.width ) );
-                            writer.dataElement( "", "", XML_PROP_HEIGTH, to_string( resolution.height ) );
-                        }
-                        writer.endElement("","", XML_NODE_RES );
-
-                        writer.dataElement( "", "", XML_PROP_VFLIP,  to_string( aframe.vFlip ) );
-                        writer.dataElement( "", "", XML_PROP_HFLIP,  to_string( aframe.hFlip ) );
-                        writer.dataElement( "", "", XML_PROP_MOSAIC, to_string( aframe.Mosaic ) );
-                        writer.dataElement( "", "", XML_PROP_OFFXBIT5, to_string( aframe.XOffbit5 ) );
-                        writer.dataElement( "", "", XML_PROP_OFFXBIT6, to_string( aframe.XOffbit6 ) );
-                        writer.dataElement( "", "", XML_PROP_OFFXBIT7, to_string( aframe.XOffbit7 ) );
-
-                        writer.dataElement( "", "", XML_PROP_OFFYBIT3, to_string( aframe.YOffbit3 ) );
-                        writer.dataElement( "", "", XML_PROP_OFFYBIT5, to_string( aframe.YOffbit5 ) );
-                        writer.dataElement( "", "", XML_PROP_OFFYBIT6, to_string( aframe.YOffbit6 ) );
-                    }
-                    writer.endElement("","", XML_NODE_FRMFRM );
-                }
+                if( m_pProgresscnt != nullptr )
+                    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_inSprite.getMetaFrmsGrps().size() );
             }
+
             DeinitWriter( writer, XML_NODE_FRMLST );
         }
 
-        void WriteOffsets()
+        void WriteAMetaFrameGroup( XMLWriter & writer, const MetaFrameGroup & grp )
+        {
+            using namespace xmlstrings;
+            
+            stringstream strs;
+            strs <<"Group contains " <<grp.metaframes.size() <<" meta-frame(s)";
+            writeComment( writer, strs.str() );
+
+            writer.startElement("","", XML_NODE_FRMGRP );
+
+            for( const auto & aframe : grp.metaframes )
+                WriteMetaFrame( writer, aframe );
+
+            writer.endElement("","", XML_NODE_FRMGRP );
+        }
+
+        void WriteMetaFrame( XMLWriter & writer, unsigned int index )
+        {
+            using namespace xmlstrings;
+            const auto & aframe = m_inSprite.getMetaFrames()[index];
+
+            writer.startElement("","", XML_NODE_FRMFRM );
+            {
+                writer.dataElement( "", "", XML_PROP_FRMINDEX, to_string( aframe.image_index ) );
+                writer.dataElement( "", "", XML_PROP_UNK0,     turnIntToHexStr( aframe.unk0 ) );
+                writer.dataElement( "", "", XML_PROP_OFFSETY,  to_string( aframe.offset_y ) );
+                writer.dataElement( "", "", XML_PROP_OFFSETX,  to_string( aframe.offset_x ) );
+                writer.dataElement( "", "", XML_PROP_UNK1,     turnIntToHexStr( aframe.unk1 ) );
+
+                writer.startElement("","", XML_NODE_RES );
+                {
+                    auto resolution = MetaFrame::eResToResolution(aframe.resolution);
+                    writer.dataElement( "", "", XML_PROP_WIDTH,  to_string( resolution.width ) );
+                    writer.dataElement( "", "", XML_PROP_HEIGTH, to_string( resolution.height ) );
+                }
+                writer.endElement("","", XML_NODE_RES );
+
+                writer.dataElement( "", "", XML_PROP_VFLIP,  to_string( aframe.vFlip ) );
+                writer.dataElement( "", "", XML_PROP_HFLIP,  to_string( aframe.hFlip ) );
+                writer.dataElement( "", "", XML_PROP_MOSAIC, to_string( aframe.Mosaic ) );
+                writer.dataElement( "", "", XML_PROP_OFFXBIT5, to_string( aframe.XOffbit5 ) );
+                writer.dataElement( "", "", XML_PROP_OFFXBIT6, to_string( aframe.XOffbit6 ) );
+                writer.dataElement( "", "", XML_PROP_OFFXBIT7, to_string( aframe.XOffbit7 ) );
+
+                writer.dataElement( "", "", XML_PROP_OFFYBIT3, to_string( aframe.YOffbit3 ) );
+                writer.dataElement( "", "", XML_PROP_OFFYBIT5, to_string( aframe.YOffbit5 ) );
+                writer.dataElement( "", "", XML_PROP_OFFYBIT6, to_string( aframe.YOffbit6 ) );
+            }
+            writer.endElement("","", XML_NODE_FRMFRM );
+        }
+
+        //void WriteMetaFrames()
+        //{
+        //    using namespace xmlstrings;
+        //    ofstream  outfile( m_outPath.setFileName(SPRITE_Frames).toString() );
+        //    XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+        //    
+        //    InitWriter( writer, XML_NODE_FRMLST );
+        //    {
+        //        for( const auto & aframe : m_inSprite.getMetaFrames() )
+        //        {
+        //            writer.startElement("","", XML_NODE_FRMFRM );
+        //            {
+        //                writer.dataElement( "", "", XML_PROP_FRMINDEX, to_string( aframe.image_index ) );
+        //                writer.dataElement( "", "", XML_PROP_UNK0,     turnIntToHexStr( aframe.unk0 ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFSETY,  to_string( aframe.offset_y ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFSETX,  to_string( aframe.offset_x ) );
+        //                writer.dataElement( "", "", XML_PROP_UNK1,     turnIntToHexStr( aframe.unk1 ) );
+
+        //                writer.startElement("","", XML_NODE_RES );
+        //                {
+        //                    auto resolution = MetaFrame::eResToResolution(aframe.resolution);
+        //                    writer.dataElement( "", "", XML_PROP_WIDTH,  to_string( resolution.width ) );
+        //                    writer.dataElement( "", "", XML_PROP_HEIGTH, to_string( resolution.height ) );
+        //                }
+        //                writer.endElement("","", XML_NODE_RES );
+
+        //                writer.dataElement( "", "", XML_PROP_VFLIP,  to_string( aframe.vFlip ) );
+        //                writer.dataElement( "", "", XML_PROP_HFLIP,  to_string( aframe.hFlip ) );
+        //                writer.dataElement( "", "", XML_PROP_MOSAIC, to_string( aframe.Mosaic ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFXBIT5, to_string( aframe.XOffbit5 ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFXBIT6, to_string( aframe.XOffbit6 ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFXBIT7, to_string( aframe.XOffbit7 ) );
+
+        //                writer.dataElement( "", "", XML_PROP_OFFYBIT3, to_string( aframe.YOffbit3 ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFYBIT5, to_string( aframe.YOffbit5 ) );
+        //                writer.dataElement( "", "", XML_PROP_OFFYBIT6, to_string( aframe.YOffbit6 ) );
+        //            }
+        //            writer.endElement("","", XML_NODE_FRMFRM );
+        //        }
+        //    }
+        //    DeinitWriter( writer, XML_NODE_FRMLST );
+        //}
+
+        void WriteOffsets( uint32_t proportionofwork )
         {
             using namespace Poco::XML;
             using namespace xmlstrings;
-            ofstream  outfile( m_outPath.setFileName(SPRITE_Offsets).toString() );
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Offsets);
+            ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
 
             InitWriter( writer, XML_NODE_OFFLST );
+
+            stringstream strs;
+            strs <<"Total nb of offset(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getPartOffsets().size();
+            writeComment( writer, strs.str() );
+
+            uint32_t saveprogress = 0;
+
+            if( m_pProgresscnt != nullptr )
+                saveprogress = m_pProgresscnt->load();
+
+            for( unsigned int i = 0; i < m_inSprite.getPartOffsets().size(); ++i )
             {
-                for( const auto & anoffset : m_inSprite.getPartOffsets() )
+                const auto & anoffset = m_inSprite.getPartOffsets()[i];
+                writer.startElement("","", XML_NODE_OFFSET );
                 {
-                    writer.startElement("","", XML_NODE_OFFSET );
-                    {
-                        writer.dataElement("","", XML_PROP_X, to_string( anoffset.offx ) );
-                        writer.dataElement("","", XML_PROP_Y, to_string( anoffset.offy ) );
-                    }
-                    writer.endElement("","", XML_NODE_OFFSET );
+                    writer.dataElement("","", XML_PROP_X, to_string( anoffset.offx ) );
+                    writer.dataElement("","", XML_PROP_Y, to_string( anoffset.offy ) );
                 }
+                writer.endElement("","", XML_NODE_OFFSET );
+
+
+                if( m_pProgresscnt != nullptr )
+                    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_inSprite.getPartOffsets().size() );
             }
+
             DeinitWriter( writer, XML_NODE_OFFLST );
         }
 
@@ -430,6 +603,7 @@ namespace pmd2{ namespace graphics
         Poco::Path              m_outPath;
         const sprite_t        & m_inSprite;
         std::atomic<uint32_t> * m_pProgresscnt;
+        uint32_t                m_progressProportion; //The percentage of the entire work attributed to this
     };
 
 //=============================================================================================
@@ -440,6 +614,8 @@ namespace pmd2{ namespace graphics
     {
     public:
         typedef _SPRITE_t sprite_t;
+
+
         
 
         SpriteToDirectory( const sprite_t & myspr )
@@ -461,17 +637,67 @@ namespace pmd2{ namespace graphics
 
             m_pProgress = progresscnt;
 
-            ExportFrames(imgty);
+            
+            /*for( const auto & frame : m_inSprite.getFrames() )*/
+                
+
+            //Count the ammount of entries for calculating work
+            // and for adding statistics to the exported files.
+            uint32_t totalnbseqs  = 0;
+            uint32_t totalnbfrms  = 0;
+
+            for( const auto & agrp : m_inSprite.getAnimGroups() )
+            {
+                if( ! ( agrp.sequences.empty() ) )
+                {
+                    totalnbseqs += agrp.sequences.size();
+                    for( const auto & aseq : agrp.sequences )
+                        totalnbfrms += aseq.getNbFrames();
+                }
+            }
+            
+            //Gather stats for computing progress proportionally at runtime
+            const uint32_t amtWorkFrames  = m_inSprite.getFrames().size();
+            const uint32_t amtWorkAnims   = m_inSprite.getAnimGroups().size() + totalnbseqs + totalnbfrms;
+            const uint32_t amtWorkFrmGrps = m_inSprite.getMetaFrames().size() + m_inSprite.getMetaFrmsGrps().size();
+            const uint32_t amtWorkOffs    = m_inSprite.getPartOffsets().size();
+            const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs + amtWorkFrames;
+
+            //Get the percentages of work, relative to the total, for each
+            const float percentFrames  = ( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
+            const float percentAnims   = ( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
+            const float percentFrmGrps = ( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
+            const float percentOffsets = ( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
+            //Get the value that each will contribute to the "m_progressProportion" they have to collectively fill
+            //const uint32_t propWorkAnims  = lround(percentFrames   * static_cast<float>(m_progressProportion) / 100.0f);
+            //const uint32_t propWorkAnims  = lround(percentAnims    * static_cast<float>(m_progressProportion) / 100.0f);
+            //const uint32_t propFrmGrps    = lround(percentFrmGrps  * static_cast<float>(m_progressProportion) / 100.0f);
+            //const uint32_t propOffsets    = lround(percentOffsets  * static_cast<float>(m_progressProportion) / 100.0f);
+
+            workstatistics stats
+            {
+                static_cast<uint32_t>(percentFrames),   //uint32_t propFrames;
+                static_cast<uint32_t>(percentAnims),    //uint32_t propAnims;
+                static_cast<uint32_t>(percentFrmGrps),  //uint32_t propMFrames;
+                static_cast<uint32_t>(percentOffsets),  //uint32_t propOffsets;
+                totalnbfrms,                            //uint32_t totalAnimFrms;
+                totalnbseqs,                            //uint32_t totalAnimSeqs;
+            };
+
+            ExportFrames(imgty, stats.propFrames );
 
             if( !xmlcolorpal )
                 ExportPalette();
 
-            ExportXMLData(xmlcolorpal);
+            ExportXMLData(xmlcolorpal, stats);
+
+            if( m_pProgress != nullptr )
+                m_pProgress->store( 100 ); //fill the remaining percentage
         }
 
     private:
 
-        void ExportFrames( eSUPPORT_IMG_IO imgty )
+        void ExportFrames( eSUPPORT_IMG_IO imgty, uint32_t proportionofwork )
         {
             Poco::Path imgdir = Poco::Path(m_outDirPath);
             imgdir.append(SPRITE_IMGs_DIR);
@@ -484,31 +710,30 @@ namespace pmd2{ namespace graphics
             {
                 case eSUPPORT_IMG_IO::BMP:
                 {
-                    ExportFramesAsBMPs(imgdir);
+                    ExportFramesAsBMPs(imgdir, proportionofwork);
                     break;
                 }
                 case eSUPPORT_IMG_IO::RAW:
                 {
-                    ExportFramesAsRawImgs(imgdir);
+                    ExportFramesAsRawImgs(imgdir, proportionofwork);
                     break;
                 }
                 case eSUPPORT_IMG_IO::PNG:
                 default:
                 {
-                    ExportFramesAsPNGs(imgdir);
+                    ExportFramesAsPNGs(imgdir, proportionofwork);
                 }
             };
         }
 
-        void ExportFramesAsPNGs( const Poco::Path & outdirpath )
+        void ExportFramesAsPNGs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            const auto & frames = m_inSprite.getFrames();
-            Poco::Path outimg(outdirpath);
-            uint32_t progressBefore = 0; //Save a little snapshot of the progress
+            uint32_t     progressBefore = 0; //Save a little snapshot of the progress
+            const auto & frames         = m_inSprite.getFrames();
+            Poco::Path   outimg(outdirpath);
+
             if(m_pProgress!=nullptr)
-            {
                 progressBefore = m_pProgress->load();
-            }
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -517,21 +742,19 @@ namespace pmd2{ namespace graphics
                 utils::io::ExportToPNG( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
 
                 if( m_pProgress != nullptr )
-                {
-                    m_pProgress->store( progressBefore + (PropCompl_Frames * (i+1) ) / frames.size() ); 
-                }
+                    m_pProgress->store( progressBefore + (proportionofwork * (i+1) ) / frames.size() ); 
             }
         }
 
-        void ExportFramesAsBMPs( const Poco::Path & outdirpath )
+        void ExportFramesAsBMPs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            const auto & frames = m_inSprite.getFrames();
-            Poco::Path outimg(outdirpath);
-            uint32_t progressBefore = 0; //Save a little snapshot of the progress
+            uint32_t     progressBefore = 0; //Save a little snapshot of the progress
+            const auto & frames         = m_inSprite.getFrames();
+            Poco::Path   outimg(outdirpath);
+            
+
             if(m_pProgress!=nullptr)
-            {
                 progressBefore = m_pProgress->load();
-            }
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -540,21 +763,19 @@ namespace pmd2{ namespace graphics
                 utils::io::ExportToBMP( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
 
                 if( m_pProgress != nullptr )
-                {
-                    m_pProgress->store( progressBefore + (PropCompl_Frames * (i+1)) / frames.size() );
-                }
+                    m_pProgress->store( progressBefore + (proportionofwork * (i+1)) / frames.size() );
             }
         }
 
-        void ExportFramesAsRawImgs( const Poco::Path & outdirpath )
+        void ExportFramesAsRawImgs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            const auto & frames = m_inSprite.getFrames();
-            Poco::Path outimg(outdirpath);
-            uint32_t progressBefore = 0; //Save a little snapshot of the progress
+            uint32_t     progressBefore = 0; 
+            const auto & frames         = m_inSprite.getFrames();
+            Poco::Path   outimg(outdirpath);
+            
+
             if(m_pProgress!=nullptr)
-            {
-                progressBefore = m_pProgress->load();
-            }
+                progressBefore = m_pProgress->load(); //Save a little snapshot of the progress
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -563,28 +784,20 @@ namespace pmd2{ namespace graphics
                 utils::io::ExportRawImg( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
 
                 if( m_pProgress != nullptr )
-                {
-                    m_pProgress->store( progressBefore + (PropCompl_Frames * (i + 1)) / frames.size() );
-                }
+                    m_pProgress->store( progressBefore + (proportionofwork * (i + 1)) / frames.size() );
             }
         }
 
-        void ExportXMLData(bool xmlcolpal)
+        void ExportXMLData(bool xmlcolpal, const workstatistics & wstats)
         {
             SpriteToXML<sprite_t> mywriter(m_inSprite);
-            mywriter.WriteXMLFiles( m_outDirPath.toString(), xmlcolpal, m_pProgress );
+            mywriter.WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
         }
 
         void ExportPalette()
         {
-            using utils::io::ExportTo_RIFF_Palette;
-            //Export as RIFF palette
-            ExportTo_RIFF_Palette( m_inSprite.getPalette(), Poco::Path(m_outDirPath).setFileName(Palette_Filename).toString() );
-
-            if( m_pProgress != nullptr )
-            {
-                m_pProgress->store( m_pProgress->load() + PropCompl_PAL );
-            }
+            utils::io::ExportTo_RIFF_Palette( m_inSprite.getPalette(), 
+                                              Poco::Path(m_outDirPath).append(Palette_Filename).toString() );
         }
 
 
@@ -593,9 +806,9 @@ namespace pmd2{ namespace graphics
         const sprite_t        & m_inSprite;
         std::atomic<uint32_t> * m_pProgress;
 
-        static const uint32_t PropCompl_Frames = 75; //75% of the job is writing the frames
-        static const uint32_t PropCompl_XML    = 20; //20% of the job is writing the xml
-        static const uint32_t PropCompl_PAL    = 5;  //5% of the job is writing the palette
+        //static const uint32_t PropCompl_Frames = 65; //% of the job is writing the frames
+        //static const uint32_t PropCompl_XML    = 30; //% of the job is writing the xml
+        //static const uint32_t PropCompl_PAL    = 5;  //% of the job is writing the palette
     };
 
 //=============================================================================================
@@ -609,34 +822,24 @@ namespace pmd2{ namespace graphics
 //=============================================================================================
 //  Type Camoflage Functions
 //=============================================================================================
-    void Export8bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i8bpp> & srcspr, 
-                                      const std::string                         & outpath,
-                                      utils::io::eSUPPORT_IMG_IO                  imgtype,
-                                      bool                                        usexmlpal)
-    {
-        SpriteToDirectory<SpriteData<gimg::tiled_image_i8bpp>> mywriter(srcspr);
-        mywriter.WriteSpriteToDir(outpath,imgtype,usexmlpal);
-    }
-
-    void Export4bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 
-                                      const std::string                         & outpath,
-                                      utils::io::eSUPPORT_IMG_IO                  imgtype,
-                                      bool                                        usexmlpal)
-    {
-        SpriteToDirectory<SpriteData<gimg::tiled_image_i4bpp>> mywriter(srcspr);
-        mywriter.WriteSpriteToDir(outpath,imgtype,usexmlpal);
-    }
-
-    //SpriteData<gimg::tiled_image_i8bpp> Import8bppSpriteFromDirectory( const std::string & inpath )
+    //void Export8bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i8bpp> & srcspr, 
+    //                                  const std::string                         & outpath,
+    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype,
+    //                                  bool                                        usexmlpal)
     //{
-    //    assert(false);
-    //    return SpriteData<gimg::tiled_image_i8bpp>();
+    //    SpriteToDirectory<SpriteData<gimg::tiled_image_i8bpp>> mywriter(srcspr);
+    //    mywriter.WriteSpriteToDir(outpath,imgtype,usexmlpal);
     //}
 
-    //SpriteData<gimg::tiled_image_i4bpp> Import4bppSpriteFromDirectory( const std::string & inpath )
+    //void Export4bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 
+    //                                  const std::string                         & outpath,
+    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype,
+    //                                  bool                                        usexmlpal)
     //{
-
+    //    SpriteToDirectory<SpriteData<gimg::tiled_image_i4bpp>> mywriter(srcspr);
+    //    mywriter.WriteSpriteToDir(outpath,imgtype,usexmlpal);
     //}
+
 
     template<>
         void ExportSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 

@@ -23,9 +23,8 @@ namespace pmd2{ namespace filetypes{ class Parse_WAN; class Write_WAN; }; };
 namespace pmd2{ namespace graphics
 {
 //=========================================================================================
-//  SpriteAnimationFrame
+//  sprOffParticle
 //=========================================================================================
-
     /*
         sprOffParticle
             Stores the value of an offset in the offset table.
@@ -36,6 +35,9 @@ namespace pmd2{ namespace graphics
         int16_t offy = 0;
     };
 
+//=========================================================================================
+//  MetaFrame
+//=========================================================================================
     /*
         MetaFrame
             Stores properties for a single frame.
@@ -64,8 +66,9 @@ namespace pmd2{ namespace graphics
             _8x16  = 0x40,  // 01xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
             _16x8  = 0x80,  // 10xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
 
-            _32x8  = 0x44,  // 01xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
-            _8x32  = 0x84,  // 10xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
+            _8x32  = 0x44,  // 01xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
+            _32x8  = 0x84,  // 10xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
+            
 
             _16x32 = 0x48,  // 01xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
             _32x16 = 0x88,  // 10xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
@@ -160,6 +163,30 @@ namespace pmd2{ namespace graphics
 
 
 //=========================================================================================
+//  Meta-Frame Group
+//=========================================================================================
+    /*
+        Contains a list of meta-frames indices to assemble together when loaded into the
+        NDS memory.
+        Implemented as a struct for future expansion on the concept of a group of meta-frame.
+    */
+    struct MetaFrameGroup
+    {
+        //Forward some basic vector stuff
+        std::size_t       & operator[]( unsigned int index )      { return metaframes[index]; }
+        const std::size_t & operator[]( unsigned int index )const { return metaframes[index]; }
+        std::size_t       size      ()const                       { return metaframes.size(); }
+
+        std::vector<std::size_t>::iterator       begin()     { return metaframes.begin(); }
+        std::vector<std::size_t>::const_iterator begin()const{ return metaframes.begin(); }
+        std::vector<std::size_t>::iterator       end()       { return metaframes.end(); }
+        std::vector<std::size_t>::const_iterator end()const  { return metaframes.end(); }
+
+        std::vector<std::size_t> metaframes;
+    };
+
+
+//=========================================================================================
 //  AnimFrame
 //=========================================================================================
     /*
@@ -173,7 +200,6 @@ namespace pmd2{ namespace graphics
         int16_t  spr_offset_y     = 0;      //The offset from the center of the sprite the frame will be drawn at.
         int16_t  shadow_offset_x  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
         int16_t  shadow_offset_y  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
-        //static const unsigned int LENGTH = 12u;  //The length of the animation frame data in raw form!
 
         inline bool isNull()const
         {
@@ -315,108 +341,88 @@ namespace pmd2{ namespace graphics
     public:
         typedef TIMG_Type img_t; 
 
-        //uint32_t InsertAFrame( const img_t & img )
-        //{
-        //}
-
-        //uint32_t InsertAFrame( img_t && img )
-        //{
-        //}
-
-        //void     RemoveAFrame( uint32_t index ) //Remove a frame and all its references!
-        //{
-        //}
         const std::vector<sprOffParticle>      & getPartOffsets()const{ return m_partOffsets; }
         const std::vector<img_t>               & getFrames()const{ return m_frames; }
         const std::multimap<uint32_t,uint32_t> & getMetaRefs()const{return m_metarefs;}
         const std::vector<MetaFrame>           & getMetaFrames()const{return m_metaframes;}
-        const std::vector<SpriteAnimationGroup>& getAnimGroups()const{return m_animgroups;;}
+        const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const{return m_metafrmsgroups;}
+        const std::vector<SpriteAnimationGroup>& getAnimGroups()const{return m_animgroups;}
         const std::vector<gimg::colorRGB24>    & getPalette()const{ return m_palette;}
         const SprInfo                          & getSprInfo()const{ return m_common; }
 
     private:
 
-        //struct framerefkeeper
+        ///*
+        //    InsertMetaFrame
+        //*/
+        //unsigned int InsertMetaFrame( MetaFrame && mfrm )
         //{
-        //    framerefkeeper()
+        //    uint32_t imgindex = mfrm.image_index;
+        //    m_metaframes.push_back(mfrm);
+
+        //    //Insert reference
+        //    m_metarefs.insert( std::make_pair<uint32_t,uint32_t>( imgindex, (m_metaframes.size() - 1) ) );
+
+        //    return (m_metaframes.size() - 1);
+        //}
+
+        ///*
+        //    ReplaceMetaFrame
+        //*/
+        //void ReplaceMetaFrame( uint32_t indextoreplace, MetaFrame && newmfrm )
+        //{
+        //    //Validate the reference to the existing image
+        //    uint32_t oldreferingto = m_metaframes[indextoreplace].image_index;
+
+        //    if( oldreferingto == newmfrm.image_index )
         //    {
-        //        meta_frames_refering.reserve(4); //reserve 4, to avoid a bunch of re-alloc
+        //        //If the original and new frame refer to the same image
+        //        m_metaframes[indextoreplace] = newmfrm;
         //    }
-        //    std::vector<uin32_t> meta_frames_refering;  //Contains the indexes of the meta-frames refering to this
-        //    img_t                imagedata;
-        //};
+        //    else
+        //    {
+        //        //If the original and new frame refer to different images
 
-        /*
-            InsertMetaFrame
-        */
-        unsigned int InsertMetaFrame( MetaFrame && mfrm )
-        {
-            uint32_t imgindex = mfrm.image_index;
-            m_metaframes.push_back(mfrm);
+        //        if( newmfrm.image_index >= m_metaframes.size() )
+        //            throw std::out_of_range( "ERROR: Trying to insert meta-frame pointing to a non-existing image!" );
 
-            //Insert reference
-            m_metarefs.insert( std::make_pair<uint32_t,uint32_t>( imgindex, (m_metaframes.size() - 1) ) );
+        //        //Flush old references, and add a new one to the correct frame
+        //        auto itfoundold = m_metarefs.find( oldreferingto );
 
-            return (m_metaframes.size() - 1);
-        }
+        //        if( itfoundold != m_metarefs.end() )
+        //            m_metarefs.erase(itfoundold);
+        //        else
+        //        {
+        //            //std::cerr << "\nTrying to replace meta-frame with broken dependency!\n"; 
+        //            assert(false);//This should never happen!
+        //        }
 
-        /*
-            ReplaceMetaFrame
-        */
-        void ReplaceMetaFrame( uint32_t indextoreplace, MetaFrame && newmfrm )
-        {
-            //Validate the reference to the existing image
-            uint32_t oldreferingto = m_metaframes[indextoreplace].image_index;
+        //        m_metaframes[indextoreplace] = newmfrm;
+        //        m_metarefs.insert( std::make_pair( m_metaframes[indextoreplace].image_index ,indextoreplace ) );
+        //    }
+        //}
 
-            if( oldreferingto == newmfrm.image_index )
-            {
-                //If the original and new frame refer to the same image
-                m_metaframes[indextoreplace] = newmfrm;
-            }
-            else
-            {
-                //If the original and new frame refer to different images
+        ///*
+        //    RemoveMetaFrame
+        //*/
+        //void RemoveMetaFrame( uint32_t index )
+        //{
+        //    //Remove all anim frames that depend on it!
+        //    const unsigned int NB_Refs  = m_metaframes[index].getNbRefs();
+        //    auto             & metafref = m_metaframes[index];
 
-                if( newmfrm.image_index >= m_metaframes.size() )
-                    throw std::out_of_range( "ERROR: Trying to insert meta-frame pointing to a non-existing image!" );
+        //    for( unsigned int i = 0; i < NB_Refs; ++i )
+        //    {
+        //        //Remove anim frame that refers to this meta-frame!
+        //        const auto & myref = metafref.getRef(i);
+        //        m_animgroups[myref.refgrp].sequences[myref.refseq].removeframe( myref.reffrm );
+        //    }
 
-                //Flush old references, and add a new one to the correct frame
-                auto itfoundold = m_metarefs.find( oldreferingto );
-
-                if( itfoundold != m_metarefs.end() )
-                    m_metarefs.erase(itfoundold);
-                else
-                {
-                    //std::cerr << "\nTrying to replace meta-frame with broken dependency!\n"; 
-                    assert(false);//This should never happen!
-                }
-
-                m_metaframes[indextoreplace] = newmfrm;
-                m_metarefs.insert( std::make_pair( m_metaframes[indextoreplace].image_index ,indextoreplace ) );
-            }
-        }
-
-        /*
-            RemoveMetaFrame
-        */
-        void RemoveMetaFrame( uint32_t index )
-        {
-            //Remove all anim frames that depend on it!
-            const unsigned int NB_Refs  = m_metaframes[index].getNbRefs();
-            auto             & metafref = m_metaframes[index];
-
-            for( unsigned int i = 0; i < NB_Refs; ++i )
-            {
-                //Remove anim frame that refers to this meta-frame!
-                const auto & myref = metafref.getRef(i);
-                m_animgroups[myref.refgrp].sequences[myref.refseq].removeframe( myref.reffrm );
-            }
-
-            //Unregister our meta-frame ref to our image!
-            auto itfoundold = m_metarefs.find(m_metaframes[index].image_index);
-            if( itfoundold != m_metarefs.end() )
-                m_metarefs.erase(itfoundold);
-        }
+        //    //Unregister our meta-frame ref to our image!
+        //    auto itfoundold = m_metarefs.find(m_metaframes[index].image_index);
+        //    if( itfoundold != m_metarefs.end() )
+        //        m_metarefs.erase(itfoundold);
+        //}
 
         /*
             Rebuilds the entire reference maps for everything currently in the sprite!
@@ -427,19 +433,19 @@ namespace pmd2{ namespace graphics
             m_metarefs.clear();
 
             //First set the meta-frames references
-            for( unsigned int i = 0; i < m_metaframes.size(); ++i )
+            for( unsigned int ctmf = 0; ctmf < m_metaframes.size(); ++ctmf )
             {
-                if( m_metaframes[i].image_index < m_frames.size() )
+                if( m_metaframes[ctmf].image_index < m_frames.size() )
                 {
                     //clear all anim references!
-                    m_metaframes[i].clearRefs();
+                    m_metaframes[ctmf].clearRefs();
                     //Register meta to frame reference 
-                    m_metarefs.insert( make_pair( m_metaframes[i].image_index, i ) );
+                    m_metarefs.insert( std::make_pair( m_metaframes[ctmf].image_index, ctmf ) );
                 }
                 else
                 {
                     //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
-                    if( m_metaframes[i].image_index != 0xFFFF )
+                    if( m_metaframes[ctmf].image_index != 0xFFFF )
                         assert(false);
                 }
             }
@@ -478,15 +484,16 @@ namespace pmd2{ namespace graphics
         }
 
     private: 
-        std::vector<img_t>                m_frames;      //Actual image data, with reference list.
-        std::multimap<uint32_t,uint32_t>  m_metarefs;    //A map of the meta-frames refering to a specific frame. 
-                                                         // The frame index in "m_frames" is the keyval, the value 
-                                                         // is the index of the metaframe in "m_metaframes"
-        std::vector<MetaFrame>            m_metaframes;  //List of frames usable in anim sequences
-        std::vector<SpriteAnimationGroup> m_animgroups;  //Groups containing animation sequences
-        std::vector<gimg::colorRGB24>     m_palette;     //The palette for this sprite
-        SprInfo                           m_common;      //Common properties about the sprite not affected by template type!
-        std::vector<sprOffParticle>       m_partOffsets; //The particle offsets list
+        std::vector<img_t>                   m_frames;      //Actual image data, with reference list.
+        std::multimap<uint32_t,uint32_t>     m_metarefs;    //A map of the meta-frames refering to a specific frame. 
+                                                             // The frame index in "m_frames" is the keyval, the value 
+                                                             // is the index of the metaframe in "m_metaframes"
+        std::vector<MetaFrame>               m_metaframes;      //Contains all the meta-frames ordered by index
+        std::vector<MetaFrameGroup>          m_metafrmsgroups;  //List of meta-frames groups, for grouping those assembled together. Only index is stored!
+        std::vector<SpriteAnimationGroup>    m_animgroups;      //Groups containing animation sequences
+        std::vector<gimg::colorRGB24>        m_palette;         //The palette for this sprite
+        SprInfo                              m_common;          //Common properties about the sprite not affected by template type!
+        std::vector<sprOffParticle>          m_partOffsets;     //The particle offsets list
     };
 
 
@@ -498,20 +505,8 @@ namespace pmd2{ namespace graphics
         -imgtype   : The supported image type to use for exporting the individual frames. 
         -usexmlpal : If true, the palette will be exported as an xml file, and not a
                      RIFF palette.
-    */
-    //void Export8bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i8bpp> & srcspr, 
-    //                                  const std::string                         & outpath,
-    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype   = utils::io::eSUPPORT_IMG_IO::PNG,
-    //                                  bool                                        usexmlpal = false);
-    //void Export4bppSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 
-    //                                  const std::string                         & outpath,
-    //                                  utils::io::eSUPPORT_IMG_IO                  imgtype   = utils::io::eSUPPORT_IMG_IO::PNG,
-    //                                  bool                                        usexmlpal = false);
-
-    /*
-        ExportSpriteToDirectory
-            Call this to export any types of Sprite.a
-            (Used those to hide template dependant low level stuff as much as possible)
+        -progress  : An atomic integer to increment all the way to 100, to indicate
+                     current progress with export.
     */
     template<class _Sprite_T>
         void ExportSpriteToDirectory( const _Sprite_T            & srcspr, 

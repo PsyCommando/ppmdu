@@ -74,6 +74,8 @@ namespace gfx_util
         "My tools in binary form are basically public domain / CC0.\n"
         "Free to re-use in any ways you may want to!\n"
         "No crappyrights, all wrongs reversed! :3";
+    static const int HPBar_NB_Bars           = 65u;
+    static const int HPBar_UpdateMSecs       = 80; //Updates at every HPBar_UpdateMSecs mseconds
 
 //------------------------------------------------
 //  Arguments Info
@@ -159,9 +161,10 @@ namespace gfx_util
 
     void CGfxUtil::_Construct()
     {
-        m_bQuiet      = false;
-        m_execMode    = eExecMode::INVALID_Mode;
-        m_pInputPath.reset( new pathwrapper_t );
+        m_bQuiet        = false;
+        m_execMode      = eExecMode::INVALID_Mode;
+        m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
+        m_pInputPath.reset ( new pathwrapper_t );
         m_pOutputPath.reset( new pathwrapper_t );
     }
 
@@ -176,66 +179,104 @@ namespace gfx_util
     const string                    & CGfxUtil::getMiscSectionText ()const { return Misc_Text;               }
 
 
+    void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
+    {
+        cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
+                <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
+    }
+
     void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
     {
-        static const int NB_Bars       = 25u;
         static const int TOTAL_PERCENT = 200u;
         while( !shouldstop )
         {
-            unsigned int nbbars = ( ( TOTAL_PERCENT - (parsingprogress + writingprogress) ) * NB_Bars ) / TOTAL_PERCENT; 
-            cout <<"\r[" <<setw(NB_Bars) <<setfill(' ') <<string( nbbars, '=' ) <<"] " 
-                 <<setw(3) <<setfill(' ') << ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) <<"%";
+            //unsigned int nbbars = ( ( TOTAL_PERCENT - (parsingprogress + writingprogress) ) * HPBar_NB_Bars ) / TOTAL_PERCENT; 
+            //cout <<"\r[" <<setw(NB_Bars) <<setfill(' ') <<string( nbbars, '=' ) <<"] " 
+            //     <<setw(3) <<setfill(' ') << ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) <<"%";
 
-            this_thread::sleep_for( chrono::milliseconds(10) );
+            DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
+
+            this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
         }
     }
 
     int CGfxUtil::UnpackSprite()
     {
+        utils::MrChronometer chronounpacker( "Unpacking Sprite" );
         atomic<uint32_t>     parsingprogress(0);
         atomic<uint32_t>     writingprogress(0);
         atomic<bool>         stopupdateprogress(false);
-        Poco::File           infileinfo(m_pInputPath->mypath);
         filetypes::Parse_WAN parser( ReadFileToByteVector( m_pInputPath->mypath.toString() ) );
+        future<void>         runThUpHpBar;
+        Poco::File           infileinfo(m_pInputPath->mypath);
+        Poco::Path           outpath(m_pOutputPath->mypath);
+        uint32_t             level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
+        
+        outpath.append( m_pInputPath->mypath.getBaseName() );
 
-        uint32_t level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
-
-        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<level <<"\n"
-             <<"HP:\n";
-
-        auto myfuture = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
-
-        auto sprty = parser.getSpriteType();
-        if( sprty == filetypes::Parse_WAN::eSpriteType::spr4bpp )
+        if( ! m_bQuiet )
         {
-            auto       sprite = parser.ParseAs4bpp(&parsingprogress);
-            Poco::Path outpath(m_pOutputPath->mypath);
-            outpath.pushDirectory(m_pInputPath->mypath.getBaseName());
+            cout <<(m_pInputPath->mypath.getFileName()) <<"\n"
+                 <<"\xda" <<setw(HPBar_NB_Bars  + 11 /*(HPBar_NB_Bars / 8)*/) <<setfill('\xC4') << "\xbf\n"
+                 <<"\xb3 " <<setw(HPBar_NB_Bars + 5/*(HPBar_NB_Bars / 8)*/ ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
+        }
 
-            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+        try
+        {
+            if( ! m_bQuiet )
+            {
+                runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
+            }
+
+            auto sprty = parser.getSpriteType();
+            if( sprty == filetypes::Parse_WAN::eSpriteType::spr4bpp )
+            {
+                auto sprite = parser.ParseAs4bpp(&parsingprogress);
+                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
             
+            }
+            else if( sprty == filetypes::Parse_WAN::eSpriteType::spr8bpp )
+            {
+                auto sprite = parser.ParseAs8bpp(&parsingprogress);
+                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+            }
         }
-        else if( sprty == filetypes::Parse_WAN::eSpriteType::spr8bpp )
+        catch( Poco::Exception e )
         {
-            auto       sprite = parser.ParseAs8bpp(&parsingprogress);
-            Poco::Path outpath(m_pOutputPath->mypath);
-            outpath.pushDirectory(m_pInputPath->mypath.getBaseName());
-
-            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+            //Stop the thread
+            stopupdateprogress = true;
+            runThUpHpBar.get();
+            //rethrow
+            throw e;
         }
-
+        catch( exception e )
+        {
+            //Stop the thread
+            stopupdateprogress = true;
+            runThUpHpBar.get();
+            //rethrow
+            throw e;
+        }
 
         stopupdateprogress = true;
-        myfuture.get();
+        runThUpHpBar.get();
+
+        //draw one last time
+        DrawHPBar( HPBar_NB_Bars, 0 );
+        cout <<"\n\xc0" <<right <<setw(HPBar_NB_Bars + 11 /*(HPBar_NB_Bars / 8)*/) <<setfill('\xC4') << "\xd9\n";
 
         return 0;
     }
 
     int CGfxUtil::BuildSprite()
     {
-        Poco::File           infileinfo(m_pInputPath->mypath);
-        cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<(m_pInputPath->mypath.depth() + ( infileinfo.getSize() & 0xF )) <<"\n"
-             <<"HP:\n";
+        Poco::File infileinfo(m_pInputPath->mypath);
+
+        if( ! m_bQuiet )
+        {
+            cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<(m_pInputPath->mypath.depth() + ( infileinfo.getSize() & 0xF )) <<"\n"
+                 <<"HP:\n";
+        }
 
         return 0;
     }
@@ -329,8 +370,7 @@ namespace gfx_util
                 {
                     assert(false); //crap
                     m_execMode = eExecMode::INVALID_Mode;
-                    if( !m_bQuiet )
-                        cerr << "No ideas what to do with that input parameter ^^;\n";
+                    cerr << "No ideas what to do with that input parameter ^^;\n";
                 }
             }
             else
@@ -353,7 +393,7 @@ namespace gfx_util
             {
                 m_execMode = eExecMode::IMPORT_POKE_SPRITES_PACK_Mode;
                 if( !m_bQuiet )
-                    cerr << "Input folder name matches the name of one of the pokemon sprites pack file!\n"
+                    cout << "Input folder name matches the name of one of the pokemon sprites pack file!\n"
                          << "Preparing to convert all sprites directories in the input directory into WAN sprites, and packing them into a pack file!";
             }
             
@@ -369,14 +409,13 @@ namespace gfx_util
                 //We got all we need to build a sprite !
                 m_execMode = eExecMode::BUILD_SPRITE_Mode;
                 if( !m_bQuiet )
-                    cerr << "Required files to build a sprite found! Get the duct tape ready, we're building a sprite!\n";
+                    cout << "Required files to build a sprite found! Get the duct tape ready, we're building a sprite!\n";
             }
             else
             {
                 assert(false); //crap
                 m_execMode = eExecMode::INVALID_Mode;
-                if( !m_bQuiet )
-                    cerr << "No ideas what to do with that input parameter ^^;\n";
+                cerr << "No ideas what to do with that input parameter ^^;\n";
             }
 
         }
@@ -451,8 +490,11 @@ namespace gfx_util
         try
         {
             SetArguments(argc,argv);
-            cout << "\"" <<m_pInputPath->mypath.getFileName() <<"\" wants to battle!\n"
-                 << "Poochyena can't wait to begin!\n";
+            if( ! m_bQuiet )
+            {
+                cout << "\"" <<m_pInputPath->mypath.getFileName() <<"\" wants to battle!\n"
+                     << "Poochyena can't wait to begin!\n";
+            }
         }
         catch( Poco::Exception pex )
         {
@@ -475,24 +517,36 @@ namespace gfx_util
             //Determine Execution mode
             DetermineOperationMode();
 
-            cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
+            if( ! m_bQuiet )
+                cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
+
             switch( m_execMode )
             {
                 case eExecMode::BUILD_SPRITE_Mode:
                 {
                     returnval = BuildSprite();
-                    cout << "\nIts super-effective!!\n"
-                         <<"\"" <<m_pInputPath->mypath.getFileName() <<"\" fainted!\n"
-                         <<"You got \"" <<m_pOutputPath->mypath.getFileName() <<"\" for your victory!\n";
+
+                    if( ! m_bQuiet )
+                    {
+                        cout << "\nIts super-effective!!\n"
+                             <<"\"" <<m_pInputPath->mypath.getFileName() <<"\" fainted!\n"
+                             <<"You got \"" <<m_pOutputPath->mypath.getFileName() <<"\" for your victory!\n";
+                    }
                     break;
                 }
                 case eExecMode::UNPACK_SPRITE_Mode:
                 {
-                    cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
+                    if( ! m_bQuiet )
+                        cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
+
                     returnval = UnpackSprite();
-                    cout << "\nIts super-effective!!\n"
-                         << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
-                         << "The pieces landed all neatly into \"" <<m_pOutputPath->mypath.toString() <<"\"!\n";
+
+                    if( ! m_bQuiet )
+                    {
+                        cout << "\nIts super-effective!!\n"
+                             << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
+                             << "The pieces landed all neatly into \"" <<m_pOutputPath->mypath.toString() <<"\"!\n";
+                    }
                     break;
                 }
                 default:
@@ -501,7 +555,8 @@ namespace gfx_util
                 }
             };
 
-            cout << "Poochyena used Rest! She went to sleep!\n";
+            if( ! m_bQuiet )
+                cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
         }
         catch( Poco::Exception pex )
         {

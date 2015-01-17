@@ -403,18 +403,20 @@ namespace utils{ namespace cmdl
         for( auto & anopt : refOptions )
         {
             //Try to find an option with one of the symbols we got!
-            auto itFoundRaw = std::find_if( rawoptions.begin(), rawoptions.end(), 
-                                      [&anopt](const vector<string>& av )->bool
-                                      {
-                                          return (av.front().compare( ("-"+anopt.optionsymbol) )) == 0;
-                                      } );
+            vector<vector<string>>::const_iterator itFoundRaw = 
+                std::find_if( rawoptions.begin(), 
+                              rawoptions.end(), 
+                              [&anopt](const vector<string>& av )->bool
+                              {
+                                return (av.front().compare( anopt.optionsymbol ) == 0 ) ;
+                              } );
 
             //Parse the found option, if applicable
             if( itFoundRaw != rawoptions.end() && !anopt.myOptionParseFun( *itFoundRaw ) )
             {
                 //If parsing fails !
                 stringstream strserror;
-                strserror <<"<!>- Error while parsing option : \"" <<anopt.optionsymbol <<"\"";
+                strserror <<"<!>- Error while parsing option : \"" <<(anopt.optionsymbol) <<"\"";
 
                 if( itFoundRaw->size() > 1  )
                 {
