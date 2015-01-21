@@ -55,24 +55,24 @@ namespace pmd2{ namespace filetypes
     {
         AnimFrame myfrm;
 
-        myfrm.frame_duration   = utils::ReadIntFromByteVector<decltype(myfrm.frame_duration)>  (itread);
-        myfrm.meta_frame_index = utils::ReadIntFromByteVector<decltype(myfrm.meta_frame_index)>(itread);
-        myfrm.spr_offset_x     = utils::ReadIntFromByteVector<decltype(myfrm.spr_offset_x)>    (itread);
-        myfrm.spr_offset_y     = utils::ReadIntFromByteVector<decltype(myfrm.spr_offset_y)>    (itread);
-        myfrm.shadow_offset_x  = utils::ReadIntFromByteVector<decltype(myfrm.shadow_offset_x)> (itread);
-        myfrm.shadow_offset_y  = utils::ReadIntFromByteVector<decltype(myfrm.shadow_offset_y)> (itread);
+        myfrm.frameDuration   = utils::ReadIntFromByteVector<decltype(myfrm.frameDuration)>  (itread);
+        myfrm.metaFrmGrpIndex = utils::ReadIntFromByteVector<decltype(myfrm.metaFrmGrpIndex)>(itread);
+        myfrm.sprOffsetX     = utils::ReadIntFromByteVector<decltype(myfrm.sprOffsetX)>    (itread);
+        myfrm.sprOffsetY     = utils::ReadIntFromByteVector<decltype(myfrm.sprOffsetY)>    (itread);
+        myfrm.shadowOffsetX  = utils::ReadIntFromByteVector<decltype(myfrm.shadowOffsetX)> (itread);
+        myfrm.shadowOffsetY  = utils::ReadIntFromByteVector<decltype(myfrm.shadowOffsetY)> (itread);
 
         return std::move(myfrm);
     }
 
     vector<uint8_t>::iterator WriteAnimFrameToContainer( const AnimFrame & frame, vector<uint8_t>::iterator itwrite )
     {
-        itwrite = utils::WriteIntToByteVector( frame.frame_duration,    itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.meta_frame_index,  itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.spr_offset_x,      itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.spr_offset_y,      itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.shadow_offset_x,   itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.shadow_offset_y,   itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.frameDuration,    itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.metaFrmGrpIndex,  itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.sprOffsetX,      itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.sprOffsetY,      itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.shadowOffsetX,   itwrite );
+        itwrite = utils::WriteIntToByteVector( frame.shadowOffsetY,   itwrite );
 
         return itwrite;
     }
@@ -96,18 +96,6 @@ namespace pmd2{ namespace filetypes
         is8DirectionSprite = utils::ReadIntFromByteVector<decltype(is8DirectionSprite)>(itReadfrom);
         unk12              = utils::ReadIntFromByteVector<decltype(unk12)>             (itReadfrom);
         return itReadfrom;
-    }
-
-    std::string wan_sub_header::toString()const
-    {
-        static const int IND = 24;
-        stringstream strs;
-        //<<setfill('.') <<setw(24) <<left 
-        strs <<setfill('.') <<setw(IND) <<left <<"Offset Animation Info"  <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_animinfo       <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Offset Img Format Info" <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_imginfo        <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Is 8 Way Sprite"        <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<is8DirectionSprite <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Unknown #12"            <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<unk12              <<nouppercase <<"\n";
-        return strs.str();
     }
 
 
@@ -134,19 +122,6 @@ namespace pmd2{ namespace filetypes
         unk11                  = utils::ReadIntFromByteVector<decltype(unk11)>                 (itReadfrom);
         nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
         return itReadfrom;
-    }
-
-    std::string wan_img_data_info::toString()const
-    {
-        static const int IND = 24;
-        stringstream strs;
-        strs <<setfill('.') <<setw(IND) <<left <<"Offset Image Ptr Table" <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_img_table <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Offset palette Info"    <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_palette   <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Is mosaic sprite"       <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<isMosaic      <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Is 256 color sprite"    <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<is256Colors   <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Unknown #11"            <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<unk11         <<nouppercase <<"\n"
-             <<setfill('.') <<setw(IND) <<left <<"Nb frames"              <<": "   <<right        <<dec     <<nb_ptrs_frm_ptrs_table           <<"\n";
-        return strs.str();
     }
 
 //============================================
@@ -181,51 +156,9 @@ namespace pmd2{ namespace filetypes
         return itReadfrom;
     }
 
-    std::string wan_anim_info::toString()const
-    {
-        stringstream strs;
-        static const int IND = 30;
-
-        strs <<setfill('.') <<setw(IND) <<left 
-             <<"Offset MFrames Table"           <<": 0x" <<right <<setfill('0') <<setw(8) <<hex <<uppercase << ptr_metaFrmTable <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Offset Particle Offsets Table"  <<": 0x" <<right <<setfill('0') <<setw(8) <<hex <<uppercase << ptr_pOffsetsTable    <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Offset table G"                 <<": 0x" <<right <<setfill('0') <<setw(8) <<hex <<uppercase << ptr_animGrpTable    <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"NbEntries table G"              <<": "   <<right <<dec          << nb_anim_groups           <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Unknown #6"                     <<": "   <<right <<dec          << unk6             <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Unknown #7"                     <<": 0x" <<right <<setfill('0') <<setw(4) <<hex <<uppercase << unk7        <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Unknown #8"                     <<": 0x" <<right <<setfill('0') <<setw(4) <<hex <<uppercase << unk8        <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Unknown #9"                     <<": 0x" <<right <<setfill('0') <<setw(4) <<hex <<uppercase << unk9        <<nouppercase <<"\n"
-
-             <<setfill('.') <<setw(IND) <<left 
-             <<"Unknown #10"                    <<": 0x" <<right <<setfill('0') <<setw(4) <<hex <<uppercase << unk10        <<nouppercase <<"\n";
-        return strs.str();
-    }
-
 //============================================
 //              wan_pal_info
 //============================================
-    string wan_pal_info::toString()const
-    {
-        stringstream sstr;
-
-        assert(false);
-
-        return sstr.str();
-    }
 
     vector<uint8_t>::iterator wan_pal_info::WriteToContainer( vector<uint8_t>::iterator itwriteto )const
     {
@@ -252,21 +185,6 @@ namespace pmd2{ namespace filetypes
 //=============================================================================================
 //  Utility Functions
 //=============================================================================================
-
-    //template<class _randit>
-    //    uint32_t GetOffsetEndMetaFrameBlock( _randit itReadAnimGrp, uint32_t nbAnimGrps, uint32_t offImgBlock )
-    //{
-    //    //Search for the first non-null group
-    //    for( unsigned int cntanimgrp = 0; cntanimgrp < nbAnimGrps; ++cntanimgrp )
-    //    {
-    //        spr_anim_grp_entry entry;
-    //        itReadAnimGrp = entry.ReadFromContainer( itReadAnimGrp );
-    //        if( entry.ptrgrp != 0 && entry.nbseqs != 0 )
-    //            return entry.ptrgrp;
-    //    }
-
-    //    return offImgBlock; //Return the offset of the next block after anims if all fails
-    //}
 
     template<class _randit>
         uint32_t GetOffsetFirstAnimSeqPtr( _randit itReadAnimGrp, uint32_t nbAnimGrps, uint32_t offImgBlock )
@@ -298,7 +216,7 @@ namespace pmd2{ namespace filetypes
     {
     }
 
-    Parse_WAN::eSpriteType Parse_WAN::getSpriteType()const
+    graphics::eSpriteType Parse_WAN::getSpriteType()const
     {
         auto        itRead   = m_rawdata.begin();
         sir0_header sir0head;
@@ -400,15 +318,15 @@ namespace pmd2{ namespace filetypes
         graphics::MetaFrame result;
 
         //Read the raw values first
-        result.image_index = utils::ReadIntFromByteVector<uint16_t>(itread); //itread is incremented automatically!
+        result.imageIndex = utils::ReadIntFromByteVector<uint16_t>(itread); //itread is incremented automatically!
         result.unk0        = utils::ReadIntFromByteVector<uint16_t>(itread);
         uint16_t offyfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
         uint16_t offxfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
         result.unk1        = utils::ReadIntFromByteVector<uint16_t>(itread);
 
         //Set the cleaned offsets
-        result.offset_y = 0x03FF & offyfl; //keep the 10 lowest bits
-        result.offset_x = 0x01FF & offxfl; //Keep the 9  lowest bits
+        result.offsetY = 0x03FF & offyfl; //keep the 10 lowest bits
+        result.offsetX = 0x01FF & offxfl; //Keep the 9  lowest bits
 
         //Get the resolution
         result.resolution = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
@@ -428,46 +346,6 @@ namespace pmd2{ namespace filetypes
 
         return result;
     }
-
-    //vector<graphics::MetaFrame> Parse_WAN::ReadMetaFrames()
-    //{
-    //    vector<graphics::MetaFrame> metaframes;
-    //    uint32_t                    offsetEndRefTable = 0;
-
-    //    if( m_wanAnimInfo.ptr_pOffsetsTable != 0 )
-    //    {
-    //        //If the Particle Offset Table exists, use its offset as end of the ref table
-    //        offsetEndRefTable = m_wanAnimInfo.ptr_pOffsetsTable;
-    //    }
-    //    else
-    //    {
-    //        //If the Particle Offset Table DOESN'T EXIST, use the AnimSequenceTable's first entry as end of the ref table
-    //        offsetEndRefTable = utils::ReadIntFromByteVector<uint32_t>( m_wanAnimInfo.ptr_animGrpTable + m_rawdata.begin() );
-    //    }
-
-    //    //Get the amount of meta frames by counting the pointers
-    //    auto           itReadOffsetMF = m_rawdata.begin() + m_wanAnimInfo.ptr_metaFrmTable;
-    //    const uint32_t nbMetaFrames   = (offsetEndRefTable - m_wanAnimInfo.ptr_metaFrmTable) / sizeof(uint32_t);
-    //    metaframes.resize(nbMetaFrames);
-    //    uint32_t progressBefore = 0; //Save a little snapshot of the progress
-    //    if(m_pProgress!=nullptr)
-    //    {
-    //        progressBefore = m_pProgress->load();
-    //    }
-
-    //    for( unsigned int cptfrm = 0; cptfrm < nbMetaFrames; ++cptfrm )
-    //    {
-    //        uint32_t curptr = utils::ReadIntFromByteVector<uint32_t>( itReadOffsetMF ); //Iterator is incremented automatically!
-    //        metaframes[cptfrm] = ReadAMetaFrame( curptr + m_rawdata.begin() );
-
-    //        if( m_pProgress != nullptr )
-    //        {
-    //            m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (cptfrm+1)) / nbMetaFrames ) );
-    //        }
-    //    }
-
-    //    return std::move(metaframes);
-    //}
 
     void Parse_WAN::ReadAMetaFrameGroup( vector<MetaFrameGroup> & out_metafrmgrps,
                                          vector<MetaFrame>      & out_metafrms,
@@ -548,17 +426,6 @@ namespace pmd2{ namespace filetypes
                                                              m_wanAnimInfo.nb_anim_groups, 
                                                              ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
         
-        //Search for the first non-null group
-        //for( unsigned int cntanimgrp = 0; offsetseqptrtbl == 0 && cntanimgrp < m_wanAnimInfo.nb_anim_groups; ++cntanimgrp )
-        //{
-        //    spr_anim_grp_entry entry;
-        //    itReadAnimGrp = entry.ReadFromContainer( itReadAnimGrp );
-        //    if( entry.ptrgrp != 0 && entry.nbseqs != 0 )
-        //    {
-        //        offsetseqptrtbl = entry.ptrgrp;
-        //        break;
-        //    }
-        //}
 
         if( offsetseqptrtbl == 0 )
         {
@@ -570,22 +437,6 @@ namespace pmd2{ namespace filetypes
 
         //Fill it up & calculate nb of meta-frames in-between
         uint32_t totalnbMF  = FillMFTblAndCalcNbMFs( MFptrTbl, itreadtbl, endMFPtrTbl + m_rawdata.begin(), offsetlast );
-        //{
-        //    uint32_t lastoffsetread = 0;
-        //    for( auto & entry : mfgptrs )
-        //    {
-        //        entry = utils::ReadIntFromByteVector<uint32_t>( itreadtbl ); //Iterator auto-incremented
-
-        //        if( lastoffsetread != 0 ) //skip the first one
-        //            totalnbMF += (entry - lastoffsetread) / WAN_LENGTH_META_FRM;
-
-        //        lastoffsetread = entry;
-        //    }
-
-        //    //Add the last offset's length
-        //    totalnbMF += ( offsetlast - lastoffsetread) / WAN_LENGTH_META_FRM;
-        //}
-
 
         //Create data + alloc
         vector<MetaFrame> mymetaframes;
@@ -812,7 +663,8 @@ namespace pmd2{ namespace filetypes
     {
         using namespace magicnumbers;
         static const unsigned int MaxSubHeaderLen = 27u; //The maximum length of the sub-header + Padding
-        sir0_header headr;
+        sir0_header    headr;
+        wan_sub_header wanheadr;
 
         //Check header
         headr.ReadFromContainer( itdatabeg );
@@ -821,29 +673,25 @@ namespace pmd2{ namespace filetypes
         if( headr.magic != SIR0_MAGIC_NUMBER_INT || headr.eofptr <= 0x10 || headr.subheaderptr <= 0x10 )
             return false;
 
-        //Literally the best check we can do ^^;
-        unsigned int lengthsofar = 0;
-        for( auto itcount = itdatabeg + headr.subheaderptr; itcount != itdataend && lengthsofar <= MaxSubHeaderLen; ++lengthsofar, ++itcount )
+        //READ WAN SUB-HEADer and check if pointers fit within file!!
+        wanheadr.ReadFromContainer( itdatabeg + headr.subheaderptr );
 
-        //It can't be longer than 26, if the last field ends up on the line below..
-        // -- -- -- -- -- -- 01 01 01 01 02 02 02 02 03 03
-        // 04 04 AA AA AA AA AA AA AA AA AA AA AA AA AA AA
-        if( lengthsofar > MaxSubHeaderLen ) //set to 27, in the very unlikely case that it wouldn't be aligned on the field's size..
-        {
+        //Check if the wan header pointers are invalid
+        if( wanheadr.is8DirectionSprite >= 2 || 
+            wanheadr.ptr_animinfo >= headr.subheaderptr || 
+            wanheadr.ptr_imginfo >= headr.subheaderptr )
             return false;
-        }
-        else if( lengthsofar == wan_sub_header::DATA_LEN )
-        {
-            return true;
-        }
-        else if( lengthsofar > wan_sub_header::DATA_LEN )
-        {
-            types::constitbyte_t itsearch = itdatabeg;
-            std::advance( itsearch, wan_sub_header::DATA_LEN );
-            return std::all_of( itsearch, itdataend, []( uint8_t val ){ return val == pmd2::filetypes::COMMON_PADDING_BYTE; } );
-        }
 
-        return false;
+        //Make sure what comes next is either 0xAA 0xAA or 0x04 0x04
+        // This covers the 2 possible cases of what might follow the subheader!
+        // 1- 0xAA padding bytes
+        // 2- The beginning of the SIR0 pointer offset list. Which always begins with 0x0404 ! 
+        auto iterafterwan = itdatabeg + (headr.subheaderptr + wan_sub_header::DATA_LEN);
+        uint16_t bytesAfterWan = utils::ReadIntFromByteVector<uint16_t>(iterafterwan);
+        if( bytesAfterWan != 0xAAAA && bytesAfterWan != 0x0404 )
+            return false;
+
+        return true;
     }
 
 //=============================================================================================

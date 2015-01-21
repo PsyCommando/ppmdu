@@ -6,10 +6,43 @@
 using std::vector;
 using std::string;
 
+
+
 namespace pmd2 { namespace filetypes
 { 
     using namespace magicnumbers;
 
+    struct filext_and_ty
+    {
+        e_ContentType type;
+        string        filext;
+    };
+
+    static const vector<filext_and_ty> EXT_TO_TYPES =
+    {{
+        { e_ContentType::PKDPX_CONTAINER,      PKDPX_FILEX   },
+        { e_ContentType::AT4PX_CONTAINER,      AT4PX_FILEX   },
+        { e_ContentType::SIR0_CONTAINER,       SIR0_FILEX    },
+        { e_ContentType::PACK_CONTAINER,       PACK_FILEX    },
+        { e_ContentType::KAOMADO_CONTAINER,    KAOMADO_FILEX },
+        { e_ContentType::WAN_SPRITE_CONTAINER, WAN_FILEX     },
+        { e_ContentType::WTE_FILE,             WTE_FILEX     },
+        { e_ContentType::BGP_FILE,             BGP_FILEX     },
+    }};
+
+
+    std::vector<e_ContentType> GetFileTypeFromExtension( const std::string & ext )
+    {
+        vector<e_ContentType> matches;
+
+        for( const auto & entry : EXT_TO_TYPES )
+        {
+            if( ( ext.compare( entry.filext ) == 0 ) )
+                matches.push_back( entry.type );
+        }
+
+        return std::move( matches );
+    }
 
     std::string GetAppropriateFileExtension( std::vector<uint8_t>::const_iterator & itdatabeg,
                                              std::vector<uint8_t>::const_iterator & itdataend )

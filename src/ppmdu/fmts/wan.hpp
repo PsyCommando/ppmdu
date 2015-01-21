@@ -27,6 +27,8 @@ namespace pmd2 { namespace filetypes
 //  WAN Structures
 //=============================================================================================
 
+    /**********************************************************************
+    **********************************************************************/
     struct zerostrip_table_entry
     {
         static const unsigned int LENGTH = 12u;
@@ -71,7 +73,6 @@ namespace pmd2 { namespace filetypes
         static const unsigned int DATA_LEN = 12u;
 
         unsigned int size()const{return DATA_LEN;}
-        std::string toString()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
@@ -93,7 +94,6 @@ namespace pmd2 { namespace filetypes
                  nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
 
         unsigned int size()const{return DATA_LEN;}
-        std::string toString()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
@@ -118,7 +118,6 @@ namespace pmd2 { namespace filetypes
                  unk10;
 
         unsigned int size()const{return DATA_LEN;}
-        std::string toString()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
@@ -139,43 +138,27 @@ namespace pmd2 { namespace filetypes
         uint32_t nullbytes;
 
         unsigned int size()const{return DATA_LEN;}
-        std::string toString()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
         std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
-    /*
-    */
-    struct wan_comp_img
-    {
-        std::vector<uint8_t> DecompImage();
-
-        template<class _init>
-            void CompressImage( _init itbeg, _init itend )
-        {
-            assert(false);
-            //#TODO: FINISH THIS!
-        }
-
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
-
-        std::vector<uint8_t> compressedimg;
-    };
 
 //=============================================================================================
 //  Functions / Functors
 //=============================================================================================
 
-    /*
-        A function to read the compression table for a compressed frame in a WAN sprite, and
-        return the decompressed image via move constructor!
+    /**********************************************************************
+        ---------------------------
+           ParseZeroStrippedTImg
+        ---------------------------
+            A function to read the compression table for a compressed frame in a WAN sprite, and
+            return the decompressed image via move constructor!
 
-        - itcomptblbeg : The iterator to beginning of the specific compression table to decode!
-        - filebeg      : An iterator to the beginning of the file, or to where the offsets in the table are relative to!
-        - imgres       : The resolution of the image to decode !
-    */
+            - itcomptblbeg : The iterator to beginning of the specific compression table to decode!
+            - filebeg      : An iterator to the beginning of the file, or to where the offsets in the table are relative to!
+            - imgres       : The resolution of the image to decode !
+    **********************************************************************/
     template<class _TIMG_t, class _randit>
         uint32_t ParseZeroStrippedTImg( _randit                            itcomptblbeg, 
                                         _randit                            filebeg, 
@@ -205,6 +188,15 @@ namespace pmd2 { namespace filetypes
         return nb_bytesread;
     }
 
+    /**********************************************************************
+        ---------------------------
+            FillZeroStripTable
+        ---------------------------
+            Reads the "zero strip table" for a compressed image.
+            The zero-strip table is basically a table that contains 
+            offsets indicating where to put zeros in-between strips 
+            of pixels to assemble the decompressed tiled image!
+    **********************************************************************/
     template<class _randit>
         std::vector<zerostrip_table_entry> FillZeroStripTable( _randit itcomptblbeg )
     {
@@ -227,10 +219,13 @@ namespace pmd2 { namespace filetypes
         return std::move(zerostrtbl);
     }
 
-    /*
-        A class to parse a WAN sprite into a SpriteData structure.
-        Because image formats can vary between sprites, 
-    */
+    /**********************************************************************
+        ----------------
+            Parse_WAN
+        ----------------
+            A class to parse a WAN sprite into a SpriteData structure.
+            Because image formats can vary between sprites, 
+    **********************************************************************/
     class Parse_WAN
     {
     public:
@@ -238,20 +233,12 @@ namespace pmd2 { namespace filetypes
         class Ex_Parsing8bppAs4bpp : public std::runtime_error { public: Ex_Parsing8bppAs4bpp():std::runtime_error("ERROR: Tried to parse 4bpp sprite as 8bpp!"){} };
         class Ex_Parsing4bppAs8bpp : public std::runtime_error { public: Ex_Parsing4bppAs8bpp():std::runtime_error("ERROR: Tried to parse 8bpp sprite as 4bpp!"){} };
 
-        //What particular format the sprite is in!
-        enum struct eSpriteType : short
-        {
-            sprInvalid,
-            spr4bpp,
-            spr8bpp,
-        };
-
         //Constructor. Pass the data to parse.
         Parse_WAN( std::vector<uint8_t>       && rawdata, const animnamelst_t * animnames = nullptr );
         Parse_WAN( const std::vector<uint8_t> &  rawdata, const animnamelst_t * animnames = nullptr );
 
         //Use this to determine which parsing method to use!
-        eSpriteType getSpriteType()const;
+        graphics::eSpriteType getSpriteType()const;
 
         template<class TIMG_t>
             graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr )
@@ -334,63 +321,65 @@ namespace pmd2 { namespace filetypes
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
             {
-                uint32_t          ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
-                auto              itfound  = metarefs.find( i ); //Find if we have a meta-frame pointing to that frame
-                myres = RES_64x64_SPRITE;
+                uint32_t ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
 
-                uint32_t totalbyamt = 0;
-                auto zerostrtable = FillZeroStripTable( m_rawdata.begin() + ptrtoimg );
-                for( const auto & entry : zerostrtable )
-                    totalbyamt += entry.pixamt;
-                uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
-                uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
-
-                if( itfound != metarefs.end() )
-                {
-                    myres = MetaFrame::eResToResolution( metafrms[itfound->second].resolution );
-                }
-                else if( metafrms.front().image_index == 0xFFFF )
-                {
-                    myres = MetaFrame::eResToResolution( metafrms.front().resolution );
-                }
-                //Otherwise default to 64x64
-                //else
-                //{
-                //    //This could mean its not animated and we should re-use the value of the meta-frame.
-                //    if( metafrms.size() == m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
-                //        myres = MetaFrame::eResToResolution( metafrms[i].resolution );
-                //    else if( !metafrms.empty() && metafrms.size() < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table )
-                //        myres = MetaFrame::eResToResolution( metafrms[metafrms.size()-1].resolution ); //Take the last valid resolution
-                //    else
-                //    {
-                //        //#TODO: Come up with something better !
-                //        //if( nbPixInBytes == 2048 )
-                //        //else if( nbPixInBytes == 512 )
-                //        //else if( nbPixInBytes == 256 )
-                //        //else if(  nbPixInBytes == 128 )
-                //    }
-                //}
-
-                assert( nbPixInBytes == (myres.width * myres.height) );
-
-                //Parse the image with the best resolution we could find!
-                out_imgs[i].setPixelResolution( myres.width, myres.height );
-                gimg::PixelReaderIterator<TIMG_t> myiter( &(out_imgs[i])); 
-
-                uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>( m_rawdata.begin() + ptrtoimg, 
-                                                                       m_rawdata.begin(), 
-                                                                       myres,
-                                                                       myiter);
-
-                //Copy the palette!
-                out_imgs[i].getPalette() = pal;
-
-                //
+                ReadAFrame( m_rawdata.begin() + ptrtoimg, metafrms, metarefs, pal, out_imgs[i], i );
+                
                 if( m_pProgress != nullptr )
-                {
-                    (*m_pProgress) = progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nb_ptrs_frm_ptrs_table );
-                }
+                    m_pProgress->store( progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ) );
             }
+        }
+
+        template<class TIMG_t>
+            void ReadAFrame( std::vector<uint8_t>::iterator            itwhere, 
+                               const std::vector<graphics::MetaFrame> & metafrms,
+                               const std::multimap<uint32_t,uint32_t> & metarefs,
+                               const std::vector<gimg::colorRGB24>    & pal,
+                               TIMG_t                                 & cur_img,
+                               uint32_t                                 curfrmindex  )
+        {
+            auto              itfound    = metarefs.find( curfrmindex ); //Find if we have a meta-frame pointing to that frame
+            utils::Resolution myres      = RES_64x64_SPRITE;
+            uint32_t          totalbyamt = 0;
+
+            //Read the Zero strip table to inflate the image data
+            auto zerostrtable = FillZeroStripTable( itwhere );
+            //Count the total size of the resulting image
+            for( const auto & entry : zerostrtable )
+                totalbyamt += entry.pixamt;
+
+            uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
+            uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
+
+            if( itfound != metarefs.end() )
+            {
+                //If we have a meta-frame for this image, take the resolution from it.
+                myres = MetaFrame::eResToResolution( metafrms[itfound->second].resolution );
+            }
+            else if( metafrms.front().imageIndex == graphics::SPRITE_SPECIAL_METAFRM_INDEX ) 
+            {
+                //If we DON'T have a meta-frame for this image, take the resolution from the first meta-frame, if its img index is 0xFFFF.
+                myres = MetaFrame::eResToResolution( metafrms.front().resolution );
+                //Kind of a bad logic here.. Its really possible that the 0xFFFF meta-frame is not the first one.
+                // Besides, we're not even 100% sure what to do if we end up with several 0xFFFF pointing meta-frames..
+                //#TODO: fix this !
+            }
+
+            //Sanity check
+            assert( nbPixInBytes == (myres.width * myres.height) );
+
+            //Parse the image with the best resolution we could find!
+            cur_img.setPixelResolution( myres.width, myres.height );
+            gimg::PixelReaderIterator<TIMG_t> myPixelReader(cur_img); 
+
+            //Build the image
+            uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>( itwhere, 
+                                                                    m_rawdata.begin(), 
+                                                                    myres,
+                                                                    myPixelReader );
+
+            //Copy the palette!
+            cur_img.getPalette() = pal;
         }
 
 
@@ -440,29 +429,16 @@ namespace pmd2 { namespace filetypes
         static const unsigned int       ProgressProp_Other      = 10; //% of the job
     };
 
-    //A function form of the above, that deals with a file path, instead of the raw data of the file.
-    //gimg::SpriteData<gimg::tiled_image_i4bpp> ParseA_4bpp_WAN_Sprite( std::string wanfilepath );
-
-    /*
+    /**********************************************************************
+        ----------------
+            Write_WAN
+        ----------------
         Class to write a WAN file from a SpriteData object!
-    */
-
+    **********************************************************************/
     class Write_WAN
     {
     public:
         //typedef _Sprite_T sprite_t;
-
-        //Parse_WAN( sprite_t && sprite )
-        //{
-        //}
-
-        //Parse_WAN( const sprite_t &  sprite )
-        //{
-        //}
-
-        void WriteUnpacked(const std::string & outputpath, std::atomic<uint32_t> * pProgress = nullptr )
-        {
-        }
 
         void WriteWan(const std::string & outputpath, std::atomic<uint32_t> * pProgress = nullptr )
         {

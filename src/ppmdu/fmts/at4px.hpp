@@ -8,8 +8,8 @@ Description: stuff for handling and building AT4PX files.
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/pmd2/pmd2_image_formats.hpp>
+//#include <ppmdu/pmd2/pmd2_palettes.hpp>
+//#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <array>

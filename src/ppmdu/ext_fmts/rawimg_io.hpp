@@ -22,35 +22,24 @@ namespace utils{ namespace io
 //=====================================================================
 
 //--------------------------------
-//  Import/Export 4bpp
+//  Export to raw pixels !
 //--------------------------------
-    //Functions for exporting a raw headerless img, along with an accompanying riff palette
-    // "filepath" is the path to the file to be outputed, it should end with an extension-less filename, 
-    // because the file extensions for the palette and rawimg will be appended automatically!
-    //bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp       & out_indexed, 
-    //                                 const std::string             & filepath, 
-    //                                 utils::Resolution               imgres );
-    //bool ExportTo4bppRawImgAndPal  ( const gimg::tiled_image_i4bpp & in_indexed, 
-    //                                 const std::string             & filepath );
-
-//--------------------------------
-//  Import/Export 8bpp
-//--------------------------------
-    //bool ImportFrom8bppRawImgAndPal( gimg::tiled_image_i8bpp       & out_indexed, 
-    //                                 const std::string             & filepath, 
-    //                                 utils::Resolution               imgres );
-    //bool ExportTo8bppRawImgAndPal  ( const gimg::tiled_image_i8bpp & in_indexed, 
-    //                                 const std::string             & filepath );
-
-//--------------------------------
-//  Export to ANY !
-//--------------------------------
-    //Generic Export Functions
-    // Calls the correct function depending on the type of the tiled image!
+    /*
+        Export an image to a tiled form, pixel by pixel into a 
+        file, without any other form of processing or a header.
+    */
     template<class _TImg_t>
         bool ExportRawImg( const _TImg_t     & in_indexed,
                            const std::string & filepath );
 
+    /*
+        Export an image to a tiled form, pixel by pixel into a 
+        file, without any other form of processing or a header.
+        #This one exports only the pixel data, not the palette!
+    */
+    template<class _TImg_t>
+        bool ExportRawImg_NoPal( const _TImg_t     & in_indexed,
+                                 const std::string & filepath );
 
 //--------------------------------
 //  Import from ANY !
@@ -62,8 +51,11 @@ namespace utils{ namespace io
         bool ImportRawImg( _TImg_t            & out_indexed,
                             const std::string & filepath,
                             utils::Resolution   imgres);
-
-
+    
+    template<class _TImg_t>
+        bool ImportRawImg_NoPal( _TImg_t           & out_indexed, 
+                                 const std::string & filepath, 
+                                 utils::Resolution   imgres);
 
 
 //=====================================================================

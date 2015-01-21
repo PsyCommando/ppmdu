@@ -69,6 +69,7 @@ namespace pmd2 { namespace filetypes
     {
         PKDPX_CONTAINER,
         AT4PX_CONTAINER,
+        AT4PN_CONTAINER,
         SIR0_CONTAINER,
         COMPRESSED_DATA,    //For the content of PKDPX container, given we can't decompress when analysing
         PACK_CONTAINER,
@@ -84,6 +85,12 @@ namespace pmd2 { namespace filetypes
 //==================================================================
 // Functions
 //==================================================================
+
+    /*
+        Pass the file extension of a file and get the possible matches list.
+        Several kinds of files share the same type of extension.
+    */
+    std::vector<e_ContentType> GetFileTypeFromExtension( const std::string & ext );
 
     //#TODO: Deprecate this !
     //For the given magic number, the function returns a file extension that correspond to the filetype ! 

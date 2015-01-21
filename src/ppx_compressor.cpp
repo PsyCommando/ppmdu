@@ -11,7 +11,7 @@
 #include <ppmdu/fmts/pkdpx.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <ppmdu/utils/utility.hpp>
-#include <ppmdu/pmd2/pmd2_palettes.hpp>
+//#include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/library_wide.hpp>
 #include <Poco/Path.h>
@@ -251,20 +251,6 @@ namespace ppx_compress
         return true;
     }
 
-    //If returns false, the header is AT4PX !
-    //bool IsOutputFileHeaderPKDPX( const string & outputpath )
-    //{
-    //    Poco::Path outfile(outputpath);
-
-    //    if( outfile.isFile() )
-    //    {
-    //        if( !(outfile.getExtension().empty()) && outfile.getExtension().compare( filetypes::AT4PX_FILEX ) == 0 )
-    //            return false;
-    //    }
-
-    //    //No output filename specified, or pkdpx extension specified, default to PKDPX
-    //    return true;
-    //}
 };
 //=================================================================================================
 // Main Function

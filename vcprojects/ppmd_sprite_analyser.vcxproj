@@ -19,23 +19,41 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\data formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\png_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -44,24 +62,35 @@
     <ClCompile Include="..\src\ppmdu\fmts\kao.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pkdpx.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\px_compression.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -144,6 +173,8 @@
     <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\color.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
@@ -152,36 +183,62 @@
     <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\ext_fmts\png_io.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp" />
+    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\ext_fmts\riff_palette.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp" />
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -190,24 +247,35 @@
     <ClInclude Include="..\src\ppmdu\fmts\kao.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pkdpx.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\px_compression.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\sir0.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>

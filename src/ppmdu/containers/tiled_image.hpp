@@ -773,11 +773,14 @@ namespace gimg
 
 
 //================================================================================================
-//  PixelReader
+//  timgPixReader
 //================================================================================================
     /*
-        Give this an iterator to a tiled img, and it will turn bytes fed to it into 
-        the proper ammount of pixels into the target tiled_image !
+        timgPixReader
+            Give this an iterator to a tiled_image, and it will turn bytes fed to it into 
+            the proper ammount of pixels into the target tiled_image !
+
+            NOTE: This provide a way to invert pixel endianess at bit level.
     */
     template<class _TImg_T, class _outit>
         class timgPixReader
@@ -798,6 +801,11 @@ namespace gimg
     //---------------------------------
     //        Optimized Handlers
     //---------------------------------
+        /*
+            Those structs contain specialised handling code for specific types of pixels.
+            They're instantiated depeneding on the pixel format of image we're handling,
+            thanks to the magic of templates!
+        */
         friend struct Handle4bpp;
         friend struct Handle8bppMultiBytes;
         friend struct Handle8bpp;
@@ -805,6 +813,9 @@ namespace gimg
 
         typedef timgPixReader<_TImg_T,_outit> parent_t;
 
+        /*
+            Handle 4bpp pixels only
+        */
         struct Handle4bpp
         {
             Handle4bpp( parent_t * parentpixreader )
@@ -835,6 +846,9 @@ namespace gimg
             parent_t * m_pPixEater;
         };
 
+        /*
+            Handle multi-bytes pixels where each components are 8 bits only
+        */
         struct Handle8bppMultiBytes
         {
             typedef std::array<uint8_t, BytesPerPixel> buffer_t;
@@ -866,6 +880,9 @@ namespace gimg
             parent_t                    * m_pPixEater;
         };
 
+        /*
+            Handle 8bpp pixels only
+        */
         struct Handle8bpp
         {
             Handle8bpp( parent_t * pixreader )
@@ -882,6 +899,10 @@ namespace gimg
             parent_t * m_pPixEater;
         };
 
+        /*
+            Handle any pixel formats bit per bit. 
+            This is the slowest method, but the most surefire one!
+        */
         struct GenericBitHandler
         {
             static const bool ShouldUse = BitsPerPixel != 8 && BitsPerPixel != 4;
@@ -901,6 +922,9 @@ namespace gimg
 
             inline void Parse( uint8_t abyte )
             {
+                if( m_bLittleEndian )
+                    assert( false ); //Can't make this guarranty yet ! #TODO: Gotta make sure if its safe to ignore pixel endian on single bits !
+
                 //Just feed the bits to the pixel eater and empty it only when its full !
                 for( int8_t bit = 7; bit >= 0; --bit, m_bitsbuff( ( (bit >> abyte) & 0x1) ) )
             }
@@ -958,11 +982,11 @@ namespace gimg
     //---------------------------------
     //     Constructor + Operator
     //---------------------------------
-        timgPixReader( outit_t itoutbeg, bool bLittleEndian = true )
+        explicit timgPixReader( outit_t itoutbeg, bool bLittleEndian = true )
             :m_itOut(itoutbeg), m_bLittleEndian(bLittleEndian), m_pixelHandler(this)
         {}
 
-        timgPixReader( timg_t & destimg, bool bLittleEndian = true )
+        explicit timgPixReader( timg_t & destimg, bool bLittleEndian = true )
             :m_bLittleEndian(bLittleEndian), m_pixelHandler(this), m_itOut(&destimg)
         {
             m_itOut = destimg.begin();
@@ -987,30 +1011,48 @@ namespace gimg
 //================================================================================================
     /*
         PixelReaderIterator
+            Pass a tiled_image as parameter at construction, and feed the PixelReaderIterator bytes. 
+            It will assemble pixels from those automatically and push them back into the 
+            tiled_image passed as parameter!
+
+            NOTE: This does not provide any way of inverting pixel "endianness" or actual endianness !
     */
-    template<class _ContainerType/*, class _parentitert = std::iterator<std::output_iterator_tag, typename _ContainerType::value_type>*/ >
-        class PixelReaderIterator : public std::_Outit //: public _parentitert
+    template<class _ContainerType>
+        class PixelReaderIterator : public std::_Outit
     {
     public:
         
-        typedef  PixelReaderIterator<_ContainerType>  mytype_t;
-        typedef _ContainerType                     container_type;
-        typedef _ContainerType                     container_t;
-        typedef typename  container_t *            container_ptr_t;
+        typedef  PixelReaderIterator<_ContainerType>                                mytype_t;
+        typedef _ContainerType                                                      container_type;
+        typedef _ContainerType                                                      container_t;
+        typedef typename  container_t *                                             container_ptr_t;
         typedef timgPixReader<typename container_t, typename container_t::iterator> mypixreader_t;
-        typedef typename _ContainerType::value_type         valty_t;
+        typedef typename _ContainerType::value_type                                 valty_t;
 
-        explicit PixelReaderIterator( container_ptr_t pcontainer)throw()
-            :m_pContainer(pcontainer), m_pixreader(*pcontainer)/*, m_itcur(pcontainer)*/
-        {
-            /*m_itcur = m_pContainer->begin();*/
-        }
-
-        explicit PixelReaderIterator( container_ptr_t pcontainer, typename container_t::iterator iter )throw()
-            :/*m_itcur(iter),*/ m_pContainer(pcontainer),m_pixreader(*pcontainer)
+        explicit PixelReaderIterator( container_t & tiledimg )
+            :m_pContainer( std::addressof(tiledimg) ), m_pixreader( tiledimg )
         {}
 
-        mytype_t & operator=( const uint8_t val )
+        PixelReaderIterator( const mytype_t & other )
+            :m_pContainer( other.m_pContainer ), m_pixreader( other.m_pixreader )
+        {}
+
+        mytype_t & operator=( const mytype_t & other )
+        {
+            this->m_pContainer = other.m_pContainer;
+            this->m_pixreader  = other.m_pixreader;
+            return *this;
+        }
+
+        //explicit PixelReaderIterator( container_ptr_t pcontainer )throw()
+        //    :m_pContainer(pcontainer),m_pixreader(*pcontainer)
+        //{}
+
+
+        /*
+            Operator =
+        */
+        mytype_t & operator=( uint8_t val )
         {
             m_pixreader = val;
             return (*this);
@@ -1022,29 +1064,35 @@ namespace gimg
             return (*this);
         }
 
+        /*
+            Operator ++(prefix)
+        */
         mytype_t& operator++()  
         { 
             //nothing
             return (*this);
         }
 
+        /*
+            Operator ++(postfix)
+        */
         mytype_t operator++(int)
         {
             //nothing;
             return (*this);
         }
 
-
+        /*
+            Operator *
+        */
         mytype_t&       operator*()        { return (*this); }
         const mytype_t& operator*() const  { return (*this); }
 
     protected:
-        //typename container_t::iterator m_itcur;
         container_ptr_t                m_pContainer;
         mypixreader_t                  m_pixreader;
     };
 };
 
-//#include "tiled_image.cpp"
 
 #endif

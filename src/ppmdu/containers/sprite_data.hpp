@@ -23,6 +23,18 @@ namespace pmd2{ namespace filetypes{ class Parse_WAN; class Write_WAN; }; };
 namespace pmd2{ namespace graphics
 {
 //=========================================================================================
+//=========================================================================================
+    //What particular format the sprite is in!
+    enum struct eSpriteType : short
+    {
+        sprInvalid,
+        spr4bpp,
+        spr8bpp,
+    };
+
+    static const uint16_t SPRITE_SPECIAL_METAFRM_INDEX = 0xFFFF;
+
+//=========================================================================================
 //  sprOffParticle
 //=========================================================================================
     /*
@@ -110,11 +122,47 @@ namespace pmd2{ namespace graphics
             return RES_INVALID;
         }
 
+        /*
+            Return the correct eRes entry to match the integer representation of the entry.
+        */
+        static eRes IntegerResTo_eRes( uint8_t xres, uint8_t yres )
+        {
+            struct integerAndRes
+            {
+                eRes enumres;
+                uint8_t x, 
+                        y; 
+            };
+            static const std::vector<integerAndRes> ResEquiv=
+            {
+                { eRes::_8x8,    8,  8 },
+                { eRes::_16x16, 16, 16 },
+                { eRes::_32x32, 32, 32 },
+                { eRes::_64x64, 64, 64 },
+                { eRes::_8x16,   8, 16 },
+                { eRes::_16x8,  16,  8 },
+                { eRes::_8x32,   8, 32 },
+                { eRes::_32x8,  32,  8 },
+                { eRes::_16x32, 16, 32 },
+                { eRes::_32x16, 32, 16 },
+                { eRes::_32x64, 32, 64 },
+                { eRes::_64x32, 64, 32 },
+            };
+
+            for( const auto & entry : ResEquiv )
+            {
+                if( entry.x == xres && entry.y == yres )
+                    return entry.enumres;
+            }
+
+            return eRes::_64x64; //If things go wrong, return the biggest
+        }
+
         //Cleaned up values from file( the Interpreted values below, were removed from those ):
-        uint16_t image_index;    //The index of the actual image data in the image data vector
+        uint16_t imageIndex;    //The index of the actual image data in the image data vector
         uint16_t unk0;           //?
-        int16_t  offset_y;       //The frame will be offset this much, ?in absolute coordinates?
-        int16_t  offset_x;       //The frame will be offset this much, ?in absolute coordinates?
+        int16_t  offsetY;       //The frame will be offset this much, ?in absolute coordinates?
+        int16_t  offsetX;       //The frame will be offset this much, ?in absolute coordinates?
         uint16_t unk1;           //Unknown data, stored in last 16 bits integer in the entry for a meta-frame
 
         //Interpreted values:
@@ -137,10 +185,10 @@ namespace pmd2{ namespace graphics
         }
 
         //--- References handling ---
-        unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
-        const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
+        inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
+        inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
 
-        void         addRef   ( uint32_t refanimgrp, uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refanimgrp, refseq,refererindex }); }
+        inline void  addRef   ( uint32_t refanimgrp, uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refanimgrp, refseq,refererindex }); }
         void         remRef   ( uint32_t refanimgrp, uint32_t refseq, uint32_t refererindex ) 
         {
             for( auto it = m_animFrmsRefer.begin(); it != m_animFrmsRefer.end(); ++it )
@@ -154,7 +202,7 @@ namespace pmd2{ namespace graphics
         }
 
         //Empty the reference table completely
-        void clearRefs() { m_animFrmsRefer.resize(0); }
+        inline void clearRefs() { m_animFrmsRefer.resize(0); }
 
 
     private:
@@ -173,14 +221,14 @@ namespace pmd2{ namespace graphics
     struct MetaFrameGroup
     {
         //Forward some basic vector stuff
-        std::size_t       & operator[]( unsigned int index )      { return metaframes[index]; }
-        const std::size_t & operator[]( unsigned int index )const { return metaframes[index]; }
-        std::size_t       size      ()const                       { return metaframes.size(); }
+        inline std::size_t       & operator[]( unsigned int index )      { return metaframes[index]; }
+        inline const std::size_t & operator[]( unsigned int index )const { return metaframes[index]; }
+        inline std::size_t       size      ()const                       { return metaframes.size(); }
 
-        std::vector<std::size_t>::iterator       begin()     { return metaframes.begin(); }
-        std::vector<std::size_t>::const_iterator begin()const{ return metaframes.begin(); }
-        std::vector<std::size_t>::iterator       end()       { return metaframes.end(); }
-        std::vector<std::size_t>::const_iterator end()const  { return metaframes.end(); }
+        inline std::vector<std::size_t>::iterator       begin()     { return metaframes.begin(); }
+        inline std::vector<std::size_t>::const_iterator begin()const{ return metaframes.begin(); }
+        inline std::vector<std::size_t>::iterator       end()       { return metaframes.end(); }
+        inline std::vector<std::size_t>::const_iterator end()const  { return metaframes.end(); }
 
         std::vector<std::size_t> metaframes;
     };
@@ -194,17 +242,17 @@ namespace pmd2{ namespace graphics
     */
     struct AnimFrame
     {
-        uint16_t frame_duration   = 0;    //The duration this frame will be displayed 0-0xFFFF
-        uint16_t meta_frame_index = 0;  //The index of the meta-frame to be displayed
-        int16_t  spr_offset_x     = 0;      //The offset from the center of the sprite the frame will be drawn at.
-        int16_t  spr_offset_y     = 0;      //The offset from the center of the sprite the frame will be drawn at.
-        int16_t  shadow_offset_x  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
-        int16_t  shadow_offset_y  = 0;   //The offset from the center of the sprite the shadow under the sprite will be drawn at.
+        uint16_t frameDuration    = 0; //The duration this frame will be displayed 0-0xFFFF
+        uint16_t metaFrmGrpIndex  = 0; //The index of the meta-frame group to be displayed
+        int16_t  sprOffsetX       = 0; //The offset from the center of the sprite the frame will be drawn at.
+        int16_t  sprOffsetY       = 0; //The offset from the center of the sprite the frame will be drawn at.
+        int16_t  shadowOffsetX    = 0; //The offset from the center of the sprite the shadow under the sprite will be drawn at.
+        int16_t  shadowOffsetY    = 0; //The offset from the center of the sprite the shadow under the sprite will be drawn at.
 
         inline bool isNull()const
         {
-            return frame_duration == 0  && meta_frame_index == 0 && spr_offset_x == 0 && spr_offset_y == 0 &&
-                   shadow_offset_x == 0 && shadow_offset_y == 0;
+            return frameDuration == 0  && metaFrmGrpIndex == 0 && sprOffsetX == 0 && sprOffsetY == 0 &&
+                   shadowOffsetX == 0 && shadowOffsetY == 0;
         }
     };
 
@@ -222,13 +270,20 @@ namespace pmd2{ namespace graphics
             :m_frames(nbframes), m_name(name)
         {}
         
-        void              reserve( unsigned int count ) { m_frames.reserve(count); }
+        inline void                reserve( unsigned int count )       { m_frames.reserve(count); }
+        inline unsigned int        getNbFrames()const                  { return m_frames.size(); } //Not counting the obligatory closing null frame!!
+        inline const AnimFrame   & getFrame( unsigned int index )const { return m_frames[index]; }
+        inline AnimFrame         & getFrame( unsigned int index )      { return m_frames[index]; }
 
-        unsigned int      getNbFrames()const                  { return m_frames.size(); } //Not counting the obligatory closing null frame!!
-        const AnimFrame & getFrame( unsigned int index )const { return m_frames[index]; }
-        AnimFrame       & getFrame( unsigned int index )      { return m_frames[index]; }
+        //uint32_t                   insertFrame( AnimFrame && aframe, int index = -1 );  //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
+        //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
+        inline uint32_t            insertFrame( const AnimFrame & aframe, int index = -1 ) {  return insertFrame( AnimFrame( aframe ), index ); }
+        inline void                removeframe( unsigned int index )                       { m_frames.erase( m_frames.begin() + index ); }
+        inline const std::string & getName    ()const                                      { return m_name; }
+        inline void                setName    (const std::string & name)                   { m_name = name; }
 
-        uint32_t insertFrame( AnimFrame && aframe, int index = -1 )  //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
+
+        uint32_t insertFrame( AnimFrame && aframe, int index = -1 ) //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
         {
             uint32_t insertpos = 0;
 
@@ -244,19 +299,6 @@ namespace pmd2{ namespace graphics
             }
             return insertpos;
         }
-
-        uint32_t insertFrame( const AnimFrame & aframe, int index = -1 )  //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
-        { 
-            return insertFrame( AnimFrame( aframe ), index ); 
-        }
-
-        void removeframe( unsigned int index )
-        {
-            m_frames.erase( m_frames.begin() + index );
-        }
-
-        const std::string & getName()const     { return m_name; }
-        void setName(const std::string & name) { m_name = name; }
 
     private:
         std::vector<AnimFrame> m_frames;
@@ -341,88 +383,48 @@ namespace pmd2{ namespace graphics
     public:
         typedef TIMG_Type img_t; 
 
-        const std::vector<sprOffParticle>      & getPartOffsets()const{ return m_partOffsets; }
-        const std::vector<img_t>               & getFrames()const{ return m_frames; }
-        const std::multimap<uint32_t,uint32_t> & getMetaRefs()const{return m_metarefs;}
-        const std::vector<MetaFrame>           & getMetaFrames()const{return m_metaframes;}
-        const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const{return m_metafrmsgroups;}
-        const std::vector<SpriteAnimationGroup>& getAnimGroups()const{return m_animgroups;}
-        const std::vector<gimg::colorRGB24>    & getPalette()const{ return m_palette;}
-        const SprInfo                          & getSprInfo()const{ return m_common; }
+        inline const std::vector<sprOffParticle>      & getPartOffsets ()const { return m_partOffsets;   } 
+        inline const std::vector<img_t>               & getFrames      ()const { return m_frames;        }
+        inline const std::multimap<uint32_t,uint32_t> & getMetaRefs    ()const { return m_metarefs;      }
+        inline const std::vector<MetaFrame>           & getMetaFrames  ()const { return m_metaframes;    }
+        inline const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const { return m_metafrmsgroups;}
+        inline const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
+        inline const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
+        inline const SprInfo                          & getSprInfo     ()const { return m_common;        }
 
-    private:
-
-        ///*
-        //    InsertMetaFrame
-        //*/
-        //unsigned int InsertMetaFrame( MetaFrame && mfrm )
+        /*
+            Reserve space in all the vectors
+        */
+        //void BatchReserve( uint32_t resOffsets, uint32_t resFrames, uint32_t resMetaF, uint32_t resMetaFG, uint32_t resAnimGrp )
         //{
-        //    uint32_t imgindex = mfrm.image_index;
-        //    m_metaframes.push_back(mfrm);
-
-        //    //Insert reference
-        //    m_metarefs.insert( std::make_pair<uint32_t,uint32_t>( imgindex, (m_metaframes.size() - 1) ) );
-
-        //    return (m_metaframes.size() - 1);
+        //    m_partOffsets.reserve(resOffsets);
+        //    m_frames.reserve(resFrames);
+        //    m_metaframes.reserve(resMetaF);
+        //    m_metafrmsgroups.reserve(resMetaFG);
+        //    m_animgroups.reserve(resAnimGrp);
         //}
 
-        ///*
-        //    ReplaceMetaFrame
-        //*/
-        //void ReplaceMetaFrame( uint32_t indextoreplace, MetaFrame && newmfrm )
+
+        //inline void setPartOffsets( std::vector<sprOffParticle> && partOffsets ) { m_partOffsets = partOffsets; } 
+        //inline void setFrames     ( std::vector<img_t>          && frmstbl )     { m_frames      = frmstbl;     }
+
+        //inline void addMFrameToGrp( unsigned int group, MetaFrame && mf )
         //{
-        //    //Validate the reference to the existing image
-        //    uint32_t oldreferingto = m_metaframes[indextoreplace].image_index;
-
-        //    if( oldreferingto == newmfrm.image_index )
+        //    m_metafrmsgroups[group].metaframes.push_back( m_metaframes.size() ); 
+        //    if( mf.imageIndex != 0xFFFF ) //Add a reference to the frame its pointing at
         //    {
-        //        //If the original and new frame refer to the same image
-        //        m_metaframes[indextoreplace] = newmfrm;
+        //        m_metarefs.insert( std::make_pair( mf.imageIndex, m_metaframes.size() ) );
         //    }
-        //    else
-        //    {
-        //        //If the original and new frame refer to different images
-
-        //        if( newmfrm.image_index >= m_metaframes.size() )
-        //            throw std::out_of_range( "ERROR: Trying to insert meta-frame pointing to a non-existing image!" );
-
-        //        //Flush old references, and add a new one to the correct frame
-        //        auto itfoundold = m_metarefs.find( oldreferingto );
-
-        //        if( itfoundold != m_metarefs.end() )
-        //            m_metarefs.erase(itfoundold);
-        //        else
-        //        {
-        //            //std::cerr << "\nTrying to replace meta-frame with broken dependency!\n"; 
-        //            assert(false);//This should never happen!
-        //        }
-
-        //        m_metaframes[indextoreplace] = newmfrm;
-        //        m_metarefs.insert( std::make_pair( m_metaframes[indextoreplace].image_index ,indextoreplace ) );
-        //    }
+        //    m_metaframes.push_back(mf);
         //}
 
-        ///*
-        //    RemoveMetaFrame
-        //*/
-        //void RemoveMetaFrame( uint32_t index )
-        //{
-        //    //Remove all anim frames that depend on it!
-        //    const unsigned int NB_Refs  = m_metaframes[index].getNbRefs();
-        //    auto             & metafref = m_metaframes[index];
 
-        //    for( unsigned int i = 0; i < NB_Refs; ++i )
-        //    {
-        //        //Remove anim frame that refers to this meta-frame!
-        //        const auto & myref = metafref.getRef(i);
-        //        m_animgroups[myref.refgrp].sequences[myref.refseq].removeframe( myref.reffrm );
-        //    }
 
-        //    //Unregister our meta-frame ref to our image!
-        //    auto itfoundold = m_metarefs.find(m_metaframes[index].image_index);
-        //    if( itfoundold != m_metarefs.end() )
-        //        m_metarefs.erase(itfoundold);
-        //}
+        //inline const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
+        //inline const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
+        //inline const SprInfo                          & getSprInfo     ()const { return m_common;        }
+
+    //private:
 
         /*
             Rebuilds the entire reference maps for everything currently in the sprite!
@@ -435,55 +437,58 @@ namespace pmd2{ namespace graphics
             //First set the meta-frames references
             for( unsigned int ctmf = 0; ctmf < m_metaframes.size(); ++ctmf )
             {
-                if( m_metaframes[ctmf].image_index < m_frames.size() )
-                {
-                    //clear all anim references!
-                    m_metaframes[ctmf].clearRefs();
-                    //Register meta to frame reference 
-                    m_metarefs.insert( std::make_pair( m_metaframes[ctmf].image_index, ctmf ) );
-                }
-                else
-                {
-                    //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
-                    if( m_metaframes[ctmf].image_index != 0xFFFF )
-                        assert(false);
-                }
+                RebuildAMetaFrameRefs(ctmf);
             }
-
             //Then handle animations references!
 
             //Iterate each animation groups
-            for( unsigned int cpgrp = 0; cpgrp < m_animgroups.size(); ++cpgrp )
+            for( unsigned int ctgrp = 0; ctgrp < m_animgroups.size(); ++ctgrp )
             {
-                auto        &CurSeqs = m_animgroups[cpgrp].sequences;
-                unsigned int NbSeq   = CurSeqs.size();
-
+                unsigned int NbSeq = m_animgroups[ctgrp].sequences.size();
                 //Each Animation Sequences
-                for( unsigned int cpseq = 0; cpseq < NbSeq; ++cpseq )
+                for( unsigned int ctseq = 0; ctseq < NbSeq; ++ctseq )
                 {
-                    auto &CurSequence = CurSeqs[cpseq];
-
+                    unsigned int NbFrms = m_animgroups[ctgrp].sequences[ctseq].getNbFrames();
                     //And each animation frames!
-                    for( unsigned int cpafrm = 0; cpafrm < CurSequence.getNbFrames(); ++cpafrm )
-                    {
-                        auto & curframe = CurSequence.getFrame(cpafrm);
-
-                        if( curframe.meta_frame_index < m_metaframes.size() )
-                        {
-                            //Register ref into the meta-frame at the index specified!
-                            m_metaframes[curframe.meta_frame_index].addRef( cpgrp, cpseq, cpafrm );
-                        }
-                        else
-                        {
-                            //Bad meta-frame index ! Sometimes this might be acceptable..
-                            assert(false);
-                        }
-                    }
+                    for( unsigned int ctfrm = 0; ctfrm < NbFrms; ++ctfrm )
+                        RebuildAnAnimRefs( ctgrp, ctseq, ctfrm );
                 }
             }
         }
 
-    private: 
+        void RebuildAMetaFrameRefs( unsigned int ctmf )
+        {
+            if( m_metaframes[ctmf].imageIndex < m_frames.size() )
+            {
+                //clear all anim references!
+                m_metaframes[ctmf].clearRefs();
+                //Register meta to frame reference 
+                m_metarefs.insert( std::make_pair( m_metaframes[ctmf].imageIndex, ctmf ) );
+            }
+            else
+            {
+                //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
+                if( m_metaframes[ctmf].imageIndex != SPRITE_SPECIAL_METAFRM_INDEX )
+                    assert(false);
+            }
+        }
+
+        void RebuildAnAnimRefs( unsigned int ctgrp, unsigned int ctseq, unsigned int ctfrm )
+        {
+            auto & curframe =  m_animgroups[ctgrp].sequences[ctseq].getFrame(ctfrm);
+            if( curframe.metaFrmGrpIndex < m_metaframes.size() )
+            {
+                //Register ref into the meta-frame at the index specified!
+                m_metaframes[curframe.metaFrmGrpIndex].addRef( ctgrp, ctseq, ctfrm );
+            }
+            else
+            {
+                //Bad meta-frame index ! Sometimes this might be acceptable..
+                assert(false);
+            }
+        }
+
+    /*private: */
         std::vector<img_t>                   m_frames;      //Actual image data, with reference list.
         std::multimap<uint32_t,uint32_t>     m_metarefs;    //A map of the meta-frames refering to a specific frame. 
                                                              // The frame index in "m_frames" is the keyval, the value 
@@ -525,18 +530,42 @@ namespace pmd2{ namespace graphics
     //SpriteData<gimg::tiled_image_i4bpp> Import4bppSpriteFromDirectory( const std::string & inpath );
 
 
-    //Check if all the required files and subfolders are in the filelist passed as param!
-    // Use this before calling ImportSpriteFromDirectory on the list of the files present
-    // in the dir to make sure everything is ok!
-    bool AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
+    /*
+        Check if all the required files and subfolders are in the filelist passed as param!
+        Use this before calling ImportSpriteFromDirectory on the list of the files present
+        in the dir to make sure everything is ok!
+    */
+    bool                AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
+    bool                AreReqFilesPresent_Sprite( const std::string              & directorypath );
 
+    /*
+        Return the missing required files in the file list specified.
+    */
+    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist );
+    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::string              & directorypath );
 
     /*
         ImportSpriteFromDirectory
             Call this to import any types of Sprite.
+
+            -bReadImgByIndex : If true we'll enforce the image order indicated by the number 
+                               in the name of the image. If false, we'll simply pushback images
+                               in the alpha-numeric order they're in the folder, applying no
+                               check on the index number.
+            -bParseXmlPal    : Whether we should try parsing a palette from xml!
     */
     template<class _Sprite_T>
-        _Sprite_T ImportSpriteFromDirectory( const std::string & inpath );
+        _Sprite_T ImportSpriteFromDirectory( const std::string     & inpath, 
+                                             bool                    bReadImgByIndex = false,
+                                             bool                    bParseXmlPal    = false,
+                                             std::atomic<uint32_t> * progresscnt     = nullptr );
+
+
+    /*
+        QuerySpriteTypeFromDirectory
+            Check the directory to get what's the sprite_ty of the sprite.
+    */
+    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )throw(std::runtime_error);
 };};
 
 #endif

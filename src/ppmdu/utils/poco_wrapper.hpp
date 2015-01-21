@@ -7,12 +7,23 @@ psycommando@gmail.com
 Description: A wrapper to avoid including POCO for doing some common file operations.
 */
 #include <string>
+#include <vector>
 
 namespace utils
 {
     // ---------------------------------------------------------------
     // File related stuff 
     // ---------------------------------------------------------------
+
+    /************************************************************************
+        ListDirContent_FilesAndDirectories
+            Write a list of all the files and folders in the directory 
+            specified.
+
+            -bFilenameOnly : If set to true, returns only the filename, 
+                             not the complete path!
+    ************************************************************************/
+    std::vector<std::string> ListDirContent_FilesAndDirectories( const std::string & dirpath, bool bFilenameOnly = false );
 
     /************************************************************************
         DoCreateDirectory

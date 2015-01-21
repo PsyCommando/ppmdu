@@ -150,7 +150,7 @@ namespace gimg
         inline static pixeldata_t  GetNbComponents()        { return mypixeltrait_t::NB_COMPONENTS;             } 
 
         //The maximum value that fits within the bits for a component
-        inline static pixeldata_t  GetMaxValuePerComponent(){ return mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT; } 
+        inline static pixeldata_t  GetMaxValuePerComponent(){ return mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT; }
 
         //Get the amount of bits per pixel
         inline static unsigned int GetBitsPerPixel()        { return mypixeltrait_t::BITS_PER_PIXEL;            } 

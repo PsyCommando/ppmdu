@@ -26,16 +26,6 @@ namespace pmd2 { namespace filetypes
 //                                  Functions
 //===============================================================================
 
-    //void WriteProgressConsole( int percent )
-    //{
-    //    std::cout << "\r" <<"   => Progress: " <<std::setw(3) <<std::dec <<percent <<"%";
-    //}
-
-    //void WriteProgressConsole( int percent, const string & textbefore )
-    //{
-    //    std::cout << "\r" <<textbefore <<std::setfill(' ') <<std::setw(4) <<std::dec <<percent  <<"%";
-    //}
-
     uint32_t ComputeFileNBPaddingBytes( uint32_t filelen )
     {
         return ( GetNextInt32DivisibleBy16( filelen ) - filelen );
@@ -269,7 +259,6 @@ namespace pmd2 { namespace filetypes
         m_OffsetTable.resize( nbsubfiles );
 
         std::advance(    itt,  OFFSET_TBL_FIRST_ENTRY );                    //Move to beginning of FOT
-        //std::advance( ittend, (TOTAL_BYTES_FOT + OFFSET_TBL_FIRST_ENTRY) ); //move end iterator to end of FOT
 
         for( auto & entry : m_OffsetTable )
         {
@@ -379,17 +368,18 @@ namespace pmd2 { namespace filetypes
                                     const std::string & path, 
                                     unsigned int        fileindex )
     {
-        static const string FILE_PREFIX = "file_";
+        //static const string FILE_PREFIX = "file_";
+
 		//----- 1. Make output filename -----
-		stringstream     outfilename;
+		stringstream outfilename;
+        Poco::Path   outpath(path);
+        outpath.makeFile();
 
-        outfilename << utils::AppendTraillingSlashIfNotThere( path ) << FILE_PREFIX
+        outfilename << utils::AppendTraillingSlashIfNotThere( path ) << (outpath.getBaseName()) <<"_"
                     <<std::setfill('0') <<std::setw(4) <<std::dec <<fileindex
+                    <<"_0x" 
+                    <<std::setfill('0') <<std::setw(4) <<std::hex << m_OffsetTable[fileindex]._fileOffset
                     << SubfileGetFExtension( file.begin(), file.end() );
-
-        //<<"_offs_0x" 
-        //<<std::setfill('0') <<std::setw(8) <<std::hex << m_OffsetTable[fileindex]._fileOffset
-
 
 		//------- 2. Output -------
         WriteByteVectorToFile( outfilename.str(), file ); 

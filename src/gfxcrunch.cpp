@@ -29,9 +29,14 @@ using namespace ::utils::io;
 
 namespace gfx_util
 {
+//=================================================================================================
+//  Constants
+//=================================================================================================
+    static const int HPBar_NB_Bars           = 65u;
+    static const int HPBar_UpdateMSecs       = 80; //Updates at every HPBar_UpdateMSecs mseconds
 
 //=================================================================================================
-// Handle Export
+// 
 //=================================================================================================
     /*
         A little wrapper to avoid contaminating with the POCO library the other headers!
@@ -46,6 +51,10 @@ namespace gfx_util
 // Utility
 //=================================================================================================
 
+    /*
+        Verify if "filename" is the name of one of the 3 special pack file that contain
+        pokemon sprites.
+    */
     bool MatchesPokeSpritePackFileName( const std::string & filename )
     {
         for( const auto & afilename : pmd2::filetypes::PackedPokemonSpritesFiles )
@@ -54,6 +63,34 @@ namespace gfx_util
                 return true;
         }
         return false;
+    }
+
+    inline void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
+    {
+        cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
+                <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
+    }
+
+    void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
+    {
+        static const int TOTAL_PERCENT = 200u;
+        while( !shouldstop )
+        {
+            DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
+            this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
+        }
+    }
+
+    void DrawHPBarHeader( const string & name, uint32_t level )
+    {
+        cout <<name <<"\n"
+             <<"\xda" <<setw( HPBar_NB_Bars  + 11 ) <<setfill('\xC4') << "\xbf\n"
+             <<"\xb3 " <<setw( HPBar_NB_Bars + 5 ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
+    }
+
+    void DrawHPBarFooter()
+    {
+        cout <<"\n\xc0" <<right <<setw( HPBar_NB_Bars + 11 ) <<setfill('\xC4') << "\xd9\n";
     }
 
 //=================================================================================================
@@ -74,8 +111,6 @@ namespace gfx_util
         "My tools in binary form are basically public domain / CC0.\n"
         "Free to re-use in any ways you may want to!\n"
         "No crappyrights, all wrongs reversed! :3";
-    static const int HPBar_NB_Bars           = 65u;
-    static const int HPBar_UpdateMSecs       = 80; //Updates at every HPBar_UpdateMSecs mseconds
 
 //------------------------------------------------
 //  Arguments Info
@@ -141,10 +176,26 @@ namespace gfx_util
             "-f (png,bmp,raw)",
             std::bind( &CGfxUtil::ParseOptionExportFormat, &GetInstance(), placeholders::_1 ),
         },
+        //Import images by index, or by alphanumeric order
+        {
+            "byindex",
+            0,
+            "This force the program to enforce the index in the file names of the images being imported, instead of just ordering them in alphanumeric order. This only applies to wan sprites this far!",
+            "-byindex",
+            std::bind( &CGfxUtil::ParseOptionImportByIndex, &GetInstance(), placeholders::_1 ),
+        },
+        //Forcing input format
+        //{
+        //    "as",
+        //    1,
+        //    "Force the content of a file to be handled as the type specified. This is ignored when the input is a directory!",
+        //    "-as (wan,wte,bgp,...)",
+        //    std::bind( &CGfxUtil::ParseOptionForceInputFormat, &GetInstance(), placeholders::_1 ),
+        //},
     }};
 
 //------------------------------------------------
-//  Methods
+// Misc Methods
 //------------------------------------------------
 
     CGfxUtil & CGfxUtil::GetInstance()
@@ -162,6 +213,7 @@ namespace gfx_util
     void CGfxUtil::_Construct()
     {
         m_bQuiet        = false;
+        m_ImportByIndex = false;
         m_execMode      = eExecMode::INVALID_Mode;
         m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
         m_pInputPath.reset ( new pathwrapper_t );
@@ -178,28 +230,9 @@ namespace gfx_util
     const string                    & CGfxUtil::getLongDescription ()const { return Long_Description;        }
     const string                    & CGfxUtil::getMiscSectionText ()const { return Misc_Text;               }
 
-
-    void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
-    {
-        cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
-                <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
-    }
-
-    void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
-    {
-        static const int TOTAL_PERCENT = 200u;
-        while( !shouldstop )
-        {
-            //unsigned int nbbars = ( ( TOTAL_PERCENT - (parsingprogress + writingprogress) ) * HPBar_NB_Bars ) / TOTAL_PERCENT; 
-            //cout <<"\r[" <<setw(NB_Bars) <<setfill(' ') <<string( nbbars, '=' ) <<"] " 
-            //     <<setw(3) <<setfill(' ') << ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) <<"%";
-
-            DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
-
-            this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
-        }
-    }
-
+//--------------------------------------------
+//  Mode Execution Methods
+//--------------------------------------------
     int CGfxUtil::UnpackSprite()
     {
         utils::MrChronometer chronounpacker( "Unpacking Sprite" );
@@ -216,9 +249,9 @@ namespace gfx_util
 
         if( ! m_bQuiet )
         {
-            cout <<(m_pInputPath->mypath.getFileName()) <<"\n"
-                 <<"\xda" <<setw(HPBar_NB_Bars  + 11 /*(HPBar_NB_Bars / 8)*/) <<setfill('\xC4') << "\xbf\n"
-                 <<"\xb3 " <<setw(HPBar_NB_Bars + 5/*(HPBar_NB_Bars / 8)*/ ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
+            if( ! m_bQuiet )
+                cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
+            DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
         }
 
         try
@@ -229,13 +262,13 @@ namespace gfx_util
             }
 
             auto sprty = parser.getSpriteType();
-            if( sprty == filetypes::Parse_WAN::eSpriteType::spr4bpp )
+            if( sprty == graphics::eSpriteType::spr4bpp )
             {
                 auto sprite = parser.ParseAs4bpp(&parsingprogress);
                 graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
             
             }
-            else if( sprty == filetypes::Parse_WAN::eSpriteType::spr8bpp )
+            else if( sprty == graphics::eSpriteType::spr8bpp )
             {
                 auto sprite = parser.ParseAs8bpp(&parsingprogress);
                 graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
@@ -262,26 +295,102 @@ namespace gfx_util
         runThUpHpBar.get();
 
         //draw one last time
-        DrawHPBar( HPBar_NB_Bars, 0 );
-        cout <<"\n\xc0" <<right <<setw(HPBar_NB_Bars + 11 /*(HPBar_NB_Bars / 8)*/) <<setfill('\xC4') << "\xd9\n";
+        if( ! m_bQuiet )
+        {
+            DrawHPBar( HPBar_NB_Bars, 0 );
+            DrawHPBarFooter();
+
+            cout    << "\nIts super-effective!!\n"
+                    << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
+                    << "The pieces landed all neatly into \"" <<m_pOutputPath->mypath.toString() <<"\"!\n";
+
+        }
 
         return 0;
     }
 
     int CGfxUtil::BuildSprite()
     {
-        Poco::File infileinfo(m_pInputPath->mypath);
+        utils::MrChronometer chronopacker( "Building Sprite" );
+        Poco::File           infileinfo(m_pInputPath->mypath);
+        Poco::Path           outpath(m_pOutputPath->mypath);
+        uint32_t             level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
+        atomic<uint32_t>     parsingprogress(0);
+        atomic<uint32_t>     writingprogress(0);
+        atomic<bool>         stopupdateprogress(false);
+        future<void>         runThUpHpBar;
 
         if( ! m_bQuiet )
         {
-            cout <<m_pInputPath->mypath.getFileName() <<setw(25) <<setfill(' ') <<"lvl " <<(m_pInputPath->mypath.depth() + ( infileinfo.getSize() & 0xF )) <<"\n"
-                 <<"HP:\n";
+            DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
+        }
+
+        outpath.append( m_pInputPath->mypath.getBaseName() );
+
+        try
+        {
+            if( ! m_bQuiet )
+            {
+                runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
+            }
+
+            auto sprty = graphics::QuerySpriteTypeFromDirectory( infileinfo.path() );
+
+            if( sprty == graphics::eSpriteType::spr4bpp )
+            {
+                auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( infileinfo.path(), 
+                                                                                                        m_ImportByIndex, 
+                                                                                                        false, 
+                                                                                                        &parsingprogress );
+                assert(false);
+            
+            }
+            else if( sprty == graphics::eSpriteType::spr8bpp )
+            {
+                auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( infileinfo.path(), 
+                                                                                                        m_ImportByIndex, 
+                                                                                                        false, 
+                                                                                                        &parsingprogress );
+                assert(false);
+            }
+        }
+        catch( Poco::Exception e )
+        {
+            //Stop the thread
+            stopupdateprogress = true;
+            runThUpHpBar.get();
+            //rethrow
+            throw e;
+        }
+        catch( exception e )
+        {
+            //Stop the thread
+            stopupdateprogress = true;
+            runThUpHpBar.get();
+            //rethrow
+            throw e;
+        }
+
+        stopupdateprogress = true;
+        runThUpHpBar.get();
+
+
+
+        if( ! m_bQuiet )
+        {
+            DrawHPBarFooter();
+
+            cout << "\nIts super-effective!!\n"
+                 <<"\"" <<m_pInputPath->mypath.getFileName() <<"\" fainted!\n"
+                 <<"You got \"" <<m_pOutputPath->mypath.getFileName() <<"\" for your victory!\n";
         }
 
         return 0;
     }
 
-
+//--------------------------------------------
+//  Parsing Args Methods
+//--------------------------------------------
     bool CGfxUtil::ParseInputPath( const string & path )
     {
         Poco::Path inputPath(path);
@@ -290,13 +399,6 @@ namespace gfx_util
         //check if path exists
         if( inputfile.exists() )
         {
-            //if( inputfile.isFile()           && isValid_WAN_InputFile( path ) )
-            //    m_execMode = eExecMode::UNPACK_SPRITE_Mode;
-            //else if( inputfile.isDirectory() && isValid_WANT_InputDirectory( path ) )
-            //    m_execMode = eExecMode::BUILD_SPRITE_Mode;
-            //else
-            //    return false; //File does not exist return failure
-
             m_pInputPath-> mypath = inputPath;
             m_pOutputPath->mypath = inputPath;
             m_pOutputPath->mypath.makeParent();
@@ -308,55 +410,48 @@ namespace gfx_util
     bool CGfxUtil::ParseOutputPath( const string & path )
     {
         Poco::Path outpath(path);
-        bool       success = false;
 
-        //if( outpath.isDirectory() && m_execMode == eExecMode::UNPACK_SPRITE_Mode )
-        //{
-        //    m_pOutputPath->mypath = outpath;
-        //    success = true;
-        //}
-        //else if( outpath.isFile() && m_execMode == eExecMode::BUILD_SPRITE_Mode )
-        //{
-        //    m_pOutputPath->mypath = outpath;
-        //    success = true;
-        //}
         if( outpath.isDirectory() ||  outpath.isFile() )
         {
             m_pOutputPath->mypath = outpath;
-            success = true;
+            return true;
         }
-        
-        return success;
+        return false;
     }
 
     void CGfxUtil::DetermineOperationMode()
     {
         using namespace pmd2::filetypes;
-       // eExecMode::BUILD_SPRITE_Mode;
         Poco::File theinput( m_pInputPath->mypath );
+
+        //If an operation mode was forced, don't try to determine what to do !
+        if( m_execMode != eExecMode::INVALID_Mode )
+            return;
 
         if( theinput.isFile() )
         {
             //Working on a file
-            if( theinput.getSize() < 5000000u ) 
+            /*if( theinput.getSize() < 5000000u ) */
             {
-                //If less than 5mb load it in to run the file format tester
+                //If less than 5mb, load it in to run the file format tester
                 vector<uint8_t> tmp = utils::io::ReadFileToByteVector(theinput.path());
                 auto result = CContentHandler::GetInstance().AnalyseContent(analysis_parameter(tmp.begin(), tmp.end(), m_pInputPath->mypath.getExtension() ) );
 
                 if( result._type == e_ContentType::WAN_SPRITE_CONTAINER )
                 {
-                    m_execMode = eExecMode::UNPACK_SPRITE_Mode;
+                    m_execMode = eExecMode::UNPACK_WAN_Mode;
                 }
                 else if( result._type == e_ContentType::PACK_CONTAINER )
                 {
-                    m_execMode = eExecMode::EXPORT_POKE_SPRITES_PACK_Mode;
+                    m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
                 }
                 else if( result._type == e_ContentType::AT4PX_CONTAINER )
                 {
+                     m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
                 }
                 else if( result._type == e_ContentType::PKDPX_CONTAINER )
                 {
+                    m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
                 }
                 else if( result._type == e_ContentType::BGP_FILE )
                 {
@@ -373,49 +468,49 @@ namespace gfx_util
                     cerr << "No ideas what to do with that input parameter ^^;\n";
                 }
             }
-            else
-            {
-                //Too big to load.. Use the file extension..
-                assert(false);
-            }
+            //else
+            //{
+            //    //Too big to load.. Use the file extension..
+            //    assert(false);
+            //}
         }
         else if( theinput.isDirectory() )
         {
             //Working on a directory
-
             //Check the content and find out what to do
-            Poco::DirectoryIterator diter( theinput );
-            Poco::DirectoryIterator diterend;
-            vector<string> content; //list of the filenames found at the root of the input folder
 
             //If the folder name matches one of the 3 special sprite pack file names
             if( MatchesPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() ) )
             {
-                m_execMode = eExecMode::IMPORT_POKE_SPRITES_PACK_Mode;
+                m_execMode = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
                 if( !m_bQuiet )
+                {
                     cout << "Input folder name matches the name of one of the pokemon sprites pack file!\n"
                          << "Preparing to convert all sprites directories in the input directory into WAN sprites, and packing them into a pack file!";
+                }
+                assert(false); //#TODO: Implement
             }
             
             //Otherwise, analyse the content of the folder!
-            while( diter != diterend )
-            {
-                content.push_back( Poco::Path( diter->path() ).getFileName() );
-                ++diter;
-            }
+            vector<string> folderContent = utils::ListDirContent_FilesAndDirectories( theinput.path(), true );
 
-            if( AreReqFilesPresent_Sprite( content ) )
+            if( AreReqFilesPresent_Sprite( folderContent ) )
             {
                 //We got all we need to build a sprite !
-                m_execMode = eExecMode::BUILD_SPRITE_Mode;
+                m_execMode = eExecMode::BUILD_WAN_Mode;
                 if( !m_bQuiet )
                     cout << "Required files to build a sprite found! Get the duct tape ready, we're building a sprite!\n";
             }
             else
             {
-                assert(false); //crap
+                vector<string> missingfiles = GetMissingRequiredFiles_Sprite( folderContent );
                 m_execMode = eExecMode::INVALID_Mode;
-                cerr << "No ideas what to do with that input parameter ^^;\n";
+                cerr << "This directory doesn't contain all the required files to build a sprite!\n"
+                     << "The " <<missingfiles.size() <<" missing file(s) are :\n";
+                for( const auto & afile : missingfiles )
+                {
+                    cerr << afile <<"\n";
+                }
             }
 
         }
@@ -428,6 +523,9 @@ namespace gfx_util
         }
     }
 
+//--------------------------------------------
+//  Parsing Options Methods
+//--------------------------------------------
     bool CGfxUtil::ParseOptionQuiet( const vector<string> & optdata )
     {
         //If this is called, we don't need to do any additional validation!
@@ -459,33 +557,144 @@ namespace gfx_util
         return false;
     }
 
-    bool CGfxUtil::isValid_WAN_InputFile( const string & path )
+    bool CGfxUtil::ParseOptionForceInputFormat( const std::vector<std::string> & optdata )
     {
-        //Poco::Path pathtovalidate(path);
+        using filetypes::e_ContentType;
 
-        //A very quick and simple first stage check. The true validation will happen later, when its 
-        // less time consuming to do so!
-        //if( pathtovalidate.getExtension().compare( filetypes::WAN_FILEX ) == 0 )
-        //    return true;
+        if( optdata.size() == 2 )
+        {
+            auto          result = filetypes::GetFileTypeFromExtension( optdata.back() );
+            e_ContentType type   = result.front();
 
-        return true;
-    }
+            switch( type )
+            {
+                case e_ContentType::WAN_SPRITE_CONTAINER:
+                {
+                    m_execMode = eExecMode::UNPACK_WAN_Mode;
+                    break;
+                }
+                case e_ContentType::KAOMADO_CONTAINER:
+                {
+                    m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
+                    break;
+                }
+                case e_ContentType::PACK_CONTAINER:
+                {
+                    m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
+                    break;
+                }
+                case e_ContentType::WTE_FILE:
+                {
+                    m_execMode = eExecMode::EXPORT_WTE_Mode;
+                    break;
+                }
+                case e_ContentType::BGP_FILE:
+                {
+                    m_execMode = eExecMode::EXPORT_BGP_Mode;
+                    break;
+                }
+                case e_ContentType::AT4PX_CONTAINER:
+                case e_ContentType::PKDPX_CONTAINER:
+                {
+                    //Ambiguous !!!!
+                    m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
+                    break;
+                }
+                default:
+                    return false;
+            };
 
-    bool CGfxUtil::isValid_WANT_InputDirectory( const string & path )
-    {
-        //Poco::DirectoryIterator itdir(path);
-        //Search for the required files, and subfolders
-        //#TODO !
-        assert(false);
+            return true;
+        }
         return false;
     }
 
-    //Main method
-    int CGfxUtil::Main(int argc, const char * argv[])
+    bool CGfxUtil::ParseOptionImportByIndex( const std::vector<std::string> & optdata )
+    {
+        //No validation required
+        return (m_ImportByIndex = true);
+    }
+
+//--------------------------------------------
+//  Validation Methods
+//--------------------------------------------
+    //bool CGfxUtil::isValid_WAN_InputFile( const string & path )
+    //{
+    //    //This doesn't work at all. Its too early on ! And there's a better check coming up anyways.
+
+    //    //Poco::Path pathtovalidate(path);
+
+    //    //A very quick and simple first stage check. The true validation will happen later, when its 
+    //    // less time consuming to do so!
+    //    //if( pathtovalidate.getExtension().compare( filetypes::WAN_FILEX ) == 0 )
+    //    //    return true;
+
+    //    return true;
+    //}
+
+    //bool CGfxUtil::isValid_WANT_InputDirectory( const string & path )
+    //{
+    //    //This doesn't work at all. Its too early on ! And there's a better check coming up anyways.
+    //    //Poco::DirectoryIterator itdir(path);
+    //    //Search for the required files, and subfolders
+    //    //#TODO !
+    //    assert(false);
+    //    return false;
+    //}
+
+//--------------------------------------------
+//  Main Exec functions
+//--------------------------------------------
+    int CGfxUtil::Execute()
     {
         int returnval = -1;
-        PrintTitle();
 
+        try
+        {
+            //Determine Execution mode
+            DetermineOperationMode();
+
+            if( ! m_bQuiet )
+                cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
+
+            switch( m_execMode )
+            {
+                case eExecMode::BUILD_WAN_Mode:
+                {
+                    returnval = BuildSprite();
+                    break;
+                }
+                case eExecMode::UNPACK_WAN_Mode:
+                {
+                    returnval = UnpackSprite();
+                    break;
+                }
+                case eExecMode::INVALID_Mode:
+                default:
+                {
+                    cerr<<"<!>- ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
+                }
+            };
+
+            if( ! m_bQuiet )
+                cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
+        }
+        catch( Poco::Exception pex )
+        {
+            cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
+            returnval = pex.code();
+        }
+        catch( exception e )
+        {
+            cerr <<"\n" 
+                 <<"\nWelp.. Poochyena almost choked while crunching the pixels!\n<she gave you an apologetic look>\n"
+                 << e.what() <<endl;
+        }
+        return returnval;
+    }
+
+    int CGfxUtil::GatherArgs( int argc, const char * argv[] )
+    {
         //Parse arguments and options
         try
         {
@@ -500,7 +709,7 @@ namespace gfx_util
         {
             cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             PrintReadme();
-            return returnval;
+            return pex.code();
         }
         catch( exception e )
         {
@@ -508,66 +717,26 @@ namespace gfx_util
                  <<"\nWelp.. Poochyena hit herself in confusion while biting through the parameters!\nShe's in a bit of a pinch. It looks like she might cry...\n"
                  << e.what() <<endl;
             PrintReadme();
+            return -1;
+        }
+        return 0;
+    }
+
+//--------------------------------------------
+//  Main Methods
+//--------------------------------------------
+    int CGfxUtil::Main(int argc, const char * argv[])
+    {
+        int returnval = -1;
+        PrintTitle();
+
+        //Handle arguments
+        returnval = GatherArgs( argc, argv );
+        if( returnval != 0 )
             return returnval;
-        }
         
-        //Exec the operation
-        try
-        {
-            //Determine Execution mode
-            DetermineOperationMode();
-
-            if( ! m_bQuiet )
-                cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
-
-            switch( m_execMode )
-            {
-                case eExecMode::BUILD_SPRITE_Mode:
-                {
-                    returnval = BuildSprite();
-
-                    if( ! m_bQuiet )
-                    {
-                        cout << "\nIts super-effective!!\n"
-                             <<"\"" <<m_pInputPath->mypath.getFileName() <<"\" fainted!\n"
-                             <<"You got \"" <<m_pOutputPath->mypath.getFileName() <<"\" for your victory!\n";
-                    }
-                    break;
-                }
-                case eExecMode::UNPACK_SPRITE_Mode:
-                {
-                    if( ! m_bQuiet )
-                        cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
-
-                    returnval = UnpackSprite();
-
-                    if( ! m_bQuiet )
-                    {
-                        cout << "\nIts super-effective!!\n"
-                             << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
-                             << "The pieces landed all neatly into \"" <<m_pOutputPath->mypath.toString() <<"\"!\n";
-                    }
-                    break;
-                }
-                default:
-                {
-                    assert(false); //This should never happen
-                }
-            };
-
-            if( ! m_bQuiet )
-                cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
-        }
-        catch( Poco::Exception pex )
-        {
-            cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
-        }
-        catch( exception e )
-        {
-            cerr <<"\n" 
-                 <<"\nWelp.. Poochyena almost choked while crunching the pixels! <she gave you an apologetic look>\n"
-                 << e.what() <<endl;
-        }
+        //Execute the utility
+        returnval = Execute();
 
 #ifdef _DEBUG
         system("pause");
@@ -580,194 +749,11 @@ namespace gfx_util
 //=================================================================================================
 // Main Function
 //=================================================================================================
-void Test();
-//void TestEncode();
 
+//#TODO: Move the main function somewhere else !
 int main( int argc, const char * argv[] )
 {
     using namespace gfx_util;
     CGfxUtil & application = CGfxUtil::GetInstance();
     return application.Main(argc,argv);
-
-    //Test();
-    //TestEncode();
-    return 0;
 }
-
-//#include "Poco/DOM/DOMParser.h"
-//#include "Poco/DOM/Document.h"
-//#include "Poco/DOM/NodeIterator.h"
-//#include "Poco/DOM/NodeFilter.h"
-//#include "Poco/DOM/AutoPtr.h"
-//#include "Poco/SAX/InputSource.h"
-//#include "Poco/XML/XMLWriter.h"
-//#include "Poco/SAX/AttributesImpl.h"
-//#include <fstream>
-//
-//void Test()
-//{
-//    typedef Poco::XML::Document PDoc;
-//
-//    std::ifstream in("test.xml");
-//    Poco::XML::InputSource src(in);
-//    Poco::XML::DOMParser parser;
-//    Poco::AutoPtr<PDoc> pDoc = parser.parse(&src);
-//    Poco::XML::NodeIterator it(pDoc, Poco::XML::NodeFilter::SHOW_ALL);
-//    Poco::XML::Node* pNode = it.nextNode();
-//    while (pNode)
-//    {
-//        std::cout<<pNode->nodeName()<<":"<< pNode->nodeValue()<<std::endl;
-//        pNode = it.nextNode();
-//    }
-//
-//
-//    using namespace Poco::XML;
-//
-//    std::ofstream str("test.xml");
-//    XMLWriter     writer(str, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT);
-//    writer.setNewLine("\n");
-//    writer.startDocument();
-//
-//
-//    //AttributesImpl attrs;
-//    //attrs.addAttribute("", "", "a1", "", "v1");
-//    //attrs.addAttribute("", "", "a2", "", "v2");
-//    
-//    //writer.startElement("","","");
-//
-//    writer.startElement("", "animation_data", "");//, attrs);
-//   
-//    AttributesImpl attrs;
-//    attrs.addAttribute("","", "name", "string", "run");
-//
-//    writer.startElement("", "", "group",attrs);
-//
-//    AttributesImpl seqattrs;
-//    seqattrs.addAttribute("","", "name", "string", "Up");
-//
-//    writer.startElement("","","sequence", seqattrs);
-//    writer.endElement("","","sequence");
-//
-//    writer.endElement("", "", "group");
-//
-//    writer.endElement("", "animation_data", "");
-//    writer.endDocument();
-//
-//    system("pause");
-//}
-
-//Encoding/decoding tests
-//#include <ppmdu/fmts/sir0.hpp>
-//#include  <fstream>
-//
-//
-//void TestEncode()
-//{
-//    vector<uint32_t> toencode={{ 0x130000 & 0x7FFFFF }};
-//    vector<uint8_t>  encoded;
-//    cout <<"Encoded :\n";
-//    encoded = filetypes::EncodeSIR0PtrOffsetList( toencode );
-//    for( auto & entry : encoded )
-//        cout <<hex <<"0x" << static_cast<unsigned short>(entry) <<"\n";
-//
-//    cout <<"\nRe-decoded :\n";
-//    vector<uint32_t> resultdecode = filetypes::DecodeSIR0PtrOffsetList( encoded );
-//
-//    for( auto & entry : resultdecode )
-//        cout <<hex <<"0x" <<entry <<"\n";
-//
-//
-//    system("pause");
-//}
-//
-//void Tests()
-//{
-//    std::vector<uint8_t> todecode=
-//    {{
-//0x04, 0x04, 0xEB, 0x4C, 0x18, 0x18, 0x83, 0x24, 0x18, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x83, 
-//0x44, 0x18, 0x82, 0x70, 0x18, 0x18, 0x83, 0x30, 0x18, 0x83, 0x10, 0x18, 0x18, 0x82, 0x70, 0x18, 
-//0x83, 0x30, 0x18, 0x83, 0x30, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x18, 0x83, 0x24, 0x18, 0x18, 
-//0x83, 0x04, 0x18, 0x18, 0x18, 0x83, 0x24, 0x18, 0x18, 0x82, 0x30, 0x18, 0x82, 0x64, 0x18, 0x83, 
-//0x30, 0x18, 0x18, 0x83, 0x10, 0x18, 0x18, 0x18, 0x83, 0x10, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 
-//0x18, 0x83, 0x38, 0x18, 0x83, 0x30, 0x18, 0x18, 0x18, 0x83, 0x38, 0x18, 0x18, 0x83, 0x04, 0x18, 
-//0x18, 0x18, 0x83, 0x24, 0x18, 0x18, 0x83, 0x64, 0x18, 0x83, 0x70, 0x83, 0x64, 0x18, 0x83, 0x44, 
-//0x18, 0x18, 0x83, 0x64, 0x18, 0x83, 0x50, 0x83, 0x10, 0x82, 0x70, 0x18, 0x83, 0x10, 0x18, 0x83, 
-//0x04, 0x18, 0x18, 0x83, 0x10, 0x18, 0x18, 0x83, 0x30, 0x18, 0x83, 0x24, 0x18, 0x18, 0x82, 0x70, 
-//0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x82, 0x64, 0x18, 0x83, 0x30, 0x18, 
-//0x18, 0x83, 0x30, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x82, 0x50, 0x18, 0x83, 0x24, 0x18, 0x18, 
-//0x83, 0x24, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x81, 0x64, 0x18, 0x82, 0x64, 0x18, 0x83, 0x10, 
-//0x18, 0x18, 0x83, 0x44, 0x18, 0x18, 0x83, 0x10, 0x18, 0x18, 0x83, 0x30, 0x18, 0x18, 0x82, 0x70, 
-//0x18, 0x83, 0x30, 0x18, 0x18, 0x82, 0x70, 0x18, 0x82, 0x70, 0x18, 0x82, 0x70, 0x18, 0x82, 0x70, 
-//0x18, 0x82, 0x70, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x82, 0x70, 
-//0x18, 0x18, 0x18, 0x82, 0x50, 0x18, 0x18, 0x18, 0x82, 0x30, 0x18, 0x18, 0x82, 0x30, 0x18, 0x18, 
-//0x82, 0x10, 0x18, 0x18, 0x82, 0x10, 0x18, 0x18, 0x81, 0x50, 0x18, 0x81, 0x50, 0x18, 0x83, 0x10, 
-//0x18, 0x18, 0x83, 0x10, 0x82, 0x70, 0x18, 0x82, 0x30, 0x82, 0x10, 0x18, 0x18, 0x81, 0x70, 0x18, 
-//0x83, 0x10, 0x83, 0x10, 0x83, 0x10, 0x83, 0x10, 0x64, 0x10, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x9B, 0x64, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x14, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x10, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x08, 0x28, 0x08, 0x20, 0x08, 0x08, 0x08, 
-//0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 
-//0x08, 0x08, 0x08, 0x08, 0x08, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x10, 0x04, 0x0C, 0x04, 0x00, 
-//    }};
-//
-//
-//    
-//    cout <<"Deccoding test :\n";
-//
-//    ofstream outputf("converted_shinx_sir0ptr_table.txt", ios::binary);
-//    vector<uint32_t> result = filetypes::DecodeSIR0PtrOffsetList( todecode );
-//
-//    for( auto & entry : result )
-//        outputf <<hex <<"0x" <<entry <<"\n";
-//
-//    cout <<"Re-encoding :\n";
-//    /*vector<uint32_t> toencode={{ 0x130001 & 0x7FFFFF }};*/
-//    vector<uint8_t>  encoded;
-//    encoded = filetypes::EncodeSIR0PtrOffsetList( result );
-//    ofstream outputreencodedf("re-encoded_shinx_sir0ptr_table.bin", ios::binary);
-//    for( auto & entry : encoded )
-//        outputreencodedf.write( reinterpret_cast<char*>(&entry),1);
-//
-//    cout <<"result :\n";
-//    for( auto & abyte : encoded )
-//        cout <<hex <<"0x" <<static_cast<unsigned short>(abyte) <<" ";
-//
-//    cout <<"\nRe-decoding :\n";
-//    ofstream outputredecodef("redecoded_shinx_sir0ptr_table.txt", ios::binary);
-//    vector<uint32_t> resultdecode = filetypes::DecodeSIR0PtrOffsetList( encoded );
-//
-//    for( auto & entry : resultdecode )
-//        outputredecodef <<hex <<"0x" <<entry <<"\n";
-//
-//    system("pause");
-//}

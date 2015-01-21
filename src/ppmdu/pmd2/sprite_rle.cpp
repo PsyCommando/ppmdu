@@ -27,22 +27,6 @@ namespace pmd2 { namespace compression
 //================================================================================================
 // rle_table_entry
 //================================================================================================
-    //uint8_t & rle_table_entry::operator[](unsigned int index)
-    //{
-    //    if( index < 4 )
-    //        return reinterpret_cast<uint8_t*>(&pixelsrc)[index];
-    //    else if( index < 8 )
-    //        return reinterpret_cast<uint8_t*>(&pixamt)[index-4];
-    //    else if( index < 12 )
-    //        return reinterpret_cast<uint8_t*>(&unknown)[index-8];
-    //    else
-    //        return *reinterpret_cast<uint8_t*>(0); //Crash please
-    //}
-
-    //const uint8_t & rle_table_entry::operator[](unsigned int index)const
-    //{
-    //    return (*const_cast<rle_table_entry*>(this))[index];
-    //}
 
     std::vector<uint8_t>::iterator rle_table_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
     {

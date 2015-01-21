@@ -54,17 +54,22 @@ namespace gfx_util
         bool ParseInputPath  ( const std::string              & path );
         bool ParseOutputPath ( const std::string              & path );
         //Parse Options
-        bool ParseOptionQuiet       ( const std::vector<std::string> & optdata );
-        bool ParseOptionExportFormat( const std::vector<std::string> & optdata );
+        bool ParseOptionQuiet           ( const std::vector<std::string> & optdata );
+        bool ParseOptionExportFormat    ( const std::vector<std::string> & optdata );
+        bool ParseOptionForceInputFormat( const std::vector<std::string> & optdata );
+        bool ParseOptionImportByIndex   ( const std::vector<std::string> & optdata );
+
 
         //Execution
         int UnpackSprite();
         int BuildSprite();
 
         //Utility
-        bool isValid_WAN_InputFile      ( const std::string & path ); //#REMOVEME
-        bool isValid_WANT_InputDirectory( const std::string & path );
-        void DetermineOperationMode();
+        //bool isValid_WAN_InputFile      ( const std::string & path ); //#REMOVEME
+        //bool isValid_WANT_InputDirectory( const std::string & path );
+        void DetermineOperationMode     ();                                 //Figure out what to do based on our input and outputs args + options !
+        int  GatherArgs                 ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
+        int  Execute                    ();                                 //Handle excution switch case + exceptions
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -80,18 +85,28 @@ namespace gfx_util
         enum struct eExecMode
         {
             INVALID_Mode,
-            UNPACK_SPRITE_Mode,            //Export a WAN sprite to a directory structure
-            BUILD_SPRITE_Mode,             //Import a WAN sprite from a directory structure
-            EXPORT_BGP_Mode,               //Export a BGP image
+
+            //Import/Build Modes:
+            BUILD_WAN_Mode,                //Import a WAN sprite from a directory structure
             IMPORT_BGP_Mode,               //Import a BGP image
-            EXPORT_WTE_Mode,               //Export a WTE image
             IMPORT_WTE_Mode,               //Import a WTE image
-            IMPORT_POKE_SPRITES_PACK_Mode, //Import a pack file, and export all its content
-            EXPORT_POKE_SPRITES_PACK_Mode, //Export a pack file, and export all its content
+            BUILD_POKE_SPRITES_PACK_Mode,  //Import a pack file, and export all its content
+            BUILD_KAOMADO_Mode,            //Export a kaomado file
+
+            //Export/Unpack Modes:
+            UNPACK_WAN_Mode,               //Export a WAN sprite to a directory structure
+            EXPORT_BGP_Mode,               //Export a BGP image
+            EXPORT_WTE_Mode,               //Export a WTE image
+            UNPACK_POKE_SPRITES_PACK_Mode, //Export a pack file, and export all its content
+            UNPACK_KAOMADO_Mode,           //Import a kaomado file from a directory
+
+            //Special Modes:
+            DECOMPRESS_AND_INDENTIFY_Mode, //Decompress the container and try to figure out what is inside
         };
 
         //Program Settings
         bool                           m_bQuiet;        //Whether we should output to console 
+        bool                           m_ImportByIndex; //Whether the images should be imported by their index number, and not just the order they're sorted as
         eExecMode                      m_execMode;      //This is set after reading the input path.
         std::unique_ptr<pathwrapper_t> m_pInputPath;    //This is the input path that was parsed 
         std::unique_ptr<pathwrapper_t> m_pOutputPath;   //This is the output path that was parsed

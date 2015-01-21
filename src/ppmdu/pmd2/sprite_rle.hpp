@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Utilites for handling the RLE compression used on sprites in PMD2.
 
 #TODO: put the sprite RLE stuff in here !
+
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
@@ -26,8 +27,6 @@ namespace pmd2 { namespace compression
                  pixamt,    //The amount of pixels to copy / insert
                  unknown;   //Not sure what this does..
 
-        //uint8_t &       operator[](unsigned int index);
-        //const uint8_t & operator[](unsigned int index)const;
         unsigned int    size()const   { return LENGTH; }
         bool            isNull()const { return (!pixelsrc && !pixamt && !unknown); } //Whether its a null entry or not 
 
@@ -79,8 +78,8 @@ namespace pmd2 { namespace compression
     private:
         std::vector<uint8_t>                        * m_pOutput; //What we currently output to.
         std::vector<std::vector<uint8_t>>::iterator   m_itcurout, //an output iterator to a data structure of images.
-                                                            m_itendout;
-        bool                                                m_bUsingIterator; //Whether we should care about our vector iterator
+                                                      m_itendout;
+        bool                                          m_bUsingIterator; //Whether we should care about our vector iterator
    
     };
 };};
