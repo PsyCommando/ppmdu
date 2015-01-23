@@ -223,6 +223,9 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmd_packfileutil.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_packfileutil.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

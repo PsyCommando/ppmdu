@@ -67,7 +67,7 @@ namespace gfx_util
         //Utility
         //bool isValid_WAN_InputFile      ( const std::string & path ); //#REMOVEME
         //bool isValid_WANT_InputDirectory( const std::string & path );
-        void DetermineOperationMode     ();                                 //Figure out what to do based on our input and outputs args + options !
+        bool DetermineOperationMode     ();                                 //Figure out what to do based on our input and outputs args + options !
         int  GatherArgs                 ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
         int  Execute                    ();                                 //Handle excution switch case + exceptions
 

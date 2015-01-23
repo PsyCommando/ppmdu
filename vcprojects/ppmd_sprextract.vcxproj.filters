@@ -266,10 +266,16 @@
     <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan_writer.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
     <Text Include="..\resources\pokesprites_names.txt" />
-    <Text Include="..\resources\pokesprites_std_anims.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\template_chranims.xml" />
+    <Xml Include="..\resources\template_exchranims.xml" />
   </ItemGroup>
 </Project>

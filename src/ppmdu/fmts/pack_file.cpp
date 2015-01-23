@@ -160,7 +160,8 @@ namespace pmd2 { namespace filetypes
         //List files in folder, put them into a vector
         Poco::DirectoryIterator itdir(pathdir),
                                 itdirend;
-        unsigned int            nbfiles = 0;
+        //unsigned int            nbfiles = 0;
+        vector<Poco::File>      validFiles;
 
         //A little lambda for determining valid files
         static auto lambdavalidfile = []( const Poco::File & f )
@@ -169,20 +170,28 @@ namespace pmd2 { namespace filetypes
         };
 
         //Count valid files inside folder
-        for( auto itcount = itdir; itcount != itdirend; ++itcount )
+        for( Poco::DirectoryIterator itcount(pathdir); itcount != itdirend; ++itcount )
         {
             if( lambdavalidfile(*itcount) )
-                ++nbfiles;
+                validFiles.push_back(*itcount);
         }
 
-        m_SubFiles.resize(nbfiles);
-        
-        //Read each files into the file data table
-        for( unsigned int cptfiles = 0; itdir != itdirend; ++cptfiles, ++itdir )
+        m_SubFiles.reserve(validFiles.size());
+        //auto itbackins = std::back_inserter( m_SubFiles );
+
+        for( const auto & afile : validFiles )
         {
-            if( lambdavalidfile(*itdir) )
-                ReadFileToByteVector( itdir->path(), m_SubFiles[cptfiles] );
+            vector<uint8_t> filedata;
+            ReadFileToByteVector( afile.path(), filedata );
+            m_SubFiles.push_back( std::move(filedata) );
         }
+        
+        ////Read each files into the file data table
+        //for( unsigned int cptfiles = 0; itdir != itdirend; ++cptfiles, ++itdir )
+        //{
+        //    if( lambdavalidfile(*itdir) )
+        //        ReadFileToByteVector( itdir->path(), m_SubFiles[cptfiles] );
+        //}
 
     }
 

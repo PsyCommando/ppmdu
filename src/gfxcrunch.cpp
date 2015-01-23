@@ -329,10 +329,10 @@ namespace gfx_util
 
         try
         {
-            if( ! m_bQuiet )
-            {
-                runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
-            }
+            //if( ! m_bQuiet )
+            //{
+            //    runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
+            //}
 
             auto sprty = graphics::QuerySpriteTypeFromDirectory( infileinfo.path() );
 
@@ -342,7 +342,8 @@ namespace gfx_util
                                                                                                         m_ImportByIndex, 
                                                                                                         false, 
                                                                                                         &parsingprogress );
-                assert(false);
+                filetypes::Write_WAN writer( &sprite );
+                writer.write( outpath.toString(), &writingprogress );
             
             }
             else if( sprty == graphics::eSpriteType::spr8bpp )
@@ -351,14 +352,16 @@ namespace gfx_util
                                                                                                         m_ImportByIndex, 
                                                                                                         false, 
                                                                                                         &parsingprogress );
-                assert(false);
+                filetypes::Write_WAN writer( &sprite );
+                writer.write( outpath.toString(), &writingprogress );
             }
         }
         catch( Poco::Exception e )
         {
             //Stop the thread
             stopupdateprogress = true;
-            runThUpHpBar.get();
+            if( runThUpHpBar.valid() )
+                runThUpHpBar.get();
             //rethrow
             throw e;
         }
@@ -366,15 +369,15 @@ namespace gfx_util
         {
             //Stop the thread
             stopupdateprogress = true;
-            runThUpHpBar.get();
+            if( runThUpHpBar.valid() )
+                runThUpHpBar.get();
             //rethrow
             throw e;
         }
 
         stopupdateprogress = true;
-        runThUpHpBar.get();
-
-
+        if( runThUpHpBar.valid() )
+            runThUpHpBar.get();
 
         if( ! m_bQuiet )
         {
@@ -419,14 +422,14 @@ namespace gfx_util
         return false;
     }
 
-    void CGfxUtil::DetermineOperationMode()
+    bool CGfxUtil::DetermineOperationMode()
     {
         using namespace pmd2::filetypes;
         Poco::File theinput( m_pInputPath->mypath );
 
         //If an operation mode was forced, don't try to determine what to do !
         if( m_execMode != eExecMode::INVALID_Mode )
-            return;
+            return true;
 
         if( theinput.isFile() )
         {
@@ -466,6 +469,7 @@ namespace gfx_util
                     assert(false); //crap
                     m_execMode = eExecMode::INVALID_Mode;
                     cerr << "No ideas what to do with that input parameter ^^;\n";
+                    return false;
                 }
             }
             //else
@@ -511,6 +515,7 @@ namespace gfx_util
                 {
                     cerr << afile <<"\n";
                 }
+                return false;
             }
 
         }
@@ -520,7 +525,10 @@ namespace gfx_util
             m_execMode = eExecMode::INVALID_Mode;
             if( !m_bQuiet )
                 cerr << "No ideas what to do with that input parameter ^^;\n";
+            return false;
         }
+
+        return true;
     }
 
 //--------------------------------------------
@@ -652,7 +660,8 @@ namespace gfx_util
         try
         {
             //Determine Execution mode
-            DetermineOperationMode();
+            if( !DetermineOperationMode() )
+                return -1;
 
             if( ! m_bQuiet )
                 cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
@@ -676,7 +685,7 @@ namespace gfx_util
                 }
             };
 
-            if( ! m_bQuiet )
+            if( ! m_bQuiet && returnval == 0 )
                 cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
         }
         catch( Poco::Exception pex )

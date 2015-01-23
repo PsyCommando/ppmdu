@@ -1,6 +1,7 @@
 #include "sprite_data.hpp"
 #include <string>
 #include <iomanip>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <atomic>
@@ -30,11 +31,13 @@ using namespace Poco::XML;
 
 namespace pmd2{ namespace graphics
 {
-    namespace xmlstrings
+    /*
+        All the strings used to parse and write the xml for the sprite!
+    */
+    namespace SpriteXMLStrings
     {
         //Filesnames
         static const string SPRITE_Properties  = "spriteinfo.xml";
-        //static const string SPRITE_Colorinf    = "colorinfo.xml";
         static const string SPRITE_Palette     = "palette.xml";
         static const string SPRITE_Animations  = "animations.xml";
         static const string SPRITE_Frames      = "frames.xml";
@@ -44,22 +47,24 @@ namespace pmd2{ namespace graphics
         static const string XML_ATTR_NAME      = "name";
 
         //Animation Stuff
-        static const string XML_NODE_ANIMDAT   = "AnimData";
-        static const string XML_NODE_ANIMGRP   = "AnimGroup";
-        static const string XML_NODE_ANIMSEQ   = "AnimSequence";
-        static const string XML_NODE_ANIMFRM   = "AnimFrame";
+        static const string XML_ROOT_ANIMDAT    = "AnimData";    //Root
+        static const string XML_NODE_ANIMGRPTBL = "AnimGroupTable"; 
+        static const string XML_NODE_ANIMGRP    = "AnimGroup";
+        static const string XML_NODE_ANIMSEQ    = "AnimSequence";
+        static const string XML_NODE_ANIMSEQTBL = "AnimSequenceTable"; 
+        static const string XML_NODE_ANIMFRM    = "AnimFrame";
 
         //Meta-Frames Stuff
-        static const string XML_NODE_FRMLST    = "FrameList";
+        static const string XML_ROOT_FRMLST    = "FrameList";
         static const string XML_NODE_FRMGRP    = "FrameGroup";
         static const string XML_NODE_FRMFRM    = "Frame";
 
         //OffsetList Stuff
-        static const string XML_NODE_OFFLST    = "OffsetList";
+        static const string XML_ROOT_OFFLST    = "OffsetList";
         static const string XML_NODE_OFFSET    = "Offset";
 
         //Sprite Property Stuff
-        static const string XML_NODE_SPRPROPS  = "SpriteProperties";
+        static const string XML_ROOT_SPRPROPS  = "SpriteProperties";
 
         //Other nodes
         static const string XML_NODE_PALLETTE  = "Palette";
@@ -82,7 +87,7 @@ namespace pmd2{ namespace graphics
         static const string XML_PROP_HFLIP     = "HFlip";
         static const string XML_PROP_VFLIP     = "VFlip";
         static const string XML_PROP_MOSAIC    = "Mosaic";
-        static const string XML_PROP_OFFXBIT5  = "XOffsetBit5";
+        static const string XML_PROP_LASTMFRM  = "LastMFrmInGrp";
         static const string XML_PROP_OFFXBIT6  = "XOffsetBit6";
         static const string XML_PROP_OFFXBIT7  = "XOffsetBit7";
         static const string XML_PROP_OFFYBIT3  = "YOffsetBit3";
@@ -116,81 +121,6 @@ namespace pmd2{ namespace graphics
         //Special chars
         static const string PARSE_HEX_NUMBER   = "0x";
 
-
-        //Elements to parse for Sprite Info
-        //static const vector<const string> XML_ParseList_SpriteInfoProps=
-        //{{
-        //        XML_PROP_UNK3,
-        //        XML_PROP_COLPERROW,
-        //        XML_PROP_UNK4,
-        //        XML_PROP_UNK5,
-        //        XML_PROP_UNK6,
-        //        XML_PROP_UNK7,
-        //        XML_PROP_UNK8,
-        //        XML_PROP_UNK9,
-        //        XML_PROP_UNK10,
-        //        XML_PROP_IS8W,
-        //        XML_PROP_IS256COL,
-        //        XML_PROP_ISMOSAICS,
-        //        XML_PROP_UNK11,
-        //        XML_PROP_UNK12,
-        //}};
-
-        ////Elements to parse for Offsets
-        //static const vector<const string&> XML_ParseList_Offsets=
-        //{{
-        //        XML_NODE_OFFSET,
-        //        XML_PROP_X,
-        //        XML_PROP_Y,
-        //}};
-
-        ////Elements to parse for Animations
-        //static const vector<const string> XML_ParseList_Animations=
-        //{{
-        //        XML_NODE_ANIMGRP,
-        //        XML_NODE_ANIMSEQ,
-        //        XML_NODE_ANIMFRM,
-        //        XML_NODE_SPRITE,
-        //        XML_NODE_SHADOW,
-        //        XML_PROP_DURATION,
-        //        XML_PROP_METAINDEX,
-        //        XML_PROP_OFFSETY,
-        //        XML_PROP_OFFSETX,
-        //}};
-
-        ////Elements to parse for MetaFrames
-        //static const vector<const string> XML_ParseList_MetaFrames=
-        //{{
-        //        XML_NODE_FRMGRP,
-        //        XML_NODE_FRMFRM,
-        //        XML_PROP_FRMINDEX,
-        //        XML_PROP_UNK0,
-        //        XML_PROP_OFFSETY,
-        //        XML_PROP_OFFSETX,
-        //        XML_PROP_UNK1,
-        //        XML_NODE_RES,
-        //        XML_PROP_WIDTH,
-        //        XML_PROP_HEIGTH,
-        //        XML_PROP_HFLIP,
-        //        XML_PROP_VFLIP,
-        //        XML_PROP_MOSAIC,
-        //        XML_PROP_OFFXBIT5,
-        //        XML_PROP_OFFXBIT6,
-        //        XML_PROP_OFFXBIT7,
-        //        XML_PROP_OFFYBIT3,
-        //        XML_PROP_OFFYBIT5,
-        //        XML_PROP_OFFYBIT6,
-        //}};
-
-        ////Elements to parse for MetaFrames
-        //static const vector<const string> XML_ParseList_Palette=
-        //{{
-        //        XML_NODE_COLOR,
-        //        XML_PROP_RED,
-        //        XML_PROP_GREEN,
-        //        XML_PROP_BLUE,
-        //}};
-
     };
     static const string SPRITE_IMGs_DIR   = "imgs"; //Name of the sub-folder for the images
     static const string Palette_Filename  = "palette.pal";
@@ -200,12 +130,31 @@ namespace pmd2{ namespace graphics
     */
     const vector<string> SpriteBuildingRequiredFiles =
     {{
-        xmlstrings::SPRITE_Properties,
-        xmlstrings::SPRITE_Animations,
-        xmlstrings::SPRITE_Frames,
-        xmlstrings::SPRITE_Offsets,
-        SPRITE_IMGs_DIR,
+        SpriteXMLStrings::SPRITE_Properties,
+        SpriteXMLStrings::SPRITE_Animations,
+        SpriteXMLStrings::SPRITE_Frames,
+        SpriteXMLStrings::SPRITE_Offsets,
+        SPRITE_IMGs_DIR+"/",
     }};
+
+    /*
+        Equivalence table for sprite resolutions
+    */
+    const std::vector<MetaFrame::integerAndRes> MetaFrame::ResEquiv=
+    {
+        { eRes::_8x8,    8,  8 },
+        { eRes::_16x16, 16, 16 },
+        { eRes::_32x32, 32, 32 },
+        { eRes::_64x64, 64, 64 },
+        { eRes::_8x16,   8, 16 },
+        { eRes::_16x8,  16,  8 },
+        { eRes::_8x32,   8, 32 },
+        { eRes::_32x8,  32,  8 },
+        { eRes::_16x32, 16, 32 },
+        { eRes::_32x16, 32, 16 },
+        { eRes::_32x64, 32, 64 },
+        { eRes::_64x32, 64, 32 },
+    };
 
 //
 //  Descriptions for the various parameters
@@ -235,9 +184,10 @@ namespace pmd2{ namespace graphics
 //  Utility
 //=============================================================================================
 
-    /*
-        Used to hold a couple of useful statistics to determine task completion.
-    */
+    /**************************************************************
+    Used to hold a couple of useful statistics to determine task completion.
+    **************************************************************/
+    
     struct workstatistics
     {
         uint32_t propFrames;
@@ -249,8 +199,8 @@ namespace pmd2{ namespace graphics
         uint32_t totalAnimSeqs;
     };
 
-    /*
-    */
+    /**************************************************************
+    **************************************************************/
     bool AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist )
     {
         for( const auto & filename : SpriteBuildingRequiredFiles )
@@ -265,14 +215,16 @@ namespace pmd2{ namespace graphics
         return true;
     }
 
+    /**************************************************************
+    **************************************************************/
     bool AreReqFilesPresent_Sprite( const std::string & dirpath )
     {
         vector<string> dircontent = utils::ListDirContent_FilesAndDirectories( dirpath, true );
         return AreReqFilesPresent_Sprite(dircontent);
     }
 
-    /*
-    */
+    /**************************************************************
+    **************************************************************/
     std::vector<string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist )
     {
         vector<string> missingf;
@@ -288,15 +240,17 @@ namespace pmd2{ namespace graphics
         return std::move( missingf );
     }
 
+    /**************************************************************
+    **************************************************************/
     std::vector<string> GetMissingRequiredFiles_Sprite( const std::string & dirpath )
     {
         vector<string> dircontent = utils::ListDirContent_FilesAndDirectories( dirpath, true );
         return GetMissingRequiredFiles_Sprite( dircontent );
     }
 
-    /*
+    /**************************************************************
         Parses a value directly as is.
-    */
+    **************************************************************/
     template<class _Ty>
         void _parseXMLValToValue( const Poco::XML::XMLString & str, _Ty out_val )
     {
@@ -305,14 +259,14 @@ namespace pmd2{ namespace graphics
         sstr >> out_val;
     }
 
-    /*
+    /**************************************************************
         Parse a value that might be an hex number or not.
-    */
+    **************************************************************/
     template<class _Ty>
-        void _parseXMLHexaValToValue( const Poco::XML::XMLString & str, _Ty out_val )
+        void _parseXMLHexaValToValue( const Poco::XML::XMLString & str, _Ty & out_val )
     {
         stringstream sstr;
-        std::size_t  foundprefix = str.find( xmlstrings::PARSE_HEX_NUMBER );
+        std::size_t  foundprefix = str.find( SpriteXMLStrings::PARSE_HEX_NUMBER );
 
         if( foundprefix != string::npos )
             sstr <<hex <<string( foundprefix + str.begin(), str.end() ).substr(2); //make sure the string begins at "0x" and skip "0x"
@@ -322,28 +276,37 @@ namespace pmd2{ namespace graphics
         sstr >> out_val;
     }
 
-    /*
+
+    /**************************************************************
         Parse the "name" attribute from the attribute map sprcified.
         Return empty string if the attribute wasn't found!
-    */
+    **************************************************************/
     string _parseNameAttribute( Poco::XML::NamedNodeMap * attribmap )
     {
         AutoPtr<NamedNodeMap> nmap = attribmap;
         for( unsigned long ctatt = 0; ctatt < nmap->length(); ++ctatt )
         {
             Node * pAtt = nmap->item(ctatt);
-            if( pAtt->nodeName() == xmlstrings::XML_ATTR_NAME )
-                return pAtt->nodeValue();
+            if( pAtt->nodeName() == SpriteXMLStrings::XML_ATTR_NAME )
+                return pAtt->innerText();
         }
         return string();
+    }
+
+    /**************************************************************
+    **************************************************************/
+    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height )
+    {
+        return ( MetaFrame::IntegerResTo_eRes( width, height ) != MetaFrame::eRes::_INVALID );
     }
 
 //=============================================================================================
 //  Sprite XML Templates Reader
 //=============================================================================================
-    /*
+
+    /**************************************************************
         A class that reads the xml template files for naming animation groups properly
-    */
+    **************************************************************/
     class SpriteTemplateReader
     {
     };
@@ -357,14 +320,20 @@ namespace pmd2{ namespace graphics
     public:
         typedef _SPRITE_t sprite_t;
 
+        /**************************************************************
+        **************************************************************/
         SpriteToXML( const sprite_t & myspr)
             :m_inSprite(myspr), m_pProgresscnt(nullptr)
         {
         }
 
-        //Write all the data for the Sprite as XML in the
-        // specified folder  under ! 
-        // -colorpalasxml : if true, will print an xml palette alongside the rest!
+
+        /**************************************************************
+            Write all the data for the Sprite as XML in the
+            specified folder  under ! 
+                -colorpalasxml : if true, will print an xml palette 
+                                 alongside the rest!
+        **************************************************************/
         void WriteXMLFiles( const string & folderpath, workstatistics stats, bool xmlcolorpal = false, std::atomic<uint32_t> * progresscnt = nullptr ) 
         {
             m_outPath = Poco::Path(folderpath);
@@ -384,6 +353,8 @@ namespace pmd2{ namespace graphics
         //
         //  Common Stuff
         //
+        /**************************************************************
+        **************************************************************/
         void InitWriter( Poco::XML::XMLWriter & writer, const std::string & rootnodename )
         {
             writer.setNewLine("\n");
@@ -391,22 +362,27 @@ namespace pmd2{ namespace graphics
             writer.startElement( "", "", rootnodename );
         }
 
+        /**************************************************************
+        **************************************************************/
         void DeinitWriter( Poco::XML::XMLWriter& writer, const std::string & rootnodename )
         {
             writer.endElement( "", "", rootnodename );
             writer.endDocument();
         }
 
-
+        /**************************************************************
+        **************************************************************/
         template<typename _myintt>
             std::string turnIntToHexStr( _myintt anint )
         {
-            using xmlstrings::PARSE_HEX_NUMBER;
+            using SpriteXMLStrings::PARSE_HEX_NUMBER;
             stringstream sstr;
             sstr <<PARSE_HEX_NUMBER << hex <<anint;
             return sstr.str();
         }
 
+        /**************************************************************
+        **************************************************************/
         void writeComment( XMLWriter & writer, const string & str )
         {
             writer.comment( str.c_str(), 0, str.size() );
@@ -417,14 +393,16 @@ namespace pmd2{ namespace graphics
         //  Specific Stuff
         //
 
+        /**************************************************************
+        **************************************************************/
         void WriteProperties()
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Properties);
             ofstream   outfile( outpath.toString() );
             XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
                 
-            InitWriter( writer, XML_NODE_SPRPROPS );
+            InitWriter( writer, XML_ROOT_SPRPROPS );
             {
                 //Color stuff
                 writeComment( writer, SprInfo::DESC_Unk3 );
@@ -471,12 +449,14 @@ namespace pmd2{ namespace graphics
                 writeComment( writer, SprInfo::DESC_Unk12 );
                 writer.dataElement( "", "", XML_PROP_UNK12,     turnIntToHexStr( m_inSprite.getSprInfo().m_Unk12 ) );
             }
-            DeinitWriter( writer, XML_NODE_SPRPROPS );
+            DeinitWriter( writer, XML_ROOT_SPRPROPS );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WritePalette()
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Palette);
             ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
@@ -504,9 +484,11 @@ namespace pmd2{ namespace graphics
             DeinitWriter( writer, XML_NODE_PALLETTE );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteAnimFrame( Poco::XML::XMLWriter & writer, const AnimFrame & curfrm )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
 
             writer.startElement("","", XML_NODE_ANIMFRM );
             {
@@ -530,9 +512,11 @@ namespace pmd2{ namespace graphics
             writer.endElement("","", XML_NODE_ANIMFRM );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteAnimSequece( Poco::XML::XMLWriter & writer, const AnimationSequence & aseq )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
 
             stringstream strs;
 
@@ -553,77 +537,86 @@ namespace pmd2{ namespace graphics
             writer.endElement("","", XML_NODE_ANIMSEQ );
         }
 
-        //-pAnimNameList : First entry of heach sub-vector is the anim group name, anything after is anim sequence names!
+        /**************************************************************
+            -pAnimNameList : First entry of heach sub-vector is the 
+                             anim group name, anything after is anim 
+                             sequence names!
+        **************************************************************/
         void WriteAnimations( uint32_t proportionofwork, uint32_t totalnbseqs, uint32_t totalnbfrms )
         {
-            using namespace xmlstrings;
-            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
-            ofstream   outfile( outpath.toString() );
-            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
-            uint32_t   saveprogress = 0;
+        assert(false);
+        //Rewrite to handle multiple references to the same animation sequence.
 
-            if( m_pProgresscnt != nullptr )
-                saveprogress = m_pProgresscnt->load();
+            //using namespace SpriteXMLStrings;
+            //Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
+            //ofstream   outfile( outpath.toString() );
+            //XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            //uint32_t   saveprogress = 0;
+
+            //if( m_pProgresscnt != nullptr )
+            //    saveprogress = m_pProgresscnt->load();
 
 
 
-            InitWriter( writer, XML_NODE_ANIMDAT );
+            //InitWriter( writer, XML_ROOT_ANIMDAT );
 
-            stringstream strs;
-            strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
-            writeComment( writer, strs.str() );
-            strs = stringstream();
+            //stringstream strs;
+            //strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
+            //writeComment( writer, strs.str() );
+            //strs = stringstream();
 
-            strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
-            writeComment( writer, strs.str() );
-            strs = stringstream();
+            //strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
+            //writeComment( writer, strs.str() );
+            //strs = stringstream();
 
-            strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
-            writeComment( writer, strs.str() );
-            strs = stringstream();
+            //strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
+            //writeComment( writer, strs.str() );
+            //strs = stringstream();
 
-            {
-                unsigned int cptgrp = 0;
+            //{
+            //    unsigned int cptgrp = 0;
 
-                //Write the content of each group
-                for( const auto & animgrp : m_inSprite.getAnimGroups() )
-                {
-                    unsigned int cptseq = 0;
-                    strs <<"Group #" <<cptgrp <<" contains " << animgrp.sequences.size() << " sequence(s)";
-                    writeComment( writer, strs.str() );
-                    strs = stringstream();
+            //    //Write the content of each group
+            //    for( const auto & animgrp : m_inSprite.getAnimGroups() )
+            //    {
+            //        unsigned int cptseq = 0;
+            //        strs <<"Group #" <<cptgrp <<" contains " << animgrp.sequences.size() << " sequence(s)";
+            //        writeComment( writer, strs.str() );
+            //        strs = stringstream();
 
-                    //Give this group a name
-                    AttributesImpl attrname;
-                    attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
-                    writer.startElement("","", XML_NODE_ANIMGRP, attrname );
+            //        //Give this group a name
+            //        AttributesImpl attrname;
+            //        attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
+            //        writer.startElement("","", XML_NODE_ANIMGRP, attrname );
 
-                    //Write the content of each sequences in that group
-                    for( const auto & aseq : animgrp.sequences )
-                    {
-                        strs <<"Seq #" <<cptseq  <<" contains " <<aseq.getNbFrames()  << " frame(s)";
-                        writeComment( writer, strs.str() );
-                        strs = stringstream();
-                        WriteAnimSequece( writer, aseq );
-                        ++cptseq;
-                    }
+            //        //Write the content of each sequences in that group
+            //        for( const auto & aseq : animgrp.sequences )
+            //        {
+            //            strs <<"Seq #" <<cptseq  <<" contains " <<aseq.getNbFrames()  << " frame(s)";
+            //            writeComment( writer, strs.str() );
+            //            strs = stringstream();
+            //            WriteAnimSequece( writer, aseq );
+            //            ++cptseq;
+            //        }
 
-                    writer.endElement("","", XML_NODE_ANIMGRP );
-                    ++cptgrp;
+            //        writer.endElement("","", XML_NODE_ANIMGRP );
+            //        ++cptgrp;
 
-                    if( m_pProgresscnt != nullptr )
-                    {
-                        uint32_t prog = ( ( proportionofwork * cptgrp ) / m_inSprite.getAnimGroups().size() );
-                        m_pProgresscnt->store( saveprogress + prog );
-                    }
-                }
-            }
-            DeinitWriter( writer, XML_NODE_ANIMDAT );
+            //        if( m_pProgresscnt != nullptr )
+            //        {
+            //            uint32_t prog = ( ( proportionofwork * cptgrp ) / m_inSprite.getAnimGroups().size() );
+            //            m_pProgresscnt->store( saveprogress + prog );
+            //        }
+            //    }
+            //}
+            //DeinitWriter( writer, XML_ROOT_ANIMDAT );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteMetaFrameGroups( uint32_t proportionofwork )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Frames);
             ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
@@ -633,7 +626,7 @@ namespace pmd2{ namespace graphics
             if( m_pProgresscnt != nullptr )
                 saveprogress = m_pProgresscnt->load();
 
-            InitWriter( writer, XML_NODE_FRMLST );
+            InitWriter( writer, XML_ROOT_FRMLST );
 
             stringstream strs;
             strs <<"Total nb of group(s)      : " <<setw(4) <<setfill(' ') <<m_inSprite.getMetaFrmsGrps().size();
@@ -656,12 +649,14 @@ namespace pmd2{ namespace graphics
                     m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_inSprite.getMetaFrmsGrps().size() );
             }
 
-            DeinitWriter( writer, XML_NODE_FRMLST );
+            DeinitWriter( writer, XML_ROOT_FRMLST );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteAMetaFrameGroup( XMLWriter & writer, const MetaFrameGroup & grp )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             writer.startElement("","", XML_NODE_FRMGRP );
             stringstream strs;
 
@@ -679,9 +674,11 @@ namespace pmd2{ namespace graphics
             writer.endElement("","", XML_NODE_FRMGRP );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteMetaFrame( XMLWriter & writer, unsigned int index )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             const auto & aframe = m_inSprite.getMetaFrames()[index];
 
             writer.startElement("","", XML_NODE_FRMFRM );
@@ -703,7 +700,7 @@ namespace pmd2{ namespace graphics
                 writer.dataElement( "", "", XML_PROP_VFLIP,  to_string( aframe.vFlip ) );
                 writer.dataElement( "", "", XML_PROP_HFLIP,  to_string( aframe.hFlip ) );
                 writer.dataElement( "", "", XML_PROP_MOSAIC, to_string( aframe.Mosaic ) );
-                writer.dataElement( "", "", XML_PROP_OFFXBIT5, to_string( aframe.XOffbit5 ) );
+                writer.dataElement( "", "", XML_PROP_LASTMFRM, to_string( aframe.isLastMFrmInGrp ) );
                 writer.dataElement( "", "", XML_PROP_OFFXBIT6, to_string( aframe.XOffbit6 ) );
                 writer.dataElement( "", "", XML_PROP_OFFXBIT7, to_string( aframe.XOffbit7 ) );
 
@@ -714,15 +711,17 @@ namespace pmd2{ namespace graphics
             writer.endElement("","", XML_NODE_FRMFRM );
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteOffsets( uint32_t proportionofwork )
         {
             using namespace Poco::XML;
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Offsets);
             ofstream   outfile( outpath.toString() );
             XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
 
-            InitWriter( writer, XML_NODE_OFFLST );
+            InitWriter( writer, XML_ROOT_OFFLST );
 
             stringstream strs;
             strs <<"Total nb of offset(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getPartOffsets().size();
@@ -753,7 +752,7 @@ namespace pmd2{ namespace graphics
                     m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_inSprite.getPartOffsets().size() );
             }
 
-            DeinitWriter( writer, XML_NODE_OFFLST );
+            DeinitWriter( writer, XML_ROOT_OFFLST );
         }
 
     private:
@@ -772,14 +771,15 @@ namespace pmd2{ namespace graphics
     public:
         typedef _SPRITE_t sprite_t;
 
-
-        
-
+        /**************************************************************
+        **************************************************************/
         SpriteToDirectory( const sprite_t & myspr )
             :m_inSprite(myspr),m_pProgress(nullptr)
         {
         }
 
+        /**************************************************************
+        **************************************************************/
         void WriteSpriteToDir( const string          & folderpath, 
                                eSUPPORT_IMG_IO         imgty, 
                                bool                    xmlcolorpal = false, 
@@ -845,6 +845,8 @@ namespace pmd2{ namespace graphics
 
     private:
 
+        /**************************************************************
+        **************************************************************/
         void ExportFrames( eSUPPORT_IMG_IO imgty, uint32_t proportionofwork )
         {
             Poco::Path imgdir = Poco::Path(m_outDirPath);
@@ -874,6 +876,8 @@ namespace pmd2{ namespace graphics
             };
         }
 
+        /**************************************************************
+        **************************************************************/
         void ExportFramesAsPNGs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
             uint32_t     progressBefore = 0; //Save a little snapshot of the progress
@@ -896,6 +900,8 @@ namespace pmd2{ namespace graphics
             }
         }
 
+        /**************************************************************
+        **************************************************************/
         void ExportFramesAsBMPs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
             uint32_t     progressBefore = 0; //Save a little snapshot of the progress
@@ -919,6 +925,8 @@ namespace pmd2{ namespace graphics
             }
         }
 
+        /**************************************************************
+        **************************************************************/
         void ExportFramesAsRawImgs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
             uint32_t     progressBefore = 0; 
@@ -942,12 +950,16 @@ namespace pmd2{ namespace graphics
             }
         }
 
+        /**************************************************************
+        **************************************************************/
         void ExportXMLData(bool xmlcolpal, const workstatistics & wstats)
         {
             SpriteToXML<sprite_t> mywriter(m_inSprite);
             mywriter.WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
         }
 
+        /**************************************************************
+        **************************************************************/
         void ExportPalette()
         {
             utils::io::ExportTo_RIFF_Palette( m_inSprite.getPalette(), 
@@ -972,30 +984,42 @@ namespace pmd2{ namespace graphics
     template<class _SPRITE_t>
         class SpriteXMLParser
     {
+        static const unsigned int MY_NODE_FILTER = NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT;
     public:
         typedef _SPRITE_t sprite_t;
 
+        /**************************************************************
+        **************************************************************/
         SpriteXMLParser(sprite_t & out_spr)
             :m_outSprite(out_spr)
         {
         }
 
-        /*
-            ParseXML
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseXML( Poco::Path sprrootfolder, bool parsexmlpal )
         {
-            using namespace xmlstrings;
+            using namespace SpriteXMLStrings;
             std::ifstream inProperties( Poco::Path(sprrootfolder).append(SPRITE_Properties).toString() );
             std::ifstream inAnims     ( Poco::Path(sprrootfolder).append(SPRITE_Animations).toString() );
             std::ifstream inMFrames   ( Poco::Path(sprrootfolder).append(SPRITE_Frames    ).toString() );
             std::ifstream inOffsets   ( Poco::Path(sprrootfolder).append(SPRITE_Offsets   ).toString() );
 
-            ParseSpriteInfo(inProperties);
-            ParseAnimations(inAnims     );
-            ParseMetaFrames(inMFrames   );
-            ParseOffsets   (inOffsets   );
+            if( inProperties.bad() || inAnims.bad() || inMFrames.bad() || inOffsets.bad() )
+            {
+                stringstream sstr;
+                sstr << "Error: One of the XML files in the sprite directory \""
+                    <<sprrootfolder.toString() << "\" cannot be opened for some reasons..";
+                throw std::runtime_error( sstr.str() );
+            }
 
+            {
+                utils::MrChronometer chrono("ParseXMLTotal");
+                ParseSpriteInfo(inProperties);
+                ParseAnimations(inAnims     );
+                ParseMetaFrames(inMFrames   );
+                ParseOffsets   (inOffsets   );
+            }
             if(parsexmlpal)
             {
                 std::ifstream inPal( Poco::Path(sprrootfolder).append(SPRITE_Palette).toString() );
@@ -1012,9 +1036,10 @@ namespace pmd2{ namespace graphics
             uint16_t x,y;
         };
 
-        /*
-            Used to parse the 2 offsets contained in an anim frame's xml data's child node!
-        */
+        /**************************************************************
+            Used to parse the 2 offsets contained in an anim frame's 
+            xml data's child node!
+        **************************************************************/
         tmpoffset ParseAnimaFrmOffsets( Poco::XML::NodeList * pNodeLst )
         {
             tmpoffset         res       = {0,0};
@@ -1024,18 +1049,17 @@ namespace pmd2{ namespace graphics
             {
                 Node * pCurOffnode = pOffNodes->item(ctoff);
 
-                if( pCurOffnode->nodeName() == xmlstrings::XML_PROP_OFFSETX )
-                        _parseXMLHexaValToValue( pCurOffnode->nodeValue(), res.x );
-                else if( pCurOffnode->nodeName() == xmlstrings::XML_PROP_OFFSETY )
-                    _parseXMLHexaValToValue( pCurOffnode->nodeValue(), res.y );
+                if( pCurOffnode->nodeName() == SpriteXMLStrings::XML_PROP_OFFSETX )
+                        _parseXMLHexaValToValue( pCurOffnode->innerText(), res.x );
+                else if( pCurOffnode->nodeName() == SpriteXMLStrings::XML_PROP_OFFSETY )
+                    _parseXMLHexaValToValue( pCurOffnode->innerText(), res.y );
             }
 
             return std::move(res);
         }
 
-        /*
-            ParseAnimationFrame
-        */
+        /**************************************************************
+        **************************************************************/
         AnimFrame ParseAnimationFrame( Poco::XML::Node * pFrmNode )
         {
             AnimFrame         afrm;
@@ -1045,19 +1069,19 @@ namespace pmd2{ namespace graphics
             {
                 Node * pCurProp = pFrmProp->item( ctfrmprop );
 
-                if( pCurProp->nodeName() == xmlstrings::XML_PROP_DURATION )
+                if( pCurProp->nodeName() == SpriteXMLStrings::XML_PROP_DURATION )
                 {
-                    _parseXMLHexaValToValue( pCurProp->nodeValue(), afrm.frameDuration );
+                    _parseXMLHexaValToValue( pCurProp->innerText(), afrm.frameDuration );
                 }
-                else if( pCurProp->nodeName() == xmlstrings::XML_PROP_METAINDEX )
-                    _parseXMLHexaValToValue( pCurProp->nodeValue(), afrm.metaFrmGrpIndex );
-                else if( pCurProp->nodeName() == xmlstrings::XML_NODE_SPRITE && pCurProp->hasChildNodes() )
+                else if( pCurProp->nodeName() == SpriteXMLStrings::XML_PROP_METAINDEX )
+                    _parseXMLHexaValToValue( pCurProp->innerText(), afrm.metaFrmGrpIndex );
+                else if( pCurProp->nodeName() == SpriteXMLStrings::XML_NODE_SPRITE && pCurProp->hasChildNodes() )
                 {
                     tmpoffset result = ParseAnimaFrmOffsets( pCurProp->childNodes() );
                     afrm.sprOffsetX = result.x;
                     afrm.sprOffsetY = result.y;
                 }
-                else if( pCurProp->nodeName() == xmlstrings::XML_NODE_SHADOW && pCurProp->hasChildNodes() )
+                else if( pCurProp->nodeName() == SpriteXMLStrings::XML_NODE_SHADOW && pCurProp->hasChildNodes() )
                 {
                     tmpoffset result = ParseAnimaFrmOffsets( pCurProp->childNodes() );
                     afrm.shadowOffsetX = result.x;
@@ -1068,9 +1092,8 @@ namespace pmd2{ namespace graphics
             return std::move(afrm);
         }
 
-        /*
-            ParseAnimationSequence
-        */
+        /**************************************************************
+        **************************************************************/
         AnimationSequence ParseAnimationSequence( Poco::XML::Node * pASeq )
         {
             AnimationSequence aseq;
@@ -1088,7 +1111,7 @@ namespace pmd2{ namespace graphics
                 {
                     Node * pCurFrm = pSeqFrms->item(ctfrms);
 
-                    if( pCurFrm->nodeName() == xmlstrings::XML_NODE_ANIMFRM && pCurFrm->hasChildNodes() )
+                    if( pCurFrm->nodeName() == SpriteXMLStrings::XML_NODE_ANIMFRM && pCurFrm->hasChildNodes() )
                     {   
                         aseq.insertFrame( ParseAnimationFrame( pCurFrm ) );
                     }
@@ -1098,78 +1121,81 @@ namespace pmd2{ namespace graphics
             return std::move(aseq);
         }
 
-        /*
-            ParseAnimationSequences
-        */
+        /**************************************************************
+        **************************************************************/
         vector<AnimationSequence> ParseAnimationSequences( Poco::XML::NodeList * pNodeLst )
         {
-            vector<AnimationSequence> seqs;
-            AutoPtr<NodeList>         pSeqs = pNodeLst;
+        assert(false);
+        //Rewrite to handle multiple references to the same animation sequence.
+            //vector<AnimationSequence> seqs;
+            //AutoPtr<NodeList>         pSeqs = pNodeLst;
 
-            for( unsigned long ctseqs = 0; ctseqs < pNodeLst->length(); ++ctseqs )
-            {
-                Node * pCurSeq = pNodeLst->item(ctseqs);
+            //for( unsigned long ctseqs = 0; ctseqs < pNodeLst->length(); ++ctseqs )
+            //{
+            //    Node * pCurSeq = pNodeLst->item(ctseqs);
 
-                if( pCurSeq->nodeName() == xmlstrings::XML_NODE_ANIMSEQ )
-                {
-                    seqs.push_back( ParseAnimationSequence( pCurSeq ) );
-                }
-            }
+            //    if( pCurSeq->nodeName() == SpriteXMLStrings::XML_NODE_ANIMSEQ )
+            //    {
+            //        seqs.push_back( ParseAnimationSequence( pCurSeq ) );
+            //    }
+            //}
 
-            if( seqs.empty() )
-                seqs.resize(1); //We must have at least a single empty sequence per groups
+            //if( seqs.empty() )
+            //    seqs.resize(1); //We must have at least a single empty sequence per groups
 
-            return std::move(seqs);
+            //return std::move(seqs);
         }
 
-        /*
-            ParseAnimations
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseAnimations(std::ifstream & in)
         {
-            using namespace Poco::XML;
-            InputSource       src(in);
-            DOMParser         parser;
-            AutoPtr<Document> pAnimGrps = parser.parse(&src);
-            NodeIterator      itnode( pAnimGrps, NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT | NodeFilter::SHOW_TEXT );
-            Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
+        assert(false);
+        //Rewrite to handle multiple references to the same animation sequence.
+            //utils::MrChronometer chronoxmlanims("ParseXMLAnims");
+            //using namespace Poco::XML;
+            //InputSource       src(in);
+            //DOMParser         parser;
+            //AutoPtr<Document> pAnimGrps = parser.parse(&src);
+            //NodeIterator      itnode( pAnimGrps, MY_NODE_FILTER );
+            //Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
-            //Read every elements
-            while( pCurNode != nullptr )
-            {
-                if( pCurNode->nodeName() == xmlstrings::XML_NODE_ANIMGRP && pCurNode->hasChildNodes() )
-                {
-                    SpriteAnimationGroup agrp;
+            ////Read every elements
+            //while( pCurNode != nullptr )
+            //{
+            //    if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_ANIMGRP && pCurNode->hasChildNodes() )
+            //    {
+            //        SpriteAnimationGroup agrp;
 
-                    //Get the name
-                    if( pCurNode->hasAttributes() )
-                        agrp.group_name = _parseNameAttribute( pCurNode->attributes() );
+            //        //Get the name
+            //        if( pCurNode->hasAttributes() )
+            //            agrp.group_name = _parseNameAttribute( pCurNode->attributes() );
 
-                    //Parse the sequences
-                    agrp.sequences = ParseAnimationSequences( pCurNode->childNodes() );
+            //        //Parse the sequences
+            //        agrp.sequences = ParseAnimationSequences( pCurNode->childNodes() );
 
-                    m_outSprite.m_animgroups.push_back( agrp );
-                }
-                pCurNode = itnode.nextNode();
-            }
+            //        m_outSprite.m_animgroups.push_back( std::move(agrp) );
+            //    }
+            //    pCurNode = itnode.nextNode();
+            //}
         }
 
-        /*
-            ParseOffsets
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseOffsets(std::ifstream & in)
         {
+            utils::MrChronometer chrono("ParseXMLSpriteOffsets");
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
             AutoPtr<Document> pOffsets = parser.parse(&src);
-            NodeIterator      itnode( pOffsets, NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT | NodeFilter::SHOW_TEXT );
+            NodeIterator      itnode( pOffsets, MY_NODE_FILTER );
             Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
             //Read every elements
             while( pCurNode != nullptr )
             {
-                if( pCurNode->nodeName() == xmlstrings::XML_NODE_OFFSET && pCurNode->hasChildNodes() )
+                if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_OFFSET && pCurNode->hasChildNodes() )
                 {
                     AutoPtr<NodeList> offsetsndl = pCurNode->childNodes();
                     sprOffParticle    anoffs;
@@ -1177,10 +1203,10 @@ namespace pmd2{ namespace graphics
                     for( unsigned long ctoffc = 0; ctoffc < offsetsndl->length(); ++ctoffc )
                     {
                         Node * pOffNode = offsetsndl->item(ctoffc);
-                        if( pOffNode->nodeName() == xmlstrings::XML_PROP_X )
-                            _parseXMLHexaValToValue( pOffNode->nodeValue(), anoffs.offx );
-                        else if( pOffNode->nodeName() == xmlstrings::XML_PROP_Y )
-                            _parseXMLHexaValToValue( pOffNode->nodeValue(), anoffs.offy );
+                        if( pOffNode->nodeName() == SpriteXMLStrings::XML_PROP_X )
+                            _parseXMLHexaValToValue( pOffNode->innerText(), anoffs.offx );
+                        else if( pOffNode->nodeName() == SpriteXMLStrings::XML_PROP_Y )
+                            _parseXMLHexaValToValue( pOffNode->innerText(), anoffs.offy );
                     }
                     m_outSprite.m_partOffsets.push_back(anoffs);
                 }
@@ -1188,9 +1214,8 @@ namespace pmd2{ namespace graphics
             }
         }
         
-        /*
-            ParseAMetaFrame
-        */
+        /**************************************************************
+        **************************************************************/
         MetaFrame ParseAMetaFrame( Poco::XML::Node * pFrmNode )
         {
             MetaFrame         mf;
@@ -1200,37 +1225,37 @@ namespace pmd2{ namespace graphics
             {
                 Node * pPropNode = nodelst->item(ctmfprop);
 
-                if( pPropNode->nodeName() == xmlstrings::XML_PROP_FRMINDEX )
+                if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_FRMINDEX )
                 {
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.imageIndex );
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.imageIndex );
                 }
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_UNK0 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.unk0 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFSETX )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.offsetX );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFSETY )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.offsetY );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_UNK1 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.unk1 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_VFLIP )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.vFlip );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_HFLIP )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.hFlip );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_MOSAIC )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.Mosaic );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFXBIT5 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.XOffbit5 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFXBIT6 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.XOffbit6 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFXBIT7 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.XOffbit7 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFYBIT3 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.YOffbit3 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFYBIT5 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.YOffbit5 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_PROP_OFFYBIT6 )
-                    _parseXMLHexaValToValue( pPropNode->nodeValue(), mf.YOffbit6 );
-                else if( pPropNode->nodeName() == xmlstrings::XML_NODE_RES && pPropNode->hasChildNodes() )
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_UNK0 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.unk0 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFSETX )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.offsetX );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFSETY )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.offsetY );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_UNK1 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.unk1 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_VFLIP )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.vFlip );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_HFLIP )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.hFlip );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_MOSAIC )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.Mosaic );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_LASTMFRM )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.isLastMFrmInGrp );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFXBIT6 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.XOffbit6 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFXBIT7 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.XOffbit7 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFYBIT3 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.YOffbit3 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFYBIT5 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.YOffbit5 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFYBIT6 )
+                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.YOffbit6 );
+                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_NODE_RES && pPropNode->hasChildNodes() )
                 {
                     AutoPtr<NodeList> resnodelst = pPropNode->childNodes();
                     utils::Resolution myres={0,0};
@@ -1238,36 +1263,50 @@ namespace pmd2{ namespace graphics
                     for( unsigned long ctres = 0; ctres < resnodelst->length(); ++ctres  )
                     {
                         Node * pResChild = resnodelst->item(ctres);
-                        if( pResChild->nodeName() == xmlstrings::XML_PROP_WIDTH )
-                            _parseXMLHexaValToValue( pResChild->nodeValue(), myres.width );
-                        else if( pResChild->nodeName() == xmlstrings::XML_PROP_HEIGTH )
-                            _parseXMLHexaValToValue( pResChild->nodeValue(), myres.height );
+                        if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_WIDTH )
+                            _parseXMLHexaValToValue( pResChild->innerText(), myres.width );
+                        else if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_HEIGTH )
+                            _parseXMLHexaValToValue( pResChild->innerText(), myres.height );
                     }
 
                     mf.resolution = MetaFrame::IntegerResTo_eRes( myres.width, myres.height );
+
+                    if( mf.resolution == MetaFrame::eRes::_INVALID )
+                    {
+                        stringstream sstr;
+                        sstr << "Error: invalid resolution specified for a meta-frame!\n"
+                             << "Got " <<myres.width << "x" <<myres.height << " for meta-frame #" <<m_outSprite.m_metaframes.size()
+                             << ", referred to in meta-frame group #" <<m_outSprite.m_metafrmsgroups.size() <<" !\n"
+                             << "Valid resolutions are any of the following :\n";
+
+                        for( const auto & theentry : graphics::MetaFrame::ResEquiv )
+                            sstr << "-> " <<theentry.x <<"x" <<theentry.y <<"\n";
+
+                        throw std::runtime_error( sstr.str() );
+                    }
                 }
             }
 
             return std::move(mf);
         }
 
-        /*
-            ParseMetaFrames
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseMetaFrames(std::ifstream & in)
         {
+            utils::MrChronometer chrono("ParseXMLSpriteMetaFrames");
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
             AutoPtr<Document> pMetaFrms = parser.parse(&src);
-            NodeIterator      itnode( pMetaFrms, NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT | NodeFilter::SHOW_TEXT );
+            NodeIterator      itnode( pMetaFrms, MY_NODE_FILTER );
             Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
             //Read every elements
             while( pCurNode != nullptr )
             {
                 //Get a frame group first !
-                if( pCurNode->nodeName() == xmlstrings::XML_NODE_FRMGRP )
+                if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_FRMGRP )
                 {
                     if( pCurNode->hasChildNodes() )
                     {
@@ -1278,14 +1317,15 @@ namespace pmd2{ namespace graphics
                         //Read all frames in the group
                         for( unsigned long ctmf = 0; ctmf < nodelst->length(); ++ctmf )
                         {
-                            if( nodelst->item(ctmf)->nodeName() == xmlstrings::XML_NODE_FRMFRM && nodelst->item(ctmf)->hasChildNodes() )
+                            if( nodelst->item(ctmf)->nodeName() == SpriteXMLStrings::XML_NODE_FRMFRM && nodelst->item(ctmf)->hasChildNodes() )
                             {
                                 mfg.metaframes.push_back( m_outSprite.m_metaframes.size() ); //put the frame's offset in the meta frame group table
                                 m_outSprite.m_metaframes.push_back( ParseAMetaFrame( nodelst->item(ctmf) ) );
                             }
                         }
 
-                        m_outSprite.m_metafrmsgroups.push_back(mfg);
+                        m_outSprite.m_metafrmsgroups.push_back( std::move(mfg) );
+                        /*std::swap( mfg, MetaFrameGroup() );*/
                     }
                     else
                         assert(false); //What to do with frm groups with no childs ? //#TODO: do something with this !!
@@ -1294,17 +1334,17 @@ namespace pmd2{ namespace graphics
             }
         }
 
-        /*
-            ParseSpriteInfo
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseSpriteInfo(std::ifstream & in)
         {
-            using namespace xmlstrings;
+            utils::MrChronometer chrono("ParseXMLSpriteInfo");
+            using namespace SpriteXMLStrings;
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
             AutoPtr<Document> pSprinfo = parser.parse(&src);
-            NodeIterator      itnode( pSprinfo, NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT | NodeFilter::SHOW_TEXT );
+            NodeIterator      itnode( pSprinfo, MY_NODE_FILTER /*| NodeFilter::SHOW_TEXT*/ );
             Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
             //Read every elements
@@ -1312,55 +1352,54 @@ namespace pmd2{ namespace graphics
             {
                 if( pCurNode->nodeName() == XML_PROP_UNK3 )
                 {
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk3 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk3 );
                 }
                 else if( pCurNode->nodeName() == XML_PROP_COLPERROW )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_nbColorsPerRow );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_nbColorsPerRow );
                 else if( pCurNode->nodeName() == XML_PROP_UNK4 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk4 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk4 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK5 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk5 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk5 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK6 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk6 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk6 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK7 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk7 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk7 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK8 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk8 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk8 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK9 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk9 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk9 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK10 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk10 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk10 );
                 else if( pCurNode->nodeName() == XML_PROP_IS8W )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_is8WaySprite );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_is8WaySprite );
                 else if( pCurNode->nodeName() == XML_PROP_IS256COL )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_is256Sprite );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_is256Sprite );
                 else if( pCurNode->nodeName() == XML_PROP_ISMOSAICS )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_IsMosaicSpr );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_IsMosaicSpr );
                 else if( pCurNode->nodeName() == XML_PROP_UNK11 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk11 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk11 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK12 )
-                    _parseXMLHexaValToValue( pCurNode->getNodeValue(), m_outSprite.m_common.m_Unk11 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk11 );
 
                 pCurNode = itnode.nextNode();
             }
         }
 
-        /*
-            ParsePalette
-        */
+        /**************************************************************
+        **************************************************************/
         void ParsePalette(std::ifstream & in)
         {
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
             AutoPtr<Document> pPalette = parser.parse(&src);
-            NodeIterator      itnode( pPalette, NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT | NodeFilter::SHOW_TEXT );
+            NodeIterator      itnode( pPalette, MY_NODE_FILTER );
             Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
             //Read every elements
             while( pCurNode != nullptr )
             {
-                if( pCurNode->nodeName() == xmlstrings::XML_NODE_COLOR )
+                if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_COLOR )
                 {
                     graphics::colRGB24 mycolor;
                     if( pCurNode->hasChildNodes() )
@@ -1371,12 +1410,12 @@ namespace pmd2{ namespace graphics
                         for( unsigned long ctchn = 0; ctchn < nodelst->length(); ++ctchn )
                         {
                             Node * pChild = nodelst->item(ctchn);
-                            if( pChild->nodeName() == xmlstrings::XML_PROP_RED )
-                                _parseXMLHexaValToValue( pChild->nodeValue(), mycolor.red ); 
-                            else if( pChild->nodeName() == xmlstrings::XML_PROP_GREEN )
-                                _parseXMLHexaValToValue( pChild->nodeValue(), mycolor.green ); 
-                            else if( pChild->nodeName() == xmlstrings::XML_PROP_BLUE )
-                                _parseXMLHexaValToValue( pChild->nodeValue(), mycolor.blue ); 
+                            if( pChild->nodeName() == SpriteXMLStrings::XML_PROP_RED )
+                                _parseXMLHexaValToValue( pChild->innerText(), mycolor.red ); 
+                            else if( pChild->nodeName() == SpriteXMLStrings::XML_PROP_GREEN )
+                                _parseXMLHexaValToValue( pChild->innerText(), mycolor.green ); 
+                            else if( pChild->nodeName() == SpriteXMLStrings::XML_PROP_BLUE )
+                                _parseXMLHexaValToValue( pChild->innerText(), mycolor.blue ); 
                         }
                     }
                     m_outSprite.m_palette.push_back(mycolor);
@@ -1401,17 +1440,15 @@ namespace pmd2{ namespace graphics
     public:
         typedef _SPRITE_t sprite_t;
 
-        /*
-            DirectoryToSprite
-        */
+        /**************************************************************
+        **************************************************************/
         DirectoryToSprite( sprite_t & out_sprite )
             :m_pProgress( nullptr ), m_outSprite( out_sprite )
         {
         }
 
-        /*
-            ParseSpriteFromDirectory
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseSpriteFromDirectory( const std::string     & directorypath, 
                                        bool                    readImgByIndex, //If true, the images are read by index number in their names. If false, by alphanumeric order!
                                        std::atomic<uint32_t> * pProgress   = nullptr,
@@ -1428,24 +1465,48 @@ namespace pmd2{ namespace graphics
             else
                 ReadImagesSorted();
 
+            if( !parsexmlpal )
+            {
+                //See if we have a palette
+                Poco::File palettef( (Poco::Path(directorypath).append(Palette_Filename)) );
+
+                if( palettef.exists() && palettef.isFile() )
+                {
+                    m_outSprite.m_palette = utils::io::ImportFrom_RIFF_Palette( palettef.path() );
+                }
+                else if( !( m_outSprite.m_frames.empty() ) )
+                {
+                    //If not, use the first image's palette 
+                    m_outSprite.m_palette = m_outSprite.m_frames.front().getPalette();
+                }
+                else
+                {
+                    //No color source, warn the user!
+                    cerr << "Warning: While parsing \""
+                         << directorypath
+                         << "\"! Could not obtain color palette from either the images, or from the expected palette file in the sprite's directory!"
+                         << "";
+                }
+
+                
+            }
+
             //End with rebuilding the references
             m_outSprite.RebuildAllReferences();
         }
 
     private:
 
-        /*
-            ParseXML
-        */
+        /**************************************************************
+        **************************************************************/
         void ParseXML( bool parsexmlpal )
         {
             SpriteXMLParser<sprite_t> myparser( m_outSprite );
             myparser.ParseXML( m_inDirPath, parsexmlpal );
         }
 
-        /*
-            ReadImages
-        */
+        /**************************************************************
+        **************************************************************/
         void ReadImagesByIndex()
         {
             //assert(false);
@@ -1520,7 +1581,8 @@ namespace pmd2{ namespace graphics
             }
         }
 
-
+        /**************************************************************
+        **************************************************************/
         void ReadImagesSorted()
         {
             Poco::Path         imgsDir( m_inDirPath );
@@ -1567,9 +1629,8 @@ namespace pmd2{ namespace graphics
             }
         }
 
-        /*
-            ReadAnImage
-        */
+        /**************************************************************
+        **************************************************************/
         void ReadAnImage( const Poco::File & imgfile )
         {
             Poco::Path               imgpath(imgfile.path());
@@ -1604,6 +1665,13 @@ namespace pmd2{ namespace graphics
                         {
                             res = MetaFrame::eResToResolution(m_outSprite.m_metaframes[i].resolution);
                         }
+
+                        if( res == RES_INVALID )
+                        {
+                            stringstream sstrerr;
+                            sstrerr << "Image \"" << imgfile.path() <<"\" has an invalid resolution specified in one or more meta-frames refereing to it!";
+                            throw std::runtime_error( sstrerr.str() );
+                        }
                     }
 
                     stringstream pathtoraw;
@@ -1619,6 +1687,15 @@ namespace pmd2{ namespace graphics
                 }
             };
 
+            //if( Sprite_IsResolutionValid( curfrm.getNbPixelWidth(), curfrm.getNbPixelHeight() )
+            //{
+            //    stringstream sstrerr;
+            //    sstrerr << "Image \"" << imgfile.path() <<"\" has an invalid resolution specified in one or more meta-frames refereing to it!";
+            //    throw std::runtime_error( sstrerr.str() );
+            //}
+            //#TODO: Check is the resolution is valid !!!!
+            //assert(false);
+
             m_outSprite.m_frames.push_back( std::move(curfrm) );
         }
 
@@ -1629,12 +1706,12 @@ namespace pmd2{ namespace graphics
     };
 
 
-
-
 //=============================================================================================
 //  Type Camoflage Functions
 //=============================================================================================
 
+    /**************************************************************
+    **************************************************************/
     template<>
         void ExportSpriteToDirectory( const SpriteData<gimg::tiled_image_i4bpp> & srcspr, 
                                       const std::string                         & outpath, 
@@ -1646,6 +1723,8 @@ namespace pmd2{ namespace graphics
         mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal, progresscnt ); 
     }
 
+    /**************************************************************
+    **************************************************************/
     template<>
        void ExportSpriteToDirectory( const SpriteData<gimg::tiled_image_i8bpp> & srcspr, 
                                      const std::string                         & outpath, 
@@ -1658,6 +1737,8 @@ namespace pmd2{ namespace graphics
     }
 
 
+    /**************************************************************
+    **************************************************************/
     template<>
         SpriteData<gimg::tiled_image_i4bpp> ImportSpriteFromDirectory( const std::string     & inpath, 
                                                                        bool                    bReadImgByIndex,
@@ -1667,9 +1748,11 @@ namespace pmd2{ namespace graphics
         SpriteData<gimg::tiled_image_i4bpp>                    result;
         DirectoryToSprite<SpriteData<gimg::tiled_image_i4bpp>> myreader(result);
         myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, progresscnt, bParseXmlPal );
-        return result;
+        return std::move( result );
     }
 
+    /**************************************************************
+    **************************************************************/
     template<>
        SpriteData<gimg::tiled_image_i8bpp> ImportSpriteFromDirectory( const std::string     & inpath, 
                                                                        bool                    bReadImgByIndex,
@@ -1679,17 +1762,18 @@ namespace pmd2{ namespace graphics
         SpriteData<gimg::tiled_image_i8bpp>                    result;
         DirectoryToSprite<SpriteData<gimg::tiled_image_i8bpp>> myreader(result);
         myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, progresscnt, bParseXmlPal );
-        return result;
+        return std::move( result );
     }
 
-
+    /**************************************************************
+    **************************************************************/
     eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )throw(std::runtime_error)
     {
         using namespace Poco::XML;
-        ifstream          in( Poco::Path(dirpath).append( xmlstrings::SPRITE_Properties ).toString() );
+        ifstream          in( Poco::Path(dirpath).append( SpriteXMLStrings::SPRITE_Properties ).toString() );
 
         if( in.bad() || !in.is_open() )
-            throw std::runtime_error( xmlstrings::SPRITE_Properties + " cannot be opened !" );
+            throw std::runtime_error( SpriteXMLStrings::SPRITE_Properties + " cannot be opened !" );
 
         InputSource       src(in);
         DOMParser         parser;
@@ -1702,8 +1786,11 @@ namespace pmd2{ namespace graphics
         //Read every elements
         while( pCurNode != nullptr )
         {
-            if( pCurNode->nodeName() == xmlstrings::XML_PROP_IS256COL )
-                _parseXMLHexaValToValue(pCurNode->getNodeValue(), bIs256Colors );
+            if( pCurNode->nodeName() == SpriteXMLStrings::XML_PROP_IS256COL )
+            {
+                _parseXMLHexaValToValue(pCurNode->innerText(), bIs256Colors );
+                break;
+            }
 
             pCurNode = itnode.nextNode();
         }

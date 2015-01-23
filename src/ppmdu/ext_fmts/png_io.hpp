@@ -14,6 +14,14 @@ namespace utils{ namespace io
 {
     static const std::string PNG_FileExtension = "png";
 
+    struct PNG_ImgInfo
+    {
+        unsigned int width;
+        unsigned int height;
+        unsigned int bitdepth;
+        unsigned int nbcolorspal;
+    };
+
 //==============================================================================================
 //  Import/Export from/to 4bpp
 //==============================================================================================
@@ -60,7 +68,6 @@ namespace utils{ namespace io
                             unsigned int        forcedwidth     = 0,
                             unsigned int        forcedheight    = 0,
                             bool                erroronwrongres = false );
-
 
 
 };};

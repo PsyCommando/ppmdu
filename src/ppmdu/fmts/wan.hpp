@@ -8,12 +8,15 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 */
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/utils/utility.hpp>
+#include <ppmdu/utils/handymath.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <ppmdu/containers/color.hpp>
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <atomic>
 #include <algorithm>
+#include <type_traits>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -22,6 +25,7 @@ namespace pmd2 { namespace filetypes
 
     static const bool         WAN_REVERSED_PIX_ORDER = true; //Whether we should read the pixels in reversed bit order, when applicable(4bpp)
     static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
+    static const unsigned int WAN_LENGTH_ANIM_FRM    = 12; //bytes
 
 //=============================================================================================
 //  WAN Structures
@@ -32,9 +36,9 @@ namespace pmd2 { namespace filetypes
     struct zerostrip_table_entry
     {
         static const unsigned int LENGTH = 12u;
-        uint32_t pixelsrc,  //The source of the pixels to use to rebuild the image. Either an address, or 0
-                 pixamt,    //The amount of pixels to copy / insert
-                 unknown;   //Not sure what this does..
+        uint32_t pixelsrc = 0;  //The source of the pixels to use to rebuild the image. Either an address, or 0
+        uint32_t pixamt   = 0;    //The amount of pixels to copy / insert
+        uint32_t unknown  = 0;   //Not sure what this does..
 
         unsigned int    size()const   { return LENGTH; }
         bool            isNull()const { return (!pixelsrc && !pixamt && !unknown); } //Whether its a null entry or not 
@@ -63,7 +67,7 @@ namespace pmd2 { namespace filetypes
         The 12 bytes sub-header that is linked to by an SIR0 header.
         Contains pointers to important sprite information.
     **********************************************************************/
-    struct wan_sub_header : public utils::data_array_struct
+    struct wan_sub_header
     {
         uint32_t ptr_animinfo,
                  ptr_imginfo;
@@ -74,73 +78,203 @@ namespace pmd2 { namespace filetypes
 
         unsigned int size()const{return DATA_LEN;}
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+
+        template<class _outIt>
+            _outIt WriteToContainer( _outIt itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( ptr_animinfo,       itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_imginfo,        itwriteto );
+            itwriteto = utils::WriteIntToByteVector( is8DirectionSprite, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk12,              itwriteto );
+            return itwriteto;
+        }
+
+        template<class _inIt>
+            _inIt ReadFromContainer( _inIt itReadfrom )
+        {
+            ptr_animinfo       = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>      (itReadfrom);
+            ptr_imginfo        = utils::ReadIntFromByteVector<decltype(ptr_imginfo)>       (itReadfrom);
+            is8DirectionSprite = utils::ReadIntFromByteVector<decltype(is8DirectionSprite)>(itReadfrom);
+            unk12              = utils::ReadIntFromByteVector<decltype(unk12)>             (itReadfrom);
+            return itReadfrom;
+        }
+
+        void FillFromSprite( graphics::BaseSprite * sprite )
+        {
+            unk12              = sprite->getSprInfo().m_Unk12;
+            is8DirectionSprite = sprite->getSprInfo().m_is8WaySprite;
+        }
     };
 
     /**********************************************************************
         The part of the header containing the pointers to the actual frames 
         of the sprite, and the palette.
     **********************************************************************/
-    struct wan_img_data_info : public utils::data_array_struct
+    struct wan_img_data_info
     {
         static const unsigned int DATA_LEN = 16u;
 
-        uint32_t ptr_img_table,             // Pointer to the the table of pointer to the individual images
-                 ptr_palette;               // Pointer to the pointer to the palette info
-        uint16_t isMosaic,                  // 1 == mosaic sprite,   0 == non-mosaic sprite
-                 is256Colors,               // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
-                 unk11,                     // Unknown, seems to range between 0 and 1..
-                 nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
+        uint32_t ptr_img_table;             // Pointer to the the table of pointer to the individual images
+        uint32_t ptr_palette;               // Pointer to the pointer to the palette info
+        uint16_t isMosaic;                  // 1 == mosaic sprite,   0 == non-mosaic sprite
+        uint16_t is256Colors;               // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
+        uint16_t unk11;                     // Unknown, seems to range between 0 and 1..
+        uint16_t nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
 
         unsigned int size()const{return DATA_LEN;}
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+
+
+        template<class _outIt>
+            _outIt WriteToContainer( _outIt itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( ptr_img_table,          itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_palette,            itwriteto );
+            itwriteto = utils::WriteIntToByteVector( isMosaic,               itwriteto );
+            itwriteto = utils::WriteIntToByteVector( is256Colors,            itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk11,                  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
+            return itwriteto;
+        }
+
+        template<class _inIt>
+            _inIt ReadFromContainer( _inIt itReadfrom )
+        {
+            ptr_img_table          = utils::ReadIntFromByteVector<decltype(ptr_img_table)>         (itReadfrom);
+            ptr_palette            = utils::ReadIntFromByteVector<decltype(ptr_palette)>           (itReadfrom);
+            isMosaic               = utils::ReadIntFromByteVector<decltype(isMosaic)>              (itReadfrom);
+            is256Colors            = utils::ReadIntFromByteVector<decltype(is256Colors)>           (itReadfrom);
+            unk11                  = utils::ReadIntFromByteVector<decltype(unk11)>                 (itReadfrom);
+            nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
+            return itReadfrom;
+        }
+
+        void FillFromSprite( graphics::BaseSprite * sprite )
+        {
+            isMosaic               = sprite->getSprInfo().m_IsMosaicSpr;
+            is256Colors            = sprite->getSprInfo().m_is256Sprite;
+            unk11                  = sprite->getSprInfo().m_Unk11;
+            nb_ptrs_frm_ptrs_table = sprite->getNbFrames();
+        }
     };
 
     /**********************************************************************
         The part of the header containing the pointers to unidentified kind 
         of info for the sprite
     **********************************************************************/
-    struct wan_anim_info : public utils::data_array_struct
+    struct wan_anim_info
     {
         static const unsigned int DATA_LEN = 24u;
 
-        uint32_t ptr_metaFrmTable,  //pointer to the table containing pointers to every meta frames. 
-                 ptr_pOffsetsTable, //ptr to Particle offset table
-                 ptr_animGrpTable;  //ptr to the table with pointers to every animation groups
-        uint16_t nb_anim_groups,
-                 unk6,
-                 unk7,
-                 unk8,
-                 unk9,
-                 unk10;
+        uint32_t ptr_metaFrmTable;  //pointer to the table containing pointers to every meta frames. 
+        uint32_t ptr_pOffsetsTable; //ptr to Particle offset table
+        uint32_t ptr_animGrpTable;  //ptr to the table with pointers to every animation groups
+        uint16_t nb_anim_groups;
+        uint16_t unk6;
+        uint16_t unk7;
+        uint16_t unk8;
+        uint16_t unk9;
+        uint16_t unk10;
 
         unsigned int size()const{return DATA_LEN;}
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+
+
+        template<class _outIt>
+            _outIt WriteToContainer( _outIt itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( ptr_metaFrmTable,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_pOffsetsTable, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_animGrpTable,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nb_anim_groups,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk6,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk7,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk8,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk9,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk10,             itwriteto );
+            return itwriteto;
+        }
+
+        template<class _inIt>
+            _inIt ReadFromContainer( _inIt itReadfrom )
+        {
+            ptr_metaFrmTable  = utils::ReadIntFromByteVector<decltype(ptr_metaFrmTable)> (itReadfrom);
+            ptr_pOffsetsTable = utils::ReadIntFromByteVector<decltype(ptr_pOffsetsTable)>(itReadfrom);
+            ptr_animGrpTable  = utils::ReadIntFromByteVector<decltype(ptr_animGrpTable)> (itReadfrom);
+            nb_anim_groups    = utils::ReadIntFromByteVector<decltype(nb_anim_groups)>   (itReadfrom);
+            unk6              = utils::ReadIntFromByteVector<decltype(unk6)>             (itReadfrom);
+            unk7              = utils::ReadIntFromByteVector<decltype(unk7)>             (itReadfrom);
+            unk8              = utils::ReadIntFromByteVector<decltype(unk8)>             (itReadfrom);
+            unk9              = utils::ReadIntFromByteVector<decltype(unk9)>             (itReadfrom);
+            unk10             = utils::ReadIntFromByteVector<decltype(unk10)>            (itReadfrom);
+            return itReadfrom;
+        }
+
+        void FillFromSprite( graphics::BaseSprite * sprite )
+        {
+            nb_anim_groups = sprite->getAnimGroups().size();
+            unk6           = sprite->getSprInfo().m_Unk6;
+            unk7           = sprite->getSprInfo().m_Unk7;
+            unk8           = sprite->getSprInfo().m_Unk8;
+            unk9           = sprite->getSprInfo().m_Unk9;
+            unk10          = sprite->getSprInfo().m_Unk10;
+        }
     };
 
     /**********************************************************************
         wan_pal_info
     **********************************************************************/
-    struct wan_pal_info : public utils::data_array_struct
+    struct wan_pal_info
     {
         static const unsigned int DATA_LEN = 16u;
 
         uint32_t ptrpal;
-        uint16_t unk3,
-                 nbcolorsperrow,
-                 unk4,
-                 unk5;
+        uint16_t unk3;
+        uint16_t nbcolorsperrow;
+        uint16_t unk4;
+        uint16_t unk5;
         uint32_t nullbytes;
 
         unsigned int size()const{return DATA_LEN;}
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outIt>
+            _outIt WriteToContainer( _outIt itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( ptrpal,         itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk3,           itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nbcolorsperrow, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk4,           itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk5,           itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nullbytes,      itwriteto );
+            return itwriteto;
+        }
+
+        template<class _inIt>
+            _inIt ReadFromContainer( _inIt itReadfrom )
+        {
+            ptrpal         = utils::ReadIntFromByteVector<decltype(ptrpal)>        (itReadfrom);
+            unk3           = utils::ReadIntFromByteVector<decltype(unk3)>          (itReadfrom);
+            nbcolorsperrow = utils::ReadIntFromByteVector<decltype(nbcolorsperrow)>(itReadfrom);
+            unk4           = utils::ReadIntFromByteVector<decltype(unk4)>          (itReadfrom);
+            unk5           = utils::ReadIntFromByteVector<decltype(unk5)>          (itReadfrom);
+            nullbytes      = utils::ReadIntFromByteVector<decltype(nullbytes)>     (itReadfrom);
+            return itReadfrom;
+        }
+
+        void FillFromSprite( graphics::BaseSprite * sprite )
+        {
+            unk3           = sprite->getSprInfo().m_Unk3;
+            nbcolorsperrow = sprite->getSprInfo().m_nbColorsPerRow;
+            unk4           = sprite->getSprInfo().m_Unk4;
+            unk5           = sprite->getSprInfo().m_Unk5;
+            nullbytes      = 0;
+        }
     };
 
 
@@ -401,7 +535,7 @@ namespace pmd2 { namespace filetypes
 
        std::vector<graphics::SpriteAnimationGroup>  ReadAnimations();   // Reads the animation data
         graphics::AnimationSequence                 ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
-        std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex );
+        std::vector<uint32_t>                       ReadAnimSequences( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex );
         std::vector<graphics::sprOffParticle>       ReadParticleOffsets(); 
 
         template<class _retty>
@@ -437,18 +571,135 @@ namespace pmd2 { namespace filetypes
     **********************************************************************/
     class Write_WAN
     {
+        static const uint32_t MAX_NB_PIXELS_SPRITE_IMG = 4096;//(graphics::RES_64x64_SPRITE.width * graphics::RES_64x64_SPRITE.height);
     public:
         //typedef _Sprite_T sprite_t;
+        Write_WAN( graphics::BaseSprite * pSprite );
 
-        void WriteWan(const std::string & outputpath, std::atomic<uint32_t> * pProgress = nullptr )
-        {
-            //Don't forget to build the SIR0 pointer offset table !
-            // We must gather the offset of ALL pointers!
-        }
+        void write( const std::string     & outputpath, std::atomic<uint32_t> * pProgress = nullptr );
 
     private:
-        //sprite_t               m_sprite;
+        /*
+            Specialization of zerostrip_table_entry to add an extra bool to make encoding easier !
+        */
+        struct zeroStripTableTempEntry : public zerostrip_table_entry
+        {
+            bool isZeroEntry = true; //Whether this entry is for copying zeroes or actual bytes.
+        };
+
+        /*
+            WriteAPointer
+                To make things simpler, always use this method to write the value of a pointer to the buffer at the current pos !
+                It will automatically add an entry to the pointer offset table !
+        */
+        void WriteAPointer( uint32_t val );
+
+        /*
+            WritePaddingBytes
+                Write padding bytes at the current position
+        */
+        void WritePaddingBytes( uint32_t alignon );
+
+        /*
+            Utilities for allocating and building the headers and structures of the 
+            resulting wan file!
+        */
+        void FillFileInfoStructures();
+        void AllocateAndEstimateResultLength();
+
+        /*
+        */
+        void WriteMetaFramesBlock();
+        void WriteAMetaFrame( const graphics::MetaFrame & cur, bool setLastBit = false ); //setLastBit set this to true for the last frame in a group !;
+
+        /*
+        */
+        void WriteAnimationSequencesBlock();
+        void WriteAnAnimFrame( const graphics::AnimFrame & curfrm );
+
+
+        /*
+        */
+        template<class _frmTy>
+            void WriteFramesBlock( const std::vector<_frmTy> & frms )
+        {
+            utils::MrChronometer chronoTotal("WriteWanFrames");
+            std::vector<uint8_t> imgbuff; //This contains the raw bytes of the current frame
+            imgbuff.reserve( MAX_NB_PIXELS_SPRITE_IMG ); //Reserve the maximum frame size
+
+            for( const auto & afrm : frms )
+            {
+                gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm );
+                WriteACompressedFrm( imgbuff );
+                imgbuff.resize(0);
+            }
+        }
+        /*
+            This insert the next sequence into the zero strip table.
+            If its a sequence of zero, it won't write into the pixel strip table. If it is, it will.
+        */
+        zeroStripTableTempEntry MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+                                                         std::vector<uint8_t>::const_iterator   itEnd,
+                                                         std::vector<uint8_t>                 & pixStrips,
+                                                         uint32_t                             & totalbytecnt );
+        void WriteACompressedFrm( const std::vector<uint8_t> & frm);
+
+        /*
+        */
+        void WritePaletteBlock();
+
+        /*
+            MetaFramesRefTable
+        */
+        void WriteMetaFrameGroupPtrTable();
+
+        /*
+            ParticleOffsetsTable
+                Write all the offset entries
+        */
+        void WriteParticleOffsetsBlock();
+
+        /*
+        */
+        void WriteAnimSequencePtrTable();
+        void WriteAnimGroupPtrTable();
+        void WriteCompImagePtrTable();
+
+        /*
+        */
+        void WriteAnimInfoHeadr();
+        void WriteImgInfoHeadr();
+        void WriteWANHeadr();
+
+        /*
+        */
+        void WriteSIR0HeaderAndEncodedPtrList();
+
+    private:
+
+        graphics::BaseSprite  *m_pSprite;
         std::atomic<uint32_t> *m_pProgress;
+        std::string            m_outPath;            //The path to where the file will be written to disk!
+
+        std::vector<uint8_t>   m_outBuffer;          //The file will be written here, before being written to disk !
+        std::back_insert_iterator<std::vector<uint8_t>> m_itbackins;
+
+        //Fill those up as we go !!!
+        wan_sub_header         m_wanHeadr;
+        wan_anim_info          m_wanHeadr_anim;
+        wan_img_data_info      m_wanHeadr_img;
+        wan_pal_info           m_wanPalInfo;
+        sir0_header            m_sir0Header;
+
+        std::vector<uint32_t>  m_MFramesGrpOffsets;       //As we write the meta-frames, keep track of the starting offsets of 
+                                                          // groups in there so we can write the pointer table later on!
+        std::vector<uint32_t>  m_AnimSequenceOffsets;     //Keep tracks of where each animation sequence's frames list begins at !
+
+        std::vector<uint32_t>  m_AnimSequencesListOffset; //Keep tracks of where each animation group's sequences ptr table begins at!
+
+        std::vector<uint32_t>  m_CompImagesTblOffsets;    //The places where the zero-strip table for each compressed image is at
+
+        std::vector<uint32_t>  m_pointerOffsetTable;      //List of all the pointers offsets in the resulting raw file !
     };
 
 

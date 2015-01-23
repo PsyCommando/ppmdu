@@ -207,4 +207,9 @@
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_packfileutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

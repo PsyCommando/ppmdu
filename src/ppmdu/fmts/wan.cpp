@@ -15,6 +15,169 @@ using namespace pmd2::graphics;
 namespace pmd2{ namespace filetypes
 {
 
+//=====================================================================================
+//                    Function for Compressing a Frame Using PMD2's RLE
+//=====================================================================================
+
+    // typedef std::pair<types::constitbyte_t, types::constitbyte_t>  zeroTableEntry_t;  //Dat long-ass type -_-
+    ////---------------------------------------------------------------------------------
+    ////Insert a range of differing elements, during RLE compression, into the Output data table and into the RLE table
+    ////---------------------------------------------------------------------------------
+    //void InsertRangeIntoZeroStripTable( vector<uint8_t>&                out_resultdata, 
+    //                              vector<RLE_TableEntry> &     out_rletable, 
+    //                              vector<uint8_t>::const_iterator itInputBytes, 
+    //                              vector<uint8_t>::const_iterator itInputBytesEnd )
+    //{
+    //    vector<uint8_t>::const_iterator itinsertpos      = out_resultdata.insert( out_resultdata.end(), itInputBytes, itInputBytesEnd );
+    //    vector<uint8_t>::const_iterator itOutputBegining = out_resultdata.begin();
+
+    //    out_rletable.push_back( 
+    //                            RLE_TableEntry( std::distance( itOutputBegining, itinsertpos), std::distance(itInputBytes, itInputBytesEnd) )
+    //                          );
+    //    out_rletable.back().setPixelSourceIsOffset(true); //The entry is an offset
+    //}
+
+
+    ////---------------------------------------------------------------------------------
+    ////Insert a compressed repeated value, during RLE compression, into the Output data table and into the RLE table
+    ////---------------------------------------------------------------------------------
+    //void InsertCompressedIntoRLETable( vector<RLE_TableEntry>& out_rletable, vector<similarTableEntry_t>::const_iterator similarSerie ) 
+    //{
+    //    out_rletable.push_back( RLE_TableEntry( *(similarSerie->first), std::distance( similarSerie->first, similarSerie->second ) ) );
+    //    out_rletable.back().setPixelSourceIsOffset(false); //The entry is NOT an offset
+    //}
+
+
+    ////---------------------------------------------------------------------------------
+    ////Function that builds the list of similar series for the RLE compression function!
+    ////---------------------------------------------------------------------------------
+    //void BuildSimilarValueSeriesTable( vector<similarTableEntry_t>& out_similarSerie, const vector<uint8_t> & in_frame )
+    //{
+    //    vector<uint8_t>::const_iterator itframecur  = in_frame.begin(),
+    //                                 itframeend  = in_frame.end(),
+    //                                 itfound;
+    //    auto lambda_valcmpr = [&](const uint8_t& by)
+    //                          { 
+    //                              return (*itframecur) == by; 
+    //                          };
+
+    //   for( vector<uint8_t>::size_type i = 0; i < in_frame.size(); )
+    //    {
+    //        //vector<uint8_t>::const_iterator itCur = ( in_frame.begin() + i );
+    //        itframecur = ( in_frame.begin() + i );
+
+    //        itfound = std::find_if_not( itframecur, itframeend, lambda_valcmpr );
+
+    //        vector<uint8_t>::size_type posFound = distance( in_frame.begin(), itfound );
+
+    //        vector<uint8_t>::size_type iDiv16_        = (i > 0)? CalcClosestHighestDenominator( i, 16 ) : 0,
+    //                                   posFoundDiv16_ = CalcClosestLowestDenominator( posFound, 16 );
+
+    //        if( posFoundDiv16_ > iDiv16_ )
+    //        {
+    //            if( (posFoundDiv16_ - iDiv16_) >= _MIN_AMNT_BYTE_FOR_RLE_COMP )
+    //            {
+    //                out_similarSerie.push_back( std::make_pair( in_frame.begin() + iDiv16_, in_frame.begin() + posFoundDiv16_ ) );
+
+    //                //unsigned short curvalue = in_frame[iDiv16_];
+    //                //std::cerr << "# PushingBack series of similar values " <<"[" <<std::dec <<iDiv16_ << ", " <<std::dec <<posFoundDiv16_  
+    //                //          <<"]\n   (len: 0x" <<std::hex << posFoundDiv16_ - iDiv16_ <<", val:0x" <<std::hex <<curvalue <<" )\n";
+    //                i = posFoundDiv16_+1;
+    //            }
+    //            else
+    //            {
+    //                i = posFound+1;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            i = posFound+1;
+    //        }
+    //        
+    //    }
+    //}
+
+
+    ////---------------------------------------------------------------------------------
+    ////Function that builds the RLE table and fill the output vector with the raw uncompressable data!
+    ////---------------------------------------------------------------------------------
+    //void Fill_RLE_TableAndRawDataOut(   const vector<uint8_t>            & in_frame,
+    //                                    const vector<similarTableEntry_t>& in_similarserieslist,
+    //                                    vector<uint8_t>                  & out_resultdata,
+    //                                    vector<RLE_TableEntry>           & out_rletable  )
+    //{
+    //    vector<uint8_t>::const_iterator             itInputBytes        = in_frame.begin(),
+    //                                                itInputBytesEnd     = in_frame.end();
+
+    //    vector<similarTableEntry_t>::const_iterator itCurSimElmSerie    = in_similarserieslist.begin(),
+    //                                                itCurSimElmSerieEnd = in_similarserieslist.end();
+
+    //    if( itCurSimElmSerie == itCurSimElmSerieEnd )
+    //    {
+    //        //We have no similar element series. Just make a single entry in the RLE table and slap everythin in the output.
+    //        InsertRangeIntoZeroStripTable( out_resultdata, out_rletable, itInputBytes, itInputBytesEnd );
+    //    }
+    //    else
+    //    {
+    //        //Iterate until we're at the end of the input byte vector
+    //        while( itInputBytes != itInputBytesEnd )
+    //        {
+    //            if( itCurSimElmSerie == itCurSimElmSerieEnd ) //No more similar serie, pack everything that's left.
+    //            {
+    //                InsertRangeIntoZeroStripTable( out_resultdata, out_rletable, itInputBytes, itInputBytesEnd );
+    //                itInputBytes = itInputBytesEnd; //Move iterator
+    //            }
+    //            else
+    //            {
+    //                if( itCurSimElmSerie->first == itInputBytes ) //We're on the first element of a serie of similar elements
+    //                {
+    //                    InsertCompressedIntoRLETable( out_rletable, itCurSimElmSerie );
+    //                    itInputBytes = itCurSimElmSerie->second; //Move iterator
+    //                    ++itCurSimElmSerie; //Move to next serie of similar elements
+    //                }
+    //                else //Our iterator on the input vector is NOT at the start of the current serie of similar elements.
+    //                {
+    //                    InsertRangeIntoZeroStripTable( out_resultdata, out_rletable, itInputBytes, itCurSimElmSerie->first );
+    //                    itInputBytes = itCurSimElmSerie->first; //Move iterator
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    //Add null entry at the end of the table
+    //    out_rletable.push_back( RLE_TableEntry() );
+    //    out_rletable.back().setPixelSourceIsOffset(false); //The entry is NOT an offset
+    //}
+
+
+    ////---------------------------------------------------------------------------------
+    ////Compress a frame to the PMD RLE format
+    ////---------------------------------------------------------------------------------
+    //void RLE_EncodeFrame( const vector<uint8_t>      & in_frame, 
+    //                      vector<uint8_t>            & out_resultdata, 
+    //                      vector<RLE_TableEntry>     & out_rletable, 
+    //                      vector<uint8_t>::size_type   baseoffset  ) //Overwrites the output vector
+    //{
+    //    //#0 - Validate 
+    //    if( in_frame.size() % 16 != 0 )
+    //    {
+    //        assert(false); //Ideally a frame aligned on 16 bytes will compress much better. Not to mention, 
+    //                       // frames actually have to be divisible by 16 to actually be legal frames..
+    //    }
+
+    //    //Store similar series in there, so we can deal more easily with extracting everything later on
+    //    vector<similarTableEntry_t> similarserieslist;
+
+    //    //#1 - List all similar values series first
+    //    BuildSimilarValueSeriesTable( similarserieslist, in_frame );
+    //    std::cerr << "\n\n";
+
+    //    //#2 - Split the similar from different, fill the output data vector with the uncompressable data, fill up the RLE table
+    //    std::cerr << "Building RLE table and output data..\n";
+    //    Fill_RLE_TableAndRawDataOut( in_frame, similarserieslist, out_resultdata, out_rletable );
+
+    //    std::cerr << "RLE table built, null entry appended! Output data ready!\n";
+    //}
 
 
 //=============================================================================================
@@ -80,107 +243,107 @@ namespace pmd2{ namespace filetypes
 //============================================
 //              wan_sub_header
 //============================================
-    std::vector<uint8_t>::iterator wan_sub_header::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
-    {
-        itwriteto = utils::WriteIntToByteVector( ptr_animinfo,       itwriteto );
-        itwriteto = utils::WriteIntToByteVector( ptr_imginfo,        itwriteto );
-        itwriteto = utils::WriteIntToByteVector( is8DirectionSprite, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk12,              itwriteto );
-        return itwriteto;
-    }
+    //std::vector<uint8_t>::iterator wan_sub_header::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    itwriteto = utils::WriteIntToByteVector( ptr_animinfo,       itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( ptr_imginfo,        itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( is8DirectionSprite, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk12,              itwriteto );
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator wan_sub_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        ptr_animinfo       = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>      (itReadfrom);
-        ptr_imginfo        = utils::ReadIntFromByteVector<decltype(ptr_imginfo)>       (itReadfrom);
-        is8DirectionSprite = utils::ReadIntFromByteVector<decltype(is8DirectionSprite)>(itReadfrom);
-        unk12              = utils::ReadIntFromByteVector<decltype(unk12)>             (itReadfrom);
-        return itReadfrom;
-    }
+    //std::vector<uint8_t>::const_iterator wan_sub_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    ptr_animinfo       = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>      (itReadfrom);
+    //    ptr_imginfo        = utils::ReadIntFromByteVector<decltype(ptr_imginfo)>       (itReadfrom);
+    //    is8DirectionSprite = utils::ReadIntFromByteVector<decltype(is8DirectionSprite)>(itReadfrom);
+    //    unk12              = utils::ReadIntFromByteVector<decltype(unk12)>             (itReadfrom);
+    //    return itReadfrom;
+    //}
 
 
 //============================================
 //              wan_frame_data
 //============================================
-    std::vector<uint8_t>::iterator wan_img_data_info::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
-    {
-        itwriteto = utils::WriteIntToByteVector( ptr_img_table,          itwriteto );
-        itwriteto = utils::WriteIntToByteVector( ptr_palette,            itwriteto );
-        itwriteto = utils::WriteIntToByteVector( isMosaic,               itwriteto );
-        itwriteto = utils::WriteIntToByteVector( is256Colors,            itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk11,                  itwriteto );
-        itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
-        return itwriteto;
-    }
+    //std::vector<uint8_t>::iterator wan_img_data_info::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    itwriteto = utils::WriteIntToByteVector( ptr_img_table,          itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( ptr_palette,            itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( isMosaic,               itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( is256Colors,            itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk11,                  itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator wan_img_data_info::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        ptr_img_table          = utils::ReadIntFromByteVector<decltype(ptr_img_table)>         (itReadfrom);
-        ptr_palette            = utils::ReadIntFromByteVector<decltype(ptr_palette)>           (itReadfrom);
-        isMosaic               = utils::ReadIntFromByteVector<decltype(isMosaic)>              (itReadfrom);
-        is256Colors            = utils::ReadIntFromByteVector<decltype(is256Colors)>           (itReadfrom);
-        unk11                  = utils::ReadIntFromByteVector<decltype(unk11)>                 (itReadfrom);
-        nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
-        return itReadfrom;
-    }
+    //std::vector<uint8_t>::const_iterator wan_img_data_info::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    ptr_img_table          = utils::ReadIntFromByteVector<decltype(ptr_img_table)>         (itReadfrom);
+    //    ptr_palette            = utils::ReadIntFromByteVector<decltype(ptr_palette)>           (itReadfrom);
+    //    isMosaic               = utils::ReadIntFromByteVector<decltype(isMosaic)>              (itReadfrom);
+    //    is256Colors            = utils::ReadIntFromByteVector<decltype(is256Colors)>           (itReadfrom);
+    //    unk11                  = utils::ReadIntFromByteVector<decltype(unk11)>                 (itReadfrom);
+    //    nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
+    //    return itReadfrom;
+    //}
 
 //============================================
 //               wan_info_data
 //============================================
 
-    std::vector<uint8_t>::iterator wan_anim_info::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
-    {
-        itwriteto = utils::WriteIntToByteVector( ptr_metaFrmTable,  itwriteto );
-        itwriteto = utils::WriteIntToByteVector( ptr_pOffsetsTable, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( ptr_animGrpTable,  itwriteto );
-        itwriteto = utils::WriteIntToByteVector( nb_anim_groups,    itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk6,              itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk7,              itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk8,              itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk9,              itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk10,             itwriteto );
-        return itwriteto;
-    }
+    //std::vector<uint8_t>::iterator wan_anim_info::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    itwriteto = utils::WriteIntToByteVector( ptr_metaFrmTable,  itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( ptr_pOffsetsTable, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( ptr_animGrpTable,  itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( nb_anim_groups,    itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk6,              itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk7,              itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk8,              itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk9,              itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk10,             itwriteto );
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator wan_anim_info::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        ptr_metaFrmTable  = utils::ReadIntFromByteVector<decltype(ptr_metaFrmTable)> (itReadfrom);
-        ptr_pOffsetsTable = utils::ReadIntFromByteVector<decltype(ptr_pOffsetsTable)>(itReadfrom);
-        ptr_animGrpTable  = utils::ReadIntFromByteVector<decltype(ptr_animGrpTable)> (itReadfrom);
-        nb_anim_groups    = utils::ReadIntFromByteVector<decltype(nb_anim_groups)>   (itReadfrom);
-        unk6              = utils::ReadIntFromByteVector<decltype(unk6)>             (itReadfrom);
-        unk7              = utils::ReadIntFromByteVector<decltype(unk7)>             (itReadfrom);
-        unk8              = utils::ReadIntFromByteVector<decltype(unk8)>             (itReadfrom);
-        unk9              = utils::ReadIntFromByteVector<decltype(unk9)>             (itReadfrom);
-        unk10             = utils::ReadIntFromByteVector<decltype(unk10)>            (itReadfrom);
-        return itReadfrom;
-    }
+    //std::vector<uint8_t>::const_iterator wan_anim_info::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    ptr_metaFrmTable  = utils::ReadIntFromByteVector<decltype(ptr_metaFrmTable)> (itReadfrom);
+    //    ptr_pOffsetsTable = utils::ReadIntFromByteVector<decltype(ptr_pOffsetsTable)>(itReadfrom);
+    //    ptr_animGrpTable  = utils::ReadIntFromByteVector<decltype(ptr_animGrpTable)> (itReadfrom);
+    //    nb_anim_groups    = utils::ReadIntFromByteVector<decltype(nb_anim_groups)>   (itReadfrom);
+    //    unk6              = utils::ReadIntFromByteVector<decltype(unk6)>             (itReadfrom);
+    //    unk7              = utils::ReadIntFromByteVector<decltype(unk7)>             (itReadfrom);
+    //    unk8              = utils::ReadIntFromByteVector<decltype(unk8)>             (itReadfrom);
+    //    unk9              = utils::ReadIntFromByteVector<decltype(unk9)>             (itReadfrom);
+    //    unk10             = utils::ReadIntFromByteVector<decltype(unk10)>            (itReadfrom);
+    //    return itReadfrom;
+    //}
 
 //============================================
 //              wan_pal_info
 //============================================
 
-    vector<uint8_t>::iterator wan_pal_info::WriteToContainer( vector<uint8_t>::iterator itwriteto )const
-    {
-        itwriteto = utils::WriteIntToByteVector( ptrpal,         itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk3,           itwriteto );
-        itwriteto = utils::WriteIntToByteVector( nbcolorsperrow, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk4,           itwriteto );
-        itwriteto = utils::WriteIntToByteVector( unk5,           itwriteto );
-        itwriteto = utils::WriteIntToByteVector( nullbytes,      itwriteto );
-        return itwriteto;
-    }
+    //vector<uint8_t>::iterator wan_pal_info::WriteToContainer( vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    itwriteto = utils::WriteIntToByteVector( ptrpal,         itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk3,           itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( nbcolorsperrow, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk4,           itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( unk5,           itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( nullbytes,      itwriteto );
+    //    return itwriteto;
+    //}
 
-    vector<uint8_t>::const_iterator wan_pal_info::ReadFromContainer( vector<uint8_t>::const_iterator itReadfrom )
-    {
-        ptrpal         = utils::ReadIntFromByteVector<decltype(ptrpal)>        (itReadfrom);
-        unk3           = utils::ReadIntFromByteVector<decltype(unk3)>          (itReadfrom);
-        nbcolorsperrow = utils::ReadIntFromByteVector<decltype(nbcolorsperrow)>(itReadfrom);
-        unk4           = utils::ReadIntFromByteVector<decltype(unk4)>          (itReadfrom);
-        unk5           = utils::ReadIntFromByteVector<decltype(unk5)>          (itReadfrom);
-        nullbytes      = utils::ReadIntFromByteVector<decltype(nullbytes)>     (itReadfrom);
-        return itReadfrom;
-    }
+    //vector<uint8_t>::const_iterator wan_pal_info::ReadFromContainer( vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    ptrpal         = utils::ReadIntFromByteVector<decltype(ptrpal)>        (itReadfrom);
+    //    unk3           = utils::ReadIntFromByteVector<decltype(unk3)>          (itReadfrom);
+    //    nbcolorsperrow = utils::ReadIntFromByteVector<decltype(nbcolorsperrow)>(itReadfrom);
+    //    unk4           = utils::ReadIntFromByteVector<decltype(unk4)>          (itReadfrom);
+    //    unk5           = utils::ReadIntFromByteVector<decltype(unk5)>          (itReadfrom);
+    //    nullbytes      = utils::ReadIntFromByteVector<decltype(nullbytes)>     (itReadfrom);
+    //    return itReadfrom;
+    //}
 
 //=============================================================================================
 //  Utility Functions
@@ -200,7 +363,6 @@ namespace pmd2{ namespace filetypes
 
         return offImgBlock; //Return the offset of the next block after anims if all fails
     }
-
 
 //=============================================================================================
 //  Parse_WAN
@@ -334,7 +496,7 @@ namespace pmd2{ namespace filetypes
         //x offset flags
         result.vFlip    = utils::GetBit( offxfl, 13u ) > 0;
         result.hFlip    = utils::GetBit( offxfl, 12u ) > 0;
-        result.XOffbit5 = utils::GetBit( offxfl, 11u ) > 0;
+        result.isLastMFrmInGrp = utils::GetBit( offxfl, 11u ) > 0;
         result.XOffbit6 = utils::GetBit( offxfl, 10u ) > 0;
         result.XOffbit7 = utils::GetBit( offxfl,  9u ) > 0;
         
@@ -483,7 +645,7 @@ namespace pmd2{ namespace filetypes
         return std::move( asequence );
     }
 
-    vector<graphics::AnimationSequence> Parse_WAN::ReadAnimSequences( vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex )
+    vector<uint32_t> Parse_WAN::ReadAnimSequences( vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex )
     {
         vector<AnimationSequence> mysequences;
         mysequences.resize(nbsequences);
@@ -494,8 +656,8 @@ namespace pmd2{ namespace filetypes
             //Get the pointer
             uint32_t ptrsequence = utils::ReadIntFromByteVector<uint32_t>( itwhere );
 
-            mysequences[cpseqs] = ReadASequence( m_rawdata.begin() + ptrsequence );
-
+            mysequences[cpseqs] = ptrsequence; //ReadASequence( m_rawdata.begin() + ptrsequence );
+            
             //Set sequence name if possible
             if( m_pANameList != nullptr && m_pANameList->size() > parentgroupindex && (m_pANameList->at(parentgroupindex).size() - 1) > cpseqs )
                 mysequences[cpseqs].setName( m_pANameList->at(parentgroupindex)[cpseqs+1] );
@@ -506,18 +668,21 @@ namespace pmd2{ namespace filetypes
 
     vector<graphics::SpriteAnimationGroup> Parse_WAN::ReadAnimations()
     {
+        assert(false);
+        //Rewrite to handle multiple references to the same animation sequence.
+
         vector<uint8_t>::const_iterator        itCurGrp = m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable;
         vector<graphics::SpriteAnimationGroup> anims( m_wanAnimInfo.nb_anim_groups );
         
         //Each group is made of a pointer, and the nb of sequences over there! Some can be null!
         spr_anim_grp_entry entry;
-        uint32_t progressBefore = 0; //Save a little snapshot of the progress
+        uint32_t           progressBefore = 0; //Save a little snapshot of the progress
         if(m_pProgress!=nullptr)
             progressBefore = m_pProgress->load();
 
         for( unsigned int cpgrp = 0; cpgrp < anims.size(); ++cpgrp )
         {
-            auto & curseqs = anims[cpgrp].sequences;
+            auto & curseqs = anims[cpgrp].seqsIndexes;
             itCurGrp = entry.ReadFromContainer(itCurGrp);
 
             //
@@ -525,7 +690,7 @@ namespace pmd2{ namespace filetypes
             {
                 //make an iterator over there !
                 vector<uint8_t>::const_iterator itseqs = m_rawdata.begin() + entry.ptrgrp;
-                anims[cpgrp].sequences = ReadAnimSequences( itseqs, entry.nbseqs, cpgrp );
+                anims[cpgrp].seqsIndexes = ReadAnimSequences( itseqs, entry.nbseqs, cpgrp );
             }
             else
             {

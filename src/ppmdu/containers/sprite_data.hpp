@@ -35,6 +35,10 @@ namespace pmd2{ namespace graphics
     static const uint16_t SPRITE_SPECIAL_METAFRM_INDEX = 0xFFFF;
 
 //=========================================================================================
+//  Utility
+//=========================================================================================
+
+//=========================================================================================
 //  sprOffParticle
 //=========================================================================================
     /*
@@ -60,11 +64,17 @@ namespace pmd2{ namespace graphics
         //Used for storing what animation frames refers to this meta-frame!
         struct animrefs_t
         {
-            uint32_t refgrp,
-                     refseq,
-                     reffrm;
+            //uint32_t refgrp;
+            uint32_t refseq;
+            uint32_t reffrm;
         };
 
+        /*
+            This table contains all the possible resolution for an image pointed to by a meta-frame.
+            The value each entry contains is the value of the 2 first bits of the x and y offsets that needs
+            to be set in the wan file to idicate that resolution.
+            The Y offset's 2 highest bits are stored in the high nybble, while X offset's are stored in the low nybble!
+        */
         enum struct eRes : uint8_t
         {
             //First nybble is highest 2 bits value of YOffset, and lowest nybble highest 2 bits of XOffset.
@@ -87,8 +97,26 @@ namespace pmd2{ namespace graphics
 
             _32x64 = 0x4C,  // 01xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
             _64x32 = 0x8C,  // 10xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
+
+            _INVALID,       //Returned in cases of errors
         };
         //static const unsigned int LENGTH = 10u;  //The length of the meta frame data in raw form!
+
+        /*
+            Struct used to associate the value in the eRes enum to numerical representation
+            of the resolution they represent!
+        */
+        struct integerAndRes
+        {
+            eRes enumres;
+            uint8_t x, 
+                    y; 
+        };
+
+        /*
+            Table containing the resolution in numerical form for each entries in the eRes enum !
+        */
+        static const std::vector<integerAndRes> ResEquiv;
 
         //Pass the raw offsets with their first 2 bits containing the img resolution
         // and get the resolution as a eRes !
@@ -127,35 +155,13 @@ namespace pmd2{ namespace graphics
         */
         static eRes IntegerResTo_eRes( uint8_t xres, uint8_t yres )
         {
-            struct integerAndRes
-            {
-                eRes enumres;
-                uint8_t x, 
-                        y; 
-            };
-            static const std::vector<integerAndRes> ResEquiv=
-            {
-                { eRes::_8x8,    8,  8 },
-                { eRes::_16x16, 16, 16 },
-                { eRes::_32x32, 32, 32 },
-                { eRes::_64x64, 64, 64 },
-                { eRes::_8x16,   8, 16 },
-                { eRes::_16x8,  16,  8 },
-                { eRes::_8x32,   8, 32 },
-                { eRes::_32x8,  32,  8 },
-                { eRes::_16x32, 16, 32 },
-                { eRes::_32x16, 32, 16 },
-                { eRes::_32x64, 32, 64 },
-                { eRes::_64x32, 64, 32 },
-            };
-
             for( const auto & entry : ResEquiv )
             {
                 if( entry.x == xres && entry.y == yres )
                     return entry.enumres;
             }
 
-            return eRes::_64x64; //If things go wrong, return the biggest
+            return eRes::_INVALID; //If things go wrong, return the biggest
         }
 
         //Cleaned up values from file( the Interpreted values below, were removed from those ):
@@ -171,7 +177,7 @@ namespace pmd2{ namespace graphics
         bool     vFlip;          //Whether the frame is flipped vertically
         bool     hFlip;          //Whether the frame is flipped horizontally
         bool     Mosaic;         //Whether the frame triggers mosaic mode.
-        bool     XOffbit5;       //The state of bit 5 of the bits assigned to flags in XOffset (0000 1000 0000 0000)
+        bool     isLastMFrmInGrp;//The state of bit 5 of the bits assigned to flags in XOffset (0000 1000 0000 0000) If non zero, the Meta-frame is the last of the meta-frame group !
         bool     XOffbit6;       //The state of bit 6 of the bits assigned to flags in XOffset (0000 0100 0000 0000)
         bool     XOffbit7;       //The state of bit 7 of the bits assigned to flags in XOffset (0000 0010 0000 0000)
         bool     YOffbit3;       //The state of bit 3 of the bits assigned to flags in YOffset (0010 0000 0000 0000)
@@ -188,12 +194,12 @@ namespace pmd2{ namespace graphics
         inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
         inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
 
-        inline void  addRef   ( uint32_t refanimgrp, uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refanimgrp, refseq,refererindex }); }
-        void         remRef   ( uint32_t refanimgrp, uint32_t refseq, uint32_t refererindex ) 
+        inline void  addRef   ( /*uint32_t refanimgrp, */uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{/*refanimgrp, */refseq,refererindex }); }
+        void         remRef   ( /*uint32_t refanimgrp,*/ uint32_t refseq, uint32_t refererindex ) 
         {
             for( auto it = m_animFrmsRefer.begin(); it != m_animFrmsRefer.end(); ++it )
             {
-                if( it->refgrp == refanimgrp && it->refseq == refseq && it->reffrm == refererindex )
+                if( /*it->refgrp == refanimgrp &&*/ it->refseq == refseq && it->reffrm == refererindex )
                 {
                     m_animFrmsRefer.erase(it);
                     return;
@@ -315,8 +321,8 @@ namespace pmd2{ namespace graphics
     */
     struct SpriteAnimationGroup
     {
-        std::string                    group_name; //A human readable name for the group. Not saved when writing a file!
-        std::vector<AnimationSequence> sequences;
+        std::string           group_name;  //A human readable name for the group. Not saved when writing a file!
+        std::vector<uint32_t> seqsIndexes; //Indexes to the animation sequences in the anim sequence table that belong to this group.
     };
 
 //=========================================================================================
@@ -330,6 +336,8 @@ namespace pmd2{ namespace graphics
     */
     struct SprInfo
     {
+        //#TODO: Rename those properly !!! Remove the m_ prefix
+
         // Sprite Color / Image Format Properties:
         uint16_t m_Unk3           = 0;
         uint16_t m_nbColorsPerRow = 0; //0 to 16.. Changes the amount of colors loaded on a single row in the runtime palette sheet.
@@ -373,24 +381,133 @@ namespace pmd2{ namespace graphics
 //  SpriteData
 //=========================================================================================
 
-    /*
-    */
+    /***************************************************************************************
+        BaseSprite
+
+    ***************************************************************************************/
+    class BaseSprite
+    {
+    public:
+        virtual ~BaseSprite() {}
+
+        virtual const std::vector<sprOffParticle>      & getPartOffsets ()const=0;
+        virtual std::vector<sprOffParticle>            & getPartOffsets ()=0;
+        virtual const std::multimap<uint32_t,uint32_t> & getMetaRefs    ()const=0;
+        //No write access to metarefs !!
+        virtual const std::vector<MetaFrame>           & getMetaFrames  ()const=0;
+        virtual std::vector<MetaFrame>                 & getMetaFrames  ()=0;
+        virtual const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const=0;
+        virtual std::vector<MetaFrameGroup>            & getMetaFrmsGrps()=0;
+
+        virtual const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const=0;
+        virtual std::vector<SpriteAnimationGroup>      & getAnimGroups  ()=0;
+
+        virtual const std::vector<AnimationSequence>   & getAnimSequences()const=0;
+        virtual std::vector<AnimationSequence>         & getAnimSequences()=0;
+
+        virtual const std::vector<gimg::colorRGB24>    & getPalette     ()const=0;
+        virtual std::vector<gimg::colorRGB24>          & getPalette     ()=0;
+        virtual const SprInfo                          & getSprInfo     ()const=0;
+        virtual SprInfo                                & getSprInfo     ()=0;
+
+        //Get the data format of the sprite
+        virtual const eSpriteType                      & getSpriteType  ()const=0;
+        virtual std::size_t                              getNbFrames    ()const=0;
+
+        //Access to sprite image data via pointer. If you use the wrong version, will return nullptr!
+        // use getSpriteType() to get the correct type.
+        virtual std::vector<gimg::tiled_image_i8bpp> * getFramesAs8bpp() { return nullptr; }
+        virtual std::vector<gimg::tiled_image_i4bpp> * getFramesAs4bpp() { return nullptr; }
+    };
+
+
+    /***************************************************************************************
+        SpriteData
+            
+    ***************************************************************************************/
     template<class TIMG_Type>
-        class SpriteData
+        class SpriteData : public BaseSprite
     {
         friend class pmd2::filetypes::Parse_WAN; 
         friend class pmd2::filetypes::Write_WAN;
+        static const uint32_t MY_NB_BITS_PER_PIXEL = TIMG_Type::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
+
+        //This contains the correct enum values depending on the type of images the sprite contains!
+        // Supports only 4, and 8 bpp for now! (Hopefully MSVSC will implement constexpr before then...)
+        static const eSpriteType MY_SPRITE_TYPE = 
+            typename std::conditional< MY_NB_BITS_PER_PIXEL == 4, 
+                                       std::integral_constant<eSpriteType,eSpriteType::spr4bpp>,
+                                       std::conditional< MY_NB_BITS_PER_PIXEL == 8,
+                                                                                    std::integral_constant<eSpriteType,eSpriteType::spr8bpp>, 
+                                                                                    std::integral_constant<eSpriteType,eSpriteType::sprInvalid>
+                                                        >::type 
+                                    >::type::value;
+
     public:
         typedef TIMG_Type img_t; 
 
-        inline const std::vector<sprOffParticle>      & getPartOffsets ()const { return m_partOffsets;   } 
+        virtual const std::vector<sprOffParticle>      & getPartOffsets ()const { return m_partOffsets;   } 
         inline const std::vector<img_t>               & getFrames      ()const { return m_frames;        }
-        inline const std::multimap<uint32_t,uint32_t> & getMetaRefs    ()const { return m_metarefs;      }
-        inline const std::vector<MetaFrame>           & getMetaFrames  ()const { return m_metaframes;    }
-        inline const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const { return m_metafrmsgroups;}
-        inline const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
-        inline const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
-        inline const SprInfo                          & getSprInfo     ()const { return m_common;        }
+        virtual const std::multimap<uint32_t,uint32_t> & getMetaRefs    ()const { return m_metarefs;      }
+        virtual const std::vector<MetaFrame>           & getMetaFrames  ()const { return m_metaframes;    }
+        virtual const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const { return m_metafrmsgroups;}
+        virtual const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
+        virtual const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
+        virtual const SprInfo                          & getSprInfo     ()const { return m_common;        }
+
+        virtual std::vector<sprOffParticle>            & getPartOffsets () { return m_partOffsets;   } 
+        virtual std::vector<MetaFrame>                 & getMetaFrames  () { return m_metaframes;    }
+        virtual std::vector<MetaFrameGroup>            & getMetaFrmsGrps() { return m_metafrmsgroups;}
+        virtual std::vector<SpriteAnimationGroup>      & getAnimGroups  () { return m_animgroups;    }
+        virtual std::vector<gimg::colorRGB24>          & getPalette     () { return m_palette;       }
+        virtual SprInfo                                & getSprInfo     () { return m_common;        }
+
+
+        //Get the data format of the sprite
+        virtual const eSpriteType & getSpriteType()const { return MY_SPRITE_TYPE; }
+        virtual std::size_t         getNbFrames  ()const { return m_frames.size(); }
+
+
+        virtual std::vector<gimg::tiled_image_i8bpp> * getFramesAs8bpp() 
+        { 
+            return GetMyFramePtr<SpriteData<img_t>, std::vector<gimg::tiled_image_i8bpp>>(const_cast<SpriteData<img_t>*>(this)); 
+        }
+
+        virtual std::vector<gimg::tiled_image_i4bpp> * getFramesAs4bpp() 
+        { 
+            return GetMyFramePtr<SpriteData<img_t>, std::vector<gimg::tiled_image_i4bpp>>(const_cast<SpriteData<img_t>*>(this)); 
+        }
+
+
+        //struct Sprite8bpp
+        //{
+
+        //    static std::vector<gimg::tiled_image_i8bpp> * Get8bppFrm(  )
+        //};
+        //struct Sprite4bpp
+        //{
+        //};
+
+        /*
+            Get the correct frame pointer for polymorphic methods
+        */
+        template<class _MyTy, class _frmTy>
+            static _frmTy * GetMyFramePtr( _MyTy * ptrme )
+        {
+            return nullptr; //If the two types do not match the specialization below, it will return a null pointer
+        }
+
+        template<>
+            static std::vector<gimg::tiled_image_i4bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i4bpp> * ptrme )
+        {
+            return &(ptrme->m_frames);
+        }
+
+        template<>
+            static std::vector<gimg::tiled_image_i8bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i8bpp> * ptrme )
+        {
+            return &(ptrme->m_frames);
+        }
 
         /*
             Reserve space in all the vectors
@@ -441,6 +558,10 @@ namespace pmd2{ namespace graphics
             }
             //Then handle animations references!
 
+
+        assert(false);
+        //Rewrite to handle multiple references to the same animation sequence.
+
             //Iterate each animation groups
             for( unsigned int ctgrp = 0; ctgrp < m_animgroups.size(); ++ctgrp )
             {
@@ -475,6 +596,9 @@ namespace pmd2{ namespace graphics
 
         void RebuildAnAnimRefs( unsigned int ctgrp, unsigned int ctseq, unsigned int ctfrm )
         {
+            assert(false);
+            //Rewrite to handle multiple references to the same animation sequence.
+
             auto & curframe =  m_animgroups[ctgrp].sequences[ctseq].getFrame(ctfrm);
             if( curframe.metaFrmGrpIndex < m_metaframes.size() )
             {
@@ -495,7 +619,11 @@ namespace pmd2{ namespace graphics
                                                              // is the index of the metaframe in "m_metaframes"
         std::vector<MetaFrame>               m_metaframes;      //Contains all the meta-frames ordered by index
         std::vector<MetaFrameGroup>          m_metafrmsgroups;  //List of meta-frames groups, for grouping those assembled together. Only index is stored!
+        
         std::vector<SpriteAnimationGroup>    m_animgroups;      //Groups containing animation sequences
+
+        std::vector<AnimationSequence>       m_animSequences;   //All animation sequences and frames
+
         std::vector<gimg::colorRGB24>        m_palette;         //The palette for this sprite
         SprInfo                              m_common;          //Common properties about the sprite not affected by template type!
         std::vector<sprOffParticle>          m_partOffsets;     //The particle offsets list
@@ -543,6 +671,12 @@ namespace pmd2{ namespace graphics
     */
     std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist );
     std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::string              & directorypath );
+
+
+    /*
+        Whether the image resolution is one of the valid sprite image resolution.
+    */
+    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height );
 
     /*
         ImportSpriteFromDirectory

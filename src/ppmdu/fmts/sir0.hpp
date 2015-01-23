@@ -36,7 +36,7 @@ namespace pmd2 { namespace filetypes
 
         uint32_t magic;
         uint32_t subheaderptr;
-        uint32_t eofptr;
+        uint32_t eofptr;        //#TODO: Rename !!!
         uint32_t _null;
 
         std::string toString()const;

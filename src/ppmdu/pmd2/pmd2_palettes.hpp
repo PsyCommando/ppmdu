@@ -21,7 +21,7 @@ namespace pmd2 { namespace graphics
 //==================================================================
 // Constants
 //==================================================================
-    //static const uint8_t               RGBX_UNUSED_BYTE_VALUE          = 0x80u; //The value of the unused byte in the 32 bits palette used in PMD2
+    static const uint8_t               RGBX_UNUSED_BYTE_VALUE          = 0x80u; //The value of the unused byte in the 32 bits palette used in PMD2
    // static const types::bytevec_szty_t PALETTE_15_BPC_1BPCHAN_AT4PX_SZ = 48; //The length of the 15bits per color, 1 byte per channel, 16 colors palette that come with AT4PX containers in some instances
 
 //==================================================================
@@ -157,6 +157,8 @@ namespace pmd2 { namespace graphics
         while( itpalbeg != itpalend )
         {
             itwhere = itpalbeg->WriteAsRawByte( itwhere );
+            (*itwhere) = RGBX_UNUSED_BYTE_VALUE;
+            ++itwhere;
             ++itpalbeg;
         }
 

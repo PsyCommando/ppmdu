@@ -26,6 +26,26 @@ Description: A set of utilities for dealing with and storing tiled images for
 namespace gimg
 {
 //=============================================================================
+//  Exceptions
+//=============================================================================
+    /*
+        Exception thrown when an invalid resolution is being set for a tiled image.
+    */
+    class ExTImgResNotDivisibleBy : public std::runtime_error 
+    {
+    public:
+        ExTImgResNotDivisibleBy( unsigned int expecteddivwidth, unsigned int expecteddivheight, unsigned int badwidth, unsigned int badheight )
+            :std::runtime_error ("Error attempted to set a tiled image resolution not divisible by its tiles' resoltution!"),
+             _expecteddivwidth(expecteddivwidth), _expecteddivheight(expecteddivheight), _badwidth(badwidth), _badheight(badheight)
+        {}
+
+        unsigned int _expecteddivwidth;
+        unsigned int _expecteddivheight;
+        unsigned int _badwidth;
+        unsigned int _badheight;
+    };
+
+//=============================================================================
 // Tile
 //=============================================================================
     /*************************************************************************************************
@@ -274,6 +294,10 @@ namespace gimg
         //Set the image resolution in pixels. Must be divisible by 8!
         inline void setPixelResolution( unsigned int pixelsWidth, unsigned int pixelsHeigth )
         {
+            if( (pixelsWidth % tile_t::WIDTH) != 0 || (pixelsHeigth % tile_t::HEIGHT) != 0 )
+            {
+                throw ExTImgResNotDivisibleBy(tile_t::WIDTH, tile_t::HEIGHT, pixelsWidth, pixelsHeigth );
+            }
             setNbTilesRowsAndColumns( pixelsHeigth / tile_t::HEIGHT, pixelsWidth / tile_t::WIDTH );
         }
 
