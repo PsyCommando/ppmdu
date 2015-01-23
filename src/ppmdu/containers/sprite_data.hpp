@@ -323,6 +323,7 @@ namespace pmd2{ namespace graphics
     {
         std::string           group_name;  //A human readable name for the group. Not saved when writing a file!
         std::vector<uint32_t> seqsIndexes; //Indexes to the animation sequences in the anim sequence table that belong to this group.
+                                           //If no sequences are in there, the group is empty !
     };
 
 //=========================================================================================
@@ -452,6 +453,8 @@ namespace pmd2{ namespace graphics
         virtual const std::vector<MetaFrame>           & getMetaFrames  ()const { return m_metaframes;    }
         virtual const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const { return m_metafrmsgroups;}
         virtual const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
+        virtual const std::vector<AnimationSequence>   & getAnimSequences()const{ return m_animSequences; }
+        
         virtual const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
         virtual const SprInfo                          & getSprInfo     ()const { return m_common;        }
 
@@ -459,6 +462,7 @@ namespace pmd2{ namespace graphics
         virtual std::vector<MetaFrame>                 & getMetaFrames  () { return m_metaframes;    }
         virtual std::vector<MetaFrameGroup>            & getMetaFrmsGrps() { return m_metafrmsgroups;}
         virtual std::vector<SpriteAnimationGroup>      & getAnimGroups  () { return m_animgroups;    }
+        virtual std::vector<AnimationSequence>         & getAnimSequences(){ return m_animSequences; }
         virtual std::vector<gimg::colorRGB24>          & getPalette     () { return m_palette;       }
         virtual SprInfo                                & getSprInfo     () { return m_common;        }
 
@@ -559,22 +563,19 @@ namespace pmd2{ namespace graphics
             //Then handle animations references!
 
 
-        assert(false);
-        //Rewrite to handle multiple references to the same animation sequence.
-
             //Iterate each animation groups
-            for( unsigned int ctgrp = 0; ctgrp < m_animgroups.size(); ++ctgrp )
-            {
-                unsigned int NbSeq = m_animgroups[ctgrp].sequences.size();
+            //for( unsigned int ctgrp = 0; ctgrp < m_animgroups.size(); ++ctgrp )
+            //{
+                //unsigned int NbSeq = m_animgroups[ctgrp].sequences.size();
                 //Each Animation Sequences
-                for( unsigned int ctseq = 0; ctseq < NbSeq; ++ctseq )
+                for( unsigned int ctseq = 0; ctseq < m_animSequences.size(); ++ctseq )
                 {
-                    unsigned int NbFrms = m_animgroups[ctgrp].sequences[ctseq].getNbFrames();
+                    unsigned int NbFrms = m_animSequences[ctseq].getNbFrames();
                     //And each animation frames!
                     for( unsigned int ctfrm = 0; ctfrm < NbFrms; ++ctfrm )
-                        RebuildAnAnimRefs( ctgrp, ctseq, ctfrm );
+                        RebuildAnAnimRefs( ctseq, ctfrm );
                 }
-            }
+            //}
         }
 
         void RebuildAMetaFrameRefs( unsigned int ctmf )
@@ -594,16 +595,13 @@ namespace pmd2{ namespace graphics
             }
         }
 
-        void RebuildAnAnimRefs( unsigned int ctgrp, unsigned int ctseq, unsigned int ctfrm )
+        void RebuildAnAnimRefs( unsigned int ctseq, unsigned int ctfrm )
         {
-            assert(false);
-            //Rewrite to handle multiple references to the same animation sequence.
-
-            auto & curframe =  m_animgroups[ctgrp].sequences[ctseq].getFrame(ctfrm);
+            auto & curframe =  m_animSequences[ctseq].getFrame(ctfrm);
             if( curframe.metaFrmGrpIndex < m_metaframes.size() )
             {
                 //Register ref into the meta-frame at the index specified!
-                m_metaframes[curframe.metaFrmGrpIndex].addRef( ctgrp, ctseq, ctfrm );
+                m_metaframes[curframe.metaFrmGrpIndex].addRef( ctseq, ctfrm );
             }
             else
             {

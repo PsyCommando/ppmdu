@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnimationListTemplate>
+    <!-- This contains the names for all the required character animations for Hero/Partner pokemons.-->
+    <!--Those 35 animation groups are required!-->
+    
+    <!--Group 0: Run Animations -->
+    <!--The run cycle when moving around in dungeons or anywhere else.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Run</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 1: Running Slow Animations -->
+    <!--The same run cycle as Group 0, but each frames are doubled/tripled, and some have their duration increased significantly.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Running Slow</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 2: Unk1 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk1</Name>
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 3: Unk2 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk2</Name>
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 4: Unk3 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk3</Name>
+        <AnimSequences />
+    </AnimGroup>
+
+    <!--Group 5: Unused Sleep(In dungeons, only for regular, 13 anim groups, pokemons) Animations -->
+    <!--A slow loop with 2 unique frames. Played while the pokemon is sleeping in dungeons. Only for non-hero/partner pokemon!-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unused Sleep</Name>
+        <AnimSequences/>
+    </AnimGroup>
+    
+    <!--Group 6: TakingAHit Animations -->
+    <!--A single shaking frame of animation when taking damages.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>TakingAHit</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 7: Slow Steps Animations -->
+    <!--Take a single step, pause, take another. Repeat.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Slow Steps</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+	<!--Group 8: Unk4-->
+	<AnimGroup>
+        <Name>Unk4</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+	<!--Group 9: Unk5-->
+	<AnimGroup>
+        <Name>Unk5</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+	<!--Group 10: Unk6-->
+	<AnimGroup>
+        <Name>Unk6</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+    <!--Group 11: Shaken Animations -->
+    <!--A single frame is shifted left and right to give the impression the character is shaking-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Shaken</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 12: Look Around 360, No Scope :P Animations -->
+    <!--Turn on 360 degrees from current facing-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Look Around 360</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 13: Sleep Animations -->
+    <!--A slow, 2 frame loop played while a Hero/Partner pokemon is sleeping.(This replaces Group#5 in Hero/Partner pokemon)-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Sleep</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 14: Waking Up Animations -->
+    <!--The long wake up animation when the Hero/Partner pokemon wakes up in bed.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Waking Up</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+ 
+    <!--Group 15: Team Pose Animations -->
+    <!--The animation that plays when the Hero/Partner pokemon do that little team pose/cheer, standing around with their mouth wide open.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Team Pose</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+        
+        
+    <!--Group 16: Rolling Animations -->
+    <!--Rolling on the ground.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Rolling</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 17: Loosing Grip Animations -->
+    <!--Hard to tell. It looks like the character is holding onto something, before being shaken left and right and screaming.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Loosing Grip</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 17: Falling Animations -->
+    <!--Looks like one of the falling animations.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Falling</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+
+    
+ 
+</AnimationListTemplate>

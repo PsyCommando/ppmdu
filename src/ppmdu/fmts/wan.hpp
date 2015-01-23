@@ -91,6 +91,26 @@ namespace pmd2 { namespace filetypes
             return itwriteto;
         }
 
+        /*
+            This will register all pointers written into "ptroffsettbl".
+            Used mainly for writing into a SIR0 container.
+        */
+        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        {
+            auto backins = std::back_inserter( appendto );
+
+            //Register ptr offset
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_animinfo,       backins );
+
+            //Register ptr offset
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_imginfo,        backins );
+
+            utils::WriteIntToByteVector( is8DirectionSprite, backins );
+            utils::WriteIntToByteVector( unk12,              backins );
+        }
+
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
@@ -139,6 +159,27 @@ namespace pmd2 { namespace filetypes
             itwriteto = utils::WriteIntToByteVector( unk11,                  itwriteto );
             itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
             return itwriteto;
+        }
+
+        /*
+            This will register all pointers written into "ptroffsettbl".
+            Used mainly for writing into a SIR0 container.
+        */
+        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        {
+            auto backins = std::back_inserter( appendto );
+
+            //Register ptr offset
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_img_table,          backins );
+
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_palette,            backins );
+
+            utils::WriteIntToByteVector( isMosaic,               backins );
+            utils::WriteIntToByteVector( is256Colors,            backins );
+            utils::WriteIntToByteVector( unk11,                  backins );
+            utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, backins );
         }
 
         template<class _inIt>
@@ -199,6 +240,33 @@ namespace pmd2 { namespace filetypes
             itwriteto = utils::WriteIntToByteVector( unk9,              itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk10,             itwriteto );
             return itwriteto;
+        }
+
+        /*
+            This will register all pointers written into "ptroffsettbl".
+            Used mainly for writing into a SIR0 container.
+        */
+        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        {
+            auto backins = std::back_inserter( appendto );
+
+            //Register ptr offset
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_metaFrmTable,  backins );
+
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_pOffsetsTable, backins );
+
+            ptroffsettbl.push_back( appendto.size() );
+            utils::WriteIntToByteVector( ptr_animGrpTable,  backins );
+
+
+            utils::WriteIntToByteVector( nb_anim_groups,    backins );
+            utils::WriteIntToByteVector( unk6,              backins );
+            utils::WriteIntToByteVector( unk7,              backins );
+            utils::WriteIntToByteVector( unk8,              backins );
+            utils::WriteIntToByteVector( unk9,              backins );
+            utils::WriteIntToByteVector( unk10,             backins );
         }
 
         template<class _inIt>
@@ -386,7 +454,8 @@ namespace pmd2 { namespace filetypes
                      sprite.m_common, 
                      sprite.m_metaframes, 
                      sprite.m_metafrmsgroups, 
-                     sprite.m_animgroups, 
+                     sprite.m_animgroups,
+                     sprite.m_animSequences,
                      sprite.m_partOffsets );
 
             if( m_wanImgDataInfo.is256Colors == 1 )
@@ -433,6 +502,7 @@ namespace pmd2 { namespace filetypes
                       std::vector<graphics::MetaFrame>            & out_mfrms,
                       std::vector<graphics::MetaFrameGroup>       & out_mtfgrps,
                       std::vector<graphics::SpriteAnimationGroup> & out_anims,
+                      std::vector<graphics::AnimationSequence>    & out_animseqs,
                       std::vector<graphics::sprOffParticle>       & out_offsets );
 
         template<class TIMG_t>
@@ -533,9 +603,13 @@ namespace pmd2 { namespace filetypes
         //Read a single meta-frame
         graphics::MetaFrame                         ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread );
 
-       std::vector<graphics::SpriteAnimationGroup>  ReadAnimations();   // Reads the animation data
-        graphics::AnimationSequence                 ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
-        std::vector<uint32_t>                       ReadAnimSequences( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex );
+        std::vector<graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
+        graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
+        std::vector<uint32_t>                        ReadAnimGroupSeqRefs( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences/*, unsigned int parentgroupindex*/ );
+        
+        //This get all anim sequences refered to by those groups, and it changes the pointer offsets to indexes in the anim sequence table!
+        std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<graphics::SpriteAnimationGroup> & groupsWPtr );
+        
         std::vector<graphics::sprOffParticle>       ReadParticleOffsets(); 
 
         template<class _retty>
@@ -629,8 +703,8 @@ namespace pmd2 { namespace filetypes
 
             for( const auto & afrm : frms )
             {
-                gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm );
-                WriteACompressedFrm( imgbuff );
+                gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm, true );
+                WriteACompressedFrm( imgbuff ); //#REMOVEME : Remove the true here after debug test done !
                 imgbuff.resize(0);
             }
         }
@@ -642,7 +716,21 @@ namespace pmd2 { namespace filetypes
                                                          std::vector<uint8_t>::const_iterator   itEnd,
                                                          std::vector<uint8_t>                 & pixStrips,
                                                          uint32_t                             & totalbytecnt );
-        void WriteACompressedFrm( const std::vector<uint8_t> & frm);
+
+        /*
+            Same as above, but it simply makes a single entry for the whole image, not stripping the image of 
+            any strips of zeroes.
+        */
+        zeroStripTableTempEntry MakeZeroStripTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
+                                                                    std::vector<uint8_t>::const_iterator   itEnd,
+                                                                    std::vector<uint8_t>                 & pixStrips,
+                                                                    uint32_t                             & totalbytecnt);
+
+        /*
+        , -dontStripZeros: if set to true, the frame will be saved as a is, without stripping the zero
+                           but in a way the game can load it. Used for UI sprites !
+        */
+        void WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros = false );
 
         /*
         */
@@ -693,13 +781,14 @@ namespace pmd2 { namespace filetypes
 
         std::vector<uint32_t>  m_MFramesGrpOffsets;       //As we write the meta-frames, keep track of the starting offsets of 
                                                           // groups in there so we can write the pointer table later on!
-        std::vector<uint32_t>  m_AnimSequenceOffsets;     //Keep tracks of where each animation sequence's frames list begins at !
+        std::map<uint32_t,uint32_t>  m_AnimSequenceOffsets;     //Keep tracks of where each animation sequence's frames list begins at !
+                                                                // first is index in sequence table, second is offset in file being written
 
         std::vector<uint32_t>  m_AnimSequencesListOffset; //Keep tracks of where each animation group's sequences ptr table begins at!
 
         std::vector<uint32_t>  m_CompImagesTblOffsets;    //The places where the zero-strip table for each compressed image is at
 
-        std::vector<uint32_t>  m_pointerOffsetTable;      //List of all the pointers offsets in the resulting raw file !
+        std::vector<uint32_t>  m_ptrOffsetTblToEncode;      //List of all the pointers offsets in the resulting raw file !
     };
 
 

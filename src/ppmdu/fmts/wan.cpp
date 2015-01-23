@@ -400,6 +400,7 @@ namespace pmd2{ namespace filetypes
                              vector<MetaFrame>             & out_mfrms,
                              vector<MetaFrameGroup>        & out_mtfgrps,
                              vector<SpriteAnimationGroup>  & out_anims,
+                             vector<AnimationSequence>     & out_animseqs,
                              vector<sprOffParticle>        & out_offsets )
     {
         ReadSir0Header();
@@ -436,7 +437,10 @@ namespace pmd2{ namespace filetypes
         out_mfrms = ReadMetaFrameGroups( out_mtfgrps );
 
         //Get anims
-        out_anims = ReadAnimations();
+        out_anims = ReadAnimGroups();
+
+        //Get the sequences refered to by the groups
+        out_animseqs = ReadAnimSequences( out_anims );
 
         //Get Offsets
         out_offsets = ReadParticleOffsets(); 
@@ -645,9 +649,9 @@ namespace pmd2{ namespace filetypes
         return std::move( asequence );
     }
 
-    vector<uint32_t> Parse_WAN::ReadAnimSequences( vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences, unsigned int parentgroupindex )
+    vector<uint32_t> Parse_WAN::ReadAnimGroupSeqRefs( vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences/*, unsigned int parentgroupindex*/ )
     {
-        vector<AnimationSequence> mysequences;
+        vector<uint32_t> mysequences;
         mysequences.resize(nbsequences);
 
         //grab the sequences
@@ -659,18 +663,46 @@ namespace pmd2{ namespace filetypes
             mysequences[cpseqs] = ptrsequence; //ReadASequence( m_rawdata.begin() + ptrsequence );
             
             //Set sequence name if possible
-            if( m_pANameList != nullptr && m_pANameList->size() > parentgroupindex && (m_pANameList->at(parentgroupindex).size() - 1) > cpseqs )
-                mysequences[cpseqs].setName( m_pANameList->at(parentgroupindex)[cpseqs+1] );
+            //if( m_pANameList != nullptr && m_pANameList->size() > parentgroupindex && (m_pANameList->at(parentgroupindex).size() - 1) > cpseqs )
+            //    mysequences[cpseqs].setName( m_pANameList->at(parentgroupindex)[cpseqs+1] );
         }
 
         return std::move( mysequences );
     }
 
-    vector<graphics::SpriteAnimationGroup> Parse_WAN::ReadAnimations()
-    {
-        assert(false);
-        //Rewrite to handle multiple references to the same animation sequence.
 
+    std::vector<graphics::AnimationSequence> Parse_WAN::ReadAnimSequences( std::vector<graphics::SpriteAnimationGroup> & groupsWPtr )
+    {
+        vector<AnimationSequence>    myanimseqs;
+        std::map<uint32_t, uint32_t> sequencesLocations; //This is used to check if we already parsed a sequence at a specific address, and if so, at what index in the sequence table is it!
+
+        for( auto & agrp : groupsWPtr )
+        {
+            for( auto & aptr : agrp.seqsIndexes )
+            {
+                uint32_t indexInSeqTbl = myanimseqs.size();
+                auto     result        = sequencesLocations.insert( make_pair( aptr, indexInSeqTbl ) ); //Add the address to the map
+
+                if( !(result.second) )
+                {
+                    //The entry was already in the map !
+                    indexInSeqTbl = result.first->second;
+                }
+                else
+                {
+                    //The entry wasn't there already
+                    myanimseqs.push_back( ReadASequence( aptr + m_rawdata.begin() ) );
+                }
+
+                aptr = indexInSeqTbl;  //Swap the file offset for a vector index to the sequence!
+            }
+        }
+
+        return std::move(myanimseqs);
+    }
+
+    vector<graphics::SpriteAnimationGroup> Parse_WAN::ReadAnimGroups()
+    {
         vector<uint8_t>::const_iterator        itCurGrp = m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable;
         vector<graphics::SpriteAnimationGroup> anims( m_wanAnimInfo.nb_anim_groups );
         
@@ -690,12 +722,12 @@ namespace pmd2{ namespace filetypes
             {
                 //make an iterator over there !
                 vector<uint8_t>::const_iterator itseqs = m_rawdata.begin() + entry.ptrgrp;
-                anims[cpgrp].seqsIndexes = ReadAnimSequences( itseqs, entry.nbseqs, cpgrp );
+                anims[cpgrp].seqsIndexes = ReadAnimGroupSeqRefs( itseqs, entry.nbseqs/*, cpgrp */);
             }
             else
             {
-                //If is null, we have to give the group a single zero length sequence!
-                curseqs.resize(1);
+                //If is null, make sure the vector is empty
+                curseqs.resize(0);
             }
 
             //Set the group name from the list if applicable!
@@ -708,9 +740,9 @@ namespace pmd2{ namespace filetypes
             }
         }
         
-
         return std::move(anims);
     }
+
 
     vector<sprOffParticle> Parse_WAN::ReadParticleOffsets()
     {

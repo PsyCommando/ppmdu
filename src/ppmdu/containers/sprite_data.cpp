@@ -50,6 +50,7 @@ namespace pmd2{ namespace graphics
         static const string XML_ROOT_ANIMDAT    = "AnimData";    //Root
         static const string XML_NODE_ANIMGRPTBL = "AnimGroupTable"; 
         static const string XML_NODE_ANIMGRP    = "AnimGroup";
+        static const string XML_PROP_ANIMSEQIND = "AnimSequenceIndex";
         static const string XML_NODE_ANIMSEQ    = "AnimSequence";
         static const string XML_NODE_ANIMSEQTBL = "AnimSequenceTable"; 
         static const string XML_NODE_ANIMFRM    = "AnimFrame";
@@ -514,7 +515,7 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void WriteAnimSequece( Poco::XML::XMLWriter & writer, const AnimationSequence & aseq )
+        void WriteAnimSequence( Poco::XML::XMLWriter & writer, const AnimationSequence & aseq )
         {
             using namespace SpriteXMLStrings;
 
@@ -544,72 +545,90 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void WriteAnimations( uint32_t proportionofwork, uint32_t totalnbseqs, uint32_t totalnbfrms )
         {
-        assert(false);
-        //Rewrite to handle multiple references to the same animation sequence.
+            using namespace SpriteXMLStrings;
+            Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
+            ofstream   outfile( outpath.toString() );
+            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            uint32_t   saveprogress = 0;
 
-            //using namespace SpriteXMLStrings;
-            //Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
-            //ofstream   outfile( outpath.toString() );
-            //XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
-            //uint32_t   saveprogress = 0;
-
-            //if( m_pProgresscnt != nullptr )
-            //    saveprogress = m_pProgresscnt->load();
+            if( m_pProgresscnt != nullptr )
+                saveprogress = m_pProgresscnt->load();
 
 
 
-            //InitWriter( writer, XML_ROOT_ANIMDAT );
+            InitWriter( writer, XML_ROOT_ANIMDAT );
 
-            //stringstream strs;
-            //strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
-            //writeComment( writer, strs.str() );
-            //strs = stringstream();
+            //Add some comments to help fellow humans 
+            stringstream strs;
+            strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
+            writeComment( writer, strs.str() );
+            strs = stringstream();
 
-            //strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
-            //writeComment( writer, strs.str() );
-            //strs = stringstream();
+            strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
+            writeComment( writer, strs.str() );
+            strs = stringstream();
 
-            //strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
-            //writeComment( writer, strs.str() );
-            //strs = stringstream();
+            strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
+            writeComment( writer, strs.str() );
+            strs = stringstream();
 
-            //{
-            //    unsigned int cptgrp = 0;
+            {
+                //First Write the GroupRefTable
+                writer.startElement("","", XML_NODE_ANIMGRPTBL );
+                {
+                    unsigned int cptgrp = 0;
+                    for( const auto & animgrp : m_inSprite.getAnimGroups() )
+                    {
+                        unsigned int cptseq = 0;
+                        strs <<"Group #" <<cptgrp <<" contains " << animgrp.seqsIndexes.size() << " sequence(s)";
+                        writeComment( writer, strs.str() );
+                        strs = stringstream();
 
-            //    //Write the content of each group
-            //    for( const auto & animgrp : m_inSprite.getAnimGroups() )
-            //    {
-            //        unsigned int cptseq = 0;
-            //        strs <<"Group #" <<cptgrp <<" contains " << animgrp.sequences.size() << " sequence(s)";
-            //        writeComment( writer, strs.str() );
-            //        strs = stringstream();
+                        //Give this group a name
+                        AttributesImpl attrname;
+                        attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
+                        writer.startElement("","", XML_NODE_ANIMGRP, attrname );
 
-            //        //Give this group a name
-            //        AttributesImpl attrname;
-            //        attrname.addAttribute("", "", XML_ATTR_NAME, "string", animgrp.group_name);
-            //        writer.startElement("","", XML_NODE_ANIMGRP, attrname );
+                        //Write the content of each sequences in that group
+                        for( const auto & aseq : animgrp.seqsIndexes )
+                        {
+                            strs <<cptseq;
+                            writer.dataElement("","", XML_PROP_ANIMSEQIND, std::to_string(aseq) );
+                            ++cptseq;
+                        }
 
-            //        //Write the content of each sequences in that group
-            //        for( const auto & aseq : animgrp.sequences )
-            //        {
-            //            strs <<"Seq #" <<cptseq  <<" contains " <<aseq.getNbFrames()  << " frame(s)";
-            //            writeComment( writer, strs.str() );
-            //            strs = stringstream();
-            //            WriteAnimSequece( writer, aseq );
-            //            ++cptseq;
-            //        }
+                        writer.endElement("","", XML_NODE_ANIMGRP );
+                        ++cptgrp;
 
-            //        writer.endElement("","", XML_NODE_ANIMGRP );
-            //        ++cptgrp;
+                        if( m_pProgresscnt != nullptr )
+                        {
+                            uint32_t prog = ( ( proportionofwork * cptgrp ) / m_inSprite.getAnimGroups().size() );
+                            m_pProgresscnt->store( saveprogress + prog );
+                        }
+                    }
+                }
+                writer.endElement( "", "", XML_NODE_ANIMGRPTBL );
 
-            //        if( m_pProgresscnt != nullptr )
-            //        {
-            //            uint32_t prog = ( ( proportionofwork * cptgrp ) / m_inSprite.getAnimGroups().size() );
-            //            m_pProgresscnt->store( saveprogress + prog );
-            //        }
-            //    }
-            //}
-            //DeinitWriter( writer, XML_ROOT_ANIMDAT );
+                //Second Write the SequenceTable
+                writer.startElement("","", XML_NODE_ANIMSEQTBL );
+                {
+                    unsigned int cptaseqs = 0;
+
+                    //Write the content of each group
+                    for( const auto & animseq : m_inSprite.getAnimSequences() )
+                    {
+                        //Write the content of each sequences in that group
+                        strs <<"Seq #" <<cptaseqs  <<" contains " <<animseq.getNbFrames()  << " frame(s)";
+                        writeComment( writer, strs.str() );
+                        strs = stringstream();
+                        WriteAnimSequence( writer, animseq );
+
+                        ++cptaseqs;
+                    }
+                }
+                writer.endElement( "", "", XML_NODE_ANIMSEQTBL );
+            }
+            DeinitWriter( writer, XML_ROOT_ANIMDAT );
         }
 
         /**************************************************************
@@ -796,17 +815,18 @@ namespace pmd2{ namespace graphics
 
             //Count the ammount of entries for calculating work
             // and for adding statistics to the exported files.
-            uint32_t totalnbseqs  = 0;
+            uint32_t totalnbseqs  = m_inSprite.getAnimSequences().size();
             uint32_t totalnbfrms  = 0;
 
-            for( const auto & agrp : m_inSprite.getAnimGroups() )
+            for( const auto & aseq : m_inSprite.getAnimSequences() )
             {
-                if( ! ( agrp.sequences.empty() ) )
-                {
-                    totalnbseqs += agrp.sequences.size();
-                    for( const auto & aseq : agrp.sequences )
-                        totalnbfrms += aseq.getNbFrames();
-                }
+                totalnbfrms += aseq.getNbFrames();
+                //if( ! ( agrp.seqsIndexes.empty() ) )
+                //{
+                //    totalnbseqs += agrp.seqsIndexes.size();
+                //    for( const auto & aseq : agrp.sequences )
+                //        totalnbfrms += aseq.getNbFrames();
+                //}
             }
             
             //Gather stats for computing progress proportionally at runtime
@@ -1125,59 +1145,91 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         vector<AnimationSequence> ParseAnimationSequences( Poco::XML::NodeList * pNodeLst )
         {
-        assert(false);
-        //Rewrite to handle multiple references to the same animation sequence.
-            //vector<AnimationSequence> seqs;
-            //AutoPtr<NodeList>         pSeqs = pNodeLst;
 
-            //for( unsigned long ctseqs = 0; ctseqs < pNodeLst->length(); ++ctseqs )
-            //{
-            //    Node * pCurSeq = pNodeLst->item(ctseqs);
+            vector<AnimationSequence> seqs;
+            AutoPtr<NodeList>         pSeqs = pNodeLst;
 
-            //    if( pCurSeq->nodeName() == SpriteXMLStrings::XML_NODE_ANIMSEQ )
-            //    {
-            //        seqs.push_back( ParseAnimationSequence( pCurSeq ) );
-            //    }
-            //}
+            for( unsigned long ctseqs = 0; ctseqs < pNodeLst->length(); ++ctseqs )
+            {
+                Node * pCurSeq = pNodeLst->item(ctseqs);
 
-            //if( seqs.empty() )
-            //    seqs.resize(1); //We must have at least a single empty sequence per groups
+                if( pCurSeq->nodeName() == SpriteXMLStrings::XML_NODE_ANIMSEQ )
+                {
+                    seqs.push_back( ParseAnimationSequence( pCurSeq ) );
+                }
+            }
 
-            //return std::move(seqs);
+            return std::move(seqs);
+        }
+
+        /**************************************************************
+        **************************************************************/
+        vector<SpriteAnimationGroup> ParseAnimationGroups( Poco::XML::NodeList * pNodeLst )
+        {
+            vector<SpriteAnimationGroup> grps;
+            AutoPtr<NodeList>            pGrps = pNodeLst;
+
+            for( unsigned long ctgrp = 0; ctgrp < pGrps->length(); ++ctgrp )
+            {
+                auto * pCurNode = pGrps->item(ctgrp);
+
+                if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_ANIMGRP )
+                {
+                    SpriteAnimationGroup agrp;
+
+                    //Get the name
+                    if( pCurNode->hasAttributes() )
+                        agrp.group_name = _parseNameAttribute( pCurNode->attributes() );
+
+                    //If we got anim sequences ref get them !
+                    if( pCurNode->hasChildNodes() )
+                    {
+                        //Parse the sequences indexes
+                        AutoPtr<NodeList>  pSeqs = pCurNode->childNodes();
+
+                        for( unsigned long ctseqs = 0; ctseqs < pSeqs->length(); ++ctseqs )
+                        {
+                            if( pSeqs->item(ctseqs)->nodeName() == SpriteXMLStrings::XML_PROP_ANIMSEQIND )
+                            {
+                                uint32_t index = 0;
+                                _parseXMLHexaValToValue( pSeqs->item(ctseqs)->innerText(), index );
+                                agrp.seqsIndexes.push_back(index);
+                            }
+                        }
+                    }
+                    //Add an empty group if we don't have any sequences !
+                    grps.push_back( std::move(agrp) );
+                }
+            }
+            return std::move( grps );
         }
 
         /**************************************************************
         **************************************************************/
         void ParseAnimations(std::ifstream & in)
         {
-        assert(false);
-        //Rewrite to handle multiple references to the same animation sequence.
-            //utils::MrChronometer chronoxmlanims("ParseXMLAnims");
-            //using namespace Poco::XML;
-            //InputSource       src(in);
-            //DOMParser         parser;
-            //AutoPtr<Document> pAnimGrps = parser.parse(&src);
-            //NodeIterator      itnode( pAnimGrps, MY_NODE_FILTER );
-            //Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
+            utils::MrChronometer chronoxmlanims("ParseXMLAnims");
+            using namespace Poco::XML;
+            InputSource       src(in);
+            DOMParser         parser;
+            AutoPtr<Document> pAnimGrps = parser.parse(&src);
+            NodeIterator      itnode( pAnimGrps, MY_NODE_FILTER );
+            Node             *pCurNode = itnode.nextNode(); //Get the first node loaded
 
-            ////Read every elements
-            //while( pCurNode != nullptr )
-            //{
-            //    if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_ANIMGRP && pCurNode->hasChildNodes() )
-            //    {
-            //        SpriteAnimationGroup agrp;
+            //Read every elements
+            while( pCurNode != nullptr )
+            {
+                if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_ANIMGRPTBL && pCurNode->hasChildNodes() )
+                {
+                    m_outSprite.m_animgroups = ParseAnimationGroups( pCurNode->childNodes() );
+                }
+                else if( pCurNode->nodeName() == SpriteXMLStrings::XML_NODE_ANIMSEQTBL && pCurNode->hasChildNodes() )
+                {
+                    m_outSprite.m_animSequences = ParseAnimationSequences( pCurNode->childNodes() );
+                }
 
-            //        //Get the name
-            //        if( pCurNode->hasAttributes() )
-            //            agrp.group_name = _parseNameAttribute( pCurNode->attributes() );
-
-            //        //Parse the sequences
-            //        agrp.sequences = ParseAnimationSequences( pCurNode->childNodes() );
-
-            //        m_outSprite.m_animgroups.push_back( std::move(agrp) );
-            //    }
-            //    pCurNode = itnode.nextNode();
-            //}
+                pCurNode = itnode.nextNode();
+            }
         }
 
         /**************************************************************
