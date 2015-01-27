@@ -170,7 +170,15 @@ namespace pmd2{ namespace filetypes
 //==================================================================
 // Functions
 //==================================================================
- 
+
+    /*
+        Use this function to avoid having to type this everytimes:
+            CContentHandler::GetInstance().AnalyseContent(analysis_parameter(...))
+    */
+    inline ContentBlock DetermineCntTy( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, const std::string & filext = "" )
+    {
+        return CContentHandler::GetInstance().AnalyseContent( analysis_parameter(itbegdata,itenddata,filext) );
+    }
 
 };};
 

@@ -33,7 +33,7 @@ namespace pmd2 { namespace filetypes
 
     /**********************************************************************
     **********************************************************************/
-    struct zerostrip_table_entry
+    struct ImgAssemblyTblEntry
     {
         static const unsigned int LENGTH = 12u;
         uint32_t pixelsrc = 0;  //The source of the pixels to use to rebuild the image. Either an address, or 0
@@ -369,7 +369,7 @@ namespace pmd2 { namespace filetypes
     {
         using namespace std;
         using namespace utils;
-        zerostrip_table_entry entry;
+        ImgAssemblyTblEntry entry;
         uint32_t nb_bytesread = 0;
 
         do
@@ -400,12 +400,12 @@ namespace pmd2 { namespace filetypes
             of pixels to assemble the decompressed tiled image!
     **********************************************************************/
     template<class _randit>
-        std::vector<zerostrip_table_entry> FillZeroStripTable( _randit itcomptblbeg )
+        std::vector<ImgAssemblyTblEntry> FillZeroStripTable( _randit itcomptblbeg )
     {
         using namespace std;
         using namespace utils;
-        std::vector<zerostrip_table_entry> zerostrtbl;
-        zerostrip_table_entry entry;
+        std::vector<ImgAssemblyTblEntry> zerostrtbl;
+        ImgAssemblyTblEntry entry;
 
         do
         {
@@ -423,12 +423,12 @@ namespace pmd2 { namespace filetypes
 
     /**********************************************************************
         ----------------
-            Parse_WAN
+            WAN_Parser
         ----------------
             A class to parse a WAN sprite into a SpriteData structure.
             Because image formats can vary between sprites, 
     **********************************************************************/
-    class Parse_WAN
+    class WAN_Parser
     {
     public:
 
@@ -436,8 +436,8 @@ namespace pmd2 { namespace filetypes
         class Ex_Parsing4bppAs8bpp : public std::runtime_error { public: Ex_Parsing4bppAs8bpp():std::runtime_error("ERROR: Tried to parse 8bpp sprite as 4bpp!"){} };
 
         //Constructor. Pass the data to parse.
-        Parse_WAN( std::vector<uint8_t>       && rawdata, const animnamelst_t * animnames = nullptr );
-        Parse_WAN( const std::vector<uint8_t> &  rawdata, const animnamelst_t * animnames = nullptr );
+        WAN_Parser( std::vector<uint8_t>       && rawdata, const animnamelst_t * animnames = nullptr );
+        WAN_Parser( const std::vector<uint8_t> &  rawdata, const animnamelst_t * animnames = nullptr );
 
         //Use this to determine which parsing method to use!
         graphics::eSpriteType getSpriteType()const;
@@ -639,24 +639,25 @@ namespace pmd2 { namespace filetypes
 
     /**********************************************************************
         ----------------
-            Write_WAN
+            WAN_Writer
         ----------------
         Class to write a WAN file from a SpriteData object!
     **********************************************************************/
-    class Write_WAN
+    class WAN_Writer
     {
         static const uint32_t MAX_NB_PIXELS_SPRITE_IMG = 4096;//(graphics::RES_64x64_SPRITE.width * graphics::RES_64x64_SPRITE.height);
     public:
         //typedef _Sprite_T sprite_t;
-        Write_WAN( graphics::BaseSprite * pSprite );
+        WAN_Writer( graphics::BaseSprite * pSprite );
 
-        void write( const std::string     & outputpath, std::atomic<uint32_t> * pProgress = nullptr );
+        std::vector<uint8_t> write( std::atomic<uint32_t> * pProgress = nullptr );
+        void                 write( const std::string     & outputpath, std::atomic<uint32_t> * pProgress = nullptr );
 
     private:
         /*
-            Specialization of zerostrip_table_entry to add an extra bool to make encoding easier !
+            Specialization of ImgAssemblyTblEntry to add an extra bool to make encoding easier !
         */
-        struct zeroStripTableTempEntry : public zerostrip_table_entry
+        struct zeroStripTableTempEntry : public ImgAssemblyTblEntry
         {
             bool isZeroEntry = true; //Whether this entry is for copying zeroes or actual bytes.
         };
@@ -703,8 +704,8 @@ namespace pmd2 { namespace filetypes
 
             for( const auto & afrm : frms )
             {
-                gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm, true );
-                WriteACompressedFrm( imgbuff ); //#REMOVEME : Remove the true here after debug test done !
+                gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm, WAN_REVERSED_PIX_ORDER );
+                WriteACompressedFrm( imgbuff );
                 imgbuff.resize(0);
             }
         }

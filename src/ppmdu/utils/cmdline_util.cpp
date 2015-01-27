@@ -295,11 +295,11 @@ namespace utils{ namespace cmdl
         // For options:
         if( !refMyOpts.empty() )
         {
-            cout <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
-                 << " option" <<": An optional option from the list below..\n";
+            cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
+                 << " option" <<": An option from the list below..(optional)\n";
             if(bDisplayOptValLegend)
             {
-                cout <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
+                cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
                      << " optionvalue" <<": An optional value for the specified option..\n";
             }
         }
@@ -321,8 +321,9 @@ namespace utils{ namespace cmdl
         // For Extra:
         if( myExtra != nullptr )
         {
-            cout <<"  (+" <<BulletChr <<left <<setw(longestargname) <<setfill(' ')
-                  <<myExtra->name <<"): " <<myExtra->description <<"\n";
+            cout << "Extra/Batch Parameter(s):\n"; 
+            cout <<"  +" <<left <<setw(longestargname) <<setfill(' ') 
+                 <<myExtra->name <<": " <<myExtra->description <<"\n";
         }
 
 

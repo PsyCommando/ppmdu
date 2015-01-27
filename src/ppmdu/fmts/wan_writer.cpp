@@ -15,19 +15,16 @@ using namespace pmd2::graphics;
 namespace pmd2 { namespace filetypes
 {
 //==================================================================================================
-//  Write_WAN
+//  WAN_Writer
 //==================================================================================================
 
     /**************************************************************
     **************************************************************/
-    Write_WAN::Write_WAN( BaseSprite * pSprite )
+    WAN_Writer::WAN_Writer( BaseSprite * pSprite )
         :m_pSprite(pSprite), m_itbackins(m_outBuffer)
     {}
 
-    /**************************************************************
-    **************************************************************/
-    void Write_WAN::write( const std::string     & outputpath, 
-                           std::atomic<uint32_t> * pProgress )
+    std::vector<uint8_t> WAN_Writer::write( std::atomic<uint32_t> * pProgress )
     {
         utils::MrChronometer chronoTotal("WriteWanTotal");
         //Don't forget to build the SIR0 pointer offset table !
@@ -71,14 +68,26 @@ namespace pmd2 { namespace filetypes
         WritePaddingBytes(16); //Add end of file padding bytes !
 
 
-        Poco::Path outptutwan(outputpath);
-        outptutwan.makeFile().setExtension(WAN_FILEX);
-        utils::io::WriteByteVectorToFile( outptutwan.toString(), m_outBuffer );
+        vector<uint8_t> swaped;
+        std::swap( swaped, m_outBuffer );//do this to avoid screwing up our internal state
+        return std::move(swaped);
     }
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::FillFileInfoStructures()
+    void WAN_Writer::write( const std::string     & outputpath, 
+                           std::atomic<uint32_t> * pProgress )
+    {
+        vector<uint8_t> outvec = write( pProgress );
+
+        Poco::Path outptutwan(outputpath);
+        outptutwan.makeFile().setExtension(WAN_FILEX);
+        utils::io::WriteByteVectorToFile( outptutwan.toString(), outvec );
+    }
+
+    /**************************************************************
+    **************************************************************/
+    void WAN_Writer::FillFileInfoStructures()
     {
         m_wanHeadr     .FillFromSprite( m_pSprite );
         m_wanHeadr_anim.FillFromSprite( m_pSprite );
@@ -88,7 +97,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::AllocateAndEstimateResultLength()
+    void WAN_Writer::AllocateAndEstimateResultLength()
     {
         static const uint32_t MINIMUM_REQUIRED_NB_POINTERS = 10;
 
@@ -185,8 +194,7 @@ namespace pmd2 { namespace filetypes
             It will automatically add an entry to the pointer 
             offset table !
     **************************************************************/
-
-    void Write_WAN::WriteAPointer( uint32_t val )
+    void WAN_Writer::WriteAPointer( uint32_t val )
     {
         if( val != 0 )  //We ignore null pointers !
             m_ptrOffsetTblToEncode.push_back( m_outBuffer.size() );
@@ -196,7 +204,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteMetaFramesBlock()
+    void WAN_Writer::WriteMetaFramesBlock()
     {
         utils::MrChronometer chronoTotal("WriteWanMetaFrames");
         const auto & metafrms = m_pSprite->getMetaFrames();
@@ -216,7 +224,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAMetaFrame( const MetaFrame & cur, bool setLastBit ) //setLastBit set this to true for the last frame in a group !
+    void WAN_Writer::WriteAMetaFrame( const MetaFrame & cur, bool setLastBit ) //setLastBit set this to true for the last frame in a group !
     {
         utils::WriteIntToByteVector( cur.imageIndex, m_itbackins );
         utils::WriteIntToByteVector( cur.unk0,       m_itbackins );
@@ -237,7 +245,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAnimationSequencesBlock()
+    void WAN_Writer::WriteAnimationSequencesBlock()
     {
         const auto & animgroups = m_pSprite->getAnimGroups();
 
@@ -286,7 +294,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAnAnimFrame( const AnimFrame & curfrm )
+    void WAN_Writer::WriteAnAnimFrame( const AnimFrame & curfrm )
     {
         utils::WriteIntToByteVector( curfrm.frameDuration,   m_itbackins );
         utils::WriteIntToByteVector( curfrm.metaFrmGrpIndex, m_itbackins );
@@ -298,7 +306,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WritePaddingBytes( uint32_t alignon )
+    void WAN_Writer::WritePaddingBytes( uint32_t alignon )
     {
         const uint32_t bufflen = m_outBuffer.size();
     //# Insert padding at the current write position, to align the next entry on "alignon" bytes
@@ -316,7 +324,7 @@ namespace pmd2 { namespace filetypes
         If its a sequence of zero, it won't write into the pixel 
         strip table. If it is, it will.    
     **************************************************************/
-    Write_WAN::zeroStripTableTempEntry Write_WAN::MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::zeroStripTableTempEntry WAN_Writer::MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                         std::vector<uint8_t>::const_iterator   itEnd,
                                                         std::vector<uint8_t>                 & pixStrips,
                                                         uint32_t                             & totalbytecnt) 
@@ -377,7 +385,10 @@ namespace pmd2 { namespace filetypes
         // Once we can't read any of our resprective sequence type, return entry!
     }
 
-    Write_WAN::zeroStripTableTempEntry Write_WAN::MakeZeroStripTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
+
+    /**************************************************************
+    **************************************************************/
+    WAN_Writer::zeroStripTableTempEntry WAN_Writer::MakeZeroStripTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
                                                                                       vector<uint8_t>::const_iterator   itEnd,
                                                                                       vector<uint8_t>                 & pixStrips,
                                                                                       uint32_t                        & totalbytecnt )
@@ -397,7 +408,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros )
+    void WAN_Writer::WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros )
     {
         uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the zerostrip table!
 
@@ -444,7 +455,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WritePaletteBlock()
+    void WAN_Writer::WritePaletteBlock()
     {
         //# Note the position of the first color !
         m_wanPalInfo.ptrpal = m_outBuffer.size();
@@ -465,7 +476,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteMetaFrameGroupPtrTable()
+    void WAN_Writer::WriteMetaFrameGroupPtrTable()
     {
         //# Note the position it begins at !
         m_wanHeadr_anim.ptr_metaFrmTable = m_outBuffer.size();
@@ -476,7 +487,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteParticleOffsetsBlock()
+    void WAN_Writer::WriteParticleOffsetsBlock()
     {
         utils::MrChronometer chronoTotal("WriteWanParticleOffsetsBlock");
         //# Write starting offset
@@ -491,7 +502,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAnimSequencePtrTable()
+    void WAN_Writer::WriteAnimSequencePtrTable()
     {
         //# Note the position where all sequences for a group begins at !
         //m_AnimSequencesListOffset;
@@ -529,7 +540,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAnimGroupPtrTable()
+    void WAN_Writer::WriteAnimGroupPtrTable()
     {
         //# Write start pos !
         m_wanHeadr_anim.ptr_animGrpTable = m_outBuffer.size();
@@ -554,7 +565,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteCompImagePtrTable()
+    void WAN_Writer::WriteCompImagePtrTable()
     {
         //Note the position it begins at
         m_wanHeadr_img.ptr_img_table = m_outBuffer.size();
@@ -566,7 +577,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteAnimInfoHeadr()
+    void WAN_Writer::WriteAnimInfoHeadr()
     {
         //# Write down starting offset
         m_wanHeadr.ptr_animinfo = m_outBuffer.size();
@@ -577,7 +588,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteImgInfoHeadr()
+    void WAN_Writer::WriteImgInfoHeadr()
     {
         //# Save location of img info 
         m_wanHeadr.ptr_imginfo = m_outBuffer.size();
@@ -587,7 +598,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteWANHeadr()
+    void WAN_Writer::WriteWANHeadr()
     {
         //Put offset in sir0 header
         m_sir0Header.subheaderptr = m_outBuffer.size();
@@ -597,7 +608,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void Write_WAN::WriteSIR0HeaderAndEncodedPtrList()
+    void WAN_Writer::WriteSIR0HeaderAndEncodedPtrList()
     {
         m_sir0Header.eofptr = m_outBuffer.size();
         //Don't forget the 2 pointers of the sir0 header! in first.

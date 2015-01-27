@@ -277,5 +277,6 @@
   <ItemGroup>
     <Xml Include="..\resources\template_chranims.xml" />
     <Xml Include="..\resources\template_exchranims.xml" />
+    <Xml Include="..\resources\animres.xml" />
   </ItemGroup>
 </Project>

@@ -88,7 +88,7 @@ namespace pmd2{ namespace graphics
         static const string XML_PROP_HFLIP     = "HFlip";
         static const string XML_PROP_VFLIP     = "VFlip";
         static const string XML_PROP_MOSAIC    = "Mosaic";
-        static const string XML_PROP_LASTMFRM  = "LastMFrmInGrp";
+        static const string XML_PROP_LASTMFRM  = "IsLastMFrmInGrp";
         static const string XML_PROP_OFFXBIT6  = "XOffsetBit6";
         static const string XML_PROP_OFFXBIT7  = "XOffsetBit7";
         static const string XML_PROP_OFFYBIT3  = "YOffsetBit3";
@@ -188,7 +188,6 @@ namespace pmd2{ namespace graphics
     /**************************************************************
     Used to hold a couple of useful statistics to determine task completion.
     **************************************************************/
-    
     struct workstatistics
     {
         uint32_t propFrames;
@@ -251,6 +250,8 @@ namespace pmd2{ namespace graphics
 
     /**************************************************************
         Parses a value directly as is.
+        Return value is a parameter, to avoid having to specify
+        a template parameter.
     **************************************************************/
     template<class _Ty>
         void _parseXMLValToValue( const Poco::XML::XMLString & str, _Ty out_val )
@@ -296,7 +297,7 @@ namespace pmd2{ namespace graphics
 
     /**************************************************************
     **************************************************************/
-    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height )
+    bool Sprite_IsResolutionValid( uint8_t width, uint8_t height )
     {
         return ( MetaFrame::IntegerResTo_eRes( width, height ) != MetaFrame::eRes::_INVALID );
     }
@@ -318,6 +319,7 @@ namespace pmd2{ namespace graphics
     template<class _SPRITE_t>
         class SpriteToXML
     {
+        static const unsigned int MY_WRITER_FLAGS = XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT; 
     public:
         typedef _SPRITE_t sprite_t;
 
@@ -401,7 +403,7 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Properties);
             ofstream   outfile( outpath.toString() );
-            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            XMLWriter  writer(outfile, MY_WRITER_FLAGS );
                 
             InitWriter( writer, XML_ROOT_SPRPROPS );
             {
@@ -460,7 +462,7 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Palette);
             ofstream   outfile( outpath.toString() );
-            XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            XMLWriter writer(outfile, MY_WRITER_FLAGS );
             
             InitWriter( writer, XML_NODE_PALLETTE );
 
@@ -548,29 +550,25 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Animations);
             ofstream   outfile( outpath.toString() );
-            XMLWriter  writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            XMLWriter  writer(outfile, MY_WRITER_FLAGS );
             uint32_t   saveprogress = 0;
 
             if( m_pProgresscnt != nullptr )
                 saveprogress = m_pProgresscnt->load();
 
-
-
             InitWriter( writer, XML_ROOT_ANIMDAT );
-
             //Add some comments to help fellow humans 
             stringstream strs;
             strs <<"Total nb of animation group(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getAnimGroups().size();
             writeComment( writer, strs.str() );
-            strs = stringstream();
 
+            strs = stringstream();
             strs <<"Total nb of sequence(s)        : " <<setw(4) <<setfill(' ') <<totalnbseqs;
             writeComment( writer, strs.str() );
-            strs = stringstream();
 
+            strs = stringstream();
             strs <<"Total nb of animation frame(s) : " <<setw(4) <<setfill(' ') <<totalnbfrms;
             writeComment( writer, strs.str() );
-            strs = stringstream();
 
             {
                 //First Write the GroupRefTable
@@ -579,10 +577,11 @@ namespace pmd2{ namespace graphics
                     unsigned int cptgrp = 0;
                     for( const auto & animgrp : m_inSprite.getAnimGroups() )
                     {
+                        strs = stringstream();
                         unsigned int cptseq = 0;
                         strs <<"Group #" <<cptgrp <<" contains " << animgrp.seqsIndexes.size() << " sequence(s)";
                         writeComment( writer, strs.str() );
-                        strs = stringstream();
+                        
 
                         //Give this group a name
                         AttributesImpl attrname;
@@ -592,6 +591,7 @@ namespace pmd2{ namespace graphics
                         //Write the content of each sequences in that group
                         for( const auto & aseq : animgrp.seqsIndexes )
                         {
+                            strs = stringstream();
                             strs <<cptseq;
                             writer.dataElement("","", XML_PROP_ANIMSEQIND, std::to_string(aseq) );
                             ++cptseq;
@@ -618,9 +618,9 @@ namespace pmd2{ namespace graphics
                     for( const auto & animseq : m_inSprite.getAnimSequences() )
                     {
                         //Write the content of each sequences in that group
+                        strs = stringstream();
                         strs <<"Seq #" <<cptaseqs  <<" contains " <<animseq.getNbFrames()  << " frame(s)";
                         writeComment( writer, strs.str() );
-                        strs = stringstream();
                         WriteAnimSequence( writer, animseq );
 
                         ++cptaseqs;
@@ -638,7 +638,7 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Frames);
             ofstream   outfile( outpath.toString() );
-            XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            XMLWriter writer(outfile, MY_WRITER_FLAGS );
 
             uint32_t saveprogress = 0;
 
@@ -738,14 +738,13 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Offsets);
             ofstream   outfile( outpath.toString() );
-            XMLWriter writer(outfile, XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT );
+            XMLWriter writer(outfile, MY_WRITER_FLAGS );
 
             InitWriter( writer, XML_ROOT_OFFLST );
 
             stringstream strs;
             strs <<"Total nb of offset(s) : " <<setw(4) <<setfill(' ') <<m_inSprite.getPartOffsets().size();
             writeComment( writer, strs.str() );
-            strs = stringstream();
 
             uint32_t saveprogress = 0;
 
@@ -755,9 +754,10 @@ namespace pmd2{ namespace graphics
             for( unsigned int i = 0; i < m_inSprite.getPartOffsets().size(); ++i )
             {
                 const auto & anoffset = m_inSprite.getPartOffsets()[i];
+                strs = stringstream();
                 strs <<"#" <<i;
                 writeComment( writer, strs.str() );
-                strs = stringstream();
+                
 
                 writer.startElement("","", XML_NODE_OFFSET );
                 {
@@ -794,8 +794,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         SpriteToDirectory( const sprite_t & myspr )
             :m_inSprite(myspr),m_pProgress(nullptr)
-        {
-        }
+        {}
 
         /**************************************************************
         **************************************************************/
@@ -819,15 +818,7 @@ namespace pmd2{ namespace graphics
             uint32_t totalnbfrms  = 0;
 
             for( const auto & aseq : m_inSprite.getAnimSequences() )
-            {
                 totalnbfrms += aseq.getNbFrames();
-                //if( ! ( agrp.seqsIndexes.empty() ) )
-                //{
-                //    totalnbseqs += agrp.seqsIndexes.size();
-                //    for( const auto & aseq : agrp.sequences )
-                //        totalnbfrms += aseq.getNbFrames();
-                //}
-            }
             
             //Gather stats for computing progress proportionally at runtime
             const uint32_t amtWorkFrames  = m_inSprite.getFrames().size();
@@ -904,7 +895,7 @@ namespace pmd2{ namespace graphics
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
 
-            if(m_pProgress!=nullptr)
+            if( m_pProgress != nullptr )
                 progressBefore = m_pProgress->load();
 
             for( unsigned int i = 0; i < frames.size(); ++i )
@@ -928,8 +919,7 @@ namespace pmd2{ namespace graphics
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
             
-
-            if(m_pProgress!=nullptr)
+            if( m_pProgress != nullptr )
                 progressBefore = m_pProgress->load();
 
             for( unsigned int i = 0; i < frames.size(); ++i )
@@ -953,8 +943,7 @@ namespace pmd2{ namespace graphics
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
             
-
-            if(m_pProgress!=nullptr)
+            if( m_pProgress != nullptr )
                 progressBefore = m_pProgress->load(); //Save a little snapshot of the progress
 
             for( unsigned int i = 0; i < frames.size(); ++i )
@@ -972,15 +961,14 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void ExportXMLData(bool xmlcolpal, const workstatistics & wstats)
+        inline void ExportXMLData(bool xmlcolpal, const workstatistics & wstats)
         {
-            SpriteToXML<sprite_t> mywriter(m_inSprite);
-            mywriter.WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
+            SpriteToXML<sprite_t>(m_inSprite).WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
         }
 
         /**************************************************************
         **************************************************************/
-        void ExportPalette()
+        inline void ExportPalette()
         {
             utils::io::ExportTo_RIFF_Palette( m_inSprite.getPalette(), 
                                               Poco::Path(m_outDirPath).append(Palette_Filename).toString() );
@@ -1060,7 +1048,7 @@ namespace pmd2{ namespace graphics
             Used to parse the 2 offsets contained in an anim frame's 
             xml data's child node!
         **************************************************************/
-        tmpoffset ParseAnimaFrmOffsets( Poco::XML::NodeList * pNodeLst )
+        tmpoffset ParseAnimFrmOffsets( Poco::XML::NodeList * pNodeLst )
         {
             tmpoffset         res       = {0,0};
             AutoPtr<NodeList> pOffNodes = pNodeLst;
@@ -1097,13 +1085,13 @@ namespace pmd2{ namespace graphics
                     _parseXMLHexaValToValue( pCurProp->innerText(), afrm.metaFrmGrpIndex );
                 else if( pCurProp->nodeName() == SpriteXMLStrings::XML_NODE_SPRITE && pCurProp->hasChildNodes() )
                 {
-                    tmpoffset result = ParseAnimaFrmOffsets( pCurProp->childNodes() );
+                    tmpoffset result = ParseAnimFrmOffsets( pCurProp->childNodes() );
                     afrm.sprOffsetX = result.x;
                     afrm.sprOffsetY = result.y;
                 }
                 else if( pCurProp->nodeName() == SpriteXMLStrings::XML_NODE_SHADOW && pCurProp->hasChildNodes() )
                 {
-                    tmpoffset result = ParseAnimaFrmOffsets( pCurProp->childNodes() );
+                    tmpoffset result = ParseAnimFrmOffsets( pCurProp->childNodes() );
                     afrm.shadowOffsetX = result.x;
                     afrm.shadowOffsetY = result.y;
                 }
@@ -1145,7 +1133,6 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         vector<AnimationSequence> ParseAnimationSequences( Poco::XML::NodeList * pNodeLst )
         {
-
             vector<AnimationSequence> seqs;
             AutoPtr<NodeList>         pSeqs = pNodeLst;
 
@@ -1208,7 +1195,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ParseAnimations(std::ifstream & in)
         {
-            utils::MrChronometer chronoxmlanims("ParseXMLAnims");
+            //utils::MrChronometer chronoxmlanims("ParseXMLAnims");
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
@@ -1236,7 +1223,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ParseOffsets(std::ifstream & in)
         {
-            utils::MrChronometer chrono("ParseXMLSpriteOffsets");
+            //utils::MrChronometer chrono("ParseXMLSpriteOffsets");
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
@@ -1264,6 +1251,42 @@ namespace pmd2{ namespace graphics
                 }
                 pCurNode = itnode.nextNode();
             }
+        }
+
+        /**************************************************************
+        **************************************************************/
+        MetaFrame::eRes ParseMetaFrameRes( NodeList * nodelst )
+        {
+            AutoPtr<NodeList> resnodelst = nodelst;
+            utils::Resolution myres      = {0,0};
+            MetaFrame::eRes   result     = MetaFrame::eRes::_INVALID;
+
+            for( unsigned long ctres = 0; ctres < resnodelst->length(); ++ctres  )
+            {
+                Node * pResChild = resnodelst->item(ctres);
+                if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_WIDTH )
+                    _parseXMLHexaValToValue( pResChild->innerText(), myres.width );
+                else if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_HEIGTH )
+                    _parseXMLHexaValToValue( pResChild->innerText(), myres.height );
+            }
+
+            result = MetaFrame::IntegerResTo_eRes( myres.width, myres.height );
+
+            if( result == MetaFrame::eRes::_INVALID )
+            {
+                stringstream sstr;
+                sstr << "Error: invalid resolution specified for a meta-frame!\n"
+                        << "Got " <<myres.width << "x" <<myres.height << " for meta-frame #" <<m_outSprite.m_metaframes.size()
+                        << ", referred to in meta-frame group #" <<m_outSprite.m_metafrmsgroups.size() <<" !\n"
+                        << "Valid resolutions are any of the following :\n";
+
+                for( const auto & theentry : graphics::MetaFrame::ResEquiv )
+                    sstr << "-> " <<theentry.x <<"x" <<theentry.y <<"\n";
+
+                throw std::runtime_error( sstr.str() );
+            }
+
+            return result;
         }
         
         /**************************************************************
@@ -1309,33 +1332,34 @@ namespace pmd2{ namespace graphics
                     _parseXMLHexaValToValue( pPropNode->innerText(), mf.YOffbit6 );
                 else if( pPropNode->nodeName() == SpriteXMLStrings::XML_NODE_RES && pPropNode->hasChildNodes() )
                 {
-                    AutoPtr<NodeList> resnodelst = pPropNode->childNodes();
-                    utils::Resolution myres={0,0};
+                    mf.resolution = ParseMetaFrameRes( pPropNode->childNodes() );
+                    //AutoPtr<NodeList> resnodelst = pPropNode->childNodes();
+                    //utils::Resolution myres={0,0};
 
-                    for( unsigned long ctres = 0; ctres < resnodelst->length(); ++ctres  )
-                    {
-                        Node * pResChild = resnodelst->item(ctres);
-                        if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_WIDTH )
-                            _parseXMLHexaValToValue( pResChild->innerText(), myres.width );
-                        else if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_HEIGTH )
-                            _parseXMLHexaValToValue( pResChild->innerText(), myres.height );
-                    }
+                    //for( unsigned long ctres = 0; ctres < resnodelst->length(); ++ctres  )
+                    //{
+                    //    Node * pResChild = resnodelst->item(ctres);
+                    //    if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_WIDTH )
+                    //        _parseXMLHexaValToValue( pResChild->innerText(), myres.width );
+                    //    else if( pResChild->nodeName() == SpriteXMLStrings::XML_PROP_HEIGTH )
+                    //        _parseXMLHexaValToValue( pResChild->innerText(), myres.height );
+                    //}
 
-                    mf.resolution = MetaFrame::IntegerResTo_eRes( myres.width, myres.height );
+                    //mf.resolution = MetaFrame::IntegerResTo_eRes( myres.width, myres.height );
 
-                    if( mf.resolution == MetaFrame::eRes::_INVALID )
-                    {
-                        stringstream sstr;
-                        sstr << "Error: invalid resolution specified for a meta-frame!\n"
-                             << "Got " <<myres.width << "x" <<myres.height << " for meta-frame #" <<m_outSprite.m_metaframes.size()
-                             << ", referred to in meta-frame group #" <<m_outSprite.m_metafrmsgroups.size() <<" !\n"
-                             << "Valid resolutions are any of the following :\n";
+                    //if( mf.resolution == MetaFrame::eRes::_INVALID )
+                    //{
+                    //    stringstream sstr;
+                    //    sstr << "Error: invalid resolution specified for a meta-frame!\n"
+                    //         << "Got " <<myres.width << "x" <<myres.height << " for meta-frame #" <<m_outSprite.m_metaframes.size()
+                    //         << ", referred to in meta-frame group #" <<m_outSprite.m_metafrmsgroups.size() <<" !\n"
+                    //         << "Valid resolutions are any of the following :\n";
 
-                        for( const auto & theentry : graphics::MetaFrame::ResEquiv )
-                            sstr << "-> " <<theentry.x <<"x" <<theentry.y <<"\n";
+                    //    for( const auto & theentry : graphics::MetaFrame::ResEquiv )
+                    //        sstr << "-> " <<theentry.x <<"x" <<theentry.y <<"\n";
 
-                        throw std::runtime_error( sstr.str() );
-                    }
+                    //    throw std::runtime_error( sstr.str() );
+                    //}
                 }
             }
 
@@ -1788,6 +1812,29 @@ namespace pmd2{ namespace graphics
         mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal, progresscnt ); 
     }
 
+
+    /**************************************************************
+    **************************************************************/
+    void ExportSpriteToDirectoryPtr( const graphics::BaseSprite * srcspr, 
+                                      const std::string          & outpath, 
+                                      utils::io::eSUPPORT_IMG_IO   imgtype,
+                                      bool                         usexmlpal,
+                                      std::atomic<uint32_t>      * progresscnt )
+    {
+        //
+        auto spritety = srcspr->getSpriteType();
+
+        if( spritety == eSpriteType::spr4bpp )
+        {
+            const SpriteData<gimg::tiled_image_i4bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i4bpp>*>(srcspr);
+            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
+        }
+        else if( spritety == eSpriteType::spr8bpp )
+        {
+            const SpriteData<gimg::tiled_image_i8bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i8bpp>*>(srcspr);
+            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
+        }
+    }
 
     /**************************************************************
     **************************************************************/

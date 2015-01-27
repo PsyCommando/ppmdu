@@ -594,6 +594,6 @@ deoxys
 deoxys-attack
 deoxys-defense
 deoxys-speed
-substitue
+substitute_doll
 kangaskhan_rock
 --

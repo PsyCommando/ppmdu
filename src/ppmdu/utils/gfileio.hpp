@@ -29,6 +29,11 @@ namespace utils{ namespace io
     ************************************************************************/
     void WriteByteVectorToFile(const std::string & path, const std::vector<uint8_t> & in_filedata);
 
+
+    /*
+        Reads a file line by line, and put each lines into a vector of string.
+    */
+    std::vector<std::string> ReadTextFileLineByLine( const std::string & filepath );
 };};
 
 #endif

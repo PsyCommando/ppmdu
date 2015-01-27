@@ -164,13 +164,14 @@ namespace utils{ namespace cmdl
         {
         }
 
-        //
-        void SetArguments( int argc, const char * argv[], bool noargsprintreadme = true )
+        //SetArguments returns false, when there are no args to parse !
+        bool SetArguments( int argc, const char * argv[], bool noargsprintreadme = true )
         {
             if( argc == 1 ) //No args, print the readme then!
             {
                 if(noargsprintreadme) 
                     PrintReadme();
+                return false;
             }
             else
             {
@@ -179,6 +180,7 @@ namespace utils{ namespace cmdl
                 parseOptions(parsemyargs);
                 parseExtraArgs(parsemyargs);
             }
+            return true;
         }
         void PrintReadme();
         void PrintTitle();

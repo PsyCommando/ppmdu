@@ -1,6 +1,7 @@
 #include "gfileio.hpp"
 #include <cassert>
 #include <fstream>
+#include <sstream>
 #include <exception>
 using namespace std;
 
@@ -50,5 +51,28 @@ namespace utils{ namespace io
         }
 
         outputfile.write(reinterpret_cast<const char*>(filedata.data()), filedata.size());
+    }
+
+    std::vector<std::string> ReadTextFileLineByLine( const std::string & filepath )
+    {
+        vector<string> stringlist;
+        ifstream       strfile( filepath );
+
+        if( !( strfile.good() && strfile.is_open() ) )
+        {
+            std::stringstream strs;
+            strs << "ReadTextFileLineByLine(): Error: file is missing or cannot be opened ! Path :\n"
+                 << filepath;
+            throw runtime_error(strs.str());
+        }
+
+        while( !strfile.eof() && !strfile.bad() )
+        {
+            string tmp;
+            getline( strfile, tmp );
+            stringlist.push_back(tmp);
+        }
+
+        return std::move(stringlist);
     }
 };};

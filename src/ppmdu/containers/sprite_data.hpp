@@ -18,7 +18,7 @@ Description:
 #include <atomic>
 
 //Forward declare for the friendly io modules !
-namespace pmd2{ namespace filetypes{ class Parse_WAN; class Write_WAN; }; };
+namespace pmd2{ namespace filetypes{ class WAN_Parser; class WAN_Writer; }; };
 
 namespace pmd2{ namespace graphics
 {
@@ -429,32 +429,35 @@ namespace pmd2{ namespace graphics
     template<class TIMG_Type>
         class SpriteData : public BaseSprite
     {
-        friend class pmd2::filetypes::Parse_WAN; 
-        friend class pmd2::filetypes::Write_WAN;
+        friend class pmd2::filetypes::WAN_Parser; 
+        friend class pmd2::filetypes::WAN_Writer;
         static const uint32_t MY_NB_BITS_PER_PIXEL = TIMG_Type::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
+
+        //A couple of constants and typedef to make the conditional statement below more readable!
+        typedef std::integral_constant<eSpriteType,eSpriteType::spr4bpp>    SPRTy_4BPP;
+        typedef std::integral_constant<eSpriteType,eSpriteType::spr8bpp>    SPRTy_8BPP;
+        typedef std::integral_constant<eSpriteType,eSpriteType::sprInvalid> SPRTy_INVALID; 
+        static const bool IsSprite4bpp = MY_NB_BITS_PER_PIXEL == 4;
+        static const bool IsSprite8bpp = MY_NB_BITS_PER_PIXEL == 8;
 
         //This contains the correct enum values depending on the type of images the sprite contains!
         // Supports only 4, and 8 bpp for now! (Hopefully MSVSC will implement constexpr before then...)
         static const eSpriteType MY_SPRITE_TYPE = 
-            typename std::conditional< MY_NB_BITS_PER_PIXEL == 4, 
-                                       std::integral_constant<eSpriteType,eSpriteType::spr4bpp>,
-                                       std::conditional< MY_NB_BITS_PER_PIXEL == 8,
-                                                                                    std::integral_constant<eSpriteType,eSpriteType::spr8bpp>, 
-                                                                                    std::integral_constant<eSpriteType,eSpriteType::sprInvalid>
-                                                        >::type 
-                                    >::type::value;
+            typename std::conditional< IsSprite4bpp, 
+                                       SPRTy_4BPP,
+                                       std::conditional< IsSprite8bpp, SPRTy_8BPP, SPRTy_INVALID >::type 
+                                     >::type::value;
 
     public:
         typedef TIMG_Type img_t; 
+        inline const std::vector<img_t>                & getFrames      ()const { return m_frames;        }
 
         virtual const std::vector<sprOffParticle>      & getPartOffsets ()const { return m_partOffsets;   } 
-        inline const std::vector<img_t>               & getFrames      ()const { return m_frames;        }
         virtual const std::multimap<uint32_t,uint32_t> & getMetaRefs    ()const { return m_metarefs;      }
         virtual const std::vector<MetaFrame>           & getMetaFrames  ()const { return m_metaframes;    }
         virtual const std::vector<MetaFrameGroup>      & getMetaFrmsGrps()const { return m_metafrmsgroups;}
         virtual const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
         virtual const std::vector<AnimationSequence>   & getAnimSequences()const{ return m_animSequences; }
-        
         virtual const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
         virtual const SprInfo                          & getSprInfo     ()const { return m_common;        }
 
@@ -465,7 +468,6 @@ namespace pmd2{ namespace graphics
         virtual std::vector<AnimationSequence>         & getAnimSequences(){ return m_animSequences; }
         virtual std::vector<gimg::colorRGB24>          & getPalette     () { return m_palette;       }
         virtual SprInfo                                & getSprInfo     () { return m_common;        }
-
 
         //Get the data format of the sprite
         virtual const eSpriteType & getSpriteType()const { return MY_SPRITE_TYPE; }
@@ -482,15 +484,6 @@ namespace pmd2{ namespace graphics
             return GetMyFramePtr<SpriteData<img_t>, std::vector<gimg::tiled_image_i4bpp>>(const_cast<SpriteData<img_t>*>(this)); 
         }
 
-
-        //struct Sprite8bpp
-        //{
-
-        //    static std::vector<gimg::tiled_image_i8bpp> * Get8bppFrm(  )
-        //};
-        //struct Sprite4bpp
-        //{
-        //};
 
         /*
             Get the correct frame pointer for polymorphic methods
@@ -513,39 +506,6 @@ namespace pmd2{ namespace graphics
             return &(ptrme->m_frames);
         }
 
-        /*
-            Reserve space in all the vectors
-        */
-        //void BatchReserve( uint32_t resOffsets, uint32_t resFrames, uint32_t resMetaF, uint32_t resMetaFG, uint32_t resAnimGrp )
-        //{
-        //    m_partOffsets.reserve(resOffsets);
-        //    m_frames.reserve(resFrames);
-        //    m_metaframes.reserve(resMetaF);
-        //    m_metafrmsgroups.reserve(resMetaFG);
-        //    m_animgroups.reserve(resAnimGrp);
-        //}
-
-
-        //inline void setPartOffsets( std::vector<sprOffParticle> && partOffsets ) { m_partOffsets = partOffsets; } 
-        //inline void setFrames     ( std::vector<img_t>          && frmstbl )     { m_frames      = frmstbl;     }
-
-        //inline void addMFrameToGrp( unsigned int group, MetaFrame && mf )
-        //{
-        //    m_metafrmsgroups[group].metaframes.push_back( m_metaframes.size() ); 
-        //    if( mf.imageIndex != 0xFFFF ) //Add a reference to the frame its pointing at
-        //    {
-        //        m_metarefs.insert( std::make_pair( mf.imageIndex, m_metaframes.size() ) );
-        //    }
-        //    m_metaframes.push_back(mf);
-        //}
-
-
-
-        //inline const std::vector<SpriteAnimationGroup>& getAnimGroups  ()const { return m_animgroups;    }
-        //inline const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
-        //inline const SprInfo                          & getSprInfo     ()const { return m_common;        }
-
-    //private:
 
         /*
             Rebuilds the entire reference maps for everything currently in the sprite!
@@ -646,16 +606,15 @@ namespace pmd2{ namespace graphics
                                       bool                         usexmlpal   = false,
                                       std::atomic<uint32_t>      * progresscnt = nullptr );
 
+    void ExportSpriteToDirectoryPtr( const graphics::BaseSprite * srcspr, 
+                                      const std::string          & outpath, 
+                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
+                                      bool                         usexmlpal   = false,
+                                      std::atomic<uint32_t>      * progresscnt = nullptr );
+
 //=========================================================================================
 //  SpriteBuilder
 //=========================================================================================
-    /*
-        Import a sprite from the exported structure above !
-    */
-    //SpriteData<gimg::tiled_image_i8bpp> Import8bppSpriteFromDirectory( const std::string & inpath );
-    //SpriteData<gimg::tiled_image_i4bpp> Import4bppSpriteFromDirectory( const std::string & inpath );
-
-
     /*
         Check if all the required files and subfolders are in the filelist passed as param!
         Use this before calling ImportSpriteFromDirectory on the list of the files present

@@ -290,6 +290,7 @@
     <Text Include="..\resources\pokesprites_names.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Xml Include="..\resources\animres.xml" />
     <Xml Include="..\resources\template_chranims.xml" />
     <Xml Include="..\resources\template_exchranims.xml" />
   </ItemGroup>
@@ -354,12 +355,20 @@
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
-copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)pokesprites_names.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokesprites_std_anims.txt"
+copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokenames.txt"
+copy "$(SolutionDir)resources\pokesprites_names.txt" "$(OutDir)pokesprites_names.txt"
+copy "$(SolutionDir)resources\animres.xml" "$(OutDir)animres.xml"
+copy "$(SolutionDir)resources\template_chranims.xml" "$(OutDir)template_chranims.xml"
+copy "$(SolutionDir)resources\template_exchranims.xml" "$(OutDir)template_exchranims.xml"
 
-copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokesprites_std_anims.txt"
-      </Command>
+copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"
+copy "$(SolutionDir)resources\pokesprites_names.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
+copy "$(SolutionDir)resources\animres.xml" "$(SolutionDir)workdir\animres.xml"
+copy "$(SolutionDir)resources\template_chranims.xml" "$(SolutionDir)workdir\template_chranims.xml"
+copy "$(SolutionDir)resources\template_exchranims.xml" "$(SolutionDir)workdir\template_exchranims.xml"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -386,12 +395,20 @@ copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokesprites_
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
-copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)pokesprites_names.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokesprites_std_anims.txt"
+copy "$(SolutionDir)resources\facenames.txt" "$(OutDir)facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(OutDir)pokenames.txt"
+copy "$(SolutionDir)resources\pokesprites_names.txt" "$(OutDir)pokesprites_names.txt"
+copy "$(SolutionDir)resources\animres.xml" "$(OutDir)animres.xml"
+copy "$(SolutionDir)resources\template_chranims.xml" "$(OutDir)template_chranims.xml"
+copy "$(SolutionDir)resources\template_exchranims.xml" "$(OutDir)template_exchranims.xml"
 
-copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
-copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokesprites_std_anims.txt"
-      </Command>
+copy "$(SolutionDir)resources\facenames.txt" "$(SolutionDir)workdir\facenames.txt"
+copy "$(SolutionDir)resources\pokenames.txt" "$(SolutionDir)workdir\pokenames.txt"
+copy "$(SolutionDir)resources\pokesprites_names.txt" "$(SolutionDir)workdir\pokesprites_names.txt"
+copy "$(SolutionDir)resources\animres.xml" "$(SolutionDir)workdir\animres.xml"
+copy "$(SolutionDir)resources\template_chranims.xml" "$(SolutionDir)workdir\template_chranims.xml"
+copy "$(SolutionDir)resources\template_exchranims.xml" "$(SolutionDir)workdir\template_exchranims.xml"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
