@@ -171,6 +171,12 @@
     <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
@@ -267,6 +273,12 @@
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\wan_writer.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
   </ItemGroup>

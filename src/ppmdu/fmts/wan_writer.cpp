@@ -26,7 +26,7 @@ namespace pmd2 { namespace filetypes
 
     std::vector<uint8_t> WAN_Writer::write( std::atomic<uint32_t> * pProgress )
     {
-        utils::MrChronometer chronoTotal("WriteWanTotal");
+        //utils::MrChronometer chronoTotal("WriteWanTotal");
         //Don't forget to build the SIR0 pointer offset table !
         // We must gather the offset of ALL pointers!
         m_pProgress = pProgress;
@@ -206,7 +206,7 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteMetaFramesBlock()
     {
-        utils::MrChronometer chronoTotal("WriteWanMetaFrames");
+        //utils::MrChronometer chronoTotal("WriteWanMetaFrames");
         const auto & metafrms = m_pSprite->getMetaFrames();
 
         for( const auto & agrp : m_pSprite->getMetaFrmsGrps() )
@@ -489,7 +489,7 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteParticleOffsetsBlock()
     {
-        utils::MrChronometer chronoTotal("WriteWanParticleOffsetsBlock");
+        //utils::MrChronometer chronoTotal("WriteWanParticleOffsetsBlock");
         //# Write starting offset
         m_wanHeadr_anim.ptr_pOffsetsTable = m_outBuffer.size();
 
@@ -610,13 +610,13 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteSIR0HeaderAndEncodedPtrList()
     {
-        m_sir0Header.eofptr = m_outBuffer.size();
+        m_sir0Header.ptrPtrOffsetLst = m_outBuffer.size();
         //Don't forget the 2 pointers of the sir0 header! in first.
         //Add padding after !
 
         filetypes::sir0_head_and_list result = filetypes::MakeSIR0ForData( m_ptrOffsetTblToEncode, 
                                                                             (m_sir0Header.subheaderptr-16), 
-                                                                            (m_sir0Header.eofptr-16) );
+                                                                            (m_sir0Header.ptrPtrOffsetLst-16) );
 
         //Write encoded ptr offset list
         for( const auto & encptr : result.ptroffsetslst )

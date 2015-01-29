@@ -358,7 +358,7 @@ namespace pmd2{ namespace graphics
         //
         /**************************************************************
         **************************************************************/
-        void InitWriter( Poco::XML::XMLWriter & writer, const std::string & rootnodename )
+        inline void InitWriter( Poco::XML::XMLWriter & writer, const std::string & rootnodename )
         {
             writer.setNewLine("\n");
             writer.startDocument();
@@ -367,7 +367,7 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void DeinitWriter( Poco::XML::XMLWriter& writer, const std::string & rootnodename )
+        inline void DeinitWriter( Poco::XML::XMLWriter& writer, const std::string & rootnodename )
         {
             writer.endElement( "", "", rootnodename );
             writer.endDocument();
@@ -386,7 +386,7 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void writeComment( XMLWriter & writer, const string & str )
+        inline void writeComment( XMLWriter & writer, const string & str )
         {
             writer.comment( str.c_str(), 0, str.size() );
         }
@@ -492,6 +492,8 @@ namespace pmd2{ namespace graphics
         void WriteAnimFrame( Poco::XML::XMLWriter & writer, const AnimFrame & curfrm )
         {
             using namespace SpriteXMLStrings;
+            //stringstream sstrconv;
+            //string result;
 
             writer.startElement("","", XML_NODE_ANIMFRM );
             {
@@ -521,7 +523,7 @@ namespace pmd2{ namespace graphics
         {
             using namespace SpriteXMLStrings;
 
-            stringstream strs;
+            //stringstream strs;
 
             //Give this sequence a name 
             AttributesImpl attr;
@@ -531,9 +533,9 @@ namespace pmd2{ namespace graphics
             //Write the content of each frame in that sequence
             for( unsigned int cptfrms = 0; cptfrms < aseq.getNbFrames(); ++cptfrms )
             {
-                strs <<"frm " <<cptfrms;
-                writeComment( writer, strs.str() );
-                strs = stringstream();
+                //strs <<"frm " <<cptfrms;
+                writeComment( writer, ("frm " + to_string(cptfrms)) /*strs.str()*/ );
+                //strs = stringstream();
                 WriteAnimFrame(writer, aseq.getFrame(cptfrms));
             }
 
@@ -638,7 +640,7 @@ namespace pmd2{ namespace graphics
             using namespace SpriteXMLStrings;
             Poco::Path outpath = Poco::Path(m_outPath).append(SPRITE_Frames);
             ofstream   outfile( outpath.toString() );
-            XMLWriter writer(outfile, MY_WRITER_FLAGS );
+            XMLWriter  writer(outfile, MY_WRITER_FLAGS );
 
             uint32_t saveprogress = 0;
 
@@ -1022,7 +1024,7 @@ namespace pmd2{ namespace graphics
             }
 
             {
-                utils::MrChronometer chrono("ParseXMLTotal");
+                //utils::MrChronometer chrono("ParseXMLTotal");
                 ParseSpriteInfo(inProperties);
                 ParseAnimations(inAnims     );
                 ParseMetaFrames(inMFrames   );
@@ -1370,7 +1372,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ParseMetaFrames(std::ifstream & in)
         {
-            utils::MrChronometer chrono("ParseXMLSpriteMetaFrames");
+            //utils::MrChronometer chrono("ParseXMLSpriteMetaFrames");
             using namespace Poco::XML;
             InputSource       src(in);
             DOMParser         parser;
@@ -1414,7 +1416,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ParseSpriteInfo(std::ifstream & in)
         {
-            utils::MrChronometer chrono("ParseXMLSpriteInfo");
+            //utils::MrChronometer chrono("ParseXMLSpriteInfo");
             using namespace SpriteXMLStrings;
             using namespace Poco::XML;
             InputSource       src(in);

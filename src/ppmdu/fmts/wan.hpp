@@ -513,7 +513,7 @@ namespace pmd2 { namespace filetypes
         {
             using namespace std;
             vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table); //Make iterator to frame pointer table
-            utils::Resolution               myres          = RES_64x64_SPRITE; //Max as default
+            //utils::Resolution               myres          = RES_64x64_SPRITE; //Max as default
             uint32_t                        progressBefore = 0; 
             //ensure capacity
             out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); 
@@ -698,7 +698,7 @@ namespace pmd2 { namespace filetypes
         template<class _frmTy>
             void WriteFramesBlock( const std::vector<_frmTy> & frms )
         {
-            utils::MrChronometer chronoTotal("WriteWanFrames");
+            //utils::MrChronometer chronoTotal("WriteWanFrames");
             std::vector<uint8_t> imgbuff; //This contains the raw bytes of the current frame
             imgbuff.reserve( MAX_NB_PIXELS_SPRITE_IMG ); //Reserve the maximum frame size
 

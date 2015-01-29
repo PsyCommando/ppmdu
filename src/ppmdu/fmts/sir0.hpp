@@ -36,14 +36,14 @@ namespace pmd2 { namespace filetypes
 
         uint32_t magic;
         uint32_t subheaderptr;
-        uint32_t eofptr;        //#TODO: Rename !!!
+        uint32_t ptrPtrOffsetLst;        //#TODO: Rename !!!
         uint32_t _null;
 
         std::string toString()const;
         unsigned int   size()const { return HEADER_LEN; }
 
         sir0_header( uint32_t magicnumber = 0u, uint32_t subhdroffset = 0u, uint32_t offptrlst = 0u )
-            :magic(magicnumber), subheaderptr(subhdroffset), eofptr(offptrlst), _null(0u)
+            :magic(magicnumber), subheaderptr(subhdroffset), ptrPtrOffsetLst(offptrlst), _null(0u)
         {}
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
@@ -127,7 +127,7 @@ namespace pmd2 { namespace filetypes
     //                header.magic        == SIR0_MAGIC_NUMBER_INT && 
     //                header._null        == 0x0                   && 
     //                header.subheaderptr <  filesizetotal         && header.subheaderptr > 0x0 &&
-    //                header.eofptr       <= filesizetotal         && header.subheaderptr > 0x0
+    //                header.ptrPtrOffsetLst       <= filesizetotal         && header.subheaderptr > 0x0
     //           );
     //}
     

@@ -28,7 +28,7 @@ namespace pmd2 { namespace filetypes
         strs <<setfill('.') <<setw(22) <<left 
              <<"Sprite header offset" <<": 0x" <<setfill('0') <<setw(8) <<uppercase <<right <<hex <<subheaderptr <<nouppercase <<"\n"
              <<setfill('.') <<setw(22) <<left 
-             <<"End of data offset"   <<": 0x" <<setfill('0') <<setw(8) <<uppercase <<right <<hex <<eofptr       <<nouppercase <<"\n";
+             <<"End of data offset"   <<": 0x" <<setfill('0') <<setw(8) <<uppercase <<right <<hex <<ptrPtrOffsetLst       <<nouppercase <<"\n";
         return strs.str();
     }
 
@@ -36,7 +36,7 @@ namespace pmd2 { namespace filetypes
     {
         itwriteto = utils::WriteIntToByteVector( magic,        itwriteto, false );
         itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( eofptr,       itwriteto );
+        itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst,       itwriteto );
         itwriteto = utils::WriteIntToByteVector( _null,        itwriteto );
         return itwriteto;
     }
@@ -45,7 +45,7 @@ namespace pmd2 { namespace filetypes
     {
         magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom, false );
         subheaderptr = utils::ReadIntFromByteVector<decltype(subheaderptr)>(itReadfrom);
-        eofptr       = utils::ReadIntFromByteVector<decltype(eofptr)>      (itReadfrom);
+        ptrPtrOffsetLst       = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>      (itReadfrom);
         _null        = utils::ReadIntFromByteVector<decltype(_null)>       (itReadfrom);
         return itReadfrom;
     }
@@ -247,13 +247,13 @@ namespace pmd2 { namespace filetypes
 
     //    //build our content block info
     //    cb._startoffset          = 0;
-    //    cb._endoffset            = headr.eofptr;
+    //    cb._endoffset            = headr.ptrPtrOffsetLst;
     //    cb._rule_id_that_matched = getRuleID();
     //    cb._type                 = getContentType();
 
     //    //Try to guess what is the subcontent
     //    analysis_parameter paramtopass( parameters._itparentbeg + headr.subheaderptr,  
-    //                                    parameters._itparentbeg + headr.eofptr, 
+    //                                    parameters._itparentbeg + headr.ptrPtrOffsetLst, 
     //                                    parameters._itparentbeg, 
     //                                    parameters._itparentend );
 

@@ -279,7 +279,7 @@ namespace pmd2{ namespace filetypes
             //Handle a single frame
             uint32_t frmindex = out_metafrms.size(); //get the size before pushback as frm index
             out_metafrms.push_back( ReadAMetaFrame( grpbeg + m_rawdata.begin() ) );
-            out_metafrmgrps.push_back( MetaFrameGroup{ vector<size_t>{ frmindex } } ); //create a group with a single entry
+            out_metafrmgrps.push_back( MetaFrameGroup{ vector<size_t>{ frmindex } } ); //create a group with a single entry refering to our new frame!
         }
         else
         {
@@ -617,7 +617,7 @@ namespace pmd2{ namespace filetypes
 
         //build our content block info
         cb._startoffset          = 0;
-        cb._endoffset            = headr.eofptr;
+        cb._endoffset            = headr.ptrPtrOffsetLst;
         cb._rule_id_that_matched = getRuleID();
         cb._type                 = getContentType();
 
@@ -637,7 +637,7 @@ namespace pmd2{ namespace filetypes
         headr.ReadFromContainer( itdatabeg );
 
         //Check magic number and make sure ptrs aren't null, or invalid.
-        if( headr.magic != SIR0_MAGIC_NUMBER_INT || headr.eofptr <= 0x10 || headr.subheaderptr <= 0x10 )
+        if( headr.magic != SIR0_MAGIC_NUMBER_INT || headr.ptrPtrOffsetLst <= 0x10 || headr.subheaderptr <= 0x10 )
             return false;
 
         //READ WAN SUB-HEADer and check if pointers fit within file!!

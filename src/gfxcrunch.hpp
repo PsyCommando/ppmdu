@@ -65,6 +65,8 @@ namespace gfx_util
         bool ParseOptionFaceNamesPath   ( const std::vector<std::string> & optdata );
         bool ParseOptionPokeNamesPath   ( const std::vector<std::string> & optdata );
         bool ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata );
+        bool ParseOptionCompressPKDPX   ( const std::vector<std::string> & optdata );
+        bool ParseOptionBuildPack       ( const std::vector<std::string> & optdata );
 
         //Execution
         int UnpackSprite();
@@ -118,12 +120,13 @@ namespace gfx_util
         };
 
         //Program Settings
-        bool                           m_bQuiet;        //Whether we should output to console 
-        bool                           m_ImportByIndex; //Whether the images should be imported by their index number, and not just the order they're sorted as
-        eExecMode                      m_execMode;      //This is set after reading the input path.
-        std::unique_ptr<pathwrapper_t> m_pInputPath;    //This is the input path that was parsed 
-        std::unique_ptr<pathwrapper_t> m_pOutputPath;   //This is the output path that was parsed
-        utils::io::eSUPPORT_IMG_IO     m_PrefOutFormat; //The image format to use when exporting
+        bool                           m_bQuiet;          //Whether we should output to console 
+        bool                           m_ImportByIndex;   //Whether the images should be imported by their index number, and not just the order they're sorted as
+        bool                           m_compressToPKDPX; //Whether the content should be compressed. Works with sprite files, and packed sprite files only this far!
+        eExecMode                      m_execMode;        //This is set after reading the input path.
+        std::unique_ptr<pathwrapper_t> m_pInputPath;      //This is the input path that was parsed 
+        std::unique_ptr<pathwrapper_t> m_pOutputPath;     //This is the output path that was parsed
+        utils::io::eSUPPORT_IMG_IO     m_PrefOutFormat;   //The image format to use when exporting
 
         //Other Misc Runtime Data<
         std::vector<std::string>       m_packPokemonNameList;   //List of all the pokemon names for each entry in a packfile!

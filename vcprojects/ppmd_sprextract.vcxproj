@@ -64,6 +64,8 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\wan_writer.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -215,6 +217,8 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\wan.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -381,6 +385,7 @@ copy "$(SolutionDir)resources\template_exchranims.xml" "$(SolutionDir)workdir\te
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

@@ -35,8 +35,9 @@ namespace gfx_util
 //=================================================================================================
 //  Constants
 //=================================================================================================
-    static const int HPBar_NB_Bars           = 65u;
-    static const int HPBar_UpdateMSecs       = 80; //Updates at every HPBar_UpdateMSecs mseconds
+    static const int      HPBar_NB_Bars        = 65u;
+    static const int      HPBar_UpdateMSecs    = 80; //Updates at every HPBar_UpdateMSecs mseconds
+    static const uint32_t ForcedPokeSpritePack = 0x1300; //The offset where pack files containing pokemon sprites are forced to begin at
 
 //=================================================================================================
 // 
@@ -60,9 +61,19 @@ namespace gfx_util
     */
     bool MatchesPokeSpritePackFileName( const std::string & filename )
     {
-        for( const auto & afilename : pmd2::filetypes::PackedPokemonSpritesFiles )
+        for( const auto & apack : pmd2::filetypes::PackedPokemonSpritesFiles )
         {
-            if( filename.compare( afilename ) == 0 )
+            if( filename.compare( apack.name ) == 0 )
+                return true;
+        }
+        return false;
+    }
+
+    bool MatchesCompressedPokeSpritePackFileName( const std::string & filename )
+    {
+        for( const auto & apack : pmd2::filetypes::PackedPokemonSpritesFiles )
+        {
+            if( filename.compare( apack.name ) == 0 && apack.isCompressed )
                 return true;
         }
         return false;
@@ -186,6 +197,13 @@ namespace gfx_util
             }
         }
         return false;
+    }
+
+    /*
+    */
+    inline bool IsFolderASpriteFolder( std::string path )
+    {
+        return AreReqFilesPresent_Sprite( utils::ListDirContent_FilesAndDirectories( path, true ) );
     }
 
 //=================================================================================================
@@ -315,6 +333,23 @@ namespace gfx_util
             "Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.",
             "-psprn \"PathToFile\"",
             std::bind( &CGfxUtil::ParseOptionPokeSprNamesPath, &GetInstance(), placeholders::_1 ),
+        },
+        //This compress the output, when re-building something. Only works with individual sprites and pack files containing sprites this far!
+        {
+            "pkdpx",
+            0,
+            "Force the outputed file to be compressed as a PKDPX! (If specified while buiding a pack file of sprite, the individual sprites in the pack will be compressed as PKDPX!)",
+            "-pkdpx",
+            std::bind( &CGfxUtil::ParseOptionCompressPKDPX,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //
+        {
+            "p",
+            0,
+            "Force the content of the directory to be handled as a pack file to assemble from unpacked sprites in its sub-directories.",
+            "-p",
+            std::bind( &CGfxUtil::ParseOptionBuildPack,  &GetInstance(), placeholders::_1 ),
         },
         //Forcing input format
         //{
@@ -486,7 +521,16 @@ namespace gfx_util
                                                                                                         false, 
                                                                                                         &parsingprogress );
                 filetypes::WAN_Writer writer( &sprite );
-                writer.write( outpath.toString(), &writingprogress );
+
+                if( m_compressToPKDPX )
+                {
+                    vector<uint8_t> result  = writer.write();
+                    vector<uint8_t> outdata;
+                    filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
+                    utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
+                }
+                else
+                    writer.write( outpath.toString(), &writingprogress );
             
             }
             else if( sprty == graphics::eSpriteType::spr8bpp )
@@ -496,7 +540,16 @@ namespace gfx_util
                                                                                                         false, 
                                                                                                         &parsingprogress );
                 filetypes::WAN_Writer writer( &sprite );
-                writer.write( outpath.toString(), &writingprogress );
+
+                if( m_compressToPKDPX )
+                {
+                    vector<uint8_t> result  = writer.write();
+                    vector<uint8_t> outdata;
+                    filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
+                    utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
+                }
+                else
+                    writer.write( outpath.toString(), &writingprogress );
             }
         }
         catch( Poco::Exception e )
@@ -537,23 +590,10 @@ namespace gfx_util
     int CGfxUtil::UnpackAndExportPackedCharSprites()
     {
         utils::MrChronometer chronounpacker( "Unpacking & Exporting Sprites" );
-        atomic<uint32_t>     parsingprogress(0);
-        atomic<uint32_t>     writingprogress(0);
-        atomic<bool>         stopupdateprogress(false);
-        future<void>         runThUpHpBar;
-
         Poco::File           infileinfo(m_pInputPath->mypath);
         Poco::Path           outpath(m_pOutputPath->mypath);
-        uint32_t             level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
         
         outpath.append( m_pInputPath->mypath.getBaseName() );
-
-        if( ! m_bQuiet )
-        {
-            if( ! m_bQuiet )
-                cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
-            DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
-        }
 
         try
         {
@@ -575,9 +615,6 @@ namespace gfx_util
             auto inpack = UnpackPackFile( m_pInputPath->mypath );
 
             //#3 - Run a check to find files that must be decompressed. And decompress them on the spot, replacing the raw data in the vector.
-                //Iterate over all files
-                //find if need decompression
-                //Turn them into sprite data
             vector<unique_ptr<graphics::BaseSprite>> mysprites(inpack.getNbSubFiles());
             TurnPackContentToSpriteData( inpack, mysprites );
 
@@ -605,7 +642,6 @@ namespace gfx_util
                 else 
                 {
                     //Build the sub-folder name
-                    //#TODO add support for giving the correct pokemon's name to each folders
                     stringstream sstr;
                     BaseSprite * curspr = mysprites[i].get();
 
@@ -629,36 +665,120 @@ namespace gfx_util
         }
         catch( Poco::Exception e )
         {
-            //Stop the thread
-            stopupdateprogress = true;
-            if( runThUpHpBar.valid() )
-                runThUpHpBar.get();
             //rethrow
             throw e;
         }
         catch( exception e )
         {
-            //Stop the thread
-            stopupdateprogress = true;
-            if( runThUpHpBar.valid() )
-                runThUpHpBar.get();
             //rethrow
             throw e;
         }
 
         cout<<"\n";
-
-        //Stop the thread
-        stopupdateprogress = true;
-        if( runThUpHpBar.valid() )
-            runThUpHpBar.get();
-
         return 0;
+    }
+
+
+    void BuildSprFromDirAndInsert( unsigned int curindex, const Poco::Path & inDirPath, filetypes::CPack & out_pack, bool importByIndex, bool bShouldCompress )
+    {
+        auto sprty = graphics::QuerySpriteTypeFromDirectory( inDirPath.toString() );
+
+        if( sprty == graphics::eSpriteType::spr4bpp )
+        {
+            auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( inDirPath.toString(), 
+                                                                                                    importByIndex, 
+                                                                                                    false );
+            filetypes::WAN_Writer writer( &sprite );
+            if( bShouldCompress )
+            {
+                auto filedata = writer.write();
+                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_pack.SubFiles()[curindex] );
+            }
+            else
+                out_pack.SubFiles()[curindex] = writer.write();
+            
+        }
+        else if( sprty == graphics::eSpriteType::spr8bpp )
+        {
+            auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( inDirPath.toString(), 
+                                                                                                    importByIndex, 
+                                                                                                    false );
+            filetypes::WAN_Writer writer( &sprite );
+            if( bShouldCompress )
+            {
+                auto filedata = writer.write();
+                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_pack.SubFiles()[curindex] );
+            }
+            else
+                out_pack.SubFiles()[curindex] = writer.write();
+        }
     }
 
     int CGfxUtil::PackAndImportCharSprites()
     {
-        utils::MrChronometer chronopacker( "Packing & Importing Sprites" );
+        utils::MrChronometer    chronopacker( "Packing & Importing Sprites" );
+        Poco::File              infileinfo(m_pInputPath->mypath);
+        Poco::Path              outpath(m_pOutputPath->mypath);
+        Poco::DirectoryIterator itDirCount( infileinfo );
+        Poco::DirectoryIterator itDirEnd;
+        filetypes::CPack        mypack;
+        //bool                    bShouldCompress = false;    //Whether the individual sprites should be compressed as PKDPX
+        vector<Poco::File>      validDirs;
+
+        //Count valid directories
+        cout <<"\nGathering valid sprite sub-directories...\n";
+        for(uint32_t nbfound = 0; itDirCount != itDirEnd; ++itDirCount )
+        {
+            if( itDirCount->isDirectory() )
+            {
+                if( IsFolderASpriteFolder( itDirCount->path() ) )
+                {
+                    validDirs.push_back( *itDirCount );
+                    ++nbfound;
+                    cout <<"\r" <<nbfound <<" so far..";
+                }
+                else
+                    cerr << "Directory \"" <<itDirCount->path() <<"\" will be ignored! Its missing content to build a sprite from it!\n";
+            }
+        }
+        cout <<"\rFound " <<validDirs.size() <<" valid sprites sub-directories!\n";
+
+        cout <<"\nReading sprite data...\n";
+
+        //Resize the file container
+        mypack.SubFiles().resize( validDirs.size() );
+
+        //Iterate the directory's content and get only the extracted sprites
+        for( unsigned int i = 0; i < validDirs.size(); )
+        {
+            Poco::File & curDir = validDirs[i];
+
+            uint32_t     insertat = 0;
+            stringstream sstrindex;
+            sstrindex << (Poco::Path( curDir.path() ).makeFile().getFileName()); //Get the name of the directory
+            sstrindex >> insertat;  //Extract the index # prefix from the folder name!
+
+            if( insertat < validDirs.size() )
+                BuildSprFromDirAndInsert( insertat, curDir.path(), mypack, m_ImportByIndex, m_compressToPKDPX );
+            else
+                cerr<< "<!>- Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
+
+            ++i;
+            cout <<"\r" <<setw(3) <<setfill(' ') <<( ( i * 100 ) / validDirs.size() ) <<"%";
+        }
+
+        //Don't forget to force the starting offset to this 
+        mypack.setForceFirstFilePosition( ForcedPokeSpritePack );
+
+        //If we don't have an output path, use the input path's parent, and create a file with the same name as the folder!
+        if( outpath.toString().empty() )
+            outpath.setFileName( Poco::Path(m_pInputPath->mypath).makeFile().setExtension(filetypes::PACK_FILEX).toString() );
+
+        string outfilepath = outpath.toString();
+        cout <<"\n\nBuilding \"" <<outfilepath <<"\"...\n";
+        utils::io::WriteByteVectorToFile( outfilepath, mypack.OutputPack() );
+        cout <<"\nDone!\n";
+
         return 0;
     }
 
@@ -748,13 +868,22 @@ namespace gfx_util
             //If the folder name matches one of the 3 special sprite pack file names
             if( MatchesPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() ) )
             {
-                m_execMode = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
+                m_execMode        = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
+                m_compressToPKDPX = MatchesCompressedPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() );
+
                 if( !m_bQuiet )
                 {
                     cout << "<*>- Input folder name matches the name of one of the pokemon sprites pack file!\n"
-                         << "<*>- Preparing to convert all sprites directories in the input directory into WAN sprites, and packing them into a pack file!";
+                         << "<*>- Preparing to convert all sprites directories in the input directory\n"
+                         << "     into WAN sprites, and packing them into a pack file!\n";
+                
+                    if( m_compressToPKDPX )
+                    {
+                        cout <<"<!>- Input directory name matches compressed pokemon sprite pack\n" 
+                             <<"     file's name. Enabling compression!\n";
+                    }
                 }
-                assert(false); //#TODO: Implement
+                return true;
             }
             
             //Otherwise, analyse the content of the folder!
@@ -903,6 +1032,17 @@ namespace gfx_util
     bool CGfxUtil::ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata )
     {
         return ParseOptionFilePath( optdata, m_pathToPokeSprNamesFile );
+    }
+
+    bool CGfxUtil::ParseOptionCompressPKDPX( const std::vector<std::string> & optdata )
+    {
+        return m_compressToPKDPX = true;
+    }
+
+    bool CGfxUtil::ParseOptionBuildPack( const std::vector<std::string> & optdata )
+    {
+        m_execMode = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
+        return true;
     }
 
 //--------------------------------------------

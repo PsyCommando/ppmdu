@@ -24,8 +24,12 @@ namespace pmd2 { namespace filetypes
 //==================================================================
 // Constants
 //==================================================================
+    
+
     namespace magicnumbers
     {
+        //#TODO: Not sure if we should put those in here :/
+
 	    //Common Magic Numbers 
         static const std::array<uint8_t,4> SIR0_MAGIC_NUMBER     = { 0x53, 0x49, 0x52, 0x30 };       //"SIR0"
         static const uint32_t              SIR0_MAGIC_NUMBER_INT = 0x53495230;                       //"SIR0", stored as unsigned int for convenience
@@ -35,6 +39,7 @@ namespace pmd2 { namespace filetypes
 
     //File extensions used in the library
     static const std::string AT4PX_FILEX             = "at4px";
+    static const std::string AT4PN_FILEX             = "at4pn";
     static const std::string IMAGE_RAW_FILEX         = "rawimg";
     static const std::string KAOMADO_FILEX           = "kao";
     static const std::string PACK_FILEX              = "bin";
@@ -42,22 +47,34 @@ namespace pmd2 { namespace filetypes
     static const std::string SIR0_FILEX              = "sir0";
     static const std::string WAN_FILEX               = "wan";
     static const std::string WTE_FILEX               = "wte";
+    static const std::string WTU_FILEX               = "wtu";
     static const std::string BGP_FILEX               = "bgp";
+    static const std::string SIR0_PKDPX_FILEX        = "sir0pkdpx";    //For a sir0 wrapped pkdpx
 
     //Padding bytes
     static const uint8_t COMMON_PADDING_BYTE        = 0xAA; //The most common padding byte in all PMD2 files !
     static const uint8_t PF_PADDING_BYTE            = 0xFF; // Padding character used by the Pack file for padding files and the header
 
     /*
+        A little struct for the special pokemon sprite pack file list below.
+    */
+    struct packedPokeSprs
+    {
+        std::string name;
+        bool        isCompressed;
+    };
+
+    /*
         The 3 files that contain the pokemon sprites in pmd2 are special.
         They all end with the ".bin" file extension.
     */
-    static const std::array<std::string,3> PackedPokemonSpritesFiles = 
+    static const std::array<packedPokeSprs,3> PackedPokemonSpritesFiles = 
     {{
-            "m_attack",
-            "m_ground",
-            "monster",
+        { "m_attack", true  },
+        { "m_ground", false },
+        { "monster",  true  },
     }};
+
 
 //==================================================================
 // Enums
@@ -71,11 +88,13 @@ namespace pmd2 { namespace filetypes
         AT4PX_CONTAINER,
         AT4PN_CONTAINER,
         SIR0_CONTAINER,
+        SIR0_PKDPX_CONTAINER, //SIR0-wrapped PKDPX
         COMPRESSED_DATA,    //For the content of PKDPX container, given we can't decompress when analysing
         PACK_CONTAINER,
         KAOMADO_CONTAINER,
         WAN_SPRITE_CONTAINER,
         WTE_FILE,
+        WTU_FILE,
         BGP_FILE,
 
         //#If you add any more, be sure to modify GetContentTypeName

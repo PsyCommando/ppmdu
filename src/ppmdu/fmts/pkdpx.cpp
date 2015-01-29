@@ -1,6 +1,7 @@
 #include "pkdpx.hpp"
 #include <ppmdu/fmts/px_compression.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
+#include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <cassert>
@@ -432,6 +433,92 @@ namespace pmd2{ namespace filetypes
         return std::equal( PKDPX_MAGIC_NUMBER.begin(), PKDPX_MAGIC_NUMBER.end(), itdatabeg );
     }
 
+
+    /*
+        sir0pkdpx_rule
+            Rule for identifying PKDPX content wrapped by a SIR0 container. With the ContentTypeHandler!
+    */
+    class sir0pkdpx_rule : public IContentHandlingRule
+    {
+    public:
+        sir0pkdpx_rule(){}
+        ~sir0pkdpx_rule(){}
+
+        //Returns the value from the content type enum to represent what this container contains!
+        virtual e_ContentType getContentType()const
+        {
+            return e_ContentType::SIR0_PKDPX_CONTAINER;
+        }
+
+        //Returns an ID number identifying the rule. Its not the index in the storage array,
+        // because rules can me added and removed during exec. Thus the need for unique IDs.
+        //IDs are assigned on registration of the rule by the handler.
+        virtual content_rule_id_t getRuleID()const
+        {
+            return m_myID;
+        }
+        virtual void              setRuleID( content_rule_id_t id )
+        {
+            m_myID = id;
+        }
+
+        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+        virtual ContentBlock Analyse( const analysis_parameter & parameters )
+        {
+            //#TODO: Seriously get rid of this method, its completely useless...
+            sir0_header  sir0hdr; 
+            pkdpx_header headr;
+            ContentBlock cb;
+            auto         itdatabeg = parameters._itdatabeg;
+
+            //Read the header
+            sir0hdr.ReadFromContainer( itdatabeg );
+            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr) );
+
+            //build our content block info
+            cb._startoffset          = 0;
+            cb._endoffset            = std::distance( parameters._itdatabeg, parameters._itdataend );
+            cb._rule_id_that_matched = getRuleID();
+            cb._type                 = getContentType();
+
+            //Handle sub-containers!
+            //Since we don't want to decompress everything just to tell what it is
+            // we'll tag it as "CompressedData"
+            //cb._hierarchy.push_back( ContentBlock( e_ContentType::COMPRESSED_DATA, headr.HEADER_SZ, cb._endoffset ) );
+
+            return cb;
+        }
+
+        //This method is a quick boolean test to determine quickly if this content handling
+        // rule matches, without in-depth analysis.
+        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
+                               types::constitbyte_t   itdataend,
+                               const std::string    & filext )
+        {
+            using namespace magicnumbers;
+
+            sir0_header  mysir0hdr;
+            pkdpx_header mypkdpxhdr;
+            try
+            {
+                mysir0hdr.ReadFromContainer( itdatabeg );
+                if( mysir0hdr.magic == SIR0_MAGIC_NUMBER_INT )
+                {
+                    mypkdpxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
+                    return std::equal( PKDPX_MAGIC_NUMBER.begin(), PKDPX_MAGIC_NUMBER.end(), mypkdpxhdr.magicn.begin() );
+                }
+            }
+            catch(...)
+            {
+                return false;
+            }
+            return false;
+        }
+
+    private:
+        content_rule_id_t m_myID;
+    };
+
 //========================================================================================================
 //  pkdpx_rule_registrator
 //========================================================================================================
@@ -439,6 +526,7 @@ namespace pmd2{ namespace filetypes
         pkdpx_rule_registrator
             A small singleton that has for only task to register the pkdpx_rule!
     */
-    RuleRegistrator<pkdpx_rule> RuleRegistrator<pkdpx_rule>::s_instance;
+    RuleRegistrator<pkdpx_rule>     RuleRegistrator<pkdpx_rule>::s_instance;
+    RuleRegistrator<sir0pkdpx_rule> RuleRegistrator<sir0pkdpx_rule>::s_instance;
 
 };};

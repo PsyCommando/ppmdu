@@ -85,18 +85,17 @@ namespace pmd2{ namespace graphics
             _32x32 = 0x08,  // 00xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
             _64x64 = 0x0C,  // 00xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
 
-            _8x16  = 0x40,  // 01xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
-            _16x8  = 0x80,  // 10xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
+            _16x8  = 0x40,  // 01xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
+            _8x16  = 0x80,  // 10xx xxxx xxxx xxxx - 00xx xxxx xxxx xxxx
 
-            _8x32  = 0x44,  // 01xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
-            _32x8  = 0x84,  // 10xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
+            _32x8  = 0x44,  // 01xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
+            _8x32  = 0x84,  // 10xx xxxx xxxx xxxx - 01xx xxxx xxxx xxxx
             
+            _32x16 = 0x48,  // 01xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
+            _16x32 = 0x88,  // 10xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
 
-            _16x32 = 0x48,  // 01xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
-            _32x16 = 0x88,  // 10xx xxxx xxxx xxxx - 10xx xxxx xxxx xxxx
-
-            _32x64 = 0x4C,  // 01xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
-            _64x32 = 0x8C,  // 10xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
+            _64x32 = 0x4C,  // 01xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
+            _32x64 = 0x8C,  // 10xx xxxx xxxx xxxx - 11xx xxxx xxxx xxxx
 
             _INVALID,       //Returned in cases of errors
         };
@@ -131,16 +130,16 @@ namespace pmd2{ namespace graphics
             switch(ares)
             {
                 //square
-                case eRes::_8x8:   return graphics::RES_8x8_SPRITE;
+                case eRes::_8x8  : return graphics::RES_8x8_SPRITE;
                 case eRes::_16x16: return graphics::RES_16x16_SPRITE;
                 case eRes::_32x32: return graphics::RES_32x32_SPRITE;
                 case eRes::_64x64: return graphics::RES_64x64_SPRITE;
 
                 //non-square
-                case eRes::_8x16: return graphics::RES_8x16_SPRITE;
-                case eRes::_16x8: return graphics::RES_16x8_SPRITE;
-                case eRes::_32x8: return graphics::RES_32x8_SPRITE;
-                case eRes::_8x32: return graphics::RES_8x32_SPRITE;
+                case eRes::_8x16 : return graphics::RES_8x16_SPRITE;
+                case eRes::_16x8 : return graphics::RES_16x8_SPRITE;
+                case eRes::_32x8 : return graphics::RES_32x8_SPRITE;
+                case eRes::_8x32 : return graphics::RES_8x32_SPRITE;
                 case eRes::_32x16: return graphics::RES_32x16_SPRITE;
                 case eRes::_16x32: return graphics::RES_16x32_SPRITE;
                 case eRes::_64x32: return graphics::RES_64x32_SPRITE;

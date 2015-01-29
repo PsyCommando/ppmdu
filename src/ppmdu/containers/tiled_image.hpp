@@ -298,7 +298,8 @@ namespace gimg
             {
                 throw ExTImgResNotDivisibleBy(tile_t::WIDTH, tile_t::HEIGHT, pixelsWidth, pixelsHeigth );
             }
-            setNbTilesRowsAndColumns( pixelsHeigth / tile_t::HEIGHT, pixelsWidth / tile_t::WIDTH );
+            setNbTilesRowsAndColumns( pixelsWidth / tile_t::WIDTH, pixelsHeigth / tile_t::HEIGHT );
+            //setNbTilesRowsAndColumns( pixelsHeigth / tile_t::HEIGHT, pixelsWidth / tile_t::WIDTH ); //Stupid stupid stupid stupid...
         }
 
         //Implementation for Non-indexed images
