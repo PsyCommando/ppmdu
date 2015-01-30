@@ -4,4 +4,4 @@ If you're not using the visual studio solution, then here are a few things to co
 
 With the current configuration of each utilities, and given the limitations of some libraries, 
 you have to compile all dependencies linking with the multi-threaded debug, and multi-threaded 
-stdlib, for debug and release respectively. Set it in "C++->Code Generation".
+stdlib, for debug and release respectively. 

@@ -3,6 +3,9 @@
 #include <Poco/DirectoryIterator.h>
 #include <cassert>
 #include <iostream>
+#include <sstream>
+#include <vector>
+#include <string>
 using namespace std;
 
 namespace utils
@@ -48,5 +51,35 @@ namespace utils
     bool pathExists( const std::string & inputpath )
     {
         return Poco::File(inputpath).exists();
+    }
+
+    //Read entire directory content to string vector
+    std::vector<std::string> ListDirContent_FilesAndDirectories( const std::string & dirpath, bool bFilenameOnly )
+    {
+        vector<string>          dircontent;
+        Poco::DirectoryIterator itdir(dirpath);
+        Poco::DirectoryIterator itdirend;
+
+        while( itdir != itdirend )
+        {
+            if( bFilenameOnly )
+            {
+                if( itdir->isFile() )
+                    dircontent.push_back( Poco::Path( itdir->path() ).getFileName() );
+                else if( itdir->isDirectory() )
+                {
+                    stringstream sstr;
+                    dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() + "/" );
+                }
+            }
+            else
+            {
+                dircontent.push_back( itdir->path() );
+            }
+
+            ++itdir;
+        }
+
+        return std::move( dircontent );
     }
 };

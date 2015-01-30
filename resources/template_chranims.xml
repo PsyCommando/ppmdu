@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnimationListTemplate>
+    <!--This contains the names for all the required character animations for regular pokemons.-->
+    <!--Those 13 animation groups are required!-->
+
+    <!--Group 0: Run Animations -->
+    <!--The run cycle when moving around in dungeons or anywhere else.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Run</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 1: Running Slow Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Running Slow</Name>
+        <!-- Contains 0 sequence(s)) -->
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 2: Unk1 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk1</Name>
+        <!-- Contains 0 sequence(s)) -->
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 3: Unk2 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk2</Name>
+        <!-- Contains 0 sequence(s)) -->
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 4: Unk3 Animations -->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Unk3</Name>
+        <!-- Contains 0 sequence(s)) -->
+        <AnimSequences />
+    </AnimGroup>
+    
+    <!--Group 5: Sleep(In dungeons, only for regular, 13 anim groups, pokemons) Animations -->
+    <!--A slow loop with 2 unique frames. Played while the pokemon is sleeping in dungeons. Only for non-hero/partner pokemon!-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Sleep</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 6: TakingAHit Animations -->
+    <!--A single shaking frame of animation when taking damages.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>TakingAHit</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 7: Idle Animations -->
+    <!--The character's idle loop that plays while not moving. Ex: The 3 Poochyena' barking loop while standing around in the guild.-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Idle</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+	<!--Group 8: Unk4-->
+	<AnimGroup>
+        <Name>Unk4</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+	<!--Group 9: Unk5-->
+	<AnimGroup>
+        <Name>Unk5</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+	<!--Group 10: Unk6-->
+	<AnimGroup>
+        <Name>Unk6</Name>
+		<AnimSequence/>
+	</AnimGroup>
+    
+    <!--Group 11: Shaken Animations -->
+    <!--A single frame is shifted left and right to give the impression the character is shaking-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Shaken</Name>
+        <!-- Contains 8 sequence(s)) -->
+        <AnimSequences>
+            <AnimSequence>
+                <Name>Down</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Left</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Up-Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Right</Name>
+            </AnimSequence>
+            <AnimSequence>
+                <Name>Down-Right</Name>
+            </AnimSequence>
+        </AnimSequences>
+    </AnimGroup>
+    
+    <!--Group 12: Look Around Animations -->
+    <!--Turn on 360 degrees from current facing-->
+    <AnimGroup>
+        <!-- Name for the current group -->
+        <Name>Look Around</Name>
+        <!-- Contains 0 sequence(s)) -->
+        <AnimSequences/>
+    </AnimGroup>
+    
+</AnimationListTemplate>

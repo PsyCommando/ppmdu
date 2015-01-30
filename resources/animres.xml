@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AnimationResources>
+    <!--Animation Template XML file for characters with 13 anim groups(regular characters)-->
+    <CharAnimTemplateFile>template_chranims.xml</CharAnimTemplateFile>
+    <!--Animation Template XML file for characters with 35 anim groups(Hero/Partner)-->
+    <ExCharAnimTemplateFile>template_exchranims.xml</ExCharAnimTemplateFile>
+</AnimationResources>

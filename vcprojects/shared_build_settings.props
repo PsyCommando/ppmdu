@@ -20,6 +20,14 @@
     <LibraryPath>$(SolutionDir)lib_release;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(SolutionDir)lib_release;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
+    <TargetName>$(ProjectName)_xp</TargetName>
+  </PropertyGroup>
   <PropertyGroup>
     <IntDir>$(Configuration)_$(ProjectName)\</IntDir>
     <_PropertySheetDisplayName>shared_build_settings</_PropertySheetDisplayName>
@@ -30,6 +38,9 @@
       <PreprocessorDefinitions>__WIN32;POCO_STATIC</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <ClCompile Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

@@ -34,11 +34,22 @@ namespace pmd2 { namespace graphics
 
     //Known Image Resolultions #TODO: Make a table with those
     static const utils::Resolution RES_INVALID      = {  0,  0 };
-    static const utils::Resolution RES_8x8_SPRITE   = {  8,  8 }; 
-    static const utils::Resolution RES_16x8_SPRITE  = { 16,  8 }; 
+
+    //Legal resolutions for sprites
+    static const utils::Resolution RES_8x8_SPRITE   = {  8,  8 };
     static const utils::Resolution RES_16x16_SPRITE = { 16, 16 };
-    static const utils::Resolution RES_16x32_SPRITE = { 16, 32 };
     static const utils::Resolution RES_32x32_SPRITE = { 32, 32 };
+    static const utils::Resolution RES_64x64_SPRITE = { 64, 64 };
+    static const utils::Resolution RES_8x16_SPRITE  = {  8, 16 }; 
+    static const utils::Resolution RES_16x8_SPRITE  = { 16,  8 }; 
+    static const utils::Resolution RES_32x8_SPRITE  = { 32,  8 };
+    static const utils::Resolution RES_8x32_SPRITE  = {  8, 32 };
+    static const utils::Resolution RES_32x16_SPRITE = { 32, 16 };
+    static const utils::Resolution RES_16x32_SPRITE = { 16, 32 };
+    static const utils::Resolution RES_64x32_SPRITE = { 64, 32 };
+    static const utils::Resolution RES_32x64_SPRITE = { 32, 64 };
+
+    //Legal resolutions for portraits
     static const utils::Resolution RES_PORTRAIT     = { 40, 40 };
 
 

@@ -341,19 +341,19 @@ namespace pmd2 { namespace filetypes
         {
             case eSUPPORT_IMG_IO::PNG:
             {
-                ImportFrom4bppPNG( palimg, imagefile.myfile.path() );
+                ImportFromPNG( palimg, imagefile.myfile.path() );
                 break;
             }
             case eSUPPORT_IMG_IO::BMP:
             {
-                ImportFrom4bppBMP( palimg, imagefile.myfile.path() );
+                ImportFromBMP( palimg, imagefile.myfile.path() );
                 break;
             }
             case eSUPPORT_IMG_IO::RAW:
             {
                 stringstream pathtoraw;
                 pathtoraw << imagepath.parent().toString() << imagepath.getBaseName();
-                ImportFrom4bppRawImgAndPal( palimg, pathtoraw.str(), graphics::RES_PORTRAIT );
+                ImportRawImg( palimg, pathtoraw.str(), graphics::RES_PORTRAIT );
                 break;
             }
             default:
@@ -476,17 +476,17 @@ namespace pmd2 { namespace filetypes
                 if( m_exportType == eSUPPORT_IMG_IO::RAW )
                 {
                     //Don't append an extension! We need only the filename!
-                    ExportTo4bppRawImgAndPal( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                    ExportRawImg( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
                 }
                 else if( m_exportType == eSUPPORT_IMG_IO::BMP )
                 {
                     strsOutputPath <<"." << BMP_FileExtension;
-                    ExportTo4bppBMP( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                    ExportToBMP( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
                 }
                 else //If all else fail, export to PNG !
                 {
                     strsOutputPath <<"." << PNG_FileExtension;
-                    ExportTo4bppPNG( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
+                    ExportToPNG( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
                 }
             }
         }

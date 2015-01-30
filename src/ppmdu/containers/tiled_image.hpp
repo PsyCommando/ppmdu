@@ -26,6 +26,26 @@ Description: A set of utilities for dealing with and storing tiled images for
 namespace gimg
 {
 //=============================================================================
+//  Exceptions
+//=============================================================================
+    /*
+        Exception thrown when an invalid resolution is being set for a tiled image.
+    */
+    class ExTImgResNotDivisibleBy : public std::runtime_error 
+    {
+    public:
+        ExTImgResNotDivisibleBy( unsigned int expecteddivwidth, unsigned int expecteddivheight, unsigned int badwidth, unsigned int badheight )
+            :std::runtime_error ("Error attempted to set a tiled image resolution not divisible by its tiles' resoltution!"),
+             _expecteddivwidth(expecteddivwidth), _expecteddivheight(expecteddivheight), _badwidth(badwidth), _badheight(badheight)
+        {}
+
+        unsigned int _expecteddivwidth;
+        unsigned int _expecteddivheight;
+        unsigned int _badwidth;
+        unsigned int _badheight;
+    };
+
+//=============================================================================
 // Tile
 //=============================================================================
     /*************************************************************************************************
@@ -274,7 +294,12 @@ namespace gimg
         //Set the image resolution in pixels. Must be divisible by 8!
         inline void setPixelResolution( unsigned int pixelsWidth, unsigned int pixelsHeigth )
         {
-            setNbTilesRowsAndColumns( pixelsHeigth / tile_t::HEIGHT, pixelsWidth / tile_t::WIDTH );
+            if( (pixelsWidth % tile_t::WIDTH) != 0 || (pixelsHeigth % tile_t::HEIGHT) != 0 )
+            {
+                throw ExTImgResNotDivisibleBy(tile_t::WIDTH, tile_t::HEIGHT, pixelsWidth, pixelsHeigth );
+            }
+            setNbTilesRowsAndColumns( pixelsWidth / tile_t::WIDTH, pixelsHeigth / tile_t::HEIGHT );
+            //setNbTilesRowsAndColumns( pixelsHeigth / tile_t::HEIGHT, pixelsWidth / tile_t::WIDTH ); //Stupid stupid stupid stupid...
         }
 
         //Implementation for Non-indexed images
@@ -585,9 +610,9 @@ namespace gimg
         //Handle every bits
         // Since we don't know if pixels are laid out across several bytes or whether they're aligned to 8 bits, 
         // we have to handle bit per bit !
-        while( cptbits < NB_TOTAL_BITS_IMG && 
-               itpixel != itendpixel && 
-               itBegByte   != itEndByte )
+        while( cptbits    < NB_TOTAL_BITS_IMG && 
+               itpixel   != itendpixel && 
+               itBegByte != itEndByte )
         {
             unsigned int posbitinbyte  = ( cptbits % 8u );                 //0-7
             unsigned int pixelbitindex = cptbits % NB_BITS_PER_PIXELS;     //0-(NB_BITS_PER_PIXELS-1)
@@ -631,6 +656,7 @@ namespace gimg
         }
     }
 
+    //#TODO: Do something with the redundant code between both of the Write methods !!!
     /*************************************************************************************************
         WriteTiledImg
             Same as above, but for a back insert iterator
@@ -768,8 +794,330 @@ namespace gimg
         //#3 - Write the buffer!
         utils::WriteByteVectorToFile( filepath, outputbuffer );
     }
+
+
+
+//================================================================================================
+//  timgPixReader
+//================================================================================================
+    /*
+        timgPixReader
+            Give this an iterator to a tiled_image, and it will turn bytes fed to it into 
+            the proper ammount of pixels into the target tiled_image !
+
+            NOTE: This provide a way to invert pixel endianess at bit level.
+    */
+    template<class _TImg_T, class _outit>
+        class timgPixReader
+    {
+    //---------------------------------
+    //       Constants + Typedefs
+    //---------------------------------
+    public:
+        static const unsigned int BytesPerPixel = _TImg_T::pixel_t::mypixeltrait_t::BYTES_PER_PIXEL;
+        static const unsigned int BitsPerPixel  = _TImg_T::pixel_t::mypixeltrait_t::BITS_PER_PIXEL; //If constexpr would work in vs, this would be less ugly !
+
+        typedef std::array<uint8_t, BytesPerPixel>                     buffer_t;
+        typedef typename _TImg_T::pixel_t::mypixeltrait_t::pixeldata_t pixeldata_t;
+        typedef _TImg_T                                                timg_t;
+        typedef _outit                                                 outit_t;
+
+    private:
+    //---------------------------------
+    //        Optimized Handlers
+    //---------------------------------
+        /*
+            Those structs contain specialised handling code for specific types of pixels.
+            They're instantiated depeneding on the pixel format of image we're handling,
+            thanks to the magic of templates!
+        */
+        friend struct Handle4bpp;
+        friend struct Handle8bppMultiBytes;
+        friend struct Handle8bpp;
+        friend struct GenericBitHandler;
+
+        typedef timgPixReader<_TImg_T,_outit> parent_t;
+
+        /*
+            Handle 4bpp pixels only
+        */
+        struct Handle4bpp
+        {
+            Handle4bpp( parent_t * parentpixreader )
+                :m_pPixEater(parentpixreader)
+            {}
+
+            static const bool ShouldUse = BitsPerPixel == 4 && BytesPerPixel == 1;
+
+            inline void Parse( uint8_t abyte )
+            {
+                auto & itrout = (m_pPixEater->m_itOut); 
+
+                if( m_pPixEater->m_bLittleEndian )
+                {
+                    (*itrout) = abyte & 0xf;
+                    ++itrout;
+                    (*itrout) = abyte >> 4;
+                    ++itrout;
+                }
+                else
+                {
+                    (*itrout) = abyte >> 4;
+                    ++itrout;
+                    (*itrout) = abyte & 0xf;
+                    ++itrout;
+                }
+            }
+            parent_t * m_pPixEater;
+        };
+
+        /*
+            Handle multi-bytes pixels where each components are 8 bits only
+        */
+        struct Handle8bppMultiBytes
+        {
+            typedef std::array<uint8_t, BytesPerPixel> buffer_t;
+
+            Handle8bppMultiBytes( parent_t * pixreader )
+                :m_pPixEater(pixreader)
+            {
+                m_itBuff = m_buffer.begin();
+            }
+
+            static const bool ShouldUse = BitsPerPixel == 8 && BytesPerPixel > 1;
+
+            inline void Parse( uint8_t abyte )
+            {
+                (*m_itBuff) = abyte;
+                ++m_itBuff;
+
+                //Check if after inserting we've filled the buffer
+                if( m_itBuff == m_buffer.end() )
+                {
+                    (*(m_pPixEater->m_itOut)) = utils::ReadIntFromByteVector<pixeldata_t>( m_buffer.begin(), (m_pPixEater->m_bLittleEndian) );
+                    ++(m_pPixEater->m_itOut);
+                    m_itBuff = m_buffer.begin(); //reset buffer write pos
+                }
+            }
+
+            buffer_t                      m_buffer;
+            typename buffer_t::iterator   m_itBuff;
+            parent_t                    * m_pPixEater;
+        };
+
+        /*
+            Handle 8bpp pixels only
+        */
+        struct Handle8bpp
+        {
+            Handle8bpp( parent_t * pixreader )
+                :m_pPixEater(pixreader)
+            {}
+
+            static const bool ShouldUse = BitsPerPixel == 8 && BytesPerPixel == 1;
+
+            inline void Parse( uint8_t abyte )
+            {
+                (*(m_pPixEater->m_itOut)) = abyte;
+                ++(m_pPixEater->m_itOut);
+            }
+            parent_t * m_pPixEater;
+        };
+
+        /*
+            Handle any pixel formats bit per bit. 
+            This is the slowest method, but the most surefire one!
+        */
+        struct GenericBitHandler
+        {
+            static const bool ShouldUse = BitsPerPixel != 8 && BitsPerPixel != 4;
+
+            GenericBitHandler( parent_t * pixreader )
+                :m_bitsbuff(pixreader),m_pPixEater(pixreader)
+            {}
+
+            ~GenericBitHandler()
+            {
+                //Warn when stopping parsing before all bits were removed
+                if( m_bitsbuff.curbit != 0 )
+                {
+                    std::cerr << "<!>- Warning: timgPixReader::GenericBitHandler : Stopping with a pixel still being parsed !\n";
+                }
+            }
+
+            inline void Parse( uint8_t abyte )
+            {
+                if( m_bLittleEndian )
+                    assert( false ); //Can't make this guarranty yet ! #TODO: Gotta make sure if its safe to ignore pixel endian on single bits !
+
+                //Just feed the bits to the pixel eater and empty it only when its full !
+                for( int8_t bit = 7; bit >= 0; --bit, m_bitsbuff( ( (bit >> abyte) & 0x1) ) )
+            }
+
+            /*
+                A bitbuffer to accumulate bits for a pixel
+            */
+            struct BitEater
+            {
+                BitEater( outit_t & theitout ):itout(theitout){ reset();}
+
+                inline void reset()
+                {
+                    curbit=0;
+                    buffer=0;
+                }
+
+                //Return true, when full.
+                // Fills the pixel bits from left to right. highest to lowest!
+                // The value of the bit passed must be in the lowest bit of the byte !
+                inline bool operator()( uint8_t abit )
+                {
+                    buffer |= ( ((BitsPerPixel-1) - curbit) << (abit & 0x1) );
+                    ++curbit;
+
+                    if( curbit == BitsPerPixel )
+                    {
+                        (*itout) = buffer;
+                        reset();
+                        return true;
+                    }
+                    return false
+                }
+
+                outit_t                              & itout;
+                unsigned int                           curbit;
+                typename timg_t::pixel_t::pixeldata_t  buffer;
+            };
+
+            BitEater   m_bitsbuff;
+            parent_t * m_pPixEater;
+        };
+
+    
+    //---------------------------------
+    //   Optimized handler selector
+    //---------------------------------
+    public:
+        typedef typename std::conditional<Handle4bpp::ShouldUse, Handle4bpp,
+                         typename std::conditional<Handle8bpp::ShouldUse, Handle8bpp, 
+                                  typename std::conditional<Handle8bppMultiBytes::ShouldUse, Handle8bppMultiBytes, 
+                                           GenericBitHandler >::type >::type >::type
+                handlerstruct_t;    //The struct containing the optimized handling code for the pixel we're dealing with !
+
+    //---------------------------------
+    //     Constructor + Operator
+    //---------------------------------
+        explicit timgPixReader( outit_t itoutbeg, bool bLittleEndian = true )
+            :m_itOut(itoutbeg), m_bLittleEndian(bLittleEndian), m_pixelHandler(this)
+        {}
+
+        explicit timgPixReader( timg_t & destimg, bool bLittleEndian = true )
+            :m_bLittleEndian(bLittleEndian), m_pixelHandler(this), m_itOut(&destimg)
+        {
+            m_itOut = destimg.begin();
+        }
+
+        timgPixReader & operator=( uint8_t abyte )
+        {
+            m_pixelHandler.Parse( abyte );
+            return (*this);
+        }
+
+    private:
+
+        handlerstruct_t             m_pixelHandler;
+        outit_t                     m_itOut;
+        bool                        m_bLittleEndian;
+    };
+
+
+//================================================================================================
+//  PixelReaderIterator
+//================================================================================================
+    /*
+        PixelReaderIterator
+            Pass a tiled_image as parameter at construction, and feed the PixelReaderIterator bytes. 
+            It will assemble pixels from those automatically and push them back into the 
+            tiled_image passed as parameter!
+
+            NOTE: This does not provide any way of inverting pixel "endianness" or actual endianness !
+    */
+    template<class _ContainerType>
+        class PixelReaderIterator : public std::_Outit
+    {
+    public:
+        
+        typedef  PixelReaderIterator<_ContainerType>                                mytype_t;
+        typedef _ContainerType                                                      container_type;
+        typedef _ContainerType                                                      container_t;
+        typedef typename  container_t *                                             container_ptr_t;
+        typedef timgPixReader<typename container_t, typename container_t::iterator> mypixreader_t;
+        typedef typename _ContainerType::value_type                                 valty_t;
+
+        explicit PixelReaderIterator( container_t & tiledimg )
+            :m_pContainer( std::addressof(tiledimg) ), m_pixreader( tiledimg )
+        {}
+
+        PixelReaderIterator( const mytype_t & other )
+            :m_pContainer( other.m_pContainer ), m_pixreader( other.m_pixreader )
+        {}
+
+        mytype_t & operator=( const mytype_t & other )
+        {
+            this->m_pContainer = other.m_pContainer;
+            this->m_pixreader  = other.m_pixreader;
+            return *this;
+        }
+
+        //explicit PixelReaderIterator( container_ptr_t pcontainer )throw()
+        //    :m_pContainer(pcontainer),m_pixreader(*pcontainer)
+        //{}
+
+
+        /*
+            Operator =
+        */
+        mytype_t & operator=( uint8_t val )
+        {
+            m_pixreader = val;
+            return (*this);
+        }
+
+        mytype_t & operator=( uint8_t && val )
+        {
+            m_pixreader = val;
+            return (*this);
+        }
+
+        /*
+            Operator ++(prefix)
+        */
+        mytype_t& operator++()  
+        { 
+            //nothing
+            return (*this);
+        }
+
+        /*
+            Operator ++(postfix)
+        */
+        mytype_t operator++(int)
+        {
+            //nothing;
+            return (*this);
+        }
+
+        /*
+            Operator *
+        */
+        mytype_t&       operator*()        { return (*this); }
+        const mytype_t& operator*() const  { return (*this); }
+
+    protected:
+        container_ptr_t                m_pContainer;
+        mypixreader_t                  m_pixreader;
+    };
 };
 
-//#include "tiled_image.cpp"
 
 #endif

@@ -9,7 +9,7 @@ Description:  Code for handling "pack files".
 **** TODO *****
  - Implement content type detection rule!
  - rewrite this mess into something simpler
- - improve for memory loading and manipulation
+ - Read directly into raw buffer instead of copying to another vector!
 
 */
 #include <exception>
@@ -136,10 +136,10 @@ namespace pmd2 { namespace filetypes
 
 
         //------- Pack Manipulation --------
-
         //#TODO: Provide better controlled ways to access those things:
-        std::vector<types::bytevec_t> & SubFiles()                                {return m_SubFiles;}
-        types::bytevec_t              & getSubFile( types::bytevec_szty_t index ) {return m_SubFiles[index];}
+        inline std::vector<types::bytevec_t> & SubFiles()                                { return m_SubFiles;        }
+        inline types::bytevec_t              & getSubFile( types::bytevec_szty_t index ) { return m_SubFiles[index]; }
+        inline unsigned int                    getNbSubFiles()const                      { return m_SubFiles.size(); }
 
     private:
         //-------------------------------

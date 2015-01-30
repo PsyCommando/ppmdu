@@ -146,6 +146,11 @@ namespace pmd2{ namespace filetypes
             Function to compress a range into another range.
             The output range must be at least 
             itinputend - itinputbeg in size !
+
+            Also write the PKDPX header. 
+
+            The returned px_info_header is just for 
+            reference.
     *******************************************************/
     compression::px_info_header CompressToPKDPX( std::vector<uint8_t>::const_iterator             itinputbeg, 
                                                  std::vector<uint8_t>::const_iterator             itinputend, 

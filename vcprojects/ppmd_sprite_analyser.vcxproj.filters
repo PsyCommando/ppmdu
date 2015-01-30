@@ -168,6 +168,9 @@
     <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\pspr_analyser.cpp">
@@ -259,6 +262,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

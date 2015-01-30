@@ -451,5 +451,4 @@ const Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount )
         //Done
     }
 
-
 };};

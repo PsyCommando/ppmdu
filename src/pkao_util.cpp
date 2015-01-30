@@ -37,7 +37,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.31";
+    static const string PVERSION                            = "0.4";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";

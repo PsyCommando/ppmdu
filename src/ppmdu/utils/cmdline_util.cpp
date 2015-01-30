@@ -102,7 +102,7 @@ namespace utils{ namespace cmdl
     //Returns whether the whole argument array has been scanned for arguments
     bool CArgsParser::hasReachedTheEndOfArgList()const
     {
-        return m_rawcurarg != m_rawargs.end();
+        return m_rawcurarg == m_rawargs.end();
     }
 
     //Takes the index of the option from the option list passed at construction, if its the case!
@@ -167,7 +167,11 @@ namespace utils{ namespace cmdl
         ResetReadPos(); //make sure we're at the beginning
 
         while( !hasReachedTheEndOfArgList() )
-            allparams.push_back( getNextParam() );
+        {
+            auto nextpara = getNextParam();
+            if( nextpara.size() > 0 )
+                allparams.push_back( nextpara );
+        }
 
         m_rawcurarg = itbefore; //restore initial state
         return std::move(allparams); 
@@ -291,11 +295,11 @@ namespace utils{ namespace cmdl
         // For options:
         if( !refMyOpts.empty() )
         {
-            cout <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
-                 << " option" <<": An optional option from the list below..\n";
+            cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
+                 << " option" <<": An option from the list below..(optional)\n";
             if(bDisplayOptValLegend)
             {
-                cout <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
+                cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
                      << " optionvalue" <<": An optional value for the specified option..\n";
             }
         }
@@ -317,8 +321,9 @@ namespace utils{ namespace cmdl
         // For Extra:
         if( myExtra != nullptr )
         {
-            cout <<"  (+" <<BulletChr <<left <<setw(longestargname) <<setfill(' ')
-                  <<myExtra->name <<"): " <<myExtra->description <<"\n";
+            cout << "Extra/Batch Parameter(s):\n"; 
+            cout <<"  +" <<left <<setw(longestargname) <<setfill(' ') 
+                 <<myExtra->name <<": " <<myExtra->description <<"\n";
         }
 
 
@@ -399,18 +404,20 @@ namespace utils{ namespace cmdl
         for( auto & anopt : refOptions )
         {
             //Try to find an option with one of the symbols we got!
-            auto itFoundRaw = std::find_if( rawoptions.begin(), rawoptions.end(), 
-                                      [&anopt](const vector<string>& av )->bool
-                                      {
-                                          return (av.front().compare( ("-"+anopt.optionsymbol) )) == 0;
-                                      } );
+            vector<vector<string>>::const_iterator itFoundRaw = 
+                std::find_if( rawoptions.begin(), 
+                              rawoptions.end(), 
+                              [&anopt](const vector<string>& av )->bool
+                              {
+                                return (av.front().compare( anopt.optionsymbol ) == 0 ) ;
+                              } );
 
             //Parse the found option, if applicable
             if( itFoundRaw != rawoptions.end() && !anopt.myOptionParseFun( *itFoundRaw ) )
             {
                 //If parsing fails !
                 stringstream strserror;
-                strserror <<"<!>- Error while parsing option : \"" <<anopt.optionsymbol <<"\"";
+                strserror <<"<!>- Error while parsing option : \"" <<(anopt.optionsymbol) <<"\"";
 
                 if( itFoundRaw->size() > 1  )
                 {

@@ -153,8 +153,7 @@ namespace pspr_analyser
 
             //Validate file first, and make sure its a sprite file
             // Also, given the format analyser can be a little wonky at time, better double check !
-            if( content._type == filetypes::e_ContentType::SPRITE_CONTAINER || 
-                (!content._hierarchy.empty()) && content._hierarchy.front()._type == filetypes::e_ContentType::SPRITE_CONTAINER )
+            if( content._type == filetypes::e_ContentType::WAN_SPRITE_CONTAINER )
             {
                 auto myfunction = bind( lambdaparse, 
                                         make_tuple(filesRawData[i].begin(), filesRawData[i].end(), filesSpriteData.begin()+i),  

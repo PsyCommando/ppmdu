@@ -9,49 +9,58 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_kaoutil", "vcprojects\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_packfileutil", "vcprojects\ppmd_packfileutil.vcxproj", "{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_sprextract", "vcprojects\ppmd_sprextract.vcxproj", "{1088591B-EDBA-4713-926C-C8210D859C47}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_sprite_analyser", "vcprojects\ppmd_sprite_analyser.vcxproj", "{59048FDC-346C-4384-A4D4-CE8E12E0F47E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_gfxcrunch", "vcprojects\ppmd_sprextract.vcxproj", "{1088591B-EDBA-4713-926C-C8210D859C47}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_unpx", "vcprojects\ppmd_unpx.vcxproj", "{2AD9B0C6-B476-4690-92DE-40C3B7883B35}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0B3A79F-E768-4EC8-81F2-6D783F8CFB50}"
 	ProjectSection(SolutionItems) = preProject
+		Performance1.psess = Performance1.psess
 		vcprojects\shared_build_settings.props = vcprojects\shared_build_settings.props
 	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Release WinXP|Win32 = Release WinXP|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Debug|Win32.ActiveCfg = Debug|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Debug|Win32.Build.0 = Debug|Win32
+		{C7642210-DD89-423B-B267-6022A96A2C42}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
+		{C7642210-DD89-423B-B267-6022A96A2C42}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release|Win32.ActiveCfg = Release|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release|Win32.Build.0 = Release|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Debug|Win32.ActiveCfg = Debug|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Debug|Win32.Build.0 = Debug|Win32
+		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
+		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release|Win32.ActiveCfg = Release|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release|Win32.Build.0 = Release|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Debug|Win32.Build.0 = Debug|Win32
+		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
+		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release|Win32.ActiveCfg = Release|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release|Win32.Build.0 = Release|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Debug|Win32.ActiveCfg = Debug|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Debug|Win32.Build.0 = Debug|Win32
+		{1088591B-EDBA-4713-926C-C8210D859C47}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
+		{1088591B-EDBA-4713-926C-C8210D859C47}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release|Win32.ActiveCfg = Release|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release|Win32.Build.0 = Release|Win32
-		{59048FDC-346C-4384-A4D4-CE8E12E0F47E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{59048FDC-346C-4384-A4D4-CE8E12E0F47E}.Debug|Win32.Build.0 = Debug|Win32
-		{59048FDC-346C-4384-A4D4-CE8E12E0F47E}.Release|Win32.ActiveCfg = Release|Win32
-		{59048FDC-346C-4384-A4D4-CE8E12E0F47E}.Release|Win32.Build.0 = Release|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Debug|Win32.Build.0 = Debug|Win32
+		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
+		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release|Win32.ActiveCfg = Release|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

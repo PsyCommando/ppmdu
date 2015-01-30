@@ -18,6 +18,53 @@ Description:
 namespace utils{ namespace io
 {
 //=====================================================================
+//                          RAW Data IO
+//=====================================================================
+
+//--------------------------------
+//  Export to raw pixels !
+//--------------------------------
+    /*
+        Export an image to a tiled form, pixel by pixel into a 
+        file, without any other form of processing or a header.
+    */
+    template<class _TImg_t>
+        bool ExportRawImg( const _TImg_t     & in_indexed,
+                           const std::string & filepath );
+
+    /*
+        Export an image to a tiled form, pixel by pixel into a 
+        file, without any other form of processing or a header.
+        #This one exports only the pixel data, not the palette!
+    */
+    template<class _TImg_t>
+        bool ExportRawImg_NoPal( const _TImg_t     & in_indexed,
+                                 const std::string & filepath );
+
+//--------------------------------
+//  Import from ANY !
+//--------------------------------
+    //Generic Import Functions
+    // Calls the correct function depending on the type of the tiled image!
+
+    template<class _TImg_t>
+        bool ImportRawImg( _TImg_t            & out_indexed,
+                            const std::string & filepath,
+                            utils::Resolution   imgres);
+    
+    template<class _TImg_t>
+        bool ImportRawImg_NoPal( _TImg_t           & out_indexed, 
+                                 const std::string & filepath, 
+                                 utils::Resolution   imgres);
+
+
+//=====================================================================
+//                          PRI format
+//=====================================================================
+
+    //#TODO: Move PRI stuff to its own header and source file!
+
+//=====================================================================
 // Constants
 //=====================================================================
     static const std::string RawImg_FileExtension = "ri";       // Raw image file extension
@@ -69,15 +116,6 @@ namespace utils{ namespace io
 //=====================================================================
 // IO Function
 //=====================================================================
-    
-    //Functions for exporting a raw headerless img, along with an accompanying riff palette
-    // "filepath" is the path to the file to be outputed, it should end with an extension-less filename, 
-    // because the file extensions for the palette and rawimg will be appended automatically!
-    bool ImportFrom4bppRawImgAndPal( gimg::tiled_image_i4bpp       & out_indexed, 
-                                     const std::string             & filepath, 
-                                     utils::Resolution               imgres );
-    bool ExportTo4bppRawImgAndPal  ( const gimg::tiled_image_i4bpp & in_indexed, 
-                                     const std::string             & filepath );
 
     //#TODO: Implement !
     //Functions for the custom PRI raw image container 
