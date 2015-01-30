@@ -35,7 +35,7 @@ namespace ppmd_packfileutil
     };
 
     static const string OUTPUT_FOLDER_SUFFIX; //= "_out";
-    static const string EXE_NAME             = "ppmd_pack.exe";
+    static const string EXE_NAME             = "ppmd_packfileutil.exe";
     static const string PVERSION             = "0.51";
 
 //=================================================================================================
