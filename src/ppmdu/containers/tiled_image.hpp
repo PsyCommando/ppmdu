@@ -1032,33 +1032,33 @@ namespace gimg
 
 
 //================================================================================================
-//  PixelReaderIterator
+//  PxlReadIter
 //================================================================================================
     /*
-        PixelReaderIterator
-            Pass a tiled_image as parameter at construction, and feed the PixelReaderIterator bytes. 
+        PxlReadIter
+            Pass a tiled_image as parameter at construction, and feed the PxlReadIter bytes. 
             It will assemble pixels from those automatically and push them back into the 
             tiled_image passed as parameter!
 
             NOTE: This does not provide any way of inverting pixel "endianness" or actual endianness !
     */
     template<class _ContainerType>
-        class PixelReaderIterator : public std::_Outit
+        class PxlReadIter : public std::_Outit
     {
     public:
         
-        typedef  PixelReaderIterator<_ContainerType>                                mytype_t;
+        typedef  PxlReadIter<_ContainerType>                                mytype_t;
         typedef _ContainerType                                                      container_type;
         typedef _ContainerType                                                      container_t;
         typedef typename  container_t *                                             container_ptr_t;
         typedef timgPixReader<typename container_t, typename container_t::iterator> mypixreader_t;
         typedef typename _ContainerType::value_type                                 valty_t;
 
-        explicit PixelReaderIterator( container_t & tiledimg )
+        explicit PxlReadIter( container_t & tiledimg )
             :m_pContainer( std::addressof(tiledimg) ), m_pixreader( tiledimg )
         {}
 
-        PixelReaderIterator( const mytype_t & other )
+        PxlReadIter( const mytype_t & other )
             :m_pContainer( other.m_pContainer ), m_pixreader( other.m_pixreader )
         {}
 
@@ -1069,7 +1069,7 @@ namespace gimg
             return *this;
         }
 
-        //explicit PixelReaderIterator( container_ptr_t pcontainer )throw()
+        //explicit PxlReadIter( container_ptr_t pcontainer )throw()
         //    :m_pContainer(pcontainer),m_pixreader(*pcontainer)
         //{}
 

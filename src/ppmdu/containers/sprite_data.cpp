@@ -317,7 +317,7 @@ namespace pmd2{ namespace graphics
 //  Sprite to XML writer
 //=============================================================================================
     template<class _SPRITE_t>
-        class SpriteToXML
+        class SpriteXMLWriter
     {
         static const unsigned int MY_WRITER_FLAGS = XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT; 
     public:
@@ -325,7 +325,7 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        SpriteToXML( const sprite_t & myspr)
+        SpriteXMLWriter( const sprite_t & myspr)
             :m_inSprite(myspr), m_pProgresscnt(nullptr)
         {
         }
@@ -721,7 +721,7 @@ namespace pmd2{ namespace graphics
                 writer.dataElement( "", "", XML_PROP_VFLIP,  to_string( aframe.vFlip ) );
                 writer.dataElement( "", "", XML_PROP_HFLIP,  to_string( aframe.hFlip ) );
                 writer.dataElement( "", "", XML_PROP_MOSAIC, to_string( aframe.Mosaic ) );
-                writer.dataElement( "", "", XML_PROP_LASTMFRM, to_string( aframe.isLastMFrmInGrp ) );
+                //writer.dataElement( "", "", XML_PROP_LASTMFRM, to_string( aframe.isLastMFrmInGrp ) );
                 writer.dataElement( "", "", XML_PROP_OFFXBIT6, to_string( aframe.XOffbit6 ) );
                 writer.dataElement( "", "", XML_PROP_OFFXBIT7, to_string( aframe.XOffbit7 ) );
 
@@ -965,7 +965,7 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         inline void ExportXMLData(bool xmlcolpal, const workstatistics & wstats)
         {
-            SpriteToXML<sprite_t>(m_inSprite).WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
+            SpriteXMLWriter<sprite_t>(m_inSprite).WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
         }
 
         /**************************************************************
@@ -1320,8 +1320,8 @@ namespace pmd2{ namespace graphics
                     _parseXMLHexaValToValue( pPropNode->innerText(), mf.hFlip );
                 else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_MOSAIC )
                     _parseXMLHexaValToValue( pPropNode->innerText(), mf.Mosaic );
-                else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_LASTMFRM )
-                    _parseXMLHexaValToValue( pPropNode->innerText(), mf.isLastMFrmInGrp );
+                //else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_LASTMFRM )
+                //    _parseXMLHexaValToValue( pPropNode->innerText(), mf.isLastMFrmInGrp );
                 else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFXBIT6 )
                     _parseXMLHexaValToValue( pPropNode->innerText(), mf.XOffbit6 );
                 else if( pPropNode->nodeName() == SpriteXMLStrings::XML_PROP_OFFXBIT7 )

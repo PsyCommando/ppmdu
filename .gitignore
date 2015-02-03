@@ -186,3 +186,5 @@ FakesAssemblies/
 /workdir/dungeon_out
 /workdir
 Release WinXP
+*.bsc
+*.lib

@@ -354,18 +354,24 @@ namespace pmd2 { namespace filetypes
         ---------------------------
            ParseZeroStrippedTImg
         ---------------------------
-            A function to read the compression table for a compressed frame in a WAN sprite, and
+            A function to read the compression table for a compressed image 
+            in a WAN sprite, and
             return the decompressed image via move constructor!
 
-            - itcomptblbeg : The iterator to beginning of the specific compression table to decode!
-            - filebeg      : An iterator to the beginning of the file, or to where the offsets in the table are relative to!
+            - itcomptblbeg : The iterator to beginning of the specific 
+                             compression table to decode!
+            - filebeg      : An iterator to the beginning of the file, or 
+                             to where the offsets in the table are relative 
+                             to!
             - imgres       : The resolution of the image to decode !
+                             (Obtained from a meta-frame refering to this
+                              image!)
     **********************************************************************/
     template<class _TIMG_t, class _randit>
         uint32_t ParseZeroStrippedTImg( _randit                            itcomptblbeg, 
                                         _randit                            filebeg, 
                                         utils::Resolution                  imgres, 
-                                        gimg::PixelReaderIterator<_TIMG_t> itinsertat )
+                                        gimg::PxlReadIter<_TIMG_t> itinsertat )
     {
         using namespace std;
         using namespace utils;
@@ -574,7 +580,7 @@ namespace pmd2 { namespace filetypes
 
             //Parse the image with the best resolution we could find!
             cur_img.setPixelResolution( myres.width, myres.height );
-            gimg::PixelReaderIterator<TIMG_t> myPixelReader(cur_img); 
+            gimg::PxlReadIter<TIMG_t> myPixelReader(cur_img); 
 
             //Build the image
             uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>( itwhere, 
@@ -601,7 +607,7 @@ namespace pmd2 { namespace filetypes
                                                                          uint32_t                                grpend );
         
         //Read a single meta-frame
-        graphics::MetaFrame                         ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread );
+        graphics::MetaFrame                          ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread );
 
         std::vector<graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
         graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
@@ -612,6 +618,9 @@ namespace pmd2 { namespace filetypes
         
         std::vector<graphics::sprOffParticle>       ReadParticleOffsets(); 
 
+        /*
+            #TODO: is this still in use anymore ?
+        */
         template<class _retty>
             inline _retty ReadOff( uint32_t fileoffset, bool littleendian = true )const
         {
@@ -694,6 +703,7 @@ namespace pmd2 { namespace filetypes
 
 
         /*
+            This writes all the image data, stripping them of their zeros when neccessary.
         */
         template<class _frmTy>
             void WriteFramesBlock( const std::vector<_frmTy> & frms )
@@ -709,6 +719,7 @@ namespace pmd2 { namespace filetypes
                 imgbuff.resize(0);
             }
         }
+
         /*
             This insert the next sequence into the zero strip table.
             If its a sequence of zero, it won't write into the pixel strip table. If it is, it will.

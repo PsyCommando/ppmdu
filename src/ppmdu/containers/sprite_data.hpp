@@ -176,7 +176,7 @@ namespace pmd2{ namespace graphics
         bool     vFlip;          //Whether the frame is flipped vertically
         bool     hFlip;          //Whether the frame is flipped horizontally
         bool     Mosaic;         //Whether the frame triggers mosaic mode.
-        bool     isLastMFrmInGrp;//The state of bit 5 of the bits assigned to flags in XOffset (0000 1000 0000 0000) If non zero, the Meta-frame is the last of the meta-frame group !
+        //bool     isLastMFrmInGrp;//The state of bit 5 of the bits assigned to flags in XOffset (0000 1000 0000 0000) If non zero, the Meta-frame is the last of the meta-frame group !
         bool     XOffbit6;       //The state of bit 6 of the bits assigned to flags in XOffset (0000 0100 0000 0000)
         bool     XOffbit7;       //The state of bit 7 of the bits assigned to flags in XOffset (0000 0010 0000 0000)
         bool     YOffbit3;       //The state of bit 3 of the bits assigned to flags in YOffset (0010 0000 0000 0000)

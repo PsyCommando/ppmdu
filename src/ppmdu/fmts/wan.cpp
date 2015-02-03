@@ -254,7 +254,7 @@ namespace pmd2{ namespace filetypes
         //x offset flags
         result.vFlip    = utils::GetBit( offxfl, 13u ) > 0;
         result.hFlip    = utils::GetBit( offxfl, 12u ) > 0;
-        result.isLastMFrmInGrp = utils::GetBit( offxfl, 11u ) > 0;
+        //result.isLastMFrmInGrp = utils::GetBit( offxfl, 11u ) > 0;
         result.XOffbit6 = utils::GetBit( offxfl, 10u ) > 0;
         result.XOffbit7 = utils::GetBit( offxfl,  9u ) > 0;
         

@@ -15,7 +15,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_unpx", "vcprojects\ppm
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0B3A79F-E768-4EC8-81F2-6D783F8CFB50}"
 	ProjectSection(SolutionItems) = preProject
-		Performance1.psess = Performance1.psess
 		vcprojects\shared_build_settings.props = vcprojects\shared_build_settings.props
 	EndProjectSection
 EndProject
@@ -59,8 +58,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
