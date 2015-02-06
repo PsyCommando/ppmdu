@@ -193,12 +193,12 @@ namespace pmd2{ namespace graphics
         inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
         inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
 
-        inline void  addRef   ( /*uint32_t refanimgrp, */uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{/*refanimgrp, */refseq,refererindex }); }
-        void         remRef   ( /*uint32_t refanimgrp,*/ uint32_t refseq, uint32_t refererindex ) 
+        inline void  addRef   ( uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refseq,refererindex }); }
+        void         remRef   ( uint32_t refseq, uint32_t refererindex ) 
         {
             for( auto it = m_animFrmsRefer.begin(); it != m_animFrmsRefer.end(); ++it )
             {
-                if( /*it->refgrp == refanimgrp &&*/ it->refseq == refseq && it->reffrm == refererindex )
+                if( it->refseq == refseq && it->reffrm == refererindex )
                 {
                     m_animFrmsRefer.erase(it);
                     return;
@@ -280,7 +280,6 @@ namespace pmd2{ namespace graphics
         inline const AnimFrame   & getFrame( unsigned int index )const { return m_frames[index]; }
         inline AnimFrame         & getFrame( unsigned int index )      { return m_frames[index]; }
 
-        //uint32_t                   insertFrame( AnimFrame && aframe, int index = -1 );  //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
         //Inserts a frame. If index == -1, inserts at the end! Return index of frame!
         inline uint32_t            insertFrame( const AnimFrame & aframe, int index = -1 ) {  return insertFrame( AnimFrame( aframe ), index ); }
         inline void                removeframe( unsigned int index )                       { m_frames.erase( m_frames.begin() + index ); }

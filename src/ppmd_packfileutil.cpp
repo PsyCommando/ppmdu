@@ -174,8 +174,12 @@ namespace ppmd_packfileutil
             {
                 stringstream sstr;
                 unsigned int foffset = 0;
+
                 sstr << validoptsfound.front()[1];
-                sstr >> hex >> foffset;
+                if( validoptsfound.front()[1].find( "0x", 0 ) != string::npos )
+                    sstr >> hex >> foffset;
+                else
+                    sstr >> foffset;
 
                 if( foffset != 0 )
                     forcedoffset = foffset;
