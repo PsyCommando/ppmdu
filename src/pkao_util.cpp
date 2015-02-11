@@ -37,7 +37,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.4";
+    static const string PVERSION                            = "0.41";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";
@@ -150,16 +150,6 @@ namespace pkao_util
 		     << "-> outputpath(opt) : folder/file to output the packed/unpacked file(s).\n"
              << "\n\n"
              << "Options:\n";
-             //<< "      -" <<OPTION_SET_TOC_ENTRY_NAME_LIST 
-             //          <<" \"filepath\" : Specifying this will make the program attempt to\n"
-             //<< "                         read the specified file as a list of names to\n"
-             //<< "                         give individual ToC entries(each folders).\n"
-             //<< "                         Works only when unpacking!!"
-             //<< "      -" <<OPTION_SET_FACE_NAME_LIST 
-             //          <<" \"filepath\" : Specifying this will make the program attempt to\n"
-             //<< "                         read the specified file as a list of names to\n"
-             //<< "                         give each individual images for all ToC entries.\n"
-             //<< "                         Works only when unpacking!!"
         //List our options
         for( auto & anoption : MY_OPTIONS )
             cout <<"    -" <<left  <<setw(5) <<setfill(' ') <<anoption.optionsymbol <<right <<" : " <<anoption.description <<"\n";
@@ -376,9 +366,9 @@ namespace pkao_util
             {
                 //Output path is folder!
                 Poco::Path outfolder(parameters.outputpath);
-                Poco::File testfile(outfolder);
+                Poco::File testparentdir(outfolder.parent());
 
-                if( testfile.exists() && testfile.isDirectory() )
+                if( testparentdir.exists() && testparentdir.isDirectory() )
                     outfolder.makeAbsolute();
                 else
                     throw runtime_error("<!>-Fatal Error: Specified output path is invalid ! Aborting !");

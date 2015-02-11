@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - GfxCrunch  ==
 ===================================================
-Version	   : 0.1
+Version	   : 0.11
 Released   : 2015/01/03
 Written by : psycommando@gmail.com
 
@@ -11,8 +11,11 @@ https://github.com/PsyCommando/ppmdu/
 ----------------------------------------------------------------------------------------------------
 Changelog:
 ----------------------------------------------------------------------------------------------------
-- 0.1 : Initial release!
-
+- 0.1(2015/01/03): 
+    * Initial release!
+- 0.11(2015/02/10): 
+    * Fixed bug where the value "Unk#11" would get overwritten after it was parsed from the sprite's 
+      XML, by the value of "Unk#12"..
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -38,6 +41,66 @@ Special Thanks:
 ----------------------------------------------------------------------------------------------------
 About:
 ----------------------------------------------------------------------------------------------------
+This tool is meant to handle several graphics formats from the game.
+
+For now, it only supports WAN sprites.
+
+Here are a few example uses:
+
+Unpacking:
+----------
+1- Feed it a file ending in ".wan"
+    A folder of the same name, without extension will be created containing XML data from the sprite
+    along with a palette, and a sub-directory containing the images contained in the sprite.
+    
+2- Feed it a file ending in ".pkdpx"
+    The application will decompress the file, and if it contains a ".wan" sprite, the same thing as in 
+    the case above will happen!
+    
+3- Feed it one of those 3 files "m_ground.bin", "m_attack.bin", "monster.bin"
+    The application will proceed to disassemble the pack file container, and unpack every sprites it 
+    contains into sub-directories inside a directory with the same name as the pack file.
+    
+Packing:
+--------
+1- Feed it a directory in the same format as an unpacked ".wan" sprite
+    The utility will rebuild a sprite from the content of the directory, and by default name it "InputDirectoryName.wan".
+
+2- Feed it a directory named "m_ground", "m_attack", or "monster"
+    The utility will rebuild all valid sprite sub-directories in the directory, and then pack them back into a pack file!
+    If the directory name is "m_attack" or "monster", every individual sprites will also be compressed to PKDPX files,
+    just like the originals are. The forced offset is set to 0x1300 by default. 
+    
+About the palette:
+-------------------
+The palette file in the unpacked sprite directory is only useful when rebuilding the sprite. It will be used for every 
+images in the sprite when rebuilding. The format does not support individual palettes for each images.
+So if you change the palette in the individual images, it won't do anything once the sprite is re-built, unless you 
+replace the palette.pal file with an updated palette!
+    
+Usage:
+-------
+ppmd_gfxcrunch.exe (option) input path (output path) 
+  ->option          : An option from the list below..(optional)
+  ->input path      : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
+  ->output path(opt): The path where to output the result of the operation. Can be a folder, or a file, depending on whether we're building a sprite, or unpacking one.
+Extra/Batch Parameter(s):
+  +input path       : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
+
+
+Options:
+  -q      : Disables console progress output.
+  -f      : Set the image format to use when exporting images to either  raw, png, or bmp. Def: png.
+  -byindex: This force the program to enforce the index in the file names of the images being imported, 
+            instead of just ordering them in alphanumeric order. This only applies to wan sprites this far!
+  -psprn  : Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.
+  -pkdpx  : Force the outputed file to be compressed as a PKDPX! (If specified while buiding a pack file of sprite, the 
+            individual sprites in the pack will be compressed as PKDPX!)
+  -p      : Force the content of the directory to be handled as a pack file to assemble from unpacked sprites in its sub-directories.
+
+
+Examples:
+ppmd_gfxcrunch.exe -q -f (png,bmp,raw) -byindex -psprn "PathToFile" -pkdpx -p "c:/mysprites/sprite.wan" "c:/mysprites/sprite.wan" +"c:/mysprites/sprite.wan" 
 
 
 ------------------------------

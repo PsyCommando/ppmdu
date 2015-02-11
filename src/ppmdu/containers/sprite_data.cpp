@@ -1457,7 +1457,7 @@ namespace pmd2{ namespace graphics
                 else if( pCurNode->nodeName() == XML_PROP_UNK11 )
                     _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk11 );
                 else if( pCurNode->nodeName() == XML_PROP_UNK12 )
-                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk11 );
+                    _parseXMLHexaValToValue( pCurNode->innerText(), m_outSprite.m_common.m_Unk12 );
 
                 pCurNode = itnode.nextNode();
             }

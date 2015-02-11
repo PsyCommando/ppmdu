@@ -37,6 +37,9 @@ Changelog:
            automatically extend the image appropriately so its divisible by 8 !
 - 0.4:(2015/01/29)
          * Recompiled with the fixed tiled_image container. Various tweaks.
+- 0.41:(2015/02/09)
+         * Fixed a bug where passing an output path wouldn't create the output directory and crash the
+           application with a cryptic error message.
 
 ----------------------------------------------------------------------------------------------------
 License info:

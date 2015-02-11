@@ -215,7 +215,7 @@ namespace gfx_util
 //------------------------------------------------
     const string CGfxUtil::Exe_Name            = "ppmd_gfxcrunch.exe";
     const string CGfxUtil::Title               = "Baz the Poochyena's PMD:EoS/T/D GfxCrunch";
-    const string CGfxUtil::Version             = "0.1";
+    const string CGfxUtil::Version             = "0.11";
     const string CGfxUtil::Short_Description   = "A utility to unpack and re-pack pmd2 sprite!";
     const string CGfxUtil::Long_Description    = 
         "#TODO";                                    //#TODO
@@ -342,7 +342,6 @@ namespace gfx_util
             "-pkdpx",
             std::bind( &CGfxUtil::ParseOptionCompressPKDPX,  &GetInstance(), placeholders::_1 ),
         },
-
         //
         {
             "p",

@@ -324,7 +324,7 @@ namespace pmd2 { namespace filetypes
         If its a sequence of zero, it won't write into the pixel 
         strip table. If it is, it will.    
     **************************************************************/
-    WAN_Writer::zeroStripTableTempEntry WAN_Writer::MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                         std::vector<uint8_t>::const_iterator   itEnd,
                                                         std::vector<uint8_t>                 & pixStrips,
                                                         uint32_t                             & totalbytecnt) 
@@ -358,7 +358,7 @@ namespace pmd2 { namespace filetypes
                 break;
             }
         }
-        zeroStripTableTempEntry myentry;
+        ImgAsmTbl_WithOpTy myentry;
         myentry.pixelsrc    = ( (isZeroSeq)? 0 : pixStrips.size() );
         myentry.isZeroEntry = isZeroSeq;
         myentry.pixamt      = countAmtBytes;
@@ -388,12 +388,12 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    WAN_Writer::zeroStripTableTempEntry WAN_Writer::MakeZeroStripTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeZeroStripTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
                                                                                       vector<uint8_t>::const_iterator   itEnd,
                                                                                       vector<uint8_t>                 & pixStrips,
                                                                                       uint32_t                        & totalbytecnt )
     {
-        zeroStripTableTempEntry myentry;
+        ImgAsmTbl_WithOpTy myentry;
         myentry.isZeroEntry = false;
         myentry.pixamt      = std::distance( itReadAt, itEnd );
         myentry.pixelsrc    = pixStrips.size();
@@ -413,7 +413,7 @@ namespace pmd2 { namespace filetypes
         uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the zerostrip table!
 
         vector<uint8_t>                 pixelstrips;
-        vector<zeroStripTableTempEntry> zerostriptable; 
+        vector<ImgAsmTbl_WithOpTy>      zerostriptable; 
         auto                            itLaststrip  = frm.begin();
         uint32_t                        totalbytecnt = 0;
 
@@ -449,7 +449,7 @@ namespace pmd2 { namespace filetypes
         }
 
         //Write a final null entry
-        zeroStripTableTempEntry().WriteToContainer( m_itbackins );
+        ImgAsmTbl_WithOpTy().WriteToContainer( m_itbackins );
     }
 
 

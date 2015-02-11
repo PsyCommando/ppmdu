@@ -32,8 +32,12 @@ namespace pmd2 { namespace filetypes
 //=============================================================================================
 
     /**********************************************************************
+        ImgAsmTblEntry
+            An entry in an image's assembly table. This struct makes it
+            easier to read them and write them from/into an assembly 
+            table.
     **********************************************************************/
-    struct ImgAssemblyTblEntry
+    struct ImgAsmTblEntry
     {
         static const unsigned int LENGTH = 12u;
         uint32_t pixelsrc = 0;  //The source of the pixels to use to rebuild the image. Either an address, or 0
@@ -140,7 +144,7 @@ namespace pmd2 { namespace filetypes
         uint32_t ptr_palette;               // Pointer to the pointer to the palette info
         uint16_t isMosaic;                  // 1 == mosaic sprite,   0 == non-mosaic sprite
         uint16_t is256Colors;               // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
-        uint16_t unk11;                     // Unknown, seems to range between 0 and 1..
+        uint16_t unk11;                     // Unknown, seems to range between 0, 1, and up..
         uint16_t nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
 
         unsigned int size()const{return DATA_LEN;}
@@ -375,7 +379,7 @@ namespace pmd2 { namespace filetypes
     {
         using namespace std;
         using namespace utils;
-        ImgAssemblyTblEntry entry;
+        ImgAsmTblEntry entry;
         uint32_t nb_bytesread = 0;
 
         do
@@ -406,12 +410,12 @@ namespace pmd2 { namespace filetypes
             of pixels to assemble the decompressed tiled image!
     **********************************************************************/
     template<class _randit>
-        std::vector<ImgAssemblyTblEntry> FillZeroStripTable( _randit itcomptblbeg )
+        std::vector<ImgAsmTblEntry> FillZeroStripTable( _randit itcomptblbeg )
     {
         using namespace std;
         using namespace utils;
-        std::vector<ImgAssemblyTblEntry> zerostrtbl;
-        ImgAssemblyTblEntry entry;
+        std::vector<ImgAsmTblEntry> zerostrtbl;
+        ImgAsmTblEntry entry;
 
         do
         {
@@ -664,9 +668,9 @@ namespace pmd2 { namespace filetypes
 
     private:
         /*
-            Specialization of ImgAssemblyTblEntry to add an extra bool to make encoding easier !
+            Specialization of ImgAsmTblEntry to add an extra bool to make encoding easier !
         */
-        struct zeroStripTableTempEntry : public ImgAssemblyTblEntry
+        struct ImgAsmTbl_WithOpTy : public ImgAsmTblEntry
         {
             bool isZeroEntry = true; //Whether this entry is for copying zeroes or actual bytes.
         };
@@ -724,7 +728,7 @@ namespace pmd2 { namespace filetypes
             This insert the next sequence into the zero strip table.
             If its a sequence of zero, it won't write into the pixel strip table. If it is, it will.
         */
-        zeroStripTableTempEntry MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+        ImgAsmTbl_WithOpTy MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                          std::vector<uint8_t>::const_iterator   itEnd,
                                                          std::vector<uint8_t>                 & pixStrips,
                                                          uint32_t                             & totalbytecnt );
@@ -733,7 +737,7 @@ namespace pmd2 { namespace filetypes
             Same as above, but it simply makes a single entry for the whole image, not stripping the image of 
             any strips of zeroes.
         */
-        zeroStripTableTempEntry MakeZeroStripTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
+        ImgAsmTbl_WithOpTy MakeZeroStripTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                                     std::vector<uint8_t>::const_iterator   itEnd,
                                                                     std::vector<uint8_t>                 & pixStrips,
                                                                     uint32_t                             & totalbytecnt);
