@@ -80,9 +80,9 @@ namespace pmd2 { namespace filetypes
     {
         vector<uint8_t> outvec = write( pProgress );
 
-        Poco::Path outptutwan(outputpath);
-        outptutwan.makeFile().setExtension(WAN_FILEX);
-        utils::io::WriteByteVectorToFile( outptutwan.toString(), outvec );
+        //Poco::Path outptutwan(outputpath);
+        //outptutwan.makeFile().setExtension(WAN_FILEX);
+        utils::io::WriteByteVectorToFile( outputpath/*outptutwan.toString()*/, outvec );
     }
 
     /**************************************************************

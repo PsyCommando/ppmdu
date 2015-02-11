@@ -382,8 +382,8 @@ namespace gfx_util
         m_ImportByIndex = false;
         m_execMode      = eExecMode::INVALID_Mode;
         m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
-        m_pInputPath.reset ( new pathwrapper_t );
-        m_pOutputPath.reset( new pathwrapper_t );
+        //m_pInputPath.reset ( new pathwrapper_t );
+        //m_pOutputPath.reset( new pathwrapper_t );
 
         m_inputCompletion    = 0;
         m_outputCompletion   = 0;
@@ -416,19 +416,23 @@ namespace gfx_util
         atomic<uint32_t>     parsingprogress(0);
         atomic<uint32_t>     writingprogress(0);
         atomic<bool>         stopupdateprogress(false);
-        filetypes::WAN_Parser parser( ReadFileToByteVector( m_pInputPath->mypath.toString() ) );
+        filetypes::WAN_Parser parser( ReadFileToByteVector( m_inputPath ) );
         future<void>         runThUpHpBar;
-        Poco::File           infileinfo(m_pInputPath->mypath);
-        Poco::Path           outpath(m_pOutputPath->mypath);
-        uint32_t             level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
+        Poco::File           infileinfo(m_inputPath);
+        Poco::Path           inputPath(m_inputPath);
+        Poco::Path           outpath;//(m_outputPath);
+        uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
         
-        outpath.append( m_pInputPath->mypath.getBaseName() );
+        if( m_outputPath.empty() )
+            m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
+
+        outpath = m_outputPath;
 
         if( ! m_bQuiet )
         {
             if( ! m_bQuiet )
                 cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
-            DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
+            DrawHPBarHeader( (inputPath.getFileName()), level );
         }
 
         try
@@ -479,7 +483,7 @@ namespace gfx_util
 
             cout    << "\nIts super-effective!!\n"
                     << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
-                    << "The pieces landed all neatly into \"" <<m_pOutputPath->mypath.toString() <<"\"!\n";
+                    << "The pieces landed all neatly into \"" <<m_outputPath <<"\"!\n";
 
         }
 
@@ -489,9 +493,10 @@ namespace gfx_util
     int CGfxUtil::BuildSprite()
     {
         utils::MrChronometer chronopacker( "Building Sprite" );
-        Poco::File           infileinfo(m_pInputPath->mypath);
-        Poco::Path           outpath(m_pOutputPath->mypath);
-        uint32_t             level = (m_pInputPath->mypath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
+        Poco::File           infileinfo(m_inputPath);
+        Poco::Path           outpath;//(m_outputPath);
+        Poco::Path           inputPath(m_inputPath);
+        uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
         atomic<uint32_t>     parsingprogress(0);
         atomic<uint32_t>     writingprogress(0);
         atomic<bool>         stopupdateprogress(false);
@@ -499,10 +504,15 @@ namespace gfx_util
 
         if( ! m_bQuiet )
         {
-            DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
+            DrawHPBarHeader( (inputPath.getFileName()), level );
         }
 
-        outpath.append( m_pInputPath->mypath.getBaseName() );
+        if( m_outputPath.empty() )
+            m_outputPath = inputPath.parent().append( Poco::Path(inputPath).makeFile().getBaseName() ).toString();
+
+        outpath = m_outputPath;
+
+        //outpath.append( inputPath.getBaseName() );
 
         try
         {
@@ -529,7 +539,7 @@ namespace gfx_util
                     utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
                 }
                 else
-                    writer.write( outpath.toString(), &writingprogress );
+                    writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString(), &writingprogress );
             
             }
             else if( sprty == graphics::eSpriteType::spr8bpp )
@@ -548,7 +558,7 @@ namespace gfx_util
                     utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
                 }
                 else
-                    writer.write( outpath.toString(), &writingprogress );
+                    writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString(), &writingprogress );
             }
         }
         catch( Poco::Exception e )
@@ -579,8 +589,8 @@ namespace gfx_util
             DrawHPBarFooter();
 
             cout << "\nIts super-effective!!\n"
-                 <<"\"" <<m_pInputPath->mypath.getFileName() <<"\" fainted!\n"
-                 <<"You got \"" <<m_pOutputPath->mypath.getFileName() <<"\" for your victory!\n";
+                 <<"\"" <<inputPath.getFileName() <<"\" fainted!\n"
+                 <<"You got \"" <<outpath.getFileName() <<"\" for your victory!\n";
         }
 
         return 0;
@@ -589,15 +599,23 @@ namespace gfx_util
     int CGfxUtil::UnpackAndExportPackedCharSprites()
     {
         utils::MrChronometer chronounpacker( "Unpacking & Exporting Sprites" );
-        Poco::File           infileinfo(m_pInputPath->mypath);
-        Poco::Path           outpath(m_pOutputPath->mypath);
+        Poco::File           infileinfo(m_inputPath);
+        Poco::Path           inputPath( m_inputPath );
+        Poco::Path           outpath;//(m_outputPath);
         
-        outpath.append( m_pInputPath->mypath.getBaseName() );
+
+
+        if( m_outputPath.empty() )
+            m_outputPath = inputPath.parent().append( Poco::Path(inputPath).makeFile().getBaseName() ).toString();
+
+        outpath = m_outputPath;
+
+        //outpath.append( inputPath.getBaseName() );
 
         try
         {
             //#1 - Check if its one of the 3, uniquely named, special pack file. If not issue a warning, and continue.
-            bool           isPokeSpriteFile = MatchesPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() );
+            bool           isPokeSpriteFile = MatchesPokeSpritePackFileName( inputPath.getBaseName() );
             vector<string> pokesprnames;
 
             if( isPokeSpriteFile )
@@ -611,7 +629,7 @@ namespace gfx_util
             }
 
             //#2 - Unpack files to raw data vector.
-            auto inpack = UnpackPackFile( m_pInputPath->mypath );
+            auto inpack = UnpackPackFile( inputPath );
 
             //#3 - Run a check to find files that must be decompressed. And decompress them on the spot, replacing the raw data in the vector.
             vector<unique_ptr<graphics::BaseSprite>> mysprites(inpack.getNbSubFiles());
@@ -632,7 +650,7 @@ namespace gfx_util
                     //Output the packed file's content as is
                     auto & cursubf = inpack.getSubFile(i);
                     stringstream sstr;
-                    sstr << m_pInputPath->mypath.getBaseName()
+                    sstr << inputPath.getBaseName()
                          <<"_" <<setw(4) <<setfill('0') <<i <<"." 
                          << filetypes::GetAppropriateFileExtension( cursubf.begin(), cursubf.end() );                   
 
@@ -650,7 +668,7 @@ namespace gfx_util
                     }
                     else
                     {
-                        sstr << m_pInputPath->mypath.getBaseName()
+                        sstr << inputPath.getBaseName()
                              <<"_" <<setw(4) <<setfill('0') <<i;   
                     }
 
@@ -716,8 +734,9 @@ namespace gfx_util
     int CGfxUtil::PackAndImportCharSprites()
     {
         utils::MrChronometer    chronopacker( "Packing & Importing Sprites" );
-        Poco::File              infileinfo(m_pInputPath->mypath);
-        Poco::Path              outpath(m_pOutputPath->mypath);
+        Poco::File              infileinfo(m_inputPath);
+        Poco::Path              inpath(m_inputPath);
+        Poco::Path              outpath;//(m_outputPath);
         Poco::DirectoryIterator itDirCount( infileinfo );
         Poco::DirectoryIterator itDirEnd;
         filetypes::CPack        mypack;
@@ -770,8 +789,15 @@ namespace gfx_util
         mypack.setForceFirstFilePosition( ForcedPokeSpritePack );
 
         //If we don't have an output path, use the input path's parent, and create a file with the same name as the folder!
-        if( outpath.toString().empty() )
-            outpath.setFileName( Poco::Path(m_pInputPath->mypath).makeFile().setExtension(filetypes::PACK_FILEX).toString() );
+
+
+        if( m_outputPath.empty() )
+            m_outputPath = Poco::Path(inpath).makeFile().setExtension(filetypes::PACK_FILEX).toString();
+
+        outpath = m_outputPath;
+
+        //if( outpath.toString().empty() )
+        //    outpath.setFileName( Poco::Path(m_inputPath).makeFile().setExtension(filetypes::PACK_FILEX).toString() );
 
         string outfilepath = outpath.toString();
         cout <<"\n\nBuilding \"" <<outfilepath <<"\"...\n";
@@ -786,15 +812,15 @@ namespace gfx_util
 //--------------------------------------------
     bool CGfxUtil::ParseInputPath( const string & path )
     {
-        Poco::Path inputPath(path);
-        Poco::File inputfile(inputPath);
+        //Poco::Path inputPath(path);
+        Poco::File inputfile(path);
 
         //check if path exists
         if( inputfile.exists() )
         {
-            m_pInputPath-> mypath = inputPath;
-            m_pOutputPath->mypath = inputPath;
-            m_pOutputPath->mypath.makeParent();
+            m_inputPath = path;
+            //m_pOutputPath->mypath = inputPath;
+            //m_pOutputPath->mypath.makeParent();
             return true;
         }
         return false;
@@ -806,7 +832,7 @@ namespace gfx_util
 
         if( outpath.isDirectory() ||  outpath.isFile() )
         {
-            m_pOutputPath->mypath = outpath;
+            m_outputPath = path;
             return true;
         }
         return false;
@@ -815,7 +841,8 @@ namespace gfx_util
     bool CGfxUtil::DetermineOperationMode()
     {
         using namespace pmd2::filetypes;
-        Poco::File theinput( m_pInputPath->mypath );
+        Poco::File theinput( m_inputPath );
+        Poco::Path inputPath(m_inputPath);
 
         //If an operation mode was forced, don't try to determine what to do !
         if( m_execMode != eExecMode::INVALID_Mode )
@@ -825,7 +852,7 @@ namespace gfx_util
         {
             //Working on a file
             vector<uint8_t> tmp    = utils::io::ReadFileToByteVector(theinput.path());
-            auto            result = DetermineCntTy(tmp.begin(), tmp.end(), m_pInputPath->mypath.getExtension());
+            auto            result = DetermineCntTy(tmp.begin(), tmp.end(), inputPath.getExtension());
 
             if( result._type == e_ContentType::WAN_SPRITE_CONTAINER )
             {
@@ -865,10 +892,10 @@ namespace gfx_util
             //Check the content and find out what to do
 
             //If the folder name matches one of the 3 special sprite pack file names
-            if( MatchesPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() ) )
+            if( MatchesPokeSpritePackFileName( inputPath.getBaseName() ) )
             {
                 m_execMode        = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
-                m_compressToPKDPX = MatchesCompressedPokeSpritePackFileName( m_pInputPath->mypath.getBaseName() );
+                m_compressToPKDPX = MatchesCompressedPokeSpritePackFileName( inputPath.getBaseName() );
 
                 if( !m_bQuiet )
                 {
@@ -882,6 +909,7 @@ namespace gfx_util
                              <<"     file's name. Enabling compression!\n";
                     }
                 }
+
                 return true;
             }
             
@@ -1096,17 +1124,17 @@ namespace gfx_util
         //        cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
         //    DrawHPBarHeader( (m_pInputPath->mypath.getFileName()), level );
         //}
-
-
-
+        
         try
         {
+            Poco::Path inpath(m_inputPath);
+
             //Determine Execution mode
             if( !DetermineOperationMode() )
                 return -1;
 
             if( ! m_bQuiet )
-                cout << "\nPoochyena used Crunch on \"" <<m_pInputPath->mypath.getFileName() <<"\"!\n";
+                cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
             switch( m_execMode )
             {
@@ -1168,9 +1196,11 @@ namespace gfx_util
                 return -1;
             }
 
+            Poco::Path inpath(m_inputPath);
+
             if( ! m_bQuiet )
             {
-                cout << "\"" <<m_pInputPath->mypath.getFileName() <<"\" wants to battle!\n"
+                cout << "\"" <<inpath.getFileName() <<"\" wants to battle!\n"
                      << "Poochyena can't wait to begin!\n";
             }
         }

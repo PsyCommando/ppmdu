@@ -103,6 +103,8 @@ namespace pmd2{ namespace filetypes
         return offImgBlock; //Return the offset of the next block after anims if all fails
     }
 
+
+
 //=============================================================================================
 //  WAN_Parser
 //=============================================================================================
@@ -190,7 +192,7 @@ namespace pmd2{ namespace filetypes
         out_animseqs = ReadAnimSequences( out_anims );
 
         //Get Offsets
-        out_offsets = ReadParticleOffsets(); 
+        out_offsets = ReadParticleOffsets( out_anims ); 
 
         if( m_pProgress != nullptr )
         {
@@ -233,7 +235,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    graphics::MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread )
+    graphics::MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
     {
         graphics::MetaFrame result;
 
@@ -254,7 +256,7 @@ namespace pmd2{ namespace filetypes
         //x offset flags
         result.vFlip    = utils::GetBit( offxfl, 13u ) > 0;
         result.hFlip    = utils::GetBit( offxfl, 12u ) > 0;
-        //result.isLastMFrmInGrp = utils::GetBit( offxfl, 11u ) > 0;
+        out_isLastFrm   = utils::GetBit( offxfl, 11u ) > 0; //X bit 5, tells whether this is the last meta-f in a grp
         result.XOffbit6 = utils::GetBit( offxfl, 10u ) > 0;
         result.XOffbit7 = utils::GetBit( offxfl,  9u ) > 0;
         
@@ -271,31 +273,45 @@ namespace pmd2{ namespace filetypes
     **************************************************************/
     void WAN_Parser::ReadAMetaFrameGroup( vector<MetaFrameGroup> & out_metafrmgrps,
                                          vector<MetaFrame>      & out_metafrms,
-                                         uint32_t                 grpbeg,
-                                         uint32_t                 grpend )
+                                         uint32_t                 grpbeg/*,
+                                         uint32_t                 grpend*/ )
     {
-        if( ( grpend - grpbeg ) == WAN_LENGTH_META_FRM )
-        {
-            //Handle a single frame
-            uint32_t frmindex = out_metafrms.size(); //get the size before pushback as frm index
-            out_metafrms.push_back( ReadAMetaFrame( grpbeg + m_rawdata.begin() ) );
-            out_metafrmgrps.push_back( MetaFrameGroup{ vector<size_t>{ frmindex } } ); //create a group with a single entry refering to our new frame!
-        }
-        else
-        {
+        //if( ( grpend - grpbeg ) == WAN_LENGTH_META_FRM )
+        //{
+        //    //Handle a single frame
+        //    uint32_t frmindex = out_metafrms.size(); //get the size before pushback as frm index
+        //    out_metafrms.push_back( ReadAMetaFrame( grpbeg + m_rawdata.begin() ) );
+        //    out_metafrmgrps.push_back( MetaFrameGroup{ vector<size_t>{ frmindex } } ); //create a group with a single entry refering to our new frame!
+        //}
+        //else
+        //{
             //Handle several frames
-            auto           itreadgrp = grpbeg + m_rawdata.begin();
-            auto           itendgrp  = grpend + m_rawdata.begin();
+            auto           itreadgrp   = grpbeg + m_rawdata.begin();
+            //auto           itendgrp  = grpend + m_rawdata.begin();
+            auto           itSanityEnd = m_rawdata.end(); //Sanity ends here
             MetaFrameGroup curgrp;
-            curgrp.metaframes.reserve( ( grpend - grpbeg ) / WAN_LENGTH_META_FRM );
+            curgrp.metaframes.reserve(1); //We know we at least have one
+            //curgrp.metaframes.reserve( ( grpend - grpbeg ) / WAN_LENGTH_META_FRM );
 
-            while( itreadgrp != itendgrp )
+            //while( itreadgrp != itendgrp )
+            //{
+            //    curgrp.metaframes.push_back( out_metafrms.size() );
+            //    out_metafrms.push_back( ReadAMetaFrame(itreadgrp) );
+            //}
+
+            bool islast = false;
+            do
             {
+                if( itreadgrp >= itSanityEnd )
+                    throw std::runtime_error( "A meta-frame group continues past the end of the input data!" );
+
+                islast = false;
                 curgrp.metaframes.push_back( out_metafrms.size() );
-                out_metafrms.push_back( ReadAMetaFrame(itreadgrp) );
-            }
+                out_metafrms     .push_back( ReadAMetaFrame(itreadgrp, islast) );
+            }while( !islast );
+
             out_metafrmgrps.push_back( std::move( curgrp ) );
-        }
+        //}
     }
 
     /**************************************************************
@@ -306,88 +322,136 @@ namespace pmd2{ namespace filetypes
                              last meta-frame.
     **************************************************************/
 
-    uint32_t FillMFTblAndCalcNbMFs( std::vector<uint32_t>               & out_ptrs, 
-                                    std::vector<uint8_t>::const_iterator  itbeg, 
-                                    std::vector<uint8_t>::const_iterator  itend,
-                                    uint32_t                              endofblockoffset )
-    {
-        uint32_t totalnbMF      = 0;
-        uint32_t lastoffsetread = 0;
+    //uint32_t FillMFTblAndCalcNbMFs( std::vector<uint32_t>               & out_ptrs, 
+    //                                std::vector<uint8_t>::const_iterator  itbeg, 
+    //                                std::vector<uint8_t>::const_iterator  itend,
+    //                                uint32_t                              endofblockoffset )
+    //{
+    //    uint32_t totalnbMF      = 0;
+    //    uint32_t lastoffsetread = 0;
 
-        for( auto & entry : out_ptrs )
-        {
-            entry = utils::ReadIntFromByteVector<uint32_t>( itbeg ); //Iterator auto-incremented
+    //    for( auto & entry : out_ptrs )
+    //    {
+    //        entry = utils::ReadIntFromByteVector<uint32_t>( itbeg ); //Iterator auto-incremented
 
-            if( lastoffsetread != 0 ) //skip the first one
-                totalnbMF += (entry - lastoffsetread) / WAN_LENGTH_META_FRM;
+    //        if( lastoffsetread != 0 ) //skip the first one
+    //            totalnbMF += (entry - lastoffsetread) / WAN_LENGTH_META_FRM;
 
-            lastoffsetread = entry;
-        }
+    //        lastoffsetread = entry;
+    //    }
 
-        //Add the last offset's length
-        totalnbMF += ( endofblockoffset - lastoffsetread) / WAN_LENGTH_META_FRM;
+    //    //Add the last offset's length
+    //    totalnbMF += ( endofblockoffset - lastoffsetread) / WAN_LENGTH_META_FRM;
 
-        return totalnbMF;
-    }
+    //    return totalnbMF;
+    //}
 
     /**************************************************************
     **************************************************************/
     vector<MetaFrame> WAN_Parser::ReadMetaFrameGroups( vector<MetaFrameGroup> & out_metafrmgrps )
     {
-        //Compute the end of the meta-frame ref table, to get its length.
+    //#0 - Compute the end of the meta-frame ref table, to get its length.
         uint32_t endMFPtrTbl = 0;
-
-        //If the Particle Offset Table exists, use its offset as end of the ref table
-        //If the Particle Offset Table DOESN'T EXIST, use the AnimSequenceTable's first entry as end of the ref table
+        const uint32_t begSeqTbl   = CalcFileOffsetBegSeqTable();
+        
         if( m_wanAnimInfo.ptr_pOffsetsTable != 0 )
-            endMFPtrTbl = m_wanAnimInfo.ptr_pOffsetsTable; 
+            endMFPtrTbl = m_wanAnimInfo.ptr_pOffsetsTable; //If the Particle Offset Table exists, use its offset as end of the ref table
         else 
-            endMFPtrTbl = ReadOff<uint32_t>(m_wanAnimInfo.ptr_animGrpTable);
+            endMFPtrTbl = begSeqTbl; //If the Particle Offset Table DOESN'T EXIST, use the AnimSequenceTable's first entry as end of the ref table
 
-        //First, build our offset list
-        uint32_t         nbPtrMFGtbl = (endMFPtrTbl       - (m_wanAnimInfo.ptr_metaFrmTable)) / sizeof(uint32_t);
-        auto             itreadtbl   = (m_rawdata.begin() + m_wanAnimInfo.ptr_metaFrmTable);
-        vector<uint32_t> MFptrTbl( nbPtrMFGtbl); 
+        uint32_t nbPtrMFGtbl = (endMFPtrTbl - (m_wanAnimInfo.ptr_metaFrmTable)) / sizeof(uint32_t);
 
+        //If we don't have any, just skip
+        if( nbPtrMFGtbl == 0 )
+        {
+            //Increment particle offset progress anyways
+            if( m_pProgress != nullptr )
+                m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
+            return vector<MetaFrame>();
+        }
+
+        
+        //vector<uint32_t> MFptrTbl( nbPtrMFGtbl ); 
 
         //Read the offset of one-past-the-last-meta-frame
-        auto     itReadAnimGrp   = ( m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable );
-        uint32_t offsetseqptrtbl = GetOffsetFirstAnimSeqPtr( itReadAnimGrp, 
-                                                             m_wanAnimInfo.nb_anim_groups, 
-                                                             ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
-        
+        //auto     itReadAnimGrp   = ( m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable );
+        //uint32_t offsetseqptrtbl = GetOffsetFirstAnimSeqPtr( itReadAnimGrp, 
+        //                                                     m_wanAnimInfo.nb_anim_groups, 
+        //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
 
-        if( offsetseqptrtbl == 0 )
+
+    //#2 - Then, first pass, read all the meta-frame groups
+        vector<uint32_t> MFptrTbl( nbPtrMFGtbl ); 
+        auto             itreadtbl   = (m_rawdata.begin() + m_wanAnimInfo.ptr_metaFrmTable);
+        uint32_t         lastPtrRead = ReadOff<uint32_t>( m_wanAnimInfo.ptr_metaFrmTable );
+        uint32_t         nbMetaF     = 0; 
+
+        for( auto & entry : MFptrTbl )
         {
-            cerr<< "It seems this sprite's first animation group is null.. This is unxexpected\n";
-            assert(false); //This should never happen
-            throw std::runtime_error("<!>- FATAL ERROR: Something is wrong with this sprite. Its animation group table, begins with a null entry!");
+            uint32_t curPtr = utils::ReadIntFromByteVector<uint32_t>( itreadtbl ); //Iterator auto-incremented
+            entry = curPtr;
+            nbMetaF += ( (curPtr - lastPtrRead) / WAN_LENGTH_ANIM_FRM );
+            lastPtrRead = curPtr;
         }
-        uint32_t offsetlast = ReadOff<uint32_t>( offsetseqptrtbl ); //Get the offset of the block after the meta-frames
 
-        //Fill it up & calculate nb of meta-frames in-between
-        uint32_t totalnbMF  = FillMFTblAndCalcNbMFs( MFptrTbl, itreadtbl, endMFPtrTbl + m_rawdata.begin(), offsetlast );
 
-        //Create data + alloc
+
+    //#3 - Second pass parse all the meta-frames
         vector<MetaFrame> mymetaframes;
         uint32_t          progressBefore = 0;
-
-        out_metafrmgrps.reserve( nbPtrMFGtbl );
-        mymetaframes   .reserve( totalnbMF );
 
         if(m_pProgress != nullptr)
             progressBefore = m_pProgress->load();  //Save a little snapshot of the progress
 
-        for( unsigned int i = 0; i < MFptrTbl.size(); ++i ) 
+        out_metafrmgrps.reserve( nbPtrMFGtbl );
+        mymetaframes   .reserve( nbMetaF );
+
+        for( unsigned int i = 0; i < MFptrTbl.size(); ++i )
         {
-            if( i == (MFptrTbl.size() - 1) ) //Avoid reading next value on last entry!
-                ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], offsetlast );
-            else
-                ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], MFptrTbl[i+1] );
+            ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i] );
+
+            //if( i == (MFptrTbl.size() - 1) ) //Avoid reading next value on last entry!
+            //    ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], endMFPtrTbl );
+            //else
+            //    ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], MFptrTbl[i+1] );
 
             if( m_pProgress != nullptr )
                 m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (i+1)) / MFptrTbl.size() ) );
         }
+
+
+        //if( offsetseqptrtbl == 0 )
+        //{
+        //    cerr<< "It seems this sprite's first animation group is null.. This is unxexpected\n";
+        //    assert(false); //This should never happen
+        //    throw std::runtime_error("<!>- FATAL ERROR: Something is wrong with this sprite. Its animation group table, begins with a null entry!");
+        //}
+        //uint32_t offsetlast = ReadOff<uint32_t>( offsetseqptrtbl ); //Get the offset of the block after the meta-frames
+
+
+        //Fill it up & calculate nb of meta-frames in-between
+        //uint32_t totalnbMF  = FillMFTblAndCalcNbMFs( MFptrTbl, itreadtbl, endMFPtrTbl + m_rawdata.begin(), endMFPtrTbl );
+
+        ////Create data + alloc
+        //vector<MetaFrame> mymetaframes;
+        //uint32_t          progressBefore = 0;
+
+        //out_metafrmgrps.reserve( nbPtrMFGtbl );
+        //mymetaframes   .reserve( totalnbMF );
+
+        //if(m_pProgress != nullptr)
+        //    progressBefore = m_pProgress->load();  //Save a little snapshot of the progress
+
+        //for( unsigned int i = 0; i < MFptrTbl.size(); ++i ) 
+        //{
+        //    if( i == (MFptrTbl.size() - 1) ) //Avoid reading next value on last entry!
+        //        ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], endMFPtrTbl );
+        //    else
+        //        ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], MFptrTbl[i+1] );
+
+        //    if( m_pProgress != nullptr )
+        //        m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (i+1)) / MFptrTbl.size() ) );
+        //}
 
         return std::move( mymetaframes );
     }
@@ -512,27 +576,116 @@ namespace pmd2{ namespace filetypes
         return std::move(anims);
     }
 
+    template<class T>
+        uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
+    {
+        uint32_t cntNullPtrs = 0;
+        for(; (itbeg != itend) && (utils::ReadIntFromByteVector<T>(itbeg) == 0); ++cntNullPtrs );
+        return cntNullPtrs;
+    }
+
+    //uint32_t WAN_Parser::GetOffsetAnimSeqTable()
+    //{
+    //    auto itAnimGrpTbl = (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable);
+
+    //    //First get the first non-null group
+    //    uint32_t ptrFirstSeq = GetOffsetFirstAnimSeqPtr( itAnimGrpTbl, 
+    //                                                     m_wanAnimInfo.nb_anim_groups, 
+    //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
+    //    uint32_t nbNullSeqPtrsBef = CountNbAdjacentNullPointer((m_rawdata.begin() + ptrFirstSeq ));
+
+    //    m_;
+    //}
+
+    uint32_t WAN_Parser::CalcFileOffsetBegSeqTable( /*const std::vector<graphics::SpriteAnimationGroup> & groupsPtr*/ )
+    {
+        //Count leading null group entries
+        uint32_t nbNullGroups = CountNbAdjacentNullValues<uint64_t>( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable),
+                                                                     (m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table) 
+                                                                   ); //Each entries is 64 bits
+
+        uint32_t firstNonNullGrp      = m_wanAnimInfo.ptr_animGrpTable + (nbNullGroups * WAN_LENGTH_ANIM_GRP);
+        uint32_t nbBytesBefNonNullSeq = ( nbNullGroups * sizeof(uint32_t) );
+
+        //In the case all groups are null
+        if( firstNonNullGrp == m_wanImgDataInfo.ptr_img_table )
+        {
+            //The entire sequences and group tables are null, 
+            // just subtract nbNullGroups * sizeof(uint32_t) from the beg of the grp table
+            //uint32_t seqtbllen = ( nbNullGroups * sizeof(uint32_t) );
+
+            assert( m_wanAnimInfo.ptr_animGrpTable > nbBytesBefNonNullSeq );
+            return ( m_wanAnimInfo.ptr_animGrpTable - nbBytesBefNonNullSeq );
+        }
+        else
+        {
+            uint32_t firstNonNullSeq = ReadOff<uint32_t>( firstNonNullGrp );
+           // uint32_t seqtblbeg       = firstNonNullSeq - ( nbNullGroups * sizeof(uint32_t) );
+
+            assert( firstNonNullSeq > nbBytesBefNonNullSeq );
+            return ( firstNonNullSeq - nbBytesBefNonNullSeq );
+        }
+
+        //Find how many null groups we have before the first non-null group. 
+        // This will give us the nb of null sequence pointers, before the first non-null one.
+        //uint32_t nbNullSeqPtrsBef = std::distance( groupsPtr.begin(), 
+        //                                          std::find_if_not( groupsPtr.begin(), 
+        //                                                            groupsPtr.end(), 
+        //                                                            [](const graphics::SpriteAnimationGroup & grp)
+        //                                                            {
+        //                                                                return grp.seqsIndexes.empty();
+        //                                                            }
+        //                                                          ) 
+        //                                         );
+
+        //Get the size of the block
+        //uint32_t ptrFirstSeq = GetOffsetFirstAnimSeqPtr( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable), 
+        //                                                  m_wanAnimInfo.nb_anim_groups, 
+        //                                                  ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) );
+
+        //Get the begining of the sequence table by subtracting the null sequences before the first non-null one!
+        //return ( ptrFirstSeq - ( nbNullGroups * sizeof(uint32_t) ) );
+    }
+
     /**************************************************************
     **************************************************************/
-    vector<sprOffParticle> WAN_Parser::ReadParticleOffsets()
+    vector<sprOffParticle> WAN_Parser::ReadParticleOffsets( const std::vector<graphics::SpriteAnimationGroup> & groupsPtr )
     {
         //First, check if we do have a particle offset block ! It can be omitted!
-        if( m_wanAnimInfo.ptr_pOffsetsTable == 0 )
+        if( m_wanAnimInfo.ptr_pOffsetsTable == 0 && 
+            m_wanAnimInfo.ptr_pOffsetsTable != m_wanAnimInfo.ptr_metaFrmTable ) //In a few files, instead of being a nullptr the particle offset table has its pointer set to the same offset as the meta-frame table's. File #43 in m_attack.bin for example.
         {
+            //Increment particle offset progress anyways
             if( m_pProgress != nullptr )
                 m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
             return vector<sprOffParticle>();
         }
 
-        //Get the size of the block
-        uint32_t                        ptrFirstSeq = GetOffsetFirstAnimSeqPtr( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable), 
-                                                                                m_wanAnimInfo.nb_anim_groups, 
-                                                                                ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
-        uint32_t                        offsetblocklen = ptrFirstSeq - m_wanAnimInfo.ptr_pOffsetsTable;
+        //Find how many null groups we have before the first non-null group. 
+        // This will give us the nb of null sequence pointers, before the first non-null one.
+        //uint32_t nbNullSeqPtrsBef = std::distance( groupsPtr.begin(), 
+        //                                          std::find_if_not( groupsPtr.begin(), 
+        //                                                            groupsPtr.end(), 
+        //                                                            [](const graphics::SpriteAnimationGroup & grp)
+        //                                                            {
+        //                                                                return grp.seqsIndexes.empty();
+        //                                                            }
+        //                                                          ) 
+        //                                         );
+
+        ////Get the size of the block
+        //uint32_t                        ptrFirstSeq = GetOffsetFirstAnimSeqPtr( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable), 
+        //                                                                        m_wanAnimInfo.nb_anim_groups, 
+        //                                                                        ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
+
+        //Get the begining of the sequence table by subtracting the null sequences before the first non-null one!
+        uint32_t                        offsetBegSeqTable = CalcFileOffsetBegSeqTable(); /*ptrFirstSeq - (nbNullSeqPtrsBef * sizeof(uint32_t));*/
+
+        uint32_t                        offsetblocklen = offsetBegSeqTable - m_wanAnimInfo.ptr_pOffsetsTable;
         vector<sprOffParticle>          offsets( offsetblocklen / 4u ); //2x 16 bit ints per entry
         vector<uint8_t>::const_iterator itCuroffset  = m_rawdata.begin() + m_wanAnimInfo.ptr_pOffsetsTable;
-        vector<uint8_t>::const_iterator itEndOffsets = m_rawdata.begin() + ptrFirstSeq;
-        uint32_t progressBefore = 0; //Save a little snapshot of the progress
+        vector<uint8_t>::const_iterator itEndOffsets = m_rawdata.begin() + offsetBegSeqTable;
+        uint32_t                        progressBefore = 0; //Save a little snapshot of the progress
 
         if(m_pProgress!=nullptr)
             progressBefore = m_pProgress->load();

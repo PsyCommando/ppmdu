@@ -124,8 +124,12 @@ namespace gfx_util
         bool                           m_ImportByIndex;   //Whether the images should be imported by their index number, and not just the order they're sorted as
         bool                           m_compressToPKDPX; //Whether the content should be compressed. Works with sprite files, and packed sprite files only this far!
         eExecMode                      m_execMode;        //This is set after reading the input path.
-        std::unique_ptr<pathwrapper_t> m_pInputPath;      //This is the input path that was parsed 
-        std::unique_ptr<pathwrapper_t> m_pOutputPath;     //This is the output path that was parsed
+        //std::unique_ptr<pathwrapper_t> m_pInputPath;      //This is the input path that was parsed 
+        //std::unique_ptr<pathwrapper_t> m_pOutputPath;     //This is the output path that was parsed
+
+        std::string                    m_inputPath;      //This is the input path that was parsed 
+        std::string                    m_outputPath;     //This is the output path that was parsed
+
         utils::io::eSUPPORT_IMG_IO     m_PrefOutFormat;   //The image format to use when exporting
 
         //Other Misc Runtime Data<

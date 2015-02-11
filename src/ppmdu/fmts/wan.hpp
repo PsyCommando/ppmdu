@@ -26,6 +26,7 @@ namespace pmd2 { namespace filetypes
     static const bool         WAN_REVERSED_PIX_ORDER = true; //Whether we should read the pixels in reversed bit order, when applicable(4bpp)
     static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
     static const unsigned int WAN_LENGTH_ANIM_FRM    = 12; //bytes
+    static const unsigned int WAN_LENGTH_ANIM_GRP    = 8;  //bytes
 
 //=============================================================================================
 //  WAN Structures
@@ -607,11 +608,11 @@ namespace pmd2 { namespace filetypes
         //This reads metaframes from a single meta-frame list pointed to by the meta-frame ref table
         void                                        ReadAMetaFrameGroup( std::vector<graphics::MetaFrameGroup> & out_metafrmgrps,
                                                                          std::vector<graphics::MetaFrame>      & out_metafrms,
-                                                                         uint32_t                                grpbeg,
-                                                                         uint32_t                                grpend );
+                                                                         uint32_t                                grpbeg/*,
+                                                                         uint32_t                                grpend*/ );
         
         //Read a single meta-frame
-        graphics::MetaFrame                          ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread );
+        graphics::MetaFrame                          ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm );
 
         std::vector<graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
         graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
@@ -620,8 +621,8 @@ namespace pmd2 { namespace filetypes
         //This get all anim sequences refered to by those groups, and it changes the pointer offsets to indexes in the anim sequence table!
         std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<graphics::SpriteAnimationGroup> & groupsWPtr );
         
-        std::vector<graphics::sprOffParticle>       ReadParticleOffsets(); 
-
+        std::vector<graphics::sprOffParticle>       ReadParticleOffsets( const std::vector<graphics::SpriteAnimationGroup> & groupsWPtr ); 
+        uint32_t                                    CalcFileOffsetBegSeqTable( /*const std::vector<graphics::SpriteAnimationGroup> & groupsPtr*/ );
         /*
             #TODO: is this still in use anymore ?
         */
