@@ -324,7 +324,7 @@ namespace pmd2 { namespace filetypes
         If its a sequence of zero, it won't write into the pixel 
         strip table. If it is, it will.    
     **************************************************************/
-    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                         std::vector<uint8_t>::const_iterator   itEnd,
                                                         std::vector<uint8_t>                 & pixStrips,
                                                         uint32_t                             & totalbytecnt) 
@@ -388,7 +388,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeZeroStripTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
                                                                                       vector<uint8_t>::const_iterator   itEnd,
                                                                                       vector<uint8_t>                 & pixStrips,
                                                                                       uint32_t                        & totalbytecnt )
@@ -410,10 +410,10 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros )
     {
-        uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the zerostrip table!
+        uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the assembly table !
 
         vector<uint8_t>                 pixelstrips;
-        vector<ImgAsmTbl_WithOpTy>      zerostriptable; 
+        vector<ImgAsmTbl_WithOpTy>      asmtable; 
         auto                            itLaststrip  = frm.begin();
         uint32_t                        totalbytecnt = 0;
 
@@ -424,19 +424,19 @@ namespace pmd2 { namespace filetypes
         while( itCurPos != itEnd )
         {
             if( dontStripZeros )
-                zerostriptable.push_back( MakeZeroStripTableEntryNoStripping(itCurPos,itEnd,pixelstrips, totalbytecnt ) );
+                asmtable.push_back( MakeImgAsmTableEntryNoStripping(itCurPos,itEnd,pixelstrips, totalbytecnt ) );
             else
-                zerostriptable.push_back( MakeZeroStripTableEntry( itCurPos, itEnd, pixelstrips, totalbytecnt ) );
+                asmtable.push_back( MakeImgAsmTableEntry( itCurPos, itEnd, pixelstrips, totalbytecnt ) );
         }
 
         //Write pixel strips
         std::copy( pixelstrips.begin(), pixelstrips.end(), m_itbackins );
 
-        //Save the offset of the upcoming zero strip table
+        //Save the offset of the upcoming assembly table
         m_CompImagesTblOffsets.push_back( m_outBuffer.size() );
 
         //Write table
-        for( auto & entry : zerostriptable )
+        for( auto & entry : asmtable )
         {
             //Offset the pointers correctly + Register ptr if non-zero
             if( !entry.isZeroEntry )

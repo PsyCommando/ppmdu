@@ -3,6 +3,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_sprites.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
+//#include <ppmdu/containers/sprite_io.hpp>
 #include <ppmdu/fmts/wan.hpp>
 #include <ppmdu/fmts/pack_file.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
@@ -45,11 +46,10 @@ namespace gfx_util
     /*
         A little wrapper to avoid contaminating with the POCO library the other headers!
     */
-    struct pathwrapper_t
-    {
-        Poco::Path mypath;
-    };
-
+    //struct pathwrapper_t
+    //{
+    //    Poco::Path mypath;
+    //};
 
 //=================================================================================================
 // Utility

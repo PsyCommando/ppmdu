@@ -20,12 +20,15 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\data formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\sprite_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\sprite_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
@@ -196,6 +199,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\sprite_io.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
@@ -382,18 +386,18 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\src;$(SourcePath)</SourcePath>
-    <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\XML\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\lib_release;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)_xp</TargetName>
   </PropertyGroup>

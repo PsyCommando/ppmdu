@@ -16,6 +16,7 @@ Description:
 #include <utility>
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
 
 //Forward declare for the friendly io modules !
 namespace pmd2{ namespace filetypes{ class WAN_Parser; class WAN_Writer; }; };
@@ -61,14 +62,6 @@ namespace pmd2{ namespace graphics
     class MetaFrame
     {
     public:
-        //Used for storing what animation frames refers to this meta-frame!
-        struct animrefs_t
-        {
-            //uint32_t refgrp;
-            uint32_t refseq;
-            uint32_t reffrm;
-        };
-
         /*
             This table contains all the possible resolution for an image pointed to by a meta-frame.
             The value each entry contains is the value of the 2 first bits of the x and y offsets that needs
@@ -99,7 +92,13 @@ namespace pmd2{ namespace graphics
 
             _INVALID,       //Returned in cases of errors
         };
-        //static const unsigned int LENGTH = 10u;  //The length of the meta frame data in raw form!
+
+        //Used for storing what animation frames refers to this meta-frame!
+        struct animrefs_t
+        {
+            uint32_t refseq;
+            uint32_t reffrm;
+        };
 
         /*
             Struct used to associate the value in the eRes enum to numerical representation
@@ -112,11 +111,9 @@ namespace pmd2{ namespace graphics
                     y; 
         };
 
-        /*
-            Table containing the resolution in numerical form for each entries in the eRes enum !
-        */
-        static const std::vector<integerAndRes> ResEquiv;
-
+    //-----------------------------
+    // Static Methods
+    //-----------------------------
         //Pass the raw offsets with their first 2 bits containing the img resolution
         // and get the resolution as a eRes !
         static inline eRes GetResolutionFromOffset_uint16( uint16_t xoffset, uint16_t yoffset )
@@ -125,44 +122,35 @@ namespace pmd2{ namespace graphics
             return static_cast<MetaFrame::eRes>( (0xC000 & yoffset) >> 8 | (0xC000 & xoffset) >> 12 );
         }
 
-        static utils::Resolution eResToResolution( eRes ares )
-        {
-            switch(ares)
-            {
-                //square
-                case eRes::_8x8  : return graphics::RES_8x8_SPRITE;
-                case eRes::_16x16: return graphics::RES_16x16_SPRITE;
-                case eRes::_32x32: return graphics::RES_32x32_SPRITE;
-                case eRes::_64x64: return graphics::RES_64x64_SPRITE;
-
-                //non-square
-                case eRes::_8x16 : return graphics::RES_8x16_SPRITE;
-                case eRes::_16x8 : return graphics::RES_16x8_SPRITE;
-                case eRes::_32x8 : return graphics::RES_32x8_SPRITE;
-                case eRes::_8x32 : return graphics::RES_8x32_SPRITE;
-                case eRes::_32x16: return graphics::RES_32x16_SPRITE;
-                case eRes::_16x32: return graphics::RES_16x32_SPRITE;
-                case eRes::_64x32: return graphics::RES_64x32_SPRITE;
-                case eRes::_32x64: return graphics::RES_32x64_SPRITE;
-            };
-            assert(false); //Asked for invalid resolution !
-            return RES_INVALID;
-        }
+        static utils::Resolution eResToResolution( eRes ares );
 
         /*
             Return the correct eRes entry to match the integer representation of the entry.
         */
-        static eRes IntegerResTo_eRes( uint8_t xres, uint8_t yres )
+        static eRes IntegerResTo_eRes( uint8_t xres, uint8_t yres );
+        
+    //-----------------------------
+    // Methods
+    //-----------------------------
+        // --- Construct ---
+        MetaFrame()
         {
-            for( const auto & entry : ResEquiv )
-            {
-                if( entry.x == xres && entry.y == yres )
-                    return entry.enumres;
-            }
-
-            return eRes::_INVALID; //If things go wrong, return the biggest
+            m_animFrmsRefer.reserve(1); //All meta-frames will be refered to at least once !
         }
 
+        //--- References handling ---
+        inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
+        inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
+
+        inline void  addRef( uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refseq,refererindex }); }
+        void         remRef( uint32_t refseq, uint32_t refererindex );
+
+        //Empty the reference table completely
+        inline void clearRefs() { m_animFrmsRefer.resize(0); }
+
+    //-----------------------------
+    // Variables
+    //-----------------------------
         //Cleaned up values from file( the Interpreted values below, were removed from those ):
         uint16_t imageIndex;    //The index of the actual image data in the image data vector
         uint16_t unk0;           //?
@@ -182,33 +170,11 @@ namespace pmd2{ namespace graphics
         bool     YOffbit3;       //The state of bit 3 of the bits assigned to flags in YOffset (0010 0000 0000 0000)
         bool     YOffbit5;       //The state of bit 5 of the bits assigned to flags in YOffset (0000 1000 0000 0000)
         bool     YOffbit6;       //The state of bit 6 of the bits assigned to flags in YOffset (0000 0100 0000 0000)
-        
-        // --- Construct ---
-        MetaFrame()
-        {
-            m_animFrmsRefer.reserve(1); //All meta-frames will be refered to at least once !
-        }
 
-        //--- References handling ---
-        inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
-        inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
-
-        inline void  addRef   ( uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refseq,refererindex }); }
-        void         remRef   ( uint32_t refseq, uint32_t refererindex ) 
-        {
-            for( auto it = m_animFrmsRefer.begin(); it != m_animFrmsRefer.end(); ++it )
-            {
-                if( it->refseq == refseq && it->reffrm == refererindex )
-                {
-                    m_animFrmsRefer.erase(it);
-                    return;
-                }
-            }
-        }
-
-        //Empty the reference table completely
-        inline void clearRefs() { m_animFrmsRefer.resize(0); }
-
+        /*
+            Table containing the resolution in numerical form for each entries in the eRes enum !
+        */
+        static const std::vector<integerAndRes> ResEquiv;
 
     private:
         std::vector<animrefs_t> m_animFrmsRefer; //list of the indexes of the anim frames referencing to this!
@@ -274,7 +240,7 @@ namespace pmd2{ namespace graphics
         AnimationSequence( const std::string & name = "", uint32_t nbframes = 0 ) //Not counting the obligatory closing null frame!!
             :m_frames(nbframes), m_name(name)
         {}
-        
+
         inline void                reserve( unsigned int count )       { m_frames.reserve(count); }
         inline unsigned int        getNbFrames()const                  { return m_frames.size(); } //Not counting the obligatory closing null frame!!
         inline const AnimFrame   & getFrame( unsigned int index )const { return m_frames[index]; }
@@ -431,7 +397,7 @@ namespace pmd2{ namespace graphics
         friend class pmd2::filetypes::WAN_Writer;
         static const uint32_t MY_NB_BITS_PER_PIXEL = TIMG_Type::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
 
-        //A couple of constants and typedef to make the conditional statement below more readable!
+        //A couple of constants and typedef to make the conditional statement below(MY_SPRITE_TYPE) more readable!
         typedef std::integral_constant<eSpriteType,eSpriteType::spr4bpp>    SPRTy_4BPP;
         typedef std::integral_constant<eSpriteType,eSpriteType::spr8bpp>    SPRTy_8BPP;
         typedef std::integral_constant<eSpriteType,eSpriteType::sprInvalid> SPRTy_INVALID; 
@@ -586,75 +552,75 @@ namespace pmd2{ namespace graphics
     };
 
 
-//=========================================================================================
-//  SpriteUnpacker
-//=========================================================================================
-    /*
-        Export a sprite to a directory structure, a palette, and several xml data files.
-        -imgtype   : The supported image type to use for exporting the individual frames. 
-        -usexmlpal : If true, the palette will be exported as an xml file, and not a
-                     RIFF palette.
-        -progress  : An atomic integer to increment all the way to 100, to indicate
-                     current progress with export.
-    */
-    template<class _Sprite_T>
-        void ExportSpriteToDirectory( const _Sprite_T            & srcspr, 
-                                      const std::string          & outpath, 
-                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
-                                      bool                         usexmlpal   = false,
-                                      std::atomic<uint32_t>      * progresscnt = nullptr );
-
-    void ExportSpriteToDirectoryPtr( const graphics::BaseSprite * srcspr, 
-                                      const std::string          & outpath, 
-                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
-                                      bool                         usexmlpal   = false,
-                                      std::atomic<uint32_t>      * progresscnt = nullptr );
-
-//=========================================================================================
-//  SpriteBuilder
-//=========================================================================================
-    /*
-        Check if all the required files and subfolders are in the filelist passed as param!
-        Use this before calling ImportSpriteFromDirectory on the list of the files present
-        in the dir to make sure everything is ok!
-    */
-    bool                AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
-    bool                AreReqFilesPresent_Sprite( const std::string              & directorypath );
-
-    /*
-        Return the missing required files in the file list specified.
-    */
-    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist );
-    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::string              & directorypath );
-
-
-    /*
-        Whether the image resolution is one of the valid sprite image resolution.
-    */
-    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height );
-
-    /*
-        ImportSpriteFromDirectory
-            Call this to import any types of Sprite.
-
-            -bReadImgByIndex : If true we'll enforce the image order indicated by the number 
-                               in the name of the image. If false, we'll simply pushback images
-                               in the alpha-numeric order they're in the folder, applying no
-                               check on the index number.
-            -bParseXmlPal    : Whether we should try parsing a palette from xml!
-    */
-    template<class _Sprite_T>
-        _Sprite_T ImportSpriteFromDirectory( const std::string     & inpath, 
-                                             bool                    bReadImgByIndex = false,
-                                             bool                    bParseXmlPal    = false,
-                                             std::atomic<uint32_t> * progresscnt     = nullptr );
-
-
-    /*
-        QuerySpriteTypeFromDirectory
-            Check the directory to get what's the sprite_ty of the sprite.
-    */
-    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )throw(std::runtime_error);
+////=========================================================================================
+////  SpriteUnpacker
+////=========================================================================================
+//    /*
+//        Export a sprite to a directory structure, a palette, and several xml data files.
+//        -imgtype   : The supported image type to use for exporting the individual frames. 
+//        -usexmlpal : If true, the palette will be exported as an xml file, and not a
+//                     RIFF palette.
+//        -progress  : An atomic integer to increment all the way to 100, to indicate
+//                     current progress with export.
+//    */
+//    template<class _Sprite_T>
+//        void ExportSpriteToDirectory( const _Sprite_T            & srcspr, 
+//                                      const std::string          & outpath, 
+//                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
+//                                      bool                         usexmlpal   = false,
+//                                      std::atomic<uint32_t>      * progresscnt = nullptr );
+//
+//    void ExportSpriteToDirectoryPtr( const graphics::BaseSprite * srcspr, 
+//                                      const std::string          & outpath, 
+//                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
+//                                      bool                         usexmlpal   = false,
+//                                      std::atomic<uint32_t>      * progresscnt = nullptr );
+//
+////=========================================================================================
+////  SpriteBuilder
+////=========================================================================================
+//    /*
+//        Check if all the required files and subfolders are in the filelist passed as param!
+//        Use this before calling ImportSpriteFromDirectory on the list of the files present
+//        in the dir to make sure everything is ok!
+//    */
+//    bool                AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
+//    bool                AreReqFilesPresent_Sprite( const std::string              & directorypath );
+//
+//    /*
+//        Return the missing required files in the file list specified.
+//    */
+//    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist );
+//    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::string              & directorypath );
+//
+//
+//    /*
+//        Whether the image resolution is one of the valid sprite image resolution.
+//    */
+//    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height );
+//
+//    /*
+//        ImportSpriteFromDirectory
+//            Call this to import any types of Sprite.
+//
+//            -bReadImgByIndex : If true we'll enforce the image order indicated by the number 
+//                               in the name of the image. If false, we'll simply pushback images
+//                               in the alpha-numeric order they're in the folder, applying no
+//                               check on the index number.
+//            -bParseXmlPal    : Whether we should try parsing a palette from xml!
+//    */
+//    template<class _Sprite_T>
+//        _Sprite_T ImportSpriteFromDirectory( const std::string     & inpath, 
+//                                             bool                    bReadImgByIndex = false,
+//                                             bool                    bParseXmlPal    = false,
+//                                             std::atomic<uint32_t> * progresscnt     = nullptr );
+//
+//
+//    /*
+//        QuerySpriteTypeFromDirectory
+//            Check the directory to get what's the sprite_ty of the sprite.
+//    */
+//    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )throw(std::runtime_error);
 };};
 
 #endif

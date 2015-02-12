@@ -10,6 +10,7 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/handymath.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
+#include <ppmdu/containers/sprite_io.hpp>
 #include <ppmdu/containers/color.hpp>
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
@@ -729,16 +730,16 @@ namespace pmd2 { namespace filetypes
             This insert the next sequence into the zero strip table.
             If its a sequence of zero, it won't write into the pixel strip table. If it is, it will.
         */
-        ImgAsmTbl_WithOpTy MakeZeroStripTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+        ImgAsmTbl_WithOpTy MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                          std::vector<uint8_t>::const_iterator   itEnd,
                                                          std::vector<uint8_t>                 & pixStrips,
                                                          uint32_t                             & totalbytecnt );
 
         /*
-            Same as above, but it simply makes a single entry for the whole image, not stripping the image of 
-            any strips of zeroes.
+            Same as above, but it simply makes a single assembly table entry for the whole image, not stripping the image of 
+            any zeroes. Essentially bypassing the whole purpose of the assembly table.
         */
-        ImgAsmTbl_WithOpTy MakeZeroStripTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
+        ImgAsmTbl_WithOpTy MakeImgAsmTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                                     std::vector<uint8_t>::const_iterator   itEnd,
                                                                     std::vector<uint8_t>                 & pixStrips,
                                                                     uint32_t                             & totalbytecnt);
