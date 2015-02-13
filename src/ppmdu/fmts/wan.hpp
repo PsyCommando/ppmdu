@@ -496,13 +496,13 @@ namespace pmd2 { namespace filetypes
         //This parse all images of the sprite as 4bpp!
         graphics::SpriteData<gimg::tiled_image_i4bpp> ParseAs4bpp( std::atomic<uint32_t> * pProgress = nullptr)
         {
-            return Parse<gimg::tiled_image_i4bpp>(pProgress);
+            return std::move(Parse<gimg::tiled_image_i4bpp>(pProgress));
         }
 
         //This parse all images of the sprite as 8bpp!
         graphics::SpriteData<gimg::tiled_image_i8bpp> ParseAs8bpp(std::atomic<uint32_t> * pProgress = nullptr)
         {
-            return Parse<gimg::tiled_image_i8bpp>(pProgress);
+            return std::move(Parse<gimg::tiled_image_i8bpp>(pProgress));
         }
 
     private:

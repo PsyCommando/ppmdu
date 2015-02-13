@@ -67,6 +67,7 @@ namespace gfx_util
         bool ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata );
         bool ParseOptionCompressPKDPX   ( const std::vector<std::string> & optdata );
         bool ParseOptionBuildPack       ( const std::vector<std::string> & optdata );
+        bool ParseOptionNbThreads       ( const std::vector<std::string> & optdata );
 
         //Execution
         int UnpackSprite();

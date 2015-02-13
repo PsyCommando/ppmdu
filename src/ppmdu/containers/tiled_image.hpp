@@ -69,7 +69,8 @@ namespace gimg
         class tile
     {
     public:
-        typedef _PIXEL_T pixel_t;
+        typedef _PIXEL_T                                pixel_t;
+        typedef tile<_PIXEL_T, _tilewidth, _tileheight> _myty;
         static const unsigned int WIDTH     = _tilewidth;
         static const unsigned int HEIGHT    = _tileheight;
         static const unsigned int NB_PIXELS = WIDTH * HEIGHT;
@@ -80,28 +81,28 @@ namespace gimg
         }
 
         //Copy contructor
-        tile( const tile<_PIXEL_T, _tilewidth, _tileheight>  & other )
+        tile( const _myty  & other )
         {
             content = other.content;
         }
 
         //Copy assignement operator
-        const tile<_PIXEL_T, _tilewidth, _tileheight> & operator=( const tile<_PIXEL_T, _tilewidth, _tileheight>  & other )
+        const _myty & operator=( const _myty  & other )
         {
             content = other.content;
             return *this;
         }
 
         //Move constructor
-        tile( tile<_PIXEL_T, _tilewidth, _tileheight>  && other )
+        tile( _myty  && other )
         {
-            content = std::move_if_noexcept(other.content);
+            content = std::move(other.content);
         }
 
         //Move assignement operator
-        inline const tile<_PIXEL_T, _tilewidth, _tileheight> & operator=( tile<_PIXEL_T, _tilewidth, _tileheight>  && other )
+        inline const _myty & operator=( _myty  && other )
         {
-            content = std::move_if_noexcept(other.content);
+            content = std::move(other.content);
             return *this;
         }
 
@@ -143,11 +144,12 @@ namespace gimg
                                                 _PIXEL_T>
     {
     public:
-        typedef tile<_PIXEL_T,_TILE_NB_ROWS,_TILE_NB_COLS>      tile_t;
-        typedef typename tile_t::pixel_t                        pixel_t;
-        typedef typename tile_t::pixel_t                        value_type; //For the iterator
-        typedef utils::index_iterator<tiled_image>              iterator;
-        typedef utils::const_index_iterator<const tiled_image>  const_iterator;
+        typedef tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> _myty;
+        typedef tile<_PIXEL_T,_TILE_NB_ROWS,_TILE_NB_COLS>          tile_t;
+        typedef typename tile_t::pixel_t                            pixel_t;
+        typedef typename tile_t::pixel_t                            value_type; //For the iterator
+        typedef utils::index_iterator<tiled_image>                  iterator;
+        typedef utils::const_index_iterator<const tiled_image>      const_iterator;
 
         //------ Construction ------
         tiled_image() throw()
@@ -155,42 +157,42 @@ namespace gimg
         {
         }
 
-        tiled_image( unsigned int pixelsWidth, unsigned int pixelsHeigth ) throw()
+        tiled_image( unsigned int pixelsWidth, unsigned int pixelsHeigth )
             :m_totalNbPixels(0), m_pixelWidth(0), m_pixelHeight(0),m_nbTileRows(0), m_nbTileColumns(0)
         {
             setPixelResolution(pixelsWidth,pixelsHeigth);
         }
 
         //Copy
-        tiled_image( const tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> & other ) throw()
+        tiled_image( const _myty & other )
             :m_totalNbPixels(0), m_pixelWidth(0), m_pixelHeight(0),m_nbTileRows(0), m_nbTileColumns(0)
         {
             copyFrom(&other);
         }
 
         //Move
-        tiled_image( tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> && other ) throw()
+        tiled_image( _myty && other )
             :m_totalNbPixels(0), m_pixelWidth(0), m_pixelHeight(0),m_nbTileRows(0), m_nbTileColumns(0)
         {
             moveFrom(&other);
         }
 
         //Copy
-        const tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> & operator=( const tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> & other ) throw()
+        const _myty & operator=( const _myty & other )
         {
             copyFrom(&other);
             return *this;
         }
 
         //Move
-        const tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> & operator=( tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> && other ) throw()
+        const _myty & operator=( _myty && other )
         {
             moveFrom(&other);
             return *this;
         }
 
         //Copy
-        inline void copyFrom( const tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> * const other ) throw()
+        inline void copyFrom( const _myty * const other )
         {
             //Move assignement operator called
             m_tiles         = std::vector< std::vector<tile_t> >( other->m_tiles.begin(), other->m_tiles.end() );
@@ -202,10 +204,10 @@ namespace gimg
         }
 
         //Move
-        inline void moveFrom( tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> * other ) throw()
+        inline void moveFrom( _myty * other )
         {
             //Move
-            m_tiles         = std::move_if_noexcept(other->m_tiles);
+            m_tiles         = std::move(other->m_tiles);
             m_totalNbPixels = other->m_totalNbPixels;
             m_pixelWidth    = other->m_pixelWidth;
             m_pixelHeight   = other->m_pixelHeight;
@@ -358,58 +360,60 @@ namespace gimg
     public:
         static_assert( _PIXEL_T::mypixeltrait_t::IS_INDEXED, "Using a non-indexed pixel type inside a tiled_indexed_image is not allowed!" );
         typedef _COLOR_T pal_color_t;
+        typedef tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> _myty;
+        typedef tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>                _parentty;
 
         //------ Constructors ------
         tiled_indexed_image()
-            :tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>(), m_palette(pixel_t::mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT)
+            :_parentty(), m_palette(pixel_t::mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT)
         {}
 
         tiled_indexed_image( unsigned int pixelsWidth, unsigned int pixelsHeigth )
-            :tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>(pixelsWidth,pixelsHeigth), m_palette(pixel_t::mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT)
+            :_parentty(pixelsWidth,pixelsHeigth), m_palette(pixel_t::mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT)
         {}
 
         tiled_indexed_image( unsigned int pixelsWidth, unsigned int pixelsHeigth, unsigned int nbcolors )
-            :tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>(pixelsWidth,pixelsHeigth), m_palette(nbcolors)
+            :_parentty(pixelsWidth,pixelsHeigth), m_palette(nbcolors)
         {}
 
-        tiled_indexed_image( const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> & other )
+        tiled_indexed_image( const _myty & other )
         {
             //do copy here
             copyFrom(&other);
         }
 
-        tiled_indexed_image( tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> && other )
+        tiled_indexed_image( _myty && other )
         {
             //do move here
             moveFrom(&other);
         }
 
         //Copy
-        inline const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> & operator=( const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> & other )
+        inline const _myty & operator=( const _myty & other )
         {
             copyFrom(&other);
             return *this;
         }
 
         //Move
-        inline const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> & operator=( tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> && other )
+        inline const _myty & operator=( _myty && other )
         {
             moveFrom(&other);
             return *this;
         }
 
-        inline void copyFrom(const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> * const other) 
+        inline void copyFrom(const _myty * const other) 
         {
             m_palette = std::vector<pal_color_t>(other->m_palette.begin(), other->m_palette.end());
             //Call copyFrom from parent
-            tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>::copyFrom( dynamic_cast<const tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> * const>(other) );
+            _parentty::copyFrom( dynamic_cast<const _myty * const>(other) );
         }
 
-        inline void moveFrom(tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> * other)
+        inline void moveFrom(_myty * other)
         {
             m_palette = std::move_if_noexcept(other->m_palette);
             //Call moveFrom from parent
-            tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>::moveFrom( dynamic_cast<tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS>*>(other) );
+            _parentty::moveFrom( dynamic_cast<_myty*>(other) );
         }
 
         //------ Methods ------
@@ -433,7 +437,7 @@ namespace gimg
 
         inline const pal_color_t & getPixelColorFromPalette( unsigned int x, unsigned int y )const
         {
-            return const_cast<tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> *>(this)->getPixelColorFromPalette(x,y);
+            return const_cast<_myty *>(this)->getPixelColorFromPalette(x,y);
         }
 
         inline virtual colorRGB24 getPixelRGBColor( unsigned int x, unsigned int y )const

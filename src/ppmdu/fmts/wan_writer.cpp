@@ -79,10 +79,7 @@ namespace pmd2 { namespace filetypes
                            std::atomic<uint32_t> * pProgress )
     {
         vector<uint8_t> outvec = write( pProgress );
-
-        //Poco::Path outptutwan(outputpath);
-        //outptutwan.makeFile().setExtension(WAN_FILEX);
-        utils::io::WriteByteVectorToFile( outputpath/*outptutwan.toString()*/, outvec );
+        utils::io::WriteByteVectorToFile( outputpath, outvec );
     }
 
     /**************************************************************

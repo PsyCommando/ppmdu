@@ -21,9 +21,9 @@ namespace multitask
 //================================================================================================
 // Constants
 //================================================================================================
-    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT_FOR_TASK = chrono::microseconds(500);
-    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT          = chrono::nanoseconds (300);
-    static const chrono::nanoseconds DUR_MANAGER_THREAD_WAIT         = chrono::microseconds(500);
+    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT_FOR_TASK = chrono::nanoseconds(10);
+    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT          = chrono::nanoseconds(10);
+    static const chrono::nanoseconds DUR_MANAGER_THREAD_WAIT         = chrono::nanoseconds(10);
 
 //================================================================================================
 // Utility

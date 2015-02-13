@@ -534,6 +534,35 @@ namespace pmd2{ namespace graphics
             }
         }
 
+        SpriteData(){}
+        SpriteData( SpriteData<TIMG_Type> && other )
+        {
+            m_frames         = std::move( other.m_frames ); 
+            m_metarefs       = std::move( other.m_metarefs );
+            m_metaframes     = std::move( other.m_metaframes );
+            m_metafrmsgroups = std::move( other.m_metafrmsgroups );
+            m_animgroups     = std::move( other.m_animgroups );
+            m_animSequences  = std::move( other.m_animSequences );
+            m_palette        = std::move( other.m_palette );
+            m_common         = std::move( other.m_common );
+            m_partOffsets    = std::move( other.m_partOffsets );
+        }
+
+        SpriteData<TIMG_Type> & operator=( SpriteData<TIMG_Type> && other )
+        {
+            m_frames         = std::move( other.m_frames ); 
+            m_metarefs       = std::move( other.m_metarefs );
+            m_metaframes     = std::move( other.m_metaframes );
+            m_metafrmsgroups = std::move( other.m_metafrmsgroups );
+            m_animgroups     = std::move( other.m_animgroups );
+            m_animSequences  = std::move( other.m_animSequences );
+            m_palette        = std::move( other.m_palette );
+            m_common         = std::move( other.m_common );
+            m_partOffsets    = std::move( other.m_partOffsets );
+            return *this;
+        }
+
+
     /*private: */
         std::vector<img_t>                   m_frames;      //Actual image data, with reference list.
         std::multimap<uint32_t,uint32_t>     m_metarefs;    //A map of the meta-frames refering to a specific frame. 
@@ -549,6 +578,10 @@ namespace pmd2{ namespace graphics
         std::vector<gimg::colorRGB24>        m_palette;         //The palette for this sprite
         SprInfo                              m_common;          //Common properties about the sprite not affected by template type!
         std::vector<sprOffParticle>          m_partOffsets;     //The particle offsets list
+
+    private:
+        SpriteData( const SpriteData<TIMG_Type> & other );
+        SpriteData<TIMG_Type> & operator=( const SpriteData<TIMG_Type> & other );
     };
 
 
