@@ -21,9 +21,10 @@ namespace multitask
 //================================================================================================
 // Constants
 //================================================================================================
-    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT_FOR_TASK = chrono::nanoseconds(10);
-    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT          = chrono::nanoseconds(10);
-    static const chrono::nanoseconds DUR_MANAGER_THREAD_WAIT         = chrono::nanoseconds(10);
+    //static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT_FOR_TASK = chrono::nanoseconds(10);
+    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT          = chrono::nanoseconds(200);
+    static const chrono::nanoseconds DUR_WORKER_THREAD_WAIT_TASK     = chrono::microseconds(500);
+    static const chrono::nanoseconds DUR_MANAGER_THREAD_WAIT         = chrono::microseconds(100);
 
 //================================================================================================
 // Utility
@@ -43,6 +44,8 @@ namespace multitask
     {
         m_NoTasksYet.store( true );
         m_managerShouldStopAftCurTask.store( false );
+        m_stopWorkers = false;
+        m_taskcompleted = 0;
     }
 
     CMultiTaskHandler::~CMultiTaskHandler()
@@ -71,6 +74,7 @@ namespace multitask
         {
             unique_lock<mutex> mynewtasklock(m_mutexNewTask);
             m_newTask.notify_one(); //FIXME: This condition variable intermitently make the program crash for no obvious reasons at this line.. 
+                                    //       it may have been a VS2012 stdlib bug, because on VS2013, this hasn't happened yet.
         }
         catch( exception e ){SimpleHandleException(e);}
     }
@@ -95,6 +99,7 @@ namespace multitask
     {
         if( !m_managerThread.joinable() )
         {
+            m_taskcompleted = 0;
             m_managerShouldStopAftCurTask = false;
             m_managerThread = std::move( std::thread(&CMultiTaskHandler::RunTasks, this) );
         }
@@ -117,9 +122,9 @@ namespace multitask
         return !(m_tasks.empty());
     }
 
-    bool CMultiTaskHandler::WorkerThread( atomic_bool * out_isworking, int id )
+    bool CMultiTaskHandler::WorkerThread( thRunParam & taskSlot )
     {
-        while( !( m_managerShouldStopAftCurTask.load() ) )
+        while( !( m_stopWorkers.load() ) )
         {
             packaged_task<pktaskret_t()> mytask;
             bool                         shouldwaitfornewtask = false;
@@ -127,11 +132,22 @@ namespace multitask
             //Grab a task if possible
             try
             {
-                lock_guard<mutex> mylg( m_mutextasks );
+                //if( taskSlot.taskAvailable )
+                //{
+                //    {
+                //        lock_guard<mutex> taskguard(taskSlot.taskmutex);
+                //        mytask = std::move(taskSlot.task);
+                //        taskSlot.taskAvailable = false;
+                //    }
+                //    out_isworking          = true;
+                //}
+                //else
+                //    shouldwaitfornewtask = true;
 
+                lock_guard<mutex> mylg( m_mutextasks );
                 if( !m_tasks.empty() )
                 {
-                    (*out_isworking) = true;
+                    taskSlot.runningTask = true;
                     mytask = std::move(m_tasks.front());
                     m_tasks.pop_front();
                 }
@@ -144,10 +160,10 @@ namespace multitask
             if( mytask.valid() )
             {
                 mytask();
-                (*out_isworking) = false;
+                ++m_taskcompleted;
+                //cout << "\nTask " <<m_taskcompleted <<" Complete.\n";
             }
-            else
-                (*out_isworking) = false;
+            taskSlot.runningTask = false;
 
             //Wait a few more microsec if the queue is empty, while hoping for a trigger of the cond var
             if( shouldwaitfornewtask )
@@ -155,7 +171,9 @@ namespace multitask
                 try
                 {
                     unique_lock<mutex> ulock( m_mutexNewTask );
-                    m_newTask.wait_for( ulock, DUR_WORKER_THREAD_WAIT_FOR_TASK );
+                    m_newTask.wait_for( ulock, DUR_WORKER_THREAD_WAIT_TASK );
+                    //unique_lock<mutex> ulock( taskSlot.newTaskmutex );
+                    //taskSlot.newTask.wait_for( ulock, DUR_WORKER_THREAD_WAIT_TASK );
                 }
                 catch( exception e ){SimpleHandleException(e);}
             }
@@ -163,7 +181,7 @@ namespace multitask
             {
                 try
                 {
-                    this_thread::sleep_for(DUR_WORKER_THREAD_WAIT);
+                    this_thread::sleep_for(taskSlot.waitTime);
                 }
                 catch( exception e ){SimpleHandleException(e);}
             }
@@ -171,42 +189,136 @@ namespace multitask
 
         return true;
     }
+    //{
+    //    while( !( m_managerShouldStopAftCurTask.load() ) )
+    //    {
+    //        packaged_task<pktaskret_t()> mytask;
+    //        bool                         shouldwaitfornewtask = false;
+
+    //        //Grab a task if possible
+    //        try
+    //        {
+    //            lock_guard<mutex> mylg( m_mutextasks );
+
+    //            if( !m_tasks.empty() )
+    //            {
+    //                (*out_isworking) = true;
+    //                mytask = std::move(m_tasks.front());
+    //                m_tasks.pop_front();
+    //            }
+    //            else
+    //                shouldwaitfornewtask = true;
+    //        }
+    //        catch( exception e ){SimpleHandleException(e);}
+
+    //        //Run the task
+    //        if( mytask.valid() )
+    //        {
+    //            mytask();
+    //            (*out_isworking) = false;
+    //        }
+    //        else
+    //            (*out_isworking) = false;
+
+    //        //Wait a few more microsec if the queue is empty, while hoping for a trigger of the cond var
+    //        if( shouldwaitfornewtask )
+    //        {
+    //            try
+    //            {
+    //                unique_lock<mutex> ulock( m_mutexNewTask );
+    //                m_newTask.wait_for( ulock, DUR_WORKER_THREAD_WAIT_FOR_TASK );
+    //            }
+    //            catch( exception e ){SimpleHandleException(e);}
+    //        }
+    //        else
+    //        {
+    //            try
+    //            {
+    //                this_thread::sleep_for(DUR_WORKER_THREAD_WAIT);
+    //            }
+    //            catch( exception e ){SimpleHandleException(e);}
+    //        }
+    //    }
+
+    //    return true;
+    //}
+
+
 
     //This is what the manager thread runs!
     void CMultiTaskHandler::RunTasks()
     {
         auto                                        nbthreads = LibraryWide::getInstance().Data().getNbThreadsToUse();
         vector<thread>                              threadpool(nbthreads);
-        vector<atomic_bool>                         taskstates(nbthreads); 
+        //vector<atomic<bool>>                        taskstates(nbthreads);
+        vector<thRunParam>                          taskSlots(nbthreads);
+        /*vector<runTaskContainer>                    tasksSlots(nbthreads);*/
         bool                                        hasnotaskrunning = false;
+
+        //Reset worker state 
+        m_stopWorkers = false;
 
         //Instantiate threads 
         for( unsigned int i = 0; i < threadpool.size(); ++i )
-            threadpool[i] = std::move( thread( &CMultiTaskHandler::WorkerThread, this, &(taskstates[i]), i ) );
+        {
+            taskSlots[i].waitTime = DUR_WORKER_THREAD_WAIT + chrono::nanoseconds(i * 10);
+            threadpool[i] = std::move( thread( &CMultiTaskHandler::WorkerThread, this, std::ref(taskSlots[i]) ) );
+        }
 
         //Check when all tasks are done
         while( !( m_managerShouldStopAftCurTask.load() && hasnotaskrunning ) )
         {
+            //Assign tasks to thread task slots
+            //for_each( tasksSlots.begin(), tasksSlots.end(), [&]( runTaskContainer &elem )
+            //{
+            //    if( ! elem.taskAvailable )
+            //    {
+            //        
+
+            //        //Grab a task if possible
+            //        try
+            //        {
+            //            {
+            //                lock_guard<mutex> taskguard(elem.taskmutex); //Lock while we're moving the task
+            //                lock_guard<mutex> mylg( m_mutextasks );
+            //                if( !m_tasks.empty() )
+            //                {
+            //                    elem.task = std::move(m_tasks.front());
+            //                    m_tasks.pop_front();
+            //                }
+            //            }
+            //            //Set the task container's state
+            //            elem.taskAvailable = true;
+            //            {
+            //                unique_lock<mutex> ulock( elem.newTaskmutex );
+            //                elem.newTask.notify_one();
+            //            }                        
+            //        }
+            //        catch( exception e ){SimpleHandleException(e);}
+            //    }
+            //});
+
             //If all tasks are done set "hasnotaskrunning" to true!
-            hasnotaskrunning = all_of( taskstates.begin(), taskstates.end(), [](atomic_bool& astate){ return !astate; } );
+            hasnotaskrunning = all_of( taskSlots.begin(), taskSlots.end(), [](thRunParam& astate){ return !(astate.runningTask); } ) /*&&
+                               all_of( tasksSlots.begin(), tasksSlots.end(), [](runTaskContainer & elem){ return !(elem.taskAvailable); } )*/;
 
             //Trigger the all task finished cond var if the task queue is empty, and no tasks are running
             if( hasnotaskrunning )
             {
-                bool notasks = false;
+                bool noTasksLeftInQueue = false;
 
                 try
                 {
                     lock_guard<mutex> mylg( m_mutextasks );
-                    notasks = m_tasks.empty();
+                    noTasksLeftInQueue = m_tasks.empty();
                 }
                 catch( exception e ){SimpleHandleException(e);}
 
-                if( notasks )
+                if( noTasksLeftInQueue )
                 {
                     try
                     {
-                        lock_guard<mutex> taskfinished(m_mutexTaskFinished);
+                        unique_lock<mutex> taskfinished(m_mutexTaskFinished);
                         m_lastTaskFinished.notify_all();
                     }
                     catch( exception e ){SimpleHandleException(e);}
@@ -219,6 +331,9 @@ namespace multitask
             }
             catch( exception e ){SimpleHandleException(e);}
         }
+
+        //Tell the workers to stop
+        m_stopWorkers = true;
 
         //Wait for all threads to finish
         for( unsigned int i = 0; i < threadpool.size(); ++i )

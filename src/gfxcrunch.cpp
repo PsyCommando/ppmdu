@@ -9,6 +9,7 @@
 #include <ppmdu/fmts/wan.hpp>
 #include <ppmdu/fmts/pack_file.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
+#include <cfenv>
 #include <string>
 #include <algorithm>
 #include <vector>
@@ -38,9 +39,11 @@ namespace gfx_util
 //=================================================================================================
 //  Constants
 //=================================================================================================
-    static const int      HPBar_NB_Bars        = 65u;
-    static const int      HPBar_UpdateMSecs    = 80; //Updates at every HPBar_UpdateMSecs mseconds
-    static const uint32_t ForcedPokeSpritePack = 0x1300; //The offset where pack files containing pokemon sprites are forced to begin at
+    static const int                  HPBar_NB_Bars        = 65u;
+    static const int                  HPBar_UpdateMSecs    = 80; //Updates at every HPBar_UpdateMSecs mseconds
+    static const uint32_t             ForcedPokeSpritePack = 0x1300; //The offset where pack files containing pokemon sprites are forced to begin at
+    static const chrono::milliseconds ProgressUpdThWait(100);
+
 
 //=================================================================================================
 // 
@@ -84,21 +87,21 @@ namespace gfx_util
     /*
         Draws the HP Bar progress bar !
     */
-    inline void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
-    {
-        cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
-                <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
-    }
+    //inline void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
+    //{
+    //    cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
+    //            <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
+    //}
 
-    void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
-    {
-        static const int TOTAL_PERCENT = 200u;
-        while( !shouldstop )
-        {
-            DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
-            this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
-        }
-    }
+    //void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
+    //{
+    //    static const int TOTAL_PERCENT = 200u;
+    //    while( !shouldstop )
+    //    {
+    //        DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
+    //        this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
+    //    }
+    //}
 
     void PrintProgressLoop( atomic<uint32_t> & completed, uint32_t total, atomic<bool> & bDoUpdate )
     {
@@ -106,21 +109,21 @@ namespace gfx_util
         {
             uint32_t percent = ( (100 * completed.load()) / total );
             cout << "\r" <<setw(3) <<setfill(' ') <<percent <<"%";
-            this_thread::sleep_for( chrono::milliseconds(200) );
+            this_thread::sleep_for( ProgressUpdThWait );
         }
     }
 
-    void DrawHPBarHeader( const string & name, uint32_t level )
-    {
-        cout <<name <<"\n"
-             <<"\xda" <<setw( HPBar_NB_Bars  + 11 ) <<setfill('\xC4') << "\xbf\n"
-             <<"\xb3 " <<setw( HPBar_NB_Bars + 5 ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
-    }
+    //void DrawHPBarHeader( const string & name, uint32_t level )
+    //{
+    //    cout <<name <<"\n"
+    //         <<"\xda" <<setw( HPBar_NB_Bars  + 11 ) <<setfill('\xC4') << "\xbf\n"
+    //         <<"\xb3 " <<setw( HPBar_NB_Bars + 5 ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
+    //}
 
-    void DrawHPBarFooter()
-    {
-        cout <<"\n\xc0" <<right <<setw( HPBar_NB_Bars + 11 ) <<setfill('\xC4') << "\xd9\n";
-    }
+    //void DrawHPBarFooter()
+    //{
+    //    cout <<"\n\xc0" <<right <<setw( HPBar_NB_Bars + 11 ) <<setfill('\xC4') << "\xd9\n";
+    //}
 
     /*
     */
@@ -452,15 +455,15 @@ namespace gfx_util
         {
             if( ! m_bQuiet )
                 cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
-            DrawHPBarHeader( (inputPath.getFileName()), level );
+            //DrawHPBarHeader( (inputPath.getFileName()), level );
         }
 
         try
         {
-            if( ! m_bQuiet )
-            {
-                runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
-            }
+            //if( ! m_bQuiet )
+            //{
+            //    runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
+            //}
 
             auto sprty = parser.getSpriteType();
             if( sprty == graphics::eSpriteType::spr4bpp )
@@ -498,8 +501,8 @@ namespace gfx_util
         //draw one last time
         if( ! m_bQuiet )
         {
-            DrawHPBar( HPBar_NB_Bars, 0 );
-            DrawHPBarFooter();
+            //DrawHPBar( HPBar_NB_Bars, 0 );
+            //DrawHPBarFooter();
 
             cout    << "\nIts super-effective!!\n"
                     << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
@@ -522,10 +525,10 @@ namespace gfx_util
         atomic<bool>         stopupdateprogress(false);
         future<void>         runThUpHpBar;
 
-        if( ! m_bQuiet )
-        {
-            DrawHPBarHeader( (inputPath.getFileName()), level );
-        }
+        //if( ! m_bQuiet )
+        //{
+        //    DrawHPBarHeader( (inputPath.getFileName()), level );
+        //}
 
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append( Poco::Path(inputPath).makeFile().getBaseName() ).toString();
@@ -606,7 +609,7 @@ namespace gfx_util
 
         if( ! m_bQuiet )
         {
-            DrawHPBarFooter();
+            //DrawHPBarFooter();
 
             cout << "\nIts super-effective!!\n"
                  <<"\"" <<inputPath.getFileName() <<"\" fainted!\n"
@@ -724,10 +727,13 @@ namespace gfx_util
             
             taskmanager.Execute();
             taskmanager.BlockUntilTaskQueueEmpty();
+            taskmanager.StopExecute();
 
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
+
+            cout<<"\r100%";
 
             //for( unsigned int i = 0; i < mysprites.size(); )
             //{
@@ -784,7 +790,6 @@ namespace gfx_util
             //rethrow
             throw e;
         }
-        taskmanager.StopExecute();
         cout<<"\n";
         return 0;
     }
@@ -803,7 +808,7 @@ namespace gfx_util
             if( bShouldCompress )
             {
                 auto filedata = writer.write();
-                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw,compression::ePXCompLevel::LEVEL_3, false );
+                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw, compression::ePXCompLevel::LEVEL_3, true );
             }
             else
                 out_sprRaw = writer.write();
@@ -838,7 +843,7 @@ namespace gfx_util
         future<void>                 updtProgress;
         atomic<bool>                 shouldUpdtProgress = true;
         multitask::CMultiTaskHandler taskmanager;
-        atomic<uint32_t>             completed = 1;
+        atomic<uint32_t>             completed;
 
         auto lambdaWrapBuildSpr = [&completed]( vector<uint8_t> & out_sprRaw, const Poco::File & infile, bool importByIndex, bool bShouldCompress )->bool
         {
@@ -866,12 +871,11 @@ namespace gfx_util
         cout <<"\rFound " <<validDirs.size() <<" valid sprites sub-directories!\n";
 
         cout <<"\nReading sprite data...\n";
-
         //Resize the file container
         mypack.SubFiles().resize( validDirs.size() );
 
         //Iterate the directory's content and get only the extracted sprites
-        for( unsigned int i = 0; i < validDirs.size(); )
+        for( unsigned int i = 0; i < validDirs.size(); ++i )
         {
             Poco::File & curDir = validDirs[i];
 
@@ -889,9 +893,6 @@ namespace gfx_util
             }
             else
                 cerr<< "<!>- Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
-
-            ++i;
-            //cout <<"\r" <<setw(3) <<setfill(' ') <<( ( i * 100 ) / validDirs.size() ) <<"%";
         }
 
         try
@@ -899,10 +900,12 @@ namespace gfx_util
             updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), validDirs.size(), std::ref(shouldUpdtProgress) );
             taskmanager.Execute();
             taskmanager.BlockUntilTaskQueueEmpty();
+            taskmanager.StopExecute();
 
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
+            cout<<"\r100%"; //Can't be bothered to make another update
         }
         catch( Poco::Exception e )
         {
@@ -928,22 +931,15 @@ namespace gfx_util
         mypack.setForceFirstFilePosition( ForcedPokeSpritePack );
 
         //If we don't have an output path, use the input path's parent, and create a file with the same name as the folder!
-
-
         if( m_outputPath.empty() )
             m_outputPath = Poco::Path(inpath).makeFile().setExtension(filetypes::PACK_FILEX).toString();
 
         outpath = m_outputPath;
 
-        //if( outpath.toString().empty() )
-        //    outpath.setFileName( Poco::Path(m_inputPath).makeFile().setExtension(filetypes::PACK_FILEX).toString() );
-
         string outfilepath = outpath.toString();
         cout <<"\n\nBuilding \"" <<outfilepath <<"\"...\n";
         utils::io::WriteByteVectorToFile( outfilepath, mypack.OutputPack() );
         cout <<"\nDone!\n";
-
-        taskmanager.StopExecute();
 
         return 0;
     }

@@ -362,7 +362,6 @@ namespace pmd2 { namespace filetypes
         ---------------------------
             A function to read the compression table for a compressed image 
             in a WAN sprite, and
-            return the decompressed image via move constructor!
 
             - itcomptblbeg : The iterator to beginning of the specific 
                              compression table to decode!
@@ -372,11 +371,14 @@ namespace pmd2 { namespace filetypes
             - imgres       : The resolution of the image to decode !
                              (Obtained from a meta-frame refering to this
                               image!)
+            - itinsertat   : A pixel reader to a tiled image where to put
+                             the pixel read!
+
     **********************************************************************/
     template<class _TIMG_t, class _randit>
-        uint32_t ParseZeroStrippedTImg( _randit                            itcomptblbeg, 
-                                        _randit                            filebeg, 
-                                        utils::Resolution                  imgres, 
+        uint32_t ParseZeroStrippedTImg( _randit                    itcomptblbeg, 
+                                        _randit                    filebeg, 
+                                        utils::Resolution          imgres, 
                                         gimg::PxlReadIter<_TIMG_t> itinsertat )
     {
         using namespace std;
@@ -417,7 +419,7 @@ namespace pmd2 { namespace filetypes
         using namespace std;
         using namespace utils;
         std::vector<ImgAsmTblEntry> zerostrtbl;
-        ImgAsmTblEntry entry;
+        ImgAsmTblEntry              entry;
 
         do
         {

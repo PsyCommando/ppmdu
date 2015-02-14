@@ -19,12 +19,23 @@ Description: This is basically a system for handling multiple tasks in parallel.
 namespace multitask
 {
     //Typedefs
-
-    //Since MS screwed up with the C++ 11 support in MSVC 2012, I had to do this.. 
-    // Packaged tasks with void return types won't compile.. And they didn't patch it.. Ever..
-    // That's really rude.. GCC doesn't have that issue..
     typedef bool                              pktaskret_t; 
     typedef std::packaged_task<pktaskret_t()> pktask_t;
+
+    /*
+        A container to contain the state of tasks assigned to threads.
+    */
+    //struct runTaskContainer
+    //{
+    //    uint32_t                threadWaitSchedule; //This sets the waiting time a thread waits before checking for a new task
+    //    std::mutex              taskmutex;          //Just in case the compiler plays us a prank...
+    //    std::atomic<bool>       taskAvailable;      //This is set to false when the task is moved, and to true when a new task is moved over it!
+
+    //    std::mutex              newTaskmutex;       //Mutex for the condition var below
+    //    std::condition_variable newTask;            //This is triggered when a new task is set
+
+    //    pktask_t                task;
+    //};
 
     /*
         CMultiTaskHandler
@@ -55,10 +66,17 @@ namespace multitask
         bool HasTasksToRun()const;
 
     private:
+
+        struct thRunParam
+        {
+            std::atomic<bool>        runningTask;  //Whether the thread is running a task or not
+            std::chrono::nanoseconds waitTime;     //the time this thread will wait in-between checks for a new task
+        };
+
         //Methods
         void RunTasks();
         //void AssignTasks( std::vector< std::pair<std::future<pktaskret_t>,std::thread> > & futthreads );
-        bool WorkerThread( std::atomic_bool * out_isworking, int id );
+        bool WorkerThread( thRunParam & taskSlot );
 
         //Don't let anynone copy or move construct us
         CMultiTaskHandler( const CMultiTaskHandler & );
@@ -82,6 +100,9 @@ namespace multitask
                                                                    //on the condition variable in 
                                                                    //case of wait on an empty task queue after init
         std::atomic_bool                             m_managerShouldStopAftCurTask;
+        std::atomic_bool                             m_stopWorkers;
+
+        std::atomic<int>                             m_taskcompleted;
     };
 };
 #endif
