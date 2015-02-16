@@ -145,6 +145,8 @@ namespace gfx_util
         std::atomic<uint32_t> m_outputCompletion;
         std::atomic<bool>     m_bStopProgressPrint;
         std::future<void>     m_runThUpHpBar;
+
+        utils::cmdl::RAIIClogRedirect      m_redirectClog;
     };
 };
 

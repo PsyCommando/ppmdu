@@ -45,9 +45,9 @@ namespace pmd2 { namespace filetypes
         WriteAnimationSequencesBlock();
         WritePaddingBytes(4); //Some 4 bytes padding is needed here
 
-        if( m_pSprite->getSpriteType() == eSpriteType::spr4bpp )
+        if( m_pSprite->getSpriteType() == eSpriteImgType::spr4bpp )
             WriteFramesBlock( *(m_pSprite->getFramesAs4bpp()) );
-        else if( m_pSprite->getSpriteType() == eSpriteType::spr8bpp )
+        else if( m_pSprite->getSpriteType() == eSpriteImgType::spr8bpp )
             WriteFramesBlock( *(m_pSprite->getFramesAs8bpp()) );
 
         WritePaletteBlock();
@@ -324,7 +324,8 @@ namespace pmd2 { namespace filetypes
     WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                         std::vector<uint8_t>::const_iterator   itEnd,
                                                         std::vector<uint8_t>                 & pixStrips,
-                                                        uint32_t                             & totalbytecnt) 
+                                                        uint32_t                             & totalbytecnt, 
+                                                        uint32_t                               imgZIndex ) 
     {
         static const unsigned int MIN_Increments = 0x20; //Minimum increments of 32 bytes
         auto lambdaIsZero    =  []( uint8_t val )->bool{ return (val == 0); };
@@ -359,7 +360,7 @@ namespace pmd2 { namespace filetypes
         myentry.pixelsrc    = ( (isZeroSeq)? 0 : pixStrips.size() );
         myentry.isZeroEntry = isZeroSeq;
         myentry.pixamt      = countAmtBytes;
-        myentry.unknown     = 0; //#TODO: figure out what this thing does !
+        myentry.zIndex      = imgZIndex; //#TODO: figure out what this thing does !
 
         if( !isZeroSeq )
             std::copy( itReadAtBefore, itLastSeqBeg, std::back_inserter(pixStrips) );
@@ -388,13 +389,14 @@ namespace pmd2 { namespace filetypes
     WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
                                                                                       vector<uint8_t>::const_iterator   itEnd,
                                                                                       vector<uint8_t>                 & pixStrips,
-                                                                                      uint32_t                        & totalbytecnt )
+                                                                                      uint32_t                        & totalbytecnt,
+                                                                                      uint32_t                          imgZIndex )
     {
         ImgAsmTbl_WithOpTy myentry;
         myentry.isZeroEntry = false;
         myentry.pixamt      = std::distance( itReadAt, itEnd );
         myentry.pixelsrc    = pixStrips.size();
-        myentry.unknown     = 0;                                //#TODO: figure out what to do with this !
+        myentry.zIndex     = imgZIndex;                                //#TODO: figure out what to do with this !
 
         std::copy( itReadAt, itEnd, std::back_inserter( pixStrips ) );
         totalbytecnt += myentry.pixamt;
@@ -405,7 +407,7 @@ namespace pmd2 { namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void WAN_Writer::WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros )
+    void WAN_Writer::WriteACompressedFrm( const std::vector<uint8_t> & frm, uint32_t imgZIndex, bool dontStripZeros )
     {
         uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the assembly table !
 
@@ -421,9 +423,9 @@ namespace pmd2 { namespace filetypes
         while( itCurPos != itEnd )
         {
             if( dontStripZeros )
-                asmtable.push_back( MakeImgAsmTableEntryNoStripping(itCurPos,itEnd,pixelstrips, totalbytecnt ) );
+                asmtable.push_back( MakeImgAsmTableEntryNoStripping(itCurPos,itEnd,pixelstrips, totalbytecnt, imgZIndex ) );
             else
-                asmtable.push_back( MakeImgAsmTableEntry( itCurPos, itEnd, pixelstrips, totalbytecnt ) );
+                asmtable.push_back( MakeImgAsmTableEntry( itCurPos, itEnd, pixelstrips, totalbytecnt, imgZIndex ) );
         }
 
         //Write pixel strips
@@ -461,7 +463,7 @@ namespace pmd2 { namespace filetypes
         graphics::WriteRawPalette_RGB24_As_RGBX32( m_itbackins, m_pSprite->getPalette().begin(), m_pSprite->getPalette().end() );
 
         //# Note the position the palette info block is written at !
-        m_wanHeadr_img.ptr_palette = m_outBuffer.size();
+        m_wanHeadr_img.ptrPal = m_outBuffer.size();
 
         //Add pointer to colors, to the ptr offset list
         m_ptrOffsetTblToEncode.push_back( m_outBuffer.size() );
@@ -565,8 +567,8 @@ namespace pmd2 { namespace filetypes
     void WAN_Writer::WriteCompImagePtrTable()
     {
         //Note the position it begins at
-        m_wanHeadr_img.ptr_img_table = m_outBuffer.size();
-        m_wanHeadr_img.nb_ptrs_frm_ptrs_table = m_pSprite->getNbFrames();
+        m_wanHeadr_img.ptrImgsTbl = m_outBuffer.size();
+        m_wanHeadr_img.nbImgsTblPtr = m_pSprite->getNbFrames();
 
         for( const auto & ptr : m_CompImagesTblOffsets )
             WriteAPointer( ptr );
@@ -617,9 +619,7 @@ namespace pmd2 { namespace filetypes
 
         //Write encoded ptr offset list
         for( const auto & encptr : result.ptroffsetslst )
-        {
             utils::WriteIntToByteVector( encptr, m_itbackins );
-        }
 
         //Then write SIR0 at the begining !
         result.hdr.WriteToContainer( m_outBuffer.begin() );

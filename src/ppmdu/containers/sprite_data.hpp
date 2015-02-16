@@ -26,7 +26,7 @@ namespace pmd2{ namespace graphics
 //=========================================================================================
 //=========================================================================================
     //What particular format the sprite is in!
-    enum struct eSpriteType : short
+    enum struct eSpriteImgType : short
     {
         sprInvalid,
         spr4bpp,
@@ -34,6 +34,17 @@ namespace pmd2{ namespace graphics
     };
 
     static const uint16_t SPRITE_SPECIAL_METAFRM_INDEX = 0xFFFF;
+
+    /*
+        The sprite type value at the end of the sprite file.
+    */
+    enum struct eSprTy : uint16_t
+    {
+        Generic   = 0,
+        Character = 1,
+        Unknown   = 2,
+        WAT_fmt   = 3,
+    };
 
 //=========================================================================================
 //  Utility
@@ -50,6 +61,17 @@ namespace pmd2{ namespace graphics
     {
         int16_t offx = 0;
         int16_t offy = 0;
+    };
+
+//=========================================================================================
+//  Image Info
+//=========================================================================================
+    /*
+        Contains data specific to the images 
+    */
+    struct ImageInfo
+    {
+        uint32_t zindex = 0;
     };
 
 //=========================================================================================
@@ -304,24 +326,24 @@ namespace pmd2{ namespace graphics
         //#TODO: Rename those properly !!! Remove the m_ prefix
 
         // Sprite Color / Image Format Properties:
-        uint16_t m_Unk3           = 0;
-        uint16_t m_nbColorsPerRow = 0; //0 to 16.. Changes the amount of colors loaded on a single row in the runtime palette sheet.
-        uint16_t m_Unk4           = 0;
-        uint16_t m_Unk5           = 0;
+        uint16_t Unk3           = 0;
+        uint16_t nbColorsPerRow = 0; //0 to 16.. Changes the amount of colors loaded on a single row in the runtime palette sheet.
+        uint16_t Unk4           = 0;
+        uint16_t Unk5           = 0;
 
         // Sprite Anim Properties:
-        uint16_t m_Unk6           = 0;
-        uint16_t m_Unk7           = 0;
-        uint16_t m_Unk8           = 0;
-        uint16_t m_Unk9           = 0;
-        uint16_t m_Unk10          = 0;
+        uint16_t Unk6           = 0;
+        uint16_t Unk7           = 0;
+        uint16_t Unk8           = 0;
+        uint16_t Unk9           = 0;
+        uint16_t Unk10          = 0;
 
         // Sprite Properties:
-        uint16_t m_is8WaySprite   = 0; //Whether the sprite uses 8 way animations. For character sprites!
+        eSprTy   spriteType       = eSprTy::Generic;
         uint16_t m_is256Sprite    = 0; //If 1, sprite is 256 colors, if 0 is 16 colors.
-        uint16_t m_IsMosaicSpr    = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
-        uint16_t m_Unk11          = 0; //Unknown value.
-        uint16_t m_Unk12          = 0; //Unknown value at the end of the file!
+        uint16_t Unk13            = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
+        uint16_t Unk11          = 0; //Unknown value.
+        uint16_t Unk12          = 0; //Unknown value at the end of the file!
 
         //Constants
         static const std::string DESC_Unk3;
@@ -335,9 +357,9 @@ namespace pmd2{ namespace graphics
         static const std::string DESC_Unk9;
         static const std::string DESC_Unk10;
 
-        static const std::string DESC_Is8WaySprite;
+        static const std::string DESC_spriteType;
         static const std::string DESC_Is256Sprite;
-        static const std::string DESC_IsMosaicSpr;
+        static const std::string DESC_Unk13;
         static const std::string DESC_Unk11;
         static const std::string DESC_Unk12;
     };
@@ -348,7 +370,10 @@ namespace pmd2{ namespace graphics
 
     /***************************************************************************************
         BaseSprite
-
+            An interface to bypass having to deal with template when using external objects
+            for IO such as the sprite parser/writer, or the wan parser/writer.
+            Mainly because its impossible to know at compilation what image format the
+            sprite the user will give us is in!
     ***************************************************************************************/
     class BaseSprite
     {
@@ -375,8 +400,11 @@ namespace pmd2{ namespace graphics
         virtual const SprInfo                          & getSprInfo     ()const=0;
         virtual SprInfo                                & getSprInfo     ()=0;
 
+        virtual const std::vector<ImageInfo>           & getImgsInfo    ()const=0;
+        virtual std::vector<ImageInfo>                 & getImgsInfo    ()=0;
+
         //Get the data format of the sprite
-        virtual const eSpriteType                      & getSpriteType  ()const=0;
+        virtual const eSpriteImgType                   & getSpriteType  ()const=0;
         virtual std::size_t                              getNbFrames    ()const=0;
 
         //Access to sprite image data via pointer. If you use the wrong version, will return nullptr!
@@ -398,15 +426,15 @@ namespace pmd2{ namespace graphics
         static const uint32_t MY_NB_BITS_PER_PIXEL = TIMG_Type::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
 
         //A couple of constants and typedef to make the conditional statement below(MY_SPRITE_TYPE) more readable!
-        typedef std::integral_constant<eSpriteType,eSpriteType::spr4bpp>    SPRTy_4BPP;
-        typedef std::integral_constant<eSpriteType,eSpriteType::spr8bpp>    SPRTy_8BPP;
-        typedef std::integral_constant<eSpriteType,eSpriteType::sprInvalid> SPRTy_INVALID; 
+        typedef std::integral_constant<eSpriteImgType,eSpriteImgType::spr4bpp>    SPRTy_4BPP;
+        typedef std::integral_constant<eSpriteImgType,eSpriteImgType::spr8bpp>    SPRTy_8BPP;
+        typedef std::integral_constant<eSpriteImgType,eSpriteImgType::sprInvalid> SPRTy_INVALID; 
         static const bool IsSprite4bpp = MY_NB_BITS_PER_PIXEL == 4;
         static const bool IsSprite8bpp = MY_NB_BITS_PER_PIXEL == 8;
 
         //This contains the correct enum values depending on the type of images the sprite contains!
         // Supports only 4, and 8 bpp for now! (Hopefully MSVSC will implement constexpr before then...)
-        static const eSpriteType MY_SPRITE_TYPE = 
+        static const eSpriteImgType MY_SPRITE_TYPE = 
             typename std::conditional< IsSprite4bpp, 
                                        SPRTy_4BPP,
                                        std::conditional< IsSprite8bpp, SPRTy_8BPP, SPRTy_INVALID >::type 
@@ -424,18 +452,20 @@ namespace pmd2{ namespace graphics
         virtual const std::vector<AnimationSequence>   & getAnimSequences()const{ return m_animSequences; }
         virtual const std::vector<gimg::colorRGB24>    & getPalette     ()const { return m_palette;       }
         virtual const SprInfo                          & getSprInfo     ()const { return m_common;        }
+        virtual const std::vector<ImageInfo>           & getImgsInfo    ()const { return m_imgsinfo;      }
 
-        virtual std::vector<sprOffParticle>            & getPartOffsets () { return m_partOffsets;   } 
-        virtual std::vector<MetaFrame>                 & getMetaFrames  () { return m_metaframes;    }
-        virtual std::vector<MetaFrameGroup>            & getMetaFrmsGrps() { return m_metafrmsgroups;}
-        virtual std::vector<SpriteAnimationGroup>      & getAnimGroups  () { return m_animgroups;    }
-        virtual std::vector<AnimationSequence>         & getAnimSequences(){ return m_animSequences; }
-        virtual std::vector<gimg::colorRGB24>          & getPalette     () { return m_palette;       }
-        virtual SprInfo                                & getSprInfo     () { return m_common;        }
+        virtual std::vector<sprOffParticle>            & getPartOffsets ()      { return m_partOffsets;   } 
+        virtual std::vector<MetaFrame>                 & getMetaFrames  ()      { return m_metaframes;    }
+        virtual std::vector<MetaFrameGroup>            & getMetaFrmsGrps()      { return m_metafrmsgroups;}
+        virtual std::vector<SpriteAnimationGroup>      & getAnimGroups  ()      { return m_animgroups;    }
+        virtual std::vector<AnimationSequence>         & getAnimSequences()     { return m_animSequences; }
+        virtual std::vector<gimg::colorRGB24>          & getPalette     ()      { return m_palette;       }
+        virtual SprInfo                                & getSprInfo     ()      { return m_common;        }
+        virtual std::vector<ImageInfo>                 & getImgsInfo    ()      { return m_imgsinfo;      }
 
         //Get the data format of the sprite
-        virtual const eSpriteType & getSpriteType()const { return MY_SPRITE_TYPE; }
-        virtual std::size_t         getNbFrames  ()const { return m_frames.size(); }
+        virtual const eSpriteImgType & getSpriteType()const { return MY_SPRITE_TYPE; }
+        virtual std::size_t            getNbFrames  ()const { return m_frames.size(); }
 
 
         virtual std::vector<gimg::tiled_image_i8bpp> * getFramesAs8bpp() 
@@ -458,17 +488,19 @@ namespace pmd2{ namespace graphics
             return nullptr; //If the two types do not match the specialization below, it will return a null pointer
         }
 
-        template<>
-            static std::vector<gimg::tiled_image_i4bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i4bpp> * ptrme )
-        {
-            return &(ptrme->m_frames);
-        }
+            //Compiled only when 4bpp
+            template<>
+                static std::vector<gimg::tiled_image_i4bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i4bpp> * ptrme )
+            {
+                return &(ptrme->m_frames);
+            }
 
-        template<>
-            static std::vector<gimg::tiled_image_i8bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i8bpp> * ptrme )
-        {
-            return &(ptrme->m_frames);
-        }
+            //Compiled only when 8bpp
+            template<>
+                static std::vector<gimg::tiled_image_i8bpp> * GetMyFramePtr( SpriteData<gimg::tiled_image_i8bpp> * ptrme )
+            {
+                return &(ptrme->m_frames);
+            }
 
 
         /*
@@ -511,11 +543,10 @@ namespace pmd2{ namespace graphics
                 //Register meta to frame reference 
                 m_metarefs.insert( std::make_pair( m_metaframes[ctmf].imageIndex, ctmf ) );
             }
-            else
+            else if( m_metaframes[ctmf].imageIndex != SPRITE_SPECIAL_METAFRM_INDEX )
             {
                 //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
-                if( m_metaframes[ctmf].imageIndex != SPRITE_SPECIAL_METAFRM_INDEX )
-                    assert(false);
+                assert(false);
             }
         }
 
@@ -537,28 +568,30 @@ namespace pmd2{ namespace graphics
         SpriteData(){}
         SpriteData( SpriteData<TIMG_Type> && other )
         {
-            m_frames         = std::move( other.m_frames ); 
-            m_metarefs       = std::move( other.m_metarefs );
-            m_metaframes     = std::move( other.m_metaframes );
+            m_frames         = std::move( other.m_frames         ); 
+            m_metarefs       = std::move( other.m_metarefs       );
+            m_metaframes     = std::move( other.m_metaframes     );
             m_metafrmsgroups = std::move( other.m_metafrmsgroups );
-            m_animgroups     = std::move( other.m_animgroups );
-            m_animSequences  = std::move( other.m_animSequences );
-            m_palette        = std::move( other.m_palette );
-            m_common         = std::move( other.m_common );
-            m_partOffsets    = std::move( other.m_partOffsets );
+            m_animgroups     = std::move( other.m_animgroups     );
+            m_animSequences  = std::move( other.m_animSequences  );
+            m_palette        = std::move( other.m_palette        );
+            m_common         = std::move( other.m_common         );
+            m_partOffsets    = std::move( other.m_partOffsets    );
+            m_imgsinfo       = std::move( other.m_imgsinfo       );
         }
 
         SpriteData<TIMG_Type> & operator=( SpriteData<TIMG_Type> && other )
         {
-            m_frames         = std::move( other.m_frames ); 
-            m_metarefs       = std::move( other.m_metarefs );
-            m_metaframes     = std::move( other.m_metaframes );
+            m_frames         = std::move( other.m_frames         ); 
+            m_metarefs       = std::move( other.m_metarefs       );
+            m_metaframes     = std::move( other.m_metaframes     );
             m_metafrmsgroups = std::move( other.m_metafrmsgroups );
-            m_animgroups     = std::move( other.m_animgroups );
-            m_animSequences  = std::move( other.m_animSequences );
-            m_palette        = std::move( other.m_palette );
-            m_common         = std::move( other.m_common );
-            m_partOffsets    = std::move( other.m_partOffsets );
+            m_animgroups     = std::move( other.m_animgroups     );
+            m_animSequences  = std::move( other.m_animSequences  );
+            m_palette        = std::move( other.m_palette        );
+            m_common         = std::move( other.m_common         );
+            m_partOffsets    = std::move( other.m_partOffsets    );
+            m_imgsinfo       = std::move( other.m_imgsinfo       );
             return *this;
         }
 
@@ -578,82 +611,14 @@ namespace pmd2{ namespace graphics
         std::vector<gimg::colorRGB24>        m_palette;         //The palette for this sprite
         SprInfo                              m_common;          //Common properties about the sprite not affected by template type!
         std::vector<sprOffParticle>          m_partOffsets;     //The particle offsets list
+        std::vector<ImageInfo>               m_imgsinfo;        //Data about the actual images. Things like the Z index. 
 
     private:
-        SpriteData( const SpriteData<TIMG_Type> & other );
-        SpriteData<TIMG_Type> & operator=( const SpriteData<TIMG_Type> & other );
+        ////We don't wanna copy
+        //SpriteData( const SpriteData<TIMG_Type> & other );
+        //SpriteData<TIMG_Type> & operator=( const SpriteData<TIMG_Type> & other );
     };
 
-
-////=========================================================================================
-////  SpriteUnpacker
-////=========================================================================================
-//    /*
-//        Export a sprite to a directory structure, a palette, and several xml data files.
-//        -imgtype   : The supported image type to use for exporting the individual frames. 
-//        -usexmlpal : If true, the palette will be exported as an xml file, and not a
-//                     RIFF palette.
-//        -progress  : An atomic integer to increment all the way to 100, to indicate
-//                     current progress with export.
-//    */
-//    template<class _Sprite_T>
-//        void ExportSpriteToDirectory( const _Sprite_T            & srcspr, 
-//                                      const std::string          & outpath, 
-//                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
-//                                      bool                         usexmlpal   = false,
-//                                      std::atomic<uint32_t>      * progresscnt = nullptr );
-//
-//    void ExportSpriteToDirectoryPtr( const graphics::BaseSprite * srcspr, 
-//                                      const std::string          & outpath, 
-//                                      utils::io::eSUPPORT_IMG_IO   imgtype     = utils::io::eSUPPORT_IMG_IO::PNG,
-//                                      bool                         usexmlpal   = false,
-//                                      std::atomic<uint32_t>      * progresscnt = nullptr );
-//
-////=========================================================================================
-////  SpriteBuilder
-////=========================================================================================
-//    /*
-//        Check if all the required files and subfolders are in the filelist passed as param!
-//        Use this before calling ImportSpriteFromDirectory on the list of the files present
-//        in the dir to make sure everything is ok!
-//    */
-//    bool                AreReqFilesPresent_Sprite( const std::vector<std::string> & filelist );
-//    bool                AreReqFilesPresent_Sprite( const std::string              & directorypath );
-//
-//    /*
-//        Return the missing required files in the file list specified.
-//    */
-//    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::vector<std::string> & filelist );
-//    std::vector<std::string> GetMissingRequiredFiles_Sprite( const std::string              & directorypath );
-//
-//
-//    /*
-//        Whether the image resolution is one of the valid sprite image resolution.
-//    */
-//    bool Sprite_IsResolutionValid( uint16_t width, uint16_t height );
-//
-//    /*
-//        ImportSpriteFromDirectory
-//            Call this to import any types of Sprite.
-//
-//            -bReadImgByIndex : If true we'll enforce the image order indicated by the number 
-//                               in the name of the image. If false, we'll simply pushback images
-//                               in the alpha-numeric order they're in the folder, applying no
-//                               check on the index number.
-//            -bParseXmlPal    : Whether we should try parsing a palette from xml!
-//    */
-//    template<class _Sprite_T>
-//        _Sprite_T ImportSpriteFromDirectory( const std::string     & inpath, 
-//                                             bool                    bReadImgByIndex = false,
-//                                             bool                    bParseXmlPal    = false,
-//                                             std::atomic<uint32_t> * progresscnt     = nullptr );
-//
-//
-//    /*
-//        QuerySpriteTypeFromDirectory
-//            Check the directory to get what's the sprite_ty of the sprite.
-//    */
-//    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )throw(std::runtime_error);
 };};
 
 #endif

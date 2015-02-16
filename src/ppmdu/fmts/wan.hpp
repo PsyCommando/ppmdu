@@ -15,9 +15,11 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 #include <atomic>
 #include <algorithm>
 #include <type_traits>
+#include <iomanip>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -28,6 +30,33 @@ namespace pmd2 { namespace filetypes
     static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
     static const unsigned int WAN_LENGTH_ANIM_FRM    = 12; //bytes
     static const unsigned int WAN_LENGTH_ANIM_GRP    = 8;  //bytes
+
+//#ifdef _DEBUG //Just for research purpose
+//
+//    struct testvalueasmtable
+//    {
+//        testvalueasmtable()
+//        {
+//            logFile.open("wanlog.txt", std::ios::out);
+//            oldbuff = std::clog.rdbuf( &logFile );
+//            std::cout << "redirected clog to wanlog.txt file!\n";
+//        }
+//
+//        ~testvalueasmtable()
+//        {
+//            std::clog.rdbuf( oldbuff );
+//            std::cout << "redirected clog to original streambuffer!\n";
+//        }
+//
+//        static void ReportValue( uint32_t val )
+//        {
+//            std::clog << "Asm Table last value found " <<val <<"\n";
+//        }
+//        static testvalueasmtable s_inst;
+//        std::filebuf             logFile;
+//        std::streambuf          *oldbuff;
+//    };
+//#endif
 
 //=============================================================================================
 //  WAN Structures
@@ -43,18 +72,20 @@ namespace pmd2 { namespace filetypes
     {
         static const unsigned int LENGTH = 12u;
         uint32_t pixelsrc = 0;  //The source of the pixels to use to rebuild the image. Either an address, or 0
-        uint32_t pixamt   = 0;    //The amount of pixels to copy / insert
-        uint32_t unknown  = 0;   //Not sure what this does..
+        uint16_t pixamt   = 0;  //The amount of pixels to copy / insert
+        uint16_t unk14    = 0;  //Not sure what this does..
+        uint32_t zIndex   = 0;  //Possibly z index
 
         unsigned int    size()const   { return LENGTH; }
-        bool            isNull()const { return (!pixelsrc && !pixamt && !unknown); } //Whether its a null entry or not 
+        bool            isNull()const { return (!pixelsrc && !pixamt && !zIndex); } //Whether its a null entry or not 
 
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
             itwriteto = utils::WriteIntToByteVector( pixelsrc, itwriteto );
             itwriteto = utils::WriteIntToByteVector( pixamt,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unknown,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk14,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( zIndex,  itwriteto );
             return itwriteto;
         }
         
@@ -63,7 +94,8 @@ namespace pmd2 { namespace filetypes
         {
             pixelsrc = utils::ReadIntFromByteVector<decltype(pixelsrc)>(itReadfrom);
             pixamt   = utils::ReadIntFromByteVector<decltype(pixamt)>  (itReadfrom);
-            unknown  = utils::ReadIntFromByteVector<decltype(unknown)> (itReadfrom);
+            unk14    = utils::ReadIntFromByteVector<decltype(unk14)>   (itReadfrom);
+            zIndex   = utils::ReadIntFromByteVector<decltype(zIndex)>  (itReadfrom);
             return itReadfrom;
         }
     };
@@ -77,23 +109,19 @@ namespace pmd2 { namespace filetypes
     {
         uint32_t ptr_animinfo,
                  ptr_imginfo;
-        uint16_t is8DirectionSprite,
-                 unk12;
+        uint16_t spriteType;
+        uint16_t unk12;
 
         static const unsigned int DATA_LEN = 12u;
-
         unsigned int size()const{return DATA_LEN;}
-
-        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptr_animinfo,       itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_imginfo,        itwriteto );
-            itwriteto = utils::WriteIntToByteVector( is8DirectionSprite, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk12,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_animinfo, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptr_imginfo,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( spriteType,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk12,        itwriteto );
             return itwriteto;
         }
 
@@ -107,30 +135,30 @@ namespace pmd2 { namespace filetypes
 
             //Register ptr offset
             ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_animinfo,       backins );
+            utils::WriteIntToByteVector( ptr_animinfo, backins );
 
             //Register ptr offset
             ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_imginfo,        backins );
+            utils::WriteIntToByteVector( ptr_imginfo,  backins );
 
-            utils::WriteIntToByteVector( is8DirectionSprite, backins );
-            utils::WriteIntToByteVector( unk12,              backins );
+            utils::WriteIntToByteVector( spriteType,   backins );
+            utils::WriteIntToByteVector( unk12,        backins );
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptr_animinfo       = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>      (itReadfrom);
-            ptr_imginfo        = utils::ReadIntFromByteVector<decltype(ptr_imginfo)>       (itReadfrom);
-            is8DirectionSprite = utils::ReadIntFromByteVector<decltype(is8DirectionSprite)>(itReadfrom);
-            unk12              = utils::ReadIntFromByteVector<decltype(unk12)>             (itReadfrom);
+            ptr_animinfo = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>(itReadfrom);
+            ptr_imginfo  = utils::ReadIntFromByteVector<decltype(ptr_imginfo)> (itReadfrom);
+            spriteType   = utils::ReadIntFromByteVector<decltype(spriteType)>  (itReadfrom);
+            unk12        = utils::ReadIntFromByteVector<decltype(unk12)>       (itReadfrom);
             return itReadfrom;
         }
 
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
-            unk12              = sprite->getSprInfo().m_Unk12;
-            is8DirectionSprite = sprite->getSprInfo().m_is8WaySprite;
+            unk12      = sprite->getSprInfo().Unk12;
+            spriteType = static_cast<uint16_t>(sprite->getSprInfo().spriteType);
         }
     };
 
@@ -142,28 +170,24 @@ namespace pmd2 { namespace filetypes
     {
         static const unsigned int DATA_LEN = 16u;
 
-        uint32_t ptr_img_table;             // Pointer to the the table of pointer to the individual images
-        uint32_t ptr_palette;               // Pointer to the pointer to the palette info
-        uint16_t isMosaic;                  // 1 == mosaic sprite,   0 == non-mosaic sprite
-        uint16_t is256Colors;               // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
-        uint16_t unk11;                     // Unknown, seems to range between 0, 1, and up..
-        uint16_t nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
+        uint32_t ptrImgsTbl;   // Pointer to the the table of pointer to the individual images
+        uint32_t ptrPal;       // Pointer to the pointer to the palette info
+        uint16_t unk13;        // 1 == mosaic sprite?,   0 == non-mosaic sprite?
+        uint16_t is256Colors;  // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
+        uint16_t unk11;        // Unknown, seems to range between 0, 1, and up..
+        uint16_t nbImgsTblPtr; // Number of entries in the table of pointers to each frames.
 
         unsigned int size()const{return DATA_LEN;}
-
-        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
-
 
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptr_img_table,          itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_palette,            itwriteto );
-            itwriteto = utils::WriteIntToByteVector( isMosaic,               itwriteto );
-            itwriteto = utils::WriteIntToByteVector( is256Colors,            itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk11,                  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptrImgsTbl,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptrPal,       itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk13,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( is256Colors,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk11,        itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nbImgsTblPtr, itwriteto );
             return itwriteto;
         }
 
@@ -175,37 +199,38 @@ namespace pmd2 { namespace filetypes
         {
             auto backins = std::back_inserter( appendto );
 
-            //Register ptr offset
+            //Register ptr offset to SIR0 ptr table
             ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_img_table,          backins );
+            utils::WriteIntToByteVector( ptrImgsTbl,    backins );
 
+            //Register ptr offset to SIR0 ptr table
             ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_palette,            backins );
+            utils::WriteIntToByteVector( ptrPal,        backins );
 
-            utils::WriteIntToByteVector( isMosaic,               backins );
-            utils::WriteIntToByteVector( is256Colors,            backins );
-            utils::WriteIntToByteVector( unk11,                  backins );
-            utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, backins );
+            utils::WriteIntToByteVector( unk13,     backins );
+            utils::WriteIntToByteVector( is256Colors,  backins );
+            utils::WriteIntToByteVector( unk11,        backins );
+            utils::WriteIntToByteVector( nbImgsTblPtr, backins );
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptr_img_table          = utils::ReadIntFromByteVector<decltype(ptr_img_table)>         (itReadfrom);
-            ptr_palette            = utils::ReadIntFromByteVector<decltype(ptr_palette)>           (itReadfrom);
-            isMosaic               = utils::ReadIntFromByteVector<decltype(isMosaic)>              (itReadfrom);
-            is256Colors            = utils::ReadIntFromByteVector<decltype(is256Colors)>           (itReadfrom);
-            unk11                  = utils::ReadIntFromByteVector<decltype(unk11)>                 (itReadfrom);
-            nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
+            ptrImgsTbl   = utils::ReadIntFromByteVector<decltype(ptrImgsTbl)>  (itReadfrom);
+            ptrPal       = utils::ReadIntFromByteVector<decltype(ptrPal)>      (itReadfrom);
+            unk13     = utils::ReadIntFromByteVector<decltype(unk13)>    (itReadfrom);
+            is256Colors  = utils::ReadIntFromByteVector<decltype(is256Colors)> (itReadfrom);
+            unk11        = utils::ReadIntFromByteVector<decltype(unk11)>       (itReadfrom);
+            nbImgsTblPtr = utils::ReadIntFromByteVector<decltype(nbImgsTblPtr)>(itReadfrom);
             return itReadfrom;
         }
 
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
-            isMosaic               = sprite->getSprInfo().m_IsMosaicSpr;
+            unk13               = sprite->getSprInfo().Unk13;
             is256Colors            = sprite->getSprInfo().m_is256Sprite;
-            unk11                  = sprite->getSprInfo().m_Unk11;
-            nb_ptrs_frm_ptrs_table = sprite->getNbFrames();
+            unk11                  = sprite->getSprInfo().Unk11;
+            nbImgsTblPtr = sprite->getNbFrames();
         }
     };
 
@@ -293,11 +318,11 @@ namespace pmd2 { namespace filetypes
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
             nb_anim_groups = sprite->getAnimGroups().size();
-            unk6           = sprite->getSprInfo().m_Unk6;
-            unk7           = sprite->getSprInfo().m_Unk7;
-            unk8           = sprite->getSprInfo().m_Unk8;
-            unk9           = sprite->getSprInfo().m_Unk9;
-            unk10          = sprite->getSprInfo().m_Unk10;
+            unk6           = sprite->getSprInfo().Unk6;
+            unk7           = sprite->getSprInfo().Unk7;
+            unk8           = sprite->getSprInfo().Unk8;
+            unk9           = sprite->getSprInfo().Unk9;
+            unk10          = sprite->getSprInfo().Unk10;
         }
     };
 
@@ -343,10 +368,10 @@ namespace pmd2 { namespace filetypes
 
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
-            unk3           = sprite->getSprInfo().m_Unk3;
-            nbcolorsperrow = sprite->getSprInfo().m_nbColorsPerRow;
-            unk4           = sprite->getSprInfo().m_Unk4;
-            unk5           = sprite->getSprInfo().m_Unk5;
+            unk3           = sprite->getSprInfo().Unk3;
+            nbcolorsperrow = sprite->getSprInfo().nbColorsPerRow;
+            unk4           = sprite->getSprInfo().Unk4;
+            unk5           = sprite->getSprInfo().Unk5;
             nullbytes      = 0;
         }
     };
@@ -406,19 +431,19 @@ namespace pmd2 { namespace filetypes
 
     /**********************************************************************
         ---------------------------
-            FillZeroStripTable
+            FillAsmTable
         ---------------------------
-            Reads the "zero strip table" for a compressed image.
-            The zero-strip table is basically a table that contains 
+            Reads the "assembly table" for a compressed image.
+            The assembly table is basically a table that contains 
             offsets indicating where to put zeros in-between strips 
             of pixels to assemble the decompressed tiled image!
     **********************************************************************/
     template<class _randit>
-        std::vector<ImgAsmTblEntry> FillZeroStripTable( _randit itcomptblbeg )
+        std::vector<ImgAsmTblEntry> FillAsmTable( _randit itcomptblbeg )
     {
         using namespace std;
         using namespace utils;
-        std::vector<ImgAsmTblEntry> zerostrtbl;
+        std::vector<ImgAsmTblEntry> asmtbl;
         ImgAsmTblEntry              entry;
 
         do
@@ -427,12 +452,12 @@ namespace pmd2 { namespace filetypes
 
             if( !(entry.isNull()) )
             {
-                zerostrtbl.push_back( entry );
+                asmtbl.push_back( entry );
             }
 
         }while( !(entry.isNull()) );
 
-        return std::move(zerostrtbl);
+        return std::move(asmtbl);
     }
 
     /**********************************************************************
@@ -454,7 +479,7 @@ namespace pmd2 { namespace filetypes
         WAN_Parser( const std::vector<uint8_t> &  rawdata, const animnamelst_t * animnames = nullptr );
 
         //Use this to determine which parsing method to use!
-        graphics::eSpriteType getSpriteType()const;
+        graphics::eSpriteImgType getSpriteType()const;
 
         template<class TIMG_t>
             graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr )
@@ -484,13 +509,13 @@ namespace pmd2 { namespace filetypes
             }
 
             //Allocate, so we can build the refs, and speed up the process!
-            sprite.m_frames.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table );
+            sprite.m_frames.resize( m_wanImgDataInfo.nbImgsTblPtr );
 
             //Build references!
             sprite.RebuildAllReferences();
 
             //Read images, use meta frames to get proper res, thanks to the refs!
-            ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette() );
+            ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette(), sprite.getImgsInfo() );
 
             return std::move( sprite );
         }
@@ -520,51 +545,73 @@ namespace pmd2 { namespace filetypes
                       std::vector<graphics::sprOffParticle>       & out_offsets );
 
         template<class TIMG_t>
-            void ReadFrames( std::vector<TIMG_t>                    & out_imgs, 
-                             const std::vector<graphics::MetaFrame> & metafrms,
-                             const std::multimap<uint32_t,uint32_t> & metarefs,
-                             const std::vector<gimg::colorRGB24>    & pal)
+            void ReadFrames( std::vector<TIMG_t>                     & out_imgs, 
+                             const std::vector<graphics::MetaFrame>  & metafrms,
+                             const std::multimap<uint32_t,uint32_t>  & metarefs,
+                             const std::vector<gimg::colorRGB24>     & pal,
+                             std::vector<graphics::ImageInfo>        & out_imginfo )
         {
             using namespace std;
-            vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table); //Make iterator to frame pointer table
+            vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptrImgsTbl); //Make iterator to frame pointer table
             //utils::Resolution               myres          = RES_64x64_SPRITE; //Max as default
             uint32_t                        progressBefore = 0; 
             //ensure capacity
-            out_imgs.resize( m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ); 
+            out_imgs.resize( m_wanImgDataInfo.nbImgsTblPtr ); 
 
             //Save a little snapshot of the progress this far
             if(m_pProgress != nullptr)
                 progressBefore = m_pProgress->load(); 
 
             //Read all ptrs in the raw data!
-            for( unsigned int i = 0; i < m_wanImgDataInfo.nb_ptrs_frm_ptrs_table; ++i )
+            for( unsigned int i = 0; i < m_wanImgDataInfo.nbImgsTblPtr; ++i )
             {
                 uint32_t ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
 
-                ReadAFrame( m_rawdata.begin() + ptrtoimg, metafrms, metarefs, pal, out_imgs[i], i );
+                if( utils::LibWide().isLogOn() )
+                    std::clog <<"== Frame #" <<i <<" ==\n";
+
+                ReadAFrame( m_rawdata.begin() + ptrtoimg, metafrms, metarefs, pal, out_imgs[i], i, out_imginfo );
                 
                 if( m_pProgress != nullptr )
-                    m_pProgress->store( progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nb_ptrs_frm_ptrs_table ) );
+                    m_pProgress->store( progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nbImgsTblPtr ) );
             }
         }
 
         template<class TIMG_t>
-            void ReadAFrame( std::vector<uint8_t>::iterator            itwhere, 
-                               const std::vector<graphics::MetaFrame> & metafrms,
-                               const std::multimap<uint32_t,uint32_t> & metarefs,
-                               const std::vector<gimg::colorRGB24>    & pal,
-                               TIMG_t                                 & cur_img,
-                               uint32_t                                 curfrmindex  )
+            void ReadAFrame( std::vector<uint8_t>::iterator             itwhere, 
+                               const std::vector<graphics::MetaFrame>  & metafrms,
+                               const std::multimap<uint32_t,uint32_t>  & metarefs,
+                               const std::vector<gimg::colorRGB24>     & pal,
+                               TIMG_t                                  & cur_img,
+                               uint32_t                                  curfrmindex,
+                               std::vector<graphics::ImageInfo>        & out_imginfo )
         {
             auto              itfound    = metarefs.find( curfrmindex ); //Find if we have a meta-frame pointing to that frame
             utils::Resolution myres      = RES_64x64_SPRITE;
             uint32_t          totalbyamt = 0;
 
-            //Read the Zero strip table to inflate the image data
-            auto zerostrtable = FillZeroStripTable( itwhere );
+            //Read the assembly table
+            auto asmtable = FillAsmTable( itwhere );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                std::clog << "Assembly Table:\n";
+                for( unsigned int i = 0; i < asmtable.size(); ++i )
+                {
+                    std::clog << "-> " <<std::setfill(' ') <<std::setw(6) <<asmtable[i].pixelsrc <<", " <<std::setw(4) 
+                              <<asmtable[i].pixamt <<", " <<std::setw(4) <<asmtable[i].unk14 <<", " <<std::setw(4) <<asmtable[i].zIndex <<"\n";
+                }
+                std::clog << "\n";
+            }
+
             //Count the total size of the resulting image
-            for( const auto & entry : zerostrtable )
+            for( const auto & entry : asmtable )
                 totalbyamt += entry.pixamt;
+
+            //Keep track of the z index
+            graphics::ImageInfo imginf;
+            imginf.zindex = asmtable.front().zIndex;
+            out_imginfo.push_back(imginf);
 
             uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
             uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
@@ -576,12 +623,15 @@ namespace pmd2 { namespace filetypes
             }
             else if( metafrms.front().imageIndex == graphics::SPRITE_SPECIAL_METAFRM_INDEX ) 
             {
+                assert(false);
                 //If we DON'T have a meta-frame for this image, take the resolution from the first meta-frame, if its img index is 0xFFFF.
                 myres = MetaFrame::eResToResolution( metafrms.front().resolution );
                 //Kind of a bad logic here.. Its really possible that the 0xFFFF meta-frame is not the first one.
                 // Besides, we're not even 100% sure what to do if we end up with several 0xFFFF pointing meta-frames..
                 //#TODO: fix this !
             }
+            else
+                assert(false);
 
             //Sanity check
             assert( nbPixInBytes == (myres.width * myres.height) );
@@ -720,11 +770,13 @@ namespace pmd2 { namespace filetypes
             std::vector<uint8_t> imgbuff; //This contains the raw bytes of the current frame
             imgbuff.reserve( MAX_NB_PIXELS_SPRITE_IMG ); //Reserve the maximum frame size
 
+            uint32_t cptfrmindex = 0;
             for( const auto & afrm : frms )
             {
                 gimg::WriteTiledImg( std::back_inserter(imgbuff), afrm, WAN_REVERSED_PIX_ORDER );
-                WriteACompressedFrm( imgbuff );
+                WriteACompressedFrm( imgbuff, m_pSprite->getImgsInfo()[cptfrmindex].zindex );
                 imgbuff.resize(0);
+                ++cptfrmindex;
             }
         }
 
@@ -735,7 +787,8 @@ namespace pmd2 { namespace filetypes
         ImgAsmTbl_WithOpTy MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                          std::vector<uint8_t>::const_iterator   itEnd,
                                                          std::vector<uint8_t>                 & pixStrips,
-                                                         uint32_t                             & totalbytecnt );
+                                                         uint32_t                             & totalbytecnt,
+                                                         uint32_t                               imgZIndex );
 
         /*
             Same as above, but it simply makes a single assembly table entry for the whole image, not stripping the image of 
@@ -744,13 +797,14 @@ namespace pmd2 { namespace filetypes
         ImgAsmTbl_WithOpTy MakeImgAsmTableEntryNoStripping( std::vector<uint8_t>::const_iterator & itReadAt, 
                                                                     std::vector<uint8_t>::const_iterator   itEnd,
                                                                     std::vector<uint8_t>                 & pixStrips,
-                                                                    uint32_t                             & totalbytecnt);
+                                                                    uint32_t                             & totalbytecnt,
+                                                                    uint32_t                               imgZIndex );
 
         /*
         , -dontStripZeros: if set to true, the frame will be saved as a is, without stripping the zero
                            but in a way the game can load it. Used for UI sprites !
         */
-        void WriteACompressedFrm( const std::vector<uint8_t> & frm, bool dontStripZeros = false );
+        void WriteACompressedFrm( const std::vector<uint8_t> & frm, uint32_t imgZIndex, bool dontStripZeros = false );
 
         /*
         */

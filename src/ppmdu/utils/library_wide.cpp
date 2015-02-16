@@ -4,12 +4,16 @@ using namespace std;
 
 namespace utils
 {
+    lwData & LibWide()
+    {
+        return LibraryWide::getInstance().Data();
+    }
 
 //=========================================================================
 // LWData
 //=========================================================================
     lwData::lwData()
-        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u ))
+        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u )), m_LoggingOn(false)
     {
     }
 

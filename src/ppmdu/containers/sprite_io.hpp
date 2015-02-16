@@ -38,6 +38,7 @@ namespace pmd2 { namespace graphics
     static const std::string SPRITE_Offsets_fname     = "offsets.xml";
     static const std::string SPRITE_IMGs_DIR          = "imgs";         //Name of the sub-folder for the images
     static const std::string SPRITE_Palette_fname     = "palette.pal";
+    static const std::string SPRITE_ImgsInfo_fname    = "imgsinfo.xml"; 
 
 //=============================================================================================
 //  Structs
@@ -52,6 +53,7 @@ namespace pmd2 { namespace graphics
         uint32_t propAnims;
         uint32_t propMFrames;
         uint32_t propOffsets;
+        uint32_t propImgInfo;
 
         uint32_t totalAnimFrms;
         uint32_t totalAnimSeqs;
@@ -125,10 +127,10 @@ namespace pmd2 { namespace graphics
 
 
     /*
-        QuerySpriteTypeFromDirectory
+        QuerySpriteImgTypeFromDirectory
             Check the directory to get what's the sprite_ty of the sprite.
     */
-    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath );
+    eSpriteImgType QuerySpriteImgTypeFromDirectory( const std::string & dirpath );
 
 
 //=============================================================================================
@@ -141,7 +143,8 @@ namespace pmd2 { namespace graphics
     ******************************************************************************************/
     void ParseXMLDataToSprite( BaseSprite        * out_spr, 
                                const std::string & spriteFolderPath, 
-                               bool                parsexmlpal = false );
+                               uint32_t            nbimgs,
+                               bool                parsexmlpal = false);
 
     /******************************************************************************************
     WriteSpriteDataToXML

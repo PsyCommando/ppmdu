@@ -106,7 +106,7 @@ namespace pmd2 { namespace filetypes
                 if( i == 1 ) //the lowest byte to encode is special
                 {
                     //If its the last byte to append, leave the highest bit to 0 !
-                    if( currentbyte != 0 )
+                    //if( currentbyte != 0 ) //It seems this isn't necessary...
                         out_encoded.push_back( currentbyte );
                     //If the last byte to append is null, we don't need to append anything
                     // as the automatic bitshift of the last byte will take care of that
@@ -143,24 +143,28 @@ namespace pmd2 { namespace filetypes
         uint32_t offsetsum = 0; //This is used to sum up all offsets and obtain the offset relative to the file, and not the last offset
         uint32_t buffer    = 0; //temp buffer to assemble longer offsets
         uint8_t curbyte    = *itcurbyte;
+        bool    LastHadBitFlag = false; //This contains whether the byte read on the previous turn of the loop had the bit flag indicating to append the next byte!
 
-        while( itcurbyte != itlastbyte && (curbyte = *itcurbyte) != 0 )
+        while( itcurbyte != itlastbyte && ( LastHadBitFlag || (*itcurbyte) != 0 ) ) //There's an aassignement in there
         {
+            curbyte = *itcurbyte;
             buffer |= curbyte & 0x7Fu;
         
             if( (0x80u & curbyte) != 0 )
             {
+                LastHadBitFlag = true;
                 buffer <<= 7u;
 
-                //In case its the last byte to decode, be sure to push it back.
-                if( (itcurbyte + 1) != itlastbyte && *(itcurbyte + 1) == 0 )
-                {
-                    offsetsum += buffer;
-                    decodedptroffsets.push_back(offsetsum);
-                }
+                //In case its the last byte before the final zero to decode, be sure to push it back.
+                //if( (itcurbyte + 1) != itlastbyte && *(itcurbyte + 1) == 0 )
+                //{
+                //    offsetsum += buffer;
+                //    decodedptroffsets.push_back(offsetsum);
+                //}
             }
             else
             {
+                LastHadBitFlag = false;
                 offsetsum += buffer;
                 decodedptroffsets.push_back(offsetsum);
                 buffer = 0;

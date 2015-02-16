@@ -15,6 +15,7 @@ Description: This is basically a system for handling multiple tasks in parallel.
 #include <functional>
 #include <deque>
 #include <atomic>
+#include <queue>
 
 namespace multitask
 {
@@ -65,6 +66,9 @@ namespace multitask
         //Returns whether there are still tasks to run in the queue
         bool HasTasksToRun()const;
 
+        //Exception handling from worker threads
+        std::exception_ptr PopException();
+
     private:
 
         struct thRunParam
@@ -73,9 +77,13 @@ namespace multitask
             std::chrono::nanoseconds waitTime;     //the time this thread will wait in-between checks for a new task
         };
 
-        //Methods
+        //Push exception to the exception queue
+        void PushException( std::exception_ptr ex );
+
+        //The manager thread run this
         void RunTasks();
-        //void AssignTasks( std::vector< std::pair<std::future<pktaskret_t>,std::thread> > & futthreads );
+
+        //The method that worker threads run
         bool WorkerThread( thRunParam & taskSlot );
 
         //Don't let anynone copy or move construct us
@@ -103,6 +111,10 @@ namespace multitask
         std::atomic_bool                             m_stopWorkers;
 
         std::atomic<int>                             m_taskcompleted;
+
+        //Exception handling
+        std::mutex                                   m_exceptionMutex;
+        std::queue<std::exception_ptr>               m_exceptions;         
     };
 };
 #endif

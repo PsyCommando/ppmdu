@@ -4,6 +4,7 @@
 #include <ppmdu/containers/sprite_data.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/containers/index_iterator.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
@@ -14,6 +15,7 @@ using namespace pmd2::graphics;
 
 namespace pmd2{ namespace filetypes
 {
+
 //=============================================================================================
 //  WAN File Specifics
 //=============================================================================================
@@ -125,7 +127,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    graphics::eSpriteType WAN_Parser::getSpriteType()const
+    graphics::eSpriteImgType WAN_Parser::getSpriteType()const
     {
         auto        itRead   = m_rawdata.begin();
         sir0_header sir0head;
@@ -139,7 +141,7 @@ namespace pmd2{ namespace filetypes
         wan_img_data_info frmdat;
         frmdat.ReadFromContainer( itRead + wanhead.ptr_imginfo );
 
-        return (frmdat.is256Colors == 1 )? eSpriteType::spr8bpp : eSpriteType::spr4bpp;
+        return (frmdat.is256Colors == 1 )? eSpriteImgType::spr8bpp : eSpriteImgType::spr4bpp;
     }
 
     /**************************************************************
@@ -159,22 +161,22 @@ namespace pmd2{ namespace filetypes
         out_pal                     = ReadPalette();
 
         //Named Properties
-        out_sprinf.m_nbColorsPerRow = m_paletteInfo.nbcolorsperrow;
-        out_sprinf.m_is256Sprite    = m_wanImgDataInfo.is256Colors;
-        out_sprinf.m_is8WaySprite   = m_wanHeader.is8DirectionSprite;
-        out_sprinf.m_IsMosaicSpr    = m_wanImgDataInfo.isMosaic;
+        out_sprinf.nbColorsPerRow  = m_paletteInfo.nbcolorsperrow;
+        out_sprinf.m_is256Sprite   = m_wanImgDataInfo.is256Colors;
+        out_sprinf.spriteType      = static_cast<graphics::eSprTy>(m_wanHeader.spriteType);
+        out_sprinf.Unk13           = m_wanImgDataInfo.unk13;
 
         //Unknowns
-        out_sprinf.m_Unk3           = m_paletteInfo.unk3;
-        out_sprinf.m_Unk4           = m_paletteInfo.unk4;
-        out_sprinf.m_Unk5           = m_paletteInfo.unk5;
-        out_sprinf.m_Unk6           = m_wanAnimInfo.unk6;
-        out_sprinf.m_Unk7           = m_wanAnimInfo.unk7;
-        out_sprinf.m_Unk8           = m_wanAnimInfo.unk8;
-        out_sprinf.m_Unk9           = m_wanAnimInfo.unk9;
-        out_sprinf.m_Unk10          = m_wanAnimInfo.unk10;
-        out_sprinf.m_Unk11          = m_wanImgDataInfo.unk11;
-        out_sprinf.m_Unk12          = m_wanHeader.unk12;
+        out_sprinf.Unk3            = m_paletteInfo.unk3;
+        out_sprinf.Unk4            = m_paletteInfo.unk4;
+        out_sprinf.Unk5            = m_paletteInfo.unk5;
+        out_sprinf.Unk6            = m_wanAnimInfo.unk6;
+        out_sprinf.Unk7            = m_wanAnimInfo.unk7;
+        out_sprinf.Unk8            = m_wanAnimInfo.unk8;
+        out_sprinf.Unk9            = m_wanAnimInfo.unk9;
+        out_sprinf.Unk10           = m_wanAnimInfo.unk10;
+        out_sprinf.Unk11           = m_wanImgDataInfo.unk11;
+        out_sprinf.Unk12           = m_wanHeader.unk12;
 
         if( m_paletteInfo.nullbytes != 0 )
         {
@@ -220,14 +222,14 @@ namespace pmd2{ namespace filetypes
     **************************************************************/
     vector<gimg::colorRGB24> WAN_Parser::ReadPalette()
     {
-        m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptr_palette );
-        unsigned int             nbcolors = (m_wanImgDataInfo.ptr_palette - m_paletteInfo.ptrpal) / 4;
+        m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptrPal );
+        unsigned int             nbcolors = (m_wanImgDataInfo.ptrPal - m_paletteInfo.ptrpal) / 4;
         vector<gimg::colorRGB24> palettecolors( nbcolors );
         rgbx32_parser            myparser( palettecolors.begin() );
 
         //2 - Read it
         std::for_each( (m_rawdata.begin() + m_paletteInfo.ptrpal), 
-                       (m_rawdata.begin() + m_wanImgDataInfo.ptr_palette), //The pointer points at the end of the palette
+                       (m_rawdata.begin() + m_wanImgDataInfo.ptrPal), //The pointer points at the end of the palette
                         myparser );
 
         return std::move(palettecolors);
@@ -377,7 +379,7 @@ namespace pmd2{ namespace filetypes
         //auto     itReadAnimGrp   = ( m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable );
         //uint32_t offsetseqptrtbl = GetOffsetFirstAnimSeqPtr( itReadAnimGrp, 
         //                                                     m_wanAnimInfo.nb_anim_groups, 
-        //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
+        //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptrImgsTbl ) ); 
 
 
     //#2 - Then, first pass, read all the meta-frame groups
@@ -591,7 +593,7 @@ namespace pmd2{ namespace filetypes
     //    //First get the first non-null group
     //    uint32_t ptrFirstSeq = GetOffsetFirstAnimSeqPtr( itAnimGrpTbl, 
     //                                                     m_wanAnimInfo.nb_anim_groups, 
-    //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
+    //                                                     ReadOff<uint32_t>( m_wanImgDataInfo.ptrImgsTbl ) ); 
     //    uint32_t nbNullSeqPtrsBef = CountNbAdjacentNullPointer((m_rawdata.begin() + ptrFirstSeq ));
 
     //    m_;
@@ -601,14 +603,14 @@ namespace pmd2{ namespace filetypes
     {
         //Count leading null group entries
         uint32_t nbNullGroups = CountNbAdjacentNullValues<uint64_t>( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable),
-                                                                     (m_rawdata.begin() + m_wanImgDataInfo.ptr_img_table) 
+                                                                     (m_rawdata.begin() + m_wanImgDataInfo.ptrImgsTbl) 
                                                                    ); //Each entries is 64 bits
 
         uint32_t firstNonNullGrp      = m_wanAnimInfo.ptr_animGrpTable + (nbNullGroups * WAN_LENGTH_ANIM_GRP);
         uint32_t nbBytesBefNonNullSeq = ( nbNullGroups * sizeof(uint32_t) );
 
         //In the case all groups are null
-        if( firstNonNullGrp == m_wanImgDataInfo.ptr_img_table )
+        if( firstNonNullGrp == m_wanImgDataInfo.ptrImgsTbl )
         {
             //The entire sequences and group tables are null, 
             // just subtract nbNullGroups * sizeof(uint32_t) from the beg of the grp table
@@ -641,7 +643,7 @@ namespace pmd2{ namespace filetypes
         //Get the size of the block
         //uint32_t ptrFirstSeq = GetOffsetFirstAnimSeqPtr( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable), 
         //                                                  m_wanAnimInfo.nb_anim_groups, 
-        //                                                  ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) );
+        //                                                  ReadOff<uint32_t>( m_wanImgDataInfo.ptrImgsTbl ) );
 
         //Get the begining of the sequence table by subtracting the null sequences before the first non-null one!
         //return ( ptrFirstSeq - ( nbNullGroups * sizeof(uint32_t) ) );
@@ -676,7 +678,7 @@ namespace pmd2{ namespace filetypes
         ////Get the size of the block
         //uint32_t                        ptrFirstSeq = GetOffsetFirstAnimSeqPtr( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable), 
         //                                                                        m_wanAnimInfo.nb_anim_groups, 
-        //                                                                        ReadOff<uint32_t>( m_wanImgDataInfo.ptr_img_table ) ); 
+        //                                                                        ReadOff<uint32_t>( m_wanImgDataInfo.ptrImgsTbl ) ); 
 
         //Get the begining of the sequence table by subtracting the null sequences before the first non-null one!
         uint32_t                        offsetBegSeqTable = CalcFileOffsetBegSeqTable(); /*ptrFirstSeq - (nbNullSeqPtrsBef * sizeof(uint32_t));*/
@@ -797,7 +799,7 @@ namespace pmd2{ namespace filetypes
         wanheadr.ReadFromContainer( itdatabeg + headr.subheaderptr );
 
         //Check if the wan header pointers are invalid
-        if( wanheadr.is8DirectionSprite >= 2 || 
+        if( wanheadr.spriteType >= 2 || 
             wanheadr.ptr_animinfo >= headr.subheaderptr || 
             wanheadr.ptr_imginfo >= headr.subheaderptr )
             return false;

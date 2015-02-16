@@ -53,6 +53,11 @@ namespace pmd2 { namespace graphics
         //Sprite Property Stuff
         static const string XML_ROOT_SPRPROPS  = "SpriteProperties";
 
+        //Images info
+        static const string XML_ROOT_IMGINFO   = "ImagesInfo";
+        static const string XML_NODE_IMAGE     = "ImageProperty";
+        static const string XML_PROP_ZINDEX    = "ZIndex";
+
         //Other nodes
         static const string XML_NODE_PALLETTE  = "Palette";
         static const string XML_NODE_SHADOW    = "Shadow";
@@ -61,7 +66,7 @@ namespace pmd2 { namespace graphics
         static const string XML_NODE_COLOR     = "Color";
 
         //Properties Stuff (names of all the properties we'll write)
-        static const string XML_PROP_FRMINDEX  = "ImageIndex";
+        static const string XML_PROP_IMGINDEX  = "ImageIndex";
         static const string XML_PROP_UNK0      = "Unk0";
         static const string XML_PROP_OFFSETY   = "YOffset";
         static const string XML_PROP_OFFSETX   = "XOffset";
@@ -95,9 +100,9 @@ namespace pmd2 { namespace graphics
         static const string XML_PROP_UNK9      = "Unk9";
         static const string XML_PROP_UNK10     = "Unk10";
 
-        static const string XML_PROP_IS8W      = "Is8Ways";
+        static const string XML_PROP_SPRTY      = "Is8Ways";
         static const string XML_PROP_IS256COL  = "Is256Colors";
-        static const string XML_PROP_ISMOSAICS = "IsMosaicSprite";
+        static const string XML_PROP_UNK13 = "IsMosaicSprite";
         static const string XML_PROP_UNK11     = "Unk11";
         static const string XML_PROP_UNK12     = "Unk12";
 
@@ -126,10 +131,10 @@ namespace pmd2 { namespace graphics
     const std::string SprInfo::DESC_Unk9            = "unknown";
     const std::string SprInfo::DESC_Unk10           = "unknown";
 
-    const std::string SprInfo::DESC_Is8WaySprite    = "If 1 character sprite. If 0, other sprite. This messes with what anim groups are used for!";
+    const std::string SprInfo::DESC_spriteType    = "If 1 character sprite. If 0, other sprite. This messes with what anim groups are used for!";
     const std::string SprInfo::DESC_Is256Sprite     = "If 1, the game draw the sprite as a 8bpp 256 color sprite from memory!(You need to specify it in the palette info too for it to work!)\n"
                                                       "       If 0, images are drawn as 4bpp !";
-    const std::string SprInfo::DESC_IsMosaicSpr     = "If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!";
+    const std::string SprInfo::DESC_Unk13     = "If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!";
     const std::string SprInfo::DESC_Unk11           = "This far 0, 1, 3(d79p41a1.wan), 4(as001.wan).. Seems to deal with the palette slot in-game.";
     const std::string SprInfo::DESC_Unk12           = "unknown";
 
@@ -215,13 +220,14 @@ namespace pmd2 { namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void ParseXML( Poco::Path sprrootfolder, bool parsexmlpal )
+        void ParseXML( Poco::Path sprrootfolder, uint32_t nbimgs, bool parsexmlpal )
         {
             using namespace SpriteXMLStrings;
             std::ifstream inProperties( Poco::Path(sprrootfolder).append(SPRITE_Properties_fname).toString() );
             std::ifstream inAnims     ( Poco::Path(sprrootfolder).append(SPRITE_Animations_fname).toString() );
             std::ifstream inMFrames   ( Poco::Path(sprrootfolder).append(SPRITE_Frames_fname    ).toString() );
             std::ifstream inOffsets   ( Poco::Path(sprrootfolder).append(SPRITE_Offsets_fname   ).toString() );
+            std::ifstream inImgsInfo  ( Poco::Path(sprrootfolder).append(SPRITE_ImgsInfo_fname  ).toString() );
 
             if( inProperties.bad() || inAnims.bad() || inMFrames.bad() || inOffsets.bad() )
             {
@@ -237,6 +243,10 @@ namespace pmd2 { namespace graphics
                 ParseAnimations(inAnims     );
                 ParseMetaFrames(inMFrames   );
                 ParseOffsets   (inOffsets   );
+
+                //Pre-alloc
+                m_pOutSprite->getImgsInfo().resize(nbimgs);
+                ParseImagesInfo(inImgsInfo  );
             }
             if(parsexmlpal)
             {
@@ -310,14 +320,11 @@ namespace pmd2 { namespace graphics
         {
             AnimationSequence aseq;
 
-
             //Get the name if applicable. If not in the attributes will set empty string
             aseq.setName( seqnode.attribute(SpriteXMLStrings::XML_ATTR_NAME.c_str()).as_string() );
 
             for( auto & frmnode : seqnode.children( SpriteXMLStrings::XML_NODE_ANIMFRM.c_str() ) )
-            {
                  aseq.insertFrame( ParseAnimationFrame( frmnode ) );
-            }
 
             return std::move(aseq);
         }
@@ -329,9 +336,7 @@ namespace pmd2 { namespace graphics
             vector<AnimationSequence> seqs;
 
             for( auto & seqnode : seqstblnode.children(SpriteXMLStrings::XML_NODE_ANIMSEQ.c_str()) )
-            {
                 seqs.push_back( ParseAnimationSequence( seqnode ) );
-            }
 
             return std::move(seqs);
         }
@@ -459,7 +464,7 @@ namespace pmd2 { namespace graphics
 
             for( auto & propnode : mfnode.children() )
             {
-                if( propnode.name() == SpriteXMLStrings::XML_PROP_FRMINDEX )
+                if( propnode.name() == SpriteXMLStrings::XML_PROP_IMGINDEX )
                 {
                     _parseXMLHexaValToValue( propnode.child_value(), mf.imageIndex );
                 }
@@ -543,34 +548,38 @@ namespace pmd2 { namespace graphics
             {
                 if( curnode.name() == XML_PROP_UNK3 )
                 {
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk3 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk3 );
                 }
                 else if( curnode.name() == XML_PROP_COLPERROW )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_nbColorsPerRow );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().nbColorsPerRow );
                 else if( curnode.name() == XML_PROP_UNK4 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk4 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk4 );
                 else if( curnode.name() == XML_PROP_UNK5 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk5 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk5 );
                 else if( curnode.name() == XML_PROP_UNK6 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk6 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk6 );
                 else if( curnode.name() == XML_PROP_UNK7 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk7 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk7 );
                 else if( curnode.name() == XML_PROP_UNK8 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk8 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk8 );
                 else if( curnode.name() == XML_PROP_UNK9 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk9 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk9 );
                 else if( curnode.name() == XML_PROP_UNK10 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk10 );
-                else if( curnode.name() == XML_PROP_IS8W )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_is8WaySprite );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk10 );
+                else if( curnode.name() == XML_PROP_SPRTY )
+                {
+                    uint16_t srty = 0;
+                    _parseXMLHexaValToValue( curnode.child_value(), srty );
+                    m_pOutSprite->getSprInfo().spriteType = static_cast<graphics::eSprTy>(srty);
+                }
                 else if( curnode.name() == XML_PROP_IS256COL )
                     _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_is256Sprite );
-                else if( curnode.name() == XML_PROP_ISMOSAICS )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_IsMosaicSpr );
+                else if( curnode.name() == XML_PROP_UNK13 )
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk13 );
                 else if( curnode.name() == XML_PROP_UNK11 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk11 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk11 );
                 else if( curnode.name() == XML_PROP_UNK12 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_Unk12 );
+                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk12 );
 
                 //pCurNode = itnode.nextNode();
             }
@@ -603,6 +612,37 @@ namespace pmd2 { namespace graphics
                         _parseXMLHexaValToValue( acomponent.child_value(), mycolor.blue ); 
                 }
                 m_pOutSprite->getPalette().push_back(mycolor);
+            }
+        }
+
+        void ParseImagesInfo(std::ifstream & in)
+        {
+            using namespace SpriteXMLStrings;
+            using namespace pugi;
+            xml_document doc;
+
+            if( ! doc.load(in) )
+                throw std::runtime_error("Failed to create xml_document for parsing the images info xml file!");
+
+            //Read every elements
+            for( auto & imagenode : doc.child(XML_ROOT_IMGINFO.c_str()).children(XML_NODE_IMAGE.c_str()) )
+            {
+                int32_t   imgindex = -1;
+                ImageInfo imginf;
+
+                for( auto & props : imagenode.children() )
+                {
+                    if( props.name() == SpriteXMLStrings::XML_PROP_IMGINDEX )
+                        _parseXMLHexaValToValue( props.child_value(), imgindex ); 
+                    else if( props.name() == SpriteXMLStrings::XML_PROP_ZINDEX )
+                        _parseXMLHexaValToValue( props.child_value(), imginf.zindex ); 
+                }
+
+                if( imgindex != -1 )
+                {
+                    auto & imginfvector = m_pOutSprite->getImgsInfo(); //We already pre-allocated the vector earlier
+                    imginfvector[imgindex] = std::move(imginf); //Add the image data
+                }
             }
         }
 
@@ -646,6 +686,7 @@ namespace pmd2 { namespace graphics
             WriteAnimations     ( stats.propAnims, stats.totalAnimSeqs, stats.totalAnimFrms );
             WriteMetaFrameGroups( stats.propMFrames );
             WriteOffsets        ( stats.propOffsets );
+            WriteImgInfo        ( stats.propImgInfo );
 
             //Write xml palette if needed
             if( xmlcolorpal )
@@ -656,36 +697,8 @@ namespace pmd2 { namespace graphics
         //
         //  Common Stuff
         //
-        /**************************************************************
-        **************************************************************/
-        //inline void InitWriter( Poco::XML::XMLWriter & writer, const std::string & rootnodename )
-        //{
-        //    writer.setNewLine("\n");
-        //    writer.startDocument();
-        //    writer.startElement( "", "", rootnodename );
-        //}
-
-        ///**************************************************************
-        //**************************************************************/
-        //inline void DeinitWriter( Poco::XML::XMLWriter& writer, const std::string & rootnodename )
-        //{
-        //    writer.endElement( "", "", rootnodename );
-        //    writer.endDocument();
-        //}
-
-        /**************************************************************
-        **************************************************************/
-        //template<typename _myintt>
-        //    std::string turnIntToHexStr( _myintt anint )
-        //{
-        //    using SpriteXMLStrings::PARSE_HEX_NUMBER;
-        //    stringstream sstr;
-        //    sstr <<PARSE_HEX_NUMBER << hex <<anint;
-        //    return sstr.str();
-        //}
 
         //Returns a pointer to the buffer passed as argument
-
         inline const char * FastTurnIntToHexCStr( unsigned int value )
         {
             sprintf_s( m_convBuff.data(), CBuffSZ, "0x%s", itoa( value, m_secConvbuffer.data(), 16 ) );
@@ -718,9 +731,6 @@ namespace pmd2 { namespace graphics
         inline void resetStrs()
         {
             m_strs.str(string());
-            //m_strs.seekp(0);
-            //m_strs.seekg(0);
-            //m_strs.clear();
         }
 
     private:
@@ -740,48 +750,48 @@ namespace pmd2 { namespace graphics
 
             //Color stuff
             writeComment( rootnode, SprInfo::DESC_Unk3 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK3, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk3 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK3, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk3 ) );
 
             writeComment( rootnode, SprInfo::DESC_nbColorsPerRow );
-            WriteNodeWithValue( rootnode, XML_PROP_COLPERROW, FastTurnIntToCStr( m_pInSprite->getSprInfo().m_nbColorsPerRow ) );
+            WriteNodeWithValue( rootnode, XML_PROP_COLPERROW, FastTurnIntToCStr( m_pInSprite->getSprInfo().nbColorsPerRow ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk4 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK4, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk4 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK4, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk4 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk5 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK5, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk5 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK5, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk5 ) );
 
             //Anim Stuff
             writeComment( rootnode, SprInfo::DESC_Unk6 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK6, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk6 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK6, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk6 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk7 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK7, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk7 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK7, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk7 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk8 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK8, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk8 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK8, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk8 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk9 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK9, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk9 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK9, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk9 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk10 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK10, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk10 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK10, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk10 ) );
 
             //Other properties
-            writeComment( rootnode, SprInfo::DESC_Is8WaySprite );
-            WriteNodeWithValue( rootnode, XML_PROP_IS8W, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_is8WaySprite ) );
+            writeComment( rootnode, SprInfo::DESC_spriteType );
+            WriteNodeWithValue( rootnode, XML_PROP_SPRTY, FastTurnIntToHexCStr( static_cast<uint16_t>(m_pInSprite->getSprInfo().spriteType) ) );
 
             writeComment( rootnode, SprInfo::DESC_Is256Sprite );
             WriteNodeWithValue( rootnode, XML_PROP_IS256COL, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_is256Sprite ) );
 
-            writeComment( rootnode, SprInfo::DESC_IsMosaicSpr );
-            WriteNodeWithValue( rootnode, XML_PROP_ISMOSAICS, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_IsMosaicSpr ) );
+            writeComment( rootnode, SprInfo::DESC_Unk13 );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK13, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk13 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk11 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK11, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk11 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK11, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk11 ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk12 );
-            WriteNodeWithValue( rootnode, XML_PROP_UNK12, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_Unk12 ) );
+            WriteNodeWithValue( rootnode, XML_PROP_UNK12, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk12 ) );
 
             if( ! doc.save_file( outpath.c_str() ) )
                 throw std::runtime_error("Error, can't write sprite info xml file!");
@@ -1015,7 +1025,7 @@ namespace pmd2 { namespace graphics
             xml_node     mfnode = parentnode.append_child( XML_NODE_FRMFRM.c_str() );
             const auto & aframe = m_pInSprite->getMetaFrames()[index];
 
-            WriteNodeWithValue( mfnode, XML_PROP_FRMINDEX, FastTurnIntToCStr(aframe.imageIndex) );
+            WriteNodeWithValue( mfnode, XML_PROP_IMGINDEX, FastTurnIntToCStr(aframe.imageIndex) );
             WriteNodeWithValue( mfnode, XML_PROP_UNK0,     FastTurnIntToHexCStr(aframe.unk0) );
             WriteNodeWithValue( mfnode, XML_PROP_OFFSETY,  FastTurnIntToCStr(aframe.offsetY   ) );
             WriteNodeWithValue( mfnode, XML_PROP_OFFSETX,  FastTurnIntToCStr(aframe.offsetX   ) );
@@ -1079,6 +1089,37 @@ namespace pmd2 { namespace graphics
                 throw std::runtime_error("Error, can't write offset list xml file!");
         }
 
+        void WriteImgInfo( uint32_t proportionofwork  )
+        {
+            using namespace SpriteXMLStrings;
+            using namespace pugi;
+            xml_document doc;
+            string       outpath      = Poco::Path(m_outPath).append(SPRITE_ImgsInfo_fname).toString();
+            xml_node     imginfonode  = doc.append_child(XML_ROOT_IMGINFO.c_str());
+            uint32_t     saveprogress = 0;
+
+            if( m_pProgresscnt != nullptr )
+                saveprogress = m_pProgresscnt->load();
+
+            unsigned int cpt = 0;
+            for( auto & imginfo : m_pInSprite->getImgsInfo() )
+            {
+                if( imginfo.zindex != 0 )   //Only write non-zero entries
+                {
+                    xml_node imgnode = imginfonode.append_child(XML_NODE_IMAGE.c_str());
+                    WriteNodeWithValue( imgnode, XML_PROP_IMGINDEX, FastTurnIntToCStr( cpt ));
+                    WriteNodeWithValue( imgnode, XML_PROP_ZINDEX,   FastTurnIntToCStr( imginfo.zindex ));
+                }
+
+                ++cpt;
+                if( m_pProgresscnt != nullptr )
+                    m_pProgresscnt->store( saveprogress + ( proportionofwork * cpt ) / m_pInSprite->getImgsInfo().size() );
+            }
+
+            if( ! doc.save_file( outpath.c_str() ) )
+                throw std::runtime_error("Error, can't write image info xml file!");
+        }
+
     private:
         static const int         CBuffSZ = (sizeof(int)*8+1);
         Poco::Path               m_outPath;
@@ -1100,9 +1141,10 @@ namespace pmd2 { namespace graphics
     ******************************************************************************************/
     void ParseXMLDataToSprite( BaseSprite        * out_spr, 
                                const std::string & spriteFolderPath, 
+                               uint32_t            nbimgs,
                                bool                parsexmlpal )
     {
-        SpriteXMLParser(out_spr).ParseXML(spriteFolderPath, parsexmlpal);
+        SpriteXMLParser(out_spr).ParseXML(spriteFolderPath, nbimgs, parsexmlpal);
     }
 
     /******************************************************************************************
@@ -1121,7 +1163,7 @@ namespace pmd2 { namespace graphics
 
     /**************************************************************
     **************************************************************/
-    eSpriteType QuerySpriteTypeFromDirectory( const std::string & dirpath )
+    eSpriteImgType QuerySpriteImgTypeFromDirectory( const std::string & dirpath )
     {
         using namespace pugi;
         ifstream          in( Poco::Path(dirpath).append( SPRITE_Properties_fname ).toString() );
@@ -1133,7 +1175,7 @@ namespace pmd2 { namespace graphics
         if( ! doc.load(in) )
             throw std::runtime_error( SPRITE_Properties_fname + " cannot be opened !" );
 
-        bool              bIs256Colors = false;
+        bool bIs256Colors = false;
         
         xml_node typenode = doc.find_node( [](xml_node & anode){ return anode.name() == SpriteXMLStrings::XML_PROP_IS256COL; });
 
@@ -1145,7 +1187,7 @@ namespace pmd2 { namespace graphics
             throw std::runtime_error("The " +SpriteXMLStrings::XML_PROP_IS256COL+ " element is mising from the xml data, impossible to determine type!" );
 
 
-        return (bIs256Colors)? eSpriteType::spr8bpp : eSpriteType::spr4bpp;
+        return (bIs256Colors)? eSpriteImgType::spr8bpp : eSpriteImgType::spr4bpp;
     }
 
 };};

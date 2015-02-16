@@ -31,8 +31,12 @@ namespace utils
         void setNbThreadsToUse( unsigned int nbthreads );
         unsigned int getNbThreadsToUse()const;
 
+        inline void isLogOn( bool state ){ m_LoggingOn = state; }
+        inline bool isLogOn()const       { return m_LoggingOn;  }
+
     private:
         bool         m_verboseOn;
+        bool         m_LoggingOn;
         unsigned int m_nbThreads;
     };
 
@@ -55,6 +59,12 @@ namespace utils
 
         lwData  m_data;
     };
+
+    /*
+        LibWide
+            Convenience function for getting the lib wide options.
+    */
+    lwData & LibWide();
 };
 
 #endif

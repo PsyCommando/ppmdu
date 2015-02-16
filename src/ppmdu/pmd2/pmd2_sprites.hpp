@@ -69,11 +69,11 @@ namespace pmd2{ namespace graphics
         static const unsigned int DATA_LEN = 16u;
 
         uint32_t ptr_frm_ptrs_table,        // Pointer to the the table of pointer to the individual frames
-                 ptr_palette;               // Pointer to the pointer to the beginning of the palette
+                 ptrPal;               // Pointer to the pointer to the beginning of the palette
         uint16_t unkn_1,                    // Unknown, seems to range between 0 and 1..
                  unkn_2,                    // Unknown, seems to range between 0 and 1..
                  unkn_3,                    // Unknown, seems to range between 0 and 1..
-                 nb_ptrs_frm_ptrs_table;    // Number of entries in the table of pointers to each frames.
+                 nbImgsTblPtr;    // Number of entries in the table of pointers to each frames.
 
         //uint8_t & operator[](unsigned int index); //access data as an array of bytes
         //const uint8_t & operator[](unsigned int index)const;

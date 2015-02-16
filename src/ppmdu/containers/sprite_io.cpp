@@ -4,6 +4,7 @@
 #include <ppmdu/ext_fmts/png_io.hpp>
 #include <ppmdu/ext_fmts/riff_palette.hpp>
 #include <ppmdu/utils/poco_wrapper.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 #include <vector>
 #include <string>
 #include <iomanip>
@@ -37,6 +38,7 @@ namespace pmd2{ namespace graphics
         SPRITE_Animations_fname,
         SPRITE_Frames_fname,
         SPRITE_Offsets_fname,
+        SPRITE_ImgsInfo_fname,
         SPRITE_IMGs_DIR+"/",
     }};
 
@@ -130,6 +132,9 @@ namespace pmd2{ namespace graphics
             if( !directory.exists() )
                 directory.createDirectory();
 
+            if( utils::LibWide().isLogOn() )
+                clog << "Output directory " <<directory.path() <<". Ok!\n";
+
             m_pProgress = progresscnt;
 
             //Count the ammount of entries for calculating work
@@ -148,10 +153,10 @@ namespace pmd2{ namespace graphics
             const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs + amtWorkFrames;
 
             //Get the percentages of work, relative to the total, for each
-            const float percentFrames  = ( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
-            const float percentAnims   = ( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
-            const float percentFrmGrps = ( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
-            const float percentOffsets = ( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
+            const float percentFrames  = static_cast<float>( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
+            const float percentAnims   = static_cast<float>( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
+            const float percentFrmGrps = static_cast<float>( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
+            const float percentOffsets = static_cast<float>( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
 
             spriteWorkStats stats
             {
@@ -226,6 +231,9 @@ namespace pmd2{ namespace graphics
                 //Export
                 utils::io::ExportToPNG( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
 
+                if( utils::LibWide().isLogOn() )
+                    clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
+
                 if( m_pProgress != nullptr )
                     m_pProgress->store( progressBefore + (proportionofwork * (i+1) ) / frames.size() ); 
             }
@@ -250,6 +258,9 @@ namespace pmd2{ namespace graphics
                 //Export
                 utils::io::ExportToBMP( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
 
+                if( utils::LibWide().isLogOn() )
+                    clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
+
                 if( m_pProgress != nullptr )
                     m_pProgress->store( progressBefore + (proportionofwork * (i+1)) / frames.size() );
             }
@@ -273,6 +284,9 @@ namespace pmd2{ namespace graphics
                 sstrname <<setw(4) <<setfill('0') <<i <<"." <<utils::io::RawImg_FileExtension;
                 //Export
                 utils::io::ExportRawImg_NoPal( frames[i], Poco::Path(outimg).append(sstrname.str()).toString() );
+
+                if( utils::LibWide().isLogOn() )
+                    clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
 
                 if( m_pProgress != nullptr )
                     m_pProgress->store( progressBefore + (proportionofwork * (i + 1)) / frames.size() );
@@ -325,16 +339,21 @@ namespace pmd2{ namespace graphics
                                        std::atomic<uint32_t> * pProgress   = nullptr,
                                        bool                    parsexmlpal = false )
         {
+            //!! This must run first !!
             m_inDirPath = Poco::Path( directorypath );
             m_pProgress = pProgress;
 
-            //Parse the xml first to help with reading image with some formats
-            ParseXML(parsexmlpal);
+            auto validimgslist = ListValidImages(readImgByIndex);
 
-            if( readImgByIndex )
-                ReadImagesByIndex();
-            else
-                ReadImagesSorted();
+            //Parse the xml first to help with reading image with some formats
+            ParseXML(parsexmlpal, validimgslist.size() );
+
+            ReadImages(validimgslist);
+
+            //if( readImgByIndex )
+            //    ReadImagesByIndex();
+            //else
+            //    ReadImagesSorted();
 
             if( !parsexmlpal )
             {
@@ -370,74 +389,56 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void ParseXML( bool parsexmlpal )
+        void ParseXML( bool parsexmlpal, uint32_t nbimgs )
         { 
-            ParseXMLDataToSprite( &m_outSprite, m_inDirPath.toString(), parsexmlpal );
-
-            //SpriteXMLParser myparser(  );
-            //myparser.ParseXML( m_inDirPath, parsexmlpal );
+            ParseXMLDataToSprite( &m_outSprite, m_inDirPath.toString(), nbimgs, parsexmlpal );
         }
 
-        /**************************************************************
-        **************************************************************/
-        void ReadImagesByIndex()
+        vector<Poco::File> ListValidImages( bool OrderByIndex )
         {
-            //assert(false);
-            //**************************************************************************
-            //#TODO: Use the meta-frame table to read image files by index/filenmae. Then change the meta-frame index in-memory to 
-            //       refer to the index the image data was actually inserted at!
-            //**************************************************************************
-            Poco::Path                imgsDir( m_inDirPath );
-            map<uint32_t, Poco::File> validImages;
-            uint32_t                  nbvalidimgs  = 0;
+            vector<Poco::File> list;
+            Poco::Path         imgsDir( m_inDirPath );
             imgsDir.append( SPRITE_IMGs_DIR );
-
-            Poco::DirectoryIterator itdir(imgsDir);
-            Poco::DirectoryIterator itdircount(imgsDir);
+            Poco::File         fimginfo(imgsDir);
             Poco::DirectoryIterator itdirend;
 
-            //count imgs
-            //while( itdircount != itdirend )
-            //{
-            //    if( utils::io::IsSupportedImageType( itdircount->path() ) )
-            //        ++nbvalidimgs;
-            //    ++itdircount;
-            //}
-
-            //
-            //validImages.resize(nbvalidimgs);
-
-            //We want to load images into the right indexes
-
-            //
-            //#1 - Count the images in the imgs directory + Find all our valid images
-            for(; itdir != itdirend; ++itdir ) 
+            for( Poco::DirectoryIterator itdir(fimginfo); itdir != itdirend; ++itdir )
             {
-                if( utils::io::IsSupportedImageType( itdir->path() ) )
+                if( itdir->isFile() && !itdir->isHidden() && utils::io::IsSupportedImageType( itdir->path() ) )
                 {
-                    stringstream sstrparseindex(itdir->path());
-                    uint32_t     curindex = 0;
-                    sstrparseindex >> curindex;
-
-                    validImages.insert( make_pair( curindex, *itdir ) );
+                    list.push_back( *itdir );
                 }
             }
 
-
-            //#2 - Parse the images after allocating
-            m_outSprite.m_frames.reserve( validImages.size() );
-
-            for( uint32_t i = 0; i < validImages.size(); ++i )
+            if( OrderByIndex )
             {
-                auto & animg = validImages.at(i);
+                //sort images
+                std::sort( list.begin(), list.end(), []( const Poco::File & first, const Poco::File & second )->bool
+                {
+                    stringstream strsFirst(first.path());
+                    stringstream strsSecond(second.path());
+                    uint32_t     indexfirst  = 0;
+                    uint32_t     indexsecond = 0;
+                    strsFirst  >> indexfirst;
+                    strsSecond >> indexsecond;
+                    return indexfirst < indexsecond;
+                });
+            }
+
+            return std::move(list);
+        }
+
+        void ReadImages( const vector<Poco::File> & filelst )
+        {
+            m_outSprite.m_frames.reserve( filelst.size() );
+
+            //for( uint32_t i = 0; i < filelst.size(); ++i )
+            for( auto & animg : filelst )
+            {
+                //auto & animg = filelst[i];
                 try
                 {
                     ReadAnImage( animg );
-                }
-                catch( std::out_of_range ore ) //In this case it means the std::map didn't find our entry
-                {
-                    cerr << "\n<!>-Warning: Image #" <<i <<" was expected, but not found !\n"
-                        << "The next image read will end up with that image# ! This might result in unforseen consequences!\n";
                 }
                 catch( Poco::Exception e )
                 {
@@ -456,51 +457,116 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void ReadImagesSorted()
-        {
-            Poco::Path         imgsDir( m_inDirPath );
-            uint32_t           nbvalidimgs  = 0;
-            imgsDir.append( SPRITE_IMGs_DIR );
+        //void ReadImagesByIndex()
+        //{
+        //    //assert(false);
+        //    //**************************************************************************
+        //    //#TODO: Use the meta-frame table to read image files by index/filenmae. Then change the meta-frame index in-memory to 
+        //    //       refer to the index the image data was actually inserted at!
+        //    //**************************************************************************
+        //    Poco::Path                imgsDir( m_inDirPath );
+        //    map<uint32_t, Poco::File> validImages;
+        //    uint32_t                  nbvalidimgs  = 0;
+        //    imgsDir.append( SPRITE_IMGs_DIR );
 
-            Poco::DirectoryIterator itdir(imgsDir);
-            Poco::DirectoryIterator itdircount(imgsDir);
-            Poco::DirectoryIterator itdirend;
+        //    Poco::DirectoryIterator itdir(imgsDir);
+        //    Poco::DirectoryIterator itdircount(imgsDir);
+        //    Poco::DirectoryIterator itdirend;
 
-            //count imgs
-            while( itdircount != itdirend )
-            {
-                if( utils::io::IsSupportedImageType( itdircount->path() ) )
-                    ++nbvalidimgs;
-                ++itdircount;
-            }
+        //    //We want to load images into the right indexes
 
-            //Allocate
-            m_outSprite.m_frames.reserve( nbvalidimgs );
+        //    //
+        //    //#1 - Count the images in the imgs directory + Find all our valid images
+        //    for(; itdir != itdirend; ++itdir ) 
+        //    {
+        //        if( utils::io::IsSupportedImageType( itdir->path() ) )
+        //        {
+        //            stringstream sstrparseindex(itdir->path());
+        //            uint32_t     curindex = 0;
+        //            sstrparseindex >> curindex;
 
-            //Grab the images in order
-            for(; itdir != itdirend; ++itdir )  
-            {
-                if( utils::io::IsSupportedImageType( itdir->path() ) )
-                {
-                    try
-                    {
-                        ReadAnImage( *itdir );
-                    }
-                    catch( Poco::Exception e )
-                    {
-                        cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
-                             <<e.message() <<"(POCO)\n"
-                             <<"Skipping !\n";
-                    }
-                    catch( exception e )
-                    {
-                        cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
-                             <<e.what() <<"\n"
-                             <<"Skipping !\n";
-                    }
-                }
-            }
-        }
+        //            validImages.insert( make_pair( curindex, *itdir ) );
+        //        }
+        //    }
+
+
+        //    //#2 - Parse the images after allocating
+        //    m_outSprite.m_frames.reserve( validImages.size() );
+
+        //    for( uint32_t i = 0; i < validImages.size(); ++i )
+        //    {
+        //        auto & animg = validImages.at(i);
+        //        try
+        //        {
+        //            ReadAnImage( animg );
+        //        }
+        //        catch( std::out_of_range ore ) //In this case it means the std::map didn't find our entry
+        //        {
+        //            cerr << "\n<!>-Warning: Image #" <<i <<" was expected, but not found !\n"
+        //                << "The next image read will end up with that image# ! This might result in unforseen consequences!\n";
+        //        }
+        //        catch( Poco::Exception e )
+        //        {
+        //            cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
+        //                 <<e.message() <<"\n"
+        //                 <<"Skipping !\n";
+        //        }
+        //        catch( exception e )
+        //        {
+        //            cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
+        //                 <<e.what() <<"\n"
+        //                 <<"Skipping !\n";
+        //        }
+        //    }
+        //}
+
+        ///**************************************************************
+        //**************************************************************/
+        //void ReadImagesSorted()
+        //{
+        //    Poco::Path         imgsDir( m_inDirPath );
+        //    uint32_t           nbvalidimgs  = 0;
+        //    imgsDir.append( SPRITE_IMGs_DIR );
+
+        //    Poco::DirectoryIterator itdir(imgsDir);
+        //    Poco::DirectoryIterator itdircount(imgsDir);
+        //    Poco::DirectoryIterator itdirend;
+
+        //    //count imgs
+        //    while( itdircount != itdirend )
+        //    {
+        //        if( utils::io::IsSupportedImageType( itdircount->path() ) )
+        //            ++nbvalidimgs;
+        //        ++itdircount;
+        //    }
+
+        //    //Allocate
+        //    m_outSprite.m_frames.reserve( nbvalidimgs );
+
+        //    //Grab the images in order
+        //    for(; itdir != itdirend; ++itdir )  
+        //    {
+        //        if( utils::io::IsSupportedImageType( itdir->path() ) )
+        //        {
+        //            try
+        //            {
+        //                ReadAnImage( *itdir );
+        //            }
+        //            catch( Poco::Exception e )
+        //            {
+        //                cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
+        //                     <<e.message() <<"(POCO)\n"
+        //                     <<"Skipping !\n";
+        //            }
+        //            catch( exception e )
+        //            {
+        //                cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
+        //                     <<e.what() <<"\n"
+        //                     <<"Skipping !\n";
+        //            }
+        //        }
+        //    }
+        //}
 
         /**************************************************************
         **************************************************************/
@@ -621,12 +687,12 @@ namespace pmd2{ namespace graphics
         //
         auto spritety = srcspr->getSpriteType();
 
-        if( spritety == eSpriteType::spr4bpp )
+        if( spritety == eSpriteImgType::spr4bpp )
         {
             const SpriteData<gimg::tiled_image_i4bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i4bpp>*>(srcspr);
             ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
         }
-        else if( spritety == eSpriteType::spr8bpp )
+        else if( spritety == eSpriteImgType::spr8bpp )
         {
             const SpriteData<gimg::tiled_image_i8bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i8bpp>*>(srcspr);
             ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
