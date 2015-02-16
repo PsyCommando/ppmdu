@@ -50,6 +50,7 @@ namespace pmd2 { namespace types
         {
         }
 
+        virtual ~Ex_StringException()throw() {}
 
         virtual const char * what()const throw()
         {
@@ -59,6 +60,36 @@ namespace pmd2 { namespace types
     protected:
         std::string m_what;
     };
+
+    /*
+        Exception for failed IO
+    */
+    //class Ex_IOException : public Ex_StringException
+    //{
+    //public:
+    //    Ex_IOException( const char * target, const char * text = "Unknown Exception" )
+    //        :Ex_StringException(text), m_target(target)
+    //    {}
+
+    //    Ex_IOException( const std::string & target, const std::string & text = "Unknown Exception" )
+    //        :Ex_StringException(text), m_target(target)
+    //    {}
+
+    //    virtual const char * what()const throw()
+    //    {
+    //        std::stringstream strs;
+    //        strs << "IO Exception when accessing " <<m_target <<"! " <<m_what;
+    //        return  strs.str().c_str();
+    //    }
+
+    //    virtual const char * target()const throw()
+    //    {
+    //        return m_target.c_str();
+    //    }
+
+    //private:
+    //    std::string m_target;
+    //};
 
 };};
 

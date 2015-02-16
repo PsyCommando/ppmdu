@@ -694,7 +694,7 @@ namespace pmd2
         //    if( index < 4 )
         //        return reinterpret_cast<uint8_t*>(&ptr_frm_ptrs_table)[index];
         //    else if( index < 8 )
-        //        return reinterpret_cast<uint8_t*>(&ptr_palette)[index-4];
+        //        return reinterpret_cast<uint8_t*>(&ptrPal)[index-4];
         //    else if( index < 10 )
         //        return reinterpret_cast<uint8_t*>(&unkn_1)[index-8];
         //    else if( index < 12 )
@@ -702,7 +702,7 @@ namespace pmd2
         //    else if( index < 14 )
         //        return reinterpret_cast<uint8_t*>(&unkn_3)[index-12];
         //    else if( index < 16 )
-        //        return reinterpret_cast<uint8_t*>(&nb_ptrs_frm_ptrs_table)[index-14];
+        //        return reinterpret_cast<uint8_t*>(&nbImgsTblPtr)[index-14];
         //    else
         //        return *reinterpret_cast<uint8_t*>(0); //Crash please
         //}
@@ -715,22 +715,22 @@ namespace pmd2
         std::vector<uint8_t>::iterator sprite_frame_data::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         {
             itwriteto = utils::WriteIntToByteVector( ptr_frm_ptrs_table,     itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_palette,            itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptrPal,            itwriteto );
             itwriteto = utils::WriteIntToByteVector( unkn_1,                 itwriteto );
             itwriteto = utils::WriteIntToByteVector( unkn_2,                 itwriteto );
             itwriteto = utils::WriteIntToByteVector( unkn_3,                 itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nb_ptrs_frm_ptrs_table, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nbImgsTblPtr, itwriteto );
             return itwriteto;
         }
 
         std::vector<uint8_t>::const_iterator sprite_frame_data::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         {
             ptr_frm_ptrs_table     = utils::ReadIntFromByteVector<decltype(ptr_frm_ptrs_table)>    (itReadfrom);
-            ptr_palette            = utils::ReadIntFromByteVector<decltype(ptr_palette)>           (itReadfrom);
+            ptrPal            = utils::ReadIntFromByteVector<decltype(ptrPal)>           (itReadfrom);
             unkn_1                 = utils::ReadIntFromByteVector<decltype(unkn_1)>                (itReadfrom);
             unkn_2                 = utils::ReadIntFromByteVector<decltype(unkn_2)>                (itReadfrom);
             unkn_3                 = utils::ReadIntFromByteVector<decltype(unkn_3)>                (itReadfrom);
-            nb_ptrs_frm_ptrs_table = utils::ReadIntFromByteVector<decltype(nb_ptrs_frm_ptrs_table)>(itReadfrom);
+            nbImgsTblPtr = utils::ReadIntFromByteVector<decltype(nbImgsTblPtr)>(itReadfrom);
             return itReadfrom;
         }
 
@@ -738,11 +738,11 @@ namespace pmd2
         {
             stringstream strs;
             strs <<setfill('.') <<setw(24) <<left <<"Offset frame ptr table" <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_frm_ptrs_table <<nouppercase <<"\n"
-                 <<setfill('.') <<setw(24) <<left <<"Offset palette end"     <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptr_palette        <<nouppercase <<"\n"
+                 <<setfill('.') <<setw(24) <<left <<"Offset palette end"     <<": 0x" <<setfill('0') <<setw(8) <<right <<uppercase <<hex <<ptrPal        <<nouppercase <<"\n"
                  <<setfill('.') <<setw(24) <<left <<"Unknown #1"             <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<unkn_1             <<nouppercase <<"\n"
                  <<setfill('.') <<setw(24) <<left <<"Unknown #2"             <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<unkn_2             <<nouppercase <<"\n"
                  <<setfill('.') <<setw(24) <<left <<"Unknown #3"             <<": 0x" <<setfill('0') <<setw(4) <<right <<uppercase <<hex <<unkn_3             <<nouppercase <<"\n"
-                 <<setfill('.') <<setw(24) <<left <<"Nb frames"              <<": "   <<right        <<dec     <<nb_ptrs_frm_ptrs_table           <<"\n";
+                 <<setfill('.') <<setw(24) <<left <<"Nb frames"              <<": "   <<right        <<dec     <<nbImgsTblPtr           <<"\n";
             return strs.str();
         }
 
@@ -1505,19 +1505,19 @@ namespace pmd2
         void sprite_parser::ReadPalette()
         {
             //#1 - Calculate the size of the palette
-            uint32_t           offsetPalBeg = ReadIntFromByteVector<uint32_t>( (m_itbegdata + m_sprfrmdat.ptr_palette) );
-            uint32_t           nbcolorspal  = ( m_sprfrmdat.ptr_palette - offsetPalBeg ) / 4;
+            uint32_t           offsetPalBeg = ReadIntFromByteVector<uint32_t>( (m_itbegdata + m_sprfrmdat.ptrPal) );
+            uint32_t           nbcolorspal  = ( m_sprfrmdat.ptrPal - offsetPalBeg ) / 4;
             vector<colRGB24>   mypalette( nbcolorspal );
             rgbx32_parser      theparser( mypalette.begin() );
             palette_fmtinf     palfmt;
 
             //#1.5 - Read the palette's format info:
-            palfmt.ReadFromContainer( m_itbegdata + m_sprfrmdat.ptr_palette );
+            palfmt.ReadFromContainer( m_itbegdata + m_sprfrmdat.ptrPal );
             m_pCurSpriteOut->m_palfmt = palfmt;
 
             //2 - Read it
             std::for_each( (m_itbegdata + offsetPalBeg), 
-                           (m_itbegdata + m_sprfrmdat.ptr_palette), //The pointer points at the end of the palette
+                           (m_itbegdata + m_sprfrmdat.ptrPal), //The pointer points at the end of the palette
                            theparser );
             m_pCurSpriteOut->setPalette(mypalette);
         }
@@ -1525,7 +1525,7 @@ namespace pmd2
         void sprite_parser::ReadAllFramePointers()
         {
             //#1 - Calculate the amount of frames, and grow our vector
-            uint32_t nbframes = m_sprfrmdat.nb_ptrs_frm_ptrs_table;
+            uint32_t nbframes = m_sprfrmdat.nbImgsTblPtr;
             m_framepointers.resize( nbframes );
 
             //Make some handy iterators

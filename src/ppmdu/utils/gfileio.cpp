@@ -1,5 +1,6 @@
 #include "gfileio.hpp"
 #include <cassert>
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <exception>
@@ -75,4 +76,6 @@ namespace utils{ namespace io
 
         return std::move(stringlist);
     }
+
+
 };};

@@ -67,6 +67,7 @@ namespace gfx_util
         bool ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata );
         bool ParseOptionCompressPKDPX   ( const std::vector<std::string> & optdata );
         bool ParseOptionBuildPack       ( const std::vector<std::string> & optdata );
+        bool ParseOptionNbThreads       ( const std::vector<std::string> & optdata );
 
         //Execution
         int UnpackSprite();
@@ -144,6 +145,8 @@ namespace gfx_util
         std::atomic<uint32_t> m_outputCompletion;
         std::atomic<bool>     m_bStopProgressPrint;
         std::future<void>     m_runThUpHpBar;
+
+        utils::cmdl::RAIIClogRedirect      m_redirectClog;
     };
 };
 

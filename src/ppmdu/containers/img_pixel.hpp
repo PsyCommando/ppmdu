@@ -134,6 +134,7 @@ namespace gimg
     template<class _pixeltrait>
         struct pixel
     {
+        typedef pixel<_pixeltrait>                   _myty;
         typedef _pixeltrait                          mypixeltrait_t;
         typedef typename mypixeltrait_t::pixeldata_t pixeldata_t;
 
@@ -168,9 +169,31 @@ namespace gimg
     //--------------------------------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------------------------------
-        pixel( pixeldata_t value = 0 )
+        pixel( pixeldata_t value = 0 )throw()
             :pixeldata(value)
         {}
+
+        pixel( const _myty & other )throw()
+        {
+            pixeldata = other.pixeldata;
+        }
+
+        pixel( _myty && other )throw()
+        {
+            pixeldata = other.pixeldata;
+        }
+
+        _myty & operator=( const _myty & other )throw()
+        {
+            pixeldata = other.pixeldata;
+            return *this;
+        }
+
+        _myty & operator=( _myty && other )throw()
+        {
+            pixeldata = other.pixeldata;
+            return *this;
+        }
 
     //--------------------------------------------------------------------------------------------------
     // Accessors

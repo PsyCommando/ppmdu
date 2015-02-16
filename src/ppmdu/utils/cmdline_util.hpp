@@ -14,6 +14,8 @@ Description: A baseclass for automating common tasks performed by simple command
 #include <functional>
 #include <memory>
 #include <exception>
+#include <iostream>
+#include <fstream>
 
 namespace utils{ namespace cmdl 
 {
@@ -143,6 +145,22 @@ namespace utils{ namespace cmdl
 
 
     /************************************************************************
+        RAIIClogRedirect
+            Redirects the clog stream for the lifetime of the object!
+    *************************************************************************/
+    class RAIIClogRedirect
+    {
+    public:
+        RAIIClogRedirect( const std::string & logfilename );
+        virtual ~RAIIClogRedirect();
+
+    protected:
+        std::streambuf * m_oldbuf;
+        std::filebuf     m_filebuf;
+    };
+
+
+    /************************************************************************
         CommandLineUtility
             A class to inherit from to implement a commandline program with 
             automated args parsing, and other various tedious tasks.
@@ -161,8 +179,7 @@ namespace utils{ namespace cmdl
 
         //Destructor
         virtual ~CommandLineUtility()
-        {
-        }
+        {}
 
         //SetArguments returns false, when there are no args to parse !
         bool SetArguments( int argc, const char * argv[], bool noargsprintreadme = true )

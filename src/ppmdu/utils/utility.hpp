@@ -53,21 +53,65 @@ namespace utils
         }
     };
 
+    /*
+        This is used to get the symbol for each standard time unit.
+    */
+    template<class TimeScaleT_symbol> struct gtimesymbol     { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::hours>        { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::minutes>      { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::seconds>      { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::milliseconds> { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::microseconds> { static const std::string symbol; };
+    template<> struct gtimesymbol<std::chrono::nanoseconds>  { static const std::string symbol; };
+
     /************************************************************************
-        MrChronometer
+        ChronoRAII
             A small utility RAII class that that tells the time elapsed 
             between its construction and destruction.
     ************************************************************************/
-    struct MrChronometer
+    template<class TimescaleT = std::chrono::milliseconds>
+        struct ChronoRAII
     {
+        typedef TimescaleT timescale_t;
+        //MrChronometer( const std::string name = "*", std::ostream * messageoutput = nullptr );
+        //~MrChronometer();
+        //static const std::string HOURS_Symbol;
 
-        MrChronometer( const std::string name = "*", std::ostream * messageoutput = nullptr );
-        ~MrChronometer();
+        ChronoRAII( const std::string name = "*", std::ostream * messageoutput = nullptr )
+            :_name(name)
+        {
+            _start  = std::chrono::steady_clock::now();
+
+            if( messageoutput == nullptr )
+                _output = &(std::cout);
+            else
+                _output = messageoutput;
+        }
+
+        ~ChronoRAII()
+        {
+            auto myduration = std::chrono::steady_clock::now() - _start;
+            (*_output) << "#" <<_name << ": Time elapsed : " << std::chrono::duration_cast<timescale_t>( myduration ).count() 
+                       << gtimesymbol<timescale_t>::symbol << "\n";
+        }
+
+        /*
+            Get the current time elapsed, automatically casted in the unit desired.
+        */
+        template<class DesiredTScale = TimescaleT>
+            DesiredTScale getElapsed()const
+        {
+            auto myduration = std::chrono::steady_clock::now() - _start;
+            return std::chrono::duration_cast<DesiredTScale>( myduration );
+        }
 
         std::chrono::steady_clock::time_point  _start;
         std::string                            _name;
         std::ostream                         * _output;
     };
+
+    //Default chrono
+    typedef ChronoRAII<> MrChronometer;
 
 //===============================================================================================
 // Classes

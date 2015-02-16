@@ -188,3 +188,4 @@ FakesAssemblies/
 Release WinXP
 *.bsc
 *.lib
+*.idb

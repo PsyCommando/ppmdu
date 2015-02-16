@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 
+
 using namespace std;
 
 namespace utils{ namespace cmdl
@@ -14,6 +15,23 @@ namespace utils{ namespace cmdl
 //============================================================================================
     const std::string CArgsParser::SWITCH_SYMBOL                 = "-";
     const std::string CArgsParser::ADDITIONAL_INPUT_PARAM_SYMBOL = "+";
+
+
+//============================================================================================
+//  RAIIClogRedirect
+//============================================================================================
+
+    RAIIClogRedirect::RAIIClogRedirect( const std::string & logfilename )
+    {
+        m_filebuf.open( logfilename, std::ios::out );
+        m_oldbuf = std::clog.rdbuf( &m_filebuf );
+    }
+
+    RAIIClogRedirect::~RAIIClogRedirect()
+    {
+        std::clog.rdbuf( m_oldbuf );
+    }
+
 
 //============================================================================================
 // CArgsParser

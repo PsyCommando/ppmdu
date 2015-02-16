@@ -9,6 +9,13 @@ using namespace std;
 
 namespace utils
 {
+    const std::string gtimesymbol<std::chrono::hours>::symbol        = "h";
+    const std::string gtimesymbol<std::chrono::minutes>::symbol      = "m";
+    const std::string gtimesymbol<std::chrono::seconds>::symbol      = "s";
+    const std::string gtimesymbol<std::chrono::milliseconds>::symbol = "ms";
+    const std::string gtimesymbol<std::chrono::microseconds>::symbol = "us";
+    const std::string gtimesymbol<std::chrono::nanoseconds>::symbol  = "ns";
+
 //============================================================================================
 // Constants
 //============================================================================================
@@ -18,22 +25,22 @@ namespace utils
 //============================================================================================
 // MrChronometer
 //============================================================================================
-    MrChronometer::MrChronometer( const string name, std::ostream * messageoutput )
-        :_name(name)
-    {
-        _start  = chrono::steady_clock::now();
+    //MrChronometer::MrChronometer( const string name, std::ostream * messageoutput )
+    //    :_name(name)
+    //{
+    //    _start  = chrono::steady_clock::now();
 
-        if( messageoutput == nullptr )
-            _output = &(std::cout);
-        else
-            _output = messageoutput;
-    }
+    //    if( messageoutput == nullptr )
+    //        _output = &(std::cout);
+    //    else
+    //        _output = messageoutput;
+    //}
 
-    MrChronometer::~MrChronometer()
-    {
-        auto myduration = chrono::steady_clock::now() - _start;
-        (*_output) << "#" <<_name << ": Time elapsed : " << chrono::duration_cast<std::chrono::milliseconds>( myduration ).count() << "ms\n";
-    }
+    //MrChronometer::~MrChronometer()
+    //{
+    //    auto myduration = chrono::steady_clock::now() - _start;
+    //    (*_output) << "#" <<_name << ": Time elapsed : " << chrono::duration_cast<std::chrono::milliseconds>( myduration ).count() << "ms\n";
+    //}
 
 //============================================================================================
 // CArgsParser
