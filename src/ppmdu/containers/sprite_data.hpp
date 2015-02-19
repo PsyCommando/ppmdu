@@ -33,8 +33,6 @@ namespace pmd2{ namespace graphics
         spr8bpp,
     };
 
-    static const uint16_t SPRITE_SPECIAL_METAFRM_INDEX = 0xFFFF;
-
     /*
         The sprite type value at the end of the sprite file.
     */
@@ -128,7 +126,7 @@ namespace pmd2{ namespace graphics
         */
         struct integerAndRes
         {
-            eRes enumres;
+            eRes    enumres;
             uint8_t x, 
                     y; 
         };
@@ -158,27 +156,47 @@ namespace pmd2{ namespace graphics
         MetaFrame()
         {
             m_animFrmsRefer.reserve(1); //All meta-frames will be refered to at least once !
+            imageIndex = SPECIAL_METAFRM_INDEX;
+            unk0       = 0;
+            offsetY    = 0;
+            offsetX    = 0;
+            unk15      = 0;
+            unk1       = 0;
         }
 
         //--- References handling ---
         inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
         inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
 
+        //Add/remove to our list of anim frames that refer to us
         inline void  addRef( uint32_t refseq, uint32_t refererindex ) { m_animFrmsRefer.push_back( animrefs_t{refseq,refererindex }); }
         void         remRef( uint32_t refseq, uint32_t refererindex );
 
         //Empty the reference table completely
         inline void clearRefs() { m_animFrmsRefer.resize(0); }
 
+        /*
+            This returns whether the meta-frame has -1 as image index!
+        */
+        inline bool isSpecialMetaFrame()const { return imageIndex == SPECIAL_METAFRM_INDEX; }
+
+    //-----------------------------
+    // IO Methods
+    //-----------------------------
+        //#TODO: we'll need to make a proper generic sprite data class that isn't heavily based on the structure of wan files...
+        std::vector<uint8_t>::const_iterator ReadFromWANContainer( std::vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm );
+        void WriteToWANContainer( std::back_insert_iterator<std::vector<uint8_t>> itbackins, bool setLastBit )const; //setLastBit set this to true for the last frame in a group !
+
     //-----------------------------
     // Variables
     //-----------------------------
         //Cleaned up values from file( the Interpreted values below, were removed from those ):
-        uint16_t imageIndex;    //The index of the actual image data in the image data vector
-        uint16_t unk0;           //?
+        int16_t  imageIndex;     //The index of the actual image data in the image data vector
+        uint16_t unk0;          //?
         int16_t  offsetY;       //The frame will be offset this much, ?in absolute coordinates?
         int16_t  offsetX;       //The frame will be offset this much, ?in absolute coordinates?
-        uint16_t unk1;           //Unknown data, stored in last 16 bits integer in the entry for a meta-frame
+        uint8_t  unk15;         //Possibly a secondary reference to an image...
+        uint8_t  unk1;          //More often than not is 0xC
 
         //Interpreted values:
         //#NOTE: lots of boolean for now, will eventually change, so don't refer to the unamed ones as much as possible !
@@ -186,7 +204,6 @@ namespace pmd2{ namespace graphics
         bool     vFlip;          //Whether the frame is flipped vertically
         bool     hFlip;          //Whether the frame is flipped horizontally
         bool     Mosaic;         //Whether the frame triggers mosaic mode.
-        //bool     isLastMFrmInGrp;//The state of bit 5 of the bits assigned to flags in XOffset (0000 1000 0000 0000) If non zero, the Meta-frame is the last of the meta-frame group !
         bool     XOffbit6;       //The state of bit 6 of the bits assigned to flags in XOffset (0000 0100 0000 0000)
         bool     XOffbit7;       //The state of bit 7 of the bits assigned to flags in XOffset (0000 0010 0000 0000)
         bool     YOffbit3;       //The state of bit 3 of the bits assigned to flags in YOffset (0010 0000 0000 0000)
@@ -197,6 +214,7 @@ namespace pmd2{ namespace graphics
             Table containing the resolution in numerical form for each entries in the eRes enum !
         */
         static const std::vector<integerAndRes> ResEquiv;
+        static const int16_t                    SPECIAL_METAFRM_INDEX = -1;// 0xFFFF;
 
     private:
         std::vector<animrefs_t> m_animFrmsRefer; //list of the indexes of the anim frames referencing to this!
@@ -323,8 +341,6 @@ namespace pmd2{ namespace graphics
     */
     struct SprInfo
     {
-        //#TODO: Rename those properly !!! Remove the m_ prefix
-
         // Sprite Color / Image Format Properties:
         uint16_t Unk3           = 0;
         uint16_t nbColorsPerRow = 0; //0 to 16.. Changes the amount of colors loaded on a single row in the runtime palette sheet.
@@ -339,9 +355,9 @@ namespace pmd2{ namespace graphics
         uint16_t Unk10          = 0;
 
         // Sprite Properties:
-        eSprTy   spriteType       = eSprTy::Generic;
-        uint16_t m_is256Sprite    = 0; //If 1, sprite is 256 colors, if 0 is 16 colors.
-        uint16_t Unk13            = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
+        eSprTy   spriteType     = eSprTy::Generic;
+        uint16_t m_is256Sprite  = 0; //If 1, sprite is 256 colors, if 0 is 16 colors.
+        uint16_t Unk13          = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
         uint16_t Unk11          = 0; //Unknown value.
         uint16_t Unk12          = 0; //Unknown value at the end of the file!
 
@@ -536,17 +552,43 @@ namespace pmd2{ namespace graphics
 
         void RebuildAMetaFrameRefs( unsigned int ctmf )
         {
-            if( m_metaframes[ctmf].imageIndex < m_frames.size() )
+            auto & currentMf = m_metaframes[ctmf];
+
+            if( currentMf.isSpecialMetaFrame() ) //Handle special frame
+            {
+                //#EXPERIMENTAL HANDLING
+                std::clog << "Rebuilding a meta-frame with an image index of -1! Using unk15 as image index value (" <<currentMf.unk15 <<")\n";
+                assert( currentMf.unk15 < static_cast<uint16_t>(currentMf.imageIndex) );
+
+                //clear all anim references!
+                currentMf.clearRefs();
+                //Register meta to frame reference 
+                m_metarefs.insert( std::make_pair( currentMf.unk15, ctmf ) );
+            }
+            else if(currentMf.imageIndex < 0 ) //Handle invalid frames
+            {
+                std::stringstream strs;
+                strs << "Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
+                     <<" refers to a negative image index that isn't -1 !";
+                std::string errmess = strs.str();
+                std::clog << errmess;
+                throw std::runtime_error(errmess);
+            }
+            else if( static_cast<uint16_t>(currentMf.imageIndex) > m_frames.size() ) //safe to cast here now, and get rid of warnings
+            {
+                std::stringstream strs;
+                strs << "Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
+                     <<" refers to an image index that is out of range ! (" <<static_cast<uint16_t>(currentMf.imageIndex) <<")";
+                std::string errmess = strs.str();
+                std::clog << errmess;
+                throw std::out_of_range(errmess);
+            }
+            else //If we end up here we're good
             {
                 //clear all anim references!
-                m_metaframes[ctmf].clearRefs();
+                currentMf.clearRefs();
                 //Register meta to frame reference 
-                m_metarefs.insert( std::make_pair( m_metaframes[ctmf].imageIndex, ctmf ) );
-            }
-            else if( m_metaframes[ctmf].imageIndex != SPRITE_SPECIAL_METAFRM_INDEX )
-            {
-                //Bad image index ! Sometimes this is acceptable, in the case of 0xFFFF !
-                assert(false);
+                m_metarefs.insert( std::make_pair( currentMf.imageIndex, ctmf ) );
             }
         }
 

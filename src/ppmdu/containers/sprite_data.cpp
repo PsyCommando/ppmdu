@@ -84,4 +84,58 @@ namespace pmd2{ namespace graphics
             }
         }
     }
+
+
+    vector<uint8_t>::const_iterator MetaFrame::ReadFromWANContainer( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
+    {
+        //Read the raw values first
+        imageIndex      = utils::ReadIntFromByteVector<decltype(imageIndex)>(itread); //itread is incremented automatically!
+        unk0            = utils::ReadIntFromByteVector<decltype(unk0)>(itread);
+        uint16_t offyfl = utils::ReadIntFromByteVector<uint16_t>(itread);
+        uint16_t offxfl = utils::ReadIntFromByteVector<uint16_t>(itread);
+        unk15           = utils::ReadIntFromByteVector<decltype(unk15)>(itread);
+        unk1            = utils::ReadIntFromByteVector<decltype(unk1)>(itread);
+
+        //Set the cleaned offsets
+        offsetY         = 0x03FF & offyfl; //keep the 10 lowest bits
+        offsetX         = 0x01FF & offxfl; //Keep the 9  lowest bits
+
+        //Get the resolution
+        resolution      = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
+        
+        //x offset flags
+        vFlip           = utils::IsBitOn( offxfl, 13u );
+        hFlip           = utils::IsBitOn( offxfl, 12u );
+        out_isLastFrm   = utils::IsBitOn( offxfl, 11u ); //X bit 5, tells whether this is the last meta-f in a grp
+        XOffbit6        = utils::IsBitOn( offxfl, 10u );
+        XOffbit7        = utils::IsBitOn( offxfl,  9u );
+        //y offset flags
+        YOffbit3        = utils::IsBitOn( offyfl, 13u );
+        Mosaic          = utils::IsBitOn( offyfl, 12u );
+        YOffbit5        = utils::IsBitOn( offyfl, 11u );
+        YOffbit6        = utils::IsBitOn( offyfl, 10u );
+
+        return itread;
+    }
+
+    void MetaFrame::WriteToWANContainer( back_insert_iterator<vector<uint8_t>> itbackins, bool setLastBit )const //setLastBit set this to true for the last frame in a group !
+    {
+        utils::WriteIntToByteVector( imageIndex, itbackins );
+        utils::WriteIntToByteVector( unk0,       itbackins );
+
+        //Get the value of the resolution as a byte
+        uint8_t resval    = static_cast<uint8_t>(resolution);
+        uint8_t EndbitVal = ( (setLastBit)?1:0 ); //set it to one if is last!
+
+        uint16_t YOffset = ( ( resval << 8 ) & 0xC000 ) | (YOffbit3 << 13) | ((Mosaic)?1:0) << 12 | (YOffbit5 << 11) | (YOffbit5 << 10) | offsetY;
+        utils::WriteIntToByteVector( YOffset,       itbackins );
+
+    //# Don't forget to make sure XOffset bit 5 is set to 1 for the last meta-frame in a group !
+        uint16_t XOffset = ( ( resval << 12 ) & 0xC000 ) | ( ((vFlip)?1:0 ) << 13) | ( ((hFlip)?1:0 ) << 12) | ( EndbitVal << 11) | (XOffbit6 << 10) | (XOffbit7 << 9) | offsetX;
+        utils::WriteIntToByteVector( XOffset,       itbackins );
+
+        utils::WriteIntToByteVector( unk15, itbackins );
+        utils::WriteIntToByteVector( unk1,  itbackins );
+    }
+
 };};

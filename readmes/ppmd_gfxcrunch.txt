@@ -16,6 +16,16 @@ Changelog:
 - 0.11(2015/02/10): 
     * Fixed bug where the value "Unk#11" would get overwritten after it was parsed from the sprite's 
       XML, by the value of "Unk#12"..
+- 0.12(2015/02/16):
+    * Fixed a bug with the SIR0 encoded ptr list, the list would omit zeros when the original files wouldn't.
+    * Fixed a bug where the WAN parser in cases where the first sequence ptr in the sequence ptr table
+      would be null, where the sequence's null ptr would be read as if it was part of the offset table!
+      It would generate extra 0s in the outputed file.
+    * Added support for what appears to be the Z index for every images. A new xml file named imgsinfo.xml
+      is now outputed and contains references to only images that have a non-zero z-index.
+    * Added multi-threaded pokemon sprites pack file handling. Set ammount of threads manually using the "-th" 
+      command line option, followed with the amount of worker threads to use.
+    * And a lot more stuff..
 
 ----------------------------------------------------------------------------------------------------
 License info:

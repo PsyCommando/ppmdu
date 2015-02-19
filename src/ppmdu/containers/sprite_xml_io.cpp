@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cstdint>
 #include <iomanip>
+#include <iostream>
 #include <array>
 #include <pugixml.hpp>
 #include <Poco/DirectoryIterator.h>
@@ -29,7 +30,7 @@ namespace pmd2 { namespace graphics
     */
     namespace SpriteXMLStrings
     {
-        //Generic Attributes
+        //Attributes
         static const string XML_ATTR_NAME       = "name";
 
         //Animation Stuff
@@ -59,18 +60,24 @@ namespace pmd2 { namespace graphics
         static const string XML_PROP_ZINDEX    = "ZIndex";
 
         //Other nodes
-        static const string XML_NODE_PALLETTE  = "Palette";
         static const string XML_NODE_SHADOW    = "Shadow";
         static const string XML_NODE_SPRITE    = "Sprite";
         static const string XML_NODE_RES       = "Resolution";
-        static const string XML_NODE_COLOR     = "Color";
 
-        //Properties Stuff (names of all the properties we'll write)
+        //Palette Stuff
+        static const string XML_ROOT_PALLETTE  = "Palette";
+        static const string XML_NODE_COLOR     = "Color";
+        static const string XML_PROP_RED       = "R";
+        static const string XML_PROP_GREEN     = "G";
+        static const string XML_PROP_BLUE      = "B";
+
+        //Properties Stuff 
         static const string XML_PROP_IMGINDEX  = "ImageIndex";
         static const string XML_PROP_UNK0      = "Unk0";
         static const string XML_PROP_OFFSETY   = "YOffset";
         static const string XML_PROP_OFFSETX   = "XOffset";
         static const string XML_PROP_UNK1      = "Unk1";
+        static const string XML_PROP_UNK15     = "Unk15";
     
         static const string XML_PROP_X         = "X";
         static const string XML_PROP_Y         = "Y";
@@ -79,7 +86,6 @@ namespace pmd2 { namespace graphics
         static const string XML_PROP_HFLIP     = "HFlip";
         static const string XML_PROP_VFLIP     = "VFlip";
         static const string XML_PROP_MOSAIC    = "Mosaic";
-        static const string XML_PROP_LASTMFRM  = "IsLastMFrmInGrp";
         static const string XML_PROP_OFFXBIT6  = "XOffsetBit6";
         static const string XML_PROP_OFFXBIT7  = "XOffsetBit7";
         static const string XML_PROP_OFFYBIT3  = "YOffsetBit3";
@@ -100,15 +106,11 @@ namespace pmd2 { namespace graphics
         static const string XML_PROP_UNK9      = "Unk9";
         static const string XML_PROP_UNK10     = "Unk10";
 
-        static const string XML_PROP_SPRTY      = "Is8Ways";
+        static const string XML_PROP_SPRTY     = "SpriteType";
         static const string XML_PROP_IS256COL  = "Is256Colors";
-        static const string XML_PROP_UNK13 = "IsMosaicSprite";
+        static const string XML_PROP_UNK13     = "IsMosaicSprite";
         static const string XML_PROP_UNK11     = "Unk11";
         static const string XML_PROP_UNK12     = "Unk12";
-
-        static const string XML_PROP_RED       = "R";
-        static const string XML_PROP_GREEN     = "G";
-        static const string XML_PROP_BLUE      = "B";
 
         //Special chars
         static const string PARSE_HEX_NUMBER   = "0x";
@@ -131,12 +133,13 @@ namespace pmd2 { namespace graphics
     const std::string SprInfo::DESC_Unk9            = "unknown";
     const std::string SprInfo::DESC_Unk10           = "unknown";
 
-    const std::string SprInfo::DESC_spriteType    = "If 1 character sprite. If 0, other sprite. This messes with what anim groups are used for!";
+    const std::string SprInfo::DESC_spriteType      = "If 1 character sprite. If 0, other sprite. This messes with what anim groups are used for!";
     const std::string SprInfo::DESC_Is256Sprite     = "If 1, the game draw the sprite as a 8bpp 256 color sprite from memory!(You need to specify it in the palette info too for it to work!)\n"
                                                       "       If 0, images are drawn as 4bpp !";
-    const std::string SprInfo::DESC_Unk13     = "If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!";
+    const std::string SprInfo::DESC_Unk13           = "If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!";
     const std::string SprInfo::DESC_Unk11           = "This far 0, 1, 3(d79p41a1.wan), 4(as001.wan).. Seems to deal with the palette slot in-game.";
     const std::string SprInfo::DESC_Unk12           = "unknown";
+
 
 //=============================================================================================
 // Utility Functions
@@ -171,19 +174,26 @@ namespace pmd2 { namespace graphics
         sstr >> out_val;
     }
 
-    /**************************************************************
-        Parse the "name" attribute from the attribute map sprcified.
-        Return empty string if the attribute wasn't found!
-    **************************************************************/
-    //string _parseNameAttribute( const pugi::xml_object_range<pugi::xml_attribute_iterator> & attributes )
-    //{
-    //    for( auto attr : attributes )
-    //    {
-    //        if( attr.name() == SpriteXMLStrings::XML_ATTR_NAME )
-    //            return attr.value();
-    //    }
-    //    return string();
-    //}
+    template<class _Ty>
+        _Ty _parseXMLHexaValToValue( const string & str )
+    {
+        _Ty          out_val;
+        stringstream sstr;
+        std::size_t  foundprefix = str.find( SpriteXMLStrings::PARSE_HEX_NUMBER );
+
+        if( foundprefix != string::npos )
+            sstr <<hex <<string( foundprefix + str.begin(), str.end() ).substr(2); //make sure the string begins at "0x" and skip "0x"
+        else
+            sstr <<dec <<str;
+
+        sstr >> out_val;
+        return out_val;
+    }
+
+    inline uint8_t parseByte( const string & str )
+    {
+        return static_cast<uint8_t>(_parseXMLHexaValToValue<uint16_t>(str));
+    }
 
 //=============================================================================================
 //  Sprite XML Templates Reader
@@ -207,9 +217,7 @@ namespace pmd2 { namespace graphics
     */
     class SpriteXMLParser
     {
-        //static const unsigned int MY_NODE_FILTER = NodeFilter::SHOW_ATTRIBUTE | NodeFilter::SHOW_ELEMENT;
     public:
-        //typedef _SPRITE_t sprite_t;
 
         /**************************************************************
         **************************************************************/
@@ -238,13 +246,12 @@ namespace pmd2 { namespace graphics
             }
 
             {
-                //utils::MrChronometer chrono("ParseXMLTotal");
                 ParseSpriteInfo(inProperties);
                 ParseAnimations(inAnims     );
                 ParseMetaFrames(inMFrames   );
                 ParseOffsets   (inOffsets   );
 
-                //Pre-alloc
+                //Resize image info vector to the total nb of images
                 m_pOutSprite->getImgsInfo().resize(nbimgs);
                 ParseImagesInfo(inImgsInfo  );
             }
@@ -275,7 +282,7 @@ namespace pmd2 { namespace graphics
             for( auto & compnode : aoffnode.children() )
             {
                 if( compnode.name() == SpriteXMLStrings::XML_PROP_OFFSETX )
-                        _parseXMLHexaValToValue( compnode.child_value(), res.x );
+                    _parseXMLHexaValToValue( compnode.child_value(), res.x );
                 else if( compnode.name() == SpriteXMLStrings::XML_PROP_OFFSETY )
                     _parseXMLHexaValToValue( compnode.child_value(), res.y );
             }
@@ -450,7 +457,9 @@ namespace pmd2 { namespace graphics
                 for( const auto & theentry : graphics::MetaFrame::ResEquiv )
                     sstr << "-> " <<theentry.x <<"x" <<theentry.y <<"\n";
 
-                throw std::runtime_error( sstr.str() );
+                string errormessage = sstr.str();
+                clog << errormessage;
+                throw std::runtime_error( errormessage );
             }
 
             return result;
@@ -460,7 +469,7 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         MetaFrame ParseAMetaFrame( const pugi::xml_node & mfnode )
         {
-            MetaFrame         mf;
+            MetaFrame mf;
 
             for( auto & propnode : mfnode.children() )
             {
@@ -475,7 +484,13 @@ namespace pmd2 { namespace graphics
                 else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFSETY )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.offsetY );
                 else if( propnode.name()  == SpriteXMLStrings::XML_PROP_UNK1 )
-                    _parseXMLHexaValToValue( propnode.child_value(), mf.unk1 );
+                {
+                    mf.unk1 = parseByte(propnode.child_value());
+                }
+                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_UNK15 )
+                {
+                    mf.unk15 = parseByte(propnode.child_value());
+                }
                 else if( propnode.name()  == SpriteXMLStrings::XML_PROP_VFLIP )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.vFlip );
                 else if( propnode.name()  == SpriteXMLStrings::XML_PROP_HFLIP )
@@ -505,10 +520,10 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         void ParseMetaFrames(std::ifstream & in)
         {
-            //utils::MrChronometer chrono("ParseXMLSpriteMetaFrames");
             using namespace SpriteXMLStrings;
             using namespace pugi;
             xml_document mydoc;
+            auto        &OutMfTable = m_pOutSprite->getMetaFrames();
 
             if( ! mydoc.load(in) )
                 throw std::runtime_error("Failed to create xml_document for parsing Sprite Meta-Frames!");
@@ -523,8 +538,8 @@ namespace pmd2 { namespace graphics
                 //Read all frames in the group
                 for( auto & mfnode : mfgnodechilds )
                 {
-                    mfg.metaframes.push_back( m_pOutSprite->getMetaFrames().size() ); //put the frame's offset in the meta frame group table
-                    m_pOutSprite->getMetaFrames().push_back( ParseAMetaFrame( mfnode ) );
+                    mfg.metaframes.push_back( OutMfTable.size() ); //put the frame's index in the meta frame group table
+                    OutMfTable.push_back( ParseAMetaFrame( mfnode ) );
                 }
 
                 m_pOutSprite->getMetaFrmsGrps().push_back( std::move(mfg) );
@@ -535,10 +550,11 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         void ParseSpriteInfo(std::ifstream & in)
         {
-            //utils::MrChronometer chrono("ParseXMLSpriteInfo");
             using namespace SpriteXMLStrings;
             using namespace pugi;
+
             xml_document mydoc;
+            auto        &outSprInfo = m_pOutSprite->getSprInfo(); //A little reference for readability
 
             if( ! mydoc.load(in) )
                 throw std::runtime_error("Failed to create xml_document for parsing Sprite info!");
@@ -548,40 +564,38 @@ namespace pmd2 { namespace graphics
             {
                 if( curnode.name() == XML_PROP_UNK3 )
                 {
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk3 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk3 );
                 }
                 else if( curnode.name() == XML_PROP_COLPERROW )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().nbColorsPerRow );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.nbColorsPerRow );
                 else if( curnode.name() == XML_PROP_UNK4 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk4 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk4 );
                 else if( curnode.name() == XML_PROP_UNK5 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk5 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk5 );
                 else if( curnode.name() == XML_PROP_UNK6 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk6 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk6 );
                 else if( curnode.name() == XML_PROP_UNK7 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk7 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk7 );
                 else if( curnode.name() == XML_PROP_UNK8 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk8 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk8 );
                 else if( curnode.name() == XML_PROP_UNK9 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk9 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk9 );
                 else if( curnode.name() == XML_PROP_UNK10 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk10 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk10 );
                 else if( curnode.name() == XML_PROP_SPRTY )
                 {
                     uint16_t srty = 0;
                     _parseXMLHexaValToValue( curnode.child_value(), srty );
-                    m_pOutSprite->getSprInfo().spriteType = static_cast<graphics::eSprTy>(srty);
+                    outSprInfo.spriteType = static_cast<graphics::eSprTy>(srty);
                 }
                 else if( curnode.name() == XML_PROP_IS256COL )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().m_is256Sprite );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.m_is256Sprite );
                 else if( curnode.name() == XML_PROP_UNK13 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk13 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk13 );
                 else if( curnode.name() == XML_PROP_UNK11 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk11 );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk11 );
                 else if( curnode.name() == XML_PROP_UNK12 )
-                    _parseXMLHexaValToValue( curnode.child_value(), m_pOutSprite->getSprInfo().Unk12 );
-
-                //pCurNode = itnode.nextNode();
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk12 );
             }
         }
 
@@ -597,7 +611,7 @@ namespace pmd2 { namespace graphics
                 throw std::runtime_error("Failed to create xml_document for parsing Sprite xml palette!");
 
             //Read every elements
-            for( auto & colornode : mydoc.child(XML_NODE_PALLETTE.c_str()).children(XML_NODE_COLOR.c_str()) )
+            for( auto & colornode : mydoc.child(XML_ROOT_PALLETTE.c_str()).children(XML_NODE_COLOR.c_str()) )
             {
                 graphics::colRGB24 mycolor;
 
@@ -638,7 +652,7 @@ namespace pmd2 { namespace graphics
                         _parseXMLHexaValToValue( props.child_value(), imginf.zindex ); 
                 }
 
-                if( imgindex != -1 )
+                if( imgindex != -1 )    //If we found a non-default Z index for this image
                 {
                     auto & imginfvector = m_pOutSprite->getImgsInfo(); //We already pre-allocated the vector earlier
                     imginfvector[imgindex] = std::move(imginf); //Add the image data
@@ -657,8 +671,7 @@ namespace pmd2 { namespace graphics
 //=============================================================================================
 
     class SpriteXMLWriter
-    {
-        //static const unsigned int MY_WRITER_FLAGS = XMLWriter::WRITE_XML_DECLARATION | XMLWriter::PRETTY_PRINT; 
+    { 
     public:
 
         /**************************************************************
@@ -670,7 +683,6 @@ namespace pmd2 { namespace graphics
             m_secConvbuffer.fill(0);
         }
 
-
         /**************************************************************
             Write all the data for the Sprite as XML in the
             specified folder  under ! 
@@ -680,13 +692,13 @@ namespace pmd2 { namespace graphics
         void WriteXMLFiles( const string & folderpath, const spriteWorkStats & stats, bool xmlcolorpal = false, std::atomic<uint32_t> * progresscnt = nullptr ) 
         {
             m_outPath = Poco::Path(folderpath);
-            m_pProgresscnt = progresscnt;
+            /*m_pProgresscnt = progresscnt;*/
 
             WriteProperties();
-            WriteAnimations     ( stats.propAnims, stats.totalAnimSeqs, stats.totalAnimFrms );
-            WriteMetaFrameGroups( stats.propMFrames );
-            WriteOffsets        ( stats.propOffsets );
-            WriteImgInfo        ( stats.propImgInfo );
+            WriteAnimations     ( /*stats.propAnims,*/ stats.totalAnimSeqs, stats.totalAnimFrms );
+            WriteMetaFrameGroups( /*stats.propMFrames*/ );
+            WriteOffsets        ( /*stats.propOffsets*/ );
+            WriteImgInfo        ( /*stats.propImgInfo*/ );
 
             //Write xml palette if needed
             if( xmlcolorpal )
@@ -694,10 +706,6 @@ namespace pmd2 { namespace graphics
         }
 
     private:
-        //
-        //  Common Stuff
-        //
-
         //Returns a pointer to the buffer passed as argument
         inline const char * FastTurnIntToHexCStr( unsigned int value )
         {
@@ -805,7 +813,7 @@ namespace pmd2 { namespace graphics
             using namespace pugi;
             xml_document doc;
             string       outpath = Poco::Path(m_outPath).append(SPRITE_Palette_fname).toString();
-            xml_node     rootnode = doc.append_child( XML_NODE_PALLETTE.c_str() );
+            xml_node     rootnode = doc.append_child( XML_ROOT_PALLETTE.c_str() );
 
             resetStrs();
             m_strs <<"Total nb of color(s) : " <<setw(4) <<setfill(' ') <<m_pInSprite->getPalette().size();
@@ -881,18 +889,16 @@ namespace pmd2 { namespace graphics
                              anim group name, anything after is anim 
                              sequence names!
         **************************************************************/
-        void WriteAnimations( uint32_t proportionofwork, uint32_t totalnbseqs, uint32_t totalnbfrms )
+        void WriteAnimations( /*uint32_t proportionofwork,*/ uint32_t totalnbseqs, uint32_t totalnbfrms )
         {
             using namespace SpriteXMLStrings;
             using namespace pugi;
             xml_document doc;
-            string       outpath = Poco::Path(m_outPath).append(SPRITE_Animations_fname).toString();
-            uint32_t     saveprogress = 0;
-
-            if( m_pProgresscnt != nullptr )
-                saveprogress = m_pProgresscnt->load();
-
-            xml_node agnode = doc.append_child(XML_ROOT_ANIMDAT.c_str());
+            string       outpath      = Poco::Path(m_outPath).append(SPRITE_Animations_fname).toString();
+            //uint32_t     saveprogress = 0;
+            xml_node     agnode       = doc.append_child(XML_ROOT_ANIMDAT.c_str());
+            //if( m_pProgresscnt != nullptr )
+            //    saveprogress = m_pProgresscnt->load();
 
             //Add some comments to help fellow humans 
             resetStrs();
@@ -909,7 +915,7 @@ namespace pmd2 { namespace graphics
 
             //First Write the GroupRefTable
             xml_node     grpreftblnode = agnode.append_child(XML_NODE_ANIMGRPTBL.c_str());
-            unsigned int cptgrp = 0;
+            unsigned int cptgrp        = 0;
             for( const auto & animgrp : m_pInSprite->getAnimGroups() )
             {
                 resetStrs();
@@ -925,22 +931,24 @@ namespace pmd2 { namespace graphics
                 //Write the content of each sequences in that group
                 for( const auto & aseq : animgrp.seqsIndexes )
                 {
-                    //m_strs.clear();
-                    //m_strs <<cptseq;
                     WriteNodeWithValue( grpnode, XML_PROP_ANIMSEQIND, FastTurnIntToCStr(aseq) );
                     ++cptseq;
                 }
                 ++cptgrp;
 
-                if( m_pProgresscnt != nullptr )
-                {
-                    uint32_t prog = ( ( proportionofwork * cptgrp ) / m_pInSprite->getAnimGroups().size() );
-                    m_pProgresscnt->store( saveprogress + prog );
-                }
+                //if( m_pProgresscnt != nullptr )
+                //{
+                //    uint32_t prog = ( ( proportionofwork * cptgrp ) / m_pInSprite->getAnimGroups().size() );
+                //    m_pProgresscnt->store( saveprogress + prog );
+                //}
             }
 
+            //Add a visible separator for humans
+            writeComment( agnode, "===========================================================================");
+            writeComment( agnode, "Animation Sequences");
+            writeComment( agnode, "===========================================================================");
 
-            //Second Write the SequenceTable
+            //Next, write the SequenceTable
             xml_node     seqreftblnode = agnode.append_child(XML_NODE_ANIMSEQTBL.c_str());
             unsigned int cptaseqs = 0;
 
@@ -948,7 +956,6 @@ namespace pmd2 { namespace graphics
             for( const auto & animseq : m_pInSprite->getAnimSequences() )
             {
                 //Write the content of each sequences in that group
-                //strs = stringstream();
                 resetStrs();
                 m_strs <<"Seq #" <<cptaseqs  <<" contains " <<animseq.getNbFrames()  << " frame(s)";
                 writeComment( seqreftblnode, m_strs.str() );
@@ -964,16 +971,16 @@ namespace pmd2 { namespace graphics
 
         /**************************************************************
         **************************************************************/
-        void WriteMetaFrameGroups( uint32_t proportionofwork )
+        void WriteMetaFrameGroups( /*uint32_t proportionofwork*/ )
         {
             using namespace SpriteXMLStrings;
             using namespace pugi;
             xml_document doc;
             string       outpath = Poco::Path(m_outPath).append(SPRITE_Frames_fname).toString();
-            uint32_t     saveprogress = 0;
+            //uint32_t     saveprogress = 0;
 
-            if( m_pProgresscnt != nullptr )
-                saveprogress = m_pProgresscnt->load();
+            //if( m_pProgresscnt != nullptr )
+            //    saveprogress = m_pProgresscnt->load();
 
             xml_node frmlstnode = doc.append_child( XML_ROOT_FRMLST.c_str() );
 
@@ -984,7 +991,7 @@ namespace pmd2 { namespace graphics
             m_strs <<"Total nb of meta-frame(s) : " <<setw(4) <<setfill(' ') <<m_pInSprite->getMetaFrames().size();
             writeComment( frmlstnode, m_strs.str() );
 
-            for( unsigned int i = 0; i < m_pInSprite->getMetaFrmsGrps().size(); ++i )
+            for( unsigned int i = 0; i < m_pInSprite->getMetaFrmsGrps().size();  )
             {
                 const auto & grp = m_pInSprite->getMetaFrmsGrps()[i];
                 resetStrs();
@@ -993,8 +1000,9 @@ namespace pmd2 { namespace graphics
 
                 WriteAMetaFrameGroup( frmlstnode, grp );
 
-                if( m_pProgresscnt != nullptr )
-                    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_pInSprite->getMetaFrmsGrps().size() );
+                ++i;
+                //if( m_pProgresscnt != nullptr )
+                //    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_pInSprite->getMetaFrmsGrps().size() );
             }
 
             if( ! doc.save_file( outpath.c_str() ) )
@@ -1025,81 +1033,82 @@ namespace pmd2 { namespace graphics
             xml_node     mfnode = parentnode.append_child( XML_NODE_FRMFRM.c_str() );
             const auto & aframe = m_pInSprite->getMetaFrames()[index];
 
-            WriteNodeWithValue( mfnode, XML_PROP_IMGINDEX, FastTurnIntToCStr(aframe.imageIndex) );
+            resetStrs();
+            m_strs << static_cast<int16_t>(aframe.imageIndex); //The index makes more sense when represented as a signed value
+            WriteNodeWithValue( mfnode, XML_PROP_IMGINDEX, m_strs.str().c_str() );
             WriteNodeWithValue( mfnode, XML_PROP_UNK0,     FastTurnIntToHexCStr(aframe.unk0) );
             WriteNodeWithValue( mfnode, XML_PROP_OFFSETY,  FastTurnIntToCStr(aframe.offsetY   ) );
             WriteNodeWithValue( mfnode, XML_PROP_OFFSETX,  FastTurnIntToCStr(aframe.offsetX   ) );
             WriteNodeWithValue( mfnode, XML_PROP_UNK1,     FastTurnIntToHexCStr(aframe.unk1) );
+            WriteNodeWithValue( mfnode, XML_PROP_UNK15,    FastTurnIntToHexCStr(aframe.unk15) );
 
-            xml_node resnode = mfnode.append_child(XML_NODE_RES.c_str());
-            auto resolution = MetaFrame::eResToResolution(aframe.resolution);
-            WriteNodeWithValue( resnode, XML_PROP_WIDTH,     FastTurnIntToCStr( resolution.width  ) );
-            WriteNodeWithValue( resnode, XML_PROP_HEIGTH,    FastTurnIntToCStr( resolution.height ) );
+            xml_node resnode    = mfnode.append_child(XML_NODE_RES.c_str());
+            auto     resolution = MetaFrame::eResToResolution(aframe.resolution);
+            WriteNodeWithValue( resnode, XML_PROP_WIDTH,   FastTurnIntToCStr( resolution.width  ) );
+            WriteNodeWithValue( resnode, XML_PROP_HEIGTH,  FastTurnIntToCStr( resolution.height ) );
 
             WriteNodeWithValue( mfnode, XML_PROP_VFLIP,    FastTurnIntToCStr( aframe.vFlip ) );
             WriteNodeWithValue( mfnode, XML_PROP_HFLIP,    FastTurnIntToCStr( aframe.hFlip ) );
             WriteNodeWithValue( mfnode, XML_PROP_MOSAIC,   FastTurnIntToCStr( aframe.Mosaic) );
 
-            WriteNodeWithValue( mfnode, XML_PROP_OFFXBIT6,   FastTurnIntToCStr( aframe.XOffbit6) );
-            WriteNodeWithValue( mfnode, XML_PROP_OFFXBIT7,   FastTurnIntToCStr( aframe.XOffbit7) );
+            WriteNodeWithValue( mfnode, XML_PROP_OFFXBIT6, FastTurnIntToCStr( aframe.XOffbit6) );
+            WriteNodeWithValue( mfnode, XML_PROP_OFFXBIT7, FastTurnIntToCStr( aframe.XOffbit7) );
 
-            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT3,   FastTurnIntToCStr( aframe.YOffbit3) );
-            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT5,   FastTurnIntToCStr( aframe.YOffbit5) );
-            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT6,   FastTurnIntToCStr( aframe.YOffbit6) );
+            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT3, FastTurnIntToCStr( aframe.YOffbit3) );
+            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT5, FastTurnIntToCStr( aframe.YOffbit5) );
+            WriteNodeWithValue( mfnode, XML_PROP_OFFYBIT6, FastTurnIntToCStr( aframe.YOffbit6) );
         }
 
         /**************************************************************
         **************************************************************/
-        void WriteOffsets( uint32_t proportionofwork )
+        void WriteOffsets( /*uint32_t proportionofwork*/ )
         {
             using namespace SpriteXMLStrings;
             using namespace pugi;
             xml_document doc;
-            string       outpath = Poco::Path(m_outPath).append(SPRITE_Offsets_fname).toString();
+            string       outpath      = Poco::Path(m_outPath).append(SPRITE_Offsets_fname).toString();
+            xml_node     offlstnode   = doc.append_child(XML_ROOT_OFFLST.c_str());
+            //uint32_t     saveprogress = 0;
 
-            xml_node offlstnode = doc.append_child(XML_ROOT_OFFLST.c_str());
-
-            //stringstream strs;
-            resetStrs();
-            m_strs <<"Total nb of offset(s) : " <<setw(4) <<setfill(' ') <<m_pInSprite->getPartOffsets().size();
-            writeComment( offlstnode, m_strs.str() );
-
-            uint32_t saveprogress = 0;
-
-            if( m_pProgresscnt != nullptr )
-                saveprogress = m_pProgresscnt->load();
-
-            for( unsigned int i = 0; i < m_pInSprite->getPartOffsets().size(); ++i )
+            if( ! m_pInSprite->getPartOffsets().empty() )
             {
-                const auto & anoffset = m_pInSprite->getPartOffsets()[i];
-                //strs.clear();
-                //strs <<"#" <<i;
-                writeComment( offlstnode, FastTurnIntToCStr(i) );
+                resetStrs();
+                m_strs <<"Total nb of offset(s) : " <<setw(4) <<setfill(' ') <<m_pInSprite->getPartOffsets().size();
+                writeComment( offlstnode, m_strs.str() );
 
-                xml_node offnode = offlstnode.append_child(XML_NODE_OFFSET.c_str());
-                WriteNodeWithValue( offnode, XML_PROP_X, FastTurnIntToCStr( anoffset.offx ));
-                WriteNodeWithValue( offnode, XML_PROP_Y, FastTurnIntToCStr( anoffset.offy ));
+                //if( m_pProgresscnt != nullptr )
+                //    saveprogress = m_pProgresscnt->load();
 
-                if( m_pProgresscnt != nullptr )
-                    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_pInSprite->getPartOffsets().size() );
+                for( unsigned int i = 0; i < m_pInSprite->getPartOffsets().size();  )
+                {
+                    const auto & anoffset = m_pInSprite->getPartOffsets()[i];
+                    writeComment( offlstnode, FastTurnIntToCStr(i) );
+
+                    xml_node offnode = offlstnode.append_child(XML_NODE_OFFSET.c_str());
+                    WriteNodeWithValue( offnode, XML_PROP_X, FastTurnIntToCStr( anoffset.offx ));
+                    WriteNodeWithValue( offnode, XML_PROP_Y, FastTurnIntToCStr( anoffset.offy ));
+
+                    ++i;
+                    //if( m_pProgresscnt != nullptr )
+                    //    m_pProgresscnt->store( saveprogress + ( proportionofwork * i ) / m_pInSprite->getPartOffsets().size() );
+                }
             }
-
 
             if( ! doc.save_file( outpath.c_str() ) )
                 throw std::runtime_error("Error, can't write offset list xml file!");
         }
 
-        void WriteImgInfo( uint32_t proportionofwork  )
+        void WriteImgInfo( /*uint32_t proportionofwork*/  )
         {
             using namespace SpriteXMLStrings;
             using namespace pugi;
             xml_document doc;
             string       outpath      = Poco::Path(m_outPath).append(SPRITE_ImgsInfo_fname).toString();
             xml_node     imginfonode  = doc.append_child(XML_ROOT_IMGINFO.c_str());
-            uint32_t     saveprogress = 0;
+            //uint32_t     saveprogress = 0;
 
-            if( m_pProgresscnt != nullptr )
-                saveprogress = m_pProgresscnt->load();
+            //if( m_pProgresscnt != nullptr )
+            //    saveprogress = m_pProgresscnt->load();
 
             unsigned int cpt = 0;
             for( auto & imginfo : m_pInSprite->getImgsInfo() )
@@ -1112,8 +1121,8 @@ namespace pmd2 { namespace graphics
                 }
 
                 ++cpt;
-                if( m_pProgresscnt != nullptr )
-                    m_pProgresscnt->store( saveprogress + ( proportionofwork * cpt ) / m_pInSprite->getImgsInfo().size() );
+                //if( m_pProgresscnt != nullptr )
+                //    m_pProgresscnt->store( saveprogress + ( proportionofwork * cpt ) / m_pInSprite->getImgsInfo().size() );
             }
 
             if( ! doc.save_file( outpath.c_str() ) )
@@ -1126,9 +1135,11 @@ namespace pmd2 { namespace graphics
         const BaseSprite       * m_pInSprite;
         std::atomic<uint32_t>  * m_pProgresscnt;
         uint32_t                 m_progressProportion; //The percentage of the entire work attributed to this
+        
+        //Temporary buffers
         std::array<char,CBuffSZ> m_convBuff;           //A buffer for executing convertions to c-strings. Pretty ugly, but less constructor calls, for simple, non-localised integer convertions.
         std::array<char,CBuffSZ> m_secConvbuffer;      //A Secondary convertion buffer
-        std::stringstream        m_strs;               //Instance-wide stringstream to handle conversions. Reduces overhead a little.
+        std::stringstream        m_strs;               //Instance-wide stringstream to handle conversions. Reduces overhead a little bit.
     };
 
 //=============================================================================================

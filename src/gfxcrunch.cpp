@@ -242,7 +242,7 @@ namespace gfx_util
 //------------------------------------------------
     const string CGfxUtil::Exe_Name            = "ppmd_gfxcrunch.exe";
     const string CGfxUtil::Title               = "Baz the Poochyena's PMD:EoS/T/D GfxCrunch";
-    const string CGfxUtil::Version             = "0.11";
+    const string CGfxUtil::Version             = "0.12";
     const string CGfxUtil::Short_Description   = "A utility to unpack and re-pack pmd2 sprite!";
     const string CGfxUtil::Long_Description    = 
         "#TODO";                                    //#TODO
@@ -369,7 +369,7 @@ namespace gfx_util
             "-pkdpx",
             std::bind( &CGfxUtil::ParseOptionCompressPKDPX,  &GetInstance(), placeholders::_1 ),
         },
-        //
+        //Pack a directory containing sprite xml data
         {
             "p",
             0,
@@ -456,15 +456,15 @@ namespace gfx_util
     int CGfxUtil::UnpackSprite()
     {
         utils::MrChronometer chronounpacker( "Unpacking Sprite" );
-        atomic<uint32_t>     parsingprogress(0);
-        atomic<uint32_t>     writingprogress(0);
-        atomic<bool>         stopupdateprogress(false);
+        //atomic<uint32_t>     parsingprogress(0);
+        //atomic<uint32_t>     writingprogress(0);
+        //atomic<bool>         stopupdateprogress(false);
         filetypes::WAN_Parser parser( ReadFileToByteVector( m_inputPath ) );
-        future<void>         runThUpHpBar;
+        //future<void>         runThUpHpBar;
         Poco::File           infileinfo(m_inputPath);
         Poco::Path           inputPath(m_inputPath);
         Poco::Path           outpath;
-        uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
+        //uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
         
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
@@ -490,36 +490,36 @@ namespace gfx_util
             if( sprty == graphics::eSpriteImgType::spr4bpp )
             {
                 clog <<"4 bpp\n";
-                auto sprite = parser.ParseAs4bpp(&parsingprogress);
-                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+                auto sprite = parser.ParseAs4bpp();
+                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
             
             }
             else if( sprty == graphics::eSpriteImgType::spr8bpp )
             {
                 clog <<"8 bpp\n";
-                auto sprite = parser.ParseAs8bpp(&parsingprogress);
-                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false, &writingprogress );
+                auto sprite = parser.ParseAs8bpp();
+                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
             }
         }
-        catch( Poco::Exception e )
+        catch( Poco::Exception & e )
         {
             //Stop the thread
-            stopupdateprogress = true;
-            runThUpHpBar.get();
+            //stopupdateprogress = true;
+            //runThUpHpBar.get();
             //rethrow
             throw e;
         }
-        catch( exception e )
+        catch( exception & e )
         {
             //Stop the thread
-            stopupdateprogress = true;
-            runThUpHpBar.get();
+            //stopupdateprogress = true;
+            //runThUpHpBar.get();
             //rethrow
             throw e;
         }
 
-        stopupdateprogress = true;
-        runThUpHpBar.get();
+        //stopupdateprogress = true;
+        //runThUpHpBar.get();
 
         //draw one last time
         if( ! m_bQuiet )
@@ -557,8 +557,6 @@ namespace gfx_util
             m_outputPath = inputPath.parent().append( Poco::Path(inputPath).makeFile().getBaseName() ).toString();
 
         outpath = m_outputPath;
-
-        //outpath.append( inputPath.getBaseName() );
 
         try
         {
@@ -718,7 +716,6 @@ namespace gfx_util
                     taskmanager.AddTask( 
                         multitask::pktask_t( 
                             std::bind(lambdaWriteFileByVec, Poco::Path(outpath).append(sstr.str()).toString(), std::ref(inpack.getSubFile(i)) ) ) );
-                    //utils::io::WriteByteVectorToFile( Poco::Path(outpath).append(sstr.str()).toString() , inpack.getSubFile(i) );
                 }
                 else 
                 {
@@ -739,9 +736,6 @@ namespace gfx_util
                     taskmanager.AddTask( 
                         multitask::pktask_t( 
                             std::bind(lambdaExpSpriteWrap, (mysprites[i].get()), Poco::Path(outpath).append(sstr.str()).toString() ) ) );
-
-                    //Output to XML+imgs
-                    //graphics::ExportSpriteToDirectoryPtr( (mysprites[i].get()), Poco::Path(outpath).append(sstr.str()).toString() );
                 }
                 ++i;
             }
@@ -757,43 +751,6 @@ namespace gfx_util
                 updtProgress.get();
 
             cout<<"\r100%";
-
-            //for( unsigned int i = 0; i < mysprites.size(); )
-            //{
-            //    if( mysprites[i] == nullptr )
-            //    {
-            //        //Output the packed file's content as is
-            //        auto & cursubf = inpack.getSubFile(i);
-            //        stringstream sstr;
-            //        sstr << inputPath.getBaseName()
-            //             <<"_" <<setw(4) <<setfill('0') <<i <<"." 
-            //             << filetypes::GetAppropriateFileExtension( cursubf.begin(), cursubf.end() );                   
-
-            //        utils::io::WriteByteVectorToFile( Poco::Path(outpath).append(sstr.str()).toString() , inpack.getSubFile(i) );
-            //    }
-            //    else 
-            //    {
-            //        //Build the sub-folder name
-            //        stringstream sstr;
-            //        BaseSprite * curspr = mysprites[i].get();
-
-            //        if( isPokeSpriteFile && pokesprnames.size() > i )
-            //        {
-            //            sstr <<setw(4) <<setfill('0') <<i <<"_" << pokesprnames[i];
-            //        }
-            //        else
-            //        {
-            //            sstr << inputPath.getBaseName()
-            //                 <<"_" <<setw(4) <<setfill('0') <<i;   
-            //        }
-
-            //        //Output to XML+imgs
-            //        graphics::ExportSpriteToDirectoryPtr( (mysprites[i].get()), Poco::Path(outpath).append(sstr.str()).toString() );
-            //    }
-
-            //    ++i;
-            //    cout<<"\r" <<setw(3) <<setfill(' ') <<(( i * 100) / mysprites.size()) <<"%";
-            //}
         }
         catch( Poco::Exception e )
         {
@@ -856,13 +813,13 @@ namespace gfx_util
     int CGfxUtil::PackAndImportCharSprites()
     {
         utils::ChronoRAII<std::chrono::seconds> chronopacker( "Packing & Importing Sprites" );
-        Poco::File              infileinfo(m_inputPath);
-        Poco::Path              inpath(m_inputPath);
-        Poco::Path              outpath;
-        Poco::DirectoryIterator itDirCount( infileinfo );
-        Poco::DirectoryIterator itDirEnd;
-        filetypes::CPack        mypack;
-        vector<Poco::File>      validDirs;
+        Poco::File                   infileinfo(m_inputPath);
+        Poco::Path                   inpath(m_inputPath);
+        Poco::Path                   outpath;
+        Poco::DirectoryIterator      itDirCount( infileinfo );
+        Poco::DirectoryIterator      itDirEnd;
+        filetypes::CPack             mypack;
+        vector<Poco::File>           validDirs;
         future<void>                 updtProgress;
         atomic<bool>                 shouldUpdtProgress = true;
         multitask::CMultiTaskHandler taskmanager;
@@ -928,7 +885,7 @@ namespace gfx_util
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
-            cout<<"\r100%"; //Can't be bothered to make another update
+            cout<<"\r100%"; //Can't be bothered to make another drawing update
         }
         catch( Poco::Exception e )
         {
@@ -1303,16 +1260,16 @@ namespace gfx_util
             if( ! m_bQuiet && returnval == 0 )
                 cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
         }
-        catch( Poco::Exception pex )
+        catch( Poco::Exception & pex )
         {
             cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             returnval = pex.code();
         }
-        catch( exception e )
+        catch( exception & e )
         {
             cerr <<"\n" 
                  <<"\nWelp.. Poochyena almost choked while crunching the pixels!\n<she gave you an apologetic look>\n"
-                 << e.what() <<endl;
+                 << "Exception : " <<e.what() <<endl;
         }
         //catch( types::Ex_IOException e )
         //{

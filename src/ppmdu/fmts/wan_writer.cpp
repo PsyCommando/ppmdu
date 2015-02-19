@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <functional>
 #include <string>
 #include <iostream>
 #include <Poco/Path.h>
@@ -26,7 +27,6 @@ namespace pmd2 { namespace filetypes
 
     std::vector<uint8_t> WAN_Writer::write( std::atomic<uint32_t> * pProgress )
     {
-        //utils::MrChronometer chronoTotal("WriteWanTotal");
         //Don't forget to build the SIR0 pointer offset table !
         // We must gather the offset of ALL pointers!
         m_pProgress = pProgress;
@@ -214,31 +214,33 @@ namespace pmd2 { namespace filetypes
             //Write meta frames group
             for( unsigned int ctfrms = 0; ctfrms < agrp.metaframes.size(); ++ctfrms )
             {
-                WriteAMetaFrame( metafrms[ agrp.metaframes[ctfrms] ], ( ctfrms == (agrp.metaframes.size() - 1) ) );
+                metafrms[ agrp.metaframes[ctfrms] ].WriteToWANContainer( m_itbackins, ( ctfrms == (agrp.metaframes.size() - 1) ) );
+                //WriteAMetaFrame( metafrms[ agrp.metaframes[ctfrms] ], ( ctfrms == (agrp.metaframes.size() - 1) ) );
             }
         }
     }
 
     /**************************************************************
     **************************************************************/
-    void WAN_Writer::WriteAMetaFrame( const MetaFrame & cur, bool setLastBit ) //setLastBit set this to true for the last frame in a group !
-    {
-        utils::WriteIntToByteVector( cur.imageIndex, m_itbackins );
-        utils::WriteIntToByteVector( cur.unk0,       m_itbackins );
+    //void WAN_Writer::WriteAMetaFrame( const MetaFrame & cur, bool setLastBit ) //setLastBit set this to true for the last frame in a group !
+    //{
+    //    utils::WriteIntToByteVector( cur.imageIndex, m_itbackins );
+    //    utils::WriteIntToByteVector( cur.unk0,       m_itbackins );
 
-        //Get the value of the resolution as a byte
-        uint8_t resval    = static_cast<uint8_t>(cur.resolution);
-        uint8_t EndbitVal = /*((cur.isLastMFrmInGrp)?1:0 ) | */( (setLastBit)?1:0 ); //Force it to one if is last!
+    //    //Get the value of the resolution as a byte
+    //    uint8_t resval    = static_cast<uint8_t>(cur.resolution);
+    //    uint8_t EndbitVal = ( (setLastBit)?1:0 ); //set it to one if is last!
 
-        uint16_t YOffset = ( ( resval << 8 ) & 0xC000 ) | (cur.YOffbit3 << 13) | ((cur.Mosaic)?1:0) << 12 | (cur.YOffbit5 << 11) | (cur.YOffbit5 << 10) | cur.offsetY;
-        utils::WriteIntToByteVector( YOffset,       m_itbackins );
+    //    uint16_t YOffset = ( ( resval << 8 ) & 0xC000 ) | (cur.YOffbit3 << 13) | ((cur.Mosaic)?1:0) << 12 | (cur.YOffbit5 << 11) | (cur.YOffbit5 << 10) | cur.offsetY;
+    //    utils::WriteIntToByteVector( YOffset,       m_itbackins );
 
-    //# Don't forget to make sure XOffset bit 5 is set to 1 for the last meta-frame in a group !
-        uint16_t XOffset = ( ( resval << 12 ) & 0xC000 ) | ( ((cur.vFlip)?1:0 ) << 13) | ( ((cur.hFlip)?1:0 ) << 12) | ( EndbitVal << 11) | (cur.XOffbit6 << 10) | (cur.XOffbit7 << 9) | cur.offsetX;
-        utils::WriteIntToByteVector( XOffset,       m_itbackins );
+    ////# Don't forget to make sure XOffset bit 5 is set to 1 for the last meta-frame in a group !
+    //    uint16_t XOffset = ( ( resval << 12 ) & 0xC000 ) | ( ((cur.vFlip)?1:0 ) << 13) | ( ((cur.hFlip)?1:0 ) << 12) | ( EndbitVal << 11) | (cur.XOffbit6 << 10) | (cur.XOffbit7 << 9) | cur.offsetX;
+    //    utils::WriteIntToByteVector( XOffset,       m_itbackins );
 
-        utils::WriteIntToByteVector( cur.unk1, m_itbackins );
-    }
+    //    utils::WriteIntToByteVector( cur.unk15, m_itbackins );
+    //    utils::WriteIntToByteVector( cur.unk1,  m_itbackins );
+    //}
 
     /**************************************************************
     **************************************************************/
@@ -465,11 +467,14 @@ namespace pmd2 { namespace filetypes
         //# Note the position the palette info block is written at !
         m_wanHeadr_img.ptrPal = m_outBuffer.size();
 
+        //Write the palette info + register pointer
+        m_wanPalInfo.WriteToWanContainer( m_itbackins, std::bind( &WAN_Writer::WriteAPointer, const_cast<WAN_Writer*>(this), placeholders::_1 ) );
+
         //Add pointer to colors, to the ptr offset list
-        m_ptrOffsetTblToEncode.push_back( m_outBuffer.size() );
+        //m_ptrOffsetTblToEncode.push_back( m_outBuffer.size() );
 
         //Write the palette info
-        m_wanPalInfo.WriteToContainer(m_itbackins);
+        //m_wanPalInfo.WriteToContainer(m_itbackins);
     }
 
 
@@ -488,7 +493,13 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteParticleOffsetsBlock()
     {
-        //utils::MrChronometer chronoTotal("WriteWanParticleOffsetsBlock");
+        //Don't write anything if the offset list is null!
+        if( m_pSprite->getPartOffsets().empty() )
+        {
+            m_wanHeadr_anim.ptr_pOffsetsTable = 0; //null ptr
+            return;
+        }
+
         //# Write starting offset
         m_wanHeadr_anim.ptr_pOffsetsTable = m_outBuffer.size();
 
@@ -582,7 +593,7 @@ namespace pmd2 { namespace filetypes
         m_wanHeadr.ptr_animinfo = m_outBuffer.size();
 
         //Write anim info
-        m_wanHeadr_anim.WriteToWanContainer( m_outBuffer, m_ptrOffsetTblToEncode );
+        m_wanHeadr_anim.WriteToWanContainer( m_itbackins, std::bind( &WAN_Writer::WriteAPointer, const_cast<WAN_Writer*>(this), placeholders::_1 ) );
     }
 
     /**************************************************************
@@ -592,7 +603,7 @@ namespace pmd2 { namespace filetypes
         //# Save location of img info 
         m_wanHeadr.ptr_imginfo = m_outBuffer.size();
 
-        m_wanHeadr_img.WriteToWanContainer( m_outBuffer, m_ptrOffsetTblToEncode );
+        m_wanHeadr_img.WriteToWanContainer( m_itbackins, std::bind( &WAN_Writer::WriteAPointer, const_cast<WAN_Writer*>(this), placeholders::_1 ) );
     }
 
     /**************************************************************
@@ -602,7 +613,7 @@ namespace pmd2 { namespace filetypes
         //Put offset in sir0 header
         m_sir0Header.subheaderptr = m_outBuffer.size();
 
-        m_wanHeadr.WriteToWanContainer( m_outBuffer, m_ptrOffsetTblToEncode );
+        m_wanHeadr.WriteToWanContainer( m_itbackins, std::bind( &WAN_Writer::WriteAPointer, const_cast<WAN_Writer*>(this), placeholders::_1 ) );
     }
 
     /**************************************************************

@@ -51,6 +51,8 @@ namespace utils
         {
             return (this->height == right.height) && (this->width == right.width);
         }
+
+        friend std::ostream & operator<<(std::ostream &os, Resolution &res);
     };
 
     /*
@@ -165,5 +167,10 @@ namespace utils
         return cpt;
     }
 };
+
+std::ostream & operator<<(std::ostream &os, utils::Resolution &res)
+{
+    return os << res.width <<"x" <<res.height;
+}
 
 #endif 

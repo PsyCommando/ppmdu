@@ -146,27 +146,25 @@ namespace pmd2{ namespace graphics
                 totalnbfrms += aseq.getNbFrames();
             
             //Gather stats for computing progress proportionally at runtime
-            const uint32_t amtWorkFrames  = m_inSprite.getFrames().size();
-            const uint32_t amtWorkAnims   = m_inSprite.getAnimGroups().size() + totalnbseqs + totalnbfrms;
-            const uint32_t amtWorkFrmGrps = m_inSprite.getMetaFrames().size() + m_inSprite.getMetaFrmsGrps().size();
-            const uint32_t amtWorkOffs    = m_inSprite.getPartOffsets().size();
-            const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs + amtWorkFrames;
+            //const uint32_t amtWorkFrames  = m_inSprite.getFrames().size();
+            //const uint32_t amtWorkAnims   = m_inSprite.getAnimGroups().size() + totalnbseqs + totalnbfrms;
+            //const uint32_t amtWorkFrmGrps = m_inSprite.getMetaFrames().size() + m_inSprite.getMetaFrmsGrps().size();
+            //const uint32_t amtWorkOffs    = m_inSprite.getPartOffsets().size();
+            //const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs + amtWorkFrames;
 
             //Get the percentages of work, relative to the total, for each
-            const float percentFrames  = static_cast<float>( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
-            const float percentAnims   = static_cast<float>( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
-            const float percentFrmGrps = static_cast<float>( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
-            const float percentOffsets = static_cast<float>( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
+            //const float percentFrames  = static_cast<float>( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
+            //const float percentAnims   = static_cast<float>( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
+            //const float percentFrmGrps = static_cast<float>( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
+            //const float percentOffsets = static_cast<float>( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
 
-            spriteWorkStats stats
-            {
-                static_cast<uint32_t>(percentFrames),   //uint32_t propFrames;
-                static_cast<uint32_t>(percentAnims),    //uint32_t propAnims;
-                static_cast<uint32_t>(percentFrmGrps),  //uint32_t propMFrames;
-                static_cast<uint32_t>(percentOffsets),  //uint32_t propOffsets;
-                totalnbfrms,                            //uint32_t totalAnimFrms;
-                totalnbseqs,                            //uint32_t totalAnimSeqs;
-            };
+            spriteWorkStats stats;
+            //stats.propFrames    = static_cast<uint32_t>(percentFrames);
+            //stats.propAnims     = static_cast<uint32_t>(percentAnims);
+            //stats.propMFrames   = static_cast<uint32_t>(percentFrmGrps);
+            //stats.propOffsets   = static_cast<uint32_t>(percentOffsets);
+            stats.totalAnimFrms = totalnbfrms;
+            stats.totalAnimSeqs = totalnbseqs;
 
             ExportFrames(imgty, stats.propFrames );
 
@@ -440,13 +438,13 @@ namespace pmd2{ namespace graphics
                 {
                     ReadAnImage( animg );
                 }
-                catch( Poco::Exception e )
+                catch( Poco::Exception & e )
                 {
                     cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
                          <<e.message() <<"\n"
                          <<"Skipping !\n";
                 }
-                catch( exception e )
+                catch( exception & e )
                 {
                     cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
                          <<e.what() <<"\n"
@@ -596,12 +594,21 @@ namespace pmd2{ namespace graphics
                     //We have to find a metaframe with the right index. Or a 0xFFFF meta-frame.
                     for( unsigned int i = 0; i < m_outSprite.m_metaframes.size(); ++i )
                     {
+                        res = RES_INVALID;
+
                         if( m_outSprite.m_metaframes[i].imageIndex == indextofind )
                         {
                             res = MetaFrame::eResToResolution(m_outSprite.m_metaframes[i].resolution);
                         }
-                        else if( m_outSprite.m_metaframes[i].imageIndex == SPRITE_SPECIAL_METAFRM_INDEX ) //For ui sprites just get the 0xFFFF meta frame
+                        else if( m_outSprite.m_metaframes[i].isSpecialMetaFrame() &&
+                                 m_outSprite.m_metaframes[i].unk15 == indextofind )
                         {
+                            //#EXPERIMENTAL
+                            if( utils::LibWide().isLogOn() )
+                            {
+                                std::clog << "Reading a Raw image #" <<i <<", meta-frame has special img index value, and unk15 value is " 
+                                          <<m_outSprite.m_metaframes[i].unk15 <<"!\n";
+                            }
                             res = MetaFrame::eResToResolution(m_outSprite.m_metaframes[i].resolution);
                         }
 

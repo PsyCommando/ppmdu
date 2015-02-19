@@ -194,6 +194,7 @@ namespace utils
 
     /*********************************************************************************************
 
+        * offsetrighttoleft : offset of the bit to isolate from right to left.
     *********************************************************************************************/
     template< class T >
         inline T GetBit( T containinginteger, uint32_t offsetrighttoleft  )
@@ -205,6 +206,13 @@ namespace utils
         //Isolate, then shift back to position 1 !
         return (containinginteger & ( (0x01u << offsetrighttoleft) ) ) >> offsetrighttoleft;
     }
+
+    /*********************************************************************************************
+        Helper method to get whether a certain bit's state as a boolean, 
+        instead of only isolating it.
+    *********************************************************************************************/
+    template< class T >
+        inline bool IsBitOn( T containinginteger, uint32_t offsetrighttoleft  ) { return GetBit( containinginteger, offsetrighttoleft ) > 0; }
 
 //===============================================================================
 //								Utility

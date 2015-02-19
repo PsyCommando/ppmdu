@@ -63,6 +63,8 @@ namespace pmd2 { namespace filetypes
                          offsetsubheader + sir0_header::HEADER_LEN,
                          offsetendofdata + sir0_header::HEADER_LEN );
 
+        //#TODO: This could be done much better. There's a lot of allocation that could possibly be avoided.
+
         vector<uint8_t> encodedptroffsets( 2u + listoffsetptrs.size() ); //Worst case scenario allocation
         encodedptroffsets.resize(0); //preserve alloc, allow push backs
 
@@ -99,17 +101,14 @@ namespace pmd2 { namespace filetypes
             offsetSoFar = anoffset; //set the value to the latest offset, so we can properly subtract it from the next offset.
 
             //Encode every bytes of the 4 bytes integer we have to
-            for( int32_t i = 4; i > 0; --i )
+            for( int32_t i = sizeof(int32_t); i > 0; --i )
             {
                 uint8_t currentbyte = ( offsetToEncode >> (7 * (i - 1)) ) & 0x7Fu;
                 
                 if( i == 1 ) //the lowest byte to encode is special
                 {
                     //If its the last byte to append, leave the highest bit to 0 !
-                    //if( currentbyte != 0 ) //It seems this isn't necessary...
-                        out_encoded.push_back( currentbyte );
-                    //If the last byte to append is null, we don't need to append anything
-                    // as the automatic bitshift of the last byte will take care of that
+                    out_encoded.push_back( currentbyte );
                 }
                 else if( currentbyte != 0 || hasHigherNonZero ) //if any bytes but the lowest one! If not null OR if we have encoded a higher non-null byte before!
                 {
@@ -145,7 +144,7 @@ namespace pmd2 { namespace filetypes
         uint8_t curbyte    = *itcurbyte;
         bool    LastHadBitFlag = false; //This contains whether the byte read on the previous turn of the loop had the bit flag indicating to append the next byte!
 
-        while( itcurbyte != itlastbyte && ( LastHadBitFlag || (*itcurbyte) != 0 ) ) //There's an aassignement in there
+        while( itcurbyte != itlastbyte && ( LastHadBitFlag || (*itcurbyte) != 0 ) )
         {
             curbyte = *itcurbyte;
             buffer |= curbyte & 0x7Fu;
@@ -154,13 +153,6 @@ namespace pmd2 { namespace filetypes
             {
                 LastHadBitFlag = true;
                 buffer <<= 7u;
-
-                //In case its the last byte before the final zero to decode, be sure to push it back.
-                //if( (itcurbyte + 1) != itlastbyte && *(itcurbyte + 1) == 0 )
-                //{
-                //    offsetsum += buffer;
-                //    decodedptroffsets.push_back(offsetsum);
-                //}
             }
             else
             {
