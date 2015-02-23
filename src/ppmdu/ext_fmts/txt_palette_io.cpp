@@ -22,8 +22,8 @@ namespace utils{ namespace io
                 sstr <<hex << entry.substr(1);
                 sstr >> entireColor;
 
-                gimg::colorRGB24::colordata_t r = ( entireColor & 0xFF0000 >> 16 ), 
-                                              g = ( entireColor & 0xFF00   >> 8  ), 
+                gimg::colorRGB24::colordata_t r = ( (entireColor & 0xFF0000) >> 16 ), 
+                                              g = ( (entireColor & 0xFF00  ) >> 8  ), 
                                               b = ( entireColor & 0xFF );
 
                 colors.push_back( gimg::colorRGB24( r, g, b ) );
@@ -42,10 +42,10 @@ namespace utils{ namespace io
         for( const auto & acolor : in_palette )
         {
             stringstream sstrcol;
-            sstrcol <<"#" 
-                    <<hex <<static_cast<unsigned int>(acolor.red) 
-                    <<hex <<static_cast<unsigned int>(acolor.green) 
-                    <<hex <<static_cast<unsigned int>(acolor.blue);
+            sstrcol <<"#" <<setfill('0')
+                    <<setw(2) <<hex <<static_cast<unsigned int>(acolor.red) 
+                    <<setw(2) <<hex <<static_cast<unsigned int>(acolor.green) 
+                    <<setw(2) <<hex <<static_cast<unsigned int>(acolor.blue);
             stringvector.push_back( sstrcol.str() );
         }
         WriteTextFileLineByLine( stringvector, outputpath );

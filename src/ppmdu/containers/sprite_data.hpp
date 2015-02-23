@@ -557,7 +557,7 @@ namespace pmd2{ namespace graphics
             if( currentMf.isSpecialMetaFrame() ) //Handle special frame
             {
                 //#EXPERIMENTAL HANDLING
-                std::clog << "Rebuilding a meta-frame with an image index of -1! Using unk15 as image index value (" <<currentMf.unk15 <<")\n";
+                std::clog << "Rebuilding a meta-frame with an image index of -1! Using unk15 as image index value (" <<static_cast<unsigned int>(currentMf.unk15) <<")\n";
                 assert( currentMf.unk15 < static_cast<uint16_t>(currentMf.imageIndex) );
 
                 //clear all anim references!

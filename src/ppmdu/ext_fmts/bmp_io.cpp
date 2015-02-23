@@ -167,8 +167,14 @@ namespace utils{ namespace io
     {
         BMP output;
         output.SetBitDepth(_TImg_t::pixel_t::GetBitsPerPixel());
-        assert( in_indexed.getNbColors() == utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL>::value );
 
+        if( in_indexed.getNbColors() != utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL>::value )
+        {
+#ifdef _DEBUG
+            assert(false);
+#endif
+            throw std::runtime_error( "ERROR: The tiled image to write to a bitmap image file has an invalid amount of color in its palette!" );
+        }
         //copy palette
         for( int i = 0; i < output.TellNumberOfColors(); ++i )
             output.SetColor( i, colorRGB24ToRGBApixel( in_indexed.getPalette()[i] ) );

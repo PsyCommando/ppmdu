@@ -282,11 +282,8 @@ namespace utils{ namespace io
 
     std::vector<gimg::colorRGB24> ImportPaletteFromPNG( const std::string & filepath )
     {
-        ifstream inimg(filepath);
-        if( ! inimg.is_open() || ! inimg.good() )
-            cout<<"wtf!";
-
-        png::reader< std::ifstream > reader(inimg);
+        fstream                   inimg( filepath, std::ios_base::in | std::ios_base::binary );
+        png::reader<std::fstream> reader(inimg);
         reader.read_info();
 
         std::vector<gimg::colorRGB24> outpal;
@@ -307,8 +304,8 @@ namespace utils{ namespace io
     void SetPalettePNGImg( const std::vector<gimg::colorRGB24> & srcpal, 
                            const std::string                   & filepath )
     {
-        ifstream                    inimg(filepath);
-        png::reader< std::istream > reader(inimg);
+        fstream                    inimg(filepath, std::ios_base::in | std::ios_base::binary );
+        png::reader< std::fstream > reader(inimg);
 
         reader.read_info();
         png::color_type colorType = reader.get_color_type();

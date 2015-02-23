@@ -148,7 +148,7 @@ namespace gfx_util
         std::atomic<bool>     m_bStopProgressPrint;//#REMOVEME
         std::future<void>     m_runThUpHpBar;//#REMOVEME
 
-        std::unique_ptr<utils::cmdl::RAIIClogRedirect> m_pRedirectClog;
+        utils::cmdl::RAIIClogRedirect m_redirectClog;
     };
 };
 

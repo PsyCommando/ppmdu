@@ -146,17 +146,24 @@ namespace utils{ namespace cmdl
 
     /************************************************************************
         RAIIClogRedirect
-            Redirects the clog stream for the lifetime of the object!
+             Handle redirecting the clog stream for the lifetime of the 
+             object! Then safely restore clog to its original state.
     *************************************************************************/
     class RAIIClogRedirect
     {
     public:
-        RAIIClogRedirect( const std::string & logfilename );
+        RAIIClogRedirect();
         virtual ~RAIIClogRedirect();
+
+        bool IsRedirecting()const;
+        void Redirect( const std::string & filename );
+        void StopRedirect();
 
     protected:
         std::streambuf * m_oldbuf;
         std::filebuf     m_filebuf;
+        std::filebuf     m_nullbuff;
+        bool             m_bIsRedirecting;
     };
 
 

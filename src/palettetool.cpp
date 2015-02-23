@@ -34,7 +34,14 @@ namespace palettetool
     const string CPaletteUtil::Version             = "0.1";
     const string CPaletteUtil::Short_Description   = "A utility to dump/build palette files from png and bmp images";
     const string CPaletteUtil::Long_Description    = 
-        "#TODO";                                    //#TODO
+        "This little utility is meant to be used to easily dump a palette\n"
+        "to a text file or RIFF palette, from an image. It can also convert\n"
+        "RIFF palettes to and from a text file palette!\n"
+        "And finally, it also can inject a palette back into an image!\n"
+        "\n"
+        "The text file contains one color per line in HTML notation, which\n"
+        "should make it very easy for peope to edit a palette! and convert\n"
+        "it to a RIFF palette to use with gfxutil for example!\n";
     const string CPaletteUtil::Misc_Text           = 
         "Named in honour of Baz, the awesome Poochyena of doom ! :D\n"
         "My tools in binary form are basically public domain / CC0.\n"

@@ -660,9 +660,9 @@ namespace gfx_util
         multitask::CMultiTaskHandler taskmanager;
         atomic<uint32_t>             completed = 1;
 
-        auto lambdaExpSpriteWrap = [&completed]( const graphics::BaseSprite * srcspr, const std::string & outpath )->bool
+        auto lambdaExpSpriteWrap = [&]( const graphics::BaseSprite * srcspr, const std::string & outpath )->bool
         {
-            graphics::ExportSpriteToDirectoryPtr(srcspr, outpath);
+            graphics::ExportSpriteToDirectoryPtr(srcspr, outpath, m_PrefOutFormat);
             ++completed;
             return true;
         };
@@ -1259,7 +1259,7 @@ namespace gfx_util
                 cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
             if( m_bRedirectClog )
-                m_pRedirectClog.reset( new utils::cmdl::RAIIClogRedirect( inpath.getBaseName() + ".log" ) );
+                m_redirectClog.Redirect( inpath.getBaseName() + ".log" );
 
             unique_ptr<utils::ChronoRAII<>> chronototal = nullptr;
 

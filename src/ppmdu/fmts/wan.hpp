@@ -638,11 +638,12 @@ namespace pmd2 { namespace filetypes
                         myres = MetaFrame::eResToResolution( metafrms[i].resolution );
                         if( utils::LibWide().isLogOn() )
                         {
-                            std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " 
-                                      << static_cast<unsigned short>(metafrms[i].unk15)
+                            uint32_t unk15_val = metafrms[i].unk15;
+                            std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
+                                      <<hex << unk15_val
                                       << ". Resolution set to " <<myres <<"!\n";
-                            std::cerr << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " 
-                                      << static_cast<unsigned short>(metafrms[i].unk15)
+                            std::cerr << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
+                                      <<hex << unk15_val
                                       << ". Resolution set to " <<myres <<"!\n";
                         }
                         break;
