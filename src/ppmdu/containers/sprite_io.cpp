@@ -607,7 +607,7 @@ namespace pmd2{ namespace graphics
                             if( utils::LibWide().isLogOn() )
                             {
                                 std::clog << "Reading a Raw image #" <<i <<", meta-frame has special img index value, and unk15 value is " 
-                                          <<m_outSprite.m_metaframes[i].unk15 <<"!\n";
+                                          <<static_cast<unsigned short>(m_outSprite.m_metaframes[i].unk15) <<"!\n";
                             }
                             res = MetaFrame::eResToResolution(m_outSprite.m_metaframes[i].resolution);
                         }

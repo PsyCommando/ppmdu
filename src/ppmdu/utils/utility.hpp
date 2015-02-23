@@ -168,9 +168,5 @@ namespace utils
     }
 };
 
-std::ostream & operator<<(std::ostream &os, utils::Resolution &res)
-{
-    return os << res.width <<"x" <<res.height;
-}
 
 #endif 

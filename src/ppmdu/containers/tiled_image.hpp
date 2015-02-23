@@ -136,16 +136,16 @@ namespace gimg
             Its size can be dynamically changed, however, the size of the individual tiles 
             is static.
     *************************************************************************************************/
-    template< class _PIXEL_T, unsigned int _TILE_NB_ROWS = 8, unsigned int _TILE_NB_COLS = 8 >
+    template< class _PIXEL_T, unsigned int _TILE_Height = 8, unsigned int _TILE_Width = 8 >
         class tiled_image : public base_image< 
                                                 tiled_image<_PIXEL_T, 
-                                                            _TILE_NB_ROWS, 
-                                                            _TILE_NB_COLS>, 
+                                                            _TILE_Height, 
+                                                            _TILE_Width>, 
                                                 _PIXEL_T>
     {
     public:
-        typedef tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> _myty;
-        typedef tile<_PIXEL_T,_TILE_NB_ROWS,_TILE_NB_COLS>          tile_t;
+        typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width> _myty;
+        typedef tile<_PIXEL_T,_TILE_Height,_TILE_Width>          tile_t;
         typedef typename tile_t::pixel_t                            pixel_t;
         typedef typename tile_t::pixel_t                            value_type; //For the iterator
         typedef utils::index_iterator<tiled_image>                  iterator;
@@ -237,7 +237,7 @@ namespace gimg
         //Access the image data like a linear 1D array
         inline const pixel_t & operator[]( unsigned int pos )const
         {
-            return (*const_cast<tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> *>(this))[pos];
+            return (*const_cast<tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width> *>(this))[pos];
         }
 
         //Access the image data like a 2D bitmap
@@ -254,7 +254,7 @@ namespace gimg
         //Access the image data like a 2D bitmap
         inline const pixel_t & getPixel( unsigned int x, unsigned int y )const
         {
-            return const_cast<tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> *>(this)->getPixel(x,y);
+            return const_cast<tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width> *>(this)->getPixel(x,y);
         }
 
         //Access a single tile via row and column coordinate
@@ -277,7 +277,19 @@ namespace gimg
         //Access a single tile via tile index
         inline const tile_t & getTile( unsigned int index )const
         {
-            return const_cast<tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS> *>(this)->getTile(index);
+            return const_cast<tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width> *>(this)->getTile(index);
+        }
+
+        //#TODO: eventually when we remove the tile dimension from the template param, we'll want to implement those properly!
+        //inline unsigned int getTileWidth()const
+        static inline unsigned int getTileWidth()
+        {
+            return _TILE_Width;
+        }
+        //inline unsigned int getTileHeight()const
+        static inline unsigned int getTileHeight()
+        {
+            return _TILE_Height;
         }
 
         //Set the nb of tiles columns and tiles rows
@@ -330,7 +342,7 @@ namespace gimg
         //Access to the iterators
         inline iterator       begin() throw()       { return iterator(this,0); }
         inline const_iterator begin() const throw() { return const_iterator(this,0); }
-        inline iterator       end()   throw()       { return iterator(const_cast<tiled_image<_PIXEL_T, _TILE_NB_ROWS,_TILE_NB_COLS>* >(this),m_totalNbPixels); }
+        inline iterator       end()   throw()       { return iterator(const_cast<tiled_image<_PIXEL_T, _TILE_Height,_TILE_Width>* >(this),m_totalNbPixels); }
         inline const_iterator end()   const throw() { return const_iterator(this,m_totalNbPixels); }
 
     protected:
@@ -354,14 +366,14 @@ namespace gimg
             And it also allows to get the color of a pixel directly, by only specifying its X/Y 
             coordinate!
     *************************************************************************************************/
-    template< class _PIXEL_T, class _COLOR_T, unsigned int _TILE_NB_ROWS = 8, unsigned int _TILE_NB_COLS = 8 >
-        class tiled_indexed_image : public tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>
+    template< class _PIXEL_T, class _COLOR_T, unsigned int _TILE_Height = 8, unsigned int _TILE_Width = 8 >
+        class tiled_indexed_image : public tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width>
     {
     public:
         static_assert( _PIXEL_T::mypixeltrait_t::IS_INDEXED, "Using a non-indexed pixel type inside a tiled_indexed_image is not allowed!" );
         typedef _COLOR_T pal_color_t;
-        typedef tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_NB_ROWS,_TILE_NB_COLS> _myty;
-        typedef tiled_image<_PIXEL_T, _TILE_NB_ROWS, _TILE_NB_COLS>                _parentty;
+        typedef tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_Height,_TILE_Width> _myty;
+        typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width>                _parentty;
 
         //------ Constructors ------
         tiled_indexed_image()

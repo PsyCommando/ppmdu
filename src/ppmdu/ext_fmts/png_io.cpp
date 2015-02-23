@@ -279,6 +279,72 @@ namespace utils{ namespace io
         return true;
     }
 
+
+    std::vector<gimg::colorRGB24> ImportPaletteFromPNG( const std::string & filepath )
+    {
+        ifstream inimg(filepath);
+        if( ! inimg.is_open() || ! inimg.good() )
+            cout<<"wtf!";
+
+        png::reader< std::ifstream > reader(inimg);
+        reader.read_info();
+
+        std::vector<gimg::colorRGB24> outpal;
+        const auto & mypalette = reader.get_image_info().get_palette();
+        outpal.resize( mypalette.size() );
+
+        //Build palette
+        for( unsigned int i = 0; i < mypalette.size(); ++i )
+        {
+            outpal[i].red   = mypalette[i].red;
+            outpal[i].green = mypalette[i].green;
+            outpal[i].blue  = mypalette[i].blue;
+        }
+
+        return std::move( outpal );
+    }
+
+    void SetPalettePNGImg( const std::vector<gimg::colorRGB24> & srcpal, 
+                           const std::string                   & filepath )
+    {
+        ifstream                    inimg(filepath);
+        png::reader< std::istream > reader(inimg);
+
+        reader.read_info();
+        png::color_type colorType = reader.get_color_type();
+        const uint32_t  bitdepth = reader.get_bit_depth();
+
+        if( colorType != png::color_type::color_type_palette )  
+            throw runtime_error( "Error: the image to inject a palette into doesn't use a color palette !" );
+
+        //Build palette
+        png::palette mypalette( srcpal.size() );
+        for( unsigned int i = 0; i < mypalette.size(); ++i )
+        {
+            mypalette[i].red    = srcpal[i].red;
+            mypalette[i].green  = srcpal[i].green;
+            mypalette[i].blue   = srcpal[i].blue;
+        }
+
+        //Set palette
+        if( bitdepth == 4 )
+        {
+            png::image<png::index_pixel_4> tmpimg;
+            tmpimg.read( filepath, png::require_color_space<png::index_pixel_4>() );
+            tmpimg.set_palette( mypalette );
+            tmpimg.write(filepath);
+        }
+        else if( bitdepth == 8 )
+        {
+            png::image<png::index_pixel> tmpimg;
+            tmpimg.read( filepath, png::require_color_space<png::index_pixel>() );
+            tmpimg.set_palette( mypalette );
+            tmpimg.write(filepath);
+        }
+        else
+            throw runtime_error("Error: the image to inject a palette into has an unsupported bitdepth!");
+    }
+
 //================================================================================================
 //  Generic Specializatin
 //================================================================================================

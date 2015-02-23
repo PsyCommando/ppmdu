@@ -313,6 +313,14 @@ namespace gfx_util
             "-q",
             std::bind( &CGfxUtil::ParseOptionQuiet, &GetInstance(), placeholders::_1 ),
         },
+        // Enable Logging
+        {
+            "log",
+            0,
+            "Enable logging to file.",
+            "-log",
+            std::bind( &CGfxUtil::ParseOptionLog, &GetInstance(), placeholders::_1 ),
+        },
         //Image Format For Export
         {
             "f",
@@ -407,11 +415,11 @@ namespace gfx_util
     }
 
     CGfxUtil::CGfxUtil()
-        :CommandLineUtility(), m_redirectClog(getExeName() + ".log")
+        :CommandLineUtility()
     {
-#ifdef _DEBUG
-        utils::LibWide().isLogOn(true);
-#endif
+//#ifdef _DEBUG
+//        utils::LibWide().isLogOn(true);
+//#endif
         _Construct();
     }
 
@@ -420,6 +428,7 @@ namespace gfx_util
         clog <<getExeName() <<" " <<getVersionString() <<" initializing..\n";
         m_bQuiet        = false;
         m_ImportByIndex = false;
+        m_bRedirectClog = false;
         m_execMode      = eExecMode::INVALID_Mode;
         m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
 
@@ -1019,7 +1028,7 @@ namespace gfx_util
                 
                     if( m_compressToPKDPX )
                     {
-                        cout <<"<!>- Input directory name matches compressed pokemon sprite pack\n" 
+                        cout <<"<*>- Input directory name matches compressed pokemon sprite pack\n" 
                              <<"     file's name. Enabling compression!\n";
                     }
                 }
@@ -1078,19 +1087,24 @@ namespace gfx_util
 
         if( optdata.size() > 1 )
         {
+            cout <<"<*>- Forcing export to ";
             if( optdata[1].compare( "raw" ) == 0 )
             {
                 m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::RAW;
+                cout <<"raw image(s)";
             }
             else if( optdata[1].compare( utils::io::BMP_FileExtension ) == 0 )
             {
                 m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::BMP;
+                cout <<".bmp image(s)";
             }
             else
             {
                 //Fallback to png
                 m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
+                cout <<".png image(s)";
             }
+            cout <<"!\n";
             return true;
         }
 
@@ -1106,31 +1120,38 @@ namespace gfx_util
             auto          result = filetypes::GetFileTypeFromExtension( optdata.back() );
             e_ContentType type   = result.front();
 
+            cout << "<*>- Forcing input as ";
+
             switch( type )
             {
                 case e_ContentType::WAN_SPRITE_CONTAINER:
                 {
                     m_execMode = eExecMode::UNPACK_WAN_Mode;
+                    cout <<"WAN sprite";
                     break;
                 }
                 case e_ContentType::KAOMADO_CONTAINER:
                 {
                     m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
+                    cout <<"kaomado.kao file";
                     break;
                 }
                 case e_ContentType::PACK_CONTAINER:
                 {
                     m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
+                    cout <<"pokemon sprites containing pack file";
                     break;
                 }
                 case e_ContentType::WTE_FILE:
                 {
                     m_execMode = eExecMode::EXPORT_WTE_Mode;
+                    cout <<"WTE file";
                     break;
                 }
                 case e_ContentType::BGP_FILE:
                 {
                     m_execMode = eExecMode::EXPORT_BGP_Mode;
+                    cout <<"BGP file";
                     break;
                 }
                 case e_ContentType::AT4PX_CONTAINER:
@@ -1138,12 +1159,16 @@ namespace gfx_util
                 {
                     //Ambiguous !!!!
                     m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
+                    cout <<"AT4PX/PKDPX file";
                     break;
                 }
                 default:
+                {
+                    cout <<"INVALID!\n";
                     return false;
+                }
             };
-
+            cout <<"!\n";
             return true;
         }
         return false;
@@ -1151,37 +1176,47 @@ namespace gfx_util
 
     bool CGfxUtil::ParseOptionImportByIndex( const std::vector<std::string> & optdata )
     {
-        //No validation required
+        cout <<"<*>- Importing images by index instead of by alphanumeric order !\n";
         return (m_ImportByIndex = true);
     }
 
     bool CGfxUtil::ParseOptionAnimResPath( const std::vector<std::string> & optdata )
     {
-        return ParseOptionFilePath( optdata, m_pathToAnimNameResFile );
+        bool result = ParseOptionFilePath( optdata, m_pathToAnimNameResFile );
+        cout <<"<*>- Changed lookup path for animation handling resources to \"" <<m_pathToAnimNameResFile <<"\"!\n";
+        return result;
     }
 
     bool CGfxUtil::ParseOptionFaceNamesPath( const std::vector<std::string> & optdata )
     {
-        return ParseOptionFilePath( optdata, m_pathToFaceNamesFile );
+        bool result = ParseOptionFilePath( optdata, m_pathToFaceNamesFile );
+        cout <<"<*>- Changed lookup path for kaomado.kao face name list to \"" <<m_pathToFaceNamesFile <<"\"!\n";
+        return result;
     }
     
     bool CGfxUtil::ParseOptionPokeNamesPath( const std::vector<std::string> & optdata )
     {
-        return ParseOptionFilePath( optdata, m_pathToPokeNamesFile );
+        bool result = ParseOptionFilePath( optdata, m_pathToPokeNamesFile );
+        cout <<"<*>- Changed lookup path for kaomado.kao pokemon name list to \"" <<m_pathToPokeNamesFile <<"\"!\n";
+        return result;
     }
     
     bool CGfxUtil::ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata )
     {
-        return ParseOptionFilePath( optdata, m_pathToPokeSprNamesFile );
+        bool result = ParseOptionFilePath( optdata, m_pathToPokeSprNamesFile );
+        cout <<"<*>- Changed lookup path for pokemon sprite name list to \"" <<m_pathToPokeSprNamesFile <<"\"!\n";
+        return result;
     }
 
     bool CGfxUtil::ParseOptionCompressPKDPX( const std::vector<std::string> & optdata )
     {
+        cout <<"<*>- Forcing compressiong to PKDPX!\n";
         return m_compressToPKDPX = true;
     }
 
     bool CGfxUtil::ParseOptionBuildPack( const std::vector<std::string> & optdata )
     {
+        cout <<"<*>- Forcing rebuilding from directory to a pokemon sprite containing pack file!\n";
         m_execMode = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
         return true;
     }
@@ -1191,12 +1226,19 @@ namespace gfx_util
         if( optdata.size() == 2 )
         {
             unsigned int nbthreads = stoul(optdata.back());
-            cout<<"<*>-Thread count set to " <<nbthreads <<" worker thread(s)!\n";
+            cout<<"<*>- Thread count set to " <<nbthreads <<" worker thread(s)!\n";
             utils::LibraryWide::getInstance().Data().setNbThreadsToUse( nbthreads );
             return true;
         }
         else
             return false;
+    }
+
+    bool CGfxUtil::ParseOptionLog( const std::vector<std::string> & optdata )
+    {
+        cout <<"<*>- Logging enabled!\n";
+        utils::LibWide().isLogOn(true);
+        return m_bRedirectClog = true;
     }
 
 //--------------------------------------------
@@ -1216,43 +1258,57 @@ namespace gfx_util
             if( ! m_bQuiet )
                 cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
+            if( m_bRedirectClog )
+                m_pRedirectClog.reset( new utils::cmdl::RAIIClogRedirect( inpath.getBaseName() + ".log" ) );
+
+            unique_ptr<utils::ChronoRAII<>> chronototal = nullptr;
+
+            if(utils::LibWide().isLogOn())
+                chronototal.reset( new utils::ChronoRAII<>("Total Execution Time", &clog ) );
+
             switch( m_execMode )
             {
                 case eExecMode::BUILD_WAN_Mode:
                 {
-                    clog <<"Building WAN sprite..\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Building WAN sprite..\n";
                     returnval = BuildSprite();
                     break;
                 }
                 case eExecMode::UNPACK_WAN_Mode:
                 {
-                    clog <<"Unpacking WAN sprite..\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Unpacking WAN sprite..\n";
                     returnval = UnpackSprite();
                     break;
                 }
                 case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:
                 {
-                    clog <<"Unpacking sprite pack file..\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Unpacking sprite pack file..\n";
                     returnval = UnpackAndExportPackedCharSprites();
                     break;
                 }
                 case eExecMode::BUILD_POKE_SPRITES_PACK_Mode:
                 {
-                    clog <<"Building sprite pack file..\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Building sprite pack file..\n";
                     returnval = PackAndImportCharSprites();
                     break;
                 }
                 case eExecMode::INVALID_Mode:
                 {
                     cerr<<"<!>- ERROR  : Nothing can be done here. Exiting..\n";
-                    clog<<"<!>- Got invalid operation mode!\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog<<"<!>- Got invalid operation mode!\n";
                     returnval = RETVAL_InvalidOp;
                     break;
                 }
                 default:
                 {
                     cerr<<"<!>- ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
-                    clog<<"<!>- Unimplemented operation mode!\n";
+                    if( utils::LibWide().isLogOn() )
+                        clog<<"<!>- Unimplemented operation mode!\n";
                     returnval = RETVAL_InvalidOp;
                 }
             };
@@ -1284,11 +1340,6 @@ namespace gfx_util
 
     int CGfxUtil::GatherArgs( int argc, const char * argv[] )
     {
-        clog <<"Got " <<argc <<" argument(s):\n";
-        for( int i = 0; i < argc; ++i )
-            clog <<argv[i] <<"\n";
-        clog <<"\n";
-
         //Parse arguments and options
         try
         {
@@ -1299,6 +1350,14 @@ namespace gfx_util
                 //char ach;
                 //cin>>ach;
                 //return -1;
+            }
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"Got " <<argc <<" argument(s):\n";
+                for( int i = 0; i < argc; ++i )
+                    clog <<argv[i] <<"\n";
+                clog <<"\n";
             }
 
             Poco::Path inpath(m_inputPath);
@@ -1312,7 +1371,8 @@ namespace gfx_util
         catch( Poco::Exception pex )
         {
             cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
-            clog <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             PrintReadme();
             return pex.code();
         }
@@ -1321,7 +1381,8 @@ namespace gfx_util
             cerr <<"\n" 
                  <<"\nWelp.. Poochyena hit herself in confusion while biting through the parameters!\nShe's in a bit of a pinch. It looks like she might cry...\n"
                  << e.what() <<endl;
-            clog <<"\n<!>- Exception: " << e.what() <<endl;
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n<!>- Exception: " << e.what() <<endl;
             PrintReadme();
             return RETVAL_BadArg;
         }

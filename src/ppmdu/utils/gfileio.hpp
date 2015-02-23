@@ -36,6 +36,10 @@ namespace utils{ namespace io
     */
     std::vector<std::string> ReadTextFileLineByLine( const std::string & filepath );
 
+    /*
+        Write a file line by line, from a vector of string.
+    */
+    void WriteTextFileLineByLine( const std::vector<std::string> & data, const std::string & filepath );
 
     /*
         This class redirect the stream for the duration of its lifetime.

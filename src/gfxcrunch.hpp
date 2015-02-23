@@ -68,6 +68,7 @@ namespace gfx_util
         bool ParseOptionCompressPKDPX   ( const std::vector<std::string> & optdata );
         bool ParseOptionBuildPack       ( const std::vector<std::string> & optdata );
         bool ParseOptionNbThreads       ( const std::vector<std::string> & optdata );
+        bool ParseOptionLog             ( const std::vector<std::string> & optdata );
 
         //Execution
         int UnpackSprite();
@@ -124,6 +125,7 @@ namespace gfx_util
         bool                           m_bQuiet;          //Whether we should output to console 
         bool                           m_ImportByIndex;   //Whether the images should be imported by their index number, and not just the order they're sorted as
         bool                           m_compressToPKDPX; //Whether the content should be compressed. Works with sprite files, and packed sprite files only this far!
+        bool                           m_bRedirectClog;   //Whether we should redirect clog to a file
         eExecMode                      m_execMode;        //This is set after reading the input path.
         //std::unique_ptr<pathwrapper_t> m_pInputPath;      //This is the input path that was parsed 
         //std::unique_ptr<pathwrapper_t> m_pOutputPath;     //This is the output path that was parsed
@@ -141,12 +143,12 @@ namespace gfx_util
         std::string                    m_pathToPokeNamesFile;   //Path to the file containing the name to give every entries in a "kaomado.kao" file
 
         //Temporary Execution Stuff
-        std::atomic<uint32_t> m_inputCompletion;
-        std::atomic<uint32_t> m_outputCompletion;
-        std::atomic<bool>     m_bStopProgressPrint;
-        std::future<void>     m_runThUpHpBar;
+        std::atomic<uint32_t> m_inputCompletion;//#REMOVEME
+        std::atomic<uint32_t> m_outputCompletion;//#REMOVEME
+        std::atomic<bool>     m_bStopProgressPrint;//#REMOVEME
+        std::future<void>     m_runThUpHpBar;//#REMOVEME
 
-        utils::cmdl::RAIIClogRedirect      m_redirectClog;
+        std::unique_ptr<utils::cmdl::RAIIClogRedirect> m_pRedirectClog;
     };
 };
 

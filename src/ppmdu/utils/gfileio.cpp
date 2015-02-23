@@ -77,5 +77,21 @@ namespace utils{ namespace io
         return std::move(stringlist);
     }
 
+    void WriteTextFileLineByLine( const std::vector<std::string> & data, const std::string & filepath )
+    {
+        ofstream output(filepath);
+
+        if( !( output.good() && output.is_open() ) )
+        {
+            std::stringstream strs;
+            strs << "WriteTextFileLineByLine(): Error: file is missing or cannot be opened ! Path :\n"
+                 << filepath;
+            throw runtime_error(strs.str());
+        }
+
+        for( const auto & entry : data )
+            output << entry << "\n";
+    }
+
 
 };};

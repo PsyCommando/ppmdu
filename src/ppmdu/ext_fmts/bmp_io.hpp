@@ -62,6 +62,12 @@ namespace utils{ namespace io
                             unsigned int        forcedheight    = 0,
                             bool                erroronwrongres = false );
 
+
+
+    std::vector<gimg::colorRGB24> ImportPaletteFromBMP( const std::string & filepath );
+    void                          SetPaletteBMPImg( const std::vector<gimg::colorRGB24> & srcpal, 
+                                                    const std::string & filepath);
+
 };};
 
 #endif

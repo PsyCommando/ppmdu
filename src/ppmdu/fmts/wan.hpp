@@ -16,6 +16,7 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/utils/library_wide.hpp>
+#include <ppmdu/utils/handymath.hpp>
 #include <atomic>
 #include <algorithm>
 #include <type_traits>
@@ -636,15 +637,26 @@ namespace pmd2 { namespace filetypes
                     {
                         myres = MetaFrame::eResToResolution( metafrms[i].resolution );
                         if( utils::LibWide().isLogOn() )
-                            std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " <<metafrms[i].unk15 
-                                      << ". Resolution set to " <<myres.width <<"x" <<myres.height <<"!\n";
+                        {
+                            std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " 
+                                      << static_cast<unsigned short>(metafrms[i].unk15)
+                                      << ". Resolution set to " <<myres <<"!\n";
+                            std::cerr << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " 
+                                      << static_cast<unsigned short>(metafrms[i].unk15)
+                                      << ". Resolution set to " <<myres <<"!\n";
+                        }
                         break;
                     }
                 }
 
-                if( i == metafrms.size() && utils::LibWide().isLogOn() )
-                    std::clog << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";
-
+                if( i == metafrms.size()  )
+                {
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        std::clog << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";  
+                        std::cerr << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";  
+                    }
+                }
             }
             //else if( metafrms.front().isSpecialMetaFrame() ) 
             //{
@@ -663,15 +675,38 @@ namespace pmd2 { namespace filetypes
             uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
             uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
 
-            if( nbPixInBytes != (myres.width * myres.height) )
+            if( nbPixInBytes > (myres.width * myres.height) )
             {
-                std::clog <<"WARNING: Image #" <<curfrmindex <<", has a resolution that doesn't match the amount of bytes to fill it with!\n"
-                          <<"Got resolution of " <<res <<"(" <<(myres.width * myres.height) <<" pixels), but expected a total of " <<nbPixInBytes <<" pixels!\n"
-                          <<"Defaulting to an approximated sufficient size!\n";
+                std::stringstream sstr;
+                sstr <<"WARNING: Image #" <<curfrmindex <<", has a resolution that doesn't match the amount of pixels to fill it with!\n"
+                     <<"\tExpected resolution of " <<myres <<"(" <<(myres.width * myres.height) <<" pixels), but got a total of " <<nbPixInBytes <<" pixels!\n";
+                
+                //This is bad, fallback to guessing the size of the image via pixel total
+                float squareroot = ceilf( sqrtf( nbPixInBytes ) );
+                long  squareRes  = std::lroundf(squareroot);
+                long  resdivbyTile  = ( (squareRes % TIMG_t::getTileWidth()) == 0 )?
+                                        squareRes :
+                                        CalcClosestHighestDenominator( squareRes, TIMG_t::getTileWidth() );
+
+                myres = { resdivbyTile, resdivbyTile };
+                sstr << "\tDefaulting to nearest match divisible by 8 : " <<myres <<" !\n"; //Flush
+
+                std::string strres = sstr.str();
+                std::cerr <<strres;
+                std::clog <<strres;
+            }
+            else if( nbPixInBytes < (myres.width * myres.height) )
+            {
+                std::stringstream sstr;
+                sstr <<"WARNING:  Image #" <<curfrmindex <<", got less pixels than expected !\n\tExpected " 
+                     <<(myres.width * myres.height) <<", but got " <<nbPixInBytes <<" instead !\n";
+                std::string strres = sstr.str();
+                std::cerr <<strres;
+                std::clog <<strres;
             }
 
             //Sanity check
-            assert( nbPixInBytes == (myres.width * myres.height) );
+            //assert( nbPixInBytes == (myres.width * myres.height) );
 
             //Parse the image with the best resolution we could find!
             cur_img.setPixelResolution( myres.width, myres.height );

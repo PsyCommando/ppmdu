@@ -5,12 +5,6 @@
 #include <fstream>
 #include <sstream>
 #include <atomic>
-#include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/ext_fmts/png_io.hpp>
-#include <ppmdu/ext_fmts/riff_palette.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
-#include <Poco/File.h>
-#include <Poco/Path.h>
 using namespace std;
 
 namespace pmd2{ namespace graphics

@@ -60,12 +60,14 @@ namespace pmd2 { namespace graphics
     //    utils::Resolution resolution;
     //};
 
-    //Resolution to 4bpp, byte size map
-    //static const std::array<entryrestable,3> BYTESZ_4BPP_TO_RES=
+    //static const std::vector<entryrestable> NBPixelsToResolution=
     //{{
-    //    { 256u, RES_16x16_SPRITE },
-    //    { 512u, RES_32x32_SPRITE },
-    //    { 800u, RES_PORTRAIT     },
+    //    {   64, RES_8x8_SPRITE   },
+    //    {  256, RES_16x16_SPRITE },
+    //    {  512, RES_32x32_SPRITE },
+    //    { 4096, RES_64x64_SPRITE },
+    //    {  128, RES_8x16_SPRITE  },
+
     //}};
 
     //This function returns the appropriate Resolution for the specified amount of pixels

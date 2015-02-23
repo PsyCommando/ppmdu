@@ -231,6 +231,8 @@ namespace utils
         cerr << "<!>-EXCEPTION: " <<e.what() <<endl;
     }
 
-
-
+    std::ostream & operator<<(std::ostream &os, utils::Resolution &res)
+    {
+        return os << res.width <<"x" <<res.height;
+    }
 };

@@ -70,6 +70,11 @@ namespace utils{ namespace io
                             bool                erroronwrongres = false );
 
 
+    std::vector<gimg::colorRGB24> ImportPaletteFromPNG( const std::string & filepath );
+    void                          SetPalettePNGImg( const std::vector<gimg::colorRGB24> & srcpal, 
+                                                    const std::string & filepath);
+
+
 };};
 
 #endif

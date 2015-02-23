@@ -235,10 +235,16 @@ namespace utils{ namespace cmdl
         //std::vector<std::string>              m_extraparams;
         //std::vector<std::vector<std::string>> m_options;
 
+        //Disable copy and move
+        CommandLineUtility( const CommandLineUtility & );
+        CommandLineUtility( CommandLineUtility && );
+        CommandLineUtility& operator=(const CommandLineUtility&);
+        CommandLineUtility& operator=(const CommandLineUtility&&);
+
     private:
         //No copy!
-        CommandLineUtility( const CommandLineUtility* );
-        CommandLineUtility& operator=( const CommandLineUtility* );
+        //CommandLineUtility( const CommandLineUtility* );
+        //CommandLineUtility& operator=( const CommandLineUtility* );
     };
 
 };};
