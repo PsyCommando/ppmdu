@@ -21,10 +21,14 @@ namespace utils{ namespace cmdl
 //  RAIIClogRedirect
 //============================================================================================
 
-    RAIIClogRedirect::RAIIClogRedirect( const std::string & logfilename )
+    RAIIClogRedirect::RAIIClogRedirect()
     {
-        m_filebuf.open( logfilename, std::ios::out );
-        m_oldbuf = std::clog.rdbuf( &m_filebuf );
+#ifdef WIN32
+        m_nullbuff.open( "nul", std::ios::out );
+#elif __linux__
+        m_nullbuff.open( "/dev/null", std::ios::out );
+#endif
+        m_oldbuf = std::clog.rdbuf( &m_nullbuff );
     }
 
     RAIIClogRedirect::~RAIIClogRedirect()
@@ -32,6 +36,27 @@ namespace utils{ namespace cmdl
         std::clog.rdbuf( m_oldbuf );
     }
 
+    bool RAIIClogRedirect::IsRedirecting()const
+    {
+        return m_bIsRedirecting;
+    }
+
+    void RAIIClogRedirect::Redirect( const std::string & filename )
+    {
+        m_filebuf.open( filename, std::ios::out );
+
+        if( ! m_filebuf.is_open() )
+            throw runtime_error("WARNING: Encountered an IO problem while creating the logfile!");
+
+        std::clog.rdbuf( &m_filebuf );
+        m_bIsRedirecting = true;
+    }
+
+    void RAIIClogRedirect::StopRedirect()
+    {
+        std::clog.rdbuf( &m_nullbuff );
+        m_bIsRedirecting = false;
+    }
 
 //============================================================================================
 // CArgsParser

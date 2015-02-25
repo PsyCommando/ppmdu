@@ -19,8 +19,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CompilingTheDependencies", 
 		CompileDependenciesInfo.txt = CompileDependenciesInfo.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XML", "lib\poco\XML\XML_vs120.vcxproj", "{9E211743-85FE-4977-82F3-4F04B40C912D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		debug_shared|Win32 = debug_shared|Win32
@@ -97,22 +95,6 @@ Global
 		{8164D41D-B053-405B-826C-CF37AC0EF176}.release_static_mt|Win32.Build.0 = release_static_mt|Win32
 		{8164D41D-B053-405B-826C-CF37AC0EF176}.Release|Win32.ActiveCfg = release_static_mt|Win32
 		{8164D41D-B053-405B-826C-CF37AC0EF176}.Release|Win32.Build.0 = release_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_shared|Win32.ActiveCfg = debug_shared|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_shared|Win32.Build.0 = debug_shared|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_static_md|Win32.ActiveCfg = debug_static_md|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_static_md|Win32.Build.0 = debug_static_md|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_static_mt|Win32.ActiveCfg = debug_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.debug_static_mt|Win32.Build.0 = debug_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.Debug|Win32.ActiveCfg = debug_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.Debug|Win32.Build.0 = debug_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_shared|Win32.ActiveCfg = release_shared|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_shared|Win32.Build.0 = release_shared|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_static_md|Win32.ActiveCfg = release_static_md|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_static_md|Win32.Build.0 = release_static_md|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_static_mt|Win32.ActiveCfg = release_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.release_static_mt|Win32.Build.0 = release_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.Release|Win32.ActiveCfg = release_static_mt|Win32
-		{9E211743-85FE-4977-82F3-4F04B40C912D}.Release|Win32.Build.0 = release_static_mt|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Utilities for importing and exporting PNG images and their palettes into the formats used in the lib.
 */
 #include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/ext_fmts/supported_io_info.hpp>
 #include <string>
 
 
@@ -69,6 +70,12 @@ namespace utils{ namespace io
                             unsigned int        forcedheight    = 0,
                             bool                erroronwrongres = false );
 
+
+    std::vector<gimg::colorRGB24> ImportPaletteFromPNG( const std::string & filepath );
+    void                          SetPalettePNGImg( const std::vector<gimg::colorRGB24> & srcpal, 
+                                                    const std::string & filepath);
+
+    image_format_info GetPNGImgInfo(const std::string & filepath);
 
 };};
 

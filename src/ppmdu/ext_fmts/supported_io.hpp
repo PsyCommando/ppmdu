@@ -64,6 +64,8 @@ namespace utils{ namespace io
         return GetSupportedImageType(pathtoimg) != eSUPPORT_IMG_IO::INVALID;
     }
 
+
+
 //================================================================================================
 // File Formats Support
 //================================================================================================

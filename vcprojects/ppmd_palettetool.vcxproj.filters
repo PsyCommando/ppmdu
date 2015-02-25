@@ -1,0 +1,201 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\ppmdu">
+      <UniqueIdentifier>{cd547452-d0f5-4283-8a32-85de6d0bb9ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats">
+      <UniqueIdentifier>{186b50e3-065b-48ce-9702-223543901db6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\external formats">
+      <UniqueIdentifier>{cd3c0916-c803-4690-94f0-1f5d2dfd711c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats">
+      <UniqueIdentifier>{dee0c04f-7d9f-4073-82fb-276aedbeead3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\utility">
+      <UniqueIdentifier>{41473549-72c5-42ca-810e-b8bed2e9b25e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu">
+      <UniqueIdentifier>{d2fddb63-c811-49a7-b336-cb06b7be5073}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats">
+      <UniqueIdentifier>{7a3d16a8-17b4-4a6c-ab20-ab18d825ec57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\external formats">
+      <UniqueIdentifier>{522f8b58-dc16-4ab1-966d-ca1d49f3f1fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats">
+      <UniqueIdentifier>{c8639e8f-7994-40ae-a1c8-acd59efe2a43}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\utility">
+      <UniqueIdentifier>{203d3ffc-a4e6-4fd5-95d6-e04a4088e5df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EasyBMP">
+      <UniqueIdentifier>{fbc3867f-aeee-4382-a1dd-f2aa5a8b0d78}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ppmdu\basetypes.hpp">
+      <Filter>Header Files\ppmdu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\color.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\png_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\riff_palette.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\palettetool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_BMP.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_DataStructures.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_VariousBMPutilities.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\txt_palette_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io_info.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ppmdu\containers\color.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\png_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
+      <Filter>EasyBMP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\txt_palette_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io_info.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\palettetool.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

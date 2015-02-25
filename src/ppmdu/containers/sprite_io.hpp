@@ -49,14 +49,13 @@ namespace pmd2 { namespace graphics
     **************************************************************/
     struct spriteWorkStats
     {
-        uint32_t propFrames;
-        uint32_t propAnims;
-        uint32_t propMFrames;
-        uint32_t propOffsets;
-        uint32_t propImgInfo;
-
-        uint32_t totalAnimFrms;
-        uint32_t totalAnimSeqs;
+        uint32_t propFrames    = 0;
+        uint32_t propAnims     = 0;
+        uint32_t propMFrames   = 0;
+        uint32_t propOffsets   = 0;
+        uint32_t propImgInfo   = 0;
+        uint32_t totalAnimFrms = 0;
+        uint32_t totalAnimSeqs = 0;
     };
     
 //=============================================================================================

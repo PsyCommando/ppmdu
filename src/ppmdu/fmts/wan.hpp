@@ -16,10 +16,12 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/utils/library_wide.hpp>
+#include <ppmdu/utils/handymath.hpp>
 #include <atomic>
 #include <algorithm>
 #include <type_traits>
 #include <iomanip>
+#include <functional>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -30,33 +32,6 @@ namespace pmd2 { namespace filetypes
     static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
     static const unsigned int WAN_LENGTH_ANIM_FRM    = 12; //bytes
     static const unsigned int WAN_LENGTH_ANIM_GRP    = 8;  //bytes
-
-//#ifdef _DEBUG //Just for research purpose
-//
-//    struct testvalueasmtable
-//    {
-//        testvalueasmtable()
-//        {
-//            logFile.open("wanlog.txt", std::ios::out);
-//            oldbuff = std::clog.rdbuf( &logFile );
-//            std::cout << "redirected clog to wanlog.txt file!\n";
-//        }
-//
-//        ~testvalueasmtable()
-//        {
-//            std::clog.rdbuf( oldbuff );
-//            std::cout << "redirected clog to original streambuffer!\n";
-//        }
-//
-//        static void ReportValue( uint32_t val )
-//        {
-//            std::clog << "Asm Table last value found " <<val <<"\n";
-//        }
-//        static testvalueasmtable s_inst;
-//        std::filebuf             logFile;
-//        std::streambuf          *oldbuff;
-//    };
-//#endif
 
 //=============================================================================================
 //  WAN Structures
@@ -107,10 +82,10 @@ namespace pmd2 { namespace filetypes
     **********************************************************************/
     struct wan_sub_header
     {
-        uint32_t ptr_animinfo,
-                 ptr_imginfo;
-        uint16_t spriteType;
-        uint16_t unk12;
+        uint32_t ptr_animinfo = 0;
+        uint32_t ptr_imginfo  = 0;
+        uint16_t spriteType   = 0;
+        uint16_t unk12        = 0;
 
         static const unsigned int DATA_LEN = 12u;
         unsigned int size()const{return DATA_LEN;}
@@ -128,18 +103,22 @@ namespace pmd2 { namespace filetypes
         /*
             This will register all pointers written into "ptroffsettbl".
             Used mainly for writing into a SIR0 container.
+
+            Takes a reference to the raw output buffer, and a pointer to a
+            function to handle the actual writing and logic for registering the pointer!
         */
-        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        void WriteToWanContainer( std::back_insert_iterator<std::vector<uint8_t>> backins, std::function<void(uint32_t)> funRegisterPtr )const
         {
-            auto backins = std::back_inserter( appendto );
+            //auto backins = std::back_inserter( appendto );
+            //Register ptr offset
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptr_animinfo, backins );
+            funRegisterPtr( ptr_animinfo );
 
             //Register ptr offset
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_animinfo, backins );
-
-            //Register ptr offset
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_imginfo,  backins );
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptr_imginfo,  backins );
+            funRegisterPtr(ptr_imginfo);
 
             utils::WriteIntToByteVector( spriteType,   backins );
             utils::WriteIntToByteVector( unk12,        backins );
@@ -170,12 +149,12 @@ namespace pmd2 { namespace filetypes
     {
         static const unsigned int DATA_LEN = 16u;
 
-        uint32_t ptrImgsTbl;   // Pointer to the the table of pointer to the individual images
-        uint32_t ptrPal;       // Pointer to the pointer to the palette info
-        uint16_t unk13;        // 1 == mosaic sprite?,   0 == non-mosaic sprite?
-        uint16_t is256Colors;  // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
-        uint16_t unk11;        // Unknown, seems to range between 0, 1, and up..
-        uint16_t nbImgsTblPtr; // Number of entries in the table of pointers to each frames.
+        uint32_t ptrImgsTbl   = 0; // Pointer to the the table of pointer to the individual images
+        uint32_t ptrPal       = 0; // Pointer to the pointer to the palette info
+        uint16_t unk13        = 0; // 1 == mosaic sprite?,   0 == non-mosaic sprite?
+        uint16_t is256Colors  = 0; // 1 == 8bpp 256 colors, 0 == 4bpp 16 colors
+        uint16_t unk11        = 0; // Unknown, seems to range between 0, 1, and up..
+        uint16_t nbImgsTblPtr = 0; // Number of entries in the table of pointers to each frames.
 
         unsigned int size()const{return DATA_LEN;}
 
@@ -194,20 +173,25 @@ namespace pmd2 { namespace filetypes
         /*
             This will register all pointers written into "ptroffsettbl".
             Used mainly for writing into a SIR0 container.
+
+            Takes a reference to the raw output buffer, and a pointer to a
+            function to handle the actual writing and logic for registering the pointer!
         */
-        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        void WriteToWanContainer( std::back_insert_iterator<std::vector<uint8_t>> backins, std::function<void(uint32_t)> funRegisterPtr )const
         {
-            auto backins = std::back_inserter( appendto );
+            //auto backins = std::back_inserter( appendto );
 
             //Register ptr offset to SIR0 ptr table
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptrImgsTbl,    backins );
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptrImgsTbl,    backins );
+            funRegisterPtr(ptrImgsTbl);
 
             //Register ptr offset to SIR0 ptr table
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptrPal,        backins );
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptrPal,        backins );
+            funRegisterPtr(ptrPal);
 
-            utils::WriteIntToByteVector( unk13,     backins );
+            utils::WriteIntToByteVector( unk13,        backins );
             utils::WriteIntToByteVector( is256Colors,  backins );
             utils::WriteIntToByteVector( unk11,        backins );
             utils::WriteIntToByteVector( nbImgsTblPtr, backins );
@@ -218,7 +202,7 @@ namespace pmd2 { namespace filetypes
         {
             ptrImgsTbl   = utils::ReadIntFromByteVector<decltype(ptrImgsTbl)>  (itReadfrom);
             ptrPal       = utils::ReadIntFromByteVector<decltype(ptrPal)>      (itReadfrom);
-            unk13     = utils::ReadIntFromByteVector<decltype(unk13)>    (itReadfrom);
+            unk13        = utils::ReadIntFromByteVector<decltype(unk13)>       (itReadfrom);
             is256Colors  = utils::ReadIntFromByteVector<decltype(is256Colors)> (itReadfrom);
             unk11        = utils::ReadIntFromByteVector<decltype(unk11)>       (itReadfrom);
             nbImgsTblPtr = utils::ReadIntFromByteVector<decltype(nbImgsTblPtr)>(itReadfrom);
@@ -227,10 +211,10 @@ namespace pmd2 { namespace filetypes
 
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
-            unk13               = sprite->getSprInfo().Unk13;
+            unk13                  = sprite->getSprInfo().Unk13;
             is256Colors            = sprite->getSprInfo().m_is256Sprite;
             unk11                  = sprite->getSprInfo().Unk11;
-            nbImgsTblPtr = sprite->getNbFrames();
+            nbImgsTblPtr           = sprite->getNbFrames();
         }
     };
 
@@ -242,15 +226,15 @@ namespace pmd2 { namespace filetypes
     {
         static const unsigned int DATA_LEN = 24u;
 
-        uint32_t ptr_metaFrmTable;  //pointer to the table containing pointers to every meta frames. 
-        uint32_t ptr_pOffsetsTable; //ptr to Particle offset table
-        uint32_t ptr_animGrpTable;  //ptr to the table with pointers to every animation groups
-        uint16_t nb_anim_groups;
-        uint16_t unk6;
-        uint16_t unk7;
-        uint16_t unk8;
-        uint16_t unk9;
-        uint16_t unk10;
+        uint32_t ptr_metaFrmTable  = 0;  //pointer to the table containing pointers to every meta frames. 
+        uint32_t ptr_pOffsetsTable = 0; //ptr to Particle offset table
+        uint32_t ptr_animGrpTable  = 0;  //ptr to the table with pointers to every animation groups
+        uint16_t nb_anim_groups    = 0;
+        uint16_t unk6              = 0;
+        uint16_t unk7              = 0;
+        uint16_t unk8              = 0;
+        uint16_t unk9              = 0;
+        uint16_t unk10             = 0;
 
         unsigned int size()const{return DATA_LEN;}
 
@@ -276,21 +260,27 @@ namespace pmd2 { namespace filetypes
         /*
             This will register all pointers written into "ptroffsettbl".
             Used mainly for writing into a SIR0 container.
+
+            Takes a reference to the raw output buffer, and a pointer to a
+            function to handle the actual writing and logic for registering the pointer!
         */
-        void WriteToWanContainer( std::vector<uint8_t> & appendto, std::vector<uint32_t> & ptroffsettbl )const
+        void WriteToWanContainer( std::back_insert_iterator<std::vector<uint8_t>> backins, std::function<void(uint32_t)> funRegisterPtr )const
         {
-            auto backins = std::back_inserter( appendto );
+            //auto backins = std::back_inserter( appendto );
 
             //Register ptr offset
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_metaFrmTable,  backins );
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptr_metaFrmTable,  backins );
+            funRegisterPtr(ptr_metaFrmTable);
 
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_pOffsetsTable, backins );
+            //if( ptr_pOffsetsTable != 0 ) //Omit appending it to the ptr offset list if null
+            //    ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptr_pOffsetsTable, backins );
+            funRegisterPtr(ptr_pOffsetsTable);
 
-            ptroffsettbl.push_back( appendto.size() );
-            utils::WriteIntToByteVector( ptr_animGrpTable,  backins );
-
+            //ptroffsettbl.push_back( appendto.size() );
+            //utils::WriteIntToByteVector( ptr_animGrpTable,  backins );
+            funRegisterPtr(ptr_animGrpTable);
 
             utils::WriteIntToByteVector( nb_anim_groups,    backins );
             utils::WriteIntToByteVector( unk6,              backins );
@@ -333,12 +323,12 @@ namespace pmd2 { namespace filetypes
     {
         static const unsigned int DATA_LEN = 16u;
 
-        uint32_t ptrpal;
-        uint16_t unk3;
-        uint16_t nbcolorsperrow;
-        uint16_t unk4;
-        uint16_t unk5;
-        uint32_t nullbytes;
+        uint32_t ptrpal         = 0;
+        uint16_t unk3           = 0;
+        uint16_t nbcolorsperrow = 0;
+        uint16_t unk4           = 0;
+        uint16_t unk5           = 0;
+        uint32_t nullbytes      = 0;
 
         unsigned int size()const{return DATA_LEN;}
 
@@ -374,8 +364,26 @@ namespace pmd2 { namespace filetypes
             unk5           = sprite->getSprInfo().Unk5;
             nullbytes      = 0;
         }
-    };
 
+        /*
+            This will register all pointers written into "ptroffsettbl".
+            Used mainly for writing into a SIR0 container.
+
+            Takes a reference to the raw output buffer, and a pointer to a
+            function to handle the actual writing and logic for registering the pointer!
+        */
+        void WriteToWanContainer( std::back_insert_iterator<std::vector<uint8_t>> backins, std::function<void(uint32_t)> funRegisterPtr )const
+        {
+            //auto backins = std::back_inserter( appendto );
+
+            funRegisterPtr(ptrpal);
+            utils::WriteIntToByteVector( unk3,           backins );
+            utils::WriteIntToByteVector( nbcolorsperrow, backins );
+            utils::WriteIntToByteVector( unk4,           backins );
+            utils::WriteIntToByteVector( unk5,           backins );
+            utils::WriteIntToByteVector( nullbytes,      backins );
+        }
+    };
 
 //=============================================================================================
 //  Functions / Functors
@@ -515,7 +523,7 @@ namespace pmd2 { namespace filetypes
             sprite.RebuildAllReferences();
 
             //Read images, use meta frames to get proper res, thanks to the refs!
-            ReadFrames<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette(), sprite.getImgsInfo() );
+            ReadImages<TIMG_t>( sprite.m_frames, sprite.m_metaframes, sprite.m_metarefs, sprite.getPalette(), sprite.getImgsInfo() );
 
             return std::move( sprite );
         }
@@ -545,7 +553,7 @@ namespace pmd2 { namespace filetypes
                       std::vector<graphics::sprOffParticle>       & out_offsets );
 
         template<class TIMG_t>
-            void ReadFrames( std::vector<TIMG_t>                     & out_imgs, 
+            void ReadImages( std::vector<TIMG_t>                     & out_imgs, 
                              const std::vector<graphics::MetaFrame>  & metafrms,
                              const std::multimap<uint32_t,uint32_t>  & metarefs,
                              const std::vector<gimg::colorRGB24>     & pal,
@@ -553,14 +561,13 @@ namespace pmd2 { namespace filetypes
         {
             using namespace std;
             vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptrImgsTbl); //Make iterator to frame pointer table
-            //utils::Resolution               myres          = RES_64x64_SPRITE; //Max as default
-            uint32_t                        progressBefore = 0; 
+            //uint32_t                        progressBefore = 0; 
             //ensure capacity
             out_imgs.resize( m_wanImgDataInfo.nbImgsTblPtr ); 
 
             //Save a little snapshot of the progress this far
-            if(m_pProgress != nullptr)
-                progressBefore = m_pProgress->load(); 
+            //if(m_pProgress != nullptr)
+            //    progressBefore = m_pProgress->load(); 
 
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nbImgsTblPtr; ++i )
@@ -570,15 +577,15 @@ namespace pmd2 { namespace filetypes
                 if( utils::LibWide().isLogOn() )
                     std::clog <<"== Frame #" <<i <<" ==\n";
 
-                ReadAFrame( m_rawdata.begin() + ptrtoimg, metafrms, metarefs, pal, out_imgs[i], i, out_imginfo );
+                ReadImage( m_rawdata.begin() + ptrtoimg, metafrms, metarefs, pal, out_imgs[i], i, out_imginfo );
                 
-                if( m_pProgress != nullptr )
-                    m_pProgress->store( progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nbImgsTblPtr ) );
+                //if( m_pProgress != nullptr )
+                //    m_pProgress->store( progressBefore + ( (ProgressProp_Frames * (i+1)) / m_wanImgDataInfo.nbImgsTblPtr ) );
             }
         }
 
         template<class TIMG_t>
-            void ReadAFrame( std::vector<uint8_t>::iterator             itwhere, 
+            void ReadImage( std::vector<uint8_t>::iterator             itwhere, 
                                const std::vector<graphics::MetaFrame>  & metafrms,
                                const std::multimap<uint32_t,uint32_t>  & metarefs,
                                const std::vector<gimg::colorRGB24>     & pal,
@@ -613,28 +620,94 @@ namespace pmd2 { namespace filetypes
             imginf.zindex = asmtable.front().zIndex;
             out_imginfo.push_back(imginf);
 
-            uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
-            uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
+
 
             if( itfound != metarefs.end() )
             {
                 //If we have a meta-frame for this image, take the resolution from it.
                 myres = MetaFrame::eResToResolution( metafrms[itfound->second].resolution );
             }
-            else if( metafrms.front().imageIndex == graphics::SPRITE_SPECIAL_METAFRM_INDEX ) 
-            {
-                assert(false);
-                //If we DON'T have a meta-frame for this image, take the resolution from the first meta-frame, if its img index is 0xFFFF.
-                myres = MetaFrame::eResToResolution( metafrms.front().resolution );
-                //Kind of a bad logic here.. Its really possible that the 0xFFFF meta-frame is not the first one.
-                // Besides, we're not even 100% sure what to do if we end up with several 0xFFFF pointing meta-frames..
-                //#TODO: fix this !
-            }
             else
-                assert(false);
+            {
+                //Run a search on the whole thing again, looking for meta-frames with special index, and check the value of unk15
+                uint32_t i = 0;
+                for( ; i < metafrms.size(); ++i )
+                {
+                    if( metafrms[i].isSpecialMetaFrame() && metafrms[i].unk15 == curfrmindex )
+                    {
+                        myres = MetaFrame::eResToResolution( metafrms[i].resolution );
+                        if( utils::LibWide().isLogOn() )
+                        {
+                            uint32_t unk15_val = metafrms[i].unk15;
+                            std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
+                                      <<hex << unk15_val
+                                      << ". Resolution set to " <<myres <<"!\n";
+                            std::cerr << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
+                                      <<hex << unk15_val
+                                      << ". Resolution set to " <<myres <<"!\n";
+                        }
+                        break;
+                    }
+                }
+
+                if( i == metafrms.size()  )
+                {
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        std::clog << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";  
+                        std::cerr << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";  
+                    }
+                }
+            }
+            //else if( metafrms.front().isSpecialMetaFrame() ) 
+            //{
+            //    if( utils::LibWide().isLogOn() )
+            //        std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " << <<"\n";
+            //    assert(false);
+            //    //If we DON'T have a meta-frame for this image, take the resolution from the first meta-frame, if its img index is 0xFFFF.
+            //    myres = MetaFrame::eResToResolution( metafrms.front().resolution );
+            //    //Kind of a bad logic here.. Its really possible that the 0xFFFF meta-frame is not the first one.
+            //    // Besides, we're not even 100% sure what to do if we end up with several 0xFFFF pointing meta-frames..
+            //    //#TODO: fix this !
+            //}
+            //else
+            //    assert(false);
+
+            uint32_t nbpixperbyte = 8 / TIMG_t::pixel_t::GetBitsPerPixel();
+            uint32_t nbPixInBytes = totalbyamt * nbpixperbyte;
+
+            if( nbPixInBytes > (myres.width * myres.height) )
+            {
+                std::stringstream sstr;
+                sstr <<"WARNING: Image #" <<curfrmindex <<", has a resolution that doesn't match the amount of pixels to fill it with!\n"
+                     <<"\tExpected resolution of " <<myres <<"(" <<(myres.width * myres.height) <<" pixels), but got a total of " <<nbPixInBytes <<" pixels!\n";
+                
+                //This is bad, fallback to guessing the size of the image via pixel total
+                float squareroot = ceilf( sqrtf( nbPixInBytes ) );
+                long  squareRes  = std::lroundf(squareroot);
+                long  resdivbyTile  = ( (squareRes % TIMG_t::getTileWidth()) == 0 )?
+                                        squareRes :
+                                        CalcClosestHighestDenominator( squareRes, TIMG_t::getTileWidth() );
+
+                myres = { resdivbyTile, resdivbyTile };
+                sstr << "\tDefaulting to nearest match divisible by 8 : " <<myres <<" !\n"; //Flush
+
+                std::string strres = sstr.str();
+                std::cerr <<strres;
+                std::clog <<strres;
+            }
+            else if( nbPixInBytes < (myres.width * myres.height) )
+            {
+                std::stringstream sstr;
+                sstr <<"WARNING:  Image #" <<curfrmindex <<", got less pixels than expected !\n\tExpected " 
+                     <<(myres.width * myres.height) <<", but got " <<nbPixInBytes <<" instead !\n";
+                std::string strres = sstr.str();
+                std::cerr <<strres;
+                std::clog <<strres;
+            }
 
             //Sanity check
-            assert( nbPixInBytes == (myres.width * myres.height) );
+            //assert( nbPixInBytes == (myres.width * myres.height) );
 
             //Parse the image with the best resolution we could find!
             cur_img.setPixelResolution( myres.width, myres.height );
@@ -697,11 +770,11 @@ namespace pmd2 { namespace filetypes
         const animnamelst_t   *m_pANameList; //List of names to give animation groups and its sequences! The first name in the sub-vector is the name of the group! The others are the names of the sequences for that group!
         std::atomic<uint32_t> *m_pProgress;
 
-        static const unsigned int       ProgressProp_Frames     = 40; //% of the job
-        static const unsigned int       ProgressProp_MetaFrames = 20; //% of the job
-        static const unsigned int       ProgressProp_Animations = 20; //% of the job
-        static const unsigned int       ProgressProp_Offsets    = 10; //% of the job
-        static const unsigned int       ProgressProp_Other      = 10; //% of the job
+        //static const unsigned int       ProgressProp_Frames     = 40; //% of the job
+        //static const unsigned int       ProgressProp_MetaFrames = 20; //% of the job
+        //static const unsigned int       ProgressProp_Animations = 20; //% of the job
+        //static const unsigned int       ProgressProp_Offsets    = 10; //% of the job
+        //static const unsigned int       ProgressProp_Other      = 10; //% of the job
     };
 
     /**********************************************************************

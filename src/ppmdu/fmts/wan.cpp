@@ -82,6 +82,10 @@ namespace pmd2{ namespace filetypes
         return itwrite;
     }
 
+//
+//
+//
+
 //=============================================================================================
 //  Utility Functions
 //=============================================================================================
@@ -196,10 +200,10 @@ namespace pmd2{ namespace filetypes
         //Get Offsets
         out_offsets = ReadParticleOffsets( out_anims ); 
 
-        if( m_pProgress != nullptr )
-        {
-            m_pProgress->store( m_pProgress->load() + ProgressProp_Other );
-        }
+        //if( m_pProgress != nullptr )
+        //{
+        //    m_pProgress->store( m_pProgress->load() + ProgressProp_Other );
+        //}
     }
 
     /**************************************************************
@@ -239,37 +243,43 @@ namespace pmd2{ namespace filetypes
     **************************************************************/
     graphics::MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
     {
-        graphics::MetaFrame result;
-
-        //Read the raw values first
-        result.imageIndex = utils::ReadIntFromByteVector<uint16_t>(itread); //itread is incremented automatically!
-        result.unk0        = utils::ReadIntFromByteVector<uint16_t>(itread);
-        uint16_t offyfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
-        uint16_t offxfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
-        result.unk1        = utils::ReadIntFromByteVector<uint16_t>(itread);
-
-        //Set the cleaned offsets
-        result.offsetY = 0x03FF & offyfl; //keep the 10 lowest bits
-        result.offsetX = 0x01FF & offxfl; //Keep the 9  lowest bits
-
-        //Get the resolution
-        result.resolution = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
-        
-        //x offset flags
-        result.vFlip    = utils::GetBit( offxfl, 13u ) > 0;
-        result.hFlip    = utils::GetBit( offxfl, 12u ) > 0;
-        out_isLastFrm   = utils::GetBit( offxfl, 11u ) > 0; //X bit 5, tells whether this is the last meta-f in a grp
-        result.XOffbit6 = utils::GetBit( offxfl, 10u ) > 0;
-        result.XOffbit7 = utils::GetBit( offxfl,  9u ) > 0;
-        
-        //y offset flags
-        result.YOffbit3   = utils::GetBit( offyfl, 13u ) > 0;
-        result.Mosaic     = utils::GetBit( offyfl, 12u ) > 0;
-        result.YOffbit5   = utils::GetBit( offyfl, 11u ) > 0;
-        result.YOffbit6   = utils::GetBit( offyfl, 10u ) > 0;
-
-        return result;
+        MetaFrame mf;
+        itread = mf.ReadFromWANContainer( itread, out_isLastFrm );
+        return std::move(mf);
     }
+    //{
+    //    graphics::MetaFrame result;
+
+    //    //Read the raw values first
+    //    result.imageIndex  = utils::ReadIntFromByteVector<decltype(result.imageIndex)>(itread); //itread is incremented automatically!
+    //    result.unk0        = utils::ReadIntFromByteVector<decltype(result.unk0)>(itread);
+    //    uint16_t offyfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
+    //    uint16_t offxfl    = utils::ReadIntFromByteVector<uint16_t>(itread);
+    //    result.unk15       = utils::ReadIntFromByteVector<decltype(result.unk15)>(itread);
+    //    result.unk1        = utils::ReadIntFromByteVector<decltype(result.unk1)>(itread);
+
+    //    //Set the cleaned offsets
+    //    result.offsetY = 0x03FF & offyfl; //keep the 10 lowest bits
+    //    result.offsetX = 0x01FF & offxfl; //Keep the 9  lowest bits
+
+    //    //Get the resolution
+    //    result.resolution = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
+    //    
+    //    //x offset flags
+    //    result.vFlip    = utils::GetBit( offxfl, 13u ) > 0;
+    //    result.hFlip    = utils::GetBit( offxfl, 12u ) > 0;
+    //    out_isLastFrm   = utils::GetBit( offxfl, 11u ) > 0; //X bit 5, tells whether this is the last meta-f in a grp
+    //    result.XOffbit6 = utils::GetBit( offxfl, 10u ) > 0;
+    //    result.XOffbit7 = utils::GetBit( offxfl,  9u ) > 0;
+    //    
+    //    //y offset flags
+    //    result.YOffbit3   = utils::GetBit( offyfl, 13u ) > 0;
+    //    result.Mosaic     = utils::GetBit( offyfl, 12u ) > 0;
+    //    result.YOffbit5   = utils::GetBit( offyfl, 11u ) > 0;
+    //    result.YOffbit6   = utils::GetBit( offyfl, 10u ) > 0;
+
+    //    return result;
+    //}
 
     /**************************************************************
     **************************************************************/
@@ -367,8 +377,8 @@ namespace pmd2{ namespace filetypes
         if( nbPtrMFGtbl == 0 )
         {
             //Increment particle offset progress anyways
-            if( m_pProgress != nullptr )
-                m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
+            //if( m_pProgress != nullptr )
+            //    m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
             return vector<MetaFrame>();
         }
 
@@ -417,8 +427,8 @@ namespace pmd2{ namespace filetypes
             //else
             //    ReadAMetaFrameGroup( out_metafrmgrps, mymetaframes, MFptrTbl[i], MFptrTbl[i+1] );
 
-            if( m_pProgress != nullptr )
-                m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (i+1)) / MFptrTbl.size() ) );
+            //if( m_pProgress != nullptr )
+            //    m_pProgress->store( progressBefore + ( (ProgressProp_MetaFrames * (i+1)) / MFptrTbl.size() ) );
         }
 
 
@@ -569,10 +579,10 @@ namespace pmd2{ namespace filetypes
             if( m_pANameList != nullptr && m_pANameList->size() < cpgrp )
                 anims[cpgrp].group_name = m_pANameList->at(cpgrp).front();
 
-            if( m_pProgress != nullptr )
-            {
-                m_pProgress->store( progressBefore + ( ( ProgressProp_Animations * (cpgrp+1)) / anims.size() ) );
-            }
+            //if( m_pProgress != nullptr )
+            //{
+            //    m_pProgress->store( progressBefore + ( ( ProgressProp_Animations * (cpgrp+1)) / anims.size() ) );
+            //}
         }
         
         return std::move(anims);
@@ -658,8 +668,8 @@ namespace pmd2{ namespace filetypes
             m_wanAnimInfo.ptr_pOffsetsTable != m_wanAnimInfo.ptr_metaFrmTable ) //In a few files, instead of being a nullptr the particle offset table has its pointer set to the same offset as the meta-frame table's. File #43 in m_attack.bin for example.
         {
             //Increment particle offset progress anyways
-            if( m_pProgress != nullptr )
-                m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
+            //if( m_pProgress != nullptr )
+            //    m_pProgress->store( m_pProgress->load() + ProgressProp_Offsets );
             return vector<sprOffParticle>();
         }
 
@@ -697,10 +707,10 @@ namespace pmd2{ namespace filetypes
             offsets[i].offx = utils::ReadIntFromByteVector<uint16_t>(itCuroffset); //Incremented automatically by the function
             offsets[i].offy = utils::ReadIntFromByteVector<uint16_t>(itCuroffset);
 
-            if( m_pProgress != nullptr )
-            {
-                m_pProgress->store( progressBefore + ( ( ProgressProp_Offsets * (i + 1) ) / offsets.size() ) );
-            }
+            //if( m_pProgress != nullptr )
+            //{
+            //    m_pProgress->store( progressBefore + ( ( ProgressProp_Offsets * (i + 1) ) / offsets.size() ) );
+            //}
         }
 
         return std::move(offsets);
