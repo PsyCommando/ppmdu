@@ -45,8 +45,8 @@ namespace palettetool
         bool ParseOutputPath ( const std::string              & path );
 
         //Parse Options
-        bool ParseOptionToRIFF( const std::vector<std::string> & optdata );
-        bool ParseOption8bpp  ( const std::vector<std::string> & optdata );
+        bool ParseOptionToRIFF  ( const std::vector<std::string> & optdata );
+        bool ParseOptionAddDummy( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -57,6 +57,8 @@ namespace palettetool
         int DumpPalette();
         int ConvertPalette();
         int InjectPalette();
+        int AddDummyColorAndShift();
+        void ExportPalette( const std::string & inparentdirpath, const std::vector<gimg::colorRGB24> & palette );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -79,6 +81,7 @@ namespace palettetool
             Dump,
             Convert,
             Inject,
+            AddDummyColor,
         };
 
         //Variables
@@ -86,7 +89,6 @@ namespace palettetool
         std::string                    m_outputPath;     //This is the output path that was parsed
         ePalType                       m_outPalType;     //This is the type of palette to output
         eOpMode                        m_operationMode;  //This holds what the program should do
-        bool                           m_imgFormatIs8bpp;//This changes whether the image will be read as 4bpp or 8bpp  
     };
 
 };

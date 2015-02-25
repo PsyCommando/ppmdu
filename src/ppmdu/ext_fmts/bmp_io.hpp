@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Interface for loading bmp files into common containers, encapsulating the library used to read it.
 */
 #include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/ext_fmts/supported_io_info.hpp>
 #include <string>
 
 namespace utils{ namespace io
@@ -67,6 +68,9 @@ namespace utils{ namespace io
     std::vector<gimg::colorRGB24> ImportPaletteFromBMP( const std::string & filepath );
     void                          SetPaletteBMPImg( const std::vector<gimg::colorRGB24> & srcpal, 
                                                     const std::string & filepath);
+
+    image_format_info GetBMPImgInfo( const std::string & filepath );
+
 
 };};
 

@@ -38,8 +38,8 @@ namespace gfx_util
 //=================================================================================================
 //  Constants
 //=================================================================================================
-    static const int                  HPBar_NB_Bars        = 65u;
-    static const int                  HPBar_UpdateMSecs    = 80; //Updates at every HPBar_UpdateMSecs mseconds
+    //static const int                  HPBar_NB_Bars        = 65u;
+    //static const int                  HPBar_UpdateMSecs    = 80; //Updates at every HPBar_UpdateMSecs mseconds
     static const uint32_t             ForcedPokeSpritePack = 0x1300; //The offset where pack files containing pokemon sprites are forced to begin at
     static const chrono::milliseconds ProgressUpdThWait    = chrono::milliseconds(100);
 
@@ -52,13 +52,7 @@ namespace gfx_util
 //=================================================================================================
 // 
 //=================================================================================================
-    /*
-        A little wrapper to avoid contaminating with the POCO library the other headers!
-    */
-    //struct pathwrapper_t
-    //{
-    //    Poco::Path mypath;
-    //};
+
 
 //=================================================================================================
 // Utility
@@ -92,25 +86,6 @@ namespace gfx_util
         return false;
     }
 
-    /*
-        Draws the HP Bar progress bar !
-    */
-    //inline void DrawHPBar( unsigned int maxnbbars, unsigned int percent )
-    //{
-    //    cout <<"\r\xb3HP:\xb4" <<setw(maxnbbars) <<setfill('\xb0') <<left <<string( ((percent * maxnbbars) / 100), '\xdb' ) <<"\xc3" 
-    //            <<setw(3) <<setfill(' ') <<percent <<"%\xb3";
-    //}
-
-    //void UpdateHPBar( atomic<bool> & shouldstop, atomic<uint32_t> & parsingprogress, atomic<uint32_t> & writingprogress )
-    //{
-    //    static const int TOTAL_PERCENT = 200u;
-    //    while( !shouldstop )
-    //    {
-    //        DrawHPBar( HPBar_NB_Bars, ( ( ( TOTAL_PERCENT - (parsingprogress + writingprogress)  ) * 100 ) / TOTAL_PERCENT ) );
-    //        this_thread::sleep_for( chrono::milliseconds(HPBar_UpdateMSecs) );
-    //    }
-    //}
-
     void PrintProgressLoop( atomic<uint32_t> & completed, uint32_t total, atomic<bool> & bDoUpdate )
     {
         while( bDoUpdate )
@@ -120,18 +95,6 @@ namespace gfx_util
             this_thread::sleep_for( ProgressUpdThWait );
         }
     }
-
-    //void DrawHPBarHeader( const string & name, uint32_t level )
-    //{
-    //    cout <<name <<"\n"
-    //         <<"\xda" <<setw( HPBar_NB_Bars  + 11 ) <<setfill('\xC4') << "\xbf\n"
-    //         <<"\xb3 " <<setw( HPBar_NB_Bars + 5 ) <<setfill(' ') <<"lvl " <<level <<" \xb3" <<"\n";
-    //}
-
-    //void DrawHPBarFooter()
-    //{
-    //    cout <<"\n\xc0" <<right <<setw( HPBar_NB_Bars + 11 ) <<setfill('\xC4') << "\xd9\n";
-    //}
 
     /*
     */
@@ -417,9 +380,6 @@ namespace gfx_util
     CGfxUtil::CGfxUtil()
         :CommandLineUtility()
     {
-//#ifdef _DEBUG
-//        utils::LibWide().isLogOn(true);
-//#endif
         _Construct();
     }
 
@@ -465,15 +425,10 @@ namespace gfx_util
     int CGfxUtil::UnpackSprite()
     {
         utils::MrChronometer chronounpacker( "Unpacking Sprite" );
-        //atomic<uint32_t>     parsingprogress(0);
-        //atomic<uint32_t>     writingprogress(0);
-        //atomic<bool>         stopupdateprogress(false);
         filetypes::WAN_Parser parser( ReadFileToByteVector( m_inputPath ) );
-        //future<void>         runThUpHpBar;
         Poco::File           infileinfo(m_inputPath);
         Poco::Path           inputPath(m_inputPath);
         Poco::Path           outpath;
-        //uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
         
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
@@ -484,62 +439,30 @@ namespace gfx_util
         {
             if( ! m_bQuiet )
                 cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
-            //DrawHPBarHeader( (inputPath.getFileName()), level );
         }
 
-        try
+        auto sprty = parser.getSpriteType();
+        clog <<"Sprite is ";
+        if( sprty == graphics::eSpriteImgType::spr4bpp )
         {
-            //if( ! m_bQuiet )
-            //{
-            //    runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
-            //}
-
-            auto sprty = parser.getSpriteType();
-            clog <<"Sprite is ";
-            if( sprty == graphics::eSpriteImgType::spr4bpp )
-            {
-                clog <<"4 bpp\n";
-                auto sprite = parser.ParseAs4bpp();
-                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
+            clog <<"4 bpp\n";
+            auto sprite = parser.ParseAs4bpp();
+            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
             
-            }
-            else if( sprty == graphics::eSpriteImgType::spr8bpp )
-            {
-                clog <<"8 bpp\n";
-                auto sprite = parser.ParseAs8bpp();
-                graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
-            }
         }
-        catch( Poco::Exception & e )
+        else if( sprty == graphics::eSpriteImgType::spr8bpp )
         {
-            //Stop the thread
-            //stopupdateprogress = true;
-            //runThUpHpBar.get();
-            //rethrow
-            throw e;
+            clog <<"8 bpp\n";
+            auto sprite = parser.ParseAs8bpp();
+            graphics::ExportSpriteToDirectory( sprite, outpath.toString(), m_PrefOutFormat, false );
         }
-        catch( exception & e )
-        {
-            //Stop the thread
-            //stopupdateprogress = true;
-            //runThUpHpBar.get();
-            //rethrow
-            throw e;
-        }
-
-        //stopupdateprogress = true;
-        //runThUpHpBar.get();
 
         //draw one last time
         if( ! m_bQuiet )
         {
-            //DrawHPBar( HPBar_NB_Bars, 0 );
-            //DrawHPBarFooter();
-
             cout    << "\nIts super-effective!!\n"
                     << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
                     << "The pieces landed all neatly into \"" <<m_outputPath <<"\"!\n";
-
         }
 
         return 0;
@@ -552,95 +475,52 @@ namespace gfx_util
         Poco::Path           outpath;//(m_outputPath);
         Poco::Path           inputPath(m_inputPath);
         uint32_t             level = (inputPath.depth() + ((( infileinfo.getSize() & 0xFF ) * 100) / 255) );
-        atomic<uint32_t>     parsingprogress(0);
-        atomic<uint32_t>     writingprogress(0);
-        atomic<bool>         stopupdateprogress(false);
-        future<void>         runThUpHpBar;
-
-        //if( ! m_bQuiet )
-        //{
-        //    DrawHPBarHeader( (inputPath.getFileName()), level );
-        //}
 
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append( Poco::Path(inputPath).makeFile().getBaseName() ).toString();
 
         outpath = m_outputPath;
 
-        try
+
+        auto sprty = graphics::QuerySpriteImgTypeFromDirectory( infileinfo.path() );
+
+        if( sprty == graphics::eSpriteImgType::spr4bpp )
         {
-            //if( ! m_bQuiet )
-            //{
-            //    runThUpHpBar = std::async( std::launch::async, UpdateHPBar, std::ref(stopupdateprogress), std::ref(parsingprogress), std::ref(writingprogress) );
-            //}
+            auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( infileinfo.path(), 
+                                                                                                    m_ImportByIndex );
+            filetypes::WAN_Writer writer( &sprite );
 
-            auto sprty = graphics::QuerySpriteImgTypeFromDirectory( infileinfo.path() );
-
-            if( sprty == graphics::eSpriteImgType::spr4bpp )
+            if( m_compressToPKDPX )
             {
-                auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( infileinfo.path(), 
-                                                                                                        m_ImportByIndex, 
-                                                                                                        false, 
-                                                                                                        &parsingprogress );
-                filetypes::WAN_Writer writer( &sprite );
-
-                if( m_compressToPKDPX )
-                {
-                    vector<uint8_t> result  = writer.write();
-                    vector<uint8_t> outdata;
-                    filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
-                    utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
-                }
-                else
-                    writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString(), &writingprogress );
+                vector<uint8_t> result  = writer.write();
+                vector<uint8_t> outdata;
+                filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
+                utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
+            }
+            else
+                writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString() );
             
-            }
-            else if( sprty == graphics::eSpriteImgType::spr8bpp )
+        }
+        else if( sprty == graphics::eSpriteImgType::spr8bpp )
+        {
+            auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( infileinfo.path(), 
+                                                                                                    m_ImportByIndex );
+            filetypes::WAN_Writer writer( &sprite );
+
+            if( m_compressToPKDPX )
             {
-                auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( infileinfo.path(), 
-                                                                                                        m_ImportByIndex, 
-                                                                                                        false, 
-                                                                                                        &parsingprogress );
-                filetypes::WAN_Writer writer( &sprite );
-
-                if( m_compressToPKDPX )
-                {
-                    vector<uint8_t> result  = writer.write();
-                    vector<uint8_t> outdata;
-                    filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
-                    utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
-                }
-                else
-                    writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString(), &writingprogress );
+                vector<uint8_t> result  = writer.write();
+                vector<uint8_t> outdata;
+                filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
+                utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
             }
-        }
-        catch( Poco::Exception e )
-        {
-            //Stop the thread
-            stopupdateprogress = true;
-            if( runThUpHpBar.valid() )
-                runThUpHpBar.get();
-            //rethrow
-            throw e;
-        }
-        catch( exception e )
-        {
-            //Stop the thread
-            stopupdateprogress = true;
-            if( runThUpHpBar.valid() )
-                runThUpHpBar.get();
-            //rethrow
-            throw e;
+            else
+                writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString() );
         }
 
-        stopupdateprogress = true;
-        if( runThUpHpBar.valid() )
-            runThUpHpBar.get();
 
         if( ! m_bQuiet )
         {
-            //DrawHPBarFooter();
-
             cout << "\nIts super-effective!!\n"
                  <<"\"" <<inputPath.getFileName() <<"\" fainted!\n"
                  <<"You got \"" <<outpath.getFileName() <<"\" for your victory!\n";
@@ -687,12 +567,13 @@ namespace gfx_util
 
             if( isPokeSpriteFile )
             {
-                cout << "This pack is named after one of the three that contains pokemon sprite files!\n";
+                cout << "<!>-This pack is named after one of the three that contains pokemon sprite files!\n\tNaming sub-folders based on the content of \"" 
+                     <<m_pathToPokeSprNamesFile <<"\"!\n";
                 pokesprnames = utils::io::ReadTextFileLineByLine( m_pathToPokeSprNamesFile );
             }
             else
             {
-                cout << "This pack might not be a pokemon sprite containing pack file!\n";
+                cout << "<!>-This file may or may not be a pack file that contains pokemon sprites!\n\tSub-folders won't be named!\n";
             }
 
             //#2 - Unpack files to raw data vector.
@@ -881,7 +762,7 @@ namespace gfx_util
                     //BuildSprFromDirAndInsert( insertat, curDir.path(), mypack, m_ImportByIndex, m_compressToPKDPX )
             }
             else
-                cerr<< "<!>- Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
+                cerr<< "<!>-Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
         }
 
         try
@@ -961,6 +842,47 @@ namespace gfx_util
         return false;
     }
 
+    void CGfxUtil::PrintOperationMode()
+    {
+        if( m_bQuiet )
+            return;
+
+        cout <<"\n--------------------------------------\n";
+        switch( m_execMode )
+        {
+            case eExecMode::BUILD_WAN_Mode:
+            {
+                cout <<"Building WAN Sprite\n";
+                break;
+            }
+            case eExecMode::UNPACK_WAN_Mode:
+            {
+                cout <<"Unpacking WAN Sprite\n";
+                break;
+            }
+            case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:
+            {
+                cout <<"Unpacking Sprites Containing Pack File\n";
+                break;
+            }
+            case eExecMode::BUILD_POKE_SPRITES_PACK_Mode:
+            {
+                cout <<"Building Sprites Containing Pack File\n";
+                break;
+            }
+            case eExecMode::INVALID_Mode:
+            {
+                cout <<"INVALID\n";
+                break;
+            }
+            default:
+            {
+                cout <<"ERROR\n";
+            }
+        };
+        cout <<"--------------------------------------\n";
+    }
+
     bool CGfxUtil::DetermineOperationMode()
     {
         using namespace pmd2::filetypes;
@@ -1004,7 +926,7 @@ namespace gfx_util
             else
             {
                 m_execMode = eExecMode::INVALID_Mode;
-                cerr << "<!>- No ideas what to do with that input parameter ^^;\n";
+                cerr << "<!>-No ideas what to do with that input parameter ^^;\n";
                 return false;
             }
 
@@ -1022,14 +944,14 @@ namespace gfx_util
 
                 if( !m_bQuiet )
                 {
-                    cout << "<*>- Input folder name matches the name of one of the pokemon sprites pack file!\n"
-                         << "<*>- Preparing to convert all sprites directories in the input directory\n"
-                         << "     into WAN sprites, and packing them into a pack file!\n";
+                    cout << "<*>-Input folder name matches the name of one of the pokemon sprites pack file!\n"
+                         << "<*>-Preparing to convert all sprites directories in the input directory\n"
+                         << "    into WAN sprites, and packing them into a pack file!\n";
                 
                     if( m_compressToPKDPX )
                     {
-                        cout <<"<*>- Input directory name matches compressed pokemon sprite pack\n" 
-                             <<"     file's name. Enabling compression!\n";
+                        cout <<"<*>-Input directory name matches compressed pokemon sprite pack\n" 
+                             <<"    file's name. Enabling compression!\n";
                     }
                 }
 
@@ -1044,14 +966,14 @@ namespace gfx_util
                 //We got all we need to build a sprite !
                 m_execMode = eExecMode::BUILD_WAN_Mode;
                 if( !m_bQuiet )
-                    cout << "<*>- Required files to build a sprite found! Get the duct tape ready! We're building a sprite!\n";
+                    cout << "<*>-Required files to build a sprite found! Get the duct tape ready! We're building a sprite!\n";
             }
             else
             {
                 vector<string> missingfiles = GetMissingRequiredFiles_Sprite( folderContent );
                 m_execMode = eExecMode::INVALID_Mode;
-                cerr << "<!>- This directory doesn't contain all the required files to build a sprite!\n"
-                     << "<!>- The " <<missingfiles.size() <<" missing file(s) are :\n";
+                cerr << "<!>-This directory doesn't contain all the required files to build a sprite!\n"
+                     << "<!>-The " <<missingfiles.size() <<" missing file(s) are :\n";
                 for( const auto & afile : missingfiles )
                 {
                     cerr << afile <<"\n";
@@ -1065,7 +987,7 @@ namespace gfx_util
             //Unknown..
             m_execMode = eExecMode::INVALID_Mode;
             if( !m_bQuiet )
-                cerr << "<!>- No ideas what to do with that input parameter ^^;\n";
+                cerr << "<!>-No ideas what to do with that input parameter ^^;\n";
             return false;
         }
 
@@ -1087,7 +1009,7 @@ namespace gfx_util
 
         if( optdata.size() > 1 )
         {
-            cout <<"<*>- Forcing export to ";
+            cout <<"<*>-Forcing export format to ";
             if( optdata[1].compare( "raw" ) == 0 )
             {
                 m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::RAW;
@@ -1120,7 +1042,7 @@ namespace gfx_util
             auto          result = filetypes::GetFileTypeFromExtension( optdata.back() );
             e_ContentType type   = result.front();
 
-            cout << "<*>- Forcing input as ";
+            cout << "<*>-Forcing input as ";
 
             switch( type )
             {
@@ -1176,47 +1098,47 @@ namespace gfx_util
 
     bool CGfxUtil::ParseOptionImportByIndex( const std::vector<std::string> & optdata )
     {
-        cout <<"<*>- Importing images by index instead of by alphanumeric order !\n";
+        cout <<"<*>-Importing images by index instead of by alphanumeric order !\n";
         return (m_ImportByIndex = true);
     }
 
     bool CGfxUtil::ParseOptionAnimResPath( const std::vector<std::string> & optdata )
     {
         bool result = ParseOptionFilePath( optdata, m_pathToAnimNameResFile );
-        cout <<"<*>- Changed lookup path for animation handling resources to \"" <<m_pathToAnimNameResFile <<"\"!\n";
+        cout <<"<*>-Changed lookup path for animation handling resources to \"" <<m_pathToAnimNameResFile <<"\"!\n";
         return result;
     }
 
     bool CGfxUtil::ParseOptionFaceNamesPath( const std::vector<std::string> & optdata )
     {
         bool result = ParseOptionFilePath( optdata, m_pathToFaceNamesFile );
-        cout <<"<*>- Changed lookup path for kaomado.kao face name list to \"" <<m_pathToFaceNamesFile <<"\"!\n";
+        cout <<"<*>-Changed lookup path for kaomado.kao face name list to \"" <<m_pathToFaceNamesFile <<"\"!\n";
         return result;
     }
     
     bool CGfxUtil::ParseOptionPokeNamesPath( const std::vector<std::string> & optdata )
     {
         bool result = ParseOptionFilePath( optdata, m_pathToPokeNamesFile );
-        cout <<"<*>- Changed lookup path for kaomado.kao pokemon name list to \"" <<m_pathToPokeNamesFile <<"\"!\n";
+        cout <<"<*>-Changed lookup path for kaomado.kao pokemon name list to \"" <<m_pathToPokeNamesFile <<"\"!\n";
         return result;
     }
     
     bool CGfxUtil::ParseOptionPokeSprNamesPath( const std::vector<std::string> & optdata )
     {
         bool result = ParseOptionFilePath( optdata, m_pathToPokeSprNamesFile );
-        cout <<"<*>- Changed lookup path for pokemon sprite name list to \"" <<m_pathToPokeSprNamesFile <<"\"!\n";
+        cout <<"<*>-Changed lookup path for pokemon sprite name list to \"" <<m_pathToPokeSprNamesFile <<"\"!\n";
         return result;
     }
 
     bool CGfxUtil::ParseOptionCompressPKDPX( const std::vector<std::string> & optdata )
     {
-        cout <<"<*>- Forcing compressiong to PKDPX!\n";
+        cout <<"<*>-Forcing compressiong to PKDPX!\n";
         return m_compressToPKDPX = true;
     }
 
     bool CGfxUtil::ParseOptionBuildPack( const std::vector<std::string> & optdata )
     {
-        cout <<"<*>- Forcing rebuilding from directory to a pokemon sprite containing pack file!\n";
+        cout <<"<*>-Forcing rebuilding from directory to a pokemon sprite containing pack file!\n";
         m_execMode = eExecMode::BUILD_POKE_SPRITES_PACK_Mode;
         return true;
     }
@@ -1226,7 +1148,7 @@ namespace gfx_util
         if( optdata.size() == 2 )
         {
             unsigned int nbthreads = stoul(optdata.back());
-            cout<<"<*>- Thread count set to " <<nbthreads <<" worker thread(s)!\n";
+            cout<<"<*>-Thread count set to " <<nbthreads <<" worker thread(s)!\n";
             utils::LibraryWide::getInstance().Data().setNbThreadsToUse( nbthreads );
             return true;
         }
@@ -1236,7 +1158,7 @@ namespace gfx_util
 
     bool CGfxUtil::ParseOptionLog( const std::vector<std::string> & optdata )
     {
-        cout <<"<*>- Logging enabled!\n";
+        cout <<"<*>-Logging enabled!\n";
         utils::LibWide().isLogOn(true);
         return m_bRedirectClog = true;
     }
@@ -1255,14 +1177,16 @@ namespace gfx_util
             if( !DetermineOperationMode() )
                 return RETVAL_GenericFail;
 
+            PrintOperationMode();
+
             if( ! m_bQuiet )
                 cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
             if( m_bRedirectClog )
                 m_redirectClog.Redirect( inpath.getBaseName() + ".log" );
 
+            //Init or not the chrono for the log file
             unique_ptr<utils::ChronoRAII<>> chronototal = nullptr;
-
             if(utils::LibWide().isLogOn())
                 chronototal.reset( new utils::ChronoRAII<>("Total Execution Time", &clog ) );
 
@@ -1298,7 +1222,7 @@ namespace gfx_util
                 }
                 case eExecMode::INVALID_Mode:
                 {
-                    cerr<<"<!>- ERROR  : Nothing can be done here. Exiting..\n";
+                    cerr<<"<!>-ERROR  : Nothing can be done here. Exiting..\n";
                     if( utils::LibWide().isLogOn() )
                         clog<<"<!>- Got invalid operation mode!\n";
                     returnval = RETVAL_InvalidOp;
@@ -1306,9 +1230,9 @@ namespace gfx_util
                 }
                 default:
                 {
-                    cerr<<"<!>- ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
+                    cerr<<"<!>-ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
                     if( utils::LibWide().isLogOn() )
-                        clog<<"<!>- Unimplemented operation mode!\n";
+                        clog<<"<!>-Unimplemented operation mode!\n";
                     returnval = RETVAL_InvalidOp;
                 }
             };
@@ -1318,7 +1242,7 @@ namespace gfx_util
         }
         catch( Poco::Exception & pex )
         {
-            cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
+            cerr <<"\n" << "<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             returnval = pex.code();
         }
         catch( exception & e )
@@ -1327,14 +1251,6 @@ namespace gfx_util
                  <<"\nWelp.. Poochyena almost choked while crunching the pixels!\n<she gave you an apologetic look>\n"
                  << "Exception : " <<e.what() <<endl;
         }
-        //catch( types::Ex_IOException e )
-        //{
-        //    cerr <<"\n" 
-        //         <<"\nWelp.. Poochyena hit herself in confusion while biting through the parameters!\nShe's in a bit of a pinch. It looks like she might cry...\n"
-        //         << e.what() <<endl;
-        //    clog <<"\n<!>- IO Exception: " << e.what() <<endl;
-        //    returnval = RETVAL_IOException;
-        //}
         return returnval;
     }
 
@@ -1344,13 +1260,7 @@ namespace gfx_util
         try
         {
             //SetArguments returns false, when there are no args to parse !
-            if( !SetArguments(argc,argv) )
-            {
-                //cout<<"Press any characters, then enter to continue.\n";
-                //char ach;
-                //cin>>ach;
-                //return -1;
-            }
+            SetArguments(argc,argv);
 
             if( utils::LibWide().isLogOn() )
             {
@@ -1370,9 +1280,9 @@ namespace gfx_util
         }
         catch( Poco::Exception pex )
         {
-            cerr <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
+            cerr <<"\n" << "<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             if( utils::LibWide().isLogOn() )
-                clog <<"\n" << "<!>- POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
+                clog <<"\n" << "<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             PrintReadme();
             return pex.code();
         }
@@ -1382,7 +1292,7 @@ namespace gfx_util
                  <<"\nWelp.. Poochyena hit herself in confusion while biting through the parameters!\nShe's in a bit of a pinch. It looks like she might cry...\n"
                  << e.what() <<endl;
             if( utils::LibWide().isLogOn() )
-                clog <<"\n<!>- Exception: " << e.what() <<endl;
+                clog <<"\n<!>-Exception: " << e.what() <<endl;
             PrintReadme();
             return RETVAL_BadArg;
         }
@@ -1408,7 +1318,6 @@ namespace gfx_util
 #ifdef _DEBUG
         system("pause");
 #endif
-
         return returnval;
     }
 };
@@ -1420,74 +1329,7 @@ namespace gfx_util
 //#TODO: Move the main function somewhere else !
 int main( int argc, const char * argv[] )
 {
-//#if 0
     using namespace gfx_util;
     CGfxUtil & application = CGfxUtil::GetInstance();
     return application.Main(argc,argv);
-//#endif
-
-    //test pointer address encoder
-//    vector<uint8_t> data = {{  0x04, 0x04, 0xE4, 0x00, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x81, 0x64, 
-//0x81, 0x64, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x81, 0x64, 
-//0x81, 0x64, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x84, 0x04, 
-//0x18, 0x84, 0x04, 0x83, 0x44, 0x18, 0x18, 0x83, 0x44, 0x18, 0x84, 0x18, 0x82, 0x38, 0x18, 0x18, 
-//0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x83, 0x10, 0x18, 0x83, 0x04, 0x18, 0x82, 0x64, 
-//0x18, 0x18, 0x82, 0x24, 0x18, 0x18, 0x82, 0x24, 0x18, 0x18, 0x82, 0x38, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x30, 0x18, 0x18, 0x82, 0x30, 0x18, 0x18, 0x83, 0x24, 
-//0x18, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x83, 0x04, 0x18, 0x18, 0x18, 0x83, 0x04, 0x18, 
-//0x18, 0x18, 0x83, 0x04, 0x18, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x83, 0x04, 0x18, 0x18, 
-//0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x82, 0x04, 0x18, 0x82, 0x38, 0x18, 
-//0x18, 0x82, 0x64, 0x18, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x30, 0x18, 0x18, 0x82, 0x24, 
-//0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x83, 0x04, 0x18, 0x18, 0x18, 0x83, 
-//0x10, 0x18, 0x18, 0x18, 0x82, 0x64, 0x18, 0x18, 0x18, 0x82, 0x70, 0x18, 0x18, 0x18, 0x82, 0x44, 
-//0x18, 0x18, 0x82, 0x64, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x64, 0x18, 0x82, 0x44, 0x18, 0x18, 
-//0x82, 0x24, 0x18, 0x18, 0x81, 0x64, 0x18, 0x81, 0x64, 0x18, 0x81, 0x30, 0x18, 0x81, 0x30, 0x18, 
-//0x82, 0x04, 0x18, 0x18, 0x82, 0x04, 0x18, 0x18, 0x83, 0x24, 0x18, 0x18, 0x18, 0x81, 0x70, 0x81, 
-//0x78, 0x18, 0x81, 0x64, 0x82, 0x58, 0x18, 0x18, 0x82, 0x44, 0x18, 0x18, 0x82, 0x24, 0x18, 0x18, 
-//0x82, 0x44, 0x18, 0x18, 0x18, 0x82, 0x10, 0x18, 0x18, 0x82, 0x24, 0x18, 0x18, 0x64, 0x10, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x9A, 0x74, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x14, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x10, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x08, 0x28, 0x08, 0x20, 0x08, 0x08, 0x08, 0x08, 0x08, 
-//0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 
-//0x08, 0x08, 0x08, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-//0x04, 0x04, 0x04, 0x10, 0x04, 0x0C, 0x04, 0x00, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA }};
-//
-//    auto decoded = filetypes::DecodeSIR0PtrOffsetList( data );
-//
-    return 0;
 }

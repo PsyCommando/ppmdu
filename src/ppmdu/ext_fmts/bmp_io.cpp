@@ -100,7 +100,10 @@ namespace utils{ namespace io
         out_timg.setNbColors( NB_Colors_Support );
 
         //Build palette
-        for( int i = 0; i < input.TellNumberOfColors(); ++i )
+        const unsigned int nbColors = static_cast<unsigned int>( ( input.TellNumberOfColors() > 0 )? input.TellNumberOfColors() : 0 );
+        if( nbColors == 0 )
+            throw runtime_error("ERROR: BMP image being imported has an invalid palette!");
+        for( unsigned int i = 0; i < nbColors; ++i )
         {
             RGBApixel acolor = input.GetColor(i);
             outpal[i].red   = acolor.Red;
@@ -165,10 +168,12 @@ namespace utils{ namespace io
         bool ExportBMP( const _TImg_t     & in_indexed,
                         const std::string & filepath )
     {
+        //shorten this static constant
+        typedef utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL> NbColorsPP_t;
         BMP output;
         output.SetBitDepth(_TImg_t::pixel_t::GetBitsPerPixel());
 
-        if( in_indexed.getNbColors() != utils::do_exponent_of_2_<_TImg_t::pixel_t::mypixeltrait_t::BITS_PER_PIXEL>::value )
+        if( in_indexed.getNbColors() != NbColorsPP_t::value )
         {
 #ifdef _DEBUG
             assert(false);
@@ -176,7 +181,7 @@ namespace utils{ namespace io
             throw std::runtime_error( "ERROR: The tiled image to write to a bitmap image file has an invalid amount of color in its palette!" );
         }
         //copy palette
-        for( int i = 0; i < output.TellNumberOfColors(); ++i )
+        for( int i = 0; i < NbColorsPP_t::value; ++i )
             output.SetColor( i, colorRGB24ToRGBApixel( in_indexed.getPalette()[i] ) );
 
         //Copy image
@@ -216,10 +221,13 @@ namespace utils{ namespace io
         BMP    input;
         input.ReadFromFile( filepath.c_str() );
 
-        const uint32_t nbcolors = input.TellNumberOfColors();
-        outpal.resize( nbcolors );
+        const unsigned int nbColors = static_cast<unsigned int>( ( input.TellNumberOfColors() > 0 )? input.TellNumberOfColors() : 0 );
+        if( nbColors == 0 )
+            throw runtime_error("ERROR: BMP image being imported has an invalid palette!");
 
-        for( unsigned int i = 0; i < nbcolors; ++i )
+        outpal.resize( nbColors );
+
+        for( unsigned int i = 0; i < nbColors; ++i )
         {
             RGBApixel acolor = input.GetColor(i);
             outpal[i].red   = acolor.Red;
@@ -235,28 +243,33 @@ namespace utils{ namespace io
                            const std::string                   & filepath )
     {
         BMP      input;
-        BMP      output;
         uint32_t nbcolstocopy = srcpal.size();
         input.ReadFromFile( filepath.c_str() );
 
-        output = input;
+        //Copy input img into output img
+        BMP output(input);
         
-        if( output.TellNumberOfColors() < srcpal.size() )
+        //Sanity check + for removing issues with signed/unsigned mismatch
+        const unsigned int nbColorsOut = static_cast<unsigned int>( ( output.TellNumberOfColors() > 0 )? output.TellNumberOfColors() : 0 );
+        if( nbColorsOut == 0 )
+            throw runtime_error("ERROR: BMP image being imported has an invalid palette!");
+
+        if( nbColorsOut < srcpal.size() )
         {
-            nbcolstocopy = output.TellNumberOfColors();
-            cerr <<"WARNING: the palette being injected into " <<filepath
-                 <<" is larger than the palette of the image! Palette has " <<srcpal.size() <<" colors, while the image has "
+            nbcolstocopy = nbColorsOut;
+            cerr <<"WARNING: the palette being injected into \"" <<filepath
+                 <<"\" is larger than the palette of the image! Palette has " <<srcpal.size() <<" colors, while the image has "
                  <<output.TellNumberOfColors() <<" colors! Only  the first" <<output.TellNumberOfColors() <<" colors will be copied!\n";
         }
-        else if( output.TellNumberOfColors() > srcpal.size() )
+        else if( nbColorsOut > srcpal.size() )
         {
             nbcolstocopy = srcpal.size();
             cerr <<"WARNING: the palette being injected into "  <<filepath
                  <<" is smaller than the palette of the image! Only " <<srcpal.size() <<" colors will be written to the image!\n";
         }
-
+         
         //reset colors to 0
-        for( unsigned int i = 0; i < output.TellNumberOfColors(); ++i )
+        for( unsigned int i = 0; i < nbColorsOut; ++i )
             output.SetColor( i, RGBApixel() );
 
         //Copy colors
@@ -274,12 +287,22 @@ namespace utils{ namespace io
     }
 
 
+    image_format_info GetBMPImgInfo( const std::string & filepath )
+    {
+        image_format_info myinfo;
+        auto              imginf = GetBMIH(filepath.c_str());
+
+        myinfo.usesPalette = imginf.biBitCount < 16;
+        myinfo.bitdepth = imginf.biBitCount;
+        myinfo.width    = imginf.biWidth;
+        myinfo.height   = imginf.biHeight;
+        return myinfo;
+    }
 
     template<>
         bool ExportToBMP( const gimg::tiled_image_i4bpp & in_indexed,
                           const std::string             & filepath )
     {
-        //return ExportTo4bppBMP( in_indexed, filepath );
         return ExportBMP(in_indexed,filepath);
     }
 
@@ -287,7 +310,6 @@ namespace utils{ namespace io
         bool ExportToBMP( const gimg::tiled_image_i8bpp & in_indexed,
                           const std::string             & filepath )
     {
-        //return ExportTo8bppBMP( in_indexed, filepath );
         return ExportBMP(in_indexed,filepath);
     }
 
@@ -299,7 +321,6 @@ namespace utils{ namespace io
                             bool                      erroronwrongres )
     {
         return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
-        //return ImportFrom4bppBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
     }
 
     template<>
@@ -310,7 +331,6 @@ namespace utils{ namespace io
                             bool                      erroronwrongres )
     {
         return ImportBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
-        //return ImportFrom8bppBMP( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
     }
 
 };};

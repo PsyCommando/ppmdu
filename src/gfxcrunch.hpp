@@ -82,6 +82,8 @@ namespace gfx_util
         bool                     DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
         int                      GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
         int                      Execute               ();                                 //Handle excution switch case + exceptions
+        void                     PrintOperationMode    ();
+
 
         //Constants
         static const std::string                                 Exe_Name;

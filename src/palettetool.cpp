@@ -6,6 +6,7 @@
 #include <ppmdu/ext_fmts/bmp_io.hpp>
 #include <ppmdu/ext_fmts/txt_palette_io.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/ext_fmts/supported_io_info.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -37,6 +38,9 @@ namespace palettetool
         "This little utility is meant to be used to easily dump a palette\n"
         "to a text file or RIFF palette, from an image. It can also convert\n"
         "RIFF palettes to and from a text file palette!\n"
+        "It can also insert a dummy color in the first palette slot for image\n"
+        "without transparency(Ex: pokemon portraits), and preserve the\n"
+        "15 or 254 previous colors!\n"
         "And finally, it also can inject a palette back into an image!\n"
         "\n"
         "The text file contains one color per line in HTML notation, which\n"
@@ -104,13 +108,13 @@ namespace palettetool
             "-riffpal",
             std::bind( &CPaletteUtil::ParseOptionToRIFF, &GetInstance(), placeholders::_1 ),
         },
-        //Quiet
+        //Prepend dummy color
         {
-            "8bpp",
+            "adddummy",
             0,
-            "When loading an image, its loaded as a 8bpp image instead of the 4bpp by default.",
-            "-8bpp",
-            std::bind( &CPaletteUtil::ParseOption8bpp, &GetInstance(), placeholders::_1 ),
+            "Tell the program to insert a dummy color in color slot 0, and shift all colors by 1, while preserving the color of each pixels in the resulting image. !!Output path is ignored!!",
+            "-adddummy",
+            std::bind( &CPaletteUtil::ParseOptionAddDummy, &GetInstance(), placeholders::_1 ),
         },
     }};
 
@@ -129,7 +133,6 @@ namespace palettetool
     {
         m_outPalType      = ePalType::TEXT;
         m_operationMode   = eOpMode::Invalid;
-        m_imgFormatIs8bpp = false;
     }
 
     const vector<argumentparsing_t> & CPaletteUtil::getArgumentsList   ()const { return Arguments_List;          }
@@ -179,9 +182,10 @@ namespace palettetool
         return true;
     }
 
-    bool CPaletteUtil::ParseOption8bpp( const std::vector<std::string> & optdata )
+    bool CPaletteUtil::ParseOptionAddDummy( const std::vector<std::string> & optdata )
     {
-        return m_imgFormatIs8bpp = true;
+        m_operationMode = eOpMode::AddDummyColor;
+        return true;
     }
 
 //
@@ -220,6 +224,9 @@ namespace palettetool
         using utils::io::eSUPPORT_IMG_IO;
         Poco::Path inpath( m_inputPath );
         eSUPPORT_IMG_IO imgtype = GetSupportedImageType(m_inputPath);
+
+        if( m_operationMode != eOpMode::Invalid )
+            return; //Skip if we have a forced mode
 
         if( imgtype == eSUPPORT_IMG_IO::BMP || 
             imgtype == eSUPPORT_IMG_IO::PNG )
@@ -276,21 +283,27 @@ namespace palettetool
         int returnval = -1;
         try
         {
+            utils::MrChronometer chronoexecuter("Total time elapsed");
             switch(m_operationMode)
             {
                 case eOpMode::Dump:
                 {
-                    DumpPalette();
+                    returnval = DumpPalette();
                     break;
                 }
                 case eOpMode::Convert:
                 {
-                    ConvertPalette();
+                    returnval = ConvertPalette();
                     break;
                 }
                 case eOpMode::Inject:
                 {
-                    InjectPalette();
+                    returnval = InjectPalette();
+                    break;
+                }
+                case eOpMode::AddDummyColor:
+                {
+                    returnval = AddDummyColorAndShift();
                     break;
                 }
                 default:
@@ -313,13 +326,48 @@ namespace palettetool
 //--------------------------------------------
 //  Operation
 //--------------------------------------------
+
+    void CPaletteUtil::ExportPalette( const std::string & inparentdirpath, const std::vector<gimg::colorRGB24> & palette )
+    {
+        Poco::Path inputPal(inparentdirpath);
+        Poco::Path outputPath;
+        cout <<"To ";
+
+        if( m_outputPath.empty() )
+        {
+            outputPath = inputPal.append("palette").makeFile();
+            outputPath.setExtension( 
+                ( 
+                    (m_outPalType == ePalType::RIFF)? 
+                        utils::io::RIFF_PAL_Filext : 
+                        (m_outPalType == ePalType::TEXT)? 
+                            TXTPAL_Filext : 
+                            "" 
+                ) );
+        }
+        else
+            outputPath = m_outputPath;
+
+        if( m_outPalType == ePalType::RIFF )
+        {
+            cout<<"RIFF palette \"" <<outputPath.toString() <<"\"\n";
+            utils::io::ExportTo_RIFF_Palette( palette, outputPath.toString() );
+        }
+        else if( m_outPalType == ePalType::TEXT )
+        {
+            cout<<"HTML text palette \"" <<outputPath.toString() <<"\"\n";
+            utils::io::ExportTo_TXT_Palette( palette, outputPath.toString() );
+        }
+    }
+
+
     int CPaletteUtil::DumpPalette()
     {
         using namespace gimg;
         eSUPPORT_IMG_IO imgtype = GetSupportedImageType(m_inputPath);
         vector<gimg::colorRGB24> palette; 
 
-        cout <<"Dumping Palette...\n";
+        cout <<"Dumping palette from \"" <<m_inputPath <<"\"...\n";
 
         if( imgtype == eSUPPORT_IMG_IO::BMP )
         {
@@ -331,31 +379,9 @@ namespace palettetool
             palette = utils::io::ImportPaletteFromPNG( m_inputPath );
         }
 
-        //Dump the palette
-        if( m_outPalType == ePalType::RIFF )
-        {
-            string outputpath;
+        ExportPalette( Poco::Path(m_inputPath).makeAbsolute().makeParent().toString(), palette );
 
-            if( m_outputPath.empty() )
-                outputpath = Poco::Path(m_inputPath).parent().append( "palette.pal" ).toString();
-            else
-                outputpath = m_outputPath;
-
-            utils::io::ExportTo_RIFF_Palette( palette, outputpath );
-        }
-        else if( m_outPalType == ePalType::TEXT )
-        {
-            string outputpath;
-
-            if( m_outputPath.empty() )
-                outputpath = Poco::Path(m_inputPath).parent().append( "palette.txt" ).toString();
-            else
-                outputpath = m_outputPath;
-
-            utils::io::ExportTo_TXT_Palette( palette, outputpath );
-        }
-
-        cout <<"Palette dump complete!\n";
+        cout <<"Palette dumped successfully!\n";
         return 0;
     }
     
@@ -363,50 +389,36 @@ namespace palettetool
     {
         using namespace gimg;
         Poco::Path               inputPal(m_inputPath);
+        //Poco::Path               outputPath;
         vector<gimg::colorRGB24> palette;
-        cout <<"Converting Palette...\n";
-
+        cout <<"Converting ";
 
         if( inputPal.getExtension() == utils::io::RIFF_PAL_Filext )
+        {
+            cout<<"RIFF";
             palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
+        }
         else //Else always assume its a txt palette until the end!
+        {
+            cout<<"HTML text";
             palette = utils::io::ImportFrom_TXT_Palette( m_inputPath );
-
-
-        if( m_outPalType == ePalType::RIFF )
-        {
-            string outputPath;
-
-            if( m_outputPath.empty() )
-                outputPath = Poco::Path(m_inputPath).parent().append( "palette.pal" ).toString();
-            else
-                outputPath = m_outputPath;
-
-            utils::io::ExportTo_RIFF_Palette( palette, outputPath );
-            
-        }
-        else if( m_outPalType == ePalType::TEXT )
-        {
-            string outputPath;
-
-            if( m_outputPath.empty() )
-                outputPath = Poco::Path(m_inputPath).parent().append( "palette.txt" ).toString();
-            else
-                outputPath = m_outputPath;
-
-            utils::io::ExportTo_TXT_Palette( palette, outputPath );
         }
 
-        cout <<"Palette converted!\n";
+        cout <<" palette \"" <<m_inputPath <<"\"\n";
+
+        ExportPalette( inputPal.absolute().makeParent().toString(), palette );
+
+        cout <<"Palette converted successfully!\n";
         return 0;
     }
     
     int CPaletteUtil::InjectPalette()
     {
         using namespace gimg;
-        cout <<"Injecting Palette...\n";
         Poco::Path               inputPal(m_inputPath);
         vector<gimg::colorRGB24> palette;
+
+        cout <<"Injecting palette \"" <<m_inputPath <<"\"\ninto \"" <<m_outputPath <<"\"...\n";
 
         if( inputPal.getExtension() == utils::io::RIFF_PAL_Filext )
             palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
@@ -416,16 +428,90 @@ namespace palettetool
         eSUPPORT_IMG_IO imgtype = GetSupportedImageType(m_outputPath);
 
         if( imgtype == eSUPPORT_IMG_IO::BMP )
-        {
-            //Importing a BMP requires importing the whole image anyways...
             utils::io::SetPaletteBMPImg( palette, m_outputPath );
-        }
         else if( imgtype == eSUPPORT_IMG_IO::PNG )
-        {
             utils::io::SetPalettePNGImg( palette, m_outputPath );
+
+        cout <<"Palette injected succesfully!\n";
+        return 0;
+    }
+
+    template<class TImg_T>
+        void DoAddDummyColorAndShift( TImg_T & image )
+    {
+        using namespace gimg;
+        typedef typename TImg_T::pixel_t          mypixel_t;
+        static const typename TImg_T::pal_color_t DummyColor = colorRGB24( 0, 255, 0 );
+
+        //insert dummy
+        std::vector<typename TImg_T::pal_color_t> & refpal = image.getPalette();
+        refpal.pop_back();  //Discard anything in the last slot!
+        refpal.insert( refpal.begin(), DummyColor );
+
+        //Shift pixel values, and clamp the value to the max of the pixel!
+        for( mypixel_t & pixel : image )
+        {
+            if( (mypixel_t::GetMaxValuePerComponent()) > static_cast<mypixel_t::pixeldata_t>(pixel+1) )
+                ++pixel;
+            else 
+                pixel =  mypixel_t::GetMaxValuePerComponent();
+        }
+    }
+
+    int CPaletteUtil::AddDummyColorAndShift()
+    {
+        using namespace gimg;
+        Poco::Path inimg(m_inputPath);
+
+        //Determine image type
+        eSUPPORT_IMG_IO outimgty = GetSupportedImageType(m_inputPath);
+
+        //Validate
+        auto format = utils::io::GetSupportedImageFormatInfo(m_inputPath);
+
+        if( ! format.usesPalette )
+            throw runtime_error("ERROR: The image does not have a color palette!");
+
+        cout <<"Adding dummy unused color to the begining of \"" <<m_inputPath <<"\"'s palette!\n"
+             <<"If all palette slots were filled, the last color will be discarded, and pixels of that color will now refer to the previous color!\n";
+
+        if( outimgty == eSUPPORT_IMG_IO::BMP )
+        {
+            if( format.bitdepth == 4 )
+            {
+                tiled_image_i4bpp img;
+                ImportFromBMP( img, m_inputPath );
+                DoAddDummyColorAndShift(img);
+                ExportToBMP( img, m_inputPath );
+            }
+            else if(format.bitdepth == 8)
+            {
+                tiled_image_i8bpp img;
+                ImportFromBMP( img, m_inputPath );
+                DoAddDummyColorAndShift(img);
+                ExportToBMP( img, m_inputPath );
+            }
+        }
+        else if( outimgty == eSUPPORT_IMG_IO::PNG )
+        {
+            if( format.bitdepth == 4 )
+            {
+                tiled_image_i4bpp img;
+                ImportFromPNG( img, m_inputPath );
+                DoAddDummyColorAndShift(img);
+                ExportToPNG( img, m_inputPath );
+            }
+            else if(format.bitdepth == 8)
+            {
+                tiled_image_i8bpp img;
+                ImportFromPNG( img, m_inputPath );
+                DoAddDummyColorAndShift(img);
+                ExportToPNG( img, m_inputPath );
+            }
         }
 
-        cout <<"Palette injected!\n";
+        cout<<"Done!\n";
+
         return 0;
     }
 

@@ -144,8 +144,8 @@ namespace gimg
                                                 _PIXEL_T>
     {
     public:
-        typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width> _myty;
-        typedef tile<_PIXEL_T,_TILE_Height,_TILE_Width>          tile_t;
+        typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width>    _myty;
+        typedef tile<_PIXEL_T,_TILE_Height,_TILE_Width>             tile_t;
         typedef typename tile_t::pixel_t                            pixel_t;
         typedef typename tile_t::pixel_t                            value_type; //For the iterator
         typedef utils::index_iterator<tiled_image>                  iterator;
@@ -371,7 +371,7 @@ namespace gimg
     {
     public:
         static_assert( _PIXEL_T::mypixeltrait_t::IS_INDEXED, "Using a non-indexed pixel type inside a tiled_indexed_image is not allowed!" );
-        typedef _COLOR_T pal_color_t;
+        typedef _COLOR_T                                                        pal_color_t;
         typedef tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_Height,_TILE_Width> _myty;
         typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width>                _parentty;
 

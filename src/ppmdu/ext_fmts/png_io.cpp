@@ -309,10 +309,10 @@ namespace utils{ namespace io
 
         reader.read_info();
         png::color_type colorType = reader.get_color_type();
-        const uint32_t  bitdepth = reader.get_bit_depth();
+        const uint32_t  bitdepth  = reader.get_bit_depth();
 
         if( colorType != png::color_type::color_type_palette )  
-            throw runtime_error( "Error: the image to inject a palette into doesn't use a color palette !" );
+            throw runtime_error( "Error: the image to inject a palette into does not have already a color palette !" );
 
         //Build palette
         png::palette mypalette( srcpal.size() );
@@ -340,6 +340,23 @@ namespace utils{ namespace io
         }
         else
             throw runtime_error("Error: the image to inject a palette into has an unsupported bitdepth!");
+    }
+
+    image_format_info GetPNGImgInfo(const std::string & filepath)
+    {
+        image_format_info         imginf;
+        fstream                   inimg(filepath, std::ios_base::in | std::ios_base::binary );
+        png::reader<std::fstream> reader(inimg);
+
+        reader.read_info();
+        png::color_type colorType = reader.get_color_type();
+
+        imginf.usesPalette = colorType == png::color_type::color_type_palette;
+        imginf.bitdepth    = reader.get_bit_depth();
+        imginf.height      = reader.get_height();
+        imginf.width       = reader.get_width();
+
+        return imginf;
     }
 
 //================================================================================================

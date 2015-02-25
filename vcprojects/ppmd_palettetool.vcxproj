@@ -45,15 +45,15 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\shared_build_settings.props" />
+    <Import Project="shared_build_settings.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\shared_build_settings.props" />
+    <Import Project="shared_build_settings.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\shared_build_settings.props" />
+    <Import Project="shared_build_settings.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -113,215 +113,217 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\lib\EasyBMP\EasyBMP\EasyBMP.h">
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\EasyBMP\EasyBMP\EasyBMP_BMP.h">
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_BMP.h">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\EasyBMP\EasyBMP\EasyBMP_DataStructures.h">
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_DataStructures.h">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\lib\EasyBMP\EasyBMP\EasyBMP_VariousBMPutilities.h">
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_VariousBMPutilities.h">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\palettetool.hpp" />
-    <ClInclude Include="..\..\src\ppmdu\basetypes.hpp">
+    <ClInclude Include="..\src\palettetool.hpp" />
+    <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\base_image.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\color.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\color.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\img_pixel.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\index_iterator.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\linear_image.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\containers\tiled_image.hpp">
+    <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\ext_fmts\bmp_io.hpp">
+    <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\ext_fmts\png_io.hpp">
+    <ClInclude Include="..\src\ppmdu\ext_fmts\png_io.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\ext_fmts\riff_palette.hpp">
+    <ClInclude Include="..\src\ppmdu\ext_fmts\riff_palette.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\ext_fmts\supported_io.hpp" />
-    <ClInclude Include="..\..\src\ppmdu\ext_fmts\txt_palette_io.hpp" />
-    <ClInclude Include="..\..\src\ppmdu\pmd2\pmd2_palettes.hpp">
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp" />
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io_info.hpp" />
+    <ClInclude Include="..\src\ppmdu\ext_fmts\txt_palette_io.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\cmdline_util.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\gbyteutils.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\gfileio.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\gfileutils.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\gstringutils.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\handymath.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\library_wide.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\multiple_task_handler.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\poco_wrapper.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\readme_writer.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\ppmdu\utils\utility.hpp">
+    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
+    <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\palettetool.cpp" />
-    <ClCompile Include="..\..\src\ppmdu\containers\color.cpp">
+    <ClCompile Include="..\src\palettetool.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\data formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\ext_fmts\bmp_io.cpp">
+    <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\ext_fmts\png_io.cpp">
+    <ClCompile Include="..\src\ppmdu\ext_fmts\png_io.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\ext_fmts\riff_palette.cpp">
+    <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\external formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\ext_fmts\supported_io.cpp" />
-    <ClCompile Include="..\..\src\ppmdu\ext_fmts\txt_palette_io.cpp" />
-    <ClCompile Include="..\..\src\ppmdu\pmd2\pmd2_palettes.cpp">
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io_info.cpp" />
+    <ClCompile Include="..\src\ppmdu\ext_fmts\txt_palette_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\cmdline_util.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\gbyteutils.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\gfileio.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\gfileutil.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\gstringutils.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\library_wide.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\multiple_task_handler.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\poco_wrapper.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\ppmdu\utils\utility.cpp">
+    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>

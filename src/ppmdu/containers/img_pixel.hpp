@@ -316,7 +316,7 @@ namespace gimg
             operator=
                 Use this to assign an integral type directly to the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator=( T val )
+        template<class T> inline _myty & operator=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             //static_assert( std::numeric_limits<T>::is_integer, "Trying to assign a non-integer to a pixel !" );
@@ -332,7 +332,7 @@ namespace gimg
                 Use this to apply a Bitwise OR with an integral type, and assign the result directly to 
                 the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator|=( T val )
+        template<class T> inline _myty & operator|=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata |= static_cast<pixeldata_t>(val);
@@ -344,7 +344,7 @@ namespace gimg
                 Use this to apply a Bitwise AND with an integral type, and assign the result directly to 
                 the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator&=( T val )
+        template<class T> inline _myty & operator&=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata &= static_cast<pixeldata_t>(val);
@@ -356,7 +356,7 @@ namespace gimg
                 Use this to apply a Bitwise XOR with an integral type, and assign the result directly to 
                 the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator^=( T val )
+        template<class T> inline _myty & operator^=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata ^= static_cast<pixeldata_t>(val);
@@ -368,7 +368,7 @@ namespace gimg
                 Use this to apply addition with an integral type, and assign the result directly to the 
                 pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator+=( T val )
+        template<class T> inline _myty & operator+=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata += static_cast<pixeldata_t>(val);
@@ -380,7 +380,7 @@ namespace gimg
                 Use this to apply subtraction with an integral type, and assign the result directly to 
                 the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator-=( T val )
+        template<class T> inline _myty & operator-=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata -= static_cast<pixeldata_t>(val);
@@ -392,7 +392,7 @@ namespace gimg
                 Use this to apply multiplication with an integral type, and assign the result directly 
                 to the pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator*=( T val )
+        template<class T> inline _myty & operator*=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata *= static_cast<pixeldata_t>(val);
@@ -404,7 +404,7 @@ namespace gimg
                 Use this to apply division with an integral type, and assign the result directly to the 
                 pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator/=( T val )
+        template<class T> inline _myty & operator/=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata /= static_cast<pixeldata_t>(val);
@@ -416,39 +416,51 @@ namespace gimg
                 Use this to apply division with an integral type, and assign the result directly to the 
                 pixel data!
         *************************************************************************************************/
-        template<class T> inline pixel<mypixeltrait_t> & operator%=( T val )
+        template<class T> inline _myty & operator%=( T val )
         {
             static_assert( std::is_convertible<T, pixeldata_t>::value, "Can't assign type T to pixel! Something is wrong about the type T!" );
             pixeldata %= static_cast<pixeldata_t>(val);
             return *this;
         }
 
-        template<class T> inline pixel<mypixeltrait_t> operator&( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata & static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator&( T val )const
+        { return _myty( pixeldata & static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator|( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata | static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator|( T val )const
+        { return _myty( pixeldata | static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator^( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata ^ static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator^( T val )const
+        { return _myty( pixeldata ^ static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator+( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata + static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator+( T val )const
+        { return _myty( pixeldata + static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator-( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata - static_cast<pixeldata_t>(val) ); }
+        inline _myty & operator++()
+        { 
+            pixeldata += static_cast<pixeldata_t>(1);
+            return *this; 
+        }
 
-        template<class T> inline pixel<mypixeltrait_t> operator*( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata * static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator-( T val )const
+        { return _myty( pixeldata - static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator/( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata / static_cast<pixeldata_t>(val) ); }
+        inline _myty & operator--()
+        {
+            pixeldata -= static_cast<pixeldata_t>(1);
+            return *this; 
+        }
 
-        template<class T> inline pixel<mypixeltrait_t> operator%( T val )const
-        { return pixel<mypixeltrait_t>( pixeldata % static_cast<pixeldata_t>(val) ); }
+        template<class T> inline _myty operator*( T val )const
+        { return _myty( pixeldata * static_cast<pixeldata_t>(val) ); }
 
-        template<class T> inline pixel<mypixeltrait_t> operator!()const
-        { return pixel<mypixeltrait_t>( !pixeldata ); }
+        template<class T> inline _myty operator/( T val )const
+        { return _myty( pixeldata / static_cast<pixeldata_t>(val) ); }
+
+        template<class T> inline _myty operator%( T val )const
+        { return _myty( pixeldata % static_cast<pixeldata_t>(val) ); }
+
+        template<class T> inline _myty operator!()const
+        { return _myty( !pixeldata ); }
 
     //--------------------------------------------------------------------------------------------------
     // Data
