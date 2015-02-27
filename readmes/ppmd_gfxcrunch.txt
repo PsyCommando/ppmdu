@@ -1,9 +1,9 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - GfxCrunch  ==
 ===================================================
-Version	   : 0.11
+Version	   : 0.13
 Released   : 2015/01/03
-Written by : psycommando@gmail.com
+Written by : psy_commando (psycommando@gmail.com)
 
 The entire sourcecode for all my tools that are part of this suite is available here:
 https://github.com/PsyCommando/ppmdu/
@@ -13,9 +13,11 @@ Changelog:
 ----------------------------------------------------------------------------------------------------
 - 0.1(2015/01/03): 
     * Initial release!
+
 - 0.11(2015/02/10): 
     * Fixed bug where the value "Unk#11" would get overwritten after it was parsed from the sprite's 
       XML, by the value of "Unk#12"..
+
 - 0.12(2015/02/16):
     * Fixed a bug with the SIR0 encoded ptr list, the list would omit zeros when the original files wouldn't.
     * Fixed a bug where the WAN parser in cases where the first sequence ptr in the sequence ptr table
@@ -27,6 +29,26 @@ Changelog:
       command line option, followed with the amount of worker threads to use.
     * And a lot more stuff..
 
+- 0.13(2015/02/27):
+    * Disabled raw image inport/export for sprites, as it causes issues and is generally not worth it.
+      The program will default to PNG if the raw image format is specified at the command line!
+    * Changed the format of the XML being outputed. So the output of the earlier version cannot be
+      read by this version correctly!
+    * Fixed a bug with character sprites(type 1) that had no particle offset. A null pointer would be written
+      to the WAN header, but only type 0 sprites can have that pointer null! 
+    * Fixed SIR0 encoded pointer list for sprites that had null pointers in their header. The null 
+      pointers would not be properly skipped when building the list!
+    * Added support for unpacking PKDPX compressed sprites directly.
+    * Fixed logging so that its turned off by default!
+    * Log files are now named after the input filename/directory name!
+    * Added automatic updating of the sprite's meta-frames resolution, when the meta-frame refers to an 
+      image in the "imgs" folder, and the resolution of the image differs from the one in the XML data.
+    * Added command-line option "noresfix" to disable the above feature.
+    * Fixed printing of the readme triggering an exception.
+    * Modified the sprite pack file building code so that sprite directories in the input folder do not
+      need to begin with a number! The files are instead read in alphanumerical order.
+    * And a lot of little things..
+
 ----------------------------------------------------------------------------------------------------
 License info:
 ----------------------------------------------------------------------------------------------------
@@ -36,7 +58,9 @@ No crappyrights, all wrongs reversed! :3
 
 This is not including any libraries I'm using that have their own licenses of course!!
 The license for each of these libraries is indicated in their respective header files,
-and they're all isolated in the "libraries" subfolder !
+and they're all isolated in the "libraries" subfolder ! Additionally, a filed named license was 
+joined and it contains the license for libraries requiring their license to be distributed with
+a program in binary form!
 
 ----------------------------------------------------------------------------------------------------
 Special Thanks:
@@ -46,7 +70,7 @@ Special Thanks:
 -> A big thanks to TruePikachu for his help !
 -> A big thanks to Evandixon for his help !
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
--> ..and anyone else I may have forgotten about !
+-> And anyone else I may have forgotten about !
 
 ----------------------------------------------------------------------------------------------------
 About:
@@ -54,7 +78,53 @@ About:
 This tool is meant to handle several graphics formats from the game.
 
 For now, it only supports WAN sprites.
+    
+About the palette:
+-------------------
+The palette file in the unpacked sprite directory is only useful when rebuilding the sprite. It will be used for every 
+images in the sprite when rebuilding. The format does not support individual palettes for each images.
+So if you change the palette in the individual images, it won't do anything once the sprite is re-built, unless you 
+replace the palette.pal file with an updated palette!
+    
+Usage:
+-------
+ppmd_gfxcrunch.exe (option) input path (output path) 
+  -> option         : An option from the list below..(optional)
+  ->input path      : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
+  ->output path(opt): The path where to output the result of the operation. Can be a folder, or a file, depending on whether we're building a sprite, or unpacking one.
+Extra/Batch Parameter(s):
+  +input path      : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
 
+
+Options:
+  -q       : Disables console progress output.
+  -log     : Enable logging to file.
+  -f       : Set the image format to use when exporting images to either  raw, png, or bmp. Def: png.
+  -byindex : This force the program to enforce the index in the file names of the images being imported, instead of just ordering them in alphanumeric order. This only applies to wan sprites this far!
+  -animres : Sets the path to the animres file to use.
+  -fn      : Sets the path to the facenames file to use to name each images in each slots for all emotions in a pokemon's entry, in the kaomado.kao file.
+  -pn      : Sets the path to the pokemon name file to use to name each pokemon's entry in the kaomado.kao file.
+  -psprn   : Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.
+  -pkdpx   : Force the outputed file to be compressed as a PKDPX! (If specified while buiding a pack file of sprite, the individual sprites in the pack will be compressed as PKDPX!)
+  -p       : Force the content of the directory to be handled as a pack file to assemble from unpacked sprites in its sub-directories.
+  -th      : Force the amount of worker threads to  use. Works best when matches half of the machine's hardware threads.(Default is 2 thread)
+  -noresfix: If specified the program will not automatically fix resolution mismatch when building (a) sprite(s) from a folder!
+
+Examples:
+ppmd_gfxcrunch.exe -q -log -f (png,bmp,raw) -byindex -animres "PathToFile" -fn "PathToFile" -pn "PathToFile" -psprn "PathToFile" -pkdpx -p -th 6 -noresfix "c:/mysprites/sprite.wan" "c:/mysprites/sprite.wan" +"c:/mysprites/sprite.wan" 
+
+
+------------------------------
+--Random Uninteresting Fact--:
+------------------------------
+The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
+He turned out really good after ingesting so many gummies and pretty much carried the team 
+most of the game! XD
+And, I just love that pokemon, so yeah, that's pretty much it..
+
+----------------------------------------------------------------------------------------------------
+How to use:
+----------------------------------------------------------------------------------------------------
 Here are a few example uses:
 
 Unpacking:
@@ -80,51 +150,6 @@ Packing:
     The utility will rebuild all valid sprite sub-directories in the directory, and then pack them back into a pack file!
     If the directory name is "m_attack" or "monster", every individual sprites will also be compressed to PKDPX files,
     just like the originals are. The forced offset is set to 0x1300 by default. 
-    
-About the palette:
--------------------
-The palette file in the unpacked sprite directory is only useful when rebuilding the sprite. It will be used for every 
-images in the sprite when rebuilding. The format does not support individual palettes for each images.
-So if you change the palette in the individual images, it won't do anything once the sprite is re-built, unless you 
-replace the palette.pal file with an updated palette!
-    
-Usage:
--------
-ppmd_gfxcrunch.exe (option) input path (output path) 
-  ->option          : An option from the list below..(optional)
-  ->input path      : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
-  ->output path(opt): The path where to output the result of the operation. Can be a folder, or a file, depending on whether we're building a sprite, or unpacking one.
-Extra/Batch Parameter(s):
-  +input path       : The path to either a folder structure containing the data of a sprite to build, or a sprite file to unpack.
-
-
-Options:
-  -q      : Disables console progress output.
-  -f      : Set the image format to use when exporting images to either  raw, png, or bmp. Def: png.
-  -byindex: This force the program to enforce the index in the file names of the images being imported, 
-            instead of just ordering them in alphanumeric order. This only applies to wan sprites this far!
-  -psprn  : Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.
-  -pkdpx  : Force the outputed file to be compressed as a PKDPX! (If specified while buiding a pack file of sprite, the 
-            individual sprites in the pack will be compressed as PKDPX!)
-  -p      : Force the content of the directory to be handled as a pack file to assemble from unpacked sprites in its sub-directories.
-
-
-Examples:
-ppmd_gfxcrunch.exe -q -f (png,bmp,raw) -byindex -psprn "PathToFile" -pkdpx -p "c:/mysprites/sprite.wan" "c:/mysprites/sprite.wan" +"c:/mysprites/sprite.wan" 
-
-
-------------------------------
---Random Uninteresting Fact--:
-------------------------------
-The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
-He turned out really good after ingesting so many gummies and pretty much carried the team 
-most of the game! XD
-And, I just love that pokemon, so yeah, that's pretty much it..
-
-----------------------------------------------------------------------------------------------------
-How to use:
-----------------------------------------------------------------------------------------------------
-
 
 ----------------------------------------------------------------------------------------------------
 About pmd2 graphics :

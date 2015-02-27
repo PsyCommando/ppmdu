@@ -205,7 +205,7 @@ namespace gfx_util
 //------------------------------------------------
     const string CGfxUtil::Exe_Name            = "ppmd_gfxcrunch.exe";
     const string CGfxUtil::Title               = "Baz the Poochyena's PMD:EoS/T/D GfxCrunch";
-    const string CGfxUtil::Version             = "0.12";
+    const string CGfxUtil::Version             = "0.13";
     const string CGfxUtil::Short_Description   = "A utility to unpack and re-pack pmd2 sprite!";
     const string CGfxUtil::Long_Description    = 
         "#TODO";                                    //#TODO
@@ -356,7 +356,14 @@ namespace gfx_util
             "-th 6",
             std::bind( &CGfxUtil::ParseOptionNbThreads,  &GetInstance(), placeholders::_1 ),
         },
-
+        //Ignore resolution mismatch!
+        {
+            "noresfix",
+            0,
+            "If specified the program will not automatically fix resolution mismatch when building (a) sprite(s) from a folder!",
+            "-noresfix",
+            std::bind( &CGfxUtil::ParseOptionNoResFix,  &GetInstance(), placeholders::_1 ),
+        },
         //Forcing input format
         //{
         //    "as",
@@ -389,12 +396,13 @@ namespace gfx_util
         m_bQuiet        = false;
         m_ImportByIndex = false;
         m_bRedirectClog = false;
+        m_bNoResAutoFix = false;
         m_execMode      = eExecMode::INVALID_Mode;
         m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
 
-        m_inputCompletion    = 0;
-        m_outputCompletion   = 0;
-        m_bStopProgressPrint = false;
+        //m_inputCompletion    = 0;
+        //m_outputCompletion   = 0;
+        //m_bStopProgressPrint = false;
 
         //By default, use a single thread!
         unsigned int nbThreadsToUse = ( ( thread::hardware_concurrency() <= 2 )? 1 : 2 ); //Use 2 thread on system with more than 2 hardware threads
@@ -419,6 +427,17 @@ namespace gfx_util
     const string                    & CGfxUtil::getLongDescription ()const { return Long_Description;        }
     const string                    & CGfxUtil::getMiscSectionText ()const { return Misc_Text;               }
 
+
+    void CGfxUtil::ChkAndHndlUnsupportedRawOutput()
+    {
+        //Currently, we do not support raw image export on sprites !
+        if( m_PrefOutFormat == utils::io::eSUPPORT_IMG_IO::RAW )
+        {
+            cerr << "<!>-WARNING: At this time, raw image output has been disabled because it was creating issues.\nWill export to PNG instead!\n";
+            m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
+        }
+    }
+
 //--------------------------------------------
 //  Mode Execution Methods
 //--------------------------------------------
@@ -430,6 +449,9 @@ namespace gfx_util
         Poco::Path           inputPath(m_inputPath);
         Poco::Path           outpath;
         
+        //Currently, we do not support raw image export on sprites !
+        ChkAndHndlUnsupportedRawOutput();
+
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
 
@@ -481,13 +503,15 @@ namespace gfx_util
 
         outpath = m_outputPath;
 
-
         auto sprty = graphics::QuerySpriteImgTypeFromDirectory( infileinfo.path() );
 
         if( sprty == graphics::eSpriteImgType::spr4bpp )
         {
             auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( infileinfo.path(), 
-                                                                                                    m_ImportByIndex );
+                                                                                                    m_ImportByIndex,
+                                                                                                    false,
+                                                                                                    nullptr,
+                                                                                                    m_bNoResAutoFix );
             filetypes::WAN_Writer writer( &sprite );
 
             if( m_compressToPKDPX )
@@ -539,6 +563,9 @@ namespace gfx_util
         atomic<bool>                 shouldUpdtProgress = true;
         multitask::CMultiTaskHandler taskmanager;
         atomic<uint32_t>             completed = 1;
+
+        //Currently, we do not support raw image export on sprites !
+        ChkAndHndlUnsupportedRawOutput();
 
         auto lambdaExpSpriteWrap = [&]( const graphics::BaseSprite * srcspr, const std::string & outpath )->bool
         {
@@ -665,7 +692,11 @@ namespace gfx_util
     }
 
 
-    void BuildSprFromDirAndInsert( vector<uint8_t> & out_sprRaw, const Poco::Path & inDirPath, bool importByIndex, bool bShouldCompress )
+    void BuildSprFromDirAndInsert( vector<uint8_t> & out_sprRaw, 
+                                  const Poco::Path & inDirPath, 
+                                  bool               importByIndex, 
+                                  bool               bShouldCompress,
+                                  bool               bNoResAutoFix )
     {
         auto sprty = graphics::QuerySpriteImgTypeFromDirectory( inDirPath.toString() );
 
@@ -673,7 +704,9 @@ namespace gfx_util
         {
             auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i4bpp>>( inDirPath.toString(), 
                                                                                                     importByIndex, 
-                                                                                                    false );
+                                                                                                    false,
+                                                                                                    nullptr,
+                                                                                                    bNoResAutoFix );
             filetypes::WAN_Writer writer( &sprite );
             if( bShouldCompress )
             {
@@ -688,7 +721,9 @@ namespace gfx_util
         {
             auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( inDirPath.toString(), 
                                                                                                     importByIndex, 
-                                                                                                    false );
+                                                                                                    false,
+                                                                                                    nullptr,
+                                                                                                    bNoResAutoFix );
             filetypes::WAN_Writer writer( &sprite );
             if( bShouldCompress )
             {
@@ -715,9 +750,9 @@ namespace gfx_util
         multitask::CMultiTaskHandler taskmanager;
         atomic<uint32_t>             completed;
 
-        auto lambdaWrapBuildSpr = [&completed]( vector<uint8_t> & out_sprRaw, const Poco::File & infile, bool importByIndex, bool bShouldCompress )->bool
+        auto lambdaWrapBuildSpr = [&]( vector<uint8_t> & out_sprRaw, const Poco::File & infile, bool importByIndex, bool bShouldCompress )->bool
         {
-            BuildSprFromDirAndInsert(out_sprRaw, infile.path(), importByIndex, bShouldCompress);
+            BuildSprFromDirAndInsert(out_sprRaw, infile.path(), importByIndex, bShouldCompress, m_bNoResAutoFix);
             ++completed;
             return true;
         };
@@ -836,6 +871,9 @@ namespace gfx_util
         Poco::File           infileinfo(m_inputPath);
         Poco::Path           inputPath(m_inputPath);
         Poco::Path           outpath;
+
+        //Currently, we do not support raw image export on sprites !
+        ChkAndHndlUnsupportedRawOutput();
 
         if( m_outputPath.empty() )
             m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
@@ -1074,7 +1112,6 @@ namespace gfx_util
     bool CGfxUtil::ParseOptionExportFormat( const std::vector<std::string> & optdata )
     {
         //First entry is the option symbol
-
         if( optdata.size() > 1 )
         {
             cout <<"<*>-Forcing export format to ";
@@ -1231,6 +1268,12 @@ namespace gfx_util
         return m_bRedirectClog = true;
     }
 
+    bool CGfxUtil::ParseOptionNoResFix( const std::vector<std::string> & optdata )
+    {
+        cout <<"<*>-noresfix specified. Utility will not attempt to get correct resolution from the images in case of mismatch. Data from the XML file will be forced!\n";
+        return m_bNoResAutoFix = true;
+    }
+
 //--------------------------------------------
 //  Main Exec functions
 //--------------------------------------------
@@ -1331,6 +1374,12 @@ namespace gfx_util
 
     int CGfxUtil::GatherArgs( int argc, const char * argv[] )
     {
+        if( argc == 1 )
+        {
+            PrintReadme();
+            return -1;
+        }
+
         //Parse arguments and options
         try
         {

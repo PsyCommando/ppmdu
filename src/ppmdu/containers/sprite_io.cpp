@@ -115,15 +115,15 @@ namespace pmd2{ namespace graphics
         /**************************************************************
         **************************************************************/
         SpriteToDirectory( const sprite_t & myspr )
-            :m_inSprite(myspr),m_pProgress(nullptr)
+            :m_inSprite(myspr)/*,m_pProgress(nullptr)*/
         {}
 
         /**************************************************************
         **************************************************************/
         void WriteSpriteToDir( const string          & folderpath, 
                                eSUPPORT_IMG_IO         imgty, 
-                               bool                    xmlcolorpal = false, 
-                               std::atomic<uint32_t> * progresscnt = nullptr ) 
+                               bool                    xmlcolorpal = false/*, 
+                               std::atomic<uint32_t> * progresscnt = nullptr*/ ) 
         {
             //Create Root Folder
             m_outDirPath = Poco::Path(folderpath);
@@ -135,7 +135,7 @@ namespace pmd2{ namespace graphics
             if( utils::LibWide().isLogOn() )
                 clog << "Output directory " <<directory.path() <<". Ok!\n";
 
-            m_pProgress = progresscnt;
+            /*m_pProgress = progresscnt;*/
 
             //Count the ammount of entries for calculating work
             // and for adding statistics to the exported files.
@@ -145,24 +145,7 @@ namespace pmd2{ namespace graphics
             for( const auto & aseq : m_inSprite.getAnimSequences() )
                 totalnbfrms += aseq.getNbFrames();
             
-            //Gather stats for computing progress proportionally at runtime
-            //const uint32_t amtWorkFrames  = m_inSprite.getFrames().size();
-            //const uint32_t amtWorkAnims   = m_inSprite.getAnimGroups().size() + totalnbseqs + totalnbfrms;
-            //const uint32_t amtWorkFrmGrps = m_inSprite.getMetaFrames().size() + m_inSprite.getMetaFrmsGrps().size();
-            //const uint32_t amtWorkOffs    = m_inSprite.getPartOffsets().size();
-            //const uint32_t totalwork      = amtWorkAnims + amtWorkFrmGrps + amtWorkOffs + amtWorkFrames;
-
-            //Get the percentages of work, relative to the total, for each
-            //const float percentFrames  = static_cast<float>( (static_cast<double>(amtWorkFrames)  * 100.0) / static_cast<double>(totalwork) );
-            //const float percentAnims   = static_cast<float>( (static_cast<double>(amtWorkAnims)   * 100.0) / static_cast<double>(totalwork) );
-            //const float percentFrmGrps = static_cast<float>( (static_cast<double>(amtWorkFrmGrps) * 100.0) / static_cast<double>(totalwork) );
-            //const float percentOffsets = static_cast<float>( (static_cast<double>(amtWorkOffs)    * 100.0) / static_cast<double>(totalwork) );
-
             spriteWorkStats stats;
-            //stats.propFrames    = static_cast<uint32_t>(percentFrames);
-            //stats.propAnims     = static_cast<uint32_t>(percentAnims);
-            //stats.propMFrames   = static_cast<uint32_t>(percentFrmGrps);
-            //stats.propOffsets   = static_cast<uint32_t>(percentOffsets);
             stats.totalAnimFrms = totalnbfrms;
             stats.totalAnimSeqs = totalnbseqs;
 
@@ -172,9 +155,6 @@ namespace pmd2{ namespace graphics
                 ExportPalette();
 
             ExportXMLData(xmlcolorpal, stats);
-
-            if( m_pProgress != nullptr )
-                m_pProgress->store( 100 ); //fill the remaining percentage (the palette and etc are nearly instantenous anyways)
         }
 
     private:
@@ -197,11 +177,13 @@ namespace pmd2{ namespace graphics
                     ExportFramesAsBMPs(imgdir, proportionofwork);
                     break;
                 }
+#if 0
                 case eSUPPORT_IMG_IO::RAW:
                 {
                     ExportFramesAsRawImgs(imgdir, proportionofwork);
                     break;
                 }
+#endif
                 case eSUPPORT_IMG_IO::PNG:
                 default:
                 {
@@ -214,12 +196,12 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ExportFramesAsPNGs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            uint32_t     progressBefore = 0; //Save a little snapshot of the progress
+            //uint32_t     progressBefore = 0; //Save a little snapshot of the progress
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
 
-            if( m_pProgress != nullptr )
-                progressBefore = m_pProgress->load();
+            //if( m_pProgress != nullptr )
+            //    progressBefore = m_pProgress->load();
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -232,8 +214,8 @@ namespace pmd2{ namespace graphics
                 if( utils::LibWide().isLogOn() )
                     clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
 
-                if( m_pProgress != nullptr )
-                    m_pProgress->store( progressBefore + (proportionofwork * (i+1) ) / frames.size() ); 
+                //if( m_pProgress != nullptr )
+                //    m_pProgress->store( progressBefore + (proportionofwork * (i+1) ) / frames.size() ); 
             }
         }
 
@@ -241,12 +223,12 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ExportFramesAsBMPs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            uint32_t     progressBefore = 0; //Save a little snapshot of the progress
+            //uint32_t     progressBefore = 0; //Save a little snapshot of the progress
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
             
-            if( m_pProgress != nullptr )
-                progressBefore = m_pProgress->load();
+            //if( m_pProgress != nullptr )
+            //    progressBefore = m_pProgress->load();
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -259,21 +241,22 @@ namespace pmd2{ namespace graphics
                 if( utils::LibWide().isLogOn() )
                     clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
 
-                if( m_pProgress != nullptr )
-                    m_pProgress->store( progressBefore + (proportionofwork * (i+1)) / frames.size() );
+                //if( m_pProgress != nullptr )
+                //    m_pProgress->store( progressBefore + (proportionofwork * (i+1)) / frames.size() );
             }
         }
 
+#if 0
         /**************************************************************
         **************************************************************/
         void ExportFramesAsRawImgs( const Poco::Path & outdirpath, uint32_t proportionofwork )
         {
-            uint32_t     progressBefore = 0; 
+            //uint32_t     progressBefore = 0; 
             const auto & frames         = m_inSprite.getFrames();
             Poco::Path   outimg(outdirpath);
             
-            if( m_pProgress != nullptr )
-                progressBefore = m_pProgress->load(); //Save a little snapshot of the progress
+            //if( m_pProgress != nullptr )
+            //    progressBefore = m_pProgress->load(); //Save a little snapshot of the progress
 
             for( unsigned int i = 0; i < frames.size(); ++i )
             {
@@ -286,17 +269,17 @@ namespace pmd2{ namespace graphics
                 if( utils::LibWide().isLogOn() )
                     clog << "Exported frame " <<i <<": " <<frames[i].getNbPixelWidth() <<"x" <<frames[i].getNbPixelHeight() <<", to " <<Poco::Path(outimg).append(sstrname.str()).toString() <<"\n";
 
-                if( m_pProgress != nullptr )
-                    m_pProgress->store( progressBefore + (proportionofwork * (i + 1)) / frames.size() );
+                //if( m_pProgress != nullptr )
+                //    m_pProgress->store( progressBefore + (proportionofwork * (i + 1)) / frames.size() );
             }
         }
+#endif
 
         /**************************************************************
         **************************************************************/
         inline void ExportXMLData(bool xmlcolpal, const spriteWorkStats & wstats)
         {
-            WriteSpriteDataToXML( &m_inSprite, m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
-            //SpriteXMLWriter(&m_inSprite).WriteXMLFiles( m_outDirPath.toString(), wstats, xmlcolpal, m_pProgress );
+            WriteSpriteDataToXML( &m_inSprite, m_outDirPath.toString(), wstats, xmlcolpal/*, m_pProgress*/ );
         }
 
         /**************************************************************
@@ -311,7 +294,7 @@ namespace pmd2{ namespace graphics
     private:
         Poco::Path              m_outDirPath;
         const sprite_t        & m_inSprite;
-        std::atomic<uint32_t> * m_pProgress;
+        /*std::atomic<uint32_t> * m_pProgress;*/
     };
 
 //=============================================================================================
@@ -326,7 +309,7 @@ namespace pmd2{ namespace graphics
         /**************************************************************
         **************************************************************/
         DirectoryToSprite( sprite_t & out_sprite )
-            :m_pProgress( nullptr ), m_outSprite( out_sprite )
+            :/*m_pProgress( nullptr ),*/ m_outSprite( out_sprite )
         {
         }
 
@@ -334,24 +317,22 @@ namespace pmd2{ namespace graphics
         **************************************************************/
         void ParseSpriteFromDirectory( const std::string     & directorypath, 
                                        bool                    readImgByIndex, //If true, the images are read by index number in their names. If false, by alphanumeric order!
-                                       std::atomic<uint32_t> * pProgress   = nullptr,
-                                       bool                    parsexmlpal = false )
+                                       /*std::atomic<uint32_t> * pProgress   = nullptr,*/
+                                       bool                    parsexmlpal   = false,
+                                       bool                    bNoResAutoFix = false )
         {
             //!! This must run first !!
             m_inDirPath = Poco::Path( directorypath );
-            m_pProgress = pProgress;
-
+            /*m_pProgress = pProgress;*/
             auto validimgslist = ListValidImages(readImgByIndex);
 
             //Parse the xml first to help with reading image with some formats
             ParseXML(parsexmlpal, validimgslist.size() );
-
             ReadImages(validimgslist);
 
-            //if( readImgByIndex )
-            //    ReadImagesByIndex();
-            //else
-            //    ReadImagesSorted();
+            //Check and fix missing/differing resolution between meta-frames and images
+            if( !bNoResAutoFix )
+                CheckForMissingResolution();
 
             if( !parsexmlpal )
             {
@@ -375,8 +356,6 @@ namespace pmd2{ namespace graphics
                          << "\"! Could not obtain color palette from either the images, or from the expected palette file in the sprite's directory!"
                          << "";
                 }
-
-                
             }
 
             //End with rebuilding the references
@@ -384,6 +363,60 @@ namespace pmd2{ namespace graphics
         }
 
     private:
+
+        /*
+            Check if a meta-frame points to an image with a resolution that doesn't match
+            its internal resolution and fix it.
+        */
+        void CheckForMissingResolution()
+        {
+            if( utils::LibWide().isLogOn() )
+                clog<<"Checking assembled sprite for resolution mismatch..\n";
+
+            for( unsigned int i = 0; i < m_outSprite.m_metaframes.size(); ++i )
+            {
+                MetaFrame & curmf = m_outSprite.m_metaframes[i];
+                if( curmf.HasValidImageIndex() )
+                    CheckMetaFrameRes( curmf, i );
+            }
+        }
+
+        void CheckMetaFrameRes( MetaFrame & curmf, unsigned int ctmf )
+        {
+            utils::Resolution mfres = MetaFrame::eResToResolution(curmf.resolution);
+            auto            & img   = m_outSprite.m_frames.at(curmf.imageIndex);
+            MetaFrame::eRes   imgres= MetaFrame::IntegerResTo_eRes( img.getNbPixelWidth(), img.getNbPixelHeight() );
+
+            if( curmf.resolution == MetaFrame::eRes::_INVALID || 
+                curmf.resolution != imgres )
+            {
+                stringstream sstr;
+                sstr <<"WARNING: Meta-frame #" <<ctmf <<", and image#" <<curmf.imageIndex <<", have a resolution mismatch!\n"
+                     <<"MF: " <<mfres <<", Img: " <<img.getNbPixelWidth() <<"x" <<img.getNbPixelHeight() <<" !\n";
+
+                //If we got a resolution mismatch fix it!
+                if( imgres != MetaFrame::eRes::_INVALID )
+                {
+                    sstr << "Meta-frame #" <<ctmf <<"'s resolution was changed to match image #" <<curmf.imageIndex
+                         << "'s resolution successfully!\n";
+                    curmf.resolution = imgres;
+                }
+                else
+                {
+                    stringstream sstrerr;
+                    sstrerr << "ERROR: image #" <<curmf.imageIndex << " has an unsupported resolution of " 
+                            <<img.getNbPixelWidth() <<"x" <<img.getNbPixelHeight() <<" !";
+                    throw runtime_error(sstrerr.str());
+                }
+
+                string message = sstr.str();
+                if( utils::LibWide().isLogOn() )
+                    clog << message;
+                cerr << message;
+            }
+        }
+
+
 
         /**************************************************************
         **************************************************************/
@@ -394,33 +427,33 @@ namespace pmd2{ namespace graphics
 
         vector<Poco::File> ListValidImages( bool OrderByIndex )
         {
-            vector<Poco::File> list;
-            Poco::Path         imgsDir( m_inDirPath );
+            Poco::Path              imgsDir( m_inDirPath );
             imgsDir.append( SPRITE_IMGs_DIR );
-            Poco::File         fimginfo(imgsDir);
+            Poco::File              fimginfo(imgsDir);
             Poco::DirectoryIterator itdirend;
+            vector<Poco::File>      list;
 
             for( Poco::DirectoryIterator itdir(fimginfo); itdir != itdirend; ++itdir )
             {
                 if( itdir->isFile() && !itdir->isHidden() && utils::io::IsSupportedImageType( itdir->path() ) )
-                {
                     list.push_back( *itdir );
-                }
             }
 
             if( OrderByIndex )
             {
                 //sort images
-                std::sort( list.begin(), list.end(), []( const Poco::File & first, const Poco::File & second )->bool
-                {
-                    stringstream strsFirst(first.path());
-                    stringstream strsSecond(second.path());
-                    uint32_t     indexfirst  = 0;
-                    uint32_t     indexsecond = 0;
-                    strsFirst  >> indexfirst;
-                    strsSecond >> indexsecond;
-                    return indexfirst < indexsecond;
-                });
+                std::sort( list.begin(), 
+                           list.end(), 
+                           []( const Poco::File & first, const Poco::File & second )->bool
+                           {
+                               stringstream strsFirst(first.path());
+                               stringstream strsSecond(second.path());
+                               uint32_t     indexfirst  = 0;
+                               uint32_t     indexsecond = 0;
+                               strsFirst  >> indexfirst;
+                               strsSecond >> indexsecond;
+                               return indexfirst < indexsecond;
+                           });
             }
 
             return std::move(list);
@@ -430,10 +463,8 @@ namespace pmd2{ namespace graphics
         {
             m_outSprite.m_frames.reserve( filelst.size() );
 
-            //for( uint32_t i = 0; i < filelst.size(); ++i )
             for( auto & animg : filelst )
             {
-                //auto & animg = filelst[i];
                 try
                 {
                     ReadAnImage( animg );
@@ -455,119 +486,6 @@ namespace pmd2{ namespace graphics
 
         /**************************************************************
         **************************************************************/
-        //void ReadImagesByIndex()
-        //{
-        //    //assert(false);
-        //    //**************************************************************************
-        //    //#TODO: Use the meta-frame table to read image files by index/filenmae. Then change the meta-frame index in-memory to 
-        //    //       refer to the index the image data was actually inserted at!
-        //    //**************************************************************************
-        //    Poco::Path                imgsDir( m_inDirPath );
-        //    map<uint32_t, Poco::File> validImages;
-        //    uint32_t                  nbvalidimgs  = 0;
-        //    imgsDir.append( SPRITE_IMGs_DIR );
-
-        //    Poco::DirectoryIterator itdir(imgsDir);
-        //    Poco::DirectoryIterator itdircount(imgsDir);
-        //    Poco::DirectoryIterator itdirend;
-
-        //    //We want to load images into the right indexes
-
-        //    //
-        //    //#1 - Count the images in the imgs directory + Find all our valid images
-        //    for(; itdir != itdirend; ++itdir ) 
-        //    {
-        //        if( utils::io::IsSupportedImageType( itdir->path() ) )
-        //        {
-        //            stringstream sstrparseindex(itdir->path());
-        //            uint32_t     curindex = 0;
-        //            sstrparseindex >> curindex;
-
-        //            validImages.insert( make_pair( curindex, *itdir ) );
-        //        }
-        //    }
-
-
-        //    //#2 - Parse the images after allocating
-        //    m_outSprite.m_frames.reserve( validImages.size() );
-
-        //    for( uint32_t i = 0; i < validImages.size(); ++i )
-        //    {
-        //        auto & animg = validImages.at(i);
-        //        try
-        //        {
-        //            ReadAnImage( animg );
-        //        }
-        //        catch( std::out_of_range ore ) //In this case it means the std::map didn't find our entry
-        //        {
-        //            cerr << "\n<!>-Warning: Image #" <<i <<" was expected, but not found !\n"
-        //                << "The next image read will end up with that image# ! This might result in unforseen consequences!\n";
-        //        }
-        //        catch( Poco::Exception e )
-        //        {
-        //            cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
-        //                 <<e.message() <<"\n"
-        //                 <<"Skipping !\n";
-        //        }
-        //        catch( exception e )
-        //        {
-        //            cerr << "\n<!>-Warning: Failure reading image " <<animg.path() <<":\n"
-        //                 <<e.what() <<"\n"
-        //                 <<"Skipping !\n";
-        //        }
-        //    }
-        //}
-
-        ///**************************************************************
-        //**************************************************************/
-        //void ReadImagesSorted()
-        //{
-        //    Poco::Path         imgsDir( m_inDirPath );
-        //    uint32_t           nbvalidimgs  = 0;
-        //    imgsDir.append( SPRITE_IMGs_DIR );
-
-        //    Poco::DirectoryIterator itdir(imgsDir);
-        //    Poco::DirectoryIterator itdircount(imgsDir);
-        //    Poco::DirectoryIterator itdirend;
-
-        //    //count imgs
-        //    while( itdircount != itdirend )
-        //    {
-        //        if( utils::io::IsSupportedImageType( itdircount->path() ) )
-        //            ++nbvalidimgs;
-        //        ++itdircount;
-        //    }
-
-        //    //Allocate
-        //    m_outSprite.m_frames.reserve( nbvalidimgs );
-
-        //    //Grab the images in order
-        //    for(; itdir != itdirend; ++itdir )  
-        //    {
-        //        if( utils::io::IsSupportedImageType( itdir->path() ) )
-        //        {
-        //            try
-        //            {
-        //                ReadAnImage( *itdir );
-        //            }
-        //            catch( Poco::Exception e )
-        //            {
-        //                cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
-        //                     <<e.message() <<"(POCO)\n"
-        //                     <<"Skipping !\n";
-        //            }
-        //            catch( exception e )
-        //            {
-        //                cerr << "\n<!>-Warning: Failure reading image " <<itdir->path() <<":\n"
-        //                     <<e.what() <<"\n"
-        //                     <<"Skipping !\n";
-        //            }
-        //        }
-        //    }
-        //}
-
-        /**************************************************************
-        **************************************************************/
         void ReadAnImage( const Poco::File & imgfile )
         {
             Poco::Path               imgpath(imgfile.path());
@@ -586,6 +504,7 @@ namespace pmd2{ namespace graphics
                     utils::io::ImportFromBMP( curfrm, imgfile.path() );
                     break;
                 }
+#if 0
                 case eSUPPORT_IMG_IO::RAW:
                 {
                     utils::Resolution res{0,0};
@@ -600,7 +519,7 @@ namespace pmd2{ namespace graphics
                         {
                             res = MetaFrame::eResToResolution(m_outSprite.m_metaframes[i].resolution);
                         }
-                        else if( m_outSprite.m_metaframes[i].isSpecialMetaFrame() &&
+                        else if( m_outSprite.m_metaframes[i].HasSpecialImageIndex() &&
                                  m_outSprite.m_metaframes[i].unk15 == indextofind )
                         {
                             //#EXPERIMENTAL
@@ -625,10 +544,11 @@ namespace pmd2{ namespace graphics
                     utils::io::ImportRawImg_NoPal( curfrm, pathtoraw.str(), res );
                     break;
                 }
+#endif
                 default:
                 {
                     stringstream strserror;
-                    strserror<< "Image " <<imgpath.toString() <<" doesn't look like a BMP, RAW or PNG image !";
+                    strserror<< "Image " <<imgpath.toString() <<" doesn't look like a supported image type !";
                     throw std::runtime_error(strserror.str());
                 }
             };
@@ -648,7 +568,7 @@ namespace pmd2{ namespace graphics
     private:
         Poco::Path              m_inDirPath;
         sprite_t              & m_outSprite;
-        std::atomic<uint32_t> * m_pProgress;
+        /*std::atomic<uint32_t> * m_pProgress;*/
     };
 
 
@@ -666,7 +586,7 @@ namespace pmd2{ namespace graphics
                                       std::atomic<uint32_t>                     * progresscnt ) 
     {
         SpriteToDirectory<SpriteData<gimg::tiled_image_i4bpp>> mywriter(srcspr);
-        mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal, progresscnt ); 
+        mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal/*, progresscnt*/ ); 
     }
 
     /**************************************************************
@@ -679,7 +599,7 @@ namespace pmd2{ namespace graphics
                                      std::atomic<uint32_t>                     * progresscnt )
     {
         SpriteToDirectory<SpriteData<gimg::tiled_image_i8bpp>> mywriter(srcspr);
-        mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal, progresscnt ); 
+        mywriter.WriteSpriteToDir( outpath, imgtype, usexmlpal/*, progresscnt*/ ); 
     }
 
 
@@ -697,12 +617,12 @@ namespace pmd2{ namespace graphics
         if( spritety == eSpriteImgType::spr4bpp )
         {
             const SpriteData<gimg::tiled_image_i4bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i4bpp>*>(srcspr);
-            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
+            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal/*, progresscnt*/ );
         }
         else if( spritety == eSpriteImgType::spr8bpp )
         {
             const SpriteData<gimg::tiled_image_i8bpp>* ptr = dynamic_cast<const SpriteData<gimg::tiled_image_i8bpp>*>(srcspr);
-            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal, progresscnt );
+            ExportSpriteToDirectory( (*ptr), outpath, imgtype, usexmlpal/*, progresscnt*/ );
         }
     }
 
@@ -712,11 +632,12 @@ namespace pmd2{ namespace graphics
         SpriteData<gimg::tiled_image_i4bpp> ImportSpriteFromDirectory( const std::string     & inpath, 
                                                                        bool                    bReadImgByIndex,
                                                                        bool                    bParseXmlPal,
-                                                                       std::atomic<uint32_t> * progresscnt ) 
+                                                                       std::atomic<uint32_t> * progresscnt,
+                                                                       bool                    bNoResAutoFix ) 
     { 
         SpriteData<gimg::tiled_image_i4bpp>                    result;
         DirectoryToSprite<SpriteData<gimg::tiled_image_i4bpp>> myreader(result);
-        myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, progresscnt, bParseXmlPal );
+        myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, /*progresscnt,*/ bParseXmlPal, bNoResAutoFix );
         return std::move( result );
     }
 
@@ -726,11 +647,12 @@ namespace pmd2{ namespace graphics
        SpriteData<gimg::tiled_image_i8bpp> ImportSpriteFromDirectory( const std::string     & inpath, 
                                                                        bool                    bReadImgByIndex,
                                                                        bool                    bParseXmlPal,
-                                                                       std::atomic<uint32_t> * progresscnt ) 
+                                                                       std::atomic<uint32_t> * progresscnt,
+                                                                       bool                    bNoResAutoFix ) 
     { 
         SpriteData<gimg::tiled_image_i8bpp>                    result;
         DirectoryToSprite<SpriteData<gimg::tiled_image_i8bpp>> myreader(result);
-        myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, progresscnt, bParseXmlPal );
+        myreader.ParseSpriteFromDirectory( inpath, bReadImgByIndex, /*progresscnt,*/ bParseXmlPal, bNoResAutoFix );
         return std::move( result );
     }
 

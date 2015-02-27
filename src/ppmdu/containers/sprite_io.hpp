@@ -92,12 +92,15 @@ namespace pmd2 { namespace graphics
                                in the alpha-numeric order they're in the folder, applying no
                                check on the index number.
             -bParseXmlPal    : Whether we should try parsing a palette from xml!
+            -bNoResAutoFix   : If true, when a resolution mismatch between an image and a meta-frame occur
+                               the meta-frame resolution will not be changed to match the image's!
     */
     template<class _Sprite_T>
         _Sprite_T ImportSpriteFromDirectory( const std::string     & inpath, 
                                              bool                    bReadImgByIndex = false,
                                              bool                    bParseXmlPal    = false,
-                                             std::atomic<uint32_t> * progresscnt     = nullptr );
+                                             std::atomic<uint32_t> * progresscnt     = nullptr,
+                                             bool                    bNoResAutoFix   = false );
 
 
 //---------------------------------------------------------------------------------------------

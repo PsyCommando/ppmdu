@@ -629,11 +629,12 @@ namespace pmd2 { namespace filetypes
             }
             else
             {
+#ifdef HANDLE_MINUS_ONE_METAFRAME_TEST
                 //Run a search on the whole thing again, looking for meta-frames with special index, and check the value of unk15
                 uint32_t i = 0;
                 for( ; i < metafrms.size(); ++i )
                 {
-                    if( metafrms[i].isSpecialMetaFrame() && metafrms[i].unk15 == curfrmindex )
+                    if( metafrms[i].HasSpecialImageIndex() && metafrms[i].unk15 == curfrmindex )
                     {
                         myres = MetaFrame::eResToResolution( metafrms[i].resolution );
                         if( utils::LibWide().isLogOn() )
@@ -641,10 +642,10 @@ namespace pmd2 { namespace filetypes
                             uint32_t unk15_val = metafrms[i].unk15;
                             std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
                                       <<hex << unk15_val
-                                      << ". Resolution set to " <<myres <<"!\n";
+                                      << ". Resolution set to " <<dec <<myres <<"!\n";
                             std::cerr << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is 0x" 
                                       <<hex << unk15_val
-                                      << ". Resolution set to " <<myres <<"!\n";
+                                      << ". Resolution set to " <<dec <<myres <<"!\n";
                         }
                         break;
                     }
@@ -658,8 +659,15 @@ namespace pmd2 { namespace filetypes
                         std::cerr << "Image #" <<curfrmindex <<", no matching Special Meta-frames found !\n";  
                     }
                 }
+#else
+                if( utils::LibWide().isLogOn() )
+                {
+                    std::clog << "Image #" <<curfrmindex <<", is orphaned! No matching meta-frame found!\n";
+                    std::cerr << "Image #" <<curfrmindex <<", is orphaned! No matching meta-frame found!\n";
+                }
+#endif
             }
-            //else if( metafrms.front().isSpecialMetaFrame() ) 
+            //else if( metafrms.front().HasSpecialImageIndex() ) 
             //{
             //    if( utils::LibWide().isLogOn() )
             //        std::clog << "Image #" <<curfrmindex <<" Meta-Frame refering to -1 found! unk15 value is " << <<"\n";

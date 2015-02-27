@@ -70,6 +70,8 @@ namespace gfx_util
         bool ParseOptionNbThreads       ( const std::vector<std::string> & optdata );
         bool ParseOptionLog             ( const std::vector<std::string> & optdata );
 
+        bool ParseOptionNoResFix        ( const std::vector<std::string> & optdata );
+
         //Execution
         int UnpackSprite();
         int BuildSprite();
@@ -83,6 +85,7 @@ namespace gfx_util
         int                      Execute               ();                                 //Handle excution switch case + exceptions
         void                     PrintOperationMode    ();
 
+        void ChkAndHndlUnsupportedRawOutput();
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -127,9 +130,9 @@ namespace gfx_util
         bool                           m_ImportByIndex;   //Whether the images should be imported by their index number, and not just the order they're sorted as
         bool                           m_compressToPKDPX; //Whether the content should be compressed. Works with sprite files, and packed sprite files only this far!
         bool                           m_bRedirectClog;   //Whether we should redirect clog to a file
+        bool                           m_bNoResAutoFix;   //Whether in case of resolution mismatch between the sprite XML data and the images, the utility will autofix
+                                                          // the content of meta-frames with the resolution of the corresponding image!
         eExecMode                      m_execMode;        //This is set after reading the input path.
-        //std::unique_ptr<pathwrapper_t> m_pInputPath;      //This is the input path that was parsed 
-        //std::unique_ptr<pathwrapper_t> m_pOutputPath;     //This is the output path that was parsed
 
         std::string                    m_inputPath;      //This is the input path that was parsed 
         std::string                    m_outputPath;     //This is the output path that was parsed
@@ -144,10 +147,10 @@ namespace gfx_util
         std::string                    m_pathToPokeNamesFile;   //Path to the file containing the name to give every entries in a "kaomado.kao" file
 
         //Temporary Execution Stuff
-        std::atomic<uint32_t> m_inputCompletion;//#REMOVEME
-        std::atomic<uint32_t> m_outputCompletion;//#REMOVEME
-        std::atomic<bool>     m_bStopProgressPrint;//#REMOVEME
-        std::future<void>     m_runThUpHpBar;//#REMOVEME
+        //std::atomic<uint32_t> m_inputCompletion;//#REMOVEME
+        //std::atomic<uint32_t> m_outputCompletion;//#REMOVEME
+        //std::atomic<bool>     m_bStopProgressPrint;//#REMOVEME
+        //std::future<void>     m_runThUpHpBar;//#REMOVEME
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
     };

@@ -178,7 +178,8 @@ namespace pmd2{ namespace graphics
         /*
             This returns whether the meta-frame has -1 as image index!
         */
-        inline bool isSpecialMetaFrame()const { return imageIndex == SPECIAL_METAFRM_INDEX; }
+        inline bool HasSpecialImageIndex()const { return imageIndex == SPECIAL_METAFRM_INDEX; }
+        inline bool HasValidImageIndex  ()const { return imageIndex >= 0; }
 
     //-----------------------------
     // IO Methods
@@ -545,7 +546,7 @@ namespace pmd2{ namespace graphics
         {
             auto & currentMf = m_metaframes[ctmf];
 
-            if( currentMf.isSpecialMetaFrame() ) //Handle special frame
+            if( currentMf.HasSpecialImageIndex() ) //Handle special frame
             {
                 //#EXPERIMENTAL HANDLING
 #ifdef HANDLE_MINUS_ONE_METAFRAME_TEST
@@ -587,10 +588,28 @@ namespace pmd2{ namespace graphics
             {
                 //clear all anim references!
                 currentMf.clearRefs();
+
                 //Register meta to frame reference 
                 m_metarefs.insert( std::make_pair( currentMf.imageIndex, ctmf ) );
             }
         }
+
+        /*
+            Check if the current meta-frame points to an image with a resolution that doesn't match
+            and fix it.
+        */
+        //void CheckForMissingResolution( MetaFrame & curmf, unsigned int ctmf )
+        //{
+        //    utils::Resolution mfres = MetaFrame::eResToResolution(curmf.resolution);
+        //    auto            & img   = m_frames.at(curmf.imageIndex);
+
+        //    if( curmf.resolution == MetaFrame::eRes::_INVALID || 
+        //        curmf.resolution != MetaFrame::IntegerResTo_eRes( img.getNbPixelWidth(), img.getNbPixelHeight() ) )
+        //    {
+        //        //If we got a resolution mismatch fix it!
+
+        //    }
+        //}
 
         void RebuildAnAnimRefs( unsigned int ctseq, unsigned int ctfrm )
         {
