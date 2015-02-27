@@ -493,11 +493,14 @@ namespace pmd2 { namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteParticleOffsetsBlock()
     {
-        //Don't write anything if the offset list is null!
+        //Don't write anything if the offset list is null for type 0 sprites!
         if( m_pSprite->getPartOffsets().empty() )
         {
-            m_wanHeadr_anim.ptr_pOffsetsTable = 0; //null ptr
-            return;
+            if( m_pSprite->getSprInfo().spriteType == graphics::eSprTy::Generic )
+            {
+                m_wanHeadr_anim.ptr_pOffsetsTable = 0; //null ptr
+                return;
+            }
         }
 
         //# Write starting offset

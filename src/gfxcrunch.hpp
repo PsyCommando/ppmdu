@@ -75,10 +75,9 @@ namespace gfx_util
         int BuildSprite();
         int UnpackAndExportPackedCharSprites();
         int PackAndImportCharSprites();
+        int DecompressAndHandle();
 
         //Utility
-        //bool isValid_WAN_InputFile      ( const std::string & path ); //#REMOVEME
-        //bool isValid_WANT_InputDirectory( const std::string & path );
         bool                     DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
         int                      GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
         int                      Execute               ();                                 //Handle excution switch case + exceptions

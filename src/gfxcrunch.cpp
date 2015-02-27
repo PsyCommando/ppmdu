@@ -665,7 +665,7 @@ namespace gfx_util
     }
 
 
-    void BuildSprFromDirAndInsert( vector<uint8_t> & out_sprRaw /*unsigned int curindex*/, const Poco::Path & inDirPath, /*filetypes::CPack & out_pack,*/ bool importByIndex, bool bShouldCompress )
+    void BuildSprFromDirAndInsert( vector<uint8_t> & out_sprRaw, const Poco::Path & inDirPath, bool importByIndex, bool bShouldCompress )
     {
         auto sprty = graphics::QuerySpriteImgTypeFromDirectory( inDirPath.toString() );
 
@@ -744,26 +744,40 @@ namespace gfx_util
         //Resize the file container
         mypack.SubFiles().resize( validDirs.size() );
 
-        //Iterate the directory's content and get only the extracted sprites
-        for( unsigned int i = 0; i < validDirs.size(); ++i )
-        {
-            Poco::File & curDir = validDirs[i];
 
-            uint32_t     insertat = 0;
-            stringstream sstrindex;
-            sstrindex << (Poco::Path( curDir.path() ).makeFile().getFileName()); //Get the name of the directory
-            sstrindex >> insertat;  //Extract the index # prefix from the folder name!
+        //if( m_ImportByIndex )
+        //{
+        //    //Iterate the directory's content and get only the extracted sprites
+        //    for( unsigned int i = 0; i < validDirs.size(); ++i )
+        //    {
+        //        Poco::File & curDir = validDirs[i];
 
-            if( insertat < validDirs.size() )
+        //        uint32_t     insertat = 0;
+        //        stringstream sstrindex;
+        //        sstrindex << (Poco::Path( curDir.path() ).makeFile().getFileName()); //Get the name of the directory
+        //        sstrindex >> insertat;  //Extract the index # prefix from the folder name!
+
+        //        if( insertat < validDirs.size() )
+        //        {
+        //            taskmanager.AddTask(
+        //                multitask::pktask_t(
+        //                std::bind( lambdaWrapBuildSpr, ref(mypack.SubFiles()[insertat]), ref(validDirs[i]), m_ImportByIndex, m_compressToPKDPX ) ) );
+        //        }
+        //        else
+        //            cerr<< "<!>-Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
+        //    }
+        //}
+        //else
+        //{
+            //Iterate the directory's content and get only the extracted sprites
+            for( unsigned int i = 0; i < validDirs.size(); ++i )
             {
+                Poco::File & curDir = validDirs[i];
                 taskmanager.AddTask(
                     multitask::pktask_t(
-                    std::bind( lambdaWrapBuildSpr, ref(mypack.SubFiles()[insertat]), ref(validDirs[i]), m_ImportByIndex, m_compressToPKDPX ) ) );
-                    //BuildSprFromDirAndInsert( insertat, curDir.path(), mypack, m_ImportByIndex, m_compressToPKDPX )
+                    std::bind( lambdaWrapBuildSpr, ref(mypack.SubFiles()[i]), ref(validDirs[i]), m_ImportByIndex, m_compressToPKDPX ) ) );
             }
-            else
-                cerr<< "<!>-Warning file \"" <<curDir.path() <<"\" has an index number higher than the amount of sprite folders to pack!\nSkipping!";
-        }
+        //}
 
         try
         {
@@ -777,23 +791,23 @@ namespace gfx_util
                 updtProgress.get();
             cout<<"\r100%"; //Can't be bothered to make another drawing update
         }
-        catch( Poco::Exception e )
+        catch( Poco::Exception &e )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
 
             //rethrow
-            throw e;
+            rethrow_exception( current_exception() );
         }
-        catch( exception e )
+        catch( exception &e )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
 
             //rethrow
-            throw e;
+            rethrow_exception( current_exception() );
         }
         cout<<"\n";
 
@@ -810,6 +824,54 @@ namespace gfx_util
         cout <<"\n\nBuilding \"" <<outfilepath <<"\"...\n";
         utils::io::WriteByteVectorToFile( outfilepath, mypack.OutputPack() );
         cout <<"\nDone!\n";
+
+        return 0;
+    }
+
+
+    int CGfxUtil::DecompressAndHandle()
+    {
+        utils::MrChronometer chronounpacker( "Unpacking compressed sprite" );
+        vector<uint8_t>      rawCompFile = ReadFileToByteVector( m_inputPath );
+        Poco::File           infileinfo(m_inputPath);
+        Poco::Path           inputPath(m_inputPath);
+        Poco::Path           outpath;
+
+        if( m_outputPath.empty() )
+            m_outputPath = inputPath.parent().append(inputPath.getBaseName()).toString();
+
+        outpath = m_outputPath;
+
+        if( ! m_bQuiet )
+        {
+            if( ! m_bQuiet )
+                cout << "\nPoochyena is so in sync with your wishes that she landed a critical hit!\n\n";
+        }
+
+        //Decompress
+        vector<uint8_t> decompBuf; 
+        filetypes::DecompressPKDPX( rawCompFile.begin(), rawCompFile.end(), decompBuf );
+
+        //Analyse content
+        auto result = filetypes::DetermineCntTy( decompBuf.begin(), decompBuf.end() );
+
+        if( result._type != filetypes::e_ContentType::WAN_SPRITE_CONTAINER )
+            throw runtime_error("ERROR: the compressed file doesn't contain a WAN sprite!");
+
+        //Then handle the sprite!
+        std::unique_ptr<graphics::BaseSprite> targetptr;
+        ParseASprite( decompBuf, targetptr );
+
+        //Write it out
+        graphics::ExportSpriteToDirectoryPtr( targetptr.get(), outpath.toString(), m_PrefOutFormat );
+
+        //write output message
+        if( ! m_bQuiet )
+        {
+            cout    << "\nIts super-effective!!\n"
+                    << "\nThe sprite's copy got shred to pieces thanks to the critical hit!\n"
+                    << "The pieces landed all neatly into \"" <<m_outputPath <<"\"!\n";
+        }
 
         return 0;
     }
@@ -870,6 +932,11 @@ namespace gfx_util
                 cout <<"Building Sprites Containing Pack File\n";
                 break;
             }
+            case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
+            {
+                cout <<"Decompressing and Unpacking Sprite\n";
+                break;
+            }
             case eExecMode::INVALID_Mode:
             {
                 cout <<"INVALID\n";
@@ -909,7 +976,8 @@ namespace gfx_util
             }
             else if( result._type == e_ContentType::AT4PX_CONTAINER )
             {
-                m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
+                throw exception("AT4PX compressed files not supported at this time!");
+                //m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
             }
             else if( result._type == e_ContentType::PKDPX_CONTAINER )
             {
@@ -1204,6 +1272,13 @@ namespace gfx_util
                     if( utils::LibWide().isLogOn() )
                         clog <<"Unpacking WAN sprite..\n";
                     returnval = UnpackSprite();
+                    break;
+                }
+                case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Encountered compressed container, decompressing and identifying!..\n";
+                    returnval = DecompressAndHandle();
                     break;
                 }
                 case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:

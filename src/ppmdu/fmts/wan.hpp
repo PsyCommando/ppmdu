@@ -212,7 +212,7 @@ namespace pmd2 { namespace filetypes
         void FillFromSprite( graphics::BaseSprite * sprite )
         {
             unk13                  = sprite->getSprInfo().Unk13;
-            is256Colors            = sprite->getSprInfo().m_is256Sprite;
+            is256Colors            = sprite->getSprInfo().is256Sprite;
             unk11                  = sprite->getSprInfo().Unk11;
             nbImgsTblPtr           = sprite->getNbFrames();
         }

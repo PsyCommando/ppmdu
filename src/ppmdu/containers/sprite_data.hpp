@@ -356,7 +356,7 @@ namespace pmd2{ namespace graphics
 
         // Sprite Properties:
         eSprTy   spriteType     = eSprTy::Generic;
-        uint16_t m_is256Sprite  = 0; //If 1, sprite is 256 colors, if 0 is 16 colors.
+        uint16_t is256Sprite  = 0; //If 1, sprite is 256 colors, if 0 is 16 colors.
         uint16_t Unk13          = 0; //If 1, load the first row of tiles of each images one after the other, the the second, and so on. Seems to be for very large animated sprites!
         uint16_t Unk11          = 0; //Unknown value.
         uint16_t Unk12          = 0; //Unknown value at the end of the file!
@@ -529,25 +529,16 @@ namespace pmd2{ namespace graphics
 
             //First set the meta-frames references
             for( unsigned int ctmf = 0; ctmf < m_metaframes.size(); ++ctmf )
-            {
                 RebuildAMetaFrameRefs(ctmf);
-            }
+
             //Then handle animations references!
-
-
-            //Iterate each animation groups
-            //for( unsigned int ctgrp = 0; ctgrp < m_animgroups.size(); ++ctgrp )
-            //{
-                //unsigned int NbSeq = m_animgroups[ctgrp].sequences.size();
-                //Each Animation Sequences
-                for( unsigned int ctseq = 0; ctseq < m_animSequences.size(); ++ctseq )
-                {
-                    unsigned int NbFrms = m_animSequences[ctseq].getNbFrames();
-                    //And each animation frames!
-                    for( unsigned int ctfrm = 0; ctfrm < NbFrms; ++ctfrm )
-                        RebuildAnAnimRefs( ctseq, ctfrm );
-                }
-            //}
+            for( unsigned int ctseq = 0; ctseq < m_animSequences.size(); ++ctseq )
+            {
+                unsigned int NbFrms = m_animSequences[ctseq].getNbFrames();
+                //And each animation frames!
+                for( unsigned int ctfrm = 0; ctfrm < NbFrms; ++ctfrm )
+                    RebuildAnAnimRefs( ctseq, ctfrm );
+            }
         }
 
         void RebuildAMetaFrameRefs( unsigned int ctmf )
@@ -557,18 +548,27 @@ namespace pmd2{ namespace graphics
             if( currentMf.isSpecialMetaFrame() ) //Handle special frame
             {
                 //#EXPERIMENTAL HANDLING
-                std::clog << "Rebuilding a meta-frame with an image index of -1! Using unk15 as image index value (" <<static_cast<unsigned int>(currentMf.unk15) <<")\n";
+#ifdef HANDLE_MINUS_ONE_METAFRAME_TEST
+                std::clog <<"Meta-Frame #" <<ctmf <<" has image index of -1! Using unk15 as image index value for reference (" 
+                          <<static_cast<unsigned int>(currentMf.unk15) <<")\n";
                 assert( currentMf.unk15 < static_cast<uint16_t>(currentMf.imageIndex) );
 
                 //clear all anim references!
                 currentMf.clearRefs();
                 //Register meta to frame reference 
                 m_metarefs.insert( std::make_pair( currentMf.unk15, ctmf ) );
+#else
+                std::stringstream strs;
+                strs <<"Meta-Frame #" <<ctmf <<" has image index of -1! -1 frame handling is off, IGNORING!\n   Unk15 value is : " 
+                     <<static_cast<unsigned int>(currentMf.unk15) <<"\n";
+                std::string errmess = strs.str();
+                std::clog << errmess;
+#endif
             }
             else if(currentMf.imageIndex < 0 ) //Handle invalid frames
             {
                 std::stringstream strs;
-                strs << "Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
+                strs <<"Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
                      <<" refers to a negative image index that isn't -1 !";
                 std::string errmess = strs.str();
                 std::clog << errmess;
@@ -577,7 +577,7 @@ namespace pmd2{ namespace graphics
             else if( static_cast<uint16_t>(currentMf.imageIndex) > m_frames.size() ) //safe to cast here now, and get rid of warnings
             {
                 std::stringstream strs;
-                strs << "Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
+                strs <<"Error while rebuilding meta-frames to images references. Meta-frame #" <<ctmf 
                      <<" refers to an image index that is out of range ! (" <<static_cast<uint16_t>(currentMf.imageIndex) <<")";
                 std::string errmess = strs.str();
                 std::clog << errmess;

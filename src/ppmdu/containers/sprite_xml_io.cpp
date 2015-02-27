@@ -78,11 +78,10 @@ namespace pmd2 { namespace graphics
         static const string XML_PROP_OFFSETX   = "XOffset";
         static const string XML_PROP_UNK1      = "Unk1";
         static const string XML_PROP_UNK15     = "Unk15";
-    
         static const string XML_PROP_X         = "X";
         static const string XML_PROP_Y         = "Y";
         static const string XML_PROP_WIDTH     = "Width";
-        static const string XML_PROP_HEIGTH    = "Heigth";
+        static const string XML_PROP_HEIGHT    = "Height";
         static const string XML_PROP_HFLIP     = "HFlip";
         static const string XML_PROP_VFLIP     = "VFlip";
         static const string XML_PROP_MOSAIC    = "Mosaic";
@@ -108,7 +107,7 @@ namespace pmd2 { namespace graphics
 
         static const string XML_PROP_SPRTY     = "SpriteType";
         static const string XML_PROP_IS256COL  = "Is256Colors";
-        static const string XML_PROP_UNK13     = "IsMosaicSprite";
+        static const string XML_PROP_UNK13     = "Unk13"; //ismosaic
         static const string XML_PROP_UNK11     = "Unk11";
         static const string XML_PROP_UNK12     = "Unk12";
 
@@ -294,23 +293,24 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         AnimFrame ParseAnimationFrame( const pugi::xml_node & frmnode )
         {
+            using namespace SpriteXMLStrings;
             AnimFrame afrm;
             
             for( auto & propnode : frmnode.children() )
             {
-                if( propnode.name() == SpriteXMLStrings::XML_PROP_DURATION )
+                if( propnode.name() == XML_PROP_DURATION )
                 {
                     _parseXMLHexaValToValue( propnode.child_value(), afrm.frameDuration );
                 }
-                else if( propnode.name() == SpriteXMLStrings::XML_PROP_METAINDEX )
+                else if( propnode.name() == XML_PROP_METAINDEX )
                     _parseXMLHexaValToValue( propnode.child_value(), afrm.metaFrmGrpIndex );
-                else if( propnode.name() == SpriteXMLStrings::XML_NODE_SPRITE )
+                else if( propnode.name() == XML_NODE_SPRITE )
                 {
                     tmpoffset result = ParseAnimFrmOffsets( propnode );
                     afrm.sprOffsetX = result.x;
                     afrm.sprOffsetY = result.y;
                 }
-                else if( propnode.name() == SpriteXMLStrings::XML_NODE_SHADOW )
+                else if( propnode.name() == XML_NODE_SHADOW )
                 {
                     tmpoffset result = ParseAnimFrmOffsets( propnode );
                     afrm.shadowOffsetX = result.x;
@@ -325,12 +325,13 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         AnimationSequence ParseAnimationSequence( const pugi::xml_node & seqnode )
         {
+            using namespace SpriteXMLStrings;
             AnimationSequence aseq;
 
             //Get the name if applicable. If not in the attributes will set empty string
-            aseq.setName( seqnode.attribute(SpriteXMLStrings::XML_ATTR_NAME.c_str()).as_string() );
+            aseq.setName( seqnode.attribute(XML_ATTR_NAME.c_str()).as_string() );
 
-            for( auto & frmnode : seqnode.children( SpriteXMLStrings::XML_NODE_ANIMFRM.c_str() ) )
+            for( auto & frmnode : seqnode.children( XML_NODE_ANIMFRM.c_str() ) )
                  aseq.insertFrame( ParseAnimationFrame( frmnode ) );
 
             return std::move(aseq);
@@ -352,20 +353,21 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         vector<SpriteAnimationGroup> ParseAnimationGroups( const pugi::xml_node & agtblnode )
         {
+            using namespace SpriteXMLStrings;
             vector<SpriteAnimationGroup> grps;
 
-            auto & animgrpsrange = agtblnode.children(SpriteXMLStrings::XML_NODE_ANIMGRP.c_str());
+            auto & animgrpsrange = agtblnode.children(XML_NODE_ANIMGRP.c_str());
             for( auto & animgrpnode : animgrpsrange )
             {
                 SpriteAnimationGroup agrp;
 
                 //Get the name
                 if( animgrpnode.attributes_begin() != animgrpnode.attributes_end() )
-                    agrp.group_name = animgrpnode.attribute(SpriteXMLStrings::XML_ATTR_NAME.c_str()).as_string();
+                    agrp.group_name = animgrpnode.attribute(XML_ATTR_NAME.c_str()).as_string();
 
 
                 //Parse the sequences indexes
-                for( auto & seqindnode : animgrpnode.children( SpriteXMLStrings::XML_PROP_ANIMSEQIND.c_str() ) )
+                for( auto & seqindnode : animgrpnode.children( XML_PROP_ANIMSEQIND.c_str() ) )
                 {
                     uint32_t index = 0;
                     _parseXMLHexaValToValue( seqindnode.child_value(), index );
@@ -394,9 +396,9 @@ namespace pmd2 { namespace graphics
             //Read every elements
             for( auto & curnode : animsrange )
             {
-                if( curnode.name() == SpriteXMLStrings::XML_NODE_ANIMGRPTBL )
+                if( curnode.name() == XML_NODE_ANIMGRPTBL )
                     m_pOutSprite->getAnimGroups() = ParseAnimationGroups( curnode );
-                else if( curnode.name() == SpriteXMLStrings::XML_NODE_ANIMSEQTBL )
+                else if( curnode.name() == XML_NODE_ANIMSEQTBL )
                     m_pOutSprite->getAnimSequences() = ParseAnimationSequences( curnode );
             }
         }
@@ -413,16 +415,16 @@ namespace pmd2 { namespace graphics
             if( ! mydoc.load(in) )
                 throw std::runtime_error("Failed to create xml_document for parsing Sprite Meta-Frames!");
 
-            auto & offsetsrange = mydoc.child(XML_ROOT_OFFLST.c_str()).children(SpriteXMLStrings::XML_NODE_OFFSET.c_str());
+            auto & offsetsrange = mydoc.child(XML_ROOT_OFFLST.c_str()).children(XML_NODE_OFFSET.c_str());
             //Read every elements
             for( auto & offnode : offsetsrange )
             {
                 sprOffParticle    anoffs;
                 for( auto & compnode : offnode.children() )
                 {
-                    if( compnode.name() == SpriteXMLStrings::XML_PROP_X )
+                    if( compnode.name() == XML_PROP_X )
                         _parseXMLHexaValToValue( compnode.child_value(), anoffs.offx );
-                    else if( compnode.name() == SpriteXMLStrings::XML_PROP_Y )
+                    else if( compnode.name() == XML_PROP_Y )
                         _parseXMLHexaValToValue( compnode.child_value(), anoffs.offy );
                 }
                 m_pOutSprite->getPartOffsets().push_back(anoffs);
@@ -433,14 +435,15 @@ namespace pmd2 { namespace graphics
         **************************************************************/
         MetaFrame::eRes ParseMetaFrameRes( const pugi::xml_node & resnode )
         {
+            using namespace SpriteXMLStrings;
             utils::Resolution myres      = {0,0};
             MetaFrame::eRes   result     = MetaFrame::eRes::_INVALID;
 
             for( auto & compnode : resnode.children() )
             {
-                if( compnode.name() == SpriteXMLStrings::XML_PROP_WIDTH )
+                if( compnode.name() == XML_PROP_WIDTH )
                     _parseXMLHexaValToValue( compnode.child_value(), myres.width );
-                else if( compnode.name() == SpriteXMLStrings::XML_PROP_HEIGTH )
+                else if( compnode.name() == XML_PROP_HEIGHT )
                     _parseXMLHexaValToValue( compnode.child_value(), myres.height );
             }
 
@@ -464,50 +467,64 @@ namespace pmd2 { namespace graphics
 
             return result;
         }
+
+        inline void ParseMetaFrameOffset( const pugi::xml_node & offsetnode, MetaFrame & out_targetmf )
+        {
+            using namespace SpriteXMLStrings;
+
+            for(  auto & offnode : offsetnode.children() )
+            {
+                if( offnode.name() == XML_PROP_X )
+                    _parseXMLHexaValToValue( offnode.child_value(), out_targetmf.offsetX );
+                else if( offnode.name() == XML_PROP_Y )
+                    _parseXMLHexaValToValue( offnode.child_value(), out_targetmf.offsetY );
+            }
+        }
         
         /**************************************************************
         **************************************************************/
-        MetaFrame ParseAMetaFrame( const pugi::xml_node & mfnode )
+        MetaFrame ParseMetaFrame( const pugi::xml_node & mfnode )
         {
+            using namespace SpriteXMLStrings;
             MetaFrame mf;
 
             for( auto & propnode : mfnode.children() )
             {
-                if( propnode.name() == SpriteXMLStrings::XML_PROP_IMGINDEX )
+                if( propnode.name() == XML_PROP_IMGINDEX )
                 {
                     _parseXMLHexaValToValue( propnode.child_value(), mf.imageIndex );
                 }
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_UNK0 )
+                else if( propnode.name() == XML_PROP_UNK0 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.unk0 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFSETX )
-                    _parseXMLHexaValToValue( propnode.child_value(), mf.offsetX );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFSETY )
-                    _parseXMLHexaValToValue( propnode.child_value(), mf.offsetY );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_UNK1 )
+                else if( propnode.name() == XML_NODE_OFFSET )
+                {
+                    ParseMetaFrameOffset( propnode, mf );
+                }
+                else if( propnode.name()  == XML_PROP_UNK1 )
                 {
                     mf.unk1 = parseByte(propnode.child_value());
                 }
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_UNK15 )
+                else if( propnode.name()  == XML_PROP_UNK15 )
                 {
                     mf.unk15 = parseByte(propnode.child_value());
                 }
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_VFLIP )
+                else if( propnode.name()  == XML_PROP_VFLIP )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.vFlip );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_HFLIP )
+                else if( propnode.name()  == XML_PROP_HFLIP )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.hFlip );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_MOSAIC )
+                else if( propnode.name()  == XML_PROP_MOSAIC )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.Mosaic );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFXBIT6 )
+                else if( propnode.name()  == XML_PROP_OFFXBIT6 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.XOffbit6 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFXBIT7 )
+                else if( propnode.name()  == XML_PROP_OFFXBIT7 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.XOffbit7 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFYBIT3 )
+                else if( propnode.name()  == XML_PROP_OFFYBIT3 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.YOffbit3 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFYBIT5 )
+                else if( propnode.name()  == XML_PROP_OFFYBIT5 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.YOffbit5 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_PROP_OFFYBIT6 )
+                else if( propnode.name()  == XML_PROP_OFFYBIT6 )
                     _parseXMLHexaValToValue( propnode.child_value(), mf.YOffbit6 );
-                else if( propnode.name()  == SpriteXMLStrings::XML_NODE_RES )
+                else if( propnode.name()  == XML_NODE_RES )
                 {
                     mf.resolution = ParseMetaFrameRes( propnode );
                 }
@@ -529,9 +546,9 @@ namespace pmd2 { namespace graphics
                 throw std::runtime_error("Failed to create xml_document for parsing Sprite Meta-Frames!");
 
             //Read every groups
-            for( auto & mfgnode : mydoc.child(XML_ROOT_FRMLST.c_str()).children( SpriteXMLStrings::XML_NODE_FRMGRP.c_str() ) )
+            for( auto & mfgnode : mydoc.child(XML_ROOT_FRMLST.c_str()).children( XML_NODE_FRMGRP.c_str() ) )
             {
-                auto           mfgnodechilds = mfgnode.children( SpriteXMLStrings::XML_NODE_FRMFRM.c_str() );
+                auto           mfgnodechilds = mfgnode.children( XML_NODE_FRMFRM.c_str() );
                 MetaFrameGroup mfg; //Create the meta-frame group
                 mfg.metaframes.reserve( distance( mfgnodechilds.begin(), mfgnodechilds.end() ) );
 
@@ -539,7 +556,7 @@ namespace pmd2 { namespace graphics
                 for( auto & mfnode : mfgnodechilds )
                 {
                     mfg.metaframes.push_back( OutMfTable.size() ); //put the frame's index in the meta frame group table
-                    OutMfTable.push_back( ParseAMetaFrame( mfnode ) );
+                    OutMfTable.push_back( ParseMetaFrame( mfnode ) );
                 }
 
                 m_pOutSprite->getMetaFrmsGrps().push_back( std::move(mfg) );
@@ -589,7 +606,7 @@ namespace pmd2 { namespace graphics
                     outSprInfo.spriteType = static_cast<graphics::eSprTy>(srty);
                 }
                 else if( curnode.name() == XML_PROP_IS256COL )
-                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.m_is256Sprite );
+                    _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.is256Sprite );
                 else if( curnode.name() == XML_PROP_UNK13 )
                     _parseXMLHexaValToValue( curnode.child_value(), outSprInfo.Unk13 );
                 else if( curnode.name() == XML_PROP_UNK11 )
@@ -618,11 +635,11 @@ namespace pmd2 { namespace graphics
                 //Copy the content of the color
                 for( auto & acomponent : colornode.children() )
                 {
-                    if( acomponent.name() == SpriteXMLStrings::XML_PROP_RED )
+                    if( acomponent.name() == XML_PROP_RED )
                         _parseXMLHexaValToValue( acomponent.child_value(), mycolor.red ); 
-                    else if( acomponent.name() == SpriteXMLStrings::XML_PROP_GREEN )
+                    else if( acomponent.name() == XML_PROP_GREEN )
                         _parseXMLHexaValToValue( acomponent.child_value(), mycolor.green ); 
-                    else if( acomponent.name() == SpriteXMLStrings::XML_PROP_BLUE )
+                    else if( acomponent.name() == XML_PROP_BLUE )
                         _parseXMLHexaValToValue( acomponent.child_value(), mycolor.blue ); 
                 }
                 m_pOutSprite->getPalette().push_back(mycolor);
@@ -646,9 +663,9 @@ namespace pmd2 { namespace graphics
 
                 for( auto & props : imagenode.children() )
                 {
-                    if( props.name() == SpriteXMLStrings::XML_PROP_IMGINDEX )
+                    if( props.name() == XML_PROP_IMGINDEX )
                         _parseXMLHexaValToValue( props.child_value(), imgindex ); 
-                    else if( props.name() == SpriteXMLStrings::XML_PROP_ZINDEX )
+                    else if( props.name() == XML_PROP_ZINDEX )
                         _parseXMLHexaValToValue( props.child_value(), imginf.zindex ); 
                 }
 
@@ -790,7 +807,7 @@ namespace pmd2 { namespace graphics
             WriteNodeWithValue( rootnode, XML_PROP_SPRTY, FastTurnIntToHexCStr( static_cast<uint16_t>(m_pInSprite->getSprInfo().spriteType) ) );
 
             writeComment( rootnode, SprInfo::DESC_Is256Sprite );
-            WriteNodeWithValue( rootnode, XML_PROP_IS256COL, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().m_is256Sprite ) );
+            WriteNodeWithValue( rootnode, XML_PROP_IS256COL, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().is256Sprite ) );
 
             writeComment( rootnode, SprInfo::DESC_Unk13 );
             WriteNodeWithValue( rootnode, XML_PROP_UNK13, FastTurnIntToHexCStr( m_pInSprite->getSprInfo().Unk13 ) );
@@ -1037,15 +1054,22 @@ namespace pmd2 { namespace graphics
             m_strs << static_cast<int16_t>(aframe.imageIndex); //The index makes more sense when represented as a signed value
             WriteNodeWithValue( mfnode, XML_PROP_IMGINDEX, m_strs.str().c_str() );
             WriteNodeWithValue( mfnode, XML_PROP_UNK0,     FastTurnIntToHexCStr(aframe.unk0) );
-            WriteNodeWithValue( mfnode, XML_PROP_OFFSETY,  FastTurnIntToCStr(aframe.offsetY   ) );
-            WriteNodeWithValue( mfnode, XML_PROP_OFFSETX,  FastTurnIntToCStr(aframe.offsetX   ) );
+
+            {
+                xml_node offsetnode = mfnode.append_child( XML_NODE_OFFSET.c_str() );
+                WriteNodeWithValue( offsetnode, XML_PROP_X,  FastTurnIntToCStr(aframe.offsetX ) );
+                WriteNodeWithValue( offsetnode, XML_PROP_Y,  FastTurnIntToCStr(aframe.offsetY ) );
+            }
+
             WriteNodeWithValue( mfnode, XML_PROP_UNK1,     FastTurnIntToHexCStr(aframe.unk1) );
             WriteNodeWithValue( mfnode, XML_PROP_UNK15,    FastTurnIntToHexCStr(aframe.unk15) );
 
-            xml_node resnode    = mfnode.append_child(XML_NODE_RES.c_str());
-            auto     resolution = MetaFrame::eResToResolution(aframe.resolution);
-            WriteNodeWithValue( resnode, XML_PROP_WIDTH,   FastTurnIntToCStr( resolution.width  ) );
-            WriteNodeWithValue( resnode, XML_PROP_HEIGTH,  FastTurnIntToCStr( resolution.height ) );
+            {
+                xml_node resnode    = mfnode.append_child(XML_NODE_RES.c_str());
+                auto     resolution = MetaFrame::eResToResolution(aframe.resolution);
+                WriteNodeWithValue( resnode, XML_PROP_WIDTH,   FastTurnIntToCStr( resolution.width  ) );
+                WriteNodeWithValue( resnode, XML_PROP_HEIGHT,  FastTurnIntToCStr( resolution.height ) );
+            }
 
             WriteNodeWithValue( mfnode, XML_PROP_VFLIP,    FastTurnIntToCStr( aframe.vFlip ) );
             WriteNodeWithValue( mfnode, XML_PROP_HFLIP,    FastTurnIntToCStr( aframe.hFlip ) );
