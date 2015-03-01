@@ -155,7 +155,7 @@ namespace ppx_extract
     {
         filetypes::sir0_header hdr;
         hdr.ReadFromContainer( itdatabeg );
-        DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
+        DoDecompressPKDPX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
 //=================================================================================================
@@ -523,13 +523,21 @@ int main( int argc, const char * argv[] )
             << "A PX file decompressor.\n"
             << endl;
 
-    if( HandleArguments( argc, argv, params ) )//inputpaths, outputpaths, benablelogging ) )
+    try
     {
-        MrChronometer mychrono("Total");
-        DecompressAll( params );// inputpaths, outputpaths, benablelogging );
+        if( HandleArguments( argc, argv, params ) )//inputpaths, outputpaths, benablelogging ) )
+        {
+            MrChronometer mychrono("Total");
+            DecompressAll( params );// inputpaths, outputpaths, benablelogging );
+        }
+        else
+            return -1;
     }
-    else
+    catch( std::exception & e )
+    {
+        cout<<"<!>-Exception: " <<e.what() <<endl;
         return -1;
+    }
 
 //#ifdef _DEBUG
 //#ifdef WIN32
