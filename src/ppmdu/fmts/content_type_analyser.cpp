@@ -25,7 +25,7 @@ namespace pmd2 { namespace filetypes
     }
 
     //Rule registration handling
-    content_rule_id_t CContentHandler::RegisterRule( IContentHandlingRule * rule )
+    cntRID_t CContentHandler::RegisterRule( IContentHandlingRule * rule )
     {
         if( rule )
         {
@@ -47,7 +47,7 @@ namespace pmd2 { namespace filetypes
         return std::numeric_limits<unsigned int>::max();// -1;
     }
 
-    bool CContentHandler::UnregisterRule( content_rule_id_t ruleid )
+    bool CContentHandler::UnregisterRule( cntRID_t ruleid )
     {
         for( auto &arule : m_vRules )
         {
@@ -59,6 +59,19 @@ namespace pmd2 { namespace filetypes
         }
         return false;
     }
+
+    /*
+        Use this to increment the internal ruleid counter in order to
+        hand out unique rule ids to sub-formats.
+
+        Returns the value of the internal ruleid counter before being incremented!
+    */
+    //cntRID_t CContentHandler::ReserveRuleIDs( unsigned int nbToReserve )
+    //{
+    //    cntRID_t idbefore = m_current_ruleid;
+    //    m_current_ruleid += nbToReserve;
+    //    return idbefore;
+    //}
 
     //File analysis
     //ContentBlock CContentHandler::AnalyseContent( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend )
@@ -79,7 +92,7 @@ namespace pmd2 { namespace filetypes
         return contentdetails;
     }
 
-    bool CContentHandler::isValidRule( content_rule_id_t theid )const 
+    bool CContentHandler::isValidRule( cntRID_t theid )const 
     { 
         return (theid != INVALID_RULE_ID && theid < m_current_ruleid); 
     }

@@ -296,6 +296,9 @@
     </ClInclude>
     <ClInclude Include="..\src\ppx_extractor.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_unpx.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2AD9B0C6-B476-4690-92DE-40C3B7883B35}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

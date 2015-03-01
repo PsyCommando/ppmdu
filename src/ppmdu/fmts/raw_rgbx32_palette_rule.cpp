@@ -1,33 +1,33 @@
-#include "wte.hpp"
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/fmts/sir0.hpp>
-
+#include <ppmdu/utils/utility.hpp>
+#include <ppmdu/pmd2/pmd2_palettes.hpp>
 using namespace std;
+using namespace pmd2::filetypes;
 
-namespace pmd2 {namespace filetypes
+namespace pmd2 { namespace filetypes
 {
 
 //========================================================================================================
-//  wte_rule
+//  Loose Palette files rules
 //========================================================================================================
     /*
-        wte_rule
+        rgbx32_raw_pal_rule
             Rule for identifying WTE content. With the ContentTypeHandler!
     */
-    class wte_rule : public IContentHandlingRule
+    class rgbx32_raw_pal_rule : public filetypes::IContentHandlingRule
     {
     public:
-        wte_rule(){}
-        ~wte_rule(){}
+        rgbx32_raw_pal_rule(){}
+        ~rgbx32_raw_pal_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const { return e_ContentType::WTE_FILE; }
+        virtual e_ContentType getContentType()const { return e_ContentType::RAW_RGBX32_PAL_FILE; }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual cntRID_t getRuleID()const                  { return m_myID; }
-        virtual void              setRuleID( cntRID_t id ) { m_myID = id; }
+        virtual cntRID_t getRuleID()const         { return m_myID; }
+        virtual void     setRuleID( cntRID_t id ) { m_myID = id; }
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         virtual ContentBlock Analyse( const analysis_parameter & parameters )
@@ -49,15 +49,13 @@ namespace pmd2 {namespace filetypes
                                types::constitbyte_t   itdataend,
                                const std::string    & filext )
         {
-            sir0_header mysir0hdr;
-            WTE_header myhead;
             try
             {
-                mysir0hdr.ReadFromContainer( itdatabeg );
-                if( mysir0hdr.magic == magicnumbers::SIR0_MAGIC_NUMBER_INT )
+                while( itdatabeg != itdataend )
                 {
-                    myhead.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
-                    return myhead.magic == WTE_MAGIC_NUMBER_INT;
+                    uint32_t acolor = utils::ReadIntFromByteVector<uint32_t>( itdatabeg, false );
+                    if( (acolor & graphics::RGBX_UNUSED_BYTE_VALUE) == 0 )
+                        return false;
                 }
             }
             catch(...)
@@ -65,19 +63,20 @@ namespace pmd2 {namespace filetypes
                 return false;
             }
 
-            return false;
+            return true;
         }
 
     private:
         cntRID_t m_myID;
     };
 
-//========================================================================================================
-//  wte_rule_registrator
-//========================================================================================================
+    //========================================================================================================
+    //  rgbx32_raw_pal_rule_registrator
+    //========================================================================================================
     /*
         wte_rule_registrator
             A small singleton that has for only task to register the wte_rule!
     */
-    SIR0RuleRegistrator<wte_rule> SIR0RuleRegistrator<wte_rule>::s_instance;
+    RuleRegistrator<rgbx32_raw_pal_rule> RuleRegistrator<rgbx32_raw_pal_rule>::s_instance;
+
 };};

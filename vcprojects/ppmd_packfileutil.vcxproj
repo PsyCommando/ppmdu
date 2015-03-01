@@ -83,6 +83,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\raw_rgbx32_palette_rule.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>
@@ -92,6 +93,8 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\wan.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>
@@ -313,6 +316,8 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\wan.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\file formats</Filter>

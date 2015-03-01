@@ -3,6 +3,7 @@
 #include <ppmdu/fmts/px_compression.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
+#include <ppmdu/fmts/sir0.hpp>
 #include <exception>
 #include <algorithm>
 #include <cassert>
@@ -474,8 +475,8 @@ namespace pmd2{ namespace filetypes
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual content_rule_id_t getRuleID()const;
-        virtual void              setRuleID( content_rule_id_t id );
+        virtual cntRID_t getRuleID()const;
+        virtual void              setRuleID( cntRID_t id );
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
@@ -490,7 +491,7 @@ namespace pmd2{ namespace filetypes
                                const std::string & filext);
 
     private:
-        content_rule_id_t m_myID;
+        cntRID_t m_myID;
     };
 
 
@@ -503,11 +504,11 @@ namespace pmd2{ namespace filetypes
     //Returns an ID number identifying the rule. Its not the index in the storage array,
     // because rules can me added and removed during exec. Thus the need for unique IDs.
     //IDs are assigned on registration of the rule by the handler.
-    content_rule_id_t at4px_rule::getRuleID()const
+    cntRID_t at4px_rule::getRuleID()const
     {
         return m_myID;
     }
-    void at4px_rule::setRuleID( content_rule_id_t id )
+    void at4px_rule::setRuleID( cntRID_t id )
     {
         m_myID = id;
     }
@@ -544,11 +545,92 @@ namespace pmd2{ namespace filetypes
     }
 
 //========================================================================================================
+//  sir0at4px_rule
+//========================================================================================================
+    /*
+        sir0at4px_rule
+            Rule for identifying AT4PX compressed content wrapped by a SIR0 header. 
+            With the ContentTypeHandler!
+    */
+    class sir0at4px_rule : public IContentHandlingRule
+    {
+    public:
+        sir0at4px_rule(){}
+        ~sir0at4px_rule(){}
+
+        //Returns the value from the content type enum to represent what this container contains!
+        virtual e_ContentType getContentType()const
+        {
+            return e_ContentType::SIR0_AT4PX_CONTAINER;
+        }
+
+        //Returns an ID number identifying the rule. Its not the index in the storage array,
+        // because rules can me added and removed during exec. Thus the need for unique IDs.
+        //IDs are assigned on registration of the rule by the handler.
+        virtual cntRID_t getRuleID()const        { return m_myID; }
+        virtual void     setRuleID( cntRID_t id ){ m_myID = id; }
+
+        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
+        virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters )
+        {
+            //#TODO: Seriously get rid of this method, its completely useless...
+            sir0_header  sir0hdr; 
+            at4px_header headr;
+            ContentBlock cb;
+            auto         itdatabeg = parameters._itdatabeg;
+
+            //Read the header
+            sir0hdr.ReadFromContainer( itdatabeg );
+            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr) );
+
+            //build our content block info
+            cb._startoffset          = 0;
+            cb._endoffset            = std::distance( parameters._itdatabeg, parameters._itdataend );
+            cb._rule_id_that_matched = getRuleID();
+            cb._type                 = getContentType();
+
+            return cb;
+        }
+
+        //This method is a quick boolean test to determine quickly if this content handling
+        // rule matches, without in-depth analysis.
+        virtual bool isMatch( types::constitbyte_t   itdatabeg, 
+                              types::constitbyte_t   itdataend,
+                              const std::string    & filext )
+        {
+            using namespace magicnumbers;
+
+            try
+            {
+                sir0_header  mysir0hdr;
+                at4px_header myat4pxhdr;
+
+                mysir0hdr.ReadFromContainer( itdatabeg );
+                if( mysir0hdr.magic == SIR0_MAGIC_NUMBER_INT )
+                {
+                    myat4pxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
+                    return std::equal( AT4PX_MAGIC_NUMBER.begin(), AT4PX_MAGIC_NUMBER.end(), myat4pxhdr.magicn.begin() );
+                }
+            }
+            catch(...)
+            {
+                return false;
+            }
+            return false;
+        }
+
+    private:
+        cntRID_t m_myID;
+    };
+
+//========================================================================================================
 //  at4px_rule_registrator
 //========================================================================================================
     /*
         at4px_rule_registrator
             A small singleton that has for only task to register the at4px_rule!
     */
-    RuleRegistrator<at4px_rule> RuleRegistrator<at4px_rule>::s_instance;
+    RuleRegistrator<at4px_rule>         RuleRegistrator<at4px_rule>        ::s_instance;
+    SIR0RuleRegistrator<sir0at4px_rule> SIR0RuleRegistrator<sir0at4px_rule>::s_instance;
 };};

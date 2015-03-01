@@ -17,7 +17,7 @@ namespace pmd2{ namespace filetypes
 //==================================================================
 // Typedefs
 //==================================================================
-    typedef unsigned int content_rule_id_t;
+    typedef unsigned int cntRID_t;
 
 //==================================================================
 // Structs
@@ -72,7 +72,7 @@ namespace pmd2{ namespace filetypes
                                                 // other same level elements if its the first analysed!
         types::bytevec_szty_t     _startoffset, //The position the content begins at, including the header
                                   _endoffset;   //The end of the content block, or the end of the whole container if not applicable
-        content_rule_id_t         _rule_id_that_matched;
+        cntRID_t         _rule_id_that_matched;
     };
 
 //==================================================================
@@ -94,8 +94,8 @@ namespace pmd2{ namespace filetypes
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual content_rule_id_t getRuleID()const             = 0;
-        virtual void              setRuleID( content_rule_id_t id ) = 0;
+        virtual cntRID_t getRuleID()const             = 0;
+        virtual void              setRuleID( cntRID_t id ) = 0;
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
@@ -123,7 +123,7 @@ namespace pmd2{ namespace filetypes
     public:
         RuleRegistrator()
         {
-            CContentHandler::GetInstance().RegisterRule( new RULE_T );
+            pmd2::filetypes::CContentHandler::GetInstance().RegisterRule( new RULE_T );
         }
 
     private:
@@ -138,7 +138,7 @@ namespace pmd2{ namespace filetypes
     class CContentHandler
     {
     public:
-        static const content_rule_id_t INVALID_RULE_ID = 0u; //The ruleid for invalid rules. Is used when no valid rules were found
+        static const cntRID_t INVALID_RULE_ID = 0u; //The ruleid for invalid rules. Is used when no valid rules were found
 
         ~CContentHandler();
 
@@ -148,9 +148,17 @@ namespace pmd2{ namespace filetypes
         static CContentHandler & GetInstance();
 
         //Rule registration handling
-        content_rule_id_t RegisterRule  ( IContentHandlingRule * rule );
-        bool              UnregisterRule( content_rule_id_t ruleid );
-        bool              isValidRule   ( content_rule_id_t theid )const;
+        cntRID_t RegisterRule  ( IContentHandlingRule * rule );
+        bool              UnregisterRule( cntRID_t ruleid );
+        bool              isValidRule   ( cntRID_t theid )const;
+
+        /*
+            Use this to increment the internal ruleid counter in order to
+            hand out unique rule ids to sub-formats.
+
+            Returns the value of the internal ruleid counter before being incremented!
+        */
+       // cntRID_t ReserveRuleIDs( unsigned int nbToReserve );
 
         //Content analysis
         //ContentBlock AnalyseContent( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend );
@@ -164,7 +172,7 @@ namespace pmd2{ namespace filetypes
         std::vector< std::unique_ptr<IContentHandlingRule> > m_vRules;
 
         //The current rule id counter, for assigning ruleids
-        content_rule_id_t m_current_ruleid;
+        cntRID_t m_current_ruleid;
     };
 
 //==================================================================

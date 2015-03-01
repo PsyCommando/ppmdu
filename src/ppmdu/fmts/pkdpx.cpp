@@ -361,8 +361,8 @@ namespace pmd2{ namespace filetypes
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual content_rule_id_t getRuleID()const;
-        virtual void              setRuleID( content_rule_id_t id );
+        virtual cntRID_t getRuleID()const;
+        virtual void              setRuleID( cntRID_t id );
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
@@ -377,7 +377,7 @@ namespace pmd2{ namespace filetypes
                                const std::string    & filext );
 
     private:
-        content_rule_id_t m_myID;
+        cntRID_t m_myID;
     };
 
 
@@ -390,11 +390,11 @@ namespace pmd2{ namespace filetypes
     //Returns an ID number identifying the rule. Its not the index in the storage array,
     // because rules can me added and removed during exec. Thus the need for unique IDs.
     //IDs are assigned on registration of the rule by the handler.
-    content_rule_id_t pkdpx_rule::getRuleID()const
+    cntRID_t pkdpx_rule::getRuleID()const
     {
         return m_myID;
     }
-    void pkdpx_rule::setRuleID( content_rule_id_t id )
+    void pkdpx_rule::setRuleID( cntRID_t id )
     {
         m_myID = id;
     }
@@ -453,11 +453,11 @@ namespace pmd2{ namespace filetypes
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual content_rule_id_t getRuleID()const
+        virtual cntRID_t getRuleID()const
         {
             return m_myID;
         }
-        virtual void              setRuleID( content_rule_id_t id )
+        virtual void              setRuleID( cntRID_t id )
         {
             m_myID = id;
         }
@@ -516,7 +516,7 @@ namespace pmd2{ namespace filetypes
         }
 
     private:
-        content_rule_id_t m_myID;
+        cntRID_t m_myID;
     };
 
 //========================================================================================================
@@ -526,7 +526,7 @@ namespace pmd2{ namespace filetypes
         pkdpx_rule_registrator
             A small singleton that has for only task to register the pkdpx_rule!
     */
-    RuleRegistrator<pkdpx_rule>     RuleRegistrator<pkdpx_rule>::s_instance;
-    RuleRegistrator<sir0pkdpx_rule> RuleRegistrator<sir0pkdpx_rule>::s_instance;
+    RuleRegistrator<pkdpx_rule>         RuleRegistrator<pkdpx_rule>        ::s_instance;
+    SIR0RuleRegistrator<sir0pkdpx_rule> SIR0RuleRegistrator<sir0pkdpx_rule>::s_instance;
 
 };};

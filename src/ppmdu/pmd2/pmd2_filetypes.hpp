@@ -50,6 +50,8 @@ namespace pmd2 { namespace filetypes
     static const std::string WTU_FILEX               = "wtu";
     static const std::string BGP_FILEX               = "bgp";
     static const std::string SIR0_PKDPX_FILEX        = "sir0pkdpx";    //For a sir0 wrapped pkdpx
+    static const std::string SIR0_AT4PX_FILEX        = "sir0at4px";    //For a sir0 wrapped at4px
+    static const std::string RGBX32_RAW_PAL_FILEX    = "rgbx32";       //For a file containing only a raw RGBX32 palette
 
     //Padding bytes
     static const uint8_t COMMON_PADDING_BYTE        = 0xAA; //The most common padding byte in all PMD2 files !
@@ -88,6 +90,7 @@ namespace pmd2 { namespace filetypes
         AT4PX_CONTAINER,
         AT4PN_CONTAINER,
         SIR0_CONTAINER,
+        SIR0_AT4PX_CONTAINER, //SIR0-wrapped AT4PX
         SIR0_PKDPX_CONTAINER, //SIR0-wrapped PKDPX
         COMPRESSED_DATA,    //For the content of PKDPX container, given we can't decompress when analysing
         PACK_CONTAINER,
@@ -96,6 +99,7 @@ namespace pmd2 { namespace filetypes
         WTE_FILE,
         WTU_FILE,
         BGP_FILE,
+        RAW_RGBX32_PAL_FILE,
 
         //#If you add any more, be sure to modify GetContentTypeName
         UNKNOWN_CONTENT,

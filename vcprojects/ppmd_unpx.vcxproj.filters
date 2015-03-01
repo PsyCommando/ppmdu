@@ -138,4 +138,9 @@
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_unpx.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

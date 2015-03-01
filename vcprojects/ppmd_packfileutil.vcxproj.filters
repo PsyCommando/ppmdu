@@ -28,11 +28,11 @@
     <Filter Include="Source Files\ppmdu\utility">
       <UniqueIdentifier>{2c4edbb8-aea9-4fc9-8a49-7dc0b6c49a87}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\data formats">
-      <UniqueIdentifier>{df0388c1-ed93-4273-aec3-f9fef85f9e7a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ppmdu\data formats">
       <UniqueIdentifier>{1a5e4fc0-cea3-4df1-9508-53e81e3e1b6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats">
+      <UniqueIdentifier>{df0388c1-ed93-4273-aec3-f9fef85f9e7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -85,28 +85,28 @@
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\color.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\sprite_rle.hpp">
-      <Filter>Header Files\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
@@ -130,6 +130,12 @@
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
   </ItemGroup>
@@ -204,6 +210,15 @@
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\raw_rgbx32_palette_rule.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
   </ItemGroup>

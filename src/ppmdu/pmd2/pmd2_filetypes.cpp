@@ -18,19 +18,22 @@ namespace pmd2 { namespace filetypes
         string        filext;
     };
 
+    //#TODO: actually put this directly in the file format analyser rules !!! To keep everything together!
     static const vector<filext_and_ty> EXT_TO_TYPES =
     {{
-        { e_ContentType::PKDPX_CONTAINER,      PKDPX_FILEX      },
-        { e_ContentType::AT4PX_CONTAINER,      AT4PX_FILEX      },
-        { e_ContentType::AT4PN_CONTAINER,      AT4PN_FILEX      },
-        { e_ContentType::SIR0_CONTAINER,       SIR0_FILEX       },
-        { e_ContentType::SIR0_PKDPX_CONTAINER, SIR0_PKDPX_FILEX },
-        { e_ContentType::PACK_CONTAINER,       PACK_FILEX       },
-        { e_ContentType::KAOMADO_CONTAINER,    KAOMADO_FILEX    },
-        { e_ContentType::WAN_SPRITE_CONTAINER, WAN_FILEX        },
-        { e_ContentType::WTE_FILE,             WTE_FILEX        },
-        { e_ContentType::WTU_FILE,             WTU_FILEX        },
-        { e_ContentType::BGP_FILE,             BGP_FILEX        },
+        { e_ContentType::PKDPX_CONTAINER,      PKDPX_FILEX          },
+        { e_ContentType::AT4PX_CONTAINER,      AT4PX_FILEX          },
+        { e_ContentType::AT4PN_CONTAINER,      AT4PN_FILEX          },
+        { e_ContentType::SIR0_CONTAINER,       SIR0_FILEX           },
+        { e_ContentType::SIR0_AT4PX_CONTAINER, SIR0_AT4PX_FILEX     },
+        { e_ContentType::SIR0_PKDPX_CONTAINER, SIR0_PKDPX_FILEX     },
+        { e_ContentType::PACK_CONTAINER,       PACK_FILEX           },
+        { e_ContentType::KAOMADO_CONTAINER,    KAOMADO_FILEX        },
+        { e_ContentType::WAN_SPRITE_CONTAINER, WAN_FILEX            },
+        { e_ContentType::WTE_FILE,             WTE_FILEX            },
+        { e_ContentType::WTU_FILE,             WTU_FILEX            },
+        { e_ContentType::BGP_FILE,             BGP_FILEX            },
+        { e_ContentType::RAW_RGBX32_PAL_FILE,  RGBX32_RAW_PAL_FILEX },
     }};
 
 
@@ -105,5 +108,7 @@ namespace pmd2 { namespace filetypes
             return "Unknown";
         };
     }
+
+
 
 };};

@@ -1,7 +1,7 @@
 =============================================================
 ==  Baz the Poochyena's Pokemon Mystery Dungeon Pack Tool  ==
 =============================================================
-Version	   : 0.52
+Version	   : 0.53
 Released   : 2014
 Written by : Psy_commando
 
@@ -11,6 +11,9 @@ https://github.com/PsyCommando/ppmdu/
 ----------------------------------------------------------------------------------------------------
 Changelog:
 ----------------------------------------------------------------------------------------------------
+- 0.53(2015/03/01):
+    * Added more supported file extension support for giving unpacked files the correct file extension!
+      Now detects : wte, wtu, sir0pkdpx, sir0 generic, sir0at4px, rgbx32pal.
 
 ----------------------------------------------------------------------------------------------------
 License info:

@@ -27,8 +27,8 @@ namespace pmd2 { namespace filetypes
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual content_rule_id_t getRuleID()const                  { return m_myID; }
-        virtual void              setRuleID( content_rule_id_t id ) { m_myID = id; }
+        virtual cntRID_t getRuleID()const                  { return m_myID; }
+        virtual void              setRuleID( cntRID_t id ) { m_myID = id; }
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         virtual ContentBlock Analyse( const analysis_parameter & parameters )
@@ -56,7 +56,7 @@ namespace pmd2 { namespace filetypes
         }
 
     private:
-        content_rule_id_t m_myID;
+        cntRID_t m_myID;
     };
 
 //========================================================================================================

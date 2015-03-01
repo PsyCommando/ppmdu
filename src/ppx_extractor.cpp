@@ -6,6 +6,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/library_wide.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
+#include <ppmdu/fmts/sir0.hpp>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -57,7 +58,7 @@ namespace ppx_extract
     }};
 
     static const string EXE_NAME             = "ppmd_unpx.exe";
-    static const string PVERSION             = "0.4";
+    static const string PVERSION             = "0.41";
 
     //A little struct to make it easier to throw around any new parsed parameters !
     struct pxextract_params
@@ -80,6 +81,16 @@ namespace ppx_extract
                 thefile.isFile() && 
                 !thefile.isHidden() && 
                 ( fileext.compare( filetypes::AT4PX_FILEX ) == 0 || fileext.compare( filetypes::PKDPX_FILEX ) == 0 ) 
+              );
+    }
+
+    inline bool IsValidSIR0WrappedPXCompressedFile( const Poco::File & thefile )
+    {
+        const string fileext = Poco::Path(thefile.path()).getExtension();
+        return( 
+                thefile.isFile() && 
+                !thefile.isHidden() && 
+                ( fileext.compare( filetypes::SIR0_AT4PX_FILEX ) == 0 || fileext.compare( filetypes::SIR0_PKDPX_FILEX ) == 0 ) 
               );
     }
 
@@ -129,6 +140,22 @@ namespace ppx_extract
         pmd2::filetypes::DecompressAT4PX( itdatabeg, itdataend, decompressed, !isQuiet, blogenabled );
 
         WriteByteVectorToFile( outputpath.toString(), decompressed ); 
+    }
+
+    void DoDecompressSIR0AT4PX( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, 
+                                const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
+    {
+        filetypes::sir0_header hdr;
+        hdr.ReadFromContainer( itdatabeg );
+        DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
+    }
+
+    void DoDecompressSIR0PKDPX( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, 
+                                const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
+    {
+        filetypes::sir0_header hdr;
+        hdr.ReadFromContainer( itdatabeg );
+        DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
 //=================================================================================================
@@ -427,6 +454,16 @@ namespace ppx_extract
                 DoDecompressPKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
                 break;
             }
+        case e_ContentType::SIR0_AT4PX_CONTAINER:
+            {
+                DoDecompressSIR0AT4PX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+                break;
+            }
+        case e_ContentType::SIR0_PKDPX_CONTAINER:
+            {
+                DoDecompressSIR0PKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+                break;
+            }
         default:
             {
                 cerr << "<!>-Error: The content of \"" <<inputpath.toString() <<"\" was not recognized as a valid PX compressed file! Skipping!\n";
@@ -494,14 +531,14 @@ int main( int argc, const char * argv[] )
     else
         return -1;
 
-#ifdef _DEBUG
-#ifdef WIN32
-	system("pause");
-#elif  _linux_
-    char a;
-    std::cin >> a;
-#endif
-#endif
+//#ifdef _DEBUG
+//#ifdef WIN32
+//	system("pause");
+//#elif  _linux_
+//    char a;
+//    std::cin >> a;
+//#endif
+//#endif
 
     return 0;
 }

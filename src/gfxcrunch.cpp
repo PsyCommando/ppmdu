@@ -826,7 +826,7 @@ namespace gfx_util
                 updtProgress.get();
             cout<<"\r100%"; //Can't be bothered to make another drawing update
         }
-        catch( Poco::Exception &e )
+        catch( Poco::Exception & )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
@@ -835,7 +835,7 @@ namespace gfx_util
             //rethrow
             rethrow_exception( current_exception() );
         }
-        catch( exception &e )
+        catch( exception & )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )

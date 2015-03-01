@@ -1,9 +1,11 @@
 #include "pmd2_palettes.hpp"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
 
 using namespace std;
+
 
 namespace pmd2 { namespace graphics 
 {
@@ -112,5 +114,5 @@ namespace pmd2 { namespace graphics
 
     //    ++_itimg; //increment the output iterator!
     //}
-
 };};
+

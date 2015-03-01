@@ -14,6 +14,7 @@ No crappyrights. All wrongs reversed !
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
 #include <ppmdu/utils/utility.hpp>
+#include <map>
 
 namespace pmd2 { namespace filetypes
 {
@@ -132,6 +133,68 @@ namespace pmd2 { namespace filetypes
     //}
     
  //#TODO: maybe add some functors or something in here ? Or a wrapper or something
+
+
+//
+//
+//
+    /*
+        SIR0DerivHandler
+            This is used to register all rules for filetypes that are wrapped by
+            an SIR0 container!
+
+            Registering those formats here will make sure that when the CContentHandler
+            scans files to see if they are a SIR0, the formats that are wrapped by an SIR0
+            container won't be ignored.
+    */
+    class SIR0DerivHandler
+    {
+    public:
+        
+        static SIR0DerivHandler & GetInstance();
+
+        //Rule registration handling
+        cntRID_t RegisterRule  ( IContentHandlingRule * rule );
+        bool     UnregisterRule( cntRID_t ruleid );
+
+        ContentBlock AnalyseContent( const analysis_parameter & parameters );
+
+    private:
+        typedef std::map<cntRID_t,std::unique_ptr<IContentHandlingRule>> container_t;
+        cntRID_t    m_currentRID;
+        container_t m_rules;
+
+        static const cntRID_t INVALID_RID = -1;
+    private:
+        SIR0DerivHandler():m_currentRID(0){}
+        SIR0DerivHandler(const SIR0DerivHandler&);
+        SIR0DerivHandler(const SIR0DerivHandler&&);
+        SIR0DerivHandler& operator=(const SIR0DerivHandler&);
+        SIR0DerivHandler& operator=(const SIR0DerivHandler&&);
+    };
+
+
+
+    /*************************************************************************************
+        SIR0RuleRegistrator
+            A small singleton that has for only task to register the rule.
+            Just call the constructor in your cpp files, with the type of
+            the rule as parameter!
+
+            Example:
+                RuleRegistrator<ruletypename> RuleRegistrator<ruletypename>::s_instance;
+    *************************************************************************************/
+    template<class RULE_T> class SIR0RuleRegistrator
+    {
+    public:
+        SIR0RuleRegistrator()
+        {
+            SIR0DerivHandler::GetInstance().RegisterRule( new RULE_T );
+        }
+
+    private:
+        static SIR0RuleRegistrator<RULE_T> s_instance;
+    };
 
 };};
 #endif

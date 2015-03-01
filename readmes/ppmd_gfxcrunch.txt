@@ -35,7 +35,7 @@ Changelog:
     * Changed the format of the XML being outputed. So the output of the earlier version cannot be
       read by this version correctly!
     * Fixed a bug with character sprites(type 1) that had no particle offset. A null pointer would be written
-      to the WAN header, but only type 0 sprites can have that pointer null! 
+      to the WAN header, but only generic (type 0) sprites can have that pointer null! 
     * Fixed SIR0 encoded pointer list for sprites that had null pointers in their header. The null 
       pointers would not be properly skipped when building the list!
     * Added support for unpacking PKDPX compressed sprites directly.
@@ -82,9 +82,12 @@ For now, it only supports WAN sprites.
 About the palette:
 -------------------
 The palette file in the unpacked sprite directory is only useful when rebuilding the sprite. It will be used for every 
-images in the sprite when rebuilding. The format does not support individual palettes for each images.
-So if you change the palette in the individual images, it won't do anything once the sprite is re-built, unless you 
+images in the sprite when rebuilding. The game does not support individual palettes for each images.
+So if you change the palette in individual images, it won't do anything once the sprite is re-built, unless you 
 replace the palette.pal file with an updated palette!
+ 
+** In the case no palette file is present, the utility will use the palette of the first image to be loaded from 
+the "imgs" subdirectory, and use that palette for all other images ! **
     
 Usage:
 -------
@@ -107,7 +110,7 @@ Options:
   -psprn   : Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.
   -pkdpx   : Force the outputed file to be compressed as a PKDPX! (If specified while buiding a pack file of sprite, the individual sprites in the pack will be compressed as PKDPX!)
   -p       : Force the content of the directory to be handled as a pack file to assemble from unpacked sprites in its sub-directories.
-  -th      : Force the amount of worker threads to  use. Works best when matches half of the machine's hardware threads.(Default is 2 thread)
+  -th      : Force the amount of worker threads to use. Works best when matches half of the machine's hardware threads.
   -noresfix: If specified the program will not automatically fix resolution mismatch when building (a) sprite(s) from a folder!
 
 Examples:
@@ -150,7 +153,31 @@ Packing:
     The utility will rebuild all valid sprite sub-directories in the directory, and then pack them back into a pack file!
     If the directory name is "m_attack" or "monster", every individual sprites will also be compressed to PKDPX files,
     just like the originals are. The forced offset is set to 0x1300 by default. 
-
+    
+    
+Supported image formats for Sprites!:
+-------------------------------------
+The images that can be imported by the program into the game for each sprites has to be:
+- Either 16 colors indexed, or 256 colors indexed. (4bpp or 8bpp)
+- Be either in the PNG or BMP format.
+- Match one of the following allowed resolution:
+     8 x  8
+    16 x 16
+    32 x 32
+    64 x 64
+    16 x  8
+     8 x 16
+    32 x  8
+     8 x 32
+    32 x 16
+    16 x 32
+    64 x 32
+    32 x 64
+(Note that, the devs probably used a tool to split images into smaller chunks that fit those resolution.
+This is why it seems so arbitrary, and impractical. But since the resolutions are stored as a bit-field,
+its impossible to use any other resolution than those for individual images. Its however possible to cut down images
+into smaller strips and assemble them using the meta-frames+meta-frame group system!)
+    
 ----------------------------------------------------------------------------------------------------
 About pmd2 graphics :
 ----------------------------------------------------------------------------------------------------

@@ -11,7 +11,7 @@ using namespace ::std;
 using namespace ::pmd2;
 using namespace ::utils;
 using filetypes::e_ContentType;
-using filetypes::content_rule_id_t;
+using filetypes::cntRID_t;
 using filetypes::ContentBlock;
 using filetypes::RuleRegistrator;
 using filetypes::CContentHandler;
@@ -1930,8 +1930,8 @@ namespace pmd2
     //        //Returns an ID number identifying the rule. Its not the index in the storage array,
     //        // because rules can me added and removed during exec. Thus the need for unique IDs.
     //        //IDs are assigned on registration of the rule by the handler.
-    //        virtual content_rule_id_t getRuleID()const;
-    //        virtual void              setRuleID( content_rule_id_t id );
+    //        virtual cntRID_t getRuleID()const;
+    //        virtual void              setRuleID( cntRID_t id );
 
     //        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
     //        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
@@ -1946,7 +1946,7 @@ namespace pmd2
     //                               const std::string & filext);
 
     //    private:
-    //        content_rule_id_t m_myID;
+    //        cntRID_t m_myID;
     //    };
 
     //    //Returns the value from the content type enum to represent what this container contains!
@@ -1958,11 +1958,11 @@ namespace pmd2
     //    //Returns an ID number identifying the rule. Its not the index in the storage array,
     //    // because rules can me added and removed during exec. Thus the need for unique IDs.
     //    //IDs are assigned on registration of the rule by the handler.
-    //    content_rule_id_t sir0_sprite_rule::getRuleID()const
+    //    cntRID_t sir0_sprite_rule::getRuleID()const
     //    {
     //        return m_myID;
     //    }
-    //    void sir0_sprite_rule::setRuleID( content_rule_id_t id )
+    //    void sir0_sprite_rule::setRuleID( cntRID_t id )
     //    {
     //        m_myID = id;
     //    }
