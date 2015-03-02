@@ -3,4 +3,16 @@
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>"C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur" "C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur.sir0pkdpx"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>"C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur" "C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur.sir0pkdpx"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
+    <LocalDebuggerCommandArguments>"C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur" "C:\Users\Guill\Pokemon\RomHacks\PMDES\BALANCE_research\modified_m_level\ModifiedLvlData\0TestModded_bulbasaur.sir0pkdpx"</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

@@ -139,8 +139,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_unpx.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
+    <Text Include="..\readmes\ppmd_unpx.txt" />
   </ItemGroup>
 </Project>

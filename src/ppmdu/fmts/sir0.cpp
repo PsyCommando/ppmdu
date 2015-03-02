@@ -18,6 +18,7 @@ using namespace std;
 
 namespace pmd2 { namespace filetypes
 {
+    static const uint8_t SIR0_EncodedOffsetsHeader = 0x04u;
 //========================================================================================================
 // sir0_header
 //========================================================================================================
@@ -32,23 +33,23 @@ namespace pmd2 { namespace filetypes
         return strs.str();
     }
 
-    std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
-    {
-        itwriteto = utils::WriteIntToByteVector( magic,        itwriteto, false );
-        itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst,       itwriteto );
-        itwriteto = utils::WriteIntToByteVector( _null,        itwriteto );
-        return itwriteto;
-    }
+    //std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    itwriteto = utils::WriteIntToByteVector( magic,        itwriteto, false );
+    //    itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst,       itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( endzero,        itwriteto );
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator sir0_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom, false );
-        subheaderptr = utils::ReadIntFromByteVector<decltype(subheaderptr)>(itReadfrom);
-        ptrPtrOffsetLst       = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>      (itReadfrom);
-        _null        = utils::ReadIntFromByteVector<decltype(_null)>       (itReadfrom);
-        return itReadfrom;
-    }
+    //std::vector<uint8_t>::const_iterator sir0_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom, false );
+    //    subheaderptr = utils::ReadIntFromByteVector<decltype(subheaderptr)>(itReadfrom);
+    //    ptrPtrOffsetLst       = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>      (itReadfrom);
+    //    endzero        = utils::ReadIntFromByteVector<decltype(endzero)>       (itReadfrom);
+    //    return itReadfrom;
+    //}
 
 //========================================================================================================
 // Utility:
@@ -58,14 +59,12 @@ namespace pmd2 { namespace filetypes
                                         uint32_t                     offsetsubheader,
                                         uint32_t                     offsetendofdata )
     {
-        static const uint8_t SIR0_EncodedOffsetsHeader = 0x04u;
         sir0_header hdr( magicnumbers::SIR0_MAGIC_NUMBER_INT, 
                          offsetsubheader + sir0_header::HEADER_LEN,
                          offsetendofdata + sir0_header::HEADER_LEN );
 
         //#TODO: This could be done much better. There's a lot of allocation that could possibly be avoided.
-
-        vector<uint8_t> encodedptroffsets( 2u + listoffsetptrs.size() ); //Worst case scenario allocation
+        vector<uint8_t> encodedptroffsets( 2 + listoffsetptrs.size() ); //Worst case scenario allocation
         encodedptroffsets.resize(0); //preserve alloc, allow push backs
 
         //Encode the pointers
@@ -87,6 +86,21 @@ namespace pmd2 { namespace filetypes
 
         EncodeSIR0PtrOffsetList( offsetsToEncode, encodedptroffsets );
         return sir0_head_and_list{ hdr, std::move(encodedptroffsets) };
+    }
+
+    sir0_head_and_list MakeSIR0ForData( uint32_t                     offsetsubheader,
+                                        uint32_t                     offsetendofdata )
+    {
+        static const vector<uint8_t> MinimalEncPtrOffsets = 
+        { 
+            SIR0_EncodedOffsetsHeader, 
+            SIR0_EncodedOffsetsHeader,
+            0, //We have to put the zero here manually, since we're entirely skipping encoding!
+        };
+        sir0_header hdr( magicnumbers::SIR0_MAGIC_NUMBER_INT, 
+                         offsetsubheader + sir0_header::HEADER_LEN,
+                         offsetendofdata + sir0_header::HEADER_LEN );
+        return sir0_head_and_list{ hdr, MinimalEncPtrOffsets };
     }
 
     //#TODO: Should use a back_inserter here !
@@ -167,6 +181,57 @@ namespace pmd2 { namespace filetypes
 
         return std::move(decodedptroffsets);
     }
+
+    vector<uint8_t> MakeSIR0Wrap( const vector<uint8_t> & data, const sir0_head_and_list & sir0data )
+    {
+        vector<uint8_t> wrap;
+        auto            itbackins = back_inserter(wrap);
+
+        //Write SIR0 header
+        sir0data.hdr.WriteToContainer(itbackins);
+
+        //Write data
+        wrap.insert( wrap.end(), data.begin(), data.end() );
+
+        //Add padding before the ptr offset list
+        AppendPaddingBytes<COMMON_PADDING_BYTE>( itbackins, wrap.size(), 16 );
+
+        //Write ptr offset list
+        wrap.insert( wrap.end(), sir0data.ptroffsetslst.begin(), sir0data.ptroffsetslst.end() );
+
+        //Add end of file padding
+        AppendPaddingBytes<COMMON_PADDING_BYTE>( itbackins, wrap.size(), 16 );
+
+        return std::move(wrap);
+    }
+
+    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data )
+    {
+        //Calculate padding first, to ensure the end offset is valid
+        uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
+
+        //Make the SIR0 data
+        sir0_head_and_list sir0data = MakeSIR0ForData( 0, data.size() + lenpadding );
+
+        //Call the function handling everything else
+        return MakeSIR0Wrap( data, sir0data );
+    }
+
+    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data, 
+                                  uint32_t                      offsetsubheader, 
+                                  const std::vector<uint32_t> & ptroffsetlst )
+    {
+        //Calculate padding first, to ensure the end offset is valid
+        uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
+
+        //Make the SIR0 data
+        sir0_head_and_list sir0data = MakeSIR0ForData( ptroffsetlst, offsetsubheader, data.size() + lenpadding );
+
+        //Call the function handling everything else
+        return MakeSIR0Wrap( data, sir0data );
+    }
+
+
 
 //========================================================================================================
 //  SIR0DerivHandler

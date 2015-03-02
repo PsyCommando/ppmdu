@@ -198,4 +198,7 @@
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_palettetool.txt" />
+  </ItemGroup>
 </Project>

@@ -240,6 +240,7 @@ namespace pmd2{ namespace filetypes
     */
     pkdpx_header PXinfoToPKDPXHeader( const compression::px_info_header & pxinf );
 
+
 };};
 
 #endif

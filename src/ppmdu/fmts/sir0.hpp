@@ -30,25 +30,49 @@ namespace pmd2 { namespace filetypes
     /*
         Header structure for a SIR0 file.
     */
-    struct sir0_header : public utils::data_array_struct
+    struct sir0_header //: public utils::data_array_struct
     {
         static const unsigned int HEADER_LEN       = 16u; //bytes
+        static const uint32_t     MAGIC_NUMBER     = magicnumbers::SIR0_MAGIC_NUMBER_INT;                       
         static const unsigned int MAGIC_NUMBER_LEN = 4u;
 
         uint32_t magic;
         uint32_t subheaderptr;
         uint32_t ptrPtrOffsetLst;        //#TODO: Rename !!!
-        uint32_t _null;
+        uint32_t endzero;
 
         std::string toString()const;
         unsigned int   size()const { return HEADER_LEN; }
 
         sir0_header( uint32_t magicnumber = 0u, uint32_t subhdroffset = 0u, uint32_t offptrlst = 0u )
-            :magic(magicnumber), subheaderptr(subhdroffset), ptrPtrOffsetLst(offptrlst), _null(0u)
+            :magic(magicnumber), subheaderptr(subhdroffset), ptrPtrOffsetLst(offptrlst), endzero(0u)
         {}
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+
+
+        //Implementations specific to pkdpx_header
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( MAGIC_NUMBER,    itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToByteVector( subheaderptr,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( uint32_t(0),     itwriteto ); //Force this, to avoid bad surprises
+            return itwriteto;
+        }
+
+        //Reading the magic number, and endzero value is solely for validating on read.
+        template<class _init>
+            _init ReadFromContainer(  _init itReadfrom )
+        {
+            magic           = utils::ReadIntFromByteVector<decltype(magic)>          (itReadfrom, false ); //iterator is incremented
+            subheaderptr    = utils::ReadIntFromByteVector<decltype(subheaderptr)>   (itReadfrom); //iterator is incremented
+            ptrPtrOffsetLst = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>(itReadfrom); //iterator is incremented
+            endzero         = utils::ReadIntFromByteVector<decltype(endzero)>        (itReadfrom); //iterator is incremented
+            return itReadfrom;
+        }
     };
 
     /*
@@ -90,10 +114,36 @@ namespace pmd2 { namespace filetypes
                 and the full encoded list of pointer offsets. 
                 The list doesn't include the padding bytes however.
 
+                The second version is for data that doesn't contain pointers.
+
     ***********************************************************************************/
     sir0_head_and_list MakeSIR0ForData( const std::vector<uint32_t> &listoffsetptrs,
                                         uint32_t                     offsetsubheader,
                                         uint32_t                     offsetendofdata );
+
+    sir0_head_and_list MakeSIR0ForData( uint32_t                     offsetsubheader,
+                                        uint32_t                     offsetendofdata );
+
+    /**************************************************************************
+        MakeSIR0Wrap
+            This is a convenience function to wrap a chunk of data into a 
+            SIR0. 
+            It comes in two version, one for data not containing any pointers,
+            and the other for data that contains pointers.
+
+            The version for data that doesn't contain ptrs will simply have 
+            the SIR0 header point to the beginning of the data.
+
+            The version for data that contains ptr takes the pointer to the
+            sub-header, and a pointer offset list! 
+
+            Both versions add the neccessary padding between the data and the 
+            SIR0's list of encoded pointers, and at the end of the whole thing.
+    **************************************************************************/
+    std::vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data );
+    std::vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data,
+                                       uint32_t                      offsetsubheader, 
+                                       const std::vector<uint32_t> & ptroffsetlst );
 
 
     /**************************************************************************
@@ -126,7 +176,7 @@ namespace pmd2 { namespace filetypes
     //    using namespace magicnumbers;
     //    return ( 
     //                header.magic        == SIR0_MAGIC_NUMBER_INT && 
-    //                header._null        == 0x0                   && 
+    //                header.endzero        == 0x0                   && 
     //                header.subheaderptr <  filesizetotal         && header.subheaderptr > 0x0 &&
     //                header.ptrPtrOffsetLst       <= filesizetotal         && header.subheaderptr > 0x0
     //           );

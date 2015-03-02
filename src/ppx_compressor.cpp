@@ -1,5 +1,6 @@
 #include "ppx_compressor.hpp"
 #include <ppmdu/fmts/content_type_analyser.hpp>
+#include <ppmdu/fmts/sir0.hpp>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -15,6 +16,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/library_wide.hpp>
 #include <Poco/Path.h>
+#include <Poco/Exception.h>
 
 #include <ppmdu/utils/cmdline_util.hpp>
 using namespace utils::cmdl;
@@ -38,7 +40,7 @@ namespace ppx_compress
     static const string                          OPTION_COMPRESSION_LVL = "l";
     static const string                          OPTION_ZEALOUS         = "z";
     static const string                          OPTION_QUIET           = "q";
-    static const array<optionparsing_t,3>        MY_OPTIONS     = 
+    static const std::vector<optionparsing_t>    MY_OPTIONS     = 
     {{
         //Option to disable progress output
         {
@@ -61,7 +63,7 @@ namespace ppx_compress
     }};
 
     static const string EXE_NAME             = "ppmd_pxcomp.exe";
-    static const string PVERSION             = "0.3";
+    static const string PVERSION             = "0.31";
 
     //A little struct to make it easier to throw around any new parsed parameters !
     struct pxcomp_params
@@ -73,12 +75,26 @@ namespace ppx_compress
         bool           isQuiet;
     };
 
+
+    //std::vector<uint8_t> WrapInSIR0( const std::vector<uint8_t> & data )
+    //{
+    //    std::vector<uint8_t> wrapped;
+
+    //    //Wrap into a SIR0
+    //    auto result = filetypes::MakeSIR0ForData( vector<uint32_t>(), 0, data.size() );
+    //    wrapped.resize( filetypes::sir0_header::HEADER_LEN );
+    //    result.hdr.WriteToContainer( wrapped.begin() );
+    //    wrapped.insert( wrapped.end(), data.begin(), data.end() );
+    //    wrapped.insert( wrapped.end(), result.ptroffsetslst.begin(), result.ptroffsetslst.end() );
+
+    //    return std::move(wrapped);
+    //}
+
 //=================================================================================================
 // Decompression Handlers
 //=================================================================================================
 
     void DoCompress( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const pxcomp_params & params )
-                     //const string & infilenameonly, const string & outfilepat, ePXCompLevel compressionlvl, bool isZealous )
     {
         if( !params.isQuiet )
             cout << "\n-----------------------------------------------------------\n";
@@ -88,10 +104,24 @@ namespace ppx_compress
                         outputfile(params.outputpath);
 
         //Write the approriate header first !
-        if( params.outputpath.getExtension().compare(filetypes::AT4PX_FILEX) == 0 )
+        if( params.outputpath.getExtension() == filetypes::AT4PX_FILEX )
         {
             outputfile.setExtension(filetypes::AT4PX_FILEX );
             filetypes::CompressToAT4PX( itdatabeg, itdataend, compressed, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+        }
+        else if( params.outputpath.getExtension() == filetypes::SIR0_AT4PX_FILEX )
+        {
+            vector<uint8_t> wrapbuf;
+            outputfile.setExtension(filetypes::SIR0_AT4PX_FILEX );
+            filetypes::CompressToAT4PX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            compressed = filetypes::MakeSIR0Wrap( wrapbuf );
+        }
+        else if( params.outputpath.getExtension() == filetypes::SIR0_PKDPX_FILEX )
+        {
+            vector<uint8_t> wrapbuf;
+            outputfile.setExtension(filetypes::SIR0_PKDPX_FILEX );
+            filetypes::CompressToPKDPX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            compressed = filetypes::MakeSIR0Wrap( wrapbuf );
         }
         else //default to PKDPX in any case its not a AT4PX !
         {
@@ -258,6 +288,7 @@ namespace ppx_compress
 int main( int argc, const char * argv[] )
 {
     using namespace ppx_compress;
+    int returnval = 0;
     pxcomp_params params =
     {
         "",                     //Input path
@@ -273,14 +304,25 @@ int main( int argc, const char * argv[] )
             <<"A PX compressor.\n"
             <<endl;
 
-    if( HandleArguments( argc, argv, params ) )
+    try
     {
-        MrChronometer mychrono("Total");
-        ReadAndCompressFile( params );
+        if( HandleArguments( argc, argv, params ) )
+        {
+            MrChronometer mychrono("Total");
+            ReadAndCompressFile( params );
+        }
+        else
+            returnval = -1;
     }
-    else
+    catch( Poco::Exception & e )
     {
-        return -1;
+        cerr << "<!>-Poco Exception : " <<e.message() <<endl;
+        returnval = e.code();
+    }
+    catch( exception & e )
+    {
+        cerr << "<!>-Exception : " << e.what() <<endl;
+        returnval = -1;
     }
 
 #ifdef _DEBUG
@@ -292,5 +334,5 @@ int main( int argc, const char * argv[] )
 #endif
 #endif
 
-    return 0;
+    return returnval;
     }

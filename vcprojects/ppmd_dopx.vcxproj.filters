@@ -141,4 +141,7 @@
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_dopx.txt" />
+  </ItemGroup>
 </Project>

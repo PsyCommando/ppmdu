@@ -14,8 +14,9 @@ namespace utils{ namespace io
 
         if (!(inputfile.good() && inputfile.is_open()))
         {
-            assert(false);
-            throw exception("ReadFileToByteVector(): Error, impossible to open file!");
+            stringstream sstr;
+            sstr <<"ERRO: ReadFileToByteVector() : impossible to open file \"" <<path <<"\"!\n";
+            throw runtime_error(sstr.str());
         }
 
         uint64_t filesize = inputfile.tellg();
@@ -47,8 +48,9 @@ namespace utils{ namespace io
 
         if (!(outputfile.good() && outputfile.is_open()))
         {
-            assert(false);
-            throw exception("WriteByteVectorToFile(): Error, impossible to open file!");
+            stringstream sstr;
+            sstr <<"ERRO: WriteByteVectorToFile() : impossible to open file \"" <<path <<"\"!\n";
+            throw runtime_error(sstr.str());
         }
 
         outputfile.write(reinterpret_cast<const char*>(filedata.data()), filedata.size());

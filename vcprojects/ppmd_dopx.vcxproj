@@ -304,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppx_compressor.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_dopx.txt" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C7642210-DD89-423B-B267-6022A96A2C42}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

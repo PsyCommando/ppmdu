@@ -13,6 +13,7 @@ No crappyrights. All wrong reversed !
 #include <string>
 #include <vector>
 #include <ppmdu/basetypes.hpp>
+#include <ppmdu/utils/handymath.hpp>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -122,6 +123,23 @@ namespace pmd2 { namespace filetypes
     //#TODO: Deprecate this !
     //Returns a short string identifying what is the type of content is in this kind of file !
     std::string GetContentTypeName( e_ContentType type );
+
+    /*
+        AppendPaddingBytes
+            This function takes a back insert iterator and the length of the container to append padding
+            to, along with the divisor to determine how much padding is needed.
+    */
+    template<uint8_t _PadByte, class _backinit>
+        void AppendPaddingBytes( _backinit itinsertat, unsigned int lengthContainer, unsigned int alignon )
+    {
+    //# Insert padding at the current write position, to align the next entry on "alignon" bytes
+        if( (lengthContainer % alignon) != 0 )
+        {
+            uint32_t lenpadding = ( CalcClosestHighestDenominator( lengthContainer, alignon ) -  lengthContainer );
+            for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
+                itinsertat = _PadByte;
+        }
+    }
 
 };};
 

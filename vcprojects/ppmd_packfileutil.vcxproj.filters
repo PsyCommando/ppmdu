@@ -223,8 +223,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_packfileutil.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
+    <Text Include="..\readmes\ppmd_packfileutil.txt" />
   </ItemGroup>
 </Project>
