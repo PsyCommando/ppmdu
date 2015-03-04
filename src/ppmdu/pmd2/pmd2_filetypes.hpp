@@ -116,7 +116,7 @@ namespace pmd2 { namespace filetypes
     */
     std::vector<e_ContentType> GetFileTypeFromExtension( const std::string & ext );
 
-    //For the given magic number, the function returns a file extension that correspond to the filetype ! 
+    //For the given data, returns a file extension
     std::string GetAppropriateFileExtension( std::vector<uint8_t>::const_iterator & itdatabeg,
                                              std::vector<uint8_t>::const_iterator & itdataend );
 

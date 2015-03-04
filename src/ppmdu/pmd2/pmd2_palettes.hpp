@@ -123,7 +123,6 @@ namespace pmd2 { namespace graphics
                                                      _init            itend,
                                                      rgb24palette_t & out_palette )
     {
-        colRGB24   temp;
         unsigned int size = std::distance( itbeg, itend );
 
         if( size % 4u != 0u  )
@@ -135,7 +134,8 @@ namespace pmd2 { namespace graphics
         //Write palette
         while( itbeg != itend )
         {
-            itbeg = temp.ReadAsRawByte( itbeg );
+            colRGB24 temp;
+            itbeg = temp.ReadAsRawByte( itbeg, false );
             ++itbeg; //Skip the ignored 0x80 byte
             out_palette.push_back( std::move(temp) );
         }

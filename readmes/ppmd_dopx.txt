@@ -1,7 +1,7 @@
 ===============================================
 ==  Baz the Poochyena's PMD:EoS/T/D CompPX  ==
 ===============================================
-Version	   : 0.3
+Version	   : 0.31
 Released   : 2014/11/10
 Written by : psycommando@gmail.com
 
@@ -11,11 +11,17 @@ https://github.com/PsyCommando/ppmdu/
 ----------------------------------------------------------------------------------------------------
 Changelog:
 ----------------------------------------------------------------------------------------------------
-- 0.1 : Initial release!
-- 0.2 : (2014/11/10) Fixed stupid bug where the size was wrongly predicted and the whole
-                     thing would crash. Used push_backs and memory reservation instead!
-- 0.3 : (2014/12/05) Fixed critical bug where the compressed size written in the AT4PX and PKDPX 
-                     header didn't include the length of the header itself..
+- 0.1(2014/11/10): Initial release!
+- 0.2(2014/11/10):
+        * Fixed stupid bug where the size was wrongly predicted and the whole
+          thing would crash. Used push_backs and memory reservation instead!
+- 0.3(2014/12/05):
+        * Fixed critical bug where the compressed size written in the AT4PX and PKDPX 
+          header didn't include the length of the header itself..
+- 0.31(2015/03/01):
+        * Added support for compressing a file and wrapping it into a SIR0 container,
+          like some files in the PMD2 games are. Just specify the output file extension
+          as either "sir0pkdpx" or "sir0at4px" to get either version.
                      
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -65,6 +71,10 @@ How to use:
 This works just like any other of my utilities, just drag and drop a file to be compressed
 onto it, and it will automatically compress it to a PKDPX by default. If you want to compress it
 into an AT4PX, you have to specify the output filename and make sure it ends with ".at4px".
+
+*NEW* If you want to compress a file to either pkdpx or at4px, and then wrap it into a sir0 container
+      you can let the utility do it for you by specifying the output filename, with either of those 
+      file extensions: "sir0pkdpx" or "sir0at4px"!
 
 You can get a better compression ratio by specifying the option "-z" at the command line. But it
 will be slightly slower.

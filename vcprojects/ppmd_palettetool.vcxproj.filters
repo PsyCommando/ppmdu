@@ -138,6 +138,12 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io_info.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
@@ -191,11 +197,17 @@
     <ClCompile Include="..\src\ppmdu\ext_fmts\txt_palette_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io_info.cpp">
+    <ClCompile Include="..\src\palettetool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\palettetool.cpp">
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io_info.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

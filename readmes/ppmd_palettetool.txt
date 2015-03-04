@@ -11,8 +11,12 @@ https://github.com/PsyCommando/ppmdu/
 ----------------------------------------------------------------------------------------------------
 Changelog:
 ----------------------------------------------------------------------------------------------------
-- 0.1(2015/01/03): 
+- 0.1(2015/02/27): 
     * Initial release!
+- 0.2(2015/03/03):
+    * Added support for raw RGBX32 palettes from the PMD 1 and 2 games!
+    * Added command-line options to specify the format of the palette in the input path, 
+      or to specify the palette type to output! ("intxt", "inrgbx32", "outriff","outrgbx32","outtxt")
 
 ----------------------------------------------------------------------------------------------------
 License info:

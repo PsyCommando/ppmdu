@@ -187,6 +187,16 @@
     <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp" />
     <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io_info.hpp" />
     <ClInclude Include="..\src\ppmdu\ext_fmts\txt_palette_io.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\file formats</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -278,6 +288,16 @@
     <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io_info.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\txt_palette_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>

@@ -607,8 +607,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -617,8 +617,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -627,8 +627,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <SourcePath>$(SolutionDir)lib\poco\XML\src;$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
-    <IncludePath>$(SolutionDir)lib\poco\XML\include;$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)\lib_release;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)_xp</TargetName>
   </PropertyGroup>

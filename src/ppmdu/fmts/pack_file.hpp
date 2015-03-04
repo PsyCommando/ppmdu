@@ -7,7 +7,6 @@ psycommando@gmail.com
 Description:  Code for handling "pack files".
 
 **** TODO *****
- - Implement content type detection rule!
  - rewrite this mess into something simpler
  - Read directly into raw buffer instead of copying to another vector!
 

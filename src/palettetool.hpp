@@ -45,8 +45,12 @@ namespace palettetool
         bool ParseOutputPath ( const std::string              & path );
 
         //Parse Options
-        bool ParseOptionToRIFF  ( const std::vector<std::string> & optdata );
-        bool ParseOptionAddDummy( const std::vector<std::string> & optdata );
+        bool ParseOptionToRIFF    ( const std::vector<std::string> & optdata );
+        bool ParseOptionAddDummy  ( const std::vector<std::string> & optdata );
+        bool ParseOptionToTxt     ( const std::vector<std::string> & optdata );
+        bool ParseOptionToRGBX32  ( const std::vector<std::string> & optdata );
+        bool ParseOptionInAsTxt   ( const std::vector<std::string> & optdata );
+        bool ParseOptionInAsRGBX32( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -59,6 +63,7 @@ namespace palettetool
         int InjectPalette();
         int AddDummyColorAndShift();
         void ExportPalette( const std::string & inparentdirpath, const std::vector<gimg::colorRGB24> & palette );
+        std::vector<gimg::colorRGB24> ImportPalette( const std::string & inpath );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -72,8 +77,10 @@ namespace palettetool
 
         enum struct ePalType
         {
+            Invalid,
             TEXT,
             RIFF,
+            RGBX32,
         };
         enum struct eOpMode
         {
@@ -88,6 +95,7 @@ namespace palettetool
         std::string                    m_inputPath;      //This is the input path that was parsed 
         std::string                    m_outputPath;     //This is the output path that was parsed
         ePalType                       m_outPalType;     //This is the type of palette to output
+        ePalType                       m_inPalType;      //The detected, or forced input palette type!
         eOpMode                        m_operationMode;  //This holds what the program should do
     };
 

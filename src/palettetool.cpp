@@ -7,6 +7,9 @@
 #include <ppmdu/ext_fmts/txt_palette_io.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/ext_fmts/supported_io_info.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <ppmdu/pmd2/pmd2_palettes.hpp>
+#include <ppmdu/fmts/content_type_analyser.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -32,8 +35,8 @@ namespace palettetool
 //------------------------------------------------
     const string CPaletteUtil::Exe_Name            = "ppmd_palettetool.exe";
     const string CPaletteUtil::Title               = "Palette Dumper/Bulder";
-    const string CPaletteUtil::Version             = "0.1";
-    const string CPaletteUtil::Short_Description   = "A utility to dump/build palette files from png and bmp images";
+    const string CPaletteUtil::Version             = "0.2";
+    const string CPaletteUtil::Short_Description   = "A utility to dump/build palette files from png and bmp images, and more.";
     const string CPaletteUtil::Long_Description    = 
         "This little utility is meant to be used to easily dump a palette\n"
         "to a text file or RIFF palette, from an image. It can also convert\n"
@@ -100,14 +103,6 @@ namespace palettetool
     */
     const vector<optionparsing_t> CPaletteUtil::Options_List=
     {{
-        //Quiet
-        {
-            "riffpal",
-            0,
-            "Dump/convert palette to the RIFF pal format.",
-            "-riffpal",
-            std::bind( &CPaletteUtil::ParseOptionToRIFF, &GetInstance(), placeholders::_1 ),
-        },
         //Prepend dummy color
         {
             "adddummy",
@@ -115,6 +110,46 @@ namespace palettetool
             "Tell the program to insert a dummy color in color slot 0, and shift all colors by 1, while preserving the color of each pixels in the resulting image. !!Output path is ignored!!",
             "-adddummy",
             std::bind( &CPaletteUtil::ParseOptionAddDummy, &GetInstance(), placeholders::_1 ),
+        },
+        //Force output to RIFF palette
+        {
+            "outriff",
+            0,
+            "Dump/convert palette to the RIFF pal format.",
+            "-outriff",
+            std::bind( &CPaletteUtil::ParseOptionToRIFF, &GetInstance(), placeholders::_1 ),
+        },
+        //Force output to txt palette
+        {
+            "outtxt",
+            0,
+            "Dump/convert palette to a text file, in HTML notation.",
+            "-outtxt",
+            std::bind( &CPaletteUtil::ParseOptionToTxt, &GetInstance(), placeholders::_1 ),
+        },
+        //Force output to RIFF palette
+        {
+            "outrgbx32",
+            0,
+            "Dump/convert palette to a raw rgbx32 palette, the same format as Pokemon Mystery Dungeon 1-2 uses.",
+            "-outrgbx32",
+            std::bind( &CPaletteUtil::ParseOptionToRGBX32, &GetInstance(), placeholders::_1 ),
+        },
+        //Force import as txt palette
+        {
+            "intxt",
+            0,
+            "Force input to be interpreted as a HTML notation text file palette regardless of its file extension!",
+            "-intxt",
+            std::bind( &CPaletteUtil::ParseOptionInAsTxt, &GetInstance(), placeholders::_1 ),
+        },
+        //Force import as RGBX32 palette
+        {
+            "inrgbx32",
+            0,
+            "Force input to be interpreted as a raw RGBX32 palette regardless of its file extension!",
+            "-inrgbx32",
+            std::bind( &CPaletteUtil::ParseOptionInAsRGBX32, &GetInstance(), placeholders::_1 ),
         },
     }};
 
@@ -132,7 +167,8 @@ namespace palettetool
         :CommandLineUtility()
     {
         m_outPalType      = ePalType::TEXT;
-        m_operationMode   = eOpMode::Invalid;
+        m_inPalType       = ePalType::Invalid;
+        m_operationMode   = eOpMode ::Invalid;
     }
 
     const vector<argumentparsing_t> & CPaletteUtil::getArgumentsList   ()const { return Arguments_List;          }
@@ -185,6 +221,30 @@ namespace palettetool
     bool CPaletteUtil::ParseOptionAddDummy( const std::vector<std::string> & optdata )
     {
         m_operationMode = eOpMode::AddDummyColor;
+        return true;
+    }
+
+    bool CPaletteUtil::ParseOptionToTxt( const std::vector<std::string> & optdata )
+    {
+        m_outPalType = ePalType::TEXT;
+        return true;
+    }
+    
+    bool CPaletteUtil::ParseOptionToRGBX32( const std::vector<std::string> & optdata )
+    {
+        m_outPalType = ePalType::RGBX32;
+        return true;
+    }
+
+    bool CPaletteUtil::ParseOptionInAsTxt( const std::vector<std::string> & optdata )
+    {
+        m_inPalType = ePalType::TEXT;
+        return true;
+    }
+    
+    bool CPaletteUtil::ParseOptionInAsRGBX32( const std::vector<std::string> & optdata )
+    {
+        m_inPalType = ePalType::RGBX32;
         return true;
     }
 
@@ -244,13 +304,28 @@ namespace palettetool
         }
         else //Input is not an image
         {
-            ePalType inpaltype = (inpath.getExtension() == utils::io::RIFF_PAL_Filext)? ePalType::RIFF : ePalType::TEXT;
+            using namespace pmd2::filetypes;
+
+            //Skip palette type check if palette type is forced!
+            if( m_inPalType == ePalType::Invalid )
+            {
+                const string ext = inpath.getExtension();
+
+                if( ext == utils::io::RIFF_PAL_Filext )
+                    m_inPalType = ePalType::RIFF;
+                else if( ext == RGBX32_RAW_PAL_FILEX )
+                    m_inPalType = ePalType::RGBX32;
+                else 
+                    m_inPalType = ePalType::TEXT;
+            }
 
             if( m_outputPath.empty() )
             {
                 //If output empty assume we want palette conversion
-                if( inpaltype != m_outPalType )
+                if( m_inPalType != m_outPalType )
+                {
                     m_operationMode = eOpMode::Convert;
+                }
                 else
                     throw runtime_error( "The palette input type is the same as the palette output type! Skipping conversion!" );
             }
@@ -327,23 +402,50 @@ namespace palettetool
 //  Operation
 //--------------------------------------------
 
+    std::vector<gimg::colorRGB24> CPaletteUtil::ImportPalette( const std::string & inpath )
+    {
+        std::vector<gimg::colorRGB24> palette;
+        cout<<"Importing \"" <<inpath <<"\" as ";
+
+        if( m_inPalType == ePalType::RIFF )
+        {
+            cout<<"RIFF palette...";
+            palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
+        }
+        else if( m_inPalType == ePalType::RGBX32 )
+        {
+            cout<<"raw RGBX32 palette...";
+            vector<uint8_t> paldata = utils::io::ReadFileToByteVector( m_inputPath );
+            pmd2::graphics::ReadRawPalette_RGBX32_As_RGB24( paldata.begin(), paldata.end(), palette );
+        }
+        else if( m_inPalType == ePalType::TEXT )
+        {
+            cout<<"HTML text palette...";
+            palette = utils::io::ImportFrom_TXT_Palette( m_inputPath );
+        }
+        else
+            throw runtime_error( "ERROR: Unrecognized input palette format!" );
+        cout<<"done!\n";
+
+        return std::move(palette);
+    }
+
+
     void CPaletteUtil::ExportPalette( const std::string & inparentdirpath, const std::vector<gimg::colorRGB24> & palette )
     {
         Poco::Path inputPal(inparentdirpath);
         Poco::Path outputPath;
-        cout <<"To ";
+        cout <<"Exporting to ";
 
         if( m_outputPath.empty() )
         {
             outputPath = inputPal.append("palette").makeFile();
-            outputPath.setExtension( 
-                ( 
-                    (m_outPalType == ePalType::RIFF)? 
-                        utils::io::RIFF_PAL_Filext : 
-                        (m_outPalType == ePalType::TEXT)? 
-                            TXTPAL_Filext : 
-                            "" 
-                ) );
+
+            if     (m_outPalType == ePalType::RIFF)   { outputPath.setExtension( utils::io::RIFF_PAL_Filext );           }
+            else if(m_outPalType == ePalType::RGBX32) { outputPath.setExtension( pmd2::filetypes::RGBX32_RAW_PAL_FILEX );}
+            else if(m_outPalType == ePalType::TEXT)   { outputPath.setExtension( TXTPAL_Filext );                        }
+            else
+                throw std::runtime_error("ERROR: Invalid output palette type!");
         }
         else
             outputPath = m_outputPath;
@@ -352,6 +454,14 @@ namespace palettetool
         {
             cout<<"RIFF palette \"" <<outputPath.toString() <<"\"\n";
             utils::io::ExportTo_RIFF_Palette( palette, outputPath.toString() );
+        }
+        else if( m_outPalType == ePalType::RGBX32 )
+        {
+            cout<<"raw RGBX32 palette\"" <<outputPath.toString() <<"\"\n";
+            vector<uint8_t> outdata;
+            outdata.reserve( palette.size() * gimg::colorRGB24::getSizeRawBytes() );
+            pmd2::graphics::WriteRawPalette_RGB24_As_RGBX32( back_inserter(outdata), palette.begin(), palette.end() );
+            utils::io::WriteByteVectorToFile( outputPath.toString(), outdata );
         }
         else if( m_outPalType == ePalType::TEXT )
         {
@@ -378,7 +488,7 @@ namespace palettetool
         {
             palette = utils::io::ImportPaletteFromPNG( m_inputPath );
         }
-
+        cout<<"\n";
         ExportPalette( Poco::Path(m_inputPath).makeAbsolute().makeParent().toString(), palette );
 
         cout <<"Palette dumped successfully!\n";
@@ -389,23 +499,9 @@ namespace palettetool
     {
         using namespace gimg;
         Poco::Path               inputPal(m_inputPath);
-        //Poco::Path               outputPath;
-        vector<gimg::colorRGB24> palette;
-        cout <<"Converting ";
+        vector<gimg::colorRGB24> palette = ImportPalette(m_inputPath);
 
-        if( inputPal.getExtension() == utils::io::RIFF_PAL_Filext )
-        {
-            cout<<"RIFF";
-            palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
-        }
-        else //Else always assume its a txt palette until the end!
-        {
-            cout<<"HTML text";
-            palette = utils::io::ImportFrom_TXT_Palette( m_inputPath );
-        }
-
-        cout <<" palette \"" <<m_inputPath <<"\"\n";
-
+        cout<<"\n";
         ExportPalette( inputPal.absolute().makeParent().toString(), palette );
 
         cout <<"Palette converted successfully!\n";
@@ -416,22 +512,29 @@ namespace palettetool
     {
         using namespace gimg;
         Poco::Path               inputPal(m_inputPath);
-        vector<gimg::colorRGB24> palette;
+        vector<gimg::colorRGB24> palette = ImportPalette(m_inputPath);
+        cout<<"\n";
+        cout <<"Injecting source palette \"" <<m_inputPath <<"\"\ninto \"" <<m_outputPath <<"\"...\n";
 
-        cout <<"Injecting palette \"" <<m_inputPath <<"\"\ninto \"" <<m_outputPath <<"\"...\n";
-
-        if( inputPal.getExtension() == utils::io::RIFF_PAL_Filext )
-            palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
-        else //Else always assume its a txt palette until the end!
-            palette = utils::io::ImportFrom_TXT_Palette( m_inputPath );
+        //if( m_inPalType == ePalType::RIFF )
+        //    palette = utils::io::ImportFrom_RIFF_Palette( m_inputPath );
+        //else if( m_inPalType == ePalType::RGBX32 )
+        //{
+        //    vector<uint8_t> paldata = utils::io::ReadFileToByteVector( m_inputPath );
+        //    pmd2::graphics::ReadRawPalette_RGBX32_As_RGB24( paldata.begin(), paldata.end(), palette );
+        //}
+        //else if( m_inPalType == ePalType::TEXT )
+        //    palette = utils::io::ImportFrom_TXT_Palette( m_inputPath );
+        //else
+        //    throw runtime_error( "ERROR: Unrecognized input palette format!" );
 
         eSUPPORT_IMG_IO imgtype = GetSupportedImageType(m_outputPath);
-
+        cout<<"\n";
         if( imgtype == eSUPPORT_IMG_IO::BMP )
             utils::io::SetPaletteBMPImg( palette, m_outputPath );
         else if( imgtype == eSUPPORT_IMG_IO::PNG )
             utils::io::SetPalettePNGImg( palette, m_outputPath );
-
+        cout<<"\n";
         cout <<"Palette injected succesfully!\n";
         return 0;
     }
