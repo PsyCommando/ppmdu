@@ -7,14 +7,14 @@ psycommando@gmail.com
 Description:
     Resources for handling the data in the "/BALANCE/m_level.bin" file of PMD2!
 */
+#include <ppmdu/containers/pokemon_stats.hpp>
 #include <vector>
 #include <string>
 #include <cstdint>
-#include <ppmdu/containers/pokemon_stats.hpp>
 
 namespace pmd2{ namespace filetypes 
 {
-    static const unsigned int MLevel_NBPokemon = 571; //Nb of pokemon stats growth entries in the m_level.bin file.
+    static const unsigned int MLevel_DefNBPokemon = 571; //Nb of pokemon stats growth entries in the m_level.bin file.
 
 //
 //

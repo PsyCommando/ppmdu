@@ -214,6 +214,31 @@ namespace utils
     template< class T >
         inline bool IsBitOn( T containinginteger, uint32_t offsetrighttoleft  ) { return GetBit( containinginteger, offsetrighttoleft ) > 0; }
 
+    /*
+        WriteStrToByteContainer
+            Write a c string to a byte container, via iterator.
+            strl is the length of the string!
+    */
+    template<class _init> 
+        _init WriteStrToByteContainer( _init itwhere, const char * str, size_t strl )
+    {
+        static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        return std::copy_n( reinterpret_cast<const typename _init::container_type::value_type*>(str), strl,  itwhere );
+        //for( unsigned int i = 0; i < strl; ++i, ++itwhere )
+        //    itwhere = static_cast<uint8_t>(str[i]);
+    }
+
+    /*
+        WriteStrToByteContainer
+    */
+    template<class _init> 
+        _init WriteStrToByteContainer( _init itwhere, const std::string & str )
+    {
+        return WriteStrToByteContainer( itwhere, str.c_str(), str.size() + 1 );
+    }
+
+
+
 //===============================================================================
 //								Utility
 //===============================================================================

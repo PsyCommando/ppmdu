@@ -144,6 +144,9 @@
     <ClCompile Include="..\src\statsutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -271,6 +274,15 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
