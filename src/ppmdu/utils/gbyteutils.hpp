@@ -208,6 +208,25 @@ namespace utils
     }
 
     /*********************************************************************************************
+        IsolateBits
+            Isolate some adjacent bits inside a value of type T, 
+            and shift them back to offset 0. 
+
+            * nbbits    : Nb of bits to isolate. Used to make the bitmask.
+            * bitoffset : Offset of the bits from the right to the left. From the last bit. 
+
+            Ex1 : we want those bits 0000 1110, the params are ( 0xE, 3, 1 ),  returns 0000 0111
+            Ex2 : we want those bits 0011 0000, the params are ( 0x30, 2, 4 ), returns 0000 0011
+    *********************************************************************************************/
+    template<class T>
+        inline T IsolateBits( T src, unsigned int nbBits, unsigned int bitoffset )
+    {
+        static_assert( std::is_pod<T>::value, "IsolateBits(): Tried to isolate bits of a non-POD type!!" );
+        T mask = static_cast<T>( ( pow( 2, nbBits ) - 1u ) ); //Subtact one to get the correct mask
+        return ( ( src & (mask << bitoffset) ) >> bitoffset );
+    }
+
+    /*********************************************************************************************
         Helper method to get whether a certain bit's state as a boolean, 
         instead of only isolating it.
     *********************************************************************************************/
@@ -236,8 +255,6 @@ namespace utils
     {
         return WriteStrToByteContainer( itwhere, str.c_str(), str.size() + 1 );
     }
-
-
 
 //===============================================================================
 //								Utility

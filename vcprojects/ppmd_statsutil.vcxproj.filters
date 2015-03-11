@@ -284,6 +284,9 @@
     <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
