@@ -34,6 +34,7 @@ namespace pmd2 { namespace filetypes
         { e_ContentType::WTU_FILE,             WTU_FILEX            },
         { e_ContentType::BGP_FILE,             BGP_FILEX            },
         { e_ContentType::RAW_RGBX32_PAL_FILE,  RGBX32_RAW_PAL_FILEX },
+        { e_ContentType::MONSTER_MD_FILE,      MD_FILEX             },
     }};
 
 

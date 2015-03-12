@@ -8,23 +8,34 @@ Description:
     This file contains generic resources for handling the PMD2 game data.
 */
 #include <ppmdu/containers/pokemon_stats.hpp>
+#include <ppmdu/containers/item_data.hpp>
 #include <string>
 #include <vector>
 
 namespace pmd2{ namespace stats
 { 
     //Game data filenames list
-    static const std::string StatsGrowthFilename;
+    // -- Pokemon --
+    static const std::string PkmnStatsGrowthFile; //Pokemon stats growth per level, and experience requirement
+    static const std::string PkmnStatsFile;       //Pokemon stats + data
+    static const std::string PkmnMovesFile;       //Pokemon level-up move list + Moves stats 
 
-    //Game data location list
-    static const std::string GameStatsFolderPath;
+    // -- Items --
+    static const std::string ItemsStatsFile;      //
+    static const std::string ExcItmsStatsFile;    //
+
+    //Game data location list, from rom root!
+    static const std::string GameStatsFolderPath; // "/BALANCE"
 
     //Game data type list
-    enum struct eGameDataTy 
-    {
-        Invalid,
-        StatsGrowthData,
-    };
+    //enum struct eGameDataTy 
+    //{
+    //    Invalid,
+    //    PkmnStatsGrowth,
+    //    PkmnStats,
+    //    MovesStats,
+    //    ItemsStats,
+    //};
 
 //==================================================================================
 //  Functions
@@ -35,7 +46,7 @@ namespace pmd2{ namespace stats
             Return what this PMD 2 file is for. If its a valid statistics 
             file!
     ************************************************************************/
-    eGameDataTy GetGameDataTyForFile( const std::string & path );
+    //eGameDataTy GetGameDataTyForFile( const std::string & path );
 
     /************************************************************************
         LoadPkmnStatGrowthFromFile
@@ -46,7 +57,7 @@ namespace pmd2{ namespace stats
             infile is the stats growth file, "m_level.bin".
 
     ************************************************************************/
-    void LoadPkmnStatGrowthFromFile( const std::string & infile, std::vector<CPokemon> & inout_pokemondata );
+    //void LoadPkmnStatGrowthFromFile( const std::string & infile, std::vector<CPokemon> & inout_pokemondata );
 
 //==================================================================================
 //  Classes
@@ -60,15 +71,19 @@ namespace pmd2{ namespace stats
     class CGameStatsLoader
     {
     public:
-        CGameStatsLoader( const std::string & pmd2DataFolder );
+        CGameStatsLoader( const std::string & pmd2rootdir );
 
         //Accessors Pokemon Data
-        const std::vector<CPokemon> & Pkmn()const                                    { return m_pokemonStats; }
-        std::vector<CPokemon>         Pkmn()                                         { return m_pokemonStats; }
-        void                          Pkmn( std::vector<CPokemon>       && newdata ) { m_pokemonStats = newdata; }
-        void                          Pkmn( const std::vector<CPokemon> &  newdata ) { m_pokemonStats = newdata; }
+        //const std::vector<CPokemon> & Pkmn()const                                    { return m_pokemonStats; }
+        //std::vector<CPokemon>       & Pkmn()                                         { return m_pokemonStats; }
+        //void                          Pkmn( std::vector<CPokemon>       && newdata ) { m_pokemonStats = newdata; }
+        //void                          Pkmn( const std::vector<CPokemon> &  newdata ) { m_pokemonStats = newdata; }
 
         //Accessors 
+        const ItemsDictionary       & Items()const                                   { return m_itemsData; }
+        ItemsDictionary             & Items()                                        { return m_itemsData; }
+        void                          Items( ItemsDictionary       && newdata )      { m_itemsData = newdata; }
+        void                          Items( const ItemsDictionary &  newdata )      { m_itemsData = newdata; }
 
         //Accessors
 
@@ -76,17 +91,21 @@ namespace pmd2{ namespace stats
 
         //Input / Output
         void Load ();
-        void Load ( const std::string & newpmd2DataFolder );
+        void Load ( const std::string & newpmd2rootdir );
         void Write();
         void Write( const std::string & rootdatafolder );
 
     private:
         void LoadPokemonData();
         void LoadPokemonStatsGrowth();
+        void LoadPokemonMoves();
+        void LoadItemData();
+        void LoadDungeonData();
 
     private:
         std::string           m_dataFolder;
-        std::vector<CPokemon> m_pokemonStats;
+        //std::vector<CPokemon> m_pokemonStats;
+        ItemsDictionary       m_itemsData;
     };
 
 };};

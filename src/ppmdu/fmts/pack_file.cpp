@@ -82,6 +82,11 @@ namespace pmd2 { namespace filetypes
 
     }
 
+    CPack::CPack( std::vector<std::vector<uint8_t>> && subfiles )
+        :m_ForcedFirstFileOffset(0), m_SubFiles(subfiles)
+    {
+    }
+
     void CPack::ClearState()
     {
         //Clear all current data

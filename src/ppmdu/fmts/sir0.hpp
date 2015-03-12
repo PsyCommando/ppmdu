@@ -52,7 +52,7 @@ namespace pmd2 { namespace filetypes
         //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
 
-        //Implementations specific to pkdpx_header
+        //Implementations specific to sir0_header
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {

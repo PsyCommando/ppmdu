@@ -138,6 +138,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -252,6 +254,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\data formats</Filter>
@@ -308,6 +311,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\kao.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -315,6 +319,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -346,7 +351,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\m_level.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -409,6 +413,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
+    <Text Include="..\resources\pkmn_abilities.txt" />
+    <Text Include="..\resources\pkmn_moves.txt" />
+    <Text Include="..\resources\pkmn_types.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

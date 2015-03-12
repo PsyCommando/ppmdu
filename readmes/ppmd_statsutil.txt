@@ -39,6 +39,8 @@ Special Thanks:
 About:
 ----------------------------------------------------------------------------------------------------
 
+** The data files pkmn_*.txt are there temporarily. Once we can properly find how to cross-reference 
+   all that data with the game'strings file we'll get rid of those! **
 
 ------------------------------
 --Random Uninteresting Fact--:

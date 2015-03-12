@@ -147,6 +147,12 @@
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -269,9 +275,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\m_level.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
@@ -287,8 +290,28 @@
     <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_statsutil.txt" />
+    <Text Include="..\resources\pkmn_types.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_abilities.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_moves.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\readmes\ppmd_statsutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>
