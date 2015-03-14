@@ -43,6 +43,9 @@
     <Filter Include="Header Files\ppmdu\utility">
       <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pugixml">
+      <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
@@ -152,6 +155,15 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
+      <Filter>pugixml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -299,6 +311,9 @@
     <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\resources\pkmn_types.txt">
@@ -311,6 +326,12 @@
       <Filter>Resource Files</Filter>
     </Text>
     <Text Include="..\readmes\ppmd_statsutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_names.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_iq.txt">
       <Filter>Resource Files</Filter>
     </Text>
   </ItemGroup>

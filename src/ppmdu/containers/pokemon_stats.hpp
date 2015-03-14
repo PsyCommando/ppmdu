@@ -129,7 +129,7 @@ namespace pmd2 { namespace stats
         typedef std::pair<uint32_t, PokeStats> growthlvl_t;
         std::vector<growthlvl_t> statsgrowth;
 
-        static const unsigned int EntryLen         = (PokeStats::DataLen + sizeof(uint32_t) + sizeof(uint16_t));   //Length of a stats entry for a single pokemon, for a single level (with the 2 ending null bytes!)
+        static const unsigned int EntryLen         = (PokeStats::DataLen + sizeof(uint32_t) + sizeof(uint16_t));   //Length of a stats entry for a single pokemon, for a single level (counting the 2 ending null bytes!)
         static const unsigned int NbEntriesPerPkmn = PkmnMaxLevel;                                                 //Nb of stats entry per pokemon
         static const unsigned int PkmnEntryLen     = EntryLen * NbEntriesPerPkmn;                                  //Length of an entry for a single pokemon
     };
@@ -210,7 +210,7 @@ namespace pmd2 { namespace stats
         uint8_t       unk19           = 0;
         uint8_t       unk20           = 0;
         uint16_t      unk21           = 0;
-        uint16_t      unk22           = 0;
+        uint16_t      pkmnIndex       = 0;
         uint16_t      unk23           = 0;
         uint16_t      unk24           = 0;
         uint16_t      unk25           = 0;
@@ -223,21 +223,24 @@ namespace pmd2 { namespace stats
         static const unsigned int DataLen = 68;//bytes (0x44)
     };
 
+    /*
+    */
+    //Self-documention
+    typedef uint16_t level_t;
+    typedef uint16_t moveid_t;
+
+    /*
+    */
     struct PokeMoveSet
     {
-        //Self-documention
-        typedef uint16_t level_t;
-        typedef uint16_t moveid_t;
+        typedef std::multimap<level_t, moveid_t> lvlUpMoveSet_t;
 
         PokeMoveSet()
         {}
 
-        std::multimap<level_t, moveid_t> lvlUpMoveSet1;    //Pokemons have 2 level-up movesets for some reasons( in EoS only, only the first is used in EoT/EoD!)
-        std::multimap<level_t, moveid_t> lvlUpMoveSet2;    //
-
-        //TM moves
-
-        //Egg moves
+        lvlUpMoveSet_t        lvlUpMoveSet; // Used a multimap, because several moves can be learned at the same level!
+        std::vector<moveid_t> teachableHMTMs;
+        std::vector<moveid_t> eggmoves;
     };
 
 //======================================================================================================
@@ -253,13 +256,25 @@ namespace pmd2 { namespace stats
     class CStatsResLoader
     {
     public:
-        static CStatsResLoader GetInstance();
+        static CStatsResLoader & GetInstance();
 
+        inline const std::vector<std::string> & PkmnNames()const { return m_pkmnnames; }
         inline const std::vector<std::string> & PkmnTypes()const { return m_pkmnTypes; }
         inline const std::vector<std::string> & IQGroups ()const { return m_iqgrps;    }
         inline const std::vector<std::string> & Abilities()const { return m_abilities; }
-        inline const std::vector<std::string> & Moves    ()const { return m_moves;     }   
-        inline const std::vector<std::string> & Items    ()const { return m_items;     }    
+        inline const std::vector<std::string> & Moves    ()const { return m_moves;     }
+        inline const std::vector<std::string> & Items    ()const { return m_items;     }
+
+        /*
+            Call this to load the data from a directory.
+            It must contain the following:
+                pkmn_abilities.txt
+                pkmn_moves.txt
+                pkmn_names.txt
+                pkmn_types.txt
+                pkmn_iq.txt
+        */
+        void Parse( const std::string & pathDataDir );
 
     private:
         CStatsResLoader();
@@ -269,15 +284,17 @@ namespace pmd2 { namespace stats
         CStatsResLoader & operator=(CStatsResLoader&&);
 
         //Parsing
-        void ParseData();
+        void ParseData(std::string pathDataDir);
 
-        void ParsePkmnTypes();
-        void ParseIQGrps();
-        void ParseAbilities();
-        void ParseMoves();
-        void ParseItems();
+        void ParsePkmnNames( const std::string & pkmnNamesPath );
+        void ParsePkmnTypes( const std::string & pkmnTypesPath );
+        void ParseIQGrps   ( const std::string & pkmnIQPath );
+        void ParseAbilities( const std::string & pkmnAbilitiesPath );
+        void ParseMoves    ( const std::string & pkmnMovesPath );
+        void ParseItems    ( const std::string & ItemsPath );
 
         //Variable
+        std::vector<std::string> m_pkmnnames;
         std::vector<std::string> m_pkmnTypes;
         std::vector<std::string> m_iqgrps;
         std::vector<std::string> m_abilities;
@@ -290,85 +307,83 @@ namespace pmd2 { namespace stats
         CPokemon
             Storage for pokemon statistics.
     *************************************************************************************/
-    //class CPokemon
-    //{
-    //public:
-    //    static const uint8_t MaxLevel = 100;
-    //    static const uint8_t MinLevel = 1;
+    class CPokemon
+    {
+    public:
+        static const uint8_t MaxLevel = PkmnMaxLevel;
+        static const uint8_t MinLevel = 1;
 
-    //    typedef std::vector<PokeStats> pkstcntner_t;
-    //    typedef std::vector<uint32_t>  expcurve_t;
+        typedef std::vector<PokeStats> pkstcntner_t;
+        typedef std::vector<uint32_t>  expcurve_t;
 
-    //public:
-    //    CPokemon()
-    //        :m_statsGrowth(MaxLevel),m_expCurve(MaxLevel,0)
-    //    {}
+    public:
+        CPokemon()
+        {}
 
-    //    //
-    //    uint32_t GetReqExp( uint8_t forlevel )const        { return m_expCurve.at(forlevel); }
+        CPokemon( const std::string & name,  PokeMonsterData && md, PokeStatsGrowth && growth, PokeMoveSet && mvs )
+            :m_name(name),m_monsterdata(md), m_statsGrowth(growth), m_moveset(mvs)
+        {}
 
-    //    //
-    //    const PokeStats & GetStatsGrowth( uint8_t forlevel )const  { return m_statsGrowth.at(forlevel); }
+        //
+        uint32_t GetReqExp( uint8_t forlevel )const                { return m_statsGrowth.statsgrowth.at(forlevel).first; }
 
-    //    //Accessors
-    //    inline const std::string     & Name()const         { return m_name;        }
-    //    inline std::string           & Name()              { return m_name;        }
+        //
+        const PokeStats & GetStatsGrowth( uint8_t forlevel )const  { return m_statsGrowth.statsgrowth.at(forlevel).second; }
 
-    //    //inline const PokeMonsterData & MonsterData()const  { return m_monsterdata; }
-    //    //inline PokeMonsterData       & MonsterData()       { return m_monsterdata; }
+        //Accessors
+        inline const std::string     & Name()const         { return m_name;        }
+        inline std::string           & Name()              { return m_name;        }
 
-    //    inline const pkstcntner_t    & StatsGrowth()const  { return m_statsGrowth; }
-    //    inline pkstcntner_t          & StatsGrowth()       { return m_statsGrowth; }
+        inline const PokeMonsterData & MonsterData()const  { return m_monsterdata; }
+        inline PokeMonsterData       & MonsterData()       { return m_monsterdata; }
 
-    //    inline const expcurve_t      & ExpCurve()const     { return m_expCurve;    }
-    //    inline expcurve_t            & ExpCurve()          { return m_expCurve;    }
+        inline const PokeStatsGrowth & StatsGrowth()const  { return m_statsGrowth; }
+        inline PokeStatsGrowth       & StatsGrowth()       { return m_statsGrowth; }
 
-    //    inline const PokeMoveSet     & MoveSet()const      { return m_moveset;     }
-    //    inline PokeMoveSet           & MoveSet()           { return m_moveset;     }
+        inline const PokeMoveSet     & MoveSet()const      { return m_moveset;     }
+        inline PokeMoveSet           & MoveSet()           { return m_moveset;     }
 
-    //public:
-    //    //DEBUG
-    //    void DumpExpCurve  ( const std::string & filepath );
-    //    void DumpStatGrowth( const std::string & filepath );
-    //    void DumpMonData   ( const std::string & filepath );
-    //    void DumpMoveset   ( const std::string & filepath );
+    public:
+        ////DEBUG
+        //void DumpExpCurve  ( const std::string & filepath );
+        //void DumpStatGrowth( const std::string & filepath );
+        //void DumpMonData   ( const std::string & filepath );
+        //void DumpMoveset   ( const std::string & filepath );
 
-    //private:
-    //    //Internal data
-    //    std::string   m_name;
+    private:
+        //Internal data
+        std::string   m_name;
 
-    //private:
-
-    //    //PokeMonsterData m_monsterdata;    //#TODO: use the pokemon's ID to lookup in a separate vector, given several pokes could share data!
-    //    pkstcntner_t    m_statsGrowth;
-    //    expcurve_t      m_expCurve;
-    //    PokeMoveSet     m_moveset;
-    //};
+    private:
+        PokeMonsterData m_monsterdata;
+        PokeStatsGrowth m_statsGrowth;
+        PokeMoveSet     m_moveset;
+    };
 
 
 //======================================================================================================
 //  Functions
 //======================================================================================================
 
-    ///*
-    //    Export pokemon data to XML
-    //*/
-    //void ExportToXML( const CPokemon & src, const std::string & destfile );
+    /*
+        Export pokemon data to XML
+    */
+    void ExportToXML( const CPokemon & src, const std::string & destfile );
 
-    ///*
-    //    Export pokemon data to text file
-    //*/
-    //void ExportToText( const CPokemon & src, const std::string & destfile );
+    /*
+        Export pokemon data to text file
+    */
+    void ExportToText( const CPokemon & src, const std::string & destfile );
 
-    ///*
-    //    Import pokemon data from XML file
-    //*/
-    //void ImportFromXML( const std::string & srcfile, const CPokemon & dest );
+    /*
+        Import pokemon data from XML file
+    */
+    void ImportFromXML( const std::string & srcfile, const CPokemon & dest );
 
-    ///*
-    //    Import pokemon data from text file
-    //*/
-    //void ImportFromText( const std::string & srcfile, const CPokemon & dest );
+    /*
+        Import pokemon data from text file
+    */
+    void ImportFromText( const std::string & srcfile, const CPokemon & dest );
 
 };};
 

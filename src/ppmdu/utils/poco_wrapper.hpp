@@ -49,6 +49,12 @@ namespace utils
             or directory.
     ************************************************************************/
     bool pathExists( const std::string & inputpath );
+
+    /************************************************************************
+        getCWD
+            Return the absolute path to the current working directory!
+    ************************************************************************/
+    std::string getCWD();
 };
 
 #endif

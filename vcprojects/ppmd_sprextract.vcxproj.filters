@@ -43,9 +43,6 @@
     <Filter Include="Source Files\ppmdu\utility">
       <UniqueIdentifier>{c25f43c4-7a4a-4b65-82b9-c514756db7f9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pugixml">
-      <UniqueIdentifier>{884ce8be-47dd-46cf-9e4e-406aaf00633e}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -280,9 +277,6 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\sprite_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

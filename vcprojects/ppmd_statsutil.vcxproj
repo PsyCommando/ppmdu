@@ -80,12 +80,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\data formats</Filter>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -165,6 +167,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\wte.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -261,6 +264,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -414,7 +418,9 @@
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
     <Text Include="..\resources\pkmn_abilities.txt" />
+    <Text Include="..\resources\pkmn_iq.txt" />
     <Text Include="..\resources\pkmn_moves.txt" />
+    <Text Include="..\resources\pkmn_names.txt" />
     <Text Include="..\resources\pkmn_types.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

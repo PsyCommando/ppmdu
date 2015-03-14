@@ -28,11 +28,12 @@ and they're all isolated in the "libraries" subfolder !
 ----------------------------------------------------------------------------------------------------
 Special Thanks:
 ----------------------------------------------------------------------------------------------------
--> Many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
+-> Many, many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
 -> A big thanks to Nerketur for his help !
 -> A big thanks to TruePikachu for his help !
 -> A big thanks to Evandixon for his help !
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> Thanks to MNChino for helping with testing !
 -> ..and anyone else I may have forgotten about !
 
 ----------------------------------------------------------------------------------------------------
@@ -41,6 +42,8 @@ About:
 
 ** The data files pkmn_*.txt are there temporarily. Once we can properly find how to cross-reference 
    all that data with the game'strings file we'll get rid of those! **
+
+** Several of the pkmn_*.txt files were made using data collected by Jellynater, OgreGunner, and nhahtdh **
 
 ------------------------------
 --Random Uninteresting Fact--:

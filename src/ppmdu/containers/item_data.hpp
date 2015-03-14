@@ -80,27 +80,27 @@ namespace pmd2 { namespace stats
     /*
         Used to contain all item data for the entire PMD games.
     */
-    class ItemsDictionary
+    class ItemsDB
     {
         friend class ItemsXMLWriter;
         friend class ItemsXMLParser;
     public:
-        ItemsDictionary(){}
-        ItemsDictionary( std::size_t reservesize );
-        ~ItemsDictionary();
+        ItemsDB(){}
+        ItemsDB( std::size_t reservesize );
+        ~ItemsDB();
 
-        ItemsDictionary( const ItemsDictionary & other )
+        ItemsDB( const ItemsDB & other )
         {
             CopyCtor(other);
         }
 
-        ItemsDictionary& operator=( const ItemsDictionary & other )
+        ItemsDB& operator=( const ItemsDB & other )
         {
             CopyCtor(other);
             return *this;
         }
 
-        void CopyCtor( const ItemsDictionary & other )
+        void CopyCtor( const ItemsDB & other )
         {
             m_itemData.resize( other.m_itemData.size() );
 
@@ -127,8 +127,6 @@ namespace pmd2 { namespace stats
         void push_back( exclusiveitemdata && item );
 
     private:
-
-
         std::vector<std::unique_ptr<itemdata>> m_itemData;
     };
 

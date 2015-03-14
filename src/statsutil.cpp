@@ -2,6 +2,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/game_stats.hpp>
+#include <ppmdu/fmts/waza_p.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -323,23 +324,34 @@ int main( int argc, const char * argv[] )
     utils::MrChronometer chronoTester("Total time elapsed");
 
         //TESTING
-        cout <<"Loading monster.md..\n";
-        vector<pmd2::stats::PokeMonsterData> md;
-        pmd2::filetypes::ParsePokemonBaseData( "monster.md", md );
-        cout <<"Done\n";
+        //cout <<"Loading monster.md..\n";
+        //vector<pmd2::stats::PokeMonsterData> md;
+        //pmd2::filetypes::ParsePokemonBaseData( "monster.md", md );
+        //cout <<"Done\n";
 
-        cout <<"Writing new monster.md..\n";
-        pmd2::filetypes::WritePokemonBaseData( md, "newmonster.md" );
-        cout <<"Done\n";
+        //cout <<"Writing new monster.md..\n";
+        //pmd2::filetypes::WritePokemonBaseData( md, "newmonster.md" );
+        //cout <<"Done\n";
+
+        ////TESTING
+        //cout <<"Loading m_level.bin..\n";
+        //vector<pmd2::stats::PokeStatsGrowth> mlvl;
+        //pmd2::filetypes::ParseLevelGrowthData( "m_level.bin", mlvl );
+        //cout <<"Done\n";
+
+        //cout <<"Writing new m_level.bin..\n";
+        //pmd2::filetypes::WriteLevelGrowthData( mlvl, "newm_level.bin" );
+        //cout <<"Done\n";
 
         //TESTING
-        cout <<"Loading m_level.bin..\n";
-        vector<pmd2::stats::PokeStatsGrowth> mlvl;
-        pmd2::filetypes::ParseLevelGrowthData( "m_level.bin", mlvl );
+        cout <<"Loading waza_p.bin and waza_p2.bin..\n";
+        auto pairdata = pmd2::filetypes::ParseMoveAndLearnsets( "waza" );
         cout <<"Done\n";
 
-        cout <<"Writing new m_level.bin..\n";
-        pmd2::filetypes::WriteLevelGrowthData( mlvl, "newm_level.bin" );
+        cout <<"Writing new/waza_p.bin and new/waza_p2..\n";
+        Poco::File newdir("new");
+        newdir.createDirectory();
+        pmd2::filetypes::WriteMoveAndLearnsets( "new", pairdata.first, pairdata.second );
         cout <<"Done\n";
     }
     system("pause");

@@ -80,10 +80,10 @@ namespace pmd2{ namespace stats
         //void                          Pkmn( const std::vector<CPokemon> &  newdata ) { m_pokemonStats = newdata; }
 
         //Accessors 
-        const ItemsDictionary       & Items()const                                   { return m_itemsData; }
-        ItemsDictionary             & Items()                                        { return m_itemsData; }
-        void                          Items( ItemsDictionary       && newdata )      { m_itemsData = newdata; }
-        void                          Items( const ItemsDictionary &  newdata )      { m_itemsData = newdata; }
+        const ItemsDB       & Items()const                                   { return m_itemsData; }
+        ItemsDB             & Items()                                        { return m_itemsData; }
+        void                          Items( ItemsDB       && newdata )      { m_itemsData = newdata; }
+        void                          Items( const ItemsDB &  newdata )      { m_itemsData = newdata; }
 
         //Accessors
 
@@ -105,7 +105,7 @@ namespace pmd2{ namespace stats
     private:
         std::string           m_dataFolder;
         //std::vector<CPokemon> m_pokemonStats;
-        ItemsDictionary       m_itemsData;
+        ItemsDB       m_itemsData;
     };
 
 };};

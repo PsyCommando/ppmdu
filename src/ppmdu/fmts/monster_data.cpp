@@ -94,7 +94,7 @@ namespace pmd2 {namespace filetypes
             ParseVal( md.unk19 );
             ParseVal( md.unk20 );
             ParseVal( md.unk21 );
-            ParseVal( md.unk22 );
+            ParseVal( md.pkmnIndex );
             ParseVal( md.unk23 );
             ParseVal( md.unk24 );
             ParseVal( md.unk25 );
@@ -194,7 +194,7 @@ namespace pmd2 {namespace filetypes
             WriteVal( entry.unk19 );
             WriteVal( entry.unk20 );
             WriteVal( entry.unk21 );
-            WriteVal( entry.unk22 );
+            WriteVal( entry.pkmnIndex );
             WriteVal( entry.unk23 );
             WriteVal( entry.unk24 );
             WriteVal( entry.unk25 );

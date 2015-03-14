@@ -34,6 +34,7 @@ Special Thanks:
 -> A big thanks to TruePikachu for his help !
 -> A big thanks to Evandixon for his help !
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> Thanks to MNChino for helping with testing !
 -> ..and anyone else I may have forgotten about !
 
 ----------------------------------------------------------------------------------------------------
