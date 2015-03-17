@@ -100,4 +100,29 @@ namespace pmd2{ namespace stats
         m_items = utils::io::ReadTextFileLineByLine( ItemsPath );
     }
 
+//
+//  Functions
+//
+    //void ExportPokemonsToXML  ( const PokemonDB   & src, const std::string & destfile )
+    //{
+    //}
+    //
+    //PokemonDB ImportPokemonsFromXML( const std::string & srcfile )
+    //{
+    //}
+
+    ///*
+    //    Export pokemon data to XML
+    //*/
+    //void ExportPokemonToXML( const CPokemon & src, const std::string & destfile )
+    //{
+    //}
+
+    ///*
+    //    Import pokemon data from XML file
+    //*/
+    //CPokemon ImportPokemonFromXML( const std::string & srcfile )
+    //{
+    //}
+
 };};

@@ -313,6 +313,86 @@ namespace statsutil
 
 #include <ppmdu/fmts/m_level.hpp>
 #include <ppmdu/fmts/monster_data.hpp>
+#include <ppmdu/fmts/integer_encoding.hpp>
+#include <ppmdu/fmts/text_str.hpp>
+
+int TextStringExtractor( int argc, const char *argv[] )
+{
+    using namespace pmd2::filetypes;
+    {
+        utils::MrChronometer chronoTester("Total time elapsed");
+
+        //vector<string> text = ParseTextStrFile( argv[1] );
+        //WriteTextFileLineByLine(text, "out_strings.txt" );
+
+        vector<string> intext = ReadTextFileLineByLine("out_strings.txt");
+        WriteTextStrFile("newtext_e.str", intext );
+    }
+    return 0;
+}
+
+int Sir0Decoder( int argc, const char *argv[] )
+{
+    using namespace statsutil;
+    {
+        utils::MrChronometer chronoTester("Total time elapsed");
+        cout<<"Decoding..\n";
+        vector<uint8_t> encodedptrs = ReadFileToByteVector( argv[1] );
+        auto result = utils::DecodeIntegers<uint32_t>( encodedptrs.begin(), encodedptrs.end() );
+        cout<<"Done! Decoded " <<result.size() <<" values.\n";
+
+        uint32_t accumulator = 0;
+        for( const auto & val : result )
+        {
+            accumulator += val;
+            cout<<"0x"<<hex<<accumulator<<"\n";
+        }
+        cout<<dec<<"Done!\n";
+    }
+
+    return 0;
+}
+
+int IntegerDecoder( int argc, const char *argv[] )
+{
+    using namespace statsutil;
+    {
+        utils::MrChronometer chronoTester("Total time elapsed");
+        vector<uint8_t> encodedints = ReadFileToByteVector( argv[1] );
+        auto itRead = encodedints.begin();
+        auto itEnd  = encodedints.end();
+
+        auto itfindend = encodedints.begin();
+        //Exclude padding if neccessary
+        for( ; itfindend != itEnd; ++itfindend )
+        {
+            if( (*itfindend) == 0xAA && ( std::distance( itfindend, itEnd ) <= 15u ) && std::all_of( itfindend, itEnd, [](uint8_t val){return val == 0xAA;} ) )
+                break;
+        }
+        itEnd = itfindend;
+
+
+        unsigned int cnt = 0;
+        cout<<"Decoding integer lists..\n";
+        while( itRead != itEnd )
+        {
+            cout<<"List #" <<dec <<cnt <<"\n";
+        
+            vector<uint32_t> result; 
+            itRead = utils::DecodeIntegers( itRead, itEnd, back_inserter(result) );
+            cout<<"Has " <<result.size() <<" values.\n";
+
+            for( const auto & val : result )
+            {
+                cout<<"0x"<<uppercase<<hex<<val<<nouppercase<<"\n";
+            }
+            ++cnt;
+        }
+        cout<<dec<<"Done!\n";
+    }
+
+    return 0;
+}
 
 //#TODO: Move the main function somewhere else !
 int main( int argc, const char * argv[] )
@@ -320,8 +400,9 @@ int main( int argc, const char * argv[] )
     using namespace statsutil;
     //CStatsUtil & application = CStatsUtil::GetInstance();
     //return application.Main(argc,argv);
+    try
     {
-    utils::MrChronometer chronoTester("Total time elapsed");
+        //utils::MrChronometer chronoTester("Total time elapsed");
 
         //TESTING
         //cout <<"Loading monster.md..\n";
@@ -344,17 +425,24 @@ int main( int argc, const char * argv[] )
         //cout <<"Done\n";
 
         //TESTING
-        cout <<"Loading waza_p.bin and waza_p2.bin..\n";
-        auto pairdata = pmd2::filetypes::ParseMoveAndLearnsets( "waza" );
-        cout <<"Done\n";
+        //cout <<"Loading waza_p.bin and waza_p2.bin..\n";
+        //auto pairdata = pmd2::filetypes::ParseMoveAndLearnsets( "waza" );
+        //cout <<"Done\n";
 
-        cout <<"Writing new/waza_p.bin and new/waza_p2..\n";
-        Poco::File newdir("new");
-        newdir.createDirectory();
-        pmd2::filetypes::WriteMoveAndLearnsets( "new", pairdata.first, pairdata.second );
-        cout <<"Done\n";
+        //cout <<"Writing new/waza_p.bin and new/waza_p2..\n";
+        //Poco::File newdir("new");
+        //newdir.createDirectory();
+        //pmd2::filetypes::WriteMoveAndLearnsets( "new", pairdata.first, pairdata.second );
+        //cout <<"Done\n";
+
+        TextStringExtractor(argc,argv);
     }
-    system("pause");
+    catch( exception & e )
+    {
+        cout<< "<!>-ERROR:" <<e.what()<<"\n"
+            << "If you get this particular error output, it means an exception got through, and the programer should be notified!\n";
+    }
+    //system("pause");
 
     return 0;
 }

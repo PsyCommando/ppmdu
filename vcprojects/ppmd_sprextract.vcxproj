@@ -35,6 +35,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">EasyBMP</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\data formats</Filter>

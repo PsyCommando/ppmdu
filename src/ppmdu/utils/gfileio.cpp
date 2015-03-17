@@ -56,7 +56,7 @@ namespace utils{ namespace io
         outputfile.write(reinterpret_cast<const char*>(filedata.data()), filedata.size());
     }
 
-    std::vector<std::string> ReadTextFileLineByLine( const std::string & filepath )
+    std::vector<std::string> ReadTextFileLineByLine( const std::string & filepath, const std::locale & txtloc )
     {
         vector<string> stringlist;
         ifstream       strfile( filepath );
@@ -68,6 +68,7 @@ namespace utils{ namespace io
                  << filepath;
             throw runtime_error(strs.str());
         }
+        strfile.imbue(txtloc);
 
         while( !strfile.eof() && !strfile.bad() )
         {
@@ -79,9 +80,10 @@ namespace utils{ namespace io
         return std::move(stringlist);
     }
 
-    void WriteTextFileLineByLine( const std::vector<std::string> & data, const std::string & filepath )
+    void WriteTextFileLineByLine( const std::vector<std::string> & data, const std::string & filepath, const std::locale & txtloc )
     {
-        ofstream output(filepath);
+        static const char EOL = '\n';
+        ofstream output( filepath/*, std::ios::binary*/ );
 
         if( !( output.good() && output.is_open() ) )
         {
@@ -90,9 +92,14 @@ namespace utils{ namespace io
                  << filepath;
             throw runtime_error(strs.str());
         }
+        output.imbue(txtloc);
 
         for( const auto & entry : data )
-            output << entry << "\n";
+        {
+            //output.write( entry.c_str(), entry.size() + 1 );
+            //output.write( &EOL, 1 );
+            output << entry <<"\n";
+        }
     }
 
 

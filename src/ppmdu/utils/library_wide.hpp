@@ -9,6 +9,7 @@ Description:
     Basically, a form of clean "globals" !
 */
 #include <ppmdu/basetypes.hpp>
+#include<locale>
 
 namespace utils
 {

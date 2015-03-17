@@ -43,7 +43,7 @@
     <Filter Include="Header Files\ppmdu\utility">
       <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pugixml">
+    <Filter Include="Source Files\pugixml">
       <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -157,7 +157,7 @@
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
+      <Filter>Source Files\pugixml</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>

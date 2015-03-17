@@ -225,14 +225,19 @@ namespace utils
         while( itbeg != itend )
         {
             val_ty value = 0;
-            value = DecodeAnInteger<val_ty>( itbeg, itend );
-            if( value != 0 )
+
+            //If we're on a byte sequence that begin with zero, don't bother!
+            if( (*itbeg) != 0 )
             {
+            value = DecodeAnInteger<val_ty>( itbeg, itend );
+            //if( value != 0 )
+            //{
                 (*itout) = value;
                 ++itout;
             }
             else
             {
+            ++itbeg;
                 wasNullTerminated = true;
                 break;  //Stop when we hit the ending 0 !
             }

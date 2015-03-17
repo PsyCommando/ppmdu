@@ -1,4 +1,4 @@
-NONE
+None
 Normal
 Fire
 Water
@@ -16,4 +16,4 @@ Ghost
 Dragon
 Dark
 Steel
-?
+Neutral

@@ -89,35 +89,6 @@ namespace pmd2 { namespace stats
         { return ( HP == 0 && Atk == 0 && SpA == 0 && Def == 0 && SpD == 0 ); }
 
         static const unsigned int DataLen = 6; //bytes
-
-        //#TODO: this is implementation specific, gotta move this out.
-        ////
-        //template<class _outit>
-        //    _outit WriteToContainer( _outit itwriteto )const
-        //{
-        //    itwriteto = utils::WriteIntToByteVector( HP,  itwriteto ); 
-        //    //Attack first
-        //    itwriteto = utils::WriteIntToByteVector( Atk, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( SpA, itwriteto );
-        //    //Defense last
-        //    itwriteto = utils::WriteIntToByteVector( Def, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( SpD, itwriteto ); 
-        //    return itwriteto;
-        //}
-
-        ////
-        //template<class _init>
-        //    _init ReadFromContainer(  _init itReadfrom )
-        //{
-        //    HP  = utils::ReadIntFromByteVector<decltype(HP)> (itReadfrom); //iterator is incremented
-        //    //Attack first
-        //    Atk = utils::ReadIntFromByteVector<decltype(Atk)>(itReadfrom); //iterator is incremented
-        //    SpA = utils::ReadIntFromByteVector<decltype(SpA)>(itReadfrom); //iterator is incremented
-        //    //Defense last
-        //    Def = utils::ReadIntFromByteVector<decltype(Def)>(itReadfrom); //iterator is incremented
-        //    SpD = utils::ReadIntFromByteVector<decltype(SpD)>(itReadfrom); //iterator is incremented
-        //    return itReadfrom;
-        //}
     };
 
     /*
@@ -150,29 +121,6 @@ namespace pmd2 { namespace stats
 
         inline bool isNull()const
         { return ( preEvoIndex == 0 && evoMethod == 0 && evoParam1 == 0 && evoParam2 == 0 ); }
-
-
-        ////#TODO: this is implementation specific, gotta move this out.
-        //template<class _outit>
-        //    _outit WriteToContainer( _outit itwriteto )const
-        //{
-        //    itwriteto = utils::WriteIntToByteVector( preEvo_ID, itwriteto ); //Force this, to avoid bad surprises
-        //    itwriteto = utils::WriteIntToByteVector( evoMethod, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( evoParam1, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( evoParam2, itwriteto ); //Force this, to avoid bad surprises
-        //    return itwriteto;
-        //}
-
-        ////Reading the magic number, and endzero value is solely for validating on read.
-        //template<class _init>
-        //    _init ReadFromContainer(  _init itReadfrom )
-        //{
-        //    preEvo_ID = utils::ReadIntFromByteVector<decltype(preEvo_ID)>(itReadfrom); //iterator is incremented
-        //    evoMethod = utils::ReadIntFromByteVector<decltype(evoMethod)>(itReadfrom); //iterator is incremented
-        //    evoParam1 = utils::ReadIntFromByteVector<decltype(evoParam1)>(itReadfrom); //iterator is incremented
-        //    evoParam2 = utils::ReadIntFromByteVector<decltype(evoParam2)>(itReadfrom); //iterator is incremented
-        //    return itReadfrom;
-        //}
     };
 
     /*
@@ -210,7 +158,7 @@ namespace pmd2 { namespace stats
         uint8_t       unk19           = 0;
         uint8_t       unk20           = 0;
         uint16_t      unk21           = 0;
-        uint16_t      pkmnIndex       = 0;
+        uint16_t      pkmnIndex       = 0;  //This might refer to this pokemon's moveset data index
         uint16_t      unk23           = 0;
         uint16_t      unk24           = 0;
         uint16_t      unk25           = 0;
@@ -306,6 +254,12 @@ namespace pmd2 { namespace stats
     /*************************************************************************************
         CPokemon
             Storage for pokemon statistics.
+
+            MoveSets    : 553
+            StatsGrowth : 571
+            MonsterMD   : 1,155
+            Kaomado     : 1,155
+
     *************************************************************************************/
     class CPokemon
     {
@@ -352,7 +306,7 @@ namespace pmd2 { namespace stats
 
     private:
         //Internal data
-        std::string   m_name;
+        std::string     m_name;
 
     private:
         PokeMonsterData m_monsterdata;
@@ -361,29 +315,61 @@ namespace pmd2 { namespace stats
     };
 
 
+    /*************************************************************************************
+        PokemonDB
+            A storage class for containing all pokemon's data.
+
+    *************************************************************************************/
+    class PokemonDB
+    {
+    public:
+
+        /*
+            From the 3 containers builds a list of pokemons!
+        */
+        void BuildDB( std::vector<PokeMonsterData> && md, 
+                      std::vector<PokeMoveSet>     && movesets, 
+                      std::vector<PokeStatsGrowth> && growth );
+
+        inline const CPokemon & operator[]( uint16_t index )const { return m_pkmn[index]; }
+        inline       CPokemon & operator[]( uint16_t index )      { return m_pkmn[index]; }
+        inline std::size_t      size()const                       { return m_pkmn.size(); }
+        inline bool             empty()const                      { return m_pkmn.empty(); }
+
+        inline const std::vector<CPokemon> & Pkmn()const          { return m_pkmn; }
+        inline       std::vector<CPokemon> & Pkmn()               { return m_pkmn; }
+
+    private:
+        std::vector<CPokemon> m_pkmn;
+    };
+
+
 //======================================================================================================
 //  Functions
 //======================================================================================================
 
+    void      ExportPokemonsToXML  ( const PokemonDB   & src, const std::string & destfile );
+    PokemonDB ImportPokemonsFromXML( const std::string & srcfile );
+
     /*
         Export pokemon data to XML
     */
-    void ExportToXML( const CPokemon & src, const std::string & destfile );
+    void ExportPokemonToXML( const CPokemon & src, const std::string & destfile );
 
     /*
         Export pokemon data to text file
     */
-    void ExportToText( const CPokemon & src, const std::string & destfile );
+    //void ExportPokemonToText( const CPokemon & src, const std::string & destfile );
 
     /*
         Import pokemon data from XML file
     */
-    void ImportFromXML( const std::string & srcfile, const CPokemon & dest );
+    CPokemon ImportPokemonFromXML( const std::string & srcfile );
 
     /*
         Import pokemon data from text file
     */
-    void ImportFromText( const std::string & srcfile, const CPokemon & dest );
+    //CPokemon ImportPokemonFromText( const std::string & srcfile );
 
 };};
 

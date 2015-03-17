@@ -241,19 +241,38 @@ namespace utils
     template<class _init> 
         _init WriteStrToByteContainer( _init itwhere, const char * str, size_t strl )
     {
-        static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        //#FIXME: The static assert below is broken with non-backinsert iterators
+        //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        
         return std::copy_n( reinterpret_cast<const typename _init::container_type::value_type*>(str), strl,  itwhere );
         //for( unsigned int i = 0; i < strl; ++i, ++itwhere )
-        //    itwhere = static_cast<uint8_t>(str[i]);
+        //{
+        //    if( isalnum( str[i] ) )
+        //        itwhere = static_cast<uint8_t>(str[i]);
+        //    else 
+        //    {
+        //        //For non-ASCII characters, write them as an 
+        //    }
+        //}
     }
 
     /*
         WriteStrToByteContainer
+            Write a std::string as a null-terminated string into a byte container!
+
+            If is the string has only a \0 character, only that character will be written!
     */
     template<class _init> 
         _init WriteStrToByteContainer( _init itwhere, const std::string & str )
     {
-        return WriteStrToByteContainer( itwhere, str.c_str(), str.size() + 1 );
+        //if( str.empty() )
+        //{
+        //    (*itwhere) = '\0';
+        //    ++itwhere;
+        //    return itwhere;
+        //}
+        //else
+            return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
     }
 
 //===============================================================================
