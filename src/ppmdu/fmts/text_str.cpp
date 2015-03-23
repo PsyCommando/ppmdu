@@ -13,6 +13,11 @@ using namespace std;
 
 namespace pmd2 { namespace filetypes
 {
+//
+//  Constants 
+//
+    static const string SpecialCharSequ_MusicNote = "\0x81\0xF4";
+    static const char   SpecialChar_MusicNoteEnd  = '\0xF4';
 
 //============================================================================================
 //  Loader
@@ -110,15 +115,26 @@ namespace pmd2 { namespace filetypes
                 for( unsigned int cntc = 0; cntc < len; ++cntc )
                 {
                     char c = ptrstr[cntc];
-                    if( std::isprint( c, m_locale) )
+                    if( std::isprint( c, m_locale) )    //Check if we need to replace the character with an escaped char
                         out << c;
-                    else if( c == '\n' )
-                        out << "\\n";
                     else
                     {
-                        //If non alpha-numeric, write as an escaped value!
-                        uint8_t thebyte = *(m_filedata.data() + (m_ptrTable[i]+cntc));
-                        out <<'\\' << static_cast<unsigned short>( thebyte );
+                        switch(c)
+                        {
+                            case '\n':
+                            {
+                                out << "\\n";
+                                break;
+                            }
+                            //Check for the last character for the music note symbol, and make sure its replaced with an escape sequence
+                            case SpecialChar_MusicNoteEnd: 
+                            default:
+                            {
+                                //If non alpha-numeric, write as an escaped value!
+                                uint8_t thebyte = *(m_filedata.data() + (m_ptrTable[i]+cntc));
+                                out <<'\\' << static_cast<unsigned short>( thebyte );
+                            }
+                        };
                     }
                 }
 

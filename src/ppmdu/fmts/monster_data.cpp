@@ -62,43 +62,45 @@ namespace pmd2 {namespace filetypes
             PokeMonsterData md;
 
             ParseVal( md.pokeID );
-            ParseVal( md.categoryIndex );
-            ParseVal( md.natPkdexNb2 );
-            ParseVal( md.unk1 );
+            ParseVal( md.mdunk31 );
+            ParseVal( md.natPkdexNb );
+            ParseVal( md.mdunk1 );
             ParseVal( md.evoData.preEvoIndex );
             ParseVal( md.evoData.evoMethod );
             ParseVal( md.evoData.evoParam1 );
             ParseVal( md.evoData.evoParam2 );
             ParseVal( md.spriteIndex );
-            ParseVal( md.genderType );
+            ParseVal( md.gender );
             ParseVal( md.bodySize );
             ParseVal( md.primaryTy );
             ParseVal( md.secondaryTy );
-            ParseVal( md.unk8 );
+            ParseVal( md.moveTy );
             ParseVal( md.IQGrp );
             ParseVal( md.primAbility );
             ParseVal( md.secAbility );
-            ParseVal( md.unk11 );
-            ParseVal( md.unk12 );
-            ParseVal( md.unk13 );
+            ParseVal( md.bitflags1 );
+            ParseVal( md.expYield );
+            ParseVal( md.recruitRate1 );
             ParseVal( md.baseHP );
-            ParseVal( md.unk14 );
+            ParseVal( md.recruitRate2 );
             ParseVal( md.baseAtk );
             ParseVal( md.baseSpAtk );
             ParseVal( md.baseDef );
             ParseVal( md.baseSpDef );
-            ParseVal( md.unk15 );
-            ParseVal( md.unk16 );
-            ParseVal( md.unk17 );
-            ParseVal( md.unk18 );
-            ParseVal( md.unk19 );
-            ParseVal( md.unk20 );
-            ParseVal( md.unk21 );
-            ParseVal( md.pkmnIndex );
-            ParseVal( md.unk23 );
-            ParseVal( md.unk24 );
-            ParseVal( md.unk25 );
-            ParseVal( md.unk26 );
+            ParseVal( md.weight );
+            ParseVal( md.size );
+            ParseVal( md.mdunk17 );
+            ParseVal( md.mdunk18 );
+            ParseVal( md.mdunk19 );
+            ParseVal( md.mdunk20 );
+            ParseVal( md.mdunk21 );
+            ParseVal( md.BasePkmn );
+
+            ParseVal( md.exclusiveItems[0] );
+            ParseVal( md.exclusiveItems[1] );
+            ParseVal( md.exclusiveItems[2] );
+            ParseVal( md.exclusiveItems[3] );
+
             ParseVal( md.unk27 );
             ParseVal( md.unk28 );
             ParseVal( md.unk29 );
@@ -159,50 +161,52 @@ namespace pmd2 {namespace filetypes
                 WriteEntry(entry);
         }
 
-        void WriteEntry( const stats::PokeMonsterData & entry )
+        void WriteEntry( const stats::PokeMonsterData & md )
         {
-            WriteVal( entry.pokeID );
-            WriteVal( entry.categoryIndex );
-            WriteVal( entry.natPkdexNb2 );
-            WriteVal( entry.unk1 );
-            WriteVal( entry.evoData.preEvoIndex );
-            WriteVal( entry.evoData.evoMethod );
-            WriteVal( entry.evoData.evoParam1 );
-            WriteVal( entry.evoData.evoParam2 );
-            WriteVal( entry.spriteIndex );
-            WriteVal( entry.genderType );
-            WriteVal( entry.bodySize );
-            WriteVal( entry.primaryTy );
-            WriteVal( entry.secondaryTy );
-            WriteVal( entry.unk8 );
-            WriteVal( entry.IQGrp );
-            WriteVal( entry.primAbility );
-            WriteVal( entry.secAbility );
-            WriteVal( entry.unk11 );
-            WriteVal( entry.unk12 );
-            WriteVal( entry.unk13 );
-            WriteVal( entry.baseHP );
-            WriteVal( entry.unk14 );
-            WriteVal( entry.baseAtk );
-            WriteVal( entry.baseSpAtk );
-            WriteVal( entry.baseDef );
-            WriteVal( entry.baseSpDef );
-            WriteVal( entry.unk15 );
-            WriteVal( entry.unk16 );
-            WriteVal( entry.unk17 );
-            WriteVal( entry.unk18 );
-            WriteVal( entry.unk19 );
-            WriteVal( entry.unk20 );
-            WriteVal( entry.unk21 );
-            WriteVal( entry.pkmnIndex );
-            WriteVal( entry.unk23 );
-            WriteVal( entry.unk24 );
-            WriteVal( entry.unk25 );
-            WriteVal( entry.unk26 );
-            WriteVal( entry.unk27 );
-            WriteVal( entry.unk28 );
-            WriteVal( entry.unk29 );
-            WriteVal( entry.unk30 );
+            WriteVal( md.pokeID );
+            WriteVal( md.mdunk31 );
+            WriteVal( md.natPkdexNb );
+            WriteVal( md.mdunk1 );
+            WriteVal( md.evoData.preEvoIndex );
+            WriteVal( md.evoData.evoMethod );
+            WriteVal( md.evoData.evoParam1 );
+            WriteVal( md.evoData.evoParam2 );
+            WriteVal( md.spriteIndex );
+            WriteVal( md.gender );
+            WriteVal( md.bodySize );
+            WriteVal( md.primaryTy );
+            WriteVal( md.secondaryTy );
+            WriteVal( md.moveTy );
+            WriteVal( md.IQGrp );
+            WriteVal( md.primAbility );
+            WriteVal( md.secAbility );
+            WriteVal( md.bitflags1 );
+            WriteVal( md.expYield );
+            WriteVal( md.recruitRate1 );
+            WriteVal( md.baseHP );
+            WriteVal( md.recruitRate2 );
+            WriteVal( md.baseAtk );
+            WriteVal( md.baseSpAtk );
+            WriteVal( md.baseDef );
+            WriteVal( md.baseSpDef );
+            WriteVal( md.weight );
+            WriteVal( md.size );
+            WriteVal( md.mdunk17 );
+            WriteVal( md.mdunk18 );
+            WriteVal( md.mdunk19 );
+            WriteVal( md.mdunk20 );
+            WriteVal( md.mdunk21 );
+            WriteVal( md.BasePkmn );
+
+            WriteVal( md.exclusiveItems[0] );
+            WriteVal( md.exclusiveItems[1] );
+            WriteVal( md.exclusiveItems[2] );
+            WriteVal( md.exclusiveItems[3] );
+
+            WriteVal( md.unk27 );
+            WriteVal( md.unk28 );
+            WriteVal( md.unk29 );
+            WriteVal( md.unk30 );
         }
 
         template<class T>
@@ -229,6 +233,13 @@ namespace pmd2 {namespace filetypes
     {
         MonsterMdParser( utils::io::ReadFileToByteVector(inpath) ).Parse(out_pkmdat);
         return out_pkmdat;
+    }
+
+    std::vector<stats::PokeMonsterData> ParsePokemonBaseData( const std::string & inpath )
+    {
+        vector<stats::PokeMonsterData> out;
+        MonsterMdParser( utils::io::ReadFileToByteVector(inpath) ).Parse(out);
+        return std::move(out);
     }
 
     /*

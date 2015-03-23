@@ -17,6 +17,8 @@ namespace pmd2 {namespace filetypes
 //
 //  Constants
 //
+    static const std::string ItemData_FName          = "item_p.bin";
+    static const std::string ExclusiveItemData_FName = "item_s_p.bin";
 
 //
 //  Functions
@@ -24,14 +26,14 @@ namespace pmd2 {namespace filetypes
     /*
         * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
     */
-    stats::ItemsDictionary ParseItemsData( const std::string & pathItemsdat );
+    stats::ItemsDB ParseItemsData( const std::string & pathBalanceDir );
 
     /*
         * pathItemsdat: The directory where the itemdata will be outputed to, in the form of at least a item_p.bin 
                         and, if there are any PMD:EoS items, possibly also an item_s_p.bin.
         * itemdata    : The item data to write the output files from.
     */
-    void WriteItemsData( const std::string & pathItemsdat, const stats::ItemsDictionary & itemdata );
+    void WriteItemsData( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata );
 
 };};
 

@@ -279,27 +279,27 @@ namespace pmd2 { namespace filetypes
         {
             MoveData md;
 
-            ReadValue( md.unk1,   itRead );
-            ReadValue( md.unk2,   itRead );
-            ReadValue( md.unk3,   itRead );
-            ReadValue( md.unk4,   itRead );
-            ReadValue( md.unk5,   itRead );
-            ReadValue( md.basePP, itRead );
-            ReadValue( md.unk6,   itRead );
-            ReadValue( md.unk7,   itRead );
-            ReadValue( md.unk8,   itRead );
-            ReadValue( md.unk9,   itRead );
-            ReadValue( md.unk10,  itRead );
-            ReadValue( md.unk11,  itRead );
-            ReadValue( md.unk12,  itRead );
-            ReadValue( md.unk13,  itRead );
-            ReadValue( md.unk14,  itRead );
-            ReadValue( md.unk15,  itRead );
-            ReadValue( md.unk16,  itRead );
-            ReadValue( md.unk17,  itRead );
-            ReadValue( md.unk18,  itRead );
-            ReadValue( md.moveID, itRead );
-            ReadValue( md.unk19,  itRead );
+            ReadValue( md.basePower, itRead );
+            ReadValue( md.type,      itRead );
+            ReadValue( md.unk3,      itRead );
+            ReadValue( md.unk4,      itRead );
+            ReadValue( md.unk5,      itRead );
+            ReadValue( md.basePP,    itRead );
+            ReadValue( md.unk6,      itRead );
+            ReadValue( md.unk7,      itRead );
+            ReadValue( md.accuracy,  itRead );
+            ReadValue( md.unk9,      itRead );
+            ReadValue( md.unk10,     itRead );
+            ReadValue( md.unk11,     itRead );
+            ReadValue( md.unk12,     itRead );
+            ReadValue( md.unk13,     itRead );
+            ReadValue( md.unk14,     itRead );
+            ReadValue( md.unk15,     itRead );
+            ReadValue( md.unk16,     itRead );
+            ReadValue( md.unk17,     itRead );
+            ReadValue( md.unk18,     itRead );
+            ReadValue( md.moveID,    itRead );
+            ReadValue( md.unk19,     itRead );
 
             return std::move(md);
         }
@@ -456,15 +456,15 @@ namespace pmd2 { namespace filetypes
 
         void WriteAMove( const MoveData & md )
         {
-            WriteValue( md.unk1 );
-            WriteValue( md.unk2 );
+            WriteValue( md.basePower );
+            WriteValue( md.type );
             WriteValue( md.unk3 );
             WriteValue( md.unk4 );
             WriteValue( md.unk5 );
             WriteValue( md.basePP );
             WriteValue( md.unk6 );
             WriteValue( md.unk7 );
-            WriteValue( md.unk8 );
+            WriteValue( md.accuracy );
             WriteValue( md.unk9 );
             WriteValue( md.unk10 );
             WriteValue( md.unk11 );
@@ -551,9 +551,9 @@ namespace pmd2 { namespace filetypes
             return make_pair( std::move(wazadata), vector<uint8_t>() );
     }
 
-    combinedlvlupmovesets_t ParsePokemonLearnSets( const std::string & pathOfBalanceDir )
+    pokeMvSets_t ParsePokemonLearnSets( const std::string & pathOfBalanceDir )
     {
-        combinedlvlupmovesets_t result;
+        pokeMvSets_t result;
         clog << "Parsing pokemon learnsets..\n";
 
         auto wazadata = LoadWazaData(pathOfBalanceDir);
@@ -577,12 +577,12 @@ namespace pmd2 { namespace filetypes
         return WazaParser(waza_pData).ParseLearnset();
     }
     
-    combinedlvlupmovesets_t ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData, 
+    pokeMvSets_t ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData, 
                                                    const std::vector<uint8_t> & waza_p2Data )
     {
         WazaParser Waza1(waza_pData);
         WazaParser Waza2(waza_p2Data);
-        return combinedlvlupmovesets_t{ Waza1.ParseLearnset(), Waza2.ParseLearnset() };
+        return pokeMvSets_t{ Waza1.ParseLearnset(), Waza2.ParseLearnset() };
     }
 
     /*
@@ -627,7 +627,7 @@ namespace pmd2 { namespace filetypes
         ParseMoveAndLearnsets
             Parse both the above at the same time.
     */
-    std::pair<combinedmovedat_t,combinedlvlupmovesets_t> ParseMoveAndLearnsets( const std::string & pathOfBalanceDir )
+    std::pair<combinedmovedat_t,pokeMvSets_t> ParseMoveAndLearnsets( const std::string & pathOfBalanceDir )
     {
         return make_pair( ParseMoveData(pathOfBalanceDir), ParsePokemonLearnSets(pathOfBalanceDir) );
     }
@@ -640,7 +640,7 @@ namespace pmd2 { namespace filetypes
     */
     void WriteMoveAndLearnsets( const std::string                            & pathOutBalanceDir,
                                 const std::pair<stats::MoveDB,stats::MoveDB> & movedata, 
-                                const combinedlvlupmovesets_t                & lvlupmvset )
+                                const pokeMvSets_t                & lvlupmvset )
     {
         if( !utils::isFolder(pathOutBalanceDir) )
         {

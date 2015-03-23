@@ -193,7 +193,7 @@ namespace gfx_util
     */
     inline bool IsFolderASpriteFolder( std::string path )
     {
-        return AreReqFilesPresent_Sprite( utils::ListDirContent_FilesAndDirectories( path, true ) );
+        return AreReqFilesPresent_Sprite( utils::ListDirContent_FilesAndDirs( path, true ) );
     }
 
 //=================================================================================================
@@ -1065,7 +1065,7 @@ namespace gfx_util
             }
             
             //Otherwise, analyse the content of the folder!
-            vector<string> folderContent = utils::ListDirContent_FilesAndDirectories( theinput.path(), true );
+            vector<string> folderContent = utils::ListDirContent_FilesAndDirs( theinput.path(), true );
 
             if( AreReqFilesPresent_Sprite( folderContent ) )
             {

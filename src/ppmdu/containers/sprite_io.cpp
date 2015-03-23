@@ -66,7 +66,7 @@ namespace pmd2{ namespace graphics
     **************************************************************/
     bool AreReqFilesPresent_Sprite( const std::string & dirpath )
     {
-        vector<string> dircontent = utils::ListDirContent_FilesAndDirectories( dirpath, true );
+        vector<string> dircontent = utils::ListDirContent_FilesAndDirs( dirpath, true );
         return AreReqFilesPresent_Sprite(dircontent);
     }
 
@@ -91,7 +91,7 @@ namespace pmd2{ namespace graphics
     **************************************************************/
     std::vector<string> GetMissingRequiredFiles_Sprite( const std::string & dirpath )
     {
-        vector<string> dircontent = utils::ListDirContent_FilesAndDirectories( dirpath, true );
+        vector<string> dircontent = utils::ListDirContent_FilesAndDirs( dirpath, true );
         return GetMissingRequiredFiles_Sprite( dircontent );
     }
 

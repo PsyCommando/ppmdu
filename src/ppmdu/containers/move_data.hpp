@@ -12,34 +12,34 @@ Description:
 
 namespace pmd2{ namespace stats
 {
-    static const unsigned int NbMoves_EoS = 559; 
+    static const unsigned int NbMoves_EoS = 559; //Nb of moves stored by default in PMD2 Explorers of Sky
 
 //
 //
 //
     struct MoveData
     {
-        uint16_t unk1   = 0;
-        uint8_t  unk2   = 0;
-        uint8_t  unk3   = 0;
-        uint16_t unk4   = 0;
-        uint16_t unk5   = 0;
-        uint8_t  basePP = 0;
-        uint8_t  unk6   = 0;
-        uint8_t  unk7   = 0;
-        uint8_t  unk8   = 0;
-        uint8_t  unk9   = 0;
-        uint8_t  unk10  = 0;
-        uint8_t  unk11  = 0;
-        uint8_t  unk12  = 0;
-        uint8_t  unk13  = 0;
-        uint8_t  unk14  = 0;
-        uint8_t  unk15  = 0;
-        uint8_t  unk16  = 0;
-        uint8_t  unk17  = 0;
-        uint8_t  unk18  = 0;
-        uint16_t moveID = 0;
-        uint16_t unk19  = 0;
+        int16_t  basePower = 0;
+        uint8_t  type      = 0;
+        uint8_t  unk3      = 0;
+        uint16_t unk4      = 0;
+        uint16_t unk5      = 0;
+        uint8_t  basePP    = 0;
+        uint8_t  unk6      = 0;
+        uint8_t  unk7      = 0;
+        uint8_t  accuracy  = 0;
+        uint8_t  unk9      = 0;
+        uint8_t  unk10     = 0;
+        uint8_t  unk11     = 0;
+        uint8_t  unk12     = 0;
+        uint8_t  unk13     = 0;
+        uint8_t  unk14     = 0;
+        uint8_t  unk15     = 0;
+        uint8_t  unk16     = 0;
+        uint8_t  unk17     = 0;
+        uint8_t  unk18     = 0;
+        uint16_t moveID    = 0;
+        uint16_t unk19     = 0;
 
         static const unsigned int DataLen = 26; //bytes
     };
@@ -64,10 +64,7 @@ namespace pmd2{ namespace stats
         inline const MoveData & operator[]( uint16_t index )const { return m_movesData[index]; }
         inline       MoveData & operator[]( uint16_t index )      { return m_movesData[index]; }
 
-        void push_back( MoveData && move )
-        {
-            m_movesData.push_back( move );
-        }
+        inline void push_back( MoveData && move )                 { m_movesData.push_back( move ); }
 
     private:
         std::vector<MoveData> m_movesData;

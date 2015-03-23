@@ -14,7 +14,8 @@ Description:
 
 namespace pmd2 { namespace filetypes
 {
-    static const uint32_t MonsterMD_DefNBPokemons = 1155; //0x483
+    static const uint32_t    MonsterMD_DefNBPokemons = 1155; //0x483
+    static const std::string MonsterMD_FName         = "monster.md";
 
 //==========================================================================================
 //  monster.md header
@@ -58,6 +59,8 @@ namespace pmd2 { namespace filetypes
     */
     std::vector<stats::PokeMonsterData> & ParsePokemonBaseData( const std::string                   & inpath, 
                                                                 std::vector<stats::PokeMonsterData> & out_pkmdat );
+
+    std::vector<stats::PokeMonsterData>   ParsePokemonBaseData( const std::string                   & inpath );
 
     /*
     */

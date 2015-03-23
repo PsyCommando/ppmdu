@@ -16,14 +16,14 @@ namespace utils
     // ---------------------------------------------------------------
 
     /************************************************************************
-        ListDirContent_FilesAndDirectories
+        ListDirContent_FilesAndDirs
             Write a list of all the files and folders in the directory 
             specified.
 
             -bFilenameOnly : If set to true, returns only the filename, 
                              not the complete path!
     ************************************************************************/
-    std::vector<std::string> ListDirContent_FilesAndDirectories( const std::string & dirpath, bool bFilenameOnly = false );
+    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly = false );
 
     /************************************************************************
         DoCreateDirectory

@@ -9,8 +9,10 @@ Description:
 */
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <ppmdu/containers/item_data.hpp>
+#include <ppmdu/containers/move_data.hpp>
 #include <string>
 #include <vector>
+#include <map>
 
 namespace pmd2{ namespace stats
 { 
@@ -36,6 +38,16 @@ namespace pmd2{ namespace stats
     //    MovesStats,
     //    ItemsStats,
     //};
+
+    /*
+    */
+    enum struct eGameVersion
+    {
+        Invalid,
+        EoS,    //Explorers of Sky
+        EoTEoD, //Explorers of Time/Darkness
+        NBGameVers,
+    };
 
 //==================================================================================
 //  Functions
@@ -63,15 +75,74 @@ namespace pmd2{ namespace stats
 //  Classes
 //==================================================================================
 
+    /*
+        Loads the list of game language and the locale strings that go with it.
+    */
+    class GameLanguageLoader
+    {
+        friend class GameLangXMLParser;
+    public:
+        //static const GameLanguageLoader & GetInstance( const std::string & langFilePath );
+
+        GameLanguageLoader( const std::string & textFileName, eGameVersion version );
+
+        /*
+            Using the name of the text_*.str file, this will return the corresponding
+            locale string parsed!
+        */
+        std::string              FindLocaleString  ( const std::string & textFileName )const;
+
+        /*
+            Return the language associated with a given text_*.str file.
+        */
+        std::string              FindLanguage      ( const std::string & textFileName )const;
+
+        /*
+            Return the name of the text_*.str file associated with the specified language.
+        */
+        std::string              FindTextStrFName  ( const std::string & language     )const;
+
+        /*
+            For a given string block name inside the text_*.str file, returns whether the 
+            block was found, and the index of the first string in that block. The result
+            is put into a pair.
+        */
+        std::pair<bool,uint32_t> FindStrBlockOffset( const std::string & blockName, const std::string & textFileName )const;
+
+    private:
+        void LoadFile( const std::string & textFileName );
+
+        typedef std::map<std::string,uint32_t>::value_type blockoffs_t;
+
+        struct glang_t
+        {
+            std::string                    language;
+            std::string                    textStrFName;
+            std::string                    localeStr;
+            std::map<std::string,uint32_t> strBlockOffsets;   //Name + offsets of all the sections containing specific strings
+        };
+
+        //typedef std::pair< std::string, std::string> glang_t;
+        std::vector<glang_t> m_langData;
+        eGameVersion         m_gameVersion;
+    };
+
+
     /************************************************************************
-        CGameStatsLoader
+        CGameStats
             This loads all stats from the PMD2 games into itself.
             It allows to import and export the data it has loaded.
     ************************************************************************/
-    class CGameStatsLoader
+    class CGameStats
     {
     public:
-        CGameStatsLoader( const std::string & pmd2rootdir );
+
+
+    public:
+        /*
+            Pass the game language loader that contains all the known locale strings depending on the game's text_*.str file name.
+        */
+        CGameStats( const std::string & pmd2rootdir, GameLanguageLoader && langList );
 
         //Accessors Pokemon Data
         //const std::vector<CPokemon> & Pkmn()const                                    { return m_pokemonStats; }
@@ -80,12 +151,13 @@ namespace pmd2{ namespace stats
         //void                          Pkmn( const std::vector<CPokemon> &  newdata ) { m_pokemonStats = newdata; }
 
         //Accessors 
-        const ItemsDB       & Items()const                                   { return m_itemsData; }
-        ItemsDB             & Items()                                        { return m_itemsData; }
-        void                          Items( ItemsDB       && newdata )      { m_itemsData = newdata; }
-        void                          Items( const ItemsDB &  newdata )      { m_itemsData = newdata; }
+        const ItemsDB       & Items()const                      { return m_itemsData;    }
+        ItemsDB             & Items()                           { return m_itemsData;    }
+        void                  Items( ItemsDB       && newdata ) { m_itemsData = newdata; }
+        void                  Items( const ItemsDB &  newdata ) { m_itemsData = newdata; }
 
         //Accessors
+
 
         //Accessors
 
@@ -96,16 +168,76 @@ namespace pmd2{ namespace stats
         void Write( const std::string & rootdatafolder );
 
     private:
+        eGameVersion  IdentifyGameVersion()const;
+        void          IdentifyGameLocaleStr();
+        void          BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings to avoid searching for them in the getstring methods below
+
+        void LoadGameStrings();
         void LoadPokemonData();
-        void LoadPokemonStatsGrowth();
-        void LoadPokemonMoves();
         void LoadItemData();
         void LoadDungeonData();
 
+        void WriteGameStrings();
+        void WritePokemonData();
+        void WriteItemData();
+        void WriteDungeonData();
+        
+        /*
+            Text Strings Access
+                Use those to get the correct string depending on the current game version.
+        */
+        std::string              & GetPokemonNameStr( uint16_t pkmnindex );
+        inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPokemonNameStr(pkmnindex); }
+        std::string              & GetPkmnCatNameStr( uint16_t pkmnindex );
+        inline const std::string & GetPkmnCatNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPkmnCatNameStr(pkmnindex); }
+
+        std::string              & GetMoveNameStr   ( uint16_t moveindex );
+        inline const std::string & GetMoveNameStr   ( uint16_t moveindex )const  { return const_cast<CGameStats*>(this)->GetMoveNameStr(moveindex); }
+        std::string              & GetMoveDexcStr   ( uint16_t moveindex );
+        inline const std::string & GetMoveDexcStr   ( uint16_t moveindex )const  { return const_cast<CGameStats*>(this)->GetMoveDexcStr(moveindex); }
+
+        std::string              & GetAbilityNameStr( uint8_t abilityindex );
+        inline const std::string & GetAbilityNameStr( uint8_t abilityindex )const{ return const_cast<CGameStats*>(this)->GetAbilityNameStr(abilityindex); }
+        std::string              & GetAbilityDescStr( uint8_t abilityindex );
+        inline const std::string & GetAbilityDescStr( uint8_t abilityindex )const{ return const_cast<CGameStats*>(this)->GetAbilityDescStr(abilityindex); }
+
+        std::string              & GetTypeNameStr   ( uint8_t type );
+        inline const std::string & GetTypeNameStr   ( uint8_t type )const        { return const_cast<CGameStats*>(this)->GetTypeNameStr(type); }
+
+        std::string              & GetItemNameStr   ( uint16_t itemindex );
+        inline const std::string & GetItemNameStr   ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemNameStr(itemindex); }
+        std::string              & GetItemSDescStr  ( uint16_t itemindex );      //Short Description
+        inline const std::string & GetItemSDescStr  ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemSDescStr(itemindex); } //Short Description
+        std::string              & GetItemLDescStr  ( uint16_t itemindex );      //Long Description
+        inline const std::string & GetItemLDescStr  ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemLDescStr(itemindex); } //Long Description
+
     private:
-        std::string           m_dataFolder;
-        //std::vector<CPokemon> m_pokemonStats;
-        ItemsDB       m_itemsData;
+
+        std::string         m_dataFolder;
+        GameLanguageLoader  m_possibleLang;
+        eGameVersion        m_gameVersion;
+        std::string         m_gameLangLocale;
+        std::string         m_gameTextFName;
+        
+        //See enum eStrBNames for what each index is for !
+        std::vector<uint32_t>    m_strOffsets;
+
+        //Game Text
+        std::vector<std::string> m_gameStrings;
+
+        //Gameplay Data
+        PokemonDB           m_pokemonStats;
+        ItemsDB             m_itemsData;
+        MoveDB              m_moveData1;
+        MoveDB              m_moveData2; //For Explorers of Sky only
+
+        //Level Data
+
+        //Quiz Data
+
+        //Mini-Game Data
+
+        //Shop Data
     };
 
 };};

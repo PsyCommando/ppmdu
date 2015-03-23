@@ -154,6 +154,11 @@ namespace pmd2 {namespace filetypes
         return out_pkmdat;
     }
 
+    std::vector<stats::PokeStatsGrowth> ParseLevelGrowthData( const std::string & inpath )
+    {
+        return MLevelParser( utils::io::ReadFileToByteVector(inpath) ).Parse();
+    }
+
     /*
     */
     void WriteLevelGrowthData( const std::vector<stats::PokeStatsGrowth> & pkmdat, 

@@ -165,6 +165,18 @@
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\config_io.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -314,6 +326,12 @@
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\config_io.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\resources\pkmn_types.txt">
@@ -334,5 +352,13 @@
     <Text Include="..\resources\pkmn_iq.txt">
       <Filter>Resource Files</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\gamelang.conf">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resources\str_indexes.xml">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -18,9 +18,15 @@ namespace pmd2 { namespace stats
 {
 
 //======================================================================================================
+//  Typedefs
+//======================================================================================================
+    //Self-documention
+    typedef uint16_t level_t;
+    typedef uint16_t moveid_t;
+
+//======================================================================================================
 //  Constants
 //======================================================================================================
-    
     static const uint8_t PkmnMaxLevel = 100;
 
     /*
@@ -71,7 +77,8 @@ namespace pmd2 { namespace stats
 //  Data Structures
 //======================================================================================================
     /*
-        Represents the stats growth for a single level/step.
+        PokeStats
+            Represents the stats growth for a single level/step.
     */
     struct PokeStats
     {
@@ -92,7 +99,8 @@ namespace pmd2 { namespace stats
     };
 
     /*
-        Represents stats growth
+        PokeStatsGrowth
+            Represents stats growth over 100 levels.
     */
     struct PokeStatsGrowth
     {
@@ -106,7 +114,8 @@ namespace pmd2 { namespace stats
     };
 
     /*
-        Evolution related data
+        PokeEvolution
+            Evolution data specific.
     */
     struct PokeEvolution
     {
@@ -124,58 +133,56 @@ namespace pmd2 { namespace stats
     };
 
     /*
-        The data specific to "monster.md"!
+        PokeMonsterData
+            The data from "monster.md"!
     */
     struct PokeMonsterData
     {
-        uint16_t      pokeID          = 0;
-        uint16_t      categoryIndex   = 0;
-        uint16_t      natPkdexNb2     = 0;
-        uint16_t      unk1            = 0;
+        uint16_t      pokeID       = 0;
+        uint16_t      mdunk31      = 0;
+        uint16_t      natPkdexNb   = 0;
+        uint16_t      mdunk1       = 0;
+
         PokeEvolution evoData;
-        uint16_t      spriteIndex     = 0;
-        uint8_t       genderType      = 0;
-        uint8_t       bodySize        = 0;
-        uint8_t       primaryTy       = 0;
-        uint8_t       secondaryTy     = 0;
-        uint8_t       unk8            = 0;
-        uint8_t       IQGrp           = 0;
-        uint8_t       primAbility     = 0;
-        uint8_t       secAbility      = 0;
-        uint16_t      unk11           = 0;
-        uint16_t      unk12           = 0;
-        uint16_t      unk13           = 0;
-        uint16_t      baseHP          = 0;
-        uint16_t      unk14           = 0;
-        uint8_t       baseAtk         = 0;
-        uint8_t       baseSpAtk       = 0;
-        uint8_t       baseDef         = 0;
-        uint8_t       baseSpDef       = 0;
-        uint16_t      unk15           = 0;
-        uint16_t      unk16           = 0;
-        uint8_t       unk17           = 0;
-        uint8_t       unk18           = 0;
-        uint8_t       unk19           = 0;
-        uint8_t       unk20           = 0;
-        uint16_t      unk21           = 0;
-        uint16_t      pkmnIndex       = 0;  //This might refer to this pokemon's moveset data index
-        uint16_t      unk23           = 0;
-        uint16_t      unk24           = 0;
-        uint16_t      unk25           = 0;
-        uint16_t      unk26           = 0;
-        uint16_t      unk27           = 0;
-        uint16_t      unk28           = 0;
-        uint16_t      unk29           = 0;
-        uint16_t      unk30           = 0;
+
+        uint16_t      spriteIndex  = 0;
+        uint8_t       gender       = 0;
+        uint8_t       bodySize     = 0;
+        uint8_t       primaryTy    = 0;
+        uint8_t       secondaryTy  = 0;
+        uint8_t       moveTy       = 0;
+        uint8_t       IQGrp        = 0;
+        uint8_t       primAbility  = 0;
+        uint8_t       secAbility   = 0;
+        uint16_t      bitflags1    = 0;
+        uint16_t      expYield     = 0;
+        uint16_t      recruitRate1 = 0;
+        uint16_t      baseHP       = 0;
+        uint16_t      recruitRate2 = 0;
+        uint8_t       baseAtk      = 0;
+        uint8_t       baseSpAtk    = 0;
+        uint8_t       baseDef      = 0;
+        uint8_t       baseSpDef    = 0;
+        uint16_t      weight       = 0;
+        uint16_t      size         = 0;
+        uint8_t       mdunk17      = 0;
+        uint8_t       mdunk18      = 0;
+        uint8_t       mdunk19      = 0;
+        uint8_t       mdunk20      = 0;
+        uint16_t      mdunk21      = 0;
+        uint16_t      BasePkmn     = 0;  //The evolution line's base pokemon entity index. Always 0 to 600. Refers to the first gender entry.
+
+        std::array<uint16_t,4> exclusiveItems;
+
+        uint16_t      unk27        = 0;
+        uint16_t      unk28        = 0;
+        uint16_t      unk29        = 0;
+        uint16_t      unk30        = 0;
 
         static const unsigned int DataLen = 68;//bytes (0x44)
     };
 
-    /*
-    */
-    //Self-documention
-    typedef uint16_t level_t;
-    typedef uint16_t moveid_t;
+
 
     /*
     */
@@ -191,6 +198,11 @@ namespace pmd2 { namespace stats
         std::vector<moveid_t> eggmoves;
     };
 
+    /*
+        The two movesets for all pokemon
+    */
+    typedef std::pair< std::vector<stats::PokeMoveSet>, std::vector<stats::PokeMoveSet> > pokeMvSets_t;
+
 //======================================================================================================
 //  Classes
 //======================================================================================================
@@ -201,54 +213,51 @@ namespace pmd2 { namespace stats
 
         #TODO
     *************************************************************************************/
-    class CStatsResLoader
-    {
-    public:
-        static CStatsResLoader & GetInstance();
+    //class CStatsResLoader
+    //{
+    //public:
+    //    static CStatsResLoader & GetInstance();
 
-        inline const std::vector<std::string> & PkmnNames()const { return m_pkmnnames; }
-        inline const std::vector<std::string> & PkmnTypes()const { return m_pkmnTypes; }
-        inline const std::vector<std::string> & IQGroups ()const { return m_iqgrps;    }
-        inline const std::vector<std::string> & Abilities()const { return m_abilities; }
-        inline const std::vector<std::string> & Moves    ()const { return m_moves;     }
-        inline const std::vector<std::string> & Items    ()const { return m_items;     }
+    //    inline const std::vector<std::string> & PkmnNames     ()const { return m_pkmnnames; }
+    //    inline const std::vector<std::string> & PkmnCategories()const { return m_pkmnCat; }
+    //    inline const std::vector<std::string> & PkmnTypes     ()const { return m_pkmnTypes; }
+    //    inline const std::vector<std::string> & IQGroups      ()const { return m_iqgrps;    }
+    //    inline const std::vector<std::string> & Abilities     ()const { return m_abilities; }
+    //    inline const std::vector<std::string> & Moves         ()const { return m_moves;     }
+    //    inline const std::vector<std::string> & Items         ()const { return m_items;     }
 
-        /*
-            Call this to load the data from a directory.
-            It must contain the following:
-                pkmn_abilities.txt
-                pkmn_moves.txt
-                pkmn_names.txt
-                pkmn_types.txt
-                pkmn_iq.txt
-        */
-        void Parse( const std::string & pathDataDir );
+    //    /*
+    //        Call this to load the data from a directory.
+    //    */
+    //    void Parse( const std::string & pathDataDir );
 
-    private:
-        CStatsResLoader();
-        CStatsResLoader(const CStatsResLoader&);
-        CStatsResLoader(CStatsResLoader&&);
-        CStatsResLoader & operator=(const CStatsResLoader&);
-        CStatsResLoader & operator=(CStatsResLoader&&);
+    //private:
+    //    CStatsResLoader();
+    //    CStatsResLoader(const CStatsResLoader&);
+    //    CStatsResLoader(CStatsResLoader&&);
+    //    CStatsResLoader & operator=(const CStatsResLoader&);
+    //    CStatsResLoader & operator=(CStatsResLoader&&);
 
-        //Parsing
-        void ParseData(std::string pathDataDir);
+    //    //Parsing
+    //    void ParseData(std::string pathDataDir);
 
-        void ParsePkmnNames( const std::string & pkmnNamesPath );
-        void ParsePkmnTypes( const std::string & pkmnTypesPath );
-        void ParseIQGrps   ( const std::string & pkmnIQPath );
-        void ParseAbilities( const std::string & pkmnAbilitiesPath );
-        void ParseMoves    ( const std::string & pkmnMovesPath );
-        void ParseItems    ( const std::string & ItemsPath );
+    //    void ParsePkmnNames( const std::string & pkmnNamesPath );
+    //    void ParsePkmnCat  ( const std::string & pkmnNamesPath );
+    //    void ParsePkmnTypes( const std::string & pkmnTypesPath );
+    //    void ParseIQGrps   ( const std::string & pkmnIQPath );
+    //    void ParseAbilities( const std::string & pkmnAbilitiesPath );
+    //    void ParseMoves    ( const std::string & pkmnMovesPath );
+    //    void ParseItems    ( const std::string & ItemsPath );
 
-        //Variable
-        std::vector<std::string> m_pkmnnames;
-        std::vector<std::string> m_pkmnTypes;
-        std::vector<std::string> m_iqgrps;
-        std::vector<std::string> m_abilities;
-        std::vector<std::string> m_moves;
-        std::vector<std::string> m_items;
-    };
+    //    //Variable
+    //    std::vector<std::string> m_pkmnnames;
+    //    std::vector<std::string> m_pkmnCat;
+    //    std::vector<std::string> m_pkmnTypes;
+    //    std::vector<std::string> m_iqgrps;
+    //    std::vector<std::string> m_abilities;
+    //    std::vector<std::string> m_moves;
+    //    std::vector<std::string> m_items;
+    //};
 
 
     /*************************************************************************************
@@ -267,16 +276,41 @@ namespace pmd2 { namespace stats
         static const uint8_t MaxLevel = PkmnMaxLevel;
         static const uint8_t MinLevel = 1;
 
-        typedef std::vector<PokeStats> pkstcntner_t;
-        typedef std::vector<uint32_t>  expcurve_t;
-
     public:
         CPokemon()
+            :m_bHas2GenderEntries(false)
         {}
 
-        CPokemon( const std::string & name,  PokeMonsterData && md, PokeStatsGrowth && growth, PokeMoveSet && mvs )
-            :m_name(name),m_monsterdata(md), m_statsGrowth(growth), m_moveset(mvs)
+        /*
+            Constructor for pokemons that appear twice in the monster.md file
+        */
+        CPokemon( PokeMonsterData   && entryGender1, 
+                  PokeMonsterData   && entryGender2, 
+                  PokeStatsGrowth   && growth, 
+                  PokeMoveSet       && mvs1,
+                  PokeMoveSet       && mvs2)
+            :m_mDataGender1(entryGender1), 
+             m_mDataGender2(entryGender2), 
+             m_statsGrowth(growth), 
+             m_moveset_1(mvs1), 
+             m_moveset_2(mvs2), 
+             m_bHas2GenderEntries(true)
         {}
+
+        /*
+            Constructor for pokemons that only appear once in the monster.md file
+        */
+        CPokemon( PokeMonsterData   && entryGender1, 
+                  PokeStatsGrowth   && growth, 
+                  PokeMoveSet       && mvs1,
+                  PokeMoveSet       && mvs2)
+            :m_mDataGender1(entryGender1), 
+             m_statsGrowth(growth), 
+             m_moveset_1(mvs1), 
+             m_moveset_2(mvs2), 
+             m_bHas2GenderEntries(false)
+        {}
+
 
         //
         uint32_t GetReqExp( uint8_t forlevel )const                { return m_statsGrowth.statsgrowth.at(forlevel).first; }
@@ -285,17 +319,23 @@ namespace pmd2 { namespace stats
         const PokeStats & GetStatsGrowth( uint8_t forlevel )const  { return m_statsGrowth.statsgrowth.at(forlevel).second; }
 
         //Accessors
-        inline const std::string     & Name()const         { return m_name;        }
-        inline std::string           & Name()              { return m_name;        }
+        inline const PokeMonsterData & MonsterDataGender1()const  { return m_mDataGender1; }
+        inline PokeMonsterData       & MonsterDataGender1()       { return m_mDataGender1; }
 
-        inline const PokeMonsterData & MonsterData()const  { return m_monsterdata; }
-        inline PokeMonsterData       & MonsterData()       { return m_monsterdata; }
+        inline const PokeMonsterData & MonsterDataGender2()const { return m_mDataGender2; }
+        inline PokeMonsterData       & MonsterDataGender2()      { return m_mDataGender2; }
 
-        inline const PokeStatsGrowth & StatsGrowth()const  { return m_statsGrowth; }
-        inline PokeStatsGrowth       & StatsGrowth()       { return m_statsGrowth; }
+        inline const PokeStatsGrowth & StatsGrowth()const        { return m_statsGrowth; }
+        inline PokeStatsGrowth       & StatsGrowth()             { return m_statsGrowth; }
 
-        inline const PokeMoveSet     & MoveSet()const      { return m_moveset;     }
-        inline PokeMoveSet           & MoveSet()           { return m_moveset;     }
+        inline const PokeMoveSet     & MoveSet1()const           { return m_moveset_1;   }
+        inline PokeMoveSet           & MoveSet1()                { return m_moveset_1;   }
+
+        inline const PokeMoveSet     & MoveSet2()const           { return m_moveset_2;   }
+        inline PokeMoveSet           & MoveSet2()                { return m_moveset_2;   }
+
+        inline bool                    Has2GenderEntries()const    { return m_bHas2GenderEntries; }
+        inline bool                    Has2GenderEntries(bool val) { m_bHas2GenderEntries = val; }
 
     public:
         ////DEBUG
@@ -305,13 +345,12 @@ namespace pmd2 { namespace stats
         //void DumpMoveset   ( const std::string & filepath );
 
     private:
-        //Internal data
-        std::string     m_name;
-
-    private:
-        PokeMonsterData m_monsterdata;
+        bool            m_bHas2GenderEntries;
+        PokeMonsterData m_mDataGender1;
+        PokeMonsterData m_mDataGender2;
+        PokeMoveSet     m_moveset_1;
+        PokeMoveSet     m_moveset_2;
         PokeStatsGrowth m_statsGrowth;
-        PokeMoveSet     m_moveset;
     };
 
 
@@ -326,10 +365,50 @@ namespace pmd2 { namespace stats
 
         /*
             From the 3 containers builds a list of pokemons!
+                - md : the entire content of the monster.md file. It will be split into the two genders.
+                - movesets : content of waza_p.bin and and waza_p2.bin. The later is an empty vector if waza_p2.bin is not present.
+                - growth: content of m_level.bin
         */
-        void BuildDB( std::vector<PokeMonsterData> && md, 
-                      std::vector<PokeMoveSet>     && movesets, 
-                      std::vector<PokeStatsGrowth> && growth );
+        static PokemonDB BuildDB( std::vector<PokeMonsterData>       && md, 
+                                  pokeMvSets_t                       && movesets, 
+                                  std::vector<PokeStatsGrowth>       && growth );
+
+        /*
+            This takes a PokemonDB and split it off into the 3 components used to build it.
+                - pdb        : The pokemon database to split into lists.
+                - out_md     : The list of PokeMonsterData that will receive the appropriate data from the pdb!
+                - out_mvsets : The 2 lists of pokemon learnsets that will receive the appropriate data from the pdb!
+                - out_growth : The list of PokeStatsGrowth that will receive the appropriate data from the pdb!
+
+            NOTE: The Pokemon DB is destroyed in the process, to allow using move assignements instead of using
+                  copie assignements, resulting in much faster code. 
+                  Use the ExportComponents instance method instead to output copies, if you'd like to preserve the object!
+        */
+        static void      SplitDB( PokemonDB                          && pdb,
+                                  std::vector<PokeMonsterData>       & out_md, 
+                                  pokeMvSets_t                       & out_mvsets, 
+                                  std::vector<PokeStatsGrowth>       & out_growth );
+
+        /*
+            Access a pokemon's name string.
+        */
+        //inline const std::string & PkmnName( uint16_t index )const;
+        //inline       std::string & PkmnName( uint16_t index );
+        /*
+            Access a pokemon's category string.
+        */
+        //inline const std::string & PkmnCat( uint16_t index )const;
+        //inline       std::string & PkmnCat( uint16_t index );
+
+        /*
+            Copy this PokemonDB's data, and place it into the 3 components that makes it up.
+                - out_md     : The list of PokeMonsterData that will receive the appropriate data from the pdb!
+                - out_mvsets : The 2 lists of pokemon learnsets that will receive the appropriate data from the pdb!
+                - out_growth : The list of PokeStatsGrowth that will receive the appropriate data from the pdb!
+        */
+        void ExportComponents( std::vector<PokeMonsterData>       & out_md, 
+                               pokeMvSets_t                       & out_mvsets, 
+                               std::vector<PokeStatsGrowth>       & out_growth )const;
 
         inline const CPokemon & operator[]( uint16_t index )const { return m_pkmn[index]; }
         inline       CPokemon & operator[]( uint16_t index )      { return m_pkmn[index]; }

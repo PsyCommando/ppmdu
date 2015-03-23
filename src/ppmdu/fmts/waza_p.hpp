@@ -14,8 +14,7 @@ Description:
 
 namespace pmd2 { namespace filetypes
 {
-    typedef std::pair< std::vector<stats::PokeMoveSet>, std::vector<stats::PokeMoveSet> > combinedlvlupmovesets_t;
-    typedef std::pair<stats::MoveDB,stats::MoveDB>                                                  combinedmovedat_t;
+    typedef std::pair<stats::MoveDB,stats::MoveDB>                                        combinedmovedat_t;
 
 //
 //  Constants
@@ -48,9 +47,9 @@ namespace pmd2 { namespace filetypes
         ParsePokemonLearnSets
             Read the pokemon level-up move list.
     */
-    combinedlvlupmovesets_t              ParsePokemonLearnSets( const std::string          & pathOfBalanceDir );
-    std::vector<stats::PokeMoveSet> ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData );
-    combinedlvlupmovesets_t              ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData, 
+    stats::pokeMvSets_t              ParsePokemonLearnSets( const std::string          & pathOfBalanceDir );
+    std::vector<stats::PokeMoveSet>      ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData );
+    stats::pokeMvSets_t              ParsePokemonLearnSets( const std::vector<uint8_t> & waza_pData, 
                                                                 const std::vector<uint8_t> & waza_p2Data );
 
     /*
@@ -66,7 +65,7 @@ namespace pmd2 { namespace filetypes
         ParseMoveAndLearnsets
             Parse both the above at the same time.
     */
-    std::pair<combinedmovedat_t,combinedlvlupmovesets_t> ParseMoveAndLearnsets( const std::string & pathOfBalanceDir );
+    std::pair<combinedmovedat_t,stats::pokeMvSets_t> ParseMoveAndLearnsets( const std::string & pathOfBalanceDir );
 
     /*
         WriteMoveAndLearnsets
@@ -76,7 +75,7 @@ namespace pmd2 { namespace filetypes
     */
     void WriteMoveAndLearnsets( const std::string                            & pathOutBalanceDir,
                                 const std::pair<stats::MoveDB,stats::MoveDB> & movedata, 
-                                const combinedlvlupmovesets_t                & lvlupmvset );
+                                const stats::pokeMvSets_t                & lvlupmvset );
 
 };};
 

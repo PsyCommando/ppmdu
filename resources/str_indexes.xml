@@ -1,0 +1,67 @@
+<StringIndexData>
+    <!--This file contains the string indexes for where the strings for certain things are stored at in the text_*.str file.
+        Since the text_*.str file has a different amount of strings depending on the native language, this
+        file is there to make sure new entry for new languages can be easily added.-->
+    
+    <!--Begin List for Explorers of Sky-->
+    <Game name="EoS">
+        <Language name="English" strfile="text_e.str" locale="en-US">
+            <StringBlock>
+                <Name>Pokemon Names</Name> 
+                <Begin>8734</Begin>
+            </StringBlock>
+            <StringBlock>
+                <Name>Pokemon Categories</Name> 
+                <Begin>9334</Begin>
+            </StringBlock>
+            <StringBlock>
+                <Name>Move Names</Name> 
+                <Begin>8173</Begin>
+            </StringBlock>
+             <StringBlock>
+                <Name>Item Names</Name> 
+                <Begin>6773</Begin>
+            </StringBlock>
+        </Language>
+        <Language name="Japanese" strfile="text_j.str" locale=".932">
+            <StringBlock>
+              <Name>Pokemon Names</Name>
+              <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Pokemon Categories</Name>
+              <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Names</Name>
+              <Begin></Begin>
+            </StringBlock>
+             <StringBlock>
+               <Name>Item Names</Name>
+               <Begin></Begin>
+            </StringBlock>
+        </Language>
+    </Game>
+
+    <!--Begin List for Explorers of Time/Darkness-->
+    <Game name="EoTD">
+        <Language name="English" strfile="text_e.str" locale="en-US">
+            <StringBlock>
+              <Name>Pokemon Names</Name>
+                <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Pokemon Categories</Name>
+                <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Names</Name>
+                <Begin></Begin>
+            </StringBlock>
+             <StringBlock>
+               <Name>Item Names</Name>
+               <Begin></Begin>
+            </StringBlock>
+        </Language>
+    </Game>
+</StringIndexData>

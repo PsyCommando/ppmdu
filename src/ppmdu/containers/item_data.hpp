@@ -17,12 +17,20 @@ namespace pmd2 { namespace stats
 //
 //
 //
+    static const uint32_t ItemDataNbEntry_EoS = 1400;
+    static const uint32_t ItemDataExBeg_EoS   = 444;    //Index at which exclusive items begins
+    static const uint32_t ItemDataExEnd_EoS   = 1351;   //Index at which exclusive items end
 
+    static const uint32_t ItemDataNbEntry_EoTD = 1000;
+
+    static const uint32_t ItemDataLen          = 16; //bytes
+    static const uint32_t ExclusiveItemDataLen = 4; //bytes
 //
 //
 //
     struct exclusiveitemdata;
     /*
+        Item data format for Explorers of Sky
     */
     struct itemdata
     {
@@ -60,10 +68,12 @@ namespace pmd2 { namespace stats
     };
 
     /*
+        Additional data for exclusive items
     */
     struct exclusiveitemdata : public itemdata
     {
         exclusiveitemdata()
+            :itemdata()
         {
             exlusiveType   = 0;
             exclusiveParam = 0;
@@ -82,12 +92,13 @@ namespace pmd2 { namespace stats
     */
     class ItemsDB
     {
+        typedef std::vector<std::unique_ptr<itemdata>> itemptr_t;
         friend class ItemsXMLWriter;
         friend class ItemsXMLParser;
     public:
         ItemsDB(){}
         ItemsDB( std::size_t reservesize );
-        ~ItemsDB();
+        ~ItemsDB(){}
 
         ItemsDB( const ItemsDB & other )
         {
@@ -100,34 +111,23 @@ namespace pmd2 { namespace stats
             return *this;
         }
 
-        void CopyCtor( const ItemsDB & other )
-        {
-            m_itemData.resize( other.m_itemData.size() );
-
-            for( unsigned int i = 0; i < other.m_itemData.size(); ++i )
-            {
-                if( other.m_itemData[i]->GetExclusiveItemData() == nullptr )
-                {
-                    m_itemData[i].reset( new itemdata( *(other.m_itemData[i]) ) );
-                }
-                else
-                {
-                    m_itemData[i].reset( new exclusiveitemdata( *(other.m_itemData[i]->GetExclusiveItemData() ) ) );
-                }
-            }
-        }
+        /*
+            Handle copying polymorphic item type.
+        */
+        void CopyCtor( const ItemsDB & other );
 
         inline std::size_t size()const { return m_itemData.size(); }
+        inline void        resize(size_t newsz)    { return m_itemData.resize(newsz);}
 
         //The items are guaranteed to stay allocated as long as the object exists!
-        inline const itemdata & Item( uint16_t itemindex )const { return *(m_itemData[itemindex].get()); }
-        inline       itemdata & Item( uint16_t itemindex )      { return *(m_itemData[itemindex].get()); }
+        inline const itemdata & Item( uint16_t itemindex )const { return *(m_itemData[itemindex]); }
+        inline       itemdata & Item( uint16_t itemindex )      { return *(m_itemData[itemindex]); }
 
         void push_back( itemdata          && item );
         void push_back( exclusiveitemdata && item );
 
     private:
-        std::vector<std::unique_ptr<itemdata>> m_itemData;
+        itemptr_t m_itemData;
     };
 
 

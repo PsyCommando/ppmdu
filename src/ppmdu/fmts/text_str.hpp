@@ -17,7 +17,11 @@ namespace pmd2{ namespace filetypes
 //============================================================================================
 //  Constants
 //============================================================================================
-    static const uint32_t    TextEStr_DefNBEntries = 18452;
+    static const uint32_t    TextEStr_DefNBEntries = 18452; //EoS English
+
+
+    static const std::string TextStr_EngFName = "text_e.str";
+    static const std::string TextStr_JapFName = "text_j.str";
     
     //English locale for English text
     static const std::string TextEnglishLocale     = 
@@ -43,6 +47,8 @@ namespace pmd2{ namespace filetypes
     static const unsigned int TextStr_PokeCategoryNames_EoS = 9334;
     static const unsigned int TextStr_MoveNames_EoS         = 8173; 
     static const unsigned int TextStr_ItemNames_EoS         = 6773; 
+
+    //  Explorers of Time/Darkness string idexes
 
 //============================================================================================
 //  Function
