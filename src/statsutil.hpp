@@ -35,8 +35,13 @@ namespace statsutil
         bool ParseOutputPath ( const std::string              & path );
 
         //Parse Options
-        bool ParseOptionOutTxt       ( const std::vector<std::string> & optdata );
-        bool ParseOptionExpSingleFile( const std::vector<std::string> & optdata );
+        bool ParseOptionPk         ( const std::vector<std::string> & optdata );
+        bool ParseOptionMvD        ( const std::vector<std::string> & optdata );
+        bool ParseOptionItems      ( const std::vector<std::string> & optdata );
+        bool ParseOptionStrings    ( const std::vector<std::string> & optdata );
+        bool ParseOptionForceImport( const std::vector<std::string> & optdata );
+        bool ParseOptionForceExport( const std::vector<std::string> & optdata );
+        bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -44,8 +49,20 @@ namespace statsutil
         int  GatherArgs        ( int argc, const char * argv[] );
 
         //Exec methods
-        int ExportPokeStatsGrowth();
-        int ImportPokeStatsGrowth();
+        //int ExportPokeStatsGrowth();
+        //int ImportPokeStatsGrowth();
+        int DoImportGameData();
+        int DoExportGameData();
+        int DoImportPokemonData();
+        int DoExportPokemonData();
+        int DoImportItemsData();
+        int DoExportItemsData();
+        int DoImportMovesData();
+        int DoExportMovesData();
+        int DoImportGameStrings();
+        int DoExportGameStrings();
+        int DoImportAll();
+        int DoExportAll();
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -57,25 +74,64 @@ namespace statsutil
         static const std::vector<utils::cmdl::argumentparsing_t> Arguments_List;
         static const std::vector<utils::cmdl::optionparsing_t>   Options_List;
 
+        //Default filenames names
+        static const std::string                                 DefExportStrName;
+        static const std::string                                 DefExportPkmnName;
+        static const std::string                                 DefExportMvName;
+        static const std::string                                 DefExportItemsName;
+
+        static const std::string                                 DefLangConfFile;
+
         enum struct eOutFormat
         {
             XML,
             TXT,
         };
 
+        enum struct eOpForce
+        {
+            None,
+            Import,
+            Export,
+        };
+
         enum struct eOpMode
         {
             Invalid,
-            ExportPokeStatsGrowth,
-            ImportPokeStatsGrowth,
+            ImportGameData,
+            ExportGameData,
+
+            ImportPokemonData,
+            ExportPokemonData,
+
+            ImportItemsData,
+            ExportItemsData,
+
+            ImportMovesData,
+            ExportMovesData,
+
+            ImportGameStrings,
+            ExportGameStrings,
+
+            ImportAll,
+            ExportAll,
         };
 
         //Variables
         std::string m_inputPath;      //This is the input path that was parsed 
         std::string m_outputPath;     //This is the output path that was parsed
         eOpMode     m_operationMode;  //This holds what the program should do
-        eOutFormat  m_outputFormat;   //
-        bool        m_bExpSingleFile; //Whether the result will be Exported to a single file, when possible
+        std::string m_langconf;       //The path to the language configuration file!
+        std::string m_flocalestr;     //The forced locale string
+
+        bool        m_hndlStrings;    //If we need to handle only a game string related OP, this is true!
+        bool        m_hndlItems;      //If we handle only items
+        bool        m_hndlMoves;      //If we handle only moves
+        bool        m_hndlPkmn;       //If we handle only Pokemon
+        eOpForce    m_force;          //Whether 
+
+        //eOutFormat  m_outputFormat;   //
+        //bool        m_bExpSingleFile; //Whether the result will be Exported to a single file, when possible
     };
 };
 

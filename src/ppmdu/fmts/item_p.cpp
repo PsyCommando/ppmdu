@@ -4,6 +4,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <sstream>
 #include <iostream>
+#include <cassert>
 
 
 using namespace std;
@@ -11,6 +12,9 @@ using namespace std;
 namespace pmd2 {namespace filetypes 
 {
 
+    /*
+        ItemDataParser
+    */
     class ItemDataParser
     {
     public:
@@ -22,47 +26,46 @@ namespace pmd2 {namespace filetypes
         operator stats::ItemsDB()
         {
             stats::ItemsDB result;
-            //Figure out if we parse the 2  item files, or only one
-            stringstream sstritem_p;
-            stringstream sstritem_s;
-            sstritem_p << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ItemData_FName;
-            sstritem_s << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ExclusiveItemData_FName;
-            string item_p = sstritem_p.str();
-            string item_s = sstritem_s.str();
+            assert(false); //#REMOVEME: Once the item issues have been solved
+            ////Figure out if we parse the 2  item files, or only one
+            //stringstream sstritem_p;
+            //stringstream sstritem_s;
+            //sstritem_p << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ItemData_FName;
+            //sstritem_s << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ExclusiveItemData_FName;
+            //string item_p = sstritem_p.str();
+            //string item_s = sstritem_s.str();
 
-            if( utils::isFile(item_p) )
-            {
-                
-                if( utils::isFile(item_s) )
-                {
-                    cout <<ExclusiveItemData_FName <<" is present, parsing exclusive item extra data..\n";
-
-                    result.resize(stats::ItemDataNbEntry_EoS);
-                    ParseItem_s_p(item_s);
-                    ParseItem_pEoS(item_p);
-                    
-                }
-                else
-                {
-                    cout <<ExclusiveItemData_FName <<" is not present, ignoring exclusive item extra data.. Assuming the data is from Explorers of Time/Darkness!\n";
-                    result.resize(stats::ItemDataNbEntry_EoTD);
-                    ParseItem_pEoTD(item_p);
-                }
-            }
-            else
-            {
-                ostringstream sstrerr;
-                sstrerr << "ERROR: Couldn't find the \"" << item_p <<"\" file!";
-                string strerr = sstrerr.str();
-                clog << strerr <<"\n";
-                throw runtime_error(strerr);
-            }
+            //if( utils::isFile(item_p) )
+            //{
+            //    
+            //    if( utils::isFile(item_s) )
+            //    {
+            //        cout <<ExclusiveItemData_FName <<" is present, parsing exclusive item extra data..\n";
+            //        ParseItem_s_p( item_s, result );
+            //        ParseItem_pEoS( item_p, result );
+            //        
+            //    }
+            //    else
+            //    {
+            //        assert(false); //#TODO: Implement EoT/D item data handling!
+            //        cout <<ExclusiveItemData_FName <<" is not present, ignoring exclusive item extra data.. Assuming the data is from Explorers of Time/Darkness!\n";
+            //        ParseItem_pEoTD( item_p, result );
+            //    }
+            //}
+            //else
+            //{
+            //    ostringstream sstrerr;
+            //    sstrerr << "ERROR: Couldn't find the \"" << item_p <<"\" file!";
+            //    string strerr = sstrerr.str();
+            //    clog << strerr <<"\n";
+            //    throw runtime_error(strerr);
+            //}
             return std::move(result);
         }
 
     private:
 
-        void ParseItem_pEoS( const string & path )
+        void ParseItem_pEoS( const string & path, stats::ItemsDB & itemdat )
         {
             vector<uint8_t> data = utils::io::ReadFileToByteVector( path );
 
@@ -70,14 +73,18 @@ namespace pmd2 {namespace filetypes
             sir0_header hdr;
             hdr.ReadFromContainer(data.begin());
 
-            const uint32_t NbEntries = (hdr.ptrPtrOffsetLst - hdr.subheaderptr) / stats::ItemDataLen;
+            const uint32_t NbEntries = (hdr.ptrPtrOffsetLst - hdr.subheaderptr) / stats::ItemDataLen_EoS;
+            auto           itCur     = (data.begin() + hdr.subheaderptr);
+            itemdat.resize(NbEntries);
 
-            for( unsigned int cnt = 0; cnt < NbEntries; ++cnt )
-            {
-            }
+            //for( unsigned int cnt = 0; cnt < NbEntries; ++cnt )
+            //{
+            //    itemdat[cnt] = new ;
+            //}
+            assert(false); //#REMOVEME: Once the item issues have been solved
         }
 
-        void ParseItem_pEoTD( const string & path )
+        void ParseItem_pEoTD( const string & path, stats::ItemsDB & itemdat  )
         {
         }
 
@@ -106,27 +113,44 @@ namespace pmd2 {namespace filetypes
         const std::string & m_pathBalanceDir;
     };
 
+    /*
+        ItemDataWriter
+    */
     class ItemDataWriter
     {
     public:
+        ItemDataWriter( const stats::ItemsDB & itemdata )
+            :m_itemdata(itemdata)
+        {
+        }
+
+        void Write( const std::string & pathBalanceDir )
+        {
+            assert(false); //#TODO
+        }
 
     private:
+        const stats::ItemsDB & m_itemdata;
     };
 
     /*
-        * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
+        ParseItemsData
+            * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
     */
     stats::ItemsDB ParseItemsData( const std::string & pathBalanceDir )
     {
+        return ItemDataParser(pathBalanceDir);
     }
 
     /*
-        * pathItemsdat: The directory where the itemdata will be outputed to, in the form of at least a item_p.bin 
-                        and, if there are any PMD:EoS items, possibly also an item_s_p.bin.
-        * itemdata    : The item data to write the output files from.
+        WriteItemsData
+            * pathItemsdat: The directory where the itemdata will be outputed to, in the form of at least a item_p.bin 
+                            and, if there are any PMD:EoS items, possibly also an item_s_p.bin.
+            * itemdata    : The item data to write the output files from.
     */
     void WriteItemsData( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata )
     {
+        ItemDataWriter(itemdata).Write(pathBalanceDir);
     }
 
 };};

@@ -19,7 +19,7 @@ namespace pmd2{ namespace filetypes
 //============================================================================================
     static const uint32_t    TextEStr_DefNBEntries = 18452; //EoS English
 
-
+    static const std::string TextStr_FExt     = "str";
     static const std::string TextStr_EngFName = "text_e.str";
     static const std::string TextStr_JapFName = "text_j.str";
     

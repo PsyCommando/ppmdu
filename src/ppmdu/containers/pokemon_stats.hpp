@@ -108,6 +108,12 @@ namespace pmd2 { namespace stats
         typedef std::pair<uint32_t, PokeStats> growthlvl_t;
         std::vector<growthlvl_t> statsgrowth;
 
+        inline bool empty()const { return statsgrowth.empty(); }
+        inline size_t size()const { return statsgrowth.size(); }
+
+        inline const growthlvl_t & operator[](size_t index)const { return statsgrowth[index]; }
+        inline       growthlvl_t & operator[](size_t index)      { return statsgrowth[index]; }
+
         static const unsigned int EntryLen         = (PokeStats::DataLen + sizeof(uint32_t) + sizeof(uint16_t));   //Length of a stats entry for a single pokemon, for a single level (counting the 2 ending null bytes!)
         static const unsigned int NbEntriesPerPkmn = PkmnMaxLevel;                                                 //Nb of stats entry per pokemon
         static const unsigned int PkmnEntryLen     = EntryLen * NbEntriesPerPkmn;                                  //Length of an entry for a single pokemon
@@ -192,6 +198,8 @@ namespace pmd2 { namespace stats
 
         PokeMoveSet()
         {}
+
+        inline bool empty()const { return lvlUpMoveSet.empty() && teachableHMTMs.empty() && eggmoves.empty(); }
 
         lvlUpMoveSet_t        lvlUpMoveSet; // Used a multimap, because several moves can be learned at the same level!
         std::vector<moveid_t> teachableHMTMs;
@@ -319,20 +327,20 @@ namespace pmd2 { namespace stats
         const PokeStats & GetStatsGrowth( uint8_t forlevel )const  { return m_statsGrowth.statsgrowth.at(forlevel).second; }
 
         //Accessors
-        inline const PokeMonsterData & MonsterDataGender1()const  { return m_mDataGender1; }
-        inline PokeMonsterData       & MonsterDataGender1()       { return m_mDataGender1; }
+        inline const PokeMonsterData & MonsterDataGender1()const   { return m_mDataGender1; }
+        inline PokeMonsterData       & MonsterDataGender1()        { return m_mDataGender1; }
 
-        inline const PokeMonsterData & MonsterDataGender2()const { return m_mDataGender2; }
-        inline PokeMonsterData       & MonsterDataGender2()      { return m_mDataGender2; }
+        inline const PokeMonsterData & MonsterDataGender2()const   { return m_mDataGender2; }
+        inline PokeMonsterData       & MonsterDataGender2()        { return m_mDataGender2; }
 
-        inline const PokeStatsGrowth & StatsGrowth()const        { return m_statsGrowth; }
-        inline PokeStatsGrowth       & StatsGrowth()             { return m_statsGrowth; }
+        inline const PokeStatsGrowth & StatsGrowth()const          { return m_statsGrowth; }
+        inline PokeStatsGrowth       & StatsGrowth()               { return m_statsGrowth; }
 
-        inline const PokeMoveSet     & MoveSet1()const           { return m_moveset_1;   }
-        inline PokeMoveSet           & MoveSet1()                { return m_moveset_1;   }
+        inline const PokeMoveSet     & MoveSet1()const             { return m_moveset_1;   }
+        inline PokeMoveSet           & MoveSet1()                  { return m_moveset_1;   }
 
-        inline const PokeMoveSet     & MoveSet2()const           { return m_moveset_2;   }
-        inline PokeMoveSet           & MoveSet2()                { return m_moveset_2;   }
+        inline const PokeMoveSet     & MoveSet2()const             { return m_moveset_2;   }
+        inline PokeMoveSet           & MoveSet2()                  { return m_moveset_2;   }
 
         inline bool                    Has2GenderEntries()const    { return m_bHas2GenderEntries; }
         inline bool                    Has2GenderEntries(bool val) { m_bHas2GenderEntries = val; }

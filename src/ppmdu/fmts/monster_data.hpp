@@ -15,6 +15,8 @@ Description:
 namespace pmd2 { namespace filetypes
 {
     static const uint32_t    MonsterMD_DefNBPokemons = 1155; //0x483
+    static const uint32_t    MonsterMD_DefNBRegulars = 555;
+    static const uint32_t    MonsterMD_DefNBSpecials = 45;
     static const std::string MonsterMD_FName         = "monster.md";
 
 //==========================================================================================

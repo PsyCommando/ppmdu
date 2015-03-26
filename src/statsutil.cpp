@@ -3,6 +3,7 @@
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
+#include <ppmdu/fmts/text_str.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -38,6 +39,12 @@ namespace statsutil
         "My tools in binary form are basically public domain / CC0.\n"
         "Free to re-use in any ways you may want to!\n"
         "No crappyrights, all wrongs reversed! :3";
+
+    const std::string CStatsUtil::DefExportStrName   = "game_strings.txt"; 
+    const std::string CStatsUtil::DefExportPkmnName  = "pkmn_data.xml";
+    const std::string CStatsUtil::DefExportMvName    = "moves_data.xml";
+    const std::string CStatsUtil::DefExportItemsName = "items_data.xml";
+    const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
 
 //------------------------------------------------
 //  Arguments Info
@@ -87,21 +94,61 @@ namespace statsutil
     */
     const vector<optionparsing_t> CStatsUtil::Options_List=
     {{
-        //Export data to text files!
+        //Force Import
         {
-            "totxt",
+            "i",
             0,
-            "Specifying this will export the data to text files instead of to XML!",
-            "-totxt",
-            std::bind( &CStatsUtil::ParseOptionOutTxt, &GetInstance(), placeholders::_1 ),
+            "Specifying this will force import!",
+            "-i",
+            std::bind( &CStatsUtil::ParseOptionForceImport, &GetInstance(), placeholders::_1 ),
         },
-        //Export data to a single file
+        //Force Export
         {
-            "sf",
+            "e",
             0,
-            "This will force the utility to export all data to a single file, in cases when it exports several by default!",
-            "-sf",
-            std::bind( &CStatsUtil::ParseOptionExpSingleFile, &GetInstance(), placeholders::_1 ),
+            "Specifying this will force export!",
+            "-e",
+            std::bind( &CStatsUtil::ParseOptionForceExport, &GetInstance(), placeholders::_1 ),
+        },
+        //pokemon stats only
+        {
+            "pk",
+            0,
+            "Specifying this will import or export only Pokemon data!",
+            "-pk",
+            std::bind( &CStatsUtil::ParseOptionPk, &GetInstance(), placeholders::_1 ),
+        },
+        //Move data only
+        {
+            "mvd",
+            0,
+            "Specifying this will import or export only move data!",
+            "-mvd",
+            std::bind( &CStatsUtil::ParseOptionMvD, &GetInstance(), placeholders::_1 ),
+        },
+        //Items data only
+        {
+            "items",
+            0,
+            "Specifying this will import or export only items data!",
+            "-items",
+            std::bind( &CStatsUtil::ParseOptionItems, &GetInstance(), placeholders::_1 ),
+        },
+        //Game Strings only
+        {
+            "str",
+            0,
+            "Specifying this will import or export only the game strings specified!",
+            "-str",
+            std::bind( &CStatsUtil::ParseOptionStrings, &GetInstance(), placeholders::_1 ),
+        },
+        //Force a locale string
+        {
+            "locale",
+            1,
+            "Force the utility to use the following locale string when importing/exporting the string file!",
+            "-locale",
+            std::bind( &CStatsUtil::ParseOptionLocaleStr, &GetInstance(), placeholders::_1 ),
         },
     }};
 
@@ -118,8 +165,14 @@ namespace statsutil
     CStatsUtil::CStatsUtil()
         :CommandLineUtility()
     {
-        m_outputFormat    = eOutFormat::XML;
         m_operationMode   = eOpMode::Invalid;
+        m_force           = eOpForce::Export; //Default to export
+        m_hndlStrings     = false;
+        m_hndlItems       = false;
+        m_hndlMoves       = false;
+        m_hndlPkmn        = false;
+        m_langconf        = DefLangConfFile;
+        m_flocalestr      = "";
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;          }
@@ -163,15 +216,57 @@ namespace statsutil
 //
 //  Parse Options
 //
-    bool CStatsUtil::ParseOptionOutTxt( const std::vector<std::string> & optdata )
+
+    bool CStatsUtil::ParseOptionPk( const std::vector<std::string> & optdata )
     {
-        m_outputFormat = eOutFormat::TXT;
+        return m_hndlPkmn = true;
+    }
+
+    bool CStatsUtil::ParseOptionMvD( const std::vector<std::string> & optdata )
+    {
+        return m_hndlMoves = true;
+    }
+
+    bool CStatsUtil::ParseOptionItems( const std::vector<std::string> & optdata )
+    {
+        return m_hndlItems = true;
+    }
+
+    bool CStatsUtil::ParseOptionStrings( const std::vector<std::string> & optdata )
+    {
+        return m_hndlStrings = true;
+    }
+
+    bool CStatsUtil::ParseOptionForceImport( const std::vector<std::string> & optdata )
+    {
+        m_force = eOpForce::Import;
         return true;
     }
 
-    bool CStatsUtil::ParseOptionExpSingleFile( const std::vector<std::string> & optdata )
+    bool CStatsUtil::ParseOptionForceExport( const std::vector<std::string> & optdata )
     {
-        return m_bExpSingleFile = true;
+        m_force = eOpForce::Export;
+        return true;
+    }
+
+    bool CStatsUtil::ParseOptionLocaleStr  ( const std::vector<std::string> & optdata )
+    {
+        if( optdata.size() > 1 )
+        {
+            try
+            {
+                std::locale( optdata[1] );
+            }
+            catch(exception & e)
+            {
+                cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
+                clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
+                return false;
+            }
+            m_flocalestr = optdata[1];
+            return true;
+        }
+        return false;
     }
 
 //
@@ -206,29 +301,88 @@ namespace statsutil
     void CStatsUtil::DetermineOperation()
     {
         Poco::Path inpath( m_inputPath );
+        //Poco::Path outpath( m_outputPath ); //if empty crash, poco is
+        Poco::File infile( inpath );
 
         if( m_operationMode != eOpMode::Invalid )
-            return; //Skip if we have a forced mode
+            return; //Skip if we have a forced mode         
 
-        //if( inpath.isFile() )
-        //{
-        //    //Analyse input content
-        //    eGameDataTy dataty = GetGameDataTyForFile(m_inputPath);
-
-        //    if( dataty == eGameDataTy::StatsGrowthData )
-        //        m_operationMode = eOpMode::ExportPokeStatsGrowth;
-        //}
-        //else 
-        if( inpath.isDirectory() )
+        if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
         {
-            //Probe the directory to find out the content
-            //eGameDataTy dataty = GetGameDataTyForDirectory(m_inputPath);
+            throw runtime_error("ERROR: Specified output path does not exists!");
+        }
 
-            //if( dataty == eGameDataTy::StatsGrowthData )
-            //    m_operationMode = eOpMode::ImportPokeStatsGrowth;
+        if( infile.exists() )
+        {
+            if( infile.isFile() && m_force == eOpForce::Import )
+            {
+                //if( inpath.getExtension() == "txt" || 
+                //    ( !m_outputPath.empty() && Poco::Path(m_outputPath).getExtension() == pmd2::filetypes::TextStr_FExt ) )
+                //{
+                //    m_operationMode = eOpMode::ImportGameStrings;
+                //}
+                //else if( inpath.getExtension() == pmd2::filetypes::TextStr_FExt || 
+                //        ( !m_outputPath.empty() && Poco::Path(m_outputPath).getExtension() == "txt" ) )
+                //{
+                //    m_operationMode = eOpMode::ExportGameStrings;
+                //}
+                //else
+                //    throw runtime_error("ERROR: Input text file has an unexpected file extension! Cannot determine whether import or export is implied..");
+                if( m_hndlStrings )
+                    m_operationMode = eOpMode::ImportGameStrings;
+                else if( m_hndlItems )
+                    m_operationMode = eOpMode::ImportItemsData;
+                else if( m_hndlMoves )
+                    m_operationMode = eOpMode::ImportMovesData;
+                else if( m_hndlPkmn )
+                    m_operationMode = eOpMode::ImportPokemonData;
+                else
+                    throw runtime_error("ERROR: Can't import all from a file!");
+            }
+            else if( infile.isDirectory() )
+            {
+                if( m_hndlStrings )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportGameStrings;
+                    else
+                        throw runtime_error("ERROR: Can't import game strings from a directory : " + m_inputPath);
+                }
+                else if( m_hndlItems )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportItemsData;
+                    else
+                        throw runtime_error("ERROR: Can't import Pokemon data from a directory : " + m_inputPath);
+
+                }
+                else if( m_hndlMoves )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportMovesData;
+                    else
+                        throw runtime_error("ERROR: Can't import move data from a directory : " + m_inputPath);
+                }
+                else if( m_hndlPkmn )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportPokemonData;
+                    else
+                        throw runtime_error("ERROR: Can't import Pokemon data from a directory : " + m_inputPath);
+                }
+                else
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportAll;
+                    else if( m_force == eOpForce::Import )
+                        m_operationMode = eOpMode::ImportAll;
+                }
+            }
+            else
+                throw runtime_error("ERROR: Cannot determine the desired operation!");
         }
         else
-            throw runtime_error("ERROR: The input path is neither a file, or a directory!");
+            throw runtime_error("ERROR: The input path does not exists!");
     }
 
     int CStatsUtil::Execute()
@@ -239,14 +393,64 @@ namespace statsutil
             utils::MrChronometer chronoexecuter("Total time elapsed");
             switch(m_operationMode)
             {
-                case eOpMode::ExportPokeStatsGrowth:
+                case eOpMode::ImportGameData:
                 {
-                    returnval = ExportPokeStatsGrowth();
+                    returnval = DoImportGameData();
                     break;
                 }
-                case eOpMode::ImportPokeStatsGrowth:
+                case eOpMode::ExportGameData:
                 {
-                    returnval = ImportPokeStatsGrowth();
+                    returnval = DoExportGameData();
+                    break;
+                }
+                case eOpMode::ImportPokemonData:
+                {
+                    returnval = DoImportPokemonData();
+                    break;
+                }
+                case eOpMode::ExportPokemonData:
+                {
+                    returnval = DoExportPokemonData();
+                    break;
+                }
+                case eOpMode::ImportItemsData:
+                {
+                    returnval = DoImportItemsData();
+                    break;
+                }
+                case eOpMode::ExportItemsData:
+                {
+                    returnval = DoExportItemsData();
+                    break;
+                }
+                case eOpMode::ImportMovesData:
+                {
+                    returnval = DoImportMovesData();
+                    break;
+                }
+                case eOpMode::ExportMovesData:
+                {
+                    returnval = DoExportMovesData();
+                    break;
+                }
+                case eOpMode::ImportGameStrings:
+                {
+                    returnval = DoImportGameStrings();
+                    break;
+                }
+                case eOpMode::ExportGameStrings:
+                {
+                    returnval = DoExportGameStrings();
+                    break;
+                }
+                case eOpMode::ImportAll:
+                {
+                    returnval = DoImportAll();
+                    break;
+                }
+                case eOpMode::ExportAll:
+                {
+                    returnval = DoExportAll();
                     break;
                 }
                 default:
@@ -269,18 +473,111 @@ namespace statsutil
 //--------------------------------------------
 //  Operation
 //--------------------------------------------
-    int CStatsUtil::ExportPokeStatsGrowth()
+    int CStatsUtil::DoImportGameData()
     {
-        //
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoExportGameData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoImportPokemonData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoExportPokemonData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoImportItemsData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoExportItemsData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoImportMovesData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoExportMovesData()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoImportGameStrings()
+    {
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.parent().append(pmd2::filetypes::TextStr_EngFName).makeFile();
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        //CGameStats mystats( m_inputPath, DefLangConfFile );
+        //mystats.LoadStringsOnly();
+
+        if( ! m_flocalestr.empty() )
+        {
+            auto myloc = std::locale( m_flocalestr );
+            pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine( m_inputPath, myloc ), myloc );
+        }
+        else
+        {
+            pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine(m_inputPath) );
+        }
 
         return 0;
     }
-    
-    int CStatsUtil::ImportPokeStatsGrowth()
-    {
-        //
 
+    int CStatsUtil::DoExportGameStrings()
+    {
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.parent().append(DefExportStrName).makeFile();
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        CGameStats mystats( m_inputPath, DefLangConfFile );
+        mystats.LoadStringsOnly();
+        cout << "Writing...\n";
+        WriteTextFileLineByLine( mystats.Strings(), outpath.toString() );
         return 0;
+    }
+
+    int CStatsUtil::DoImportAll()
+    {
+        int returnval = -1;
+        return returnval;
+    }
+
+    int CStatsUtil::DoExportAll()
+    {
+        int returnval = -1;
+        return returnval;
     }
 
 //--------------------------------------------
@@ -380,11 +677,11 @@ int IntegerDecoder( int argc, const char *argv[] )
         
             vector<uint32_t> result; 
             itRead = utils::DecodeIntegers( itRead, itEnd, back_inserter(result) );
-            cout<<"Has " <<result.size() <<" values.\n";
+            cout <<"Has " <<result.size() <<" values.\n";
 
             for( const auto & val : result )
             {
-                cout<<"0x"<<uppercase<<hex<<val<<nouppercase<<"\n";
+                cout <<"0x" <<uppercase <<hex <<val <<nouppercase <<"\n";
             }
             ++cnt;
         }
@@ -398,10 +695,10 @@ int IntegerDecoder( int argc, const char *argv[] )
 int main( int argc, const char * argv[] )
 {
     using namespace statsutil;
-    //CStatsUtil & application = CStatsUtil::GetInstance();
-    //return application.Main(argc,argv);
     try
     {
+        CStatsUtil & application = CStatsUtil::GetInstance();
+        return application.Main(argc,argv);
         //utils::MrChronometer chronoTester("Total time elapsed");
 
         //TESTING
@@ -435,12 +732,12 @@ int main( int argc, const char * argv[] )
         //pmd2::filetypes::WriteMoveAndLearnsets( "new", pairdata.first, pairdata.second );
         //cout <<"Done\n";
 
-        TextStringExtractor(argc,argv);
+        //TextStringExtractor(argc,argv);
     }
     catch( exception & e )
     {
         cout<< "<!>-ERROR:" <<e.what()<<"\n"
-            << "If you get this particular error output, it means an exception got through, and the programer should be notified!\n";
+            << "If you get this particular error output, it means an exception got through, and the programmer should be notified!\n";
     }
     //system("pause");
 

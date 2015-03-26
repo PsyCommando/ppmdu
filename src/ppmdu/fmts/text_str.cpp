@@ -16,8 +16,9 @@ namespace pmd2 { namespace filetypes
 //
 //  Constants 
 //
-    static const string SpecialCharSequ_MusicNote = "\0x81\0xF4";
-    static const char   SpecialChar_MusicNoteEnd  = '\0xF4';
+    static const string SpecialCharSequ_MusicNote = "\129\244";
+    static const char   SpecialChar_CtrlChar      = 129;
+    static const char   SpecialChar_MusicNoteEnd  = 244;
 
 //============================================================================================
 //  Loader
@@ -72,6 +73,7 @@ namespace pmd2 { namespace filetypes
 
     private:
 
+
         void ReadPointerTable()
         {
             m_ptrTable.resize(0);
@@ -94,8 +96,9 @@ namespace pmd2 { namespace filetypes
             //Allocate
             m_txtstr.resize(m_ptrTable.size());
 
-            const unsigned int PtrTableSize = m_ptrTable.size()-1; // The last pointer is a pointer to the end of the file!
-            const unsigned int LastPtrIndex = PtrTableSize - 1;    // Index of the last element before the end
+            const unsigned int PtrTableSize     = m_ptrTable.size()-1; // The last pointer is a pointer to the end of the file!
+            const unsigned int LastPtrIndex     = PtrTableSize - 1;    // Index of the last element before the end
+            
 
             //Read them all
             for( unsigned int i = 0; i < PtrTableSize;  )
@@ -112,11 +115,14 @@ namespace pmd2 { namespace filetypes
                 out.imbue(m_locale);
 
                 //Copy string 
+                bool blastWasCtrlChar = false;               //Whether the last character was the \129 control char!
                 for( unsigned int cntc = 0; cntc < len; ++cntc )
                 {
                     char c = ptrstr[cntc];
-                    if( std::isprint( c, m_locale) )    //Check if we need to replace the character with an escaped char
+                    if( std::isprint( c, m_locale) && !blastWasCtrlChar )    //Check if we need to replace the character with an escaped char
+                    {
                         out << c;
+                    }
                     else
                     {
                         switch(c)
@@ -136,6 +142,7 @@ namespace pmd2 { namespace filetypes
                             }
                         };
                     }
+                    blastWasCtrlChar = (c == SpecialChar_CtrlChar);
                 }
 
                 m_txtstr[i] = out.str();

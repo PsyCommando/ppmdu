@@ -23,14 +23,19 @@ namespace pmd2 { namespace stats
 
     static const uint32_t ItemDataNbEntry_EoTD = 1000;
 
-    static const uint32_t ItemDataLen          = 16; //bytes
+    static const uint32_t ItemDataLen_EoS      = 16; //bytes
     static const uint32_t ExclusiveItemDataLen = 4; //bytes
+
+    static const uint32_t ItemDataLen_EoTD     = 24; //bytes
 //
 //
 //
     struct exclusiveitemdata;
+    struct itemdata_EoTD;
+    struct itemdata_EoS;
+
     /*
-        Item data format for Explorers of Sky
+        Base item
     */
     struct itemdata
     {
@@ -50,8 +55,9 @@ namespace pmd2 { namespace stats
             unk4        = 0;
         }
         virtual ~itemdata(){}
-
         virtual exclusiveitemdata * GetExclusiveItemData() { return nullptr; }
+        virtual itemdata_EoS      * Get_EoS_ItemData()     { return nullptr; }
+        virtual itemdata_EoTD     * Get_EoTD_ItemData()    { return nullptr; }
 
         uint16_t buyPrice;
         uint16_t sellPrice;
@@ -68,12 +74,65 @@ namespace pmd2 { namespace stats
     };
 
     /*
+        Item data format for Explorers of Time/Darkness
+    */
+    struct itemdata_EoTD : public itemdata
+    {
+        itemdata_EoTD()
+            :itemdata()
+        {
+        }
+
+        virtual itemdata_EoTD * Get_EoTD_ItemData() { return this; }
+    };
+
+    
+    /*
+        Item data format for Explorers of Sky
+    */
+    struct itemdata_EoS : public itemdata
+    {
+        itemdata_EoS()
+            :itemdata()
+        {
+            //buyPrice    = 0;
+            //sellPrice   = 0;
+            //category    = 0;
+            //spriteID    = 0;
+            //itemID      = 0;
+            //itemParam1  = 0;
+            //itemParam2  = 0;
+            //itemParam3  = 0;
+            //unk1        = 0;
+            //unk2        = 0;
+            //unk3        = 0;
+            //unk4        = 0;
+        }
+        virtual ~itemdata_EoS(){}
+        virtual exclusiveitemdata * GetExclusiveItemData() { return nullptr; }
+        virtual itemdata_EoS      * Get_EoS_ItemData()     { return this; }
+
+        //uint16_t buyPrice;
+        //uint16_t sellPrice;
+        //uint8_t  category;
+        //uint8_t  spriteID;
+        //uint16_t itemID;
+        //uint16_t itemParam1;
+        //uint8_t  itemParam2;
+        //uint8_t  itemParam3;
+        //uint8_t  unk1;
+        //uint8_t  unk2;
+        //uint8_t  unk3;
+        //uint8_t  unk4;
+    };
+
+    /*
         Additional data for exclusive items
     */
-    struct exclusiveitemdata : public itemdata
+    struct exclusiveitemdata : public itemdata_EoS
     {
         exclusiveitemdata()
-            :itemdata()
+            :itemdata_EoS()
         {
             exlusiveType   = 0;
             exclusiveParam = 0;
@@ -123,7 +182,12 @@ namespace pmd2 { namespace stats
         inline const itemdata & Item( uint16_t itemindex )const { return *(m_itemData[itemindex]); }
         inline       itemdata & Item( uint16_t itemindex )      { return *(m_itemData[itemindex]); }
 
+        inline const itemdata & operator[]( uint16_t itemindex )const { return *(m_itemData[itemindex]); }
+        inline       itemdata & operator[]( uint16_t itemindex )      { return *(m_itemData[itemindex]); }
+
         void push_back( itemdata          && item );
+        void push_back( itemdata_EoTD     && item );
+        void push_back( itemdata_EoS      && item );
         void push_back( exclusiveitemdata && item );
 
     private:

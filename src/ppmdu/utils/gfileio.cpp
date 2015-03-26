@@ -94,11 +94,14 @@ namespace utils{ namespace io
         }
         output.imbue(txtloc);
 
-        for( const auto & entry : data )
+        const unsigned int lastentry = data.size() - 1;
+        for( unsigned int i = 0; i < data.size(); ++i )// const auto & entry : data )
         {
             //output.write( entry.c_str(), entry.size() + 1 );
             //output.write( &EOL, 1 );
-            output << entry <<"\n";
+            output << data[i];
+            if( i < lastentry ) //Avoid the extra unneeded EoL
+               output <<"\n";
         }
     }
 

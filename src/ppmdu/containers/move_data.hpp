@@ -47,6 +47,7 @@ namespace pmd2{ namespace stats
 //
 //
 //
+    //#TODO: The move DB should abstract game specific details, so that we don't need 2 of them for EoS !!
     class MoveDB
     {
         friend class MovesXMLWriter;

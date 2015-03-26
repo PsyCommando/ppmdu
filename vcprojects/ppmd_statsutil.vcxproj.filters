@@ -330,7 +330,7 @@
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -357,7 +357,7 @@
     <None Include="..\resources\gamelang.conf">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="..\resources\str_indexes.xml">
+    <None Include="..\resources\gamelang.xml">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

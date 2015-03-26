@@ -304,6 +304,9 @@ namespace pmd2{ namespace stats
         GameLanguageLoader& m_target;
     };
 
+    GameLanguageLoader::GameLanguageLoader()
+        :m_gameVersion(eGameVersion::Invalid)
+    {}
 
     GameLanguageLoader::GameLanguageLoader( const std::string & textFileName, eGameVersion version )
         :m_gameVersion(version)
@@ -381,12 +384,17 @@ namespace pmd2{ namespace stats
 //==========================================================================================
 //  CGameStats
 //==========================================================================================
-    CGameStats::CGameStats( const std::string & pmd2rootdir, GameLanguageLoader && langList )
-        :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_possibleLang(langList)
+    //CGameStats::CGameStats( const std::string & pmd2rootdir, GameLanguageLoader && langList )
+    //    :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid)/*, m_possibleLang(langList)*/
+    //{
+    //}
+
+    CGameStats::CGameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
+        :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
     {
     }
 
-    eGameVersion CGameStats::IdentifyGameVersion()const
+    void CGameStats::IdentifyGameVersion()
     {
         //To identify whether its Explorers of Sky or Explorers of Time/Darkness
         // check if we have a waza_p2.bin file under the /BALANCE/ directory.
@@ -397,16 +405,21 @@ namespace pmd2{ namespace stats
         {
             sstr << "/" << filetypes::WAZA2_Fname;
             if( utils::isFile( sstr.str() ) )
-                return eGameVersion::EoS;
+                m_gameVersion = eGameVersion::EoS;
             else
-                return eGameVersion::EoTEoD;
+                m_gameVersion = eGameVersion::EoTEoD;
         }
         else
-            return eGameVersion::Invalid;
+            m_gameVersion = eGameVersion::Invalid;
     }
 
     void CGameStats::IdentifyGameLocaleStr()
     {
+        /*
+            Load game language file
+        */
+        m_possibleLang = GameLanguageLoader( m_gamelangfile, m_gameVersion );
+
         /*
             To identify the game language, find the text_*.str file, and compare the name to the lookup table.
         */
@@ -422,7 +435,7 @@ namespace pmd2{ namespace stats
             {
                 //if the begining of the text_*.str filename matches, do a comparison, and return the result
                 if( fname.size() > TextStr_FnameBeg.size() &&
-                   fname.substr( 0, (TextStr_FnameBeg.size()-1) ) == TextStr_FnameBeg )
+                   fname.substr( 0, (TextStr_FnameBeg.size()) ) == TextStr_FnameBeg )
                 {
                     m_gameTextFName  = fname;
                     m_gameLangLocale = m_possibleLang.FindLocaleString( fname );
@@ -458,7 +471,7 @@ namespace pmd2{ namespace stats
 
         //Print all the missing entries
         if(bencounteredError)
-        {    
+        {
             string strerr = sstr.str();
             clog << strerr <<"\n";
             throw runtime_error( strerr );
@@ -468,7 +481,7 @@ namespace pmd2{ namespace stats
     void CGameStats::Load()
     {
         //First identify what we're dealing with
-        m_gameVersion = IdentifyGameVersion();
+        IdentifyGameVersion();
         IdentifyGameLocaleStr();
         BuildListOfStringOffsets();
 
@@ -476,8 +489,8 @@ namespace pmd2{ namespace stats
         {
             LoadGameStrings();
             LoadPokemonData();
-            LoadItemData();
-            LoadDungeonData();
+            //LoadItemData();
+            //LoadDungeonData();
         }
         else
             throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
@@ -489,11 +502,24 @@ namespace pmd2{ namespace stats
         Load();
     }
 
+    void CGameStats::LoadStringsOnly()
+    {
+        IdentifyGameVersion();
+        IdentifyGameLocaleStr();
+        LoadGameStrings();
+    }
+
+    void CGameStats::LoadStringsOnly( const std::string & newpmd2rootdir )
+    {
+        m_dataFolder = newpmd2rootdir;
+        LoadStringsOnly();
+    }
+
     void CGameStats::LoadGameStrings()
     {
         stringstream sstr;
         sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
-        m_gameStrings = filetypes::ParseTextStrFile( sstr.str() );
+        m_gameStrings = filetypes::ParseTextStrFile( sstr.str(), std::locale( m_gameLangLocale ) );
     }
 
     void CGameStats::LoadPokemonData()
@@ -521,14 +547,15 @@ namespace pmd2{ namespace stats
 
     void CGameStats::LoadItemData()
     {
-        stringstream sstr;
-        sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
-        m_itemsData = filetypes::ParseItemsData( sstr.str() );
+        assert(false);  //#TODO
+        //stringstream sstr;
+        //sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+        //m_itemsData = filetypes::ParseItemsData( sstr.str() );
     }
 
     void CGameStats::LoadDungeonData()
     {
-        //assert(false); //Not implemented yet !
+        assert(false); //Not implemented yet !
     }
 
 
@@ -545,18 +572,22 @@ namespace pmd2{ namespace stats
 
     void CGameStats::WriteGameStrings()
     {
+        assert(false); //Not implemented yet !
     }
     
     void CGameStats::WritePokemonData()
     {
+        assert(false); //Not implemented yet !
     }
 
     void CGameStats::WriteItemData()
     {
+        assert(false); //Not implemented yet !
     }
 
     void CGameStats::WriteDungeonData()
     {
+        assert(false); //Not implemented yet !
     }
 
     /*
