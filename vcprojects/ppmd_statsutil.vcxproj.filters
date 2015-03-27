@@ -177,6 +177,9 @@
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -330,6 +333,9 @@
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\pugixml_utils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
   </ItemGroup>

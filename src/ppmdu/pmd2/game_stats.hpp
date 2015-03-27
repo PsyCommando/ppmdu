@@ -104,22 +104,22 @@ namespace pmd2{ namespace stats
 
         /*
             For a given string block name inside the text_*.str file, returns whether the 
-            block was found, and the index of the first string in that block. The result
-            is put into a pair.
+            block was found, and the bounds of that block. The result is put into a pair.
+            First is whether it was found or not, second are the bounds, beginning and end.
         */
-        std::pair<bool,uint32_t> FindStrBlockOffset( const std::string & blockName, const std::string & textFileName )const;
+        std::pair<bool,std::pair<uint32_t,uint32_t>> FindStrBlockOffset( const std::string & blockName, const std::string & textFileName )const;
 
     private:
         void LoadFile( const std::string & textFileName );
 
-        typedef std::map<std::string,uint32_t>::value_type blockoffs_t;
+        typedef std::map<std::string,std::pair<uint32_t,uint32_t>>::value_type blockoffs_t;
 
         struct glang_t
         {
             std::string                    language;
             std::string                    textStrFName;
             std::string                    localeStr;
-            std::map<std::string,uint32_t> strBlockOffsets;   //Name + offsets of all the sections containing specific strings
+            std::map<std::string,std::pair<uint32_t,uint32_t>> strBlockOffsets;   //Name + offsets of all the sections containing specific strings
         };
 
         //typedef std::pair< std::string, std::string> glang_t;
@@ -135,8 +135,12 @@ namespace pmd2{ namespace stats
     ************************************************************************/
     class CGameStats
     {
-    public:
 
+        struct strbounds_t
+        {
+            uint32_t beg = 0;
+            uint32_t end = 0;
+        };
 
     public:
         /*
@@ -172,14 +176,36 @@ namespace pmd2{ namespace stats
         void LoadStringsOnly();
         void LoadStringsOnly( const std::string & newpmd2rootdir );
 
+        void LoadPkmn();
+
         void Write();
+
+        void WritePkmn( const std::string & rootdatafolder );
+
         void Write( const std::string & rootdatafolder );
+
+        //Export
+        void ExportPkmn( const std::string & file );
+
+        //Import
+        void ImportPkmn( const std::string & file );
         
     public:
         /*
             Text Strings Access
                 Use those to get the correct string depending on the current game version.
         */
+
+        std::vector<std::string>::const_iterator GetPokemonNameBeg()const;
+        std::vector<std::string>::const_iterator GetPokemonNameEnd()const;
+        std::vector<std::string>::iterator       GetPokemonNameBeg();
+        std::vector<std::string>::iterator       GetPokemonNameEnd();
+
+        std::vector<std::string>::const_iterator GetPokemonCatBeg()const;
+        std::vector<std::string>::const_iterator GetPokemonCatEnd()const;
+        std::vector<std::string>::iterator       GetPokemonCatBeg();
+        std::vector<std::string>::iterator       GetPokemonCatEnd();
+
         std::string              & GetPokemonNameStr( uint16_t pkmnindex );
         inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPokemonNameStr(pkmnindex); }
         std::string              & GetPkmnCatNameStr( uint16_t pkmnindex );
@@ -205,6 +231,26 @@ namespace pmd2{ namespace stats
         std::string              & GetItemLDescStr  ( uint16_t itemindex );      //Long Description
         inline const std::string & GetItemLDescStr  ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemLDescStr(itemindex); } //Long Description
 
+        /*
+            Enum for associating the values of the StrBlocksNames array below.
+        */
+        enum struct eStrBNames : unsigned int
+        {
+            PkmnNames,
+            PkmnCats,
+            MvNames,
+            MvDesc,
+            ItemNames,
+            ItemDescS,
+            ItemDescL,
+            AbilityNames,
+            AbilityDesc,
+            TypeNames,
+
+            //Add new string types above!
+            NBEntries,
+        };
+    
     private:
         void   IdentifyGameVersion();
         void          IdentifyGameLocaleStr();
@@ -220,6 +266,11 @@ namespace pmd2{ namespace stats
         void WriteItemData();
         void WriteDungeonData();
 
+        inline strbounds_t strBounds( eStrBNames what )const
+        {
+            return m_strOffsets[static_cast<uint32_t>(what)];
+        }
+
     private:
 
         std::string         m_dataFolder;
@@ -229,8 +280,10 @@ namespace pmd2{ namespace stats
         std::string         m_gameLangLocale;
         std::string         m_gameTextFName;
         
+
+
         //See enum eStrBNames for what each index is for !
-        std::vector<uint32_t>    m_strOffsets;
+        std::vector<strbounds_t>    m_strOffsets;
 
         //Game Text
         std::vector<std::string> m_gameStrings;

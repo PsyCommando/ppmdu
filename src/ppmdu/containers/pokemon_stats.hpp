@@ -151,7 +151,7 @@ namespace pmd2 { namespace stats
 
         PokeEvolution evoData;
 
-        uint16_t      spriteIndex  = 0;
+        int16_t       spriteIndex  = 0;
         uint8_t       gender       = 0;
         uint8_t       bodySize     = 0;
         uint8_t       primaryTy    = 0;
@@ -162,9 +162,9 @@ namespace pmd2 { namespace stats
         uint8_t       secAbility   = 0;
         uint16_t      bitflags1    = 0;
         uint16_t      expYield     = 0;
-        uint16_t      recruitRate1 = 0;
+        int16_t       recruitRate1 = 0;
         uint16_t      baseHP       = 0;
-        uint16_t      recruitRate2 = 0;
+        int16_t       recruitRate2 = 0;
         uint8_t       baseAtk      = 0;
         uint8_t       baseSpAtk    = 0;
         uint8_t       baseDef      = 0;
@@ -435,8 +435,26 @@ namespace pmd2 { namespace stats
 //  Functions
 //======================================================================================================
 
-    void      ExportPokemonsToXML  ( const PokemonDB   & src, const std::string & destfile );
-    PokemonDB ImportPokemonsFromXML( const std::string & srcfile );
+    /*
+        Write pokemon data to a file. Takes 2 iterators to the beginning of the pokemon names and 
+        pokemon category strings respectively! 
+        
+        The code expercts the amount of name strings matches the amount of pokemon in the PokemonDB object !
+    */
+    void      ExportPokemonsToXML  ( const PokemonDB                         & src,
+                                     std::vector<std::string>::const_iterator  itbegnames,
+                                     std::vector<std::string>::const_iterator  itbegcat,
+                                     const std::string                       & destfile );
+    /*
+        Read pokemon data from a file into a PokemonDB.
+        Also import string data from the xml files into the ranges specified by the 4 iterators.
+    */
+    void      ImportPokemonsFromXML( const std::string                  & srcfile, 
+                                     PokemonDB                          & out_pkdb,
+                                     std::vector<std::string>::iterator   itbegnames,
+                                     std::vector<std::string>::iterator   itendnames,
+                                     std::vector<std::string>::iterator   itbegcat,
+                                     std::vector<std::string>::iterator   itendcat );
 
     /*
         Export pokemon data to XML

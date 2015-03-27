@@ -207,7 +207,7 @@ namespace pmd2{ namespace stats
         //itin_t itg1end = itg2beg;
         //itin_t itg2end = md.end();
         const uint32_t nbRegularPk = md.size() - offsetDups;       //The amount of regular pokes is the length of the secondary gender block
-        const uint32_t nbSpecialPk = md.size() - (2 * offsetDups); //The amount of special pokes is the remainder of the total size minus the size of the two genders blocks added together
+        const uint32_t nbSpecialPk = md.size() - (2 * nbRegularPk); //The amount of special pokes is the remainder of the total size minus the size of the two genders blocks added together
 
         if( utils::LibWide().isLogOn() )
         {

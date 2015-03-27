@@ -105,6 +105,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -427,6 +428,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\pugixml_utils.hpp" />
     <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>

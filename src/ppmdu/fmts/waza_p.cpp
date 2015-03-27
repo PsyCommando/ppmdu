@@ -107,7 +107,7 @@ namespace pmd2 { namespace filetypes
             ls.resize( ptrtbl.size() );
 
             clog<<"Parsing learnset data..\n";
-            for( unsigned int i = 0; i < ptrtbl.size(); ++i )
+            for( unsigned int i = 1; i < ptrtbl.size(); ++i ) //Skip first null entry
             {
                 if( utils::LibWide().isLogOn() )
                     clog <<" -- Pokemon #" <<setfill(' ') <<setw(3) <<dec <<i <<" --\n";
@@ -147,6 +147,7 @@ namespace pmd2 { namespace filetypes
             bool                  bHitPadding   = false;
 
             //std::count_if( itRead, itEnd, [](  ){  } );
+            pointers.push_back(pkmnPtrs()); //Push the null first entry
 
             while( itRead != itEnd )
             {
@@ -382,8 +383,11 @@ namespace pmd2 { namespace filetypes
             WriteValue(uint8_t(0));
             WriteValue(uint8_t(0));
 
-            for( const auto & pkmnmv : m_pkmnmoves )
-                WriteAPkmnMoveLists(pkmnmv);
+            //Skip first null entry
+            for( auto itpkmove = m_pkmnmoves.begin()+1; itpkmove != m_pkmnmoves.end(); ++itpkmove )
+            {
+                WriteAPkmnMoveLists(*itpkmove);
+            }
         }
 
         void WriteAPkmnMoveLists( const stats::PokeMoveSet & pkmnmvs )

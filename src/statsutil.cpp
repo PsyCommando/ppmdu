@@ -257,7 +257,7 @@ namespace statsutil
             {
                 std::locale( optdata[1] );
             }
-            catch(exception & e)
+            catch(exception & )
             {
                 cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
@@ -383,6 +383,7 @@ namespace statsutil
         }
         else
             throw runtime_error("ERROR: The input path does not exists!");
+
     }
 
     int CStatsUtil::Execute()
@@ -395,61 +396,73 @@ namespace statsutil
             {
                 case eOpMode::ImportGameData:
                 {
+                    cout << "Importing game data..\n";
                     returnval = DoImportGameData();
                     break;
                 }
                 case eOpMode::ExportGameData:
                 {
+                    cout << "Exporting game data..\n";
                     returnval = DoExportGameData();
                     break;
                 }
                 case eOpMode::ImportPokemonData:
                 {
+                    cout << "Importing Pokemon data..\n";
                     returnval = DoImportPokemonData();
                     break;
                 }
                 case eOpMode::ExportPokemonData:
                 {
+                    cout << "Exporting Pokemon data..\n";
                     returnval = DoExportPokemonData();
                     break;
                 }
                 case eOpMode::ImportItemsData:
                 {
+                    cout << "Importing items data..\n";
                     returnval = DoImportItemsData();
                     break;
                 }
                 case eOpMode::ExportItemsData:
                 {
+                    cout << "Exporting items data..\n";
                     returnval = DoExportItemsData();
                     break;
                 }
                 case eOpMode::ImportMovesData:
                 {
+                    cout << "Importing moves data..\n";
                     returnval = DoImportMovesData();
                     break;
                 }
                 case eOpMode::ExportMovesData:
                 {
+                    cout << "Exporting moves data..\n";
                     returnval = DoExportMovesData();
                     break;
                 }
                 case eOpMode::ImportGameStrings:
                 {
+                    cout << "Importing game strings..\n";
                     returnval = DoImportGameStrings();
                     break;
                 }
                 case eOpMode::ExportGameStrings:
                 {
+                    cout << "Exporting game strings..\n";
                     returnval = DoExportGameStrings();
                     break;
                 }
                 case eOpMode::ImportAll:
                 {
+                    cout << "Importing ALL..\n";
                     returnval = DoImportAll();
                     break;
                 }
                 case eOpMode::ExportAll:
                 {
+                    cout << "Exporting ALL..\n";
                     returnval = DoExportAll();
                     break;
                 }
@@ -487,14 +500,41 @@ namespace statsutil
 
     int CStatsUtil::DoImportPokemonData()
     {
-        int returnval = -1;
-        return returnval;
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            throw runtime_error("Output path is empty!");
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        CGameStats gstats( m_outputPath, m_langconf );
+        gstats.ImportPkmn( m_inputPath );
+        gstats.WritePkmn(m_outputPath);
+
+        return 0;
     }
 
     int CStatsUtil::DoExportPokemonData()
     {
-        int returnval = -1;
-        return returnval;
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.parent().append(DefExportPkmnName).makeFile();
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        CGameStats gstats( m_inputPath, m_langconf );
+
+        gstats.LoadPkmn();
+        gstats.ExportPkmn( outpath.toString() );
+
+        return 0;
     }
 
     int CStatsUtil::DoImportItemsData()
@@ -533,9 +573,6 @@ namespace statsutil
         else
             outpath = Poco::Path(m_outputPath);
 
-        //CGameStats mystats( m_inputPath, DefLangConfFile );
-        //mystats.LoadStringsOnly();
-
         if( ! m_flocalestr.empty() )
         {
             auto myloc = std::locale( m_flocalestr );
@@ -561,7 +598,7 @@ namespace statsutil
         else
             outpath = Poco::Path(m_outputPath);
 
-        CGameStats mystats( m_inputPath, DefLangConfFile );
+        CGameStats mystats( m_inputPath, m_langconf );
         mystats.LoadStringsOnly();
         cout << "Writing...\n";
         WriteTextFileLineByLine( mystats.Strings(), outpath.toString() );
