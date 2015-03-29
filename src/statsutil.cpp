@@ -121,10 +121,10 @@ namespace statsutil
         },
         //Move data only
         {
-            "mvd",
+            "mv",
             0,
             "Specifying this will import or export only move data!",
-            "-mvd",
+            "-mv",
             std::bind( &CStatsUtil::ParseOptionMvD, &GetInstance(), placeholders::_1 ),
         },
         //Items data only
@@ -648,9 +648,10 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath);
 
         CGameStats mystats( m_inputPath, m_langconf );
-        mystats.LoadStringsOnly();
+        mystats.LoadStrings();
         cout << "Writing...\n";
-        WriteTextFileLineByLine( mystats.Strings(), outpath.toString() );
+        mystats.ExportStrings( outpath.toString() );
+        //WriteTextFileLineByLine( mystats.Strings(), outpath.toString() );
         return 0;
     }
 

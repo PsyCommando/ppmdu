@@ -135,7 +135,6 @@ namespace pmd2{ namespace stats
     ************************************************************************/
     class CGameStats
     {
-
         struct strbounds_t
         {
             uint32_t beg = 0;
@@ -165,34 +164,44 @@ namespace pmd2{ namespace stats
         //void                  Items( const ItemsDB &  newdata ) { m_itemsData = newdata; }
 
         //Accessors
-
+        inline void                setCurDataDir( const std::string & path ) { m_dataFolder = path; }
+        inline const std::string & getCurDataDir()const                      { return m_dataFolder; }
 
         //Accessors
 
         //Input / Output
-        void Load ();
-        void Load ( const std::string & newpmd2rootdir );
+        /*
+            If no path is specified, will use the last path used in either the constructor or in the function below
+        */
+        void Load       ( const std::string & rootdatafolder = "" );
+        void LoadStrings( const std::string & rootdatafolder = "" );
+        void LoadPkmn   ( const std::string & rootdatafolder = "" );
+        void LoadMoves  ( const std::string & rootdatafolder = "" );
 
-        void LoadStringsOnly();
-        void LoadStringsOnly( const std::string & newpmd2rootdir );
-
-        void LoadPkmn();
-        void LoadMoves();
-
-        void Write();
-
-        void WritePkmn ( const std::string & rootdatafolder );
-        void WriteMoves( const std::string & rootdatafolder );
-
-        void Write( const std::string & rootdatafolder );
+        void Write       ( const std::string & rootdatafolder = "" );
+        void WritePkmn   ( const std::string & rootdatafolder = "" );
+        void WriteMoves  ( const std::string & rootdatafolder = "" );
+        void WriteStrings( const std::string & rootdatafolder = "" );
 
         //Export
-        void ExportPkmn ( const std::string & directory );
-        void ExportMoves( const std::string & directory );
+        /*
+            The Current data directory must be set to the game data
+            folder the data is exported from !
+            Unless everything was loaded!
+        */
+        void ExportPkmn   ( const std::string & directory );
+        void ExportMoves  ( const std::string & directory );
+        void ExportStrings( const std::string & file );
 
         //Import
-        void ImportPkmn ( const std::string & directory );
-        void ImportMoves( const std::string & directory );
+        /*
+            The Current data directory must be set to the game data
+            folder where the data will be imported to ! This is
+            to allow determining the target game version, nothing will be overwritten!
+        */
+        void ImportPkmn   ( const std::string & directory );
+        void ImportMoves  ( const std::string & directory );
+        void ImportStrings( const std::string & file );
         
     public:
         /*
@@ -266,19 +275,32 @@ namespace pmd2{ namespace stats
         };
     
     private:
-        void   IdentifyGameVersion();
-        void          IdentifyGameLocaleStr();
-        void          BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings to avoid searching for them in the getstring methods below
+        /*
+            Analyze the current data folder to find out what game, and language it is, 
+            and where are the correct strings located at.
+        */
+        inline void AnalyzeGameDir()
+        {
+            IdentifyGameVersion();
+            IdentifyGameLocaleStr();
+            BuildListOfStringOffsets();
+        }
 
-        void LoadGameStrings();
-        void LoadPokemonData();
-        void LoadItemData();
-        void LoadDungeonData();
+        void IdentifyGameVersion     ();
+        void IdentifyGameLocaleStr   ();
+        void BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings to avoid searching for them in the getstring methods below
 
-        void WriteGameStrings();
-        void WritePokemonData();
-        void WriteItemData();
-        void WriteDungeonData();
+        void _LoadGameStrings();
+        void _LoadPokemonAndMvData(); //Must be written together!
+        //void _LoadMoveData   ();
+        void _LoadItemData   ();
+        void _LoadDungeonData();
+
+        void _WriteGameStrings();
+        void _WritePokemonAndMvData(); //Must be written together!
+        //void _WriteMoveData   ();
+        void _WriteItemData   ();
+        void _WriteDungeonData();
 
         inline strbounds_t strBounds( eStrBNames what )const
         {

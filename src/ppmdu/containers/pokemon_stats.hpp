@@ -426,8 +426,12 @@ namespace pmd2 { namespace stats
         inline const std::vector<CPokemon> & Pkmn()const          { return m_pkmn; }
         inline       std::vector<CPokemon> & Pkmn()               { return m_pkmn; }
 
+        inline bool             isEoSData()const                  { return m_isEoSData; } 
+        inline void             isEoSData( bool val )             { m_isEoSData = val; } 
+
     private:
         std::vector<CPokemon> m_pkmn;
+        bool                  m_isEoSData;
     };
 
 

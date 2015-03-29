@@ -20,9 +20,10 @@ namespace pmd2 {namespace stats
 //===============================================================================================
     namespace pkmnXML
     {
-        static const string ROOT_PkmnData = "PokemonData";
+        //static const string ROOT_PkmnData = "PokemonData";
 
         static const string NODE_Pkmn     = "Pokemon";
+        static const string ATTR_GameVer  = "GameVersion";
 
         static const string NODE_GenderEnt= "GenderedEntity";
 
@@ -95,6 +96,9 @@ namespace pmd2 {namespace stats
         static const string PROP_Unk29    = "Unk29";
         static const string PROP_Unk30    = "Unk30";
     };
+
+    static const string GameVersion_EoS  = "EoS";
+    static const string GameVersion_EoTD = "EoT/D";
 
 //===============================================================================================
 //  Classes
@@ -193,6 +197,12 @@ namespace pmd2 {namespace stats
 
                 xml_document doc;
                 xml_node pknode = doc.append_child( NODE_Pkmn.c_str() );
+
+                if( m_src.isEoSData() )
+                    AppendAttribute( pknode, ATTR_GameVer, GameVersion_EoS );
+                else
+                    AppendAttribute( pknode, ATTR_GameVer, GameVersion_EoTD );
+
                 WriteAPokemon( m_src[i], pknode, i );
 
                 if( ! doc.save_file( sstrfname.str().c_str() ) )
@@ -203,28 +213,40 @@ namespace pmd2 {namespace stats
         void WriteAPokemon( const CPokemon & pkmn, xml_node & pknode, unsigned int pkindex )
         {
             using namespace pkmnXML;
+            //array<char,64> commentBuff = {0};
             //xml_node pknode = pn.append_child( NODE_Pkmn.c_str() );
 
             //Write strings block
+            WriteCommentNode( pknode, "In-game text" );
             WriteStrings( pknode, pkindex );
 
             //Write Gender entity 1
-            WriteCommentNode( pknode, "Gender 1" );
+            //sprintf_s( commentBuff.data(), commentBuff.size(), "Gender 1, index #%i", pkindex );
+            //WriteCommentNode( pknode, commentBuff.data() );
+            WriteCommentNode( pknode, "Primary gender entity" );
             xml_node genderent1 = pknode.append_child( NODE_GenderEnt.c_str() );
             WriteMonsterData( pkmn.MonsterDataGender1(), genderent1 );
 
             if( pkmn.Has2GenderEntries() )
             {
                 //Write Gender entity 2
-                WriteCommentNode( pknode, "Gender 2" );
+                //sprintf_s( commentBuff.data(), commentBuff.size(), "Gender 2, index #%i", pkindex );
+                //WriteCommentNode( pknode, commentBuff.data() );
+                WriteCommentNode( pknode, "Secondary gender entity" );
                 xml_node genderent2 = pknode.append_child( NODE_GenderEnt.c_str() );
                 WriteMonsterData( pkmn.MonsterDataGender2(), genderent2 );
             }
 
             //Write common data
             WriteStatsGrowth( pkmn.StatsGrowth(), pknode );
+            WriteCommentNode( pknode, "Moveset from waza_p.bin" );
             WriteMoveSet    ( pkmn.MoveSet1(),    pknode );
 
+            if( m_src.isEoSData() )
+            {
+                WriteCommentNode( pknode, "Moveset from waza_p2.bin" );
+                WriteMoveSet    ( pkmn.MoveSet2(),    pknode );
+            }
         }
 
         void WriteStrings( xml_node & pn, unsigned int pkindex )
@@ -335,6 +357,10 @@ namespace pmd2 {namespace stats
         {
             using namespace pkmnXML;
             xml_node mvsetnode = pn.append_child( NODE_Moveset.c_str() );
+            array<char,32> commentbuf = {0};
+
+            sprintf_s( commentbuf.data(), commentbuf.size(), "Learns %i move(s)", mv.lvlUpMoveSet.size() );
+            WriteCommentNode( mvsetnode, commentbuf.data() );
 
             //Level-up moves
             xml_node lvlupnode = mvsetnode.append_child( NODE_LvlUpMv.c_str() );
@@ -345,10 +371,16 @@ namespace pmd2 {namespace stats
                 WriteNodeWithValue( learnnode, PROP_MoveID, FastTurnIntToCStr(lvlupmv.second) );
             }
 
+            sprintf_s( commentbuf.data(), commentbuf.size(), "Has %i egg move(s)", mv.eggmoves.size() );
+            WriteCommentNode( mvsetnode, commentbuf.data() );
+
             //Egg Moves
             xml_node eggnode = mvsetnode.append_child( NODE_EggMv.c_str() );
             for( const auto & eggmv : mv.eggmoves )
                 WriteNodeWithValue( eggnode, PROP_MoveID, FastTurnIntToCStr(eggmv) );
+
+            sprintf_s( commentbuf.data(), commentbuf.size(), "Can learn %i HM/TM move(s)", mv.teachableHMTMs.size() );
+            WriteCommentNode( mvsetnode, commentbuf.data() );
 
             //HM/TM moves
             xml_node tmnode = mvsetnode.append_child( NODE_HMTMMv.c_str() );
@@ -380,7 +412,7 @@ namespace pmd2 {namespace stats
                              std::vector<std::string>::iterator   itendnames,
                              std::vector<std::string>::iterator   itbegcat,
                              std::vector<std::string>::iterator   itendcat )
-           :m_out(out_pkdb),m_boundsNames(make_pair(itbegnames,itendnames)), m_boundsCats(make_pair(itbegcat,itendcat))
+           :m_out(out_pkdb),m_boundsNames(make_pair(itbegnames,itendnames)), m_boundsCats(make_pair(itbegcat,itendcat)), m_isEoS(false)
         {}
 
         void Parse( const std::string & srcdir )
@@ -407,6 +439,7 @@ namespace pmd2 {namespace stats
             try
             {
                 m_out.Pkmn() = ReadAllPokemon(srcdir);
+                m_out.isEoSData(m_isEoS);
                // m_out.Pkmn() = ReadAllPokemon(root);
             }
             catch( exception & e )
@@ -446,7 +479,8 @@ namespace pmd2 {namespace stats
             vector<CPokemon> result;
             result.reserve(filelst.size());
 
-            uint32_t cntPkmn = 0;
+            uint32_t cntEoSPk = 0;
+            uint32_t cntPkmn  = 0;
             for( auto & pkmn : filelst /*rootchilds*/ )
             {
                 string & strname = GetStringRefPkmn(cntPkmn);
@@ -460,8 +494,27 @@ namespace pmd2 {namespace stats
                     sstr <<"Can't load XML document \"" <<pkmn <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
                     throw std::runtime_error(sstr.str());
                 }
-                result.push_back( ReadPokemon( doc.first_child(), strname, strcat ) );
+
+                bool hadEoSAttribute = false;
+                result.push_back( ReadPokemon( doc.first_child(), strname, strcat, hadEoSAttribute ) );
+
+                //Count EoS pokes
+                if( hadEoSAttribute )
+                    ++cntEoSPk;
+
                 ++cntPkmn;
+            }
+
+            //Determine if is EoS data by looking at the total nb of EoS-like entries!
+            if( cntEoSPk > 0 && cntEoSPk < (filelst.size()-1) ) //Account for always null first entry
+            {
+                cerr << "WARNING: One or more Pokemon's " <<ATTR_GameVer <<" attribute doesn't match the others!\n"
+                     << "Got " <<dec <<cntEoSPk <<" entries that had Explorers of Sky as their game version, while the rest didn't!\n"
+                     << "Attempting to continue.\n";
+            }
+            else
+            {
+                m_isEoS = cntEoSPk > 0;
             }
             return std::move(result);
         }
@@ -494,7 +547,7 @@ namespace pmd2 {namespace stats
             }
         }
 
-        CPokemon ReadPokemon( xml_node & pknode, string & pkname, string & pkcat )
+        CPokemon ReadPokemon( xml_node & pknode, string & pkname, string & pkcat, bool & isEoS )
         {
             using namespace pkmnXML;
             //CPokemon curpoke;
@@ -502,9 +555,38 @@ namespace pmd2 {namespace stats
 
             PokeStatsGrowth sg;
             PokeMoveSet     mvset1;
+            PokeMoveSet     mvset2;
             PokeMonsterData gen1;
             PokeMonsterData gen2;
-            bool            has2gender = false;
+            bool            hasParsedMv1 = false;
+            bool            has2gender   = false;
+
+            //Check the game version of the pokemon data
+            xml_attribute gv = pknode.attribute( ATTR_GameVer.c_str() );
+            const string  gvs= gv.as_string(); 
+
+            if( !gvs.empty() ) //If the attribute exists
+            {
+                //Easier to do it this way in order to handle the last case without running another string compare!
+                if( gvs == GameVersion_EoS )
+                    isEoS = true;
+                else if( gvs == GameVersion_EoS )
+                    isEoS = false;
+                else
+                {
+                    stringstream sstr;
+                    sstr << "Invalid game version attribute of \"" <<gvs <<"\" for Pokemon " <<pkname <<"!";
+                    throw runtime_error(sstr.str());
+                }
+                    
+            }
+            else
+            {
+                stringstream sstr;
+                sstr << "Game version attribute for Pokemon " <<pkname <<" is missing!";
+                throw runtime_error(sstr.str());
+            }
+
 
             for( auto & curnode : pknode.children() )
             {
@@ -518,7 +600,24 @@ namespace pmd2 {namespace stats
                 }
                 else if( curnode.name() == NODE_Moveset )
                 {
-                    mvset1 = ReadMoveSet( curnode );
+                    if( isEoS )
+                    {
+                        //Handle parsing the 2 movesets for EoS
+                        if( !hasParsedMv1 )
+                        {
+                            mvset1 = ReadMoveSet( curnode );
+                            hasParsedMv1 = true;
+                        }
+                        else
+                        {
+                            mvset2 = ReadMoveSet( curnode );
+                            hasParsedMv1 = false;
+                        }
+                    }
+                    else
+                    {
+                        mvset1 = ReadMoveSet( curnode );
+                    }
                 }
                 else if( curnode.name() == NODE_GenderEnt )
                 {
@@ -534,9 +633,9 @@ namespace pmd2 {namespace stats
             }
 
             if( has2gender )
-                return CPokemon( move(gen1), move(gen2), move(sg), move(mvset1), PokeMoveSet() );
+                return CPokemon( move(gen1), move(gen2), move(sg), move(mvset1), move(mvset2) );
             else
-                return CPokemon( move(gen1), move(sg), move(mvset1), PokeMoveSet() );
+                return CPokemon( move(gen1), move(sg), move(mvset1), move(mvset2) );
         }
 
         void ReadStrings( xml_node & strnode, string & pkname, string & pkcat )
@@ -754,6 +853,7 @@ namespace pmd2 {namespace stats
         PokemonDB & m_out;
         strbounds_t m_boundsNames;
         strbounds_t m_boundsCats;
+        bool        m_isEoS;
     };
 
 //===============================================================================================

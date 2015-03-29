@@ -216,21 +216,28 @@ namespace pmd2{ namespace stats
         if( nbSpecialPk != filetypes::MonsterMD_DefNBSpecials )
             clog << "WARNING: The amount of special Pokemon parsed differs from the default value. Continuing happily.\n";
 
-        //#2 - Allocate
+        //#2 - Allocate pokemon slots in the db
         mydb.m_pkmn.resize(offsetDups);
 
-        //#3 - Fill up each entries 
+        uint32_t nbValidMvSet2 = 0;
+
+        //#3 - Fill up each pokemon entries 
         for( unsigned int i = 0; i < mydb.m_pkmn.size(); ++i )
         {
+            PokeMoveSet mvset2 = ( i < movesets.second.size() )? std::move(movesets.second[i]) : PokeMoveSet();
+
+            if( !mvset2.empty() )
+                ++nbValidMvSet2;
+
             //#1 - Check if we have a secondary gender entry for this poke
             if( i < nbRegularPk )
             {
                 //If we do, Handle regulars
                 mydb[i] =CPokemon( std::move(md[i]), 
-                                   std::move(md[i+offsetDups]), 
-                                   (i < growth.size() )? std::move(growth[i]) : PokeStatsGrowth(),
-                                   ( i < movesets.first.size() )? std::move(movesets.first[i]) : PokeMoveSet(),
-                                   ( i < movesets.second.size() )? std::move(movesets.second[i]) : PokeMoveSet() );
+                                    std::move(md[i+offsetDups]), 
+                                    (i < growth.size() )? std::move(growth[i]) : PokeStatsGrowth(),
+                                    ( i < movesets.first.size() )? std::move(movesets.first[i]) : PokeMoveSet(),
+                                    std::move(mvset2) );
             }
             else
             {
@@ -238,9 +245,15 @@ namespace pmd2{ namespace stats
                 mydb[i] = CPokemon( std::move(md[i]), 
                                     (i < growth.size() )? std::move(growth[i]) : PokeStatsGrowth(),
                                     ( i < movesets.first.size() )? std::move(movesets.first[i]) : PokeMoveSet(),
-                                    ( i < movesets.second.size() )? std::move(movesets.second[i]) : PokeMoveSet() );
+                                    std::move(mvset2) );
             }
         }
+
+        //If we got more than a single entry its safe to say its not a possible input error
+        if( nbValidMvSet2 > 1 )
+            mydb.isEoSData(true);   //Uses the waza_p2.bin file as well !
+        else
+             mydb.isEoSData(false);  
 
         return std::move(mydb);
     }
