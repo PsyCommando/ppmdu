@@ -14,7 +14,7 @@ Description:
 
 namespace pmd2 { namespace filetypes
 {
-    typedef std::pair<stats::MoveDB,stats::MoveDB>                                        combinedmovedat_t;
+    typedef std::pair<stats::MoveDB,stats::MoveDB> combinedmovedat_t;
 
 //
 //  Constants

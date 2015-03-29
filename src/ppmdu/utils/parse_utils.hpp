@@ -46,7 +46,23 @@ namespace utils
         else
             sstr <<dec <<str;
 
-        sstr >> out_val;
+        //Handle bytes differently
+        if(std::is_same<_Ty, uint8_t>::value)
+        {
+            uint16_t temp = 0;
+            sstr >> temp;
+            out_val = static_cast<uint8_t>(temp);
+        }
+        else if(std::is_same<_Ty, int8_t>::value)
+        {
+            int16_t temp = 0;
+            sstr >> temp;
+            out_val = static_cast<int8_t>(temp);
+        }
+        else
+        {
+            sstr >> out_val;
+        }
     }
 
     template<class _Ty>
@@ -54,15 +70,16 @@ namespace utils
     {
         using namespace std;
         _Ty          out_val;
-        stringstream sstr;
-        std::size_t  foundprefix = str.find( "0x" );
+        //stringstream sstr;
+        //std::size_t  foundprefix = str.find( "0x" );
 
-        if( foundprefix != string::npos )
-            sstr <<hex <<string( foundprefix + str.begin(), str.end() ).substr(2); //make sure the string begins at "0x" and skip "0x"
-        else
-            sstr <<dec <<str;
+        //if( foundprefix != string::npos )
+        //    sstr <<hex <<string( foundprefix + str.begin(), str.end() ).substr(2); //make sure the string begins at "0x" and skip "0x"
+        //else
+        //    sstr <<dec <<str;
 
-        sstr >> out_val;
+        //sstr >> out_val;
+        parseHexaValToValue( str, out_val );
         return out_val;
     }
 

@@ -24,29 +24,29 @@ namespace pmd2{ namespace filetypes
     static const std::string TextStr_JapFName = "text_j.str";
     
     //English locale for English text
-    static const std::string TextEnglishLocale     = 
-#ifdef _WIN32 || defined _WIN64
-        "en-US";
-#else
-        "";
-    static_assert(false, "If you're compiling this on another platform than windows, please put a valid locale name here!");
-#endif
-
-    //Japanese locale for Japanese text
-    static const std::string TextJapaneseLocale    = 
-#ifdef _WIN32 || defined _WIN64
-        ".932";    //shift_jis - ANSI/OEM Japanese; Japanese (Shift-JIS)
-#else
-        "";
-    static_assert(false, "If you're compiling this on another platform than windows, please put a valid locale name here!");
-#endif
-
-
-    //  Explorers of Sky string indexes
-    static const unsigned int TextStr_PokeNames_EoS         = 8734; //Pokemon names begin at entry #8734, in Explorers of sky!
-    static const unsigned int TextStr_PokeCategoryNames_EoS = 9334;
-    static const unsigned int TextStr_MoveNames_EoS         = 8173; 
-    static const unsigned int TextStr_ItemNames_EoS         = 6773; 
+//    static const std::string TextEnglishLocale     = 
+//#ifdef _WIN32 || defined _WIN64
+//        "en-US";
+//#else
+//        "";
+//    static_assert(false, "If you're compiling this on another platform than windows, please put a valid locale name here!");
+//#endif
+//
+//    //Japanese locale for Japanese text
+//    static const std::string TextJapaneseLocale    = 
+//#ifdef _WIN32 || defined _WIN64
+//        ".932";    //shift_jis - ANSI/OEM Japanese; Japanese (Shift-JIS)
+//#else
+//        "";
+//    static_assert(false, "If you're compiling this on another platform than windows, please put a valid locale name here!");
+//#endif
+//
+//
+//    //  Explorers of Sky string indexes
+//    static const unsigned int TextStr_PokeNames_EoS         = 8734; //Pokemon names begin at entry #8734, in Explorers of sky!
+//    static const unsigned int TextStr_PokeCategoryNames_EoS = 9334;
+//    static const unsigned int TextStr_MoveNames_EoS         = 8173; 
+//    static const unsigned int TextStr_ItemNames_EoS         = 6773; 
 
     //  Explorers of Time/Darkness string idexes
 
@@ -59,7 +59,7 @@ namespace pmd2{ namespace filetypes
             Parse a text_*.str file from PMD2, to a string vector.
     */
     std::vector<std::string> ParseTextStrFile( const std::string              & filepath, 
-                                               const std::locale              & txtloc = std::locale(TextEnglishLocale) );
+                                               const std::locale              & txtloc = std::locale::classic() );
 
     /*
         WriteTextStrFile
@@ -67,7 +67,7 @@ namespace pmd2{ namespace filetypes
     */
     void                     WriteTextStrFile( const std::string              & filepath, 
                                                const std::vector<std::string> & text, 
-                                               const std::locale              & txtloc = std::locale(TextEnglishLocale) );
+                                               const std::locale              & txtloc = std::locale::classic() );
 
 //============================================================================================
 //  Classes

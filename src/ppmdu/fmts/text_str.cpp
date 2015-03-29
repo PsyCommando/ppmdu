@@ -56,7 +56,7 @@ namespace pmd2 { namespace filetypes
                 clog <<"Found " <<dec <<m_ptrTable.size() <<" strings to parse!\nParsing..\n";
                 //Read all the strings
                 ReadStrings();
-                clog<<"Done!\n";
+                clog<<"Done parsing strings !\n";
             }
             catch( exception & e )
             {
@@ -110,7 +110,7 @@ namespace pmd2 { namespace filetypes
                 else
                     len = (m_ptrTable[i+1] - m_ptrTable[i]);
 
-                char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]);
+                char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
                 stringstream out;
                 out.imbue(m_locale);
 
@@ -149,6 +149,7 @@ namespace pmd2 { namespace filetypes
                 ++i;
                 cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (i * 100 / PtrTableSize) <<"%";
             }
+            cout<<"\n";
         }
 
         std::string              m_strFilePath;
@@ -321,7 +322,7 @@ namespace pmd2 { namespace filetypes
                 ++cntstr;
                 cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (cntstr * 100 / m_txtstr.size()) <<"%";
             }
-
+            cout<<"\n";
             //Write file
             utils::io::WriteByteVectorToFile( filepath, m_fileData );
         }

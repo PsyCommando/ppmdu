@@ -77,6 +77,7 @@ namespace statsutil
         //Default filenames names
         static const std::string                                 DefExportStrName;
         static const std::string                                 DefExportPkmnName;
+        static const std::string                                 DefExportPkmnOutDir;
         static const std::string                                 DefExportMvName;
         static const std::string                                 DefExportItemsName;
 

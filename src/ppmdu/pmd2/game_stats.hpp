@@ -185,10 +185,10 @@ namespace pmd2{ namespace stats
         void Write( const std::string & rootdatafolder );
 
         //Export
-        void ExportPkmn( const std::string & file );
+        void ExportPkmn( const std::string & directory );
 
         //Import
-        void ImportPkmn( const std::string & file );
+        void ImportPkmn( const std::string & directory );
         
     public:
         /*

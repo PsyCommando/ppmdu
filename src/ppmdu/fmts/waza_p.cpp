@@ -384,7 +384,7 @@ namespace pmd2 { namespace filetypes
             WriteValue(uint8_t(0));
 
             //Skip first null entry
-            for( auto itpkmove = m_pkmnmoves.begin()+1; itpkmove != m_pkmnmoves.end(); ++itpkmove )
+            for( auto itpkmove = m_pkmnmoves.begin(); itpkmove != m_pkmnmoves.end(); ++itpkmove )
             {
                 WriteAPkmnMoveLists(*itpkmove);
             }
@@ -596,21 +596,25 @@ namespace pmd2 { namespace filetypes
     std::pair<MoveDB,MoveDB> ParseMoveData( const std::string & pathOfBalanceDir )
     {
         std::pair<MoveDB,MoveDB> result;
-        clog << "Parsing move data..\n";
+        if( utils::LibWide().isLogOn() )
+            clog << "Parsing move data..\n";
 
         auto wazadata = LoadWazaData(pathOfBalanceDir);
 
         if( ! (wazadata.second.empty()) )
         {
-            clog << "waza_p2.bin is present. Assuming game data is from Explorers of Sky!\n";
+            if( utils::LibWide().isLogOn() )
+                clog << "waza_p2.bin is present. Assuming game data is from Explorers of Sky!\n";
             result = ParseMoveData( wazadata.first, wazadata.second );
         }
         else
         {
-            clog << "waza_p2.bin is NOT present. Assuming game data is from Explorers of Time/Darkness!\n";
+            if( utils::LibWide().isLogOn() )
+                clog << "waza_p2.bin is NOT present. Assuming game data is from Explorers of Time/Darkness!\n";
             result.first = ParseMoveData(wazadata.first);
         }
-        clog << "Parsing complete!\n";
+        if( utils::LibWide().isLogOn() )
+            clog << "Parsing complete!\n";
         return result;
     }
     
@@ -671,17 +675,21 @@ namespace pmd2 { namespace filetypes
 
             if( !(lvlupmvset.second.empty()) && !(movedata.second.empty()) )
             {
-                clog << "Second learnset list and movedata list are present. Assuming game data is from Explorers of Sky! Writing waza_p2.bin file!\n";
+                if( utils::LibWide().isLogOn() )
+                    clog << "Second learnset list and movedata list are present. Assuming game data is from Explorers of Sky! Writing waza_p2.bin file!\n";
                 WazaWriter wazaw2( lvlupmvset.second, movedata.second );
                 utils::io::WriteByteVectorToFile( waza1Path, wazaw1.Write() );
                 utils::io::WriteByteVectorToFile( waza2Path, wazaw2.Write() );
-                clog << "Wrote \"" <<waza1Path <<"\" and \"" <<waza2Path <<"\" successfully!\n";
+                if( utils::LibWide().isLogOn() )
+                    clog << "Wrote \"" <<waza1Path <<"\" and \"" <<waza2Path <<"\" successfully!\n";
             }
             else
             {
-                clog << "Second learnset list and movedata list are NOT present. Assuming game data is from Explorers of Time/Darkness! Skipping on waza_p2.bin file!\n";
+                if( utils::LibWide().isLogOn() )
+                    clog << "Second learnset list and movedata list are NOT present. Assuming game data is from Explorers of Time/Darkness! Skipping on waza_p2.bin file!\n";
                 utils::io::WriteByteVectorToFile( waza1Path, wazaw1.Write() );
-                clog << "Wrote \"" <<waza1Path <<"\" successfully!\n";
+                if( utils::LibWide().isLogOn() )
+                    clog << "Wrote \"" <<waza1Path <<"\" successfully!\n";
             }
         }
         else

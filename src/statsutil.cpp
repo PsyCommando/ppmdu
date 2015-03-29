@@ -42,6 +42,7 @@ namespace statsutil
 
     const std::string CStatsUtil::DefExportStrName   = "game_strings.txt"; 
     const std::string CStatsUtil::DefExportPkmnName  = "pkmn_data.xml";
+    const std::string CStatsUtil::DefExportPkmnOutDir= "pkmn_data";
     const std::string CStatsUtil::DefExportMvName    = "moves_data.xml";
     const std::string CStatsUtil::DefExportItemsName = "items_data.xml";
     const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
@@ -334,8 +335,8 @@ namespace statsutil
                     m_operationMode = eOpMode::ImportItemsData;
                 else if( m_hndlMoves )
                     m_operationMode = eOpMode::ImportMovesData;
-                else if( m_hndlPkmn )
-                    m_operationMode = eOpMode::ImportPokemonData;
+                //else if( m_hndlPkmn )
+                //    m_operationMode = eOpMode::ImportPokemonData;
                 else
                     throw runtime_error("ERROR: Can't import all from a file!");
             }
@@ -368,7 +369,8 @@ namespace statsutil
                     if( m_force == eOpForce::Export )
                         m_operationMode = eOpMode::ExportPokemonData;
                     else
-                        throw runtime_error("ERROR: Can't import Pokemon data from a directory : " + m_inputPath);
+                        m_operationMode = eOpMode::ImportPokemonData;
+                        /*throw runtime_error("ERROR: Can't import Pokemon data from a directory : " + m_inputPath);*/
                 }
                 else
                 {
@@ -396,73 +398,73 @@ namespace statsutil
             {
                 case eOpMode::ImportGameData:
                 {
-                    cout << "Importing game data..\n";
+                    cout << "=== Importing game data ===\n";
                     returnval = DoImportGameData();
                     break;
                 }
                 case eOpMode::ExportGameData:
                 {
-                    cout << "Exporting game data..\n";
+                    cout << "=== Exporting game data ===\n";
                     returnval = DoExportGameData();
                     break;
                 }
                 case eOpMode::ImportPokemonData:
                 {
-                    cout << "Importing Pokemon data..\n";
+                    cout << "=== Importing Pokemon data ===\n";
                     returnval = DoImportPokemonData();
                     break;
                 }
                 case eOpMode::ExportPokemonData:
                 {
-                    cout << "Exporting Pokemon data..\n";
+                    cout << "=== Exporting Pokemon data ===\n";
                     returnval = DoExportPokemonData();
                     break;
                 }
                 case eOpMode::ImportItemsData:
                 {
-                    cout << "Importing items data..\n";
+                    cout << "=== Importing items data ===\n";
                     returnval = DoImportItemsData();
                     break;
                 }
                 case eOpMode::ExportItemsData:
                 {
-                    cout << "Exporting items data..\n";
+                    cout << "=== Exporting items data ===\n";
                     returnval = DoExportItemsData();
                     break;
                 }
                 case eOpMode::ImportMovesData:
                 {
-                    cout << "Importing moves data..\n";
+                    cout << "=== Importing moves data ===\n";
                     returnval = DoImportMovesData();
                     break;
                 }
                 case eOpMode::ExportMovesData:
                 {
-                    cout << "Exporting moves data..\n";
+                    cout << "=== Exporting moves data ===\n";
                     returnval = DoExportMovesData();
                     break;
                 }
                 case eOpMode::ImportGameStrings:
                 {
-                    cout << "Importing game strings..\n";
+                    cout << "=== Importing game strings ===\n";
                     returnval = DoImportGameStrings();
                     break;
                 }
                 case eOpMode::ExportGameStrings:
                 {
-                    cout << "Exporting game strings..\n";
+                    cout << "=== Exporting game strings ===\n";
                     returnval = DoExportGameStrings();
                     break;
                 }
                 case eOpMode::ImportAll:
                 {
-                    cout << "Importing ALL..\n";
+                    cout << "=== Importing ALL ===\n";
                     returnval = DoImportAll();
                     break;
                 }
                 case eOpMode::ExportAll:
                 {
-                    cout << "Exporting ALL..\n";
+                    cout << "=== Exporting ALL ===\n";
                     returnval = DoExportAll();
                     break;
                 }
@@ -524,13 +526,22 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.parent().append(DefExportPkmnName).makeFile();
+            outpath = inpath.absolute().makeParent().append(DefExportPkmnOutDir);
         }
         else
-            outpath = Poco::Path(m_outputPath);
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+        }
+
+        //Test output path
+        Poco::File fTestOut = outpath;
+        if( ! fTestOut.exists() )
+        {
+            cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+            fTestOut.createDirectory();
+        }
 
         CGameStats gstats( m_inputPath, m_langconf );
-
         gstats.LoadPkmn();
         gstats.ExportPkmn( outpath.toString() );
 

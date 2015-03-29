@@ -6,6 +6,9 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <Poco/DirectoryIterator.h>
+#include <Poco/File.h>
+#include <Poco/Path.h>
 using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
@@ -108,15 +111,26 @@ namespace pmd2 {namespace stats
             :m_src(src),m_itbegnames(itbegnames),m_itbegcat(itbegcat)
         {}
 
-        void Write( const std::string & outfile )
+        void Write( const std::string & outdir )
         {
-            using namespace pkmnXML;
-            xml_document doc;
-            xml_node     rootnode = doc.append_child( ROOT_PkmnData.c_str() );
-            WriteAllEntries(rootnode);
+            //using namespace pkmnXML;
+            //xml_document doc;
+            //xml_node     rootnode = doc.append_child( ROOT_PkmnData.c_str() );
+            //Poco::DirectoryIterator itend;
+            //stringstream            sstrPkfilename;
 
-            if( ! doc.save_file( outfile.c_str() ) )
-                throw std::runtime_error("ERROR: Can't write xml file " + outfile);
+            //for( Poco::DirectoryIterator itdir(outdir); itdir != itend; ++itdir )
+            //{
+            //    sstrPkfilename.str( string() ); //Clear stream
+            //    xml_document doc;
+            //    sstrPkfilename << << ""
+            //}
+
+
+            WriteAllEntries(outdir);
+
+            //if( ! doc.save_file( outfile.c_str() ) )
+            //    throw std::runtime_error("ERROR: Can't write xml file " + outfile);
         }
 
     private:
@@ -156,39 +170,40 @@ namespace pmd2 {namespace stats
         }
 
 
-        //template<class T>
-        //    struct IntToCStr
-        //{
-        //    IntToCStr( T value )
-        //    {}
-
-        //    operator const char*()
-        //    {
-        //        out = to_string(val);
-        //        return out.c_str();
-        //    }
-
-        //    T      val;
-        //    string out;
-        //};
-
-        void WriteAllEntries( xml_node & root )
+        inline string PreparePokeNameFName( const string & name )
         {
-            //stringstream sstr;
-            for( unsigned int i = 0; i < m_src.size(); ++i )
+            return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) ); //Remove ending "\0" and remove illegal characters for filesystem
+        }
+
+        //void WriteAllEntries( xml_node & root )
+        void WriteAllEntries( const string & outdir )
+        {
+            stringstream sstrfname;
+            auto         itcurname = m_itbegnames;
+            const string outpathpre = utils::AppendTraillingSlashIfNotThere(outdir);
+
+            for( unsigned int i = 0; i < m_src.size(); ++i, ++itcurname )
             {
-                //
-                array<char,32> commentBuf={0};
-                sprintf_s( commentBuf.data(), commentBuf.size(), "Pokemon #%i", i );
-                WriteCommentNode( root, commentBuf.data() );
-                WriteAPokemon( m_src[i], root, i );
+                using namespace pkmnXML;
+                //array<char,32> fnamebuff={0};
+                //sprintf_s( fnamebuff.data(), fnamebuff.size(), "%i", i );
+                sstrfname.str(string());
+                //WriteCommentNode( root, commentBuf.data() );
+                sstrfname <<outpathpre <<setw(4) <<setfill('0') <<i <<"_" <<PreparePokeNameFName(*itcurname) <<".xml";
+
+                xml_document doc;
+                xml_node pknode = doc.append_child( NODE_Pkmn.c_str() );
+                WriteAPokemon( m_src[i], pknode, i );
+
+                if( ! doc.save_file( sstrfname.str().c_str() ) )
+                    throw std::runtime_error("Can't write xml file " + sstrfname.str());
             }
         }
 
-        void WriteAPokemon( const CPokemon & pkmn, xml_node & pn, unsigned int pkindex )
+        void WriteAPokemon( const CPokemon & pkmn, xml_node & pknode, unsigned int pkindex )
         {
             using namespace pkmnXML;
-            xml_node pknode = pn.append_child( NODE_Pkmn.c_str() );
+            //xml_node pknode = pn.append_child( NODE_Pkmn.c_str() );
 
             //Write strings block
             WriteStrings( pknode, pkindex );
@@ -289,72 +304,6 @@ namespace pmd2 {namespace stats
             WriteNodeWithValue( pn, PROP_Unk30, FastTurnIntToHexCStr(md.unk30) );
         }
 
-        //void WriteMonsterData( const PokeMonsterData & md, xml_node & pn )
-        //{
-        //    using namespace pkmnXML;
-        //    WriteNodeWithValue( pn, PROP_PokeID, FastTurnIntToCStr(md.pokeID)     );
-        //    WriteNodeWithValue( pn, PROP_Unk31,  FastTurnIntToCStr(md.mdunk31)    );
-        //    WriteNodeWithValue( pn, PROP_DexNb,  FastTurnIntToCStr(md.natPkdexNb) );
-        //    WriteNodeWithValue( pn, PROP_Unk1,   FastTurnIntToCStr(md.mdunk1)     );
-
-        //    //Evolution data
-        //    //{
-        //        xml_node evorq = pn.append_child( NODE_EvoReq.c_str() );
-        //        WriteNodeWithValue( evorq, PROP_PreEvo,    FastTurnIntToCStr(md.evoData.preEvoIndex) );
-        //        WriteNodeWithValue( evorq, PROP_EvoMeth,   FastTurnIntToCStr(md.evoData.evoMethod)   );
-        //        WriteNodeWithValue( evorq, PROP_EvoParam1, FastTurnIntToCStr(md.evoData.evoParam1)   );
-        //        WriteNodeWithValue( evorq, PROP_EvoParam2, FastTurnIntToCStr(md.evoData.evoParam2)   );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_SprID,     FastTurnIntToCStr(md.spriteIndex) );
-        //    WriteNodeWithValue( pn, PROP_Gender,     FastTurnIntToCStr(md.gender)     );
-        //    WriteNodeWithValue( pn, PROP_BodySz,    FastTurnIntToCStr(md.bodySize)    );
-        //    WriteNodeWithValue( pn, PROP_PrimaryTy, FastTurnIntToCStr(md.primaryTy)   );
-        //    WriteNodeWithValue( pn, PROP_SecTy,     FastTurnIntToCStr(md.secondaryTy) );
-        //    WriteNodeWithValue( pn, PROP_MvTy,      FastTurnIntToCStr(md.moveTy)      );
-        //    WriteNodeWithValue( pn, PROP_IQGrp,     FastTurnIntToCStr(md.IQGrp)       );
-        //    WriteNodeWithValue( pn, PROP_Ability1,  FastTurnIntToCStr(md.primAbility) );
-        //    WriteNodeWithValue( pn, PROP_Ability2,  FastTurnIntToCStr(md.secAbility)  );
-
-        //    WriteNodeWithValue( pn, PROP_BitField,  FastTurnIntToHexCStr(md.bitflags1));
-
-        //    WriteNodeWithValue( pn, PROP_ExpYield,  FastTurnIntToCStr(md.expYield)    );
-        //    WriteNodeWithValue( pn, PROP_RecRate1,  FastTurnIntToCStr(md.recruitRate1));
-        //    WriteNodeWithValue( pn, PROP_RecRate2,  FastTurnIntToCStr(md.recruitRate2));
-
-        //    //Base stats data
-        //    //{
-        //        xml_node bstats = pn.append_child( NODE_BaseStats.c_str() );
-        //        WriteNodeWithValue( bstats, PROP_HP,    FastTurnIntToCStr(md.baseHP)    );
-        //        WriteNodeWithValue( bstats, PROP_Atk,   FastTurnIntToCStr(md.baseAtk)   );
-        //        WriteNodeWithValue( bstats, PROP_SpAtk, FastTurnIntToCStr(md.baseSpAtk) );
-        //        WriteNodeWithValue( bstats, PROP_Def,   FastTurnIntToCStr(md.baseDef)   );
-        //        WriteNodeWithValue( bstats, PROP_SpDef, FastTurnIntToCStr(md.baseSpDef) );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_Weight,   FastTurnIntToCStr(md.weight)  );
-        //    WriteNodeWithValue( pn, PROP_Size,     FastTurnIntToCStr(md.size)    );
-        //    WriteNodeWithValue( pn, PROP_Unk17,    FastTurnIntToHexCStr(md.mdunk17) );
-        //    WriteNodeWithValue( pn, PROP_Unk18,    FastTurnIntToHexCStr(md.mdunk18) );
-        //    WriteNodeWithValue( pn, PROP_Unk19,    FastTurnIntToHexCStr(md.mdunk19) );
-        //    WriteNodeWithValue( pn, PROP_Unk20,    FastTurnIntToHexCStr(md.mdunk20) );
-        //    WriteNodeWithValue( pn, PROP_Unk21,    FastTurnIntToHexCStr(md.mdunk21) );
-
-        //    WriteNodeWithValue( pn, PROP_BPkmnInd, FastTurnIntToCStr(md.BasePkmn) );
-
-        //    //Exclusive items data
-        //    //{
-        //        xml_node exclusive = pn.append_child( NODE_ExItems.c_str() );
-        //        for( const auto & exitem : md.exclusiveItems )
-        //            WriteNodeWithValue( exclusive, PROP_ExItemID, FastTurnIntToCStr(exitem) );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_Unk27, FastTurnIntToHexCStr(md.unk27) );
-        //    WriteNodeWithValue( pn, PROP_Unk28, FastTurnIntToHexCStr(md.unk28) );
-        //    WriteNodeWithValue( pn, PROP_Unk29, FastTurnIntToHexCStr(md.unk29) );
-        //    WriteNodeWithValue( pn, PROP_Unk30, FastTurnIntToHexCStr(md.unk30) );
-        //}
-
         void WriteStatsGrowth( const PokeStatsGrowth & sg, xml_node & pn )
         {
             using namespace pkmnXML;
@@ -434,55 +383,84 @@ namespace pmd2 {namespace stats
            :m_out(out_pkdb),m_boundsNames(make_pair(itbegnames,itendnames)), m_boundsCats(make_pair(itbegcat,itendcat))
         {}
 
-        void Parse( const std::string & srcfile )
+        void Parse( const std::string & srcdir )
         {
-            using namespace pkmnXML;
-            ifstream inPkmn( srcfile );
+            //using namespace pkmnXML;
+            //ifstream inPkmn( srcfile );
 
-            if( inPkmn.bad() || !inPkmn.is_open() )
-            {
-                stringstream sstr;
-                sstr << "ERROR: Can't open XML file \""
-                     << srcfile << "\"!";
-                const string strerr = sstr.str();
-                clog <<strerr <<"\n";
-                throw std::runtime_error( strerr );
-            }
+            //if( inPkmn.bad() || !inPkmn.is_open() )
+            //{
+            //    stringstream sstr;
+            //    sstr << "ERROR: Can't open XML file \""
+            //         << srcfile << "\"!";
+            //    const string strerr = sstr.str();
+            //    clog <<strerr <<"\n";
+            //    throw std::runtime_error( strerr );
+            //}
 
-            xml_document doc;
-            if( ! doc.load(inPkmn) )
-                throw std::runtime_error("ERROR: Can't load XML document! Pugixml returned an error!");
+            //xml_document doc;
+            //if( ! doc.load(inPkmn) )
+            //    throw std::runtime_error("ERROR: Can't load XML document! Pugixml returned an error!");
 
-            xml_node root = doc.child(ROOT_PkmnData.c_str());
+            //xml_node root = doc.child(ROOT_PkmnData.c_str());
 
             try
             {
-                m_out.Pkmn() = ReadAllPokemon(root);
+                m_out.Pkmn() = ReadAllPokemon(srcdir);
+               // m_out.Pkmn() = ReadAllPokemon(root);
             }
             catch( exception & e )
             {
                 stringstream sstr;
-                sstr <<"Got Exception while parsing file \"" <<srcfile <<"\" : " << e.what();
+                sstr <<"Got Exception while parsing XML from directory \"" <<srcdir <<"\" : " << e.what();
                 throw runtime_error( sstr.str() );
             }
         }
 
     private:
 
-        vector<CPokemon> ReadAllPokemon( xml_node & root )
+        //vector<CPokemon> ReadAllPokemon( xml_node & root )
+        vector<CPokemon> ReadAllPokemon( const string & srcdir )
         {
             using namespace pkmnXML;
-            auto &         rootchilds = root.children( NODE_Pkmn.c_str() );
-            const uint32_t nbpkmn     = distance( rootchilds.begin(), rootchilds.end() );
+            //auto &         rootchilds = root.children( NODE_Pkmn.c_str() );
+            //const uint32_t nbpkmn     = distance( rootchilds.begin(), rootchilds.end() );
+
+
+            Poco::DirectoryIterator itDirEnd;
+            //uint32_t                nbpkmn = 0;
+            vector<string>          filelst;
+            //stringstream            sstrfname;
+
+            for( Poco::DirectoryIterator itDir(srcdir); itDir != itDirEnd; ++itDir )
+            {
+                if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
+                {
+                    //sstrfname.str(string());
+                    //sstrfname << utils::AppendTraillingSlashIfNotThere(srcdir)  <<;
+                    filelst.push_back( (itDir.path().absolute().toString()) );
+                }
+            }
+
+
             vector<CPokemon> result;
-            result.reserve(nbpkmn);
+            result.reserve(filelst.size());
 
             uint32_t cntPkmn = 0;
-            for( auto & pkmn : rootchilds )
+            for( auto & pkmn : filelst /*rootchilds*/ )
             {
                 string & strname = GetStringRefPkmn(cntPkmn);
                 string & strcat  = GetStringRefCat(cntPkmn);
-                result.push_back( ReadPokemon( pkmn, strname, strcat ) );
+
+                xml_document doc;
+                xml_parse_result loadres = doc.load_file(pkmn.c_str());
+                if( ! loadres )
+                {
+                    stringstream sstr;
+                    sstr <<"Can't load XML document \"" <<pkmn <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+                    throw std::runtime_error(sstr.str());
+                }
+                result.push_back( ReadPokemon( doc.first_child(), strname, strcat ) );
                 ++cntPkmn;
             }
             return std::move(result);
@@ -519,8 +497,14 @@ namespace pmd2 {namespace stats
         CPokemon ReadPokemon( xml_node & pknode, string & pkname, string & pkcat )
         {
             using namespace pkmnXML;
-            CPokemon curpoke;
+            //CPokemon curpoke;
             int curgenderEnt = 0;
+
+            PokeStatsGrowth sg;
+            PokeMoveSet     mvset1;
+            PokeMonsterData gen1;
+            PokeMonsterData gen2;
+            bool            has2gender = false;
 
             for( auto & curnode : pknode.children() )
             {
@@ -530,22 +514,29 @@ namespace pmd2 {namespace stats
                 }
                 else if( curnode.name() == NODE_SGrowth )
                 {
-                    curpoke.StatsGrowth() = ReadStatsGrowth( curnode );
+                    sg = ReadStatsGrowth( curnode );
                 }
                 else if( curnode.name() == NODE_Moveset )
                 {
-                    curpoke.MoveSet1() = ReadMoveSet( curnode );
+                    mvset1 = ReadMoveSet( curnode );
                 }
                 else if( curnode.name() == NODE_GenderEnt )
                 {
                     if( curgenderEnt == 0 )
-                        curpoke.MonsterDataGender1() = ReadGenderEnt( curnode );
+                        gen1 = ReadGenderEnt( curnode );
                     else if( curgenderEnt == 1 )
-                        curpoke.MonsterDataGender2() = ReadGenderEnt( curnode );
+                    {
+                        gen2 = ReadGenderEnt( curnode );
+                        has2gender = true;
+                    }
                     ++curgenderEnt;
                 }
             }
-            return std::move( curpoke );
+
+            if( has2gender )
+                return CPokemon( move(gen1), move(gen2), move(sg), move(mvset1), PokeMoveSet() );
+            else
+                return CPokemon( move(gen1), move(sg), move(mvset1), PokeMoveSet() );
         }
 
         void ReadStrings( xml_node & strnode, string & pkname, string & pkcat )
@@ -695,6 +686,8 @@ namespace pmd2 {namespace stats
                     utils::parseHexaValToValue( curnode.child_value(), result.primAbility );
                 else if( curnode.name() == PROP_Ability2 )
                     utils::parseHexaValToValue( curnode.child_value(), result.secAbility );
+                else if( curnode.name() == PROP_BitField )
+                    utils::parseHexaValToValue( curnode.child_value(), result.bitflags1 );
                 else if( curnode.name() == PROP_ExpYield )
                     utils::parseHexaValToValue( curnode.child_value(), result.expYield );
                 else if( curnode.name() == PROP_RecRate1 )
@@ -755,72 +748,6 @@ namespace pmd2 {namespace stats
             return std::move(result);
         }
 
-        //void WriteMonsterData( const PokeMonsterData & md, xml_node & pn )
-        //{
-        //    using namespace pkmnXML;
-        //    WriteNodeWithValue( pn, PROP_PokeID, FastTurnIntToCStr(md.pokeID)     );
-        //    WriteNodeWithValue( pn, PROP_Unk31,  FastTurnIntToCStr(md.mdunk31)    );
-        //    WriteNodeWithValue( pn, PROP_DexNb,  FastTurnIntToCStr(md.natPkdexNb) );
-        //    WriteNodeWithValue( pn, PROP_Unk1,   FastTurnIntToCStr(md.mdunk1)     );
-
-        //    //Evolution data
-        //    //{
-        //        xml_node evorq = pn.append_child( NODE_EvoReq.c_str() );
-        //        WriteNodeWithValue( evorq, PROP_PreEvo,    FastTurnIntToCStr(md.evoData.preEvoIndex) );
-        //        WriteNodeWithValue( evorq, PROP_EvoMeth,   FastTurnIntToCStr(md.evoData.evoMethod)   );
-        //        WriteNodeWithValue( evorq, PROP_EvoParam1, FastTurnIntToCStr(md.evoData.evoParam1)   );
-        //        WriteNodeWithValue( evorq, PROP_EvoParam2, FastTurnIntToCStr(md.evoData.evoParam2)   );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_SprID,     FastTurnIntToCStr(md.spriteIndex) );
-        //    WriteNodeWithValue( pn, PROP_Gender,    FastTurnIntToCStr(md.gender)      );
-        //    WriteNodeWithValue( pn, PROP_BodySz,    FastTurnIntToCStr(md.bodySize)    );
-        //    WriteNodeWithValue( pn, PROP_PrimaryTy, FastTurnIntToCStr(md.primaryTy)   );
-        //    WriteNodeWithValue( pn, PROP_SecTy,     FastTurnIntToCStr(md.secondaryTy) );
-        //    WriteNodeWithValue( pn, PROP_MvTy,      FastTurnIntToCStr(md.moveTy)      );
-        //    WriteNodeWithValue( pn, PROP_IQGrp,     FastTurnIntToCStr(md.IQGrp)       );
-        //    WriteNodeWithValue( pn, PROP_Ability1,  FastTurnIntToCStr(md.primAbility) );
-        //    WriteNodeWithValue( pn, PROP_Ability2,  FastTurnIntToCStr(md.secAbility)  );
-
-        //    WriteNodeWithValue( pn, PROP_BitField,  FastTurnIntToHexCStr(md.bitflags1));
-
-        //    WriteNodeWithValue( pn, PROP_ExpYield,  FastTurnIntToCStr(md.expYield)    );
-        //    WriteNodeWithValue( pn, PROP_RecRate1,  FastTurnIntToCStr(md.recruitRate1));
-        //    WriteNodeWithValue( pn, PROP_RecRate2,  FastTurnIntToCStr(md.recruitRate2));
-
-        //    //Base stats data
-        //    //{
-        //        xml_node bstats = pn.append_child( NODE_BaseStats.c_str() );
-        //        WriteNodeWithValue( bstats, PROP_HP,    FastTurnIntToCStr(md.baseHP)    );
-        //        WriteNodeWithValue( bstats, PROP_Atk,   FastTurnIntToCStr(md.baseAtk)   );
-        //        WriteNodeWithValue( bstats, PROP_SpAtk, FastTurnIntToCStr(md.baseSpAtk) );
-        //        WriteNodeWithValue( bstats, PROP_Def,   FastTurnIntToCStr(md.baseDef)   );
-        //        WriteNodeWithValue( bstats, PROP_SpDef, FastTurnIntToCStr(md.baseSpDef) );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_Weight,   FastTurnIntToCStr(md.weight)  );
-        //    WriteNodeWithValue( pn, PROP_Size,     FastTurnIntToCStr(md.size)    );
-        //    WriteNodeWithValue( pn, PROP_Unk17,    FastTurnIntToHexCStr(md.mdunk17) );
-        //    WriteNodeWithValue( pn, PROP_Unk18,    FastTurnIntToHexCStr(md.mdunk18) );
-        //    WriteNodeWithValue( pn, PROP_Unk19,    FastTurnIntToHexCStr(md.mdunk19) );
-        //    WriteNodeWithValue( pn, PROP_Unk20,    FastTurnIntToHexCStr(md.mdunk20) );
-        //    WriteNodeWithValue( pn, PROP_Unk21,    FastTurnIntToHexCStr(md.mdunk21) );
-
-        //    WriteNodeWithValue( pn, PROP_BPkmnInd, FastTurnIntToCStr(md.BasePkmn) );
-
-        //    //Exclusive items data
-        //    //{
-        //        xml_node exclusive = pn.append_child( NODE_ExItems.c_str() );
-        //        for( const auto & exitem : md.exclusiveItems )
-        //            WriteNodeWithValue( exclusive, PROP_ExItemID, FastTurnIntToCStr(exitem) );
-        //    //}
-
-        //    WriteNodeWithValue( pn, PROP_Unk27, FastTurnIntToHexCStr(md.unk27) );
-        //    WriteNodeWithValue( pn, PROP_Unk28, FastTurnIntToHexCStr(md.unk28) );
-        //    WriteNodeWithValue( pn, PROP_Unk29, FastTurnIntToHexCStr(md.unk29) );
-        //    WriteNodeWithValue( pn, PROP_Unk30, FastTurnIntToHexCStr(md.unk30) );
-        //}
-
     private:
         PokemonDB & m_out;
         strbounds_t m_boundsNames;
@@ -833,18 +760,18 @@ namespace pmd2 {namespace stats
     void      ExportPokemonsToXML  ( const PokemonDB                         & src,
                                      std::vector<std::string>::const_iterator  itbegnames,
                                      std::vector<std::string>::const_iterator  itbegcat,
-                                     const std::string                       & destfile )
+                                     const std::string                       & destDir )
     {
-        PokemonDB_XMLWriter( src, itbegnames, itbegcat ).Write(destfile);
+        PokemonDB_XMLWriter( src, itbegnames, itbegcat ).Write(destDir);
     }
     
-    void      ImportPokemonsFromXML( const std::string                  & srcfile, 
+    void      ImportPokemonsFromXML( const std::string                  & srcdir, 
                                      PokemonDB                          & out_pkdb,
                                      std::vector<std::string>::iterator   itbegnames,
                                      std::vector<std::string>::iterator   itendnames,
                                      std::vector<std::string>::iterator   itbegcat,
                                      std::vector<std::string>::iterator   itendcat )
     {
-        PokemonDB_XMLParser( out_pkdb, itbegnames, itendnames, itbegcat, itendcat ).Parse(srcfile);
+        PokemonDB_XMLParser( out_pkdb, itbegnames, itendnames, itbegcat, itendcat ).Parse(srcdir);
     }
 };};

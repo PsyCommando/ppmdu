@@ -201,11 +201,7 @@ namespace pmd2{ namespace stats
         if( offsetDups == md.size() )
             throw runtime_error("ERROR: Secondary gender entries not found in parsed Pokemon monster.md data! Possibly an error in the code!");
 
-        //Make our iterators
-        //itin_t itg1beg = md.begin();
-        //itin_t itg2beg = itg1beg + offsetDups;
-        //itin_t itg1end = itg2beg;
-        //itin_t itg2end = md.end();
+
         const uint32_t nbRegularPk = md.size() - offsetDups;       //The amount of regular pokes is the length of the secondary gender block
         const uint32_t nbSpecialPk = md.size() - (2 * nbRegularPk); //The amount of special pokes is the remainder of the total size minus the size of the two genders blocks added together
 
@@ -229,20 +225,20 @@ namespace pmd2{ namespace stats
             //#1 - Check if we have a secondary gender entry for this poke
             if( i < nbRegularPk )
             {
+                //If we do, Handle regulars
                 mydb[i] =CPokemon( std::move(md[i]), 
                                    std::move(md[i+offsetDups]), 
                                    (i < growth.size() )? std::move(growth[i]) : PokeStatsGrowth(),
                                    ( i < movesets.first.size() )? std::move(movesets.first[i]) : PokeMoveSet(),
                                    ( i < movesets.second.size() )? std::move(movesets.second[i]) : PokeMoveSet() );
-                //Handle regulars
             }
             else
             {
+                //If we don't, Handle uniques
                 mydb[i] = CPokemon( std::move(md[i]), 
                                     (i < growth.size() )? std::move(growth[i]) : PokeStatsGrowth(),
                                     ( i < movesets.first.size() )? std::move(movesets.first[i]) : PokeMoveSet(),
                                     ( i < movesets.second.size() )? std::move(movesets.second[i]) : PokeMoveSet() );
-                //Handle uniques
             }
         }
 
