@@ -436,7 +436,7 @@ namespace pmd2 { namespace stats
 //======================================================================================================
 
     /*
-        Write pokemon data to a file. Takes 2 iterators to the beginning of the pokemon names and 
+        Write pokemon data to a directory, into several xml files. Takes 2 iterators to the beginning of the pokemon names and 
         pokemon category strings respectively! 
         
         The code expercts the amount of name strings matches the amount of pokemon in the PokemonDB object !
@@ -444,12 +444,12 @@ namespace pmd2 { namespace stats
     void      ExportPokemonsToXML  ( const PokemonDB                         & src,
                                      std::vector<std::string>::const_iterator  itbegnames,
                                      std::vector<std::string>::const_iterator  itbegcat,
-                                     const std::string                       & destfile );
+                                     const std::string                       & destdir );
     /*
-        Read pokemon data from a file into a PokemonDB.
+        Read pokemon data from several xml files in a directory, into a PokemonDB.
         Also import string data from the xml files into the ranges specified by the 4 iterators.
     */
-    void      ImportPokemonsFromXML( const std::string                  & srcfile, 
+    void      ImportPokemonsFromXML( const std::string                  & srcdir, 
                                      PokemonDB                          & out_pkdb,
                                      std::vector<std::string>::iterator   itbegnames,
                                      std::vector<std::string>::iterator   itendnames,
@@ -459,7 +459,7 @@ namespace pmd2 { namespace stats
     /*
         Export pokemon data to XML
     */
-    void ExportPokemonToXML( const CPokemon & src, const std::string & destfile );
+    //void ExportPokemonToXML( const CPokemon & src, const std::string & destfile );
 
     /*
         Export pokemon data to text file
@@ -469,7 +469,7 @@ namespace pmd2 { namespace stats
     /*
         Import pokemon data from XML file
     */
-    CPokemon ImportPokemonFromXML( const std::string & srcfile );
+    //CPokemon ImportPokemonFromXML( const std::string & srcfile );
 
     /*
         Import pokemon data from text file

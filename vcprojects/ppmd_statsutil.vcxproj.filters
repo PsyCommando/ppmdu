@@ -180,6 +180,9 @@
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">

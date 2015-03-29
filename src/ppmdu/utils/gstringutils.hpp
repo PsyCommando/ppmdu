@@ -39,6 +39,15 @@ namespace utils
         auto itnewend = std::remove_if(str.begin(), str.end(), [&ch](char c){ return (c == ch); });
         return std::move(std::string(str.begin(), itnewend));
     }
+
+    /************************************************************************
+        StrRemoveAfter
+            Returns the part before the position the delimiter is found!
+    ************************************************************************/
+    inline std::string StrRemoveAfter( const std::string & str, const std::string & delim )
+    {
+        return str.substr( 0, str.find( delim, 0 ) );
+    }
 };
 
 #endif 

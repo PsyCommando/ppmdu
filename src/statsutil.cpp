@@ -43,7 +43,7 @@ namespace statsutil
     const std::string CStatsUtil::DefExportStrName   = "game_strings.txt"; 
     const std::string CStatsUtil::DefExportPkmnName  = "pkmn_data.xml";
     const std::string CStatsUtil::DefExportPkmnOutDir= "pkmn_data";
-    const std::string CStatsUtil::DefExportMvName    = "moves_data.xml";
+    const std::string CStatsUtil::DefExportMvDir     = "moves_data";
     const std::string CStatsUtil::DefExportItemsName = "items_data.xml";
     const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
 
@@ -362,7 +362,8 @@ namespace statsutil
                     if( m_force == eOpForce::Export )
                         m_operationMode = eOpMode::ExportMovesData;
                     else
-                        throw runtime_error("ERROR: Can't import move data from a directory : " + m_inputPath);
+                        m_operationMode = eOpMode::ImportMovesData;
+
                 }
                 else if( m_hndlPkmn )
                 {
@@ -502,19 +503,19 @@ namespace statsutil
 
     int CStatsUtil::DoImportPokemonData()
     {
-        Poco::Path inpath(m_inputPath);
-        Poco::Path outpath;
+        //Poco::Path inpath(m_inputPath);
+        //Poco::Path outpath;
         
         if( m_outputPath.empty() )
         {
             throw runtime_error("Output path is empty!");
         }
-        else
-            outpath = Poco::Path(m_outputPath);
+        //else
+        //    outpath = Poco::Path(m_outputPath);
 
         CGameStats gstats( m_outputPath, m_langconf );
         gstats.ImportPkmn( m_inputPath );
-        gstats.WritePkmn(m_outputPath);
+        gstats.WritePkmn( m_outputPath );
 
         return 0;
     }
@@ -542,7 +543,7 @@ namespace statsutil
         }
 
         CGameStats gstats( m_inputPath, m_langconf );
-        gstats.LoadPkmn();
+        gstats.LoadPkmn  ();
         gstats.ExportPkmn( outpath.toString() );
 
         return 0;
@@ -562,14 +563,51 @@ namespace statsutil
 
     int CStatsUtil::DoImportMovesData()
     {
-        int returnval = -1;
-        return returnval;
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            throw runtime_error("Output path is empty!");
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        CGameStats gstats ( m_outputPath, m_langconf );
+        gstats.ImportMoves( m_inputPath );
+        gstats.WriteMoves ( m_outputPath );
+
+        return 0;
     }
 
     int CStatsUtil::DoExportMovesData()
     {
-        int returnval = -1;
-        return returnval;
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.absolute().makeParent().append(DefExportMvDir);
+        }
+        else
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+        }
+
+        //Test output path
+        Poco::File fTestOut = outpath;
+        if( ! fTestOut.exists() )
+        {
+            cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+            fTestOut.createDirectory();
+        }
+
+        CGameStats gstats( m_inputPath, m_langconf );
+
+        gstats.LoadMoves  ();
+        gstats.ExportMoves( outpath.toString() );
+
+        return 0;
     }
 
     int CStatsUtil::DoImportGameStrings()

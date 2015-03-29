@@ -282,7 +282,7 @@ namespace pmd2 { namespace filetypes
 
             ReadValue( md.basePower, itRead );
             ReadValue( md.type,      itRead );
-            ReadValue( md.unk3,      itRead );
+            ReadValue( md.category,  itRead );
             ReadValue( md.unk4,      itRead );
             ReadValue( md.unk5,      itRead );
             ReadValue( md.basePP,    itRead );
@@ -361,7 +361,7 @@ namespace pmd2 { namespace filetypes
 
     private:
 
-        void WritePtr( uint32_t ptr )
+        uint32_t WritePtr( uint32_t ptr )
         {
             if( ptr != 0 )
             {
@@ -373,15 +373,16 @@ namespace pmd2 { namespace filetypes
                 m_ptrofflist.push_back( m_outBuff.size() );
             }
             m_itWrite = utils::WriteIntToByteVector( ptr, m_itWrite );
+            return ptr;
         }
 
         void WritePkmnMoveLists()
         {
             //#FIXME: Not sure if should hardcode this ?!
             //Write the first 3 null move lists
-            WriteValue(uint8_t(0));
-            WriteValue(uint8_t(0));
-            WriteValue(uint8_t(0));
+            //WriteValue(uint8_t(0));
+            //WriteValue(uint8_t(0));
+            //WriteValue(uint8_t(0));
 
             //Skip first null entry
             for( auto itpkmove = m_pkmnmoves.begin(); itpkmove != m_pkmnmoves.end(); ++itpkmove )
@@ -462,7 +463,7 @@ namespace pmd2 { namespace filetypes
         {
             WriteValue( md.basePower );
             WriteValue( md.type );
-            WriteValue( md.unk3 );
+            WriteValue( md.category );
             WriteValue( md.unk4 );
             WriteValue( md.unk5 );
             WriteValue( md.basePP );
@@ -496,14 +497,29 @@ namespace pmd2 { namespace filetypes
 
             //#FIXME: Not sure if should hardcode this ?!
             //Write the initial 3 null dummy ptrs
-            utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
-            utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
-            utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
+            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
+            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
+            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
 
             //
+            ///uint32_t lastptr = 0;
             for( unsigned int i = 0; i < m_ptrPkmnMvTbl.size(); ++i )
             {
-                WritePtr(m_ptrPkmnMvTbl[i]);
+                if( !m_pkmnmoves[i/3].empty() )
+                {
+                    WritePtr(m_ptrPkmnMvTbl[i]);
+                }
+                else if( i < 3 )
+                {
+                    WritePtr(0);
+                }
+                else
+                {
+                    stringstream sstrerr;
+                    sstrerr << "Found extra empty pokemon moveset data at index " <<i <<"!";
+                    throw runtime_error( sstrerr.str() );
+                }
+
             }
         }
 
@@ -648,7 +664,7 @@ namespace pmd2 { namespace filetypes
     */
     void WriteMoveAndLearnsets( const std::string                            & pathOutBalanceDir,
                                 const std::pair<stats::MoveDB,stats::MoveDB> & movedata, 
-                                const pokeMvSets_t                & lvlupmvset )
+                                const pokeMvSets_t                           & lvlupmvset )
     {
         if( !utils::isFolder(pathOutBalanceDir) )
         {

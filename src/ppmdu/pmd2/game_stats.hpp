@@ -177,18 +177,22 @@ namespace pmd2{ namespace stats
         void LoadStringsOnly( const std::string & newpmd2rootdir );
 
         void LoadPkmn();
+        void LoadMoves();
 
         void Write();
 
-        void WritePkmn( const std::string & rootdatafolder );
+        void WritePkmn ( const std::string & rootdatafolder );
+        void WriteMoves( const std::string & rootdatafolder );
 
         void Write( const std::string & rootdatafolder );
 
         //Export
-        void ExportPkmn( const std::string & directory );
+        void ExportPkmn ( const std::string & directory );
+        void ExportMoves( const std::string & directory );
 
         //Import
-        void ImportPkmn( const std::string & directory );
+        void ImportPkmn ( const std::string & directory );
+        void ImportMoves( const std::string & directory );
         
     public:
         /*
@@ -205,6 +209,16 @@ namespace pmd2{ namespace stats
         std::vector<std::string>::const_iterator GetPokemonCatEnd()const;
         std::vector<std::string>::iterator       GetPokemonCatBeg();
         std::vector<std::string>::iterator       GetPokemonCatEnd();
+
+        std::vector<std::string>::const_iterator GetMoveNamesBeg()const;
+        std::vector<std::string>::const_iterator GetMoveNamesEnd()const;
+        std::vector<std::string>::iterator       GetMoveNamesBeg();
+        std::vector<std::string>::iterator       GetMoveNamesEnd();
+
+        std::vector<std::string>::const_iterator GetMoveDescBeg()const;
+        std::vector<std::string>::const_iterator GetMoveDescEnd()const;
+        std::vector<std::string>::iterator       GetMoveDescBeg();
+        std::vector<std::string>::iterator       GetMoveDescEnd();
 
         std::string              & GetPokemonNameStr( uint16_t pkmnindex );
         inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPokemonNameStr(pkmnindex); }

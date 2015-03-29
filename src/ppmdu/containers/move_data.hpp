@@ -14,6 +14,13 @@ namespace pmd2{ namespace stats
 {
     static const unsigned int NbMoves_EoS = 559; //Nb of moves stored by default in PMD2 Explorers of Sky
 
+    enum struct eMvCat : uint8_t
+    {
+        Physical = 0,
+        Special  = 1,
+        Status   = 2,
+    };
+
 //
 //
 //
@@ -21,7 +28,7 @@ namespace pmd2{ namespace stats
     {
         int16_t  basePower = 0;
         uint8_t  type      = 0;
-        uint8_t  unk3      = 0;
+        uint8_t  category  = static_cast<uint8_t>(eMvCat::Physical);
         uint16_t unk4      = 0;
         uint16_t unk5      = 0;
         uint8_t  basePP    = 0;
@@ -55,8 +62,9 @@ namespace pmd2{ namespace stats
     public:
         MoveDB(){ m_movesData.reserve(NbMoves_EoS); }
 
-        inline std::size_t size()const { return m_movesData.size(); }
-        inline bool        empty()const{ return m_movesData.empty(); }
+        inline std::size_t size()const        { return m_movesData.size(); }
+        inline bool        empty()const       { return m_movesData.empty(); }
+        inline void        reserve(size_t sz) { m_movesData.reserve(sz); }
 
         //The items are guaranteed to stay allocated as long as the object exists!
         //inline const MoveData & Move( uint16_t itemindex )const { return m_movesData[itemindex]; }
@@ -71,5 +79,27 @@ namespace pmd2{ namespace stats
         std::vector<MoveData> m_movesData;
     };
 
+
+//
+//
+//
+    /*
+        Export move data to XML files.
+    */
+    void      ExportMovesToXML     ( const MoveDB                            & src1,
+                                     const MoveDB                            & src2,
+                                     std::vector<std::string>::const_iterator  itbegnames,
+                                     std::vector<std::string>::const_iterator  itbegdesc,
+                                     const std::string                       & destdir );
+    /*
+        Import move data from xml files.
+    */
+    void      ImportMovesFromXML   ( const std::string                  & srcdir, 
+                                     MoveDB                             & out_mvdb1,
+                                     MoveDB                             & out_mvdb2,
+                                     std::vector<std::string>::iterator   itbegnames,
+                                     std::vector<std::string>::iterator   itendnames,
+                                     std::vector<std::string>::iterator   itbegdesc,
+                                     std::vector<std::string>::iterator   itenddesc );
 };};
 #endif

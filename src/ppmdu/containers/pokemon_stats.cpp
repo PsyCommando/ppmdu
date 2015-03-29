@@ -272,9 +272,9 @@ namespace pmd2{ namespace stats
                 //Handle secondary gender for regulars
                 out_md[i + pdb.size()] = std::move( pdb[i].MonsterDataGender2() ); //Put the second gender entry in the secondary gender section!
             }
-            if( !pdb[i].MoveSet1().empty() )
+            if( !pdb[i].MoveSet1().empty() || i == 0 ) //First entry is special
                 out_mvsets.first.push_back( std::move( pdb[i].MoveSet1() ) );
-            if( !pdb[i].MoveSet2().empty() )
+            if( !pdb[i].MoveSet2().empty() || i == 0 ) //First entry is special
                 out_mvsets.second.push_back( std::move( pdb[i].MoveSet2() ) );
             if( !pdb[i].StatsGrowth().empty() )
                 out_growth.push_back( std::move( pdb[i].StatsGrowth() ) );
@@ -302,9 +302,10 @@ namespace pmd2{ namespace stats
                 //Handle secondary gender for regulars
                 out_md[i + m_pkmn.size()] = m_pkmn[i].MonsterDataGender2(); //Put the second gender entry in the secondary gender section!
             }
-            if( !m_pkmn[i].MoveSet1().empty() )
+
+            if( !m_pkmn[i].MoveSet1().empty() || i == 0 ) //First entry is special
                 out_mvsets.first.push_back(  m_pkmn[i].MoveSet1() );
-            if( !m_pkmn[i].MoveSet2().empty() )
+            if( !m_pkmn[i].MoveSet2().empty() || i == 0 ) //First entry is special
                 out_mvsets.second.push_back( m_pkmn[i].MoveSet2() );
             if( !m_pkmn[i].StatsGrowth().empty() )
                 out_growth.push_back( m_pkmn[i].StatsGrowth() );

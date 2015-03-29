@@ -80,6 +80,9 @@ namespace pmd2{ namespace stats
         //static const string TypeNamesBlockName    = "Type Names";
     };
 
+    static const string DefMoveData1ExportDir = "move_data1";
+    static const string DefMoveData2ExportDir = "move_data2";
+
     static const array<string, static_cast<uint32_t>(CGameStats::eStrBNames::NBEntries)> StrBlocksNames = 
     {
         "Pokemon Names",
@@ -634,6 +637,56 @@ namespace pmd2{ namespace stats
         cout << "Done exporting Pokemon data!\n";
     }
 
+    void CGameStats::LoadMoves()
+    {
+        using namespace filetypes;
+        IdentifyGameVersion();
+        IdentifyGameLocaleStr();
+        BuildListOfStringOffsets();
+
+        if( m_gameVersion != eGameVersion::Invalid )
+        {
+            LoadGameStrings();
+            stringstream sstrMovedat;
+            sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+
+            cout << "Loading moves Data..\n";
+            auto allmovedat = ParseMoveAndLearnsets(sstrMovedat.str());
+
+            //Set move data
+            m_moveData1 = std::move(allmovedat.first.first);
+            m_moveData2 = std::move(allmovedat.first.second);
+
+            cout << "Done loading moves data!\n";
+        }
+        else
+            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+    }
+
+    void CGameStats::WriteMoves( const std::string & rootdatafolder )
+    {
+        using namespace filetypes;
+        stringstream sstrMovedat;
+        sstrMovedat << utils::AppendTraillingSlashIfNotThere(rootdatafolder) << BalanceDirectory;
+        stringstream sstrstrings;
+        sstrstrings << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
+
+        const string fMoveData    = sstrMovedat.str();
+        const string fStrings     = sstrstrings.str();
+
+        cout << "Writing moves Data..\n";
+
+        //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
+        // movesets!
+        cout << "\t<*>- Need to load partially Pokemon moveset data file(s) from directory \"" <<fMoveData <<"\"..\n";
+        auto mvset  = ParsePokemonLearnSets(fMoveData);
+
+        cout << "\t<*>- Writing data to \"" <<fMoveData <<"\"..\n";
+        filetypes::WriteMoveAndLearnsets( fMoveData, make_pair( MoveDB(m_moveData1), MoveDB(m_moveData2) ), mvset );
+
+        cout << "Done writing moves data!\n";
+    }
+
     void CGameStats::Write( const std::string & rootdatafolder )
     {
         m_dataFolder = rootdatafolder;
@@ -692,6 +745,93 @@ namespace pmd2{ namespace stats
         cout<<"Done!\n";
     }
 
+    void CGameStats::ExportMoves( const std::string & directory )
+    {
+        cout<<"Exporting all moves data to XML data..\n";
+        if( m_gameStrings.empty() || m_moveData1.empty() )
+            throw runtime_error("Move list(s) is/are empty. Or the game strings are not loaded!");
+
+        //For EoS we have 2 move data files!
+        //if( m_gameVersion == eGameVersion::EoS )
+        //{
+        //    stringstream sstrmv1; 
+        //    sstrmv1 << utils::AppendTraillingSlashIfNotThere(directory) << DefMoveData1ExportDir;
+        //    stringstream sstrmv2; 
+        //    sstrmv2 << utils::AppendTraillingSlashIfNotThere(directory) << DefMoveData2ExportDir;
+
+        //    const string fnmd1 = sstrmv1.str();
+        //    const string fnmd2 = sstrmv2.str();
+
+        //    if( !utils::pathExists( fnmd1 ) )
+        //        utils::DoCreateDirectory( fnmd1 );
+        //    if( !utils::pathExists( fnmd2 ) )
+        //        utils::DoCreateDirectory( fnmd2 );
+
+        //    cout << "\t<*>- Writing move list 1 XML data..\n";
+        //    stats::ExportMovesToXML( m_moveData1, GetMoveNamesBeg(), GetMoveDescBeg(), fnmd1 );
+        //    cout << "\t<*>- Writing move list 2 XML data..\n";
+        //    stats::ExportMovesToXML( m_moveData2, GetMoveNamesBeg(), GetMoveDescBeg(), fnmd2 );
+        //}
+        //else
+        //{
+            cout << "\t<*>- Writing move list XML data..\n";
+            stats::ExportMovesToXML( m_moveData1, m_moveData2, GetMoveNamesBeg(), GetMoveDescBeg(), directory );
+        //}
+
+        cout << "Done writing move lists!\n";
+    }
+
+    void CGameStats::ImportMoves( const std::string & directory )
+    {
+        cout<<"Importing all moves data from XML data..\n";
+        //Need game strings loaded for this !
+        if( m_gameStrings.empty() )
+        {
+            cout<<"\t<*>- Need to load target game strings file!\nLoading..\n";
+            LoadStringsOnly();
+        }
+        if( m_gameVersion == eGameVersion::Invalid )
+            throw runtime_error("Game version is invalid, or was not determined. Cannot import move data and format it!");
+
+        //if( m_gameVersion == eGameVersion::EoS )
+        //{
+        //    stringstream sstrmv1; 
+        //    sstrmv1 << utils::AppendTraillingSlashIfNotThere(directory) << DefMoveData1ExportDir;
+        //    stringstream sstrmv2; 
+        //    sstrmv2 << utils::AppendTraillingSlashIfNotThere(directory) << DefMoveData2ExportDir;
+
+        //    const string fnmd1 = sstrmv1.str();
+        //    const string fnmd2 = sstrmv2.str();
+
+        //    if( !utils::pathExists( fnmd1 ) )
+        //    {
+        //        stringstream sstr;
+        //        sstr << "Move data directory \"" <<fnmd1 <<"\" is missing! Explorers of Sky needs 2 directories, one for each of the 2 move data files!";
+        //        throw runtime_error(sstr.str());
+        //    }
+        //    if( !utils::pathExists( fnmd2 ) )
+        //    {
+        //        stringstream sstr;
+        //        sstr << "Move data directory \"" <<fnmd2 <<"\" is missing! Explorers of Sky needs 2 directories, one for each of the 2 move data files!";
+        //        throw runtime_error(sstr.str());
+        //    }
+
+
+        //    cout << "\t<*>- Parsing move list 1 XML data..\n";
+        //    stats::ImportMovesFromXML( fnmd1, m_moveData1, GetMoveNamesBeg(), GetMoveNamesEnd(), GetMoveDescBeg(), GetMoveDescEnd() );
+        //    cout << "\t<*>- Parsing move list 2 XML data..\n";
+        //    stats::ImportMovesFromXML( fnmd2, m_moveData2, GetMoveNamesBeg(), GetMoveNamesEnd(), GetMoveDescBeg(), GetMoveDescEnd() );
+        //}
+        //else
+        //{
+            cout<<"\t<*>- Parsing XML data..\n";
+            stats::ImportMovesFromXML( directory, m_moveData1, m_moveData2, GetMoveNamesBeg(), GetMoveNamesEnd(), GetMoveDescBeg(), GetMoveDescEnd() );
+        
+        //}
+
+        cout<<"Done importing move data!\n";
+    }
+
     /*
         Text Strings Access
             Use those to get the correct string depending on the current game version.
@@ -732,6 +872,47 @@ namespace pmd2{ namespace stats
     std::vector<std::string>::iterator CGameStats::GetPokemonCatEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::PkmnCats).end );
+    }
+
+
+    std::vector<std::string>::const_iterator CGameStats::GetMoveNamesBeg()const
+    {
+        return const_cast<CGameStats*>(this)->GetMoveNamesBeg();
+    }
+
+    std::vector<std::string>::const_iterator CGameStats::GetMoveNamesEnd()const
+    {
+        return const_cast<CGameStats*>(this)->GetMoveNamesEnd();
+    }
+
+    std::vector<std::string>::iterator       CGameStats::GetMoveNamesBeg()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).beg );
+    }
+
+    std::vector<std::string>::iterator       CGameStats::GetMoveNamesEnd()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).end );
+    }
+
+    std::vector<std::string>::const_iterator CGameStats::GetMoveDescBeg()const
+    {
+        return const_cast<CGameStats*>(this)->GetMoveDescBeg();
+    }
+
+    std::vector<std::string>::const_iterator CGameStats::GetMoveDescEnd()const
+    {
+        return const_cast<CGameStats*>(this)->GetMoveDescEnd();
+    }
+
+    std::vector<std::string>::iterator       CGameStats::GetMoveDescBeg()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).beg );
+    }
+
+    std::vector<std::string>::iterator       CGameStats::GetMoveDescEnd()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).end );
     }
 
     std::string & CGameStats::GetPokemonNameStr( uint16_t pkmnindex )

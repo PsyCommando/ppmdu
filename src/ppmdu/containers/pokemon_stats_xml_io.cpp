@@ -233,9 +233,9 @@ namespace pmd2 {namespace stats
             xml_node strnode = pn.append_child( NODE_Strings.c_str() );
 
             //Write Name
-            WriteNodeWithValue( strnode, PROP_Name, (m_itbegnames + pkindex)->c_str() );
+            WriteNodeWithValue( strnode, PROP_Name, utils::StrRemoveAfter( *(m_itbegnames + pkindex), "\\0" ) ); //remove ending \0
             //Write Category
-            WriteNodeWithValue( strnode, PROP_Category, (m_itbegcat + pkindex)->c_str() );
+            WriteNodeWithValue( strnode, PROP_Category, utils::StrRemoveAfter( *(m_itbegcat + pkindex), "\\0" ) ); //remove ending \0
         }
 
         void WriteMonsterData( const PokeMonsterData & md, xml_node & pn )
@@ -547,10 +547,12 @@ namespace pmd2 {namespace stats
                 if( curnode.name() == PROP_Name )
                 {
                     pkname = curnode.child_value();
+                    pkname += "\\0"; //put back the \0
                 }
                 else if( curnode.name() == PROP_Category )
                 {
                     pkcat = curnode.child_value();
+                    pkcat += "\\0"; //put back the \0
                 }
             }
         }

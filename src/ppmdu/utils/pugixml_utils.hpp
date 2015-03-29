@@ -40,6 +40,27 @@ namespace pugixmlutils
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value);
     }
 
+    template<>
+        inline void WriteNodeWithValue<const std::string &>( pugi::xml_node & parentnode, const std::string & name, const std::string & value )
+    {
+        using namespace pugi;
+        parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
+    }
+
+    template<>
+        inline void WriteNodeWithValue<std::string&&>( pugi::xml_node & parentnode, const std::string & name, std::string &&value )
+    {
+        using namespace pugi;
+        parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
+    }
+
+    template<>
+        inline void WriteNodeWithValue<std::string>( pugi::xml_node & parentnode, const std::string & name, std::string value )
+    {
+        using namespace pugi;
+        parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
+    }
+
     inline pugi::xml_node AppendChildNode( pugi::xml_node & parent, const std::string & childname )
     {
         return parent.append_child( childname.c_str() );
