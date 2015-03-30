@@ -2,9 +2,12 @@
     <!--This file contains the string indexes for where the strings for certain things are stored at in the text_*.str file.
         Since the text_*.str file has a different amount of strings depending on the native language, this
         file is there to make sure new entry for new languages can be easily added.-->
-    
+    <!--##############################################################################-->
+    <!--IMPORTANT: The end index must be one PAST the last string entry!-->
+    <!--##############################################################################-->
     <!--Begin List for Explorers of Sky-->
     <Game name="EoS">
+        <!--Begin English EoS-->
         <Language name="English" strfile="text_e.str" locale="en-US">
             <StringBlock>
                 <Name>Pokemon Names</Name> 
@@ -57,45 +60,16 @@
               <End>13989</End>
             </StringBlock>
         </Language>
+        <!--Begin Japanese EoS. (.932 is Shift-JIS ANSI codepage on Windows!)-->
         <Language name="Japanese" strfile="text_j.str" locale=".932">
-            <StringBlock>
-              <Name>Pokemon Names</Name>
-              <Begin></Begin>
-            </StringBlock>
-            <StringBlock>
-              <Name>Pokemon Categories</Name>
-              <Begin></Begin>
-            </StringBlock>
-            <StringBlock>
-              <Name>Move Names</Name>
-              <Begin></Begin>
-            </StringBlock>
-             <StringBlock>
-               <Name>Item Names</Name>
-               <Begin></Begin>
-            </StringBlock>
+            <!--#TODO: Fill this up!-->
         </Language>
     </Game>
-
     <!--Begin List for Explorers of Time/Darkness-->
     <Game name="EoTD">
+        <!--Begin English EoT/D-->
         <Language name="English" strfile="text_e.str" locale="en-US">
-            <StringBlock>
-              <Name>Pokemon Names</Name>
-                <Begin></Begin>
-            </StringBlock>
-            <StringBlock>
-              <Name>Pokemon Categories</Name>
-                <Begin></Begin>
-            </StringBlock>
-            <StringBlock>
-              <Name>Move Names</Name>
-                <Begin></Begin>
-            </StringBlock>
-             <StringBlock>
-               <Name>Item Names</Name>
-               <Begin></Begin>
-            </StringBlock>
+            <!--#TODO: Fill this up!-->
         </Language>
     </Game>
 </StringIndexData>

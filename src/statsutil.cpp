@@ -30,7 +30,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.1";
+    const string CStatsUtil::Version             = "0.11";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
@@ -45,9 +45,9 @@ namespace statsutil
         "No crappyrights, all wrongs reversed! :3";
 
     const std::string CStatsUtil::DefExportStrName   = "game_strings.txt"; 
-    const std::string CStatsUtil::DefExportPkmnOutDir= "pkmn_data";
-    const std::string CStatsUtil::DefExportMvDir     = "moves_data";
-    const std::string CStatsUtil::DefExportItemsDir  = "items_data";
+    //const std::string CStatsUtil::DefExportPkmnOutDir= "pkmn_data";
+    //const std::string CStatsUtil::DefExportMvDir     = "moves_data";
+    //const std::string CStatsUtil::DefExportItemsDir  = "items_data";
     const std::string CStatsUtil::DefExportAllDir    = "exported_data";
     const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
 
@@ -164,6 +164,9 @@ namespace statsutil
             std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
         },
     }};
+
+
+
 
 //------------------------------------------------
 // Misc Methods
@@ -336,7 +339,6 @@ namespace statsutil
     void CStatsUtil::DetermineOperation()
     {
         Poco::Path inpath( m_inputPath );
-        //Poco::Path outpath( m_outputPath ); //if empty crash, poco is
         Poco::File infile( inpath );
 
         if( m_operationMode != eOpMode::Invalid )
@@ -387,10 +389,10 @@ namespace statsutil
                 }
                 else
                 {
-                    if( m_force == eOpForce::Export )
-                        m_operationMode = eOpMode::ExportAll;
-                    else if( m_force == eOpForce::Import )
+                    if( m_force == eOpForce::Import || isImportAllDir(m_inputPath) )
                         m_operationMode = eOpMode::ImportAll;
+                    else
+                        m_operationMode = eOpMode::ExportAll; //If all else fails, try an export all!
                 }
             }
             else
@@ -404,9 +406,9 @@ namespace statsutil
     int CStatsUtil::Execute()
     {
         int returnval = -1;
+        utils::MrChronometer chronoexecuter("Total time elapsed");
         try
         {
-            utils::MrChronometer chronoexecuter("Total time elapsed");
             switch(m_operationMode)
             {
                 case eOpMode::ImportPokemonData:
@@ -521,7 +523,7 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(DefExportPkmnOutDir);
+            outpath = inpath.absolute().makeParent().append(CGameStats::DefPkmnDir);
         }
         else
         {
@@ -563,7 +565,7 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(DefExportItemsDir);
+            outpath = inpath.absolute().makeParent().append(CGameStats::DefItemsDir);
         }
         else
         {
@@ -611,7 +613,7 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(DefExportMvDir);
+            outpath = inpath.absolute().makeParent().append(CGameStats::DefMvDir);
         }
         else
         {

@@ -393,7 +393,7 @@ namespace pmd2 { namespace filetypes
         Poco::Path   outpath(path);
         outpath.makeFile();
 
-        outfilename << utils::AppendTraillingSlashIfNotThere( path ) << (outpath.getBaseName()) <<"_"
+        outfilename << utils::TryAppendSlash( path ) << (outpath.getBaseName()) <<"_"
                     <<std::setfill('0') <<std::setw(4) <<std::dec <<fileindex
                     <<"_0x" 
                     <<std::setfill('0') <<std::setw(4) <<std::hex << m_OffsetTable[fileindex]._fileOffset

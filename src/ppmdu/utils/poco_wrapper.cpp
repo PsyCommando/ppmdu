@@ -22,12 +22,8 @@ namespace utils
 
         if( outfolder.exists() )
         {
-            if( outfolder.isFile() )
-            {
-                assert(false);
-                cerr << "<!>-Error: A file with the same name as the directory to create exists!!\n";
-                return false;
-            }
+            if( outfolder.isFile() ) //This is really bad!
+                throw runtime_error("A file with the same name as the directory to create exists!:" + path);
             else
                 return true;
         }

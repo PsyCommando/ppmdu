@@ -16,9 +16,9 @@ namespace pmd2 { namespace filetypes
 //
 //  Constants 
 //
-    static const string SpecialCharSequ_MusicNote = "\129\244";
-    static const char   SpecialChar_CtrlChar      = 129;
-    static const char   SpecialChar_MusicNoteEnd  = 244;
+    static const string        SpecialCharSequ_MusicNote = "\129\244";
+    static const unsigned char SpecialChar_CtrlChar      = 129u;
+    static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
 
 //============================================================================================
 //  Loader
@@ -50,13 +50,11 @@ namespace pmd2 { namespace filetypes
             {
                 m_txtstr = vector<string>(); //Ensure the vector has a valid state
                 m_filedata = utils::io::ReadFileToByteVector( m_strFilePath );
-
                 //Read pointer table
                 ReadPointerTable();
-                clog <<"Found " <<dec <<m_ptrTable.size() <<" strings to parse!\nParsing..\n";
+                clog <<"Found " <<dec <<m_ptrTable.size() <<" strings to parse!\nParsing..";
                 //Read all the strings
                 ReadStrings();
-                clog<<"Done parsing strings !\n";
             }
             catch( exception & e )
             {
@@ -92,14 +90,12 @@ namespace pmd2 { namespace filetypes
 
         void ReadStrings()
         {
+            const unsigned int PtrTableSize = m_ptrTable.size()-1; // The last pointer is a pointer to the end of the file!
+            const unsigned int LastPtrIndex = PtrTableSize - 1;    // Index of the last element before the end
             
             //Allocate
             m_txtstr.resize(m_ptrTable.size());
-
-            const unsigned int PtrTableSize     = m_ptrTable.size()-1; // The last pointer is a pointer to the end of the file!
-            const unsigned int LastPtrIndex     = PtrTableSize - 1;    // Index of the last element before the end
             
-
             //Read them all
             for( unsigned int i = 0; i < PtrTableSize;  )
             {
@@ -120,9 +116,7 @@ namespace pmd2 { namespace filetypes
                 {
                     char c = ptrstr[cntc];
                     if( std::isprint( c, m_locale) && !blastWasCtrlChar )    //Check if we need to replace the character with an escaped char
-                    {
                         out << c;
-                    }
                     else
                     {
                         switch(c)
@@ -147,9 +141,9 @@ namespace pmd2 { namespace filetypes
 
                 m_txtstr[i] = out.str();
                 ++i;
-                cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (i * 100 / PtrTableSize) <<"%";
+                //cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (i * 100 / PtrTableSize) <<"%";
             }
-            cout<<"\n";
+            cout<<" Done!\n";
         }
 
         std::string              m_strFilePath;
@@ -292,7 +286,7 @@ namespace pmd2 { namespace filetypes
             //Reserve ptr table space!
             m_fileData.resize( m_txtstr.size() * PTR_LEN );
 
-            clog << "Writing " <<dec << m_txtstr.size() <<" strings to file \"" <<filepath <<"\"\n";
+            clog << "Writing " <<dec << m_txtstr.size() <<" strings to file \"" <<filepath <<"\"";
 
             //Write each strings
             auto itbackins = back_inserter( m_fileData );
@@ -320,9 +314,9 @@ namespace pmd2 { namespace filetypes
 
                 std::copy( processed.begin(), processed.end(), itbackins );
                 ++cntstr;
-                cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (cntstr * 100 / m_txtstr.size()) <<"%";
+                //cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (cntstr * 100 / m_txtstr.size()) <<"%";
             }
-            cout<<"\n";
+            cout<<" Done!\n";
             //Write file
             utils::io::WriteByteVectorToFile( filepath, m_fileData );
         }

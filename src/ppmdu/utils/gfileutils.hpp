@@ -26,11 +26,11 @@ namespace utils
 	std::string GetPathWithoutFileExt( const std::string & fullpath );
 
     /************************************************************************
-        AppendTraillingSlashIfNotThere
+        TryAppendSlash
             Appends a trailing slash to a path if its not there in the first 
             place ! Move constructor makes this fast !
     ************************************************************************/
-    std::string AppendTraillingSlashIfNotThere( const std::string &path );
+    std::string TryAppendSlash( const std::string &path );
 
     /************************************************************************
         RemEscapedDblQuoteFromPath

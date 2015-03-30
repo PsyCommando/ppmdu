@@ -39,7 +39,7 @@ namespace utils
         Appends a trailing slash to a path if its not there in the first place !
         Move constructor makes this fast !
     */
-    std::string AppendTraillingSlashIfNotThere( const std::string &path )
+    std::string TryAppendSlash( const std::string &path )
     {
         if( !has_suffix( path, "/")  && !has_suffix( path, "\\" ) )
         {

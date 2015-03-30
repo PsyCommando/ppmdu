@@ -52,24 +52,12 @@ namespace pmd2{ namespace stats
 //==================================================================================
 //  Functions
 //==================================================================================
-    
-    /************************************************************************
-        GetGameDataTyForFile
-            Return what this PMD 2 file is for. If its a valid statistics 
-            file!
-    ************************************************************************/
-    //eGameDataTy GetGameDataTyForFile( const std::string & path );
 
-    /************************************************************************
-        LoadPkmnStatGrowthFromFile
-            Use this to only load stats growth and overwrite the stats 
-            growth data for the pokemon data in the "inout_pokemondata"
-            vector!
-
-            infile is the stats growth file, "m_level.bin".
-
-    ************************************************************************/
-    //void LoadPkmnStatGrowthFromFile( const std::string & infile, std::vector<CPokemon> & inout_pokemondata );
+    /*
+        Returns whether the directory contains at least one of
+        the expected folders for an importall operation!
+    */
+    bool isImportAllDir( const std::string & directory );
 
 //==================================================================================
 //  Classes
@@ -142,6 +130,13 @@ namespace pmd2{ namespace stats
         };
 
     public:
+
+        static const std::string DefPkmnDir;
+        static const std::string DefMvDir;
+        static const std::string DefStrFName;
+        static const std::string DefItemsDir;
+        static const std::string DefDungeonDir;
+
         /*
             Pass the game language loader that contains all the known locale strings depending on the game's text_*.str file name.
         */
@@ -290,6 +285,8 @@ namespace pmd2{ namespace stats
             IdentifyGameVersion();
             IdentifyGameLocaleStr();
             BuildListOfStringOffsets();
+            if( m_gameVersion == eGameVersion::Invalid )
+                throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
         }
 
         void IdentifyGameVersion     ();

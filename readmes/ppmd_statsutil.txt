@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
-Version	   : 0.1
+Version	   : 0.11
 Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -12,12 +12,16 @@ https://github.com/PsyCommando/ppmdu/
 Changelog:
 ----------------------------------------------------------------------------------------------------
 - 0.1 : Initial release!
-
+- 0.11(2015/03/30):
+    * Fixed specifying a single argument, with no options, not running Export ALL properly!
+    * Fixed specifying a directory for import, with no options, not running Import All properly!
+    * Removed slow progress indicator for text_*.str file parsing and writing! Exec time cut from 
+      ~6s to >1s !
 
 ----------------------------------------------------------------------------------------------------
 License info:
 ----------------------------------------------------------------------------------------------------
-My code and tools are basically CC0. 
+My code and tools are CC0. 
 Free to re-use in any ways you may want to!
 No crappyrights, all wrongs reversed! :3
 
@@ -34,7 +38,7 @@ Special Thanks:
 -> A big thanks to Evandixon for his help !
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
 -> Thanks to MNChino for helping with some of my tools !
--> ..and anyone else I may have forgotten about !
+-> ..and anyone else I may have forgotten about ! ^^;
 
 ----------------------------------------------------------------------------------------------------
 About:
@@ -58,6 +62,23 @@ And, I just love that pokemon, so yeah, that's pretty much it..
 ----------------------------------------------------------------------------------------------------
 How to use:
 ----------------------------------------------------------------------------------------------------
+
+** IMPORTANT **
+    Keep the gamelang.xml file in the same directory as the executable! Or specify the path to it 
+    using the -gl option at the command line followed with the path!
+
+Easy:
+---------
+ * For exporting everything, just drag and drop the ROM data directory onto the application.
+ * For importing everything, open a command prompt, and put the path of the directory resulting from the 
+   "export everything" operation, followed with the path of the ROM's data directory.
+   
+ You can force either operation using the "-e" or "-i" option, respectively!
+ 
+ NOTE: Export ALL and Import ALL do not export or import all game strings! Because the data 
+       exported or imported during those operations already contain a small part of the game
+       strings, and thus many issues would arise when those would get overwritten by the 
+       full game strings file on import!
 
 Exporting:
 ----------

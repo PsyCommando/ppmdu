@@ -20,8 +20,6 @@ namespace pmd2 {namespace stats
 //===============================================================================================
     namespace pkmnXML
     {
-        //static const string ROOT_PkmnData = "PokemonData";
-
         static const string NODE_Pkmn     = "Pokemon";
         static const string ATTR_GameVer  = "GameVersion";
 
@@ -97,6 +95,7 @@ namespace pmd2 {namespace stats
         static const string PROP_Unk30    = "Unk30";
     };
 
+    //#TODO: Constants with the same values are spread out around the code! Do something about that!
     static const string GameVersion_EoS  = "EoS";
     static const string GameVersion_EoTD = "EoT/D";
 
@@ -117,24 +116,7 @@ namespace pmd2 {namespace stats
 
         void Write( const std::string & outdir )
         {
-            //using namespace pkmnXML;
-            //xml_document doc;
-            //xml_node     rootnode = doc.append_child( ROOT_PkmnData.c_str() );
-            //Poco::DirectoryIterator itend;
-            //stringstream            sstrPkfilename;
-
-            //for( Poco::DirectoryIterator itdir(outdir); itdir != itend; ++itdir )
-            //{
-            //    sstrPkfilename.str( string() ); //Clear stream
-            //    xml_document doc;
-            //    sstrPkfilename << << ""
-            //}
-
-
             WriteAllEntries(outdir);
-
-            //if( ! doc.save_file( outfile.c_str() ) )
-            //    throw std::runtime_error("ERROR: Can't write xml file " + outfile);
         }
 
     private:
@@ -179,24 +161,20 @@ namespace pmd2 {namespace stats
             return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) ); //Remove ending "\0" and remove illegal characters for filesystem
         }
 
-        //void WriteAllEntries( xml_node & root )
         void WriteAllEntries( const string & outdir )
         {
             stringstream sstrfname;
             auto         itcurname = m_itbegnames;
-            const string outpathpre = utils::AppendTraillingSlashIfNotThere(outdir);
+            const string outpathpre = utils::TryAppendSlash(outdir);
 
             for( unsigned int i = 0; i < m_src.size(); ++i, ++itcurname )
             {
                 using namespace pkmnXML;
-                //array<char,32> fnamebuff={0};
-                //sprintf_s( fnamebuff.data(), fnamebuff.size(), "%i", i );
                 sstrfname.str(string());
-                //WriteCommentNode( root, commentBuf.data() );
                 sstrfname <<outpathpre <<setw(4) <<setfill('0') <<i <<"_" <<PreparePokeNameFName(*itcurname) <<".xml";
 
                 xml_document doc;
-                xml_node pknode = doc.append_child( NODE_Pkmn.c_str() );
+                xml_node     pknode = doc.append_child( NODE_Pkmn.c_str() );
 
                 if( m_src.isEoSData() )
                     AppendAttribute( pknode, ATTR_GameVer, GameVersion_EoS );
@@ -213,16 +191,11 @@ namespace pmd2 {namespace stats
         void WriteAPokemon( const CPokemon & pkmn, xml_node & pknode, unsigned int pkindex )
         {
             using namespace pkmnXML;
-            //array<char,64> commentBuff = {0};
-            //xml_node pknode = pn.append_child( NODE_Pkmn.c_str() );
-
             //Write strings block
             WriteCommentNode( pknode, "In-game text" );
             WriteStrings( pknode, pkindex );
 
             //Write Gender entity 1
-            //sprintf_s( commentBuff.data(), commentBuff.size(), "Gender 1, index #%i", pkindex );
-            //WriteCommentNode( pknode, commentBuff.data() );
             WriteCommentNode( pknode, "Primary gender entity" );
             xml_node genderent1 = pknode.append_child( NODE_GenderEnt.c_str() );
             WriteMonsterData( pkmn.MonsterDataGender1(), genderent1 );
@@ -230,15 +203,12 @@ namespace pmd2 {namespace stats
             if( pkmn.Has2GenderEntries() )
             {
                 //Write Gender entity 2
-                //sprintf_s( commentBuff.data(), commentBuff.size(), "Gender 2, index #%i", pkindex );
-                //WriteCommentNode( pknode, commentBuff.data() );
                 WriteCommentNode( pknode, "Secondary gender entity" );
                 xml_node genderent2 = pknode.append_child( NODE_GenderEnt.c_str() );
                 WriteMonsterData( pkmn.MonsterDataGender2(), genderent2 );
             }
 
             //Write common data
-            WriteStatsGrowth( pkmn.StatsGrowth(), pknode );
             WriteCommentNode( pknode, "Moveset from waza_p.bin" );
             WriteMoveSet    ( pkmn.MoveSet1(),    pknode );
 
@@ -247,6 +217,9 @@ namespace pmd2 {namespace stats
                 WriteCommentNode( pknode, "Moveset from waza_p2.bin" );
                 WriteMoveSet    ( pkmn.MoveSet2(),    pknode );
             }
+
+            WriteCommentNode( pknode, "Stats growth and exp requirements" );
+            WriteStatsGrowth( pkmn.StatsGrowth(), pknode );
         }
 
         void WriteStrings( xml_node & pn, unsigned int pkindex )
@@ -417,30 +390,10 @@ namespace pmd2 {namespace stats
 
         void Parse( const std::string & srcdir )
         {
-            //using namespace pkmnXML;
-            //ifstream inPkmn( srcfile );
-
-            //if( inPkmn.bad() || !inPkmn.is_open() )
-            //{
-            //    stringstream sstr;
-            //    sstr << "ERROR: Can't open XML file \""
-            //         << srcfile << "\"!";
-            //    const string strerr = sstr.str();
-            //    clog <<strerr <<"\n";
-            //    throw std::runtime_error( strerr );
-            //}
-
-            //xml_document doc;
-            //if( ! doc.load(inPkmn) )
-            //    throw std::runtime_error("ERROR: Can't load XML document! Pugixml returned an error!");
-
-            //xml_node root = doc.child(ROOT_PkmnData.c_str());
-
             try
             {
                 m_out.Pkmn() = ReadAllPokemon(srcdir);
                 m_out.isEoSData(m_isEoS);
-               // m_out.Pkmn() = ReadAllPokemon(root);
             }
             catch( exception & e )
             {
@@ -452,41 +405,29 @@ namespace pmd2 {namespace stats
 
     private:
 
-        //vector<CPokemon> ReadAllPokemon( xml_node & root )
         vector<CPokemon> ReadAllPokemon( const string & srcdir )
         {
             using namespace pkmnXML;
-            //auto &         rootchilds = root.children( NODE_Pkmn.c_str() );
-            //const uint32_t nbpkmn     = distance( rootchilds.begin(), rootchilds.end() );
-
-
             Poco::DirectoryIterator itDirEnd;
-            //uint32_t                nbpkmn = 0;
             vector<string>          filelst;
-            //stringstream            sstrfname;
 
             for( Poco::DirectoryIterator itDir(srcdir); itDir != itDirEnd; ++itDir )
             {
                 if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
-                {
-                    //sstrfname.str(string());
-                    //sstrfname << utils::AppendTraillingSlashIfNotThere(srcdir)  <<;
                     filelst.push_back( (itDir.path().absolute().toString()) );
-                }
             }
-
 
             vector<CPokemon> result;
             result.reserve(filelst.size());
 
             uint32_t cntEoSPk = 0;
             uint32_t cntPkmn  = 0;
-            for( auto & pkmn : filelst /*rootchilds*/ )
+            for( auto & pkmn : filelst )
             {
                 string & strname = GetStringRefPkmn(cntPkmn);
                 string & strcat  = GetStringRefCat(cntPkmn);
 
-                xml_document doc;
+                xml_document     doc;
                 xml_parse_result loadres = doc.load_file(pkmn.c_str());
                 if( ! loadres )
                 {
@@ -577,8 +518,7 @@ namespace pmd2 {namespace stats
                     stringstream sstr;
                     sstr << "Invalid game version attribute of \"" <<gvs <<"\" for Pokemon " <<pkname <<"!";
                     throw runtime_error(sstr.str());
-                }
-                    
+                } 
             }
             else
             {
@@ -586,7 +526,6 @@ namespace pmd2 {namespace stats
                 sstr << "Game version attribute for Pokemon " <<pkname <<" is missing!";
                 throw runtime_error(sstr.str());
             }
-
 
             for( auto & curnode : pknode.children() )
             {
@@ -661,11 +600,9 @@ namespace pmd2 {namespace stats
             using namespace pkmnXML;
             PokeStatsGrowth result;
 
-            //uint32_t curlvl = 1;
             for( auto & lvlnode : sgrowthnode.children( NODE_Level.c_str() ) )
             {
                 PokeStatsGrowth::growthlvl_t entry;
-
                 for( auto & curnode : lvlnode.children() )
                 {
                     if( curnode.name() == PROP_ExpReq )
@@ -681,9 +618,7 @@ namespace pmd2 {namespace stats
                     else if( curnode.name() == PROP_SpDef )
                         utils::parseHexaValToValue( curnode.child_value(), entry.second.SpD );
                 }
-                
                 result.statsgrowth.push_back( std::move(entry) );
-                //++curlvl;
             }
 
             return std::move(result);
