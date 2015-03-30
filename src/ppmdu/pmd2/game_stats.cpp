@@ -32,6 +32,30 @@ namespace pmd2{ namespace stats
         "EoTD",
     };
 
+
+    const string CGameStats::DefPkmnDir    = "pokemon_data";
+    const string CGameStats::DefMvDir      = "move_data";
+    const string CGameStats::DefStrFName   = "game_text.txt";
+    const string CGameStats::DefItemsDir   = "item_data";
+    const string CGameStats::DefDungeonDir = "dungeon_data";
+
+//==========================================================================================
+//  Utilities
+//==========================================================================================
+    /*
+        Returns whether the directory contains XML data that
+        can be imported.
+    */
+    bool isImportAllDir( const std::string & directory )
+    {
+        //Check for one of the required directories
+        const string pkmndir = Poco::Path(directory).append(CGameStats::DefPkmnDir ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).append(CGameStats::DefItemsDir).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).append(CGameStats::DefMvDir   ).makeDirectory().toString();
+        return ( utils::isFolder(pkmndir) || utils::isFolder(mvdir) || utils::isFolder(itemdir) );
+    }
+
+
 //==========================================================================================
 //  GameLanguageLoader
 //==========================================================================================
@@ -84,8 +108,7 @@ namespace pmd2{ namespace stats
     public:
         GameLangXMLParser(GameLanguageLoader& target)
             :m_target(target)
-        {
-        }
+        {}
 
         void Parse(const std::string & confFilePath )
         {
@@ -107,9 +130,7 @@ namespace pmd2{ namespace stats
             if( ! langconf.load(ingamelang) )
                 throw std::runtime_error("Failed to create xml_document for parsing game language config file!");
 
-            /*
-                iterate through all game definitions
-            */
+            //iterate through all game definitions
             for( auto & gamedef : langconf.child(ROOT_StrIndexes.c_str()).children( NODE_GameDef.c_str() ) )
             {
                 try
@@ -182,9 +203,6 @@ namespace pmd2{ namespace stats
         {
             using namespace pugi;
             using namespace GameLangXMLStr;
-            //std::string langname;
-            //std::string strfilename;
-            //std::string localestr;
             GameLanguageLoader::glang_t gamelang;
 
             //Get the attributes
@@ -218,7 +236,6 @@ namespace pmd2{ namespace stats
                     clog << strerr <<"\n";
                     throw runtime_error(strerr);
                 }
-
             }
             else
             {
@@ -228,8 +245,6 @@ namespace pmd2{ namespace stats
                 clog << strerr <<"\n";
                 throw runtime_error(strerr);
             }
-
-            
 
             //Then parse the indexes
             for( auto & strblock : lang.children() )
@@ -250,7 +265,6 @@ namespace pmd2{ namespace stats
             string   name;
             uint32_t begindex = 0;
             uint32_t endindex = 0;
-
 
             for( auto & ablock : strblock )
             {
@@ -351,8 +365,7 @@ namespace pmd2{ namespace stats
 
     CGameStats::CGameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
         :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
-    {
-    }
+    {}
 
 //--------------------------------------------------------------
 //  Game Analysis
@@ -362,7 +375,7 @@ namespace pmd2{ namespace stats
         //To identify whether its Explorers of Sky or Explorers of Time/Darkness
         // check if we have a waza_p2.bin file under the /BALANCE/ directory.
         stringstream sstr;
-        sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+        sstr << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
 
         if( utils::isFolder( sstr.str() ) )
         {
@@ -396,8 +409,8 @@ namespace pmd2{ namespace stats
             To identify the game language, find the text_*.str file, and compare the name to the lookup table.
         */
         static const string TextStr_FnameBeg = "text_";
-        stringstream sstr;
-        sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory;
+        stringstream        sstr;
+        sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory;
         const string MessageDirPath =  sstr.str();
 
         if( utils::isFolder( MessageDirPath ) )
@@ -469,16 +482,8 @@ namespace pmd2{ namespace stats
 
         //First identify what we're dealing with
         AnalyzeGameDir();
-
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            _LoadGameStrings();
-            _LoadPokemonAndMvData();
-            //_LoadItemData();
-            //_LoadDungeonData();
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _LoadGameStrings();
+        _LoadPokemonAndMvData();
     }
 
     void CGameStats::LoadStrings( const std::string & rootdatafolder )
@@ -487,17 +492,13 @@ namespace pmd2{ namespace stats
             m_dataFolder = rootdatafolder;
 
         AnalyzeGameDir();
-
-        if( m_gameVersion != eGameVersion::Invalid )
-            _LoadGameStrings();
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _LoadGameStrings();
     }
 
     void CGameStats::_LoadGameStrings()
     {
         stringstream sstr;
-        sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
+        sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
         m_gameStrings = filetypes::ParseTextStrFile( sstr.str(), std::locale( m_gameLangLocale ) );
     }
 
@@ -507,34 +508,28 @@ namespace pmd2{ namespace stats
             m_dataFolder = rootdatafolder;
 
         AnalyzeGameDir();
-
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            _LoadGameStrings();
-            _LoadPokemonAndMvData();
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _LoadGameStrings();
+        _LoadPokemonAndMvData();
     }
 
     void CGameStats::_LoadPokemonAndMvData()
     {
         using namespace filetypes;
         stringstream sstrMd;
-        sstrMd << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
+        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
         stringstream sstrMovedat;
-        sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+        sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
         stringstream sstrGrowth;
-        sstrGrowth << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory << "/"  << MLevel_FName;
+        sstrGrowth << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/"  << MLevel_FName;
 
-        cout << "-- Loading Pokemon Data --\n";
+        cout << "Loading Pokemon Data..\n";
 
         //Load all the move and move set data at the same time first
-        cout << "\t<*>- Loading move data and Pokemon movesets..\n";
+        cout << " <*>-Loading move data and Pokemon movesets..\n";
         auto allmovedat = ParseMoveAndLearnsets(sstrMovedat.str());
 
         //Build all pokemon entries
-        cout << "\t<*>- Building Pokemon database..\n";
+        cout << " <*>-Building Pokemon database..\n";
         m_pokemonStats = PokemonDB::BuildDB( filetypes::ParsePokemonBaseData(sstrMd.str()),
                                              std::move(allmovedat.second),
                                              filetypes::ParseLevelGrowthData(sstrGrowth.str()) );
@@ -558,16 +553,16 @@ namespace pmd2{ namespace stats
         {
             _LoadGameStrings();
             stringstream sstrMovedat;
-            sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+            sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
 
-            cout << "-- Loading moves data --\n";
+            cout << "Loading moves data..";
             auto allmovedat = ParseMoveAndLearnsets(sstrMovedat.str());
 
             //Set move data
             m_moveData1 = std::move(allmovedat.first.first);
             m_moveData2 = std::move(allmovedat.first.second);
 
-            cout << "-- Done loading moves data! --\n";
+            cout << " Done!\n";
         }
         else
             throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
@@ -586,29 +581,29 @@ namespace pmd2{ namespace stats
         {
             _LoadGameStrings();
             stringstream sstrMovedat;
-            sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+            sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
 
-            cout << "-- Loading items data --\n";
+            cout << "Loading items data..";
 
             assert(false);
 
-            cout << "-- Done loading moves data! --\n";
+            cout << " Done!\n";
         }
         else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+            throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
     }
 
     void CGameStats::_LoadItemData()
     {
-        assert(false);  //#TODO
+        throw exception("Not Implemented!");  //#TODO
         //stringstream sstr;
-        //sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+        //sstr << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
         //m_itemsData = filetypes::ParseItemsData( sstr.str() );
     }
 
     void CGameStats::_LoadDungeonData()
     {
-        assert(false); //Not implemented yet !
+        throw exception("Not Implemented!"); //Not implemented yet !
     }
 
 //--------------------------------------------------------------
@@ -621,14 +616,8 @@ namespace pmd2{ namespace stats
 
         //First identify what we're dealing with
         AnalyzeGameDir();
-
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            _WritePokemonAndMvData();
-            _WriteGameStrings();
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _WritePokemonAndMvData();
+        _WriteGameStrings();
     }
 
     void CGameStats::WritePkmn( const std::string & rootdatafolder )
@@ -639,55 +628,49 @@ namespace pmd2{ namespace stats
 
         //First identify what we're dealing with
         AnalyzeGameDir();
-
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            _WritePokemonAndMvData();
-            _WriteGameStrings();
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _WritePokemonAndMvData();
+        _WriteGameStrings();
     }
 
     void CGameStats::_WritePokemonAndMvData()
     {
         using namespace filetypes;
-        //utils::MrChronometer chronopoke("Writing Pokemon");
+
         stringstream sstrMd;
-        sstrMd << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
+        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
         stringstream sstrMovedat;
-        sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+        sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
         stringstream sstrGrowth;
-        sstrGrowth << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory << "/"  << MLevel_FName;
+        sstrGrowth << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/"  << MLevel_FName;
         stringstream sstrstrings;
-        sstrstrings << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
+        sstrstrings << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
 
         const string fStatsGrowth = sstrGrowth.str();
         const string fPokeData    = sstrMd.str();
         const string fMoveData    = sstrMovedat.str();
         const string fStrings     = sstrstrings.str();
 
-        cout << "-- Writing Pokemon Data --\n";
+        cout << "Writing Pokemon Data..\n";
 
         //Split the pokemon data into its 3 parts
         vector<PokeMonsterData> md;
         pokeMvSets_t            mvset;
         vector<PokeStatsGrowth> sgrowth;
-        cout << "\t<*>-Building move, Pokemon data, and level-up data lists..\n";
+        cout << " <*>-Building move, Pokemon data, and level-up data lists..\n";
         m_pokemonStats.ExportComponents( md, mvset, sgrowth );
 
         //Write stats growth
-        cout << "\t<*>-Writing Pokemon stats growth file \"" <<fStatsGrowth <<"\"..\n";
+        cout << " <*>-Writing Pokemon stats growth file \"" <<fStatsGrowth <<"\"..\n";
         filetypes::WriteLevelGrowthData( sgrowth, fStatsGrowth );
 
         //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
         // movesets!
-        cout << "\t<*>- Writing move data file(s) to directory \"" <<fMoveData <<"\"..\n";
+        cout << " <*>-Writing move data file(s) to directory \"" <<fMoveData <<"\"..\n";
         if( m_moveData1.empty() )
         {
-            cout << "\t<!>- Loading move data, as MoveDB had not been loaded..\n";
+            cout << "  <!>-Loading move data, as MoveDB had not been loaded..\n";
             auto movedat = ParseMoveData(fMoveData);
-            cout << "\t<!>- Load complete!\n";
+            cout << "  <!>-Load complete!\n";
             filetypes::WriteMoveAndLearnsets( fMoveData, movedat, mvset );
         }
         else
@@ -696,13 +679,8 @@ namespace pmd2{ namespace stats
         }
 
         //Write monster data
-        cout << "\t<*>-Writing Pokemon data file \"" <<fPokeData <<"\"..\n";
+        cout << " <*>-Writing Pokemon data file \"" <<fPokeData <<"\"..\n";
         filetypes::WritePokemonBaseData( md, fPokeData );
-
-        ////Write game strings
-        //cout << "\t<*>-Writing game strings file \"" <<fStrings <<"\"..\n";
-        ////filetypes::WriteTextStrFile( fStrings, m_gameStrings, std::locale( m_gameLangLocale ) );
-        //_WriteGameStrings();
 
         cout << "Done exporting Pokemon data!\n";
     }
@@ -716,33 +694,28 @@ namespace pmd2{ namespace stats
 
         AnalyzeGameDir();
 
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            stringstream sstrMovedat;
-            sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
-            stringstream sstrstrings;
-            sstrstrings << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
+        stringstream sstrMovedat;
+        sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
+        stringstream sstrstrings;
+        sstrstrings << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
 
-            const string fMoveData    = sstrMovedat.str();
-            const string fStrings     = sstrstrings.str();
+        const string fMoveData    = sstrMovedat.str();
+        const string fStrings     = sstrstrings.str();
 
-            cout << "Writing moves Data..\n";
+        cout << "Writing moves Data..\n";
 
-            //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
-            // movesets!
-            cout << "\t<*>- Need to load partially Pokemon moveset data file(s) from directory \"" <<fMoveData <<"\"..\n";
-            auto mvset  = ParsePokemonLearnSets(fMoveData);
+        //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
+        // movesets!
+        cout << " <*>-Need to load partially Pokemon moveset data file(s) from directory \"" <<fMoveData <<"\"..\n";
+        auto mvset  = ParsePokemonLearnSets(fMoveData);
 
-            cout << "\t<*>- Writing data to \"" <<fMoveData <<"\"..\n";
-            WriteMoveAndLearnsets( fMoveData, make_pair( MoveDB(m_moveData1), MoveDB(m_moveData2) ), mvset );
+        cout << " <*>-Writing data to \"" <<fMoveData <<"\"..\n";
+        WriteMoveAndLearnsets( fMoveData, make_pair( MoveDB(m_moveData1), MoveDB(m_moveData2) ), mvset );
 
-            cout << "\t<*>- Writing game strings to \"" <<fStrings <<"\"..\n";
-            _WriteGameStrings();
+        cout << " <*>-Writing game strings to \"" <<fStrings <<"\"..\n";
+        _WriteGameStrings();
 
-            cout << "Done writing moves data!\n";
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        cout << "Done writing moves data!\n";
     }
 
     void CGameStats::WriteStrings( const std::string & rootdatafolder )
@@ -763,21 +736,16 @@ namespace pmd2{ namespace stats
                  <<"This will result in unforceen consequences. Continuing..\n";
         }
 
-        if( m_gameVersion != eGameVersion::Invalid )
-            _WriteGameStrings();
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _WriteGameStrings();
+
     }
 
     void CGameStats::_WriteGameStrings()
     {
         using namespace filetypes;
         stringstream sstr;
-        sstr << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
-        const string ftxtfile = sstr.str();
-        //cout << "Writing game strings file \"" <<ftxtfile <<"\"..\n";
-        filetypes::WriteTextStrFile( ftxtfile, m_gameStrings, std::locale( m_gameLangLocale ) );
-        //cout << "Done!\n";
+        sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
+        filetypes::WriteTextStrFile( sstr.str(), m_gameStrings, std::locale( m_gameLangLocale ) );
     }
     
     void CGameStats::WriteItems( const std::string & rootdatafolder )
@@ -801,23 +769,18 @@ namespace pmd2{ namespace stats
                  <<"This will result in unforceen consequences. Continuing..\n";
         }
 
-        if( m_gameVersion != eGameVersion::Invalid )
-        {
-            _WriteItemData();
-            _WriteGameStrings();
-        }
-        else
-            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+        _WriteItemData();
+        _WriteGameStrings();
     }
 
     void CGameStats::_WriteItemData()
     {
-        assert(false); //Not implemented yet !
+        throw exception("Not Implemented!"); //Not implemented yet !
     }
 
     void CGameStats::_WriteDungeonData()
     {
-        assert(false); //Not implemented yet !
+        throw exception("Not Implemented!"); //Not implemented yet !
     }
 
 
@@ -826,81 +789,78 @@ namespace pmd2{ namespace stats
 //--------------------------------------------------------------
     void CGameStats::ExportPkmn( const std::string & directory )
     {
-        cout<<"-- Exporting all Pokemon data to XML data --\n";
+        //cout<<"-- Exporting all Pokemon data to XML data --\n";
         if( m_gameStrings.empty() || m_pokemonStats.empty() )
         {
             throw runtime_error("ERROR: Tried to export an empty list of Pokemon ! Or with an empty string list!");
         }
 
-        cout<<"\t<*>- Writing XML data..\n";
+        cout<<" <*>- Writing Pokemon XML data..";
         stats::ExportPokemonsToXML( m_pokemonStats, GetPokemonNameBeg(), GetPokemonCatBeg(), directory );
-        cout<<"Done!\n";
+        cout<<" Done!\n";
     }
 
     void CGameStats::ImportPkmn( const std::string & directory )
     {
-        cout<<"-- Importing all Pokemon from XML data --\n";
-
+        //cout<<"-- Importing all Pokemon from XML data --\n";
         //Need game strings loaded for this !
         if( m_gameStrings.empty() )
         {
-            cout<<"\t<*>- Need to load target game strings file!\nLoading..\n";
+            cout<<"  <!>-Need to load target game strings file! Loading..\n";
             LoadStrings();
         }
 
-        cout<<"\t<*>- Parsing XML data.. ";
+        cout<<" <*>-Parsing Pokemon XML data..";
         stats::ImportPokemonsFromXML( directory, m_pokemonStats, GetPokemonNameBeg(), GetPokemonNameEnd(), GetPokemonCatBeg(), GetPokemonCatEnd() );
-        cout<<"Done!\n";
+        cout<<" Done!\n";
     }
 
     void CGameStats::ExportMoves( const std::string & directory )
     {
-        cout<<"-- Exporting all moves data to XML data --\n";
+        //cout<<"-- Exporting all moves data to XML data --\n";
         if( m_gameStrings.empty() || m_moveData1.empty() )
             throw runtime_error("Move list(s) is/are empty. Or the game strings are not loaded!");
 
-        cout << "\t<*>- Writing move list XML data..\n";
+        cout << " <*>-Writing moves to XML data.. ";
         stats::ExportMovesToXML( m_moveData1, m_moveData2, GetMoveNamesBeg(), GetMoveDescBeg(), directory );
-        cout << "Done writing move lists!\n";
+        cout << " Done!\n";
     }
 
     void CGameStats::ImportMoves( const std::string & directory )
     {
-        cout<<"-- Importing all moves data from XML data --\n";
+        //cout<<"-- Importing all moves data from XML data --\n";
         //Need game strings loaded for this !
         if( m_gameStrings.empty() )
         {
-            cout<<"\t<*>- Need to load target game strings file!\nLoading..\n";
+            cout<<"  <!>-Need to load target game strings file! Loading..\n";
             LoadStrings();
         }
 
         if( m_gameVersion == eGameVersion::Invalid )
             throw runtime_error("Game version is invalid, or was not determined. Cannot import move data and format it!");
 
-        cout<<"\t<*>- Parsing XML data..\n";
+        cout<<" <*>-Parsing moves XML data..";
         stats::ImportMovesFromXML( directory, m_moveData1, m_moveData2, GetMoveNamesBeg(), GetMoveNamesEnd(), GetMoveDescBeg(), GetMoveDescEnd() );
-        cout<<"Done importing move data!\n";
+        cout<<" Done!\n";
     }
 
 
     void CGameStats::ExportStrings( const std::string & file )
     {
-        cout<<"-- Exporting all game strings to text file \"" <<file <<"\" --\n";
-
+        //cout<<"-- Exporting all game strings to text file \"" <<file <<"\" --\n";
         if( m_gameStrings.empty() )
             throw runtime_error( "No string data to export !" );
-
+        cout<<" <*>-Writing game text to \"" <<file <<"\" file..";
         utils::io::WriteTextFileLineByLine( m_gameStrings, file, locale(m_gameLangLocale) );
-        cout<<"Done exporting strings!\n";
+        cout<<" Done!\n";
     }
 
     void CGameStats::ImportStrings( const std::string & file )
     {
-        cout<<"-- Importing all game strings from text file --\n";
-
+        //cout<<"-- Importing all game strings from text file --\n";
         if( m_gameStrings.empty() )
             throw runtime_error( "No string data to export !" );
-
+        cout<<" <*>-Importing game text to \"" <<file <<"\" file..";
         m_gameStrings = utils::io::ReadTextFileLineByLine( file, locale(m_gameLangLocale) );
         cout<<"Done importing strings!\n";
     }
@@ -925,18 +885,100 @@ namespace pmd2{ namespace stats
     void CGameStats::ExportAll( const std::string & directory )
     {
         cout<<"-- Exporting everything to XML --\n";
+        const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).makeAbsolute().append(DefMvDir   ).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir).makeDirectory().toString();
 
-        if( m_pokemonStats.empty() && m_gameStrings.empty() && m_moveData1.empty() && m_itemsData.empty() )
+        if( m_pokemonStats.empty() && m_moveData1.empty() && m_itemsData.empty() )
             throw runtime_error( "No data to export!" );
 
-        throw exception("Not Implemented!");
+        if( m_gameStrings.empty() )
+        {
+            cout <<" <!>- Game strings not loaded! Attempting to load..\n";
+            LoadStrings();
+        }
+
+        if( !m_pokemonStats.empty() )
+        {
+            utils::DoCreateDirectory(pkmndir);
+
+            cout<<" <*>- Has Pokemon data to export. Exporting to \"" <<pkmndir <<"\"..\n  ";
+            ExportPkmn( pkmndir );
+        }
+        else
+            cout<<" <!>- No item Pokemon data to export, skipping..\n";
+
+        if( !m_moveData1.empty() )
+        {
+            utils::DoCreateDirectory(mvdir);
+
+            cout<<" <*>- Has moves data to export. Exporting to \"" <<mvdir <<"\"..\n  ";
+            ExportMoves( mvdir );
+        }
+        else
+            cout<<" <!>- No move data to export, skipping..\n";
+
+        if( !m_itemsData.empty() )
+        {
+            utils::DoCreateDirectory(itemdir);
+
+            cout<<" <*>- Has items data to export. Exporting to \"" <<itemdir <<"\"..\n  ";
+            ExportItems( itemdir );
+        }
+        else
+            cout<<" <!>- No item data to export, skipping..\n";
+
+        cout<<"-- Export complete! --\n";
     }
 
     void CGameStats::ImportAll( const std::string & directory )
     {
+        using namespace utils;
         cout<<"-- Importing everything from XML --\n";
+        const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).makeAbsolute().append(DefMvDir   ).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir).makeDirectory().toString();
 
-        throw exception("Not Implemented!");
+        //Check what we can import
+        bool importPokes = pathExists(pkmndir);
+        bool importMoves = pathExists(mvdir  );
+        bool importItems = pathExists(itemdir);
+
+        if( !importPokes && !importMoves && !importItems )
+        {
+            stringstream sstrerr;
+            sstrerr << "Couldn't find any expected data directories in specified directory!:\n"
+                    << " - Expected \"" <<pkmndir <<"\", but no such directory exists!\n" 
+                    << " - Expected \"" <<mvdir <<"\", but no such directory exists!\n" 
+                    << " - Expected \"" <<itemdir <<"\", but no such directory exists!\n";
+            const string strerr = sstrerr.str();
+            clog <<strerr <<"\n";
+            throw runtime_error( strerr );
+        }
+
+        if( !m_pokemonStats.empty() || !m_moveData1.empty() || !m_itemsData.empty() )
+            cout <<"  <!>- WARNING: The data already loaded will be overwritten! Continuing happily..\n";
+
+        //Need game strings loaded for this !
+        if( m_gameStrings.empty() )
+        {
+            cout<<"  <!>- Need to load target game strings file! Loading..\n";
+            LoadStrings();
+        }
+
+        //Check after loading strings
+        if( m_gameVersion == eGameVersion::Invalid )
+            throw runtime_error("Game version is invalid, or could not be determined!");
+
+        //Run all the import methods
+        if(importPokes)
+            ImportPkmn(pkmndir);
+        if(importMoves)
+            ImportMoves(mvdir);
+        if(importItems)
+            ImportItems(itemdir);
+
+        cout<<"-- Import complete! --\n";
     }
 
 //--------------------------------------------------------------

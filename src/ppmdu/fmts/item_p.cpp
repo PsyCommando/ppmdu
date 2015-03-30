@@ -30,8 +30,8 @@ namespace pmd2 {namespace filetypes
             ////Figure out if we parse the 2  item files, or only one
             //stringstream sstritem_p;
             //stringstream sstritem_s;
-            //sstritem_p << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ItemData_FName;
-            //sstritem_s << utils::AppendTraillingSlashIfNotThere(m_pathBalanceDir) << ExclusiveItemData_FName;
+            //sstritem_p << utils::TryAppendSlash(m_pathBalanceDir) << ItemData_FName;
+            //sstritem_s << utils::TryAppendSlash(m_pathBalanceDir) << ExclusiveItemData_FName;
             //string item_p = sstritem_p.str();
             //string item_s = sstritem_s.str();
 

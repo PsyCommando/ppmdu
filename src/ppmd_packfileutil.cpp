@@ -244,7 +244,7 @@ namespace ppmd_packfileutil
                 if( isPacking ) //input path is folder
                     return outputpath;
                 else //output path is folder
-                    return AppendTraillingSlashIfNotThere(outputpath);
+                    return TryAppendSlash(outputpath);
             }
         }
         else

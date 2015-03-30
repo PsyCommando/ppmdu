@@ -10,130 +10,17 @@ using namespace std;
 
 namespace pmd2{ namespace stats
 {
-    static const std::string PKMN_NamesFile     = "pkmn_names.txt";
-    static const std::string PKMN_AbilitiesFile = "pkmn_abilities.txt";
-    static const std::string PKMN_IQGrpsFile    = "pkmn_iq.txt";
-    static const std::string PKMN_TypesFile     = "pkmn_types.txt";
-    static const std::string PKMN_MovesFile     = "pkmn_moves.txt";
-    static const std::string ItemsFile          = "items.txt";
+    //static const std::string PKMN_NamesFile     = "pkmn_names.txt";
+    //static const std::string PKMN_AbilitiesFile = "pkmn_abilities.txt";
+    //static const std::string PKMN_IQGrpsFile    = "pkmn_iq.txt";
+    //static const std::string PKMN_TypesFile     = "pkmn_types.txt";
+    //static const std::string PKMN_MovesFile     = "pkmn_moves.txt";
+    //static const std::string ItemsFile          = "items.txt";
 
+//==========================================================================================
 //
-//
-//
-    //CStatsResLoader & CStatsResLoader::GetInstance()
-    //{
-    //    static CStatsResLoader s_instance;
-    //    return s_instance;
-    //}
-
-    //CStatsResLoader::CStatsResLoader()
-    //{
-    //    Parse( utils::getCWD() );
-    //}
-
-    //void CStatsResLoader::Parse( const std::string & pathDataDir )
-    //{
-    //    ParseData(pathDataDir);
-    //}
-
-    ////Parsing
-    //void CStatsResLoader::ParseData( std::string pathDataDir )
-    //{
-    //    try
-    //    {
-    //        pathDataDir = utils::AppendTraillingSlashIfNotThere( pathDataDir );
-    //        
-    //        clog<<"Parsing " <<PKMN_NamesFile <<"...\n";
-    //        ParsePkmnNames(pathDataDir + PKMN_NamesFile);
-    //        
-    //        clog<<"Parsing " <<PKMN_TypesFile <<"...\n";
-    //        ParsePkmnTypes(pathDataDir + PKMN_TypesFile);
-    //        
-    //        clog<<"Parsing " <<PKMN_IQGrpsFile <<"...\n";
-    //        ParseIQGrps   (pathDataDir + PKMN_IQGrpsFile);
-    //        
-    //        clog<<"Parsing " <<PKMN_AbilitiesFile <<"...\n";
-    //        ParseAbilities(pathDataDir + PKMN_AbilitiesFile);
-    //        
-    //        clog<<"Parsing " <<PKMN_MovesFile <<"...\n";
-    //        ParseMoves    (pathDataDir + PKMN_MovesFile);
-    //        
-    //        //clog<<"Parsing " <<ItemsFile <<"...\n";
-    //        //ParseItems    (pathDataDir + ItemsFile );
-    //        clog<<"All resources loaded!\n";
-    //    }
-    //    catch( exception & e )
-    //    {
-    //        stringstream sstr;
-    //        sstr<<"ERROR: Unable to parse the pkmn_*.txt string files! " <<e.what();
-    //        string errorstr = sstr.str();
-    //        clog<<errorstr<<"\n";
-    //        throw std::runtime_error(errorstr);
-    //    }
-    //}
-
-    //void CStatsResLoader::ParsePkmnNames( const std::string & pkmnNamesPath )
-    //{
-    //    m_pkmnnames = utils::io::ReadTextFileLineByLine( pkmnNamesPath );
-    //}
-
-    //void CStatsResLoader::ParsePkmnTypes( const std::string & pkmnTypesPath )
-    //{
-    //    m_pkmnTypes = utils::io::ReadTextFileLineByLine( pkmnTypesPath );
-    //}
-    //
-    //void CStatsResLoader::ParseIQGrps   ( const std::string & pkmnIQPath )
-    //{
-    //    m_iqgrps = utils::io::ReadTextFileLineByLine( pkmnIQPath );
-    //}
-
-    //void CStatsResLoader::ParseAbilities( const std::string & pkmnAbilitiesPath )
-    //{
-    //    m_abilities = utils::io::ReadTextFileLineByLine( pkmnAbilitiesPath );
-    //}
-
-    //void CStatsResLoader::ParseMoves    ( const std::string & pkmnMovesPath )
-    //{
-    //    m_moves = utils::io::ReadTextFileLineByLine( pkmnMovesPath );
-    //}
-
-    //void CStatsResLoader::ParseItems    ( const std::string & ItemsPath )
-    //{
-    //    m_items = utils::io::ReadTextFileLineByLine( ItemsPath );
-    //}
-
-//
-//  Functions
-//
-    //void ExportPokemonsToXML  ( const PokemonDB   & src, const std::string & destfile )
-    //{
-    //}
-    //
-    //PokemonDB ImportPokemonsFromXML( const std::string & srcfile )
-    //{
-    //}
-
-    ///*
-    //    Export pokemon data to XML
-    //*/
-    //void ExportPokemonToXML( const CPokemon & src, const std::string & destfile )
-    //{
-    //}
-
-    ///*
-    //    Import pokemon data from XML file
-    //*/
-    //CPokemon ImportPokemonFromXML( const std::string & srcfile )
-    //{
-    //}
-
-//
-//
-//
-
+//==========================================================================================
     /*
-        Function used both by SplitDB and ExportComponents to prepare for export.
-        Its basically the operations both methods have a common of allocating space and etc..
     */
     uint32_t PrepareExport( const PokemonDB              & pdb, 
                             std::vector<PokeMonsterData> & out_md, 
@@ -174,12 +61,7 @@ namespace pmd2{ namespace stats
         return nbRegulars;
     }
 
-
     /*
-        From the 3 containers builds a list of pokemons!
-            - md : the entire content of the monster.md file. It will be split into the two genders.
-            - movesets : content of waza_p.bin and and waza_p2.bin. The later is an empty vector if waza_p2.bin is not present.
-            - growth: content of m_level.bin
     */
     PokemonDB PokemonDB::BuildDB( std::vector<PokeMonsterData>       && md, 
                                   pokeMvSets_t                       && movesets, 
@@ -259,15 +141,6 @@ namespace pmd2{ namespace stats
     }
 
     /*
-        This takes a PokemonDB and split it off into the 3 components used to build it.
-            - pdb        : The pokemon database to split into lists.
-            - out_md     : The list of PokeMonsterData that will receive the appropriate data from the pdb!
-            - out_mvsets : The 2 lists of pokemon learnsets that will receive the appropriate data from the pdb!
-            - out_growth : The list of PokeStatsGrowth that will receive the appropriate data from the pdb!
-
-        NOTE: The Pokemon DB is destroyed in the process, to allow using move assignements instead of using
-                copie assignements, resulting in much faster code. 
-                Use the ExportComponents instance method instead to output copies, if you'd like to preserve the object!
     */
     void PokemonDB::SplitDB( PokemonDB                          && pdb,
                              std::vector<PokeMonsterData>       & out_md, 
@@ -295,10 +168,6 @@ namespace pmd2{ namespace stats
     }
 
     /*
-        Copy this PokemonDB's data, and place it into the 3 components that makes it up.
-            - out_md     : The list of PokeMonsterData that will receive the appropriate data from the pdb!
-            - out_mvsets : The 2 lists of pokemon learnsets that will receive the appropriate data from the pdb!
-            - out_growth : The list of PokeStatsGrowth that will receive the appropriate data from the pdb!
     */
     void PokemonDB::ExportComponents( std::vector<PokeMonsterData>       & out_md, 
                                       pokeMvSets_t                       & out_mvsets, 

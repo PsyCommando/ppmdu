@@ -431,7 +431,7 @@ namespace pmd2 { namespace filetypes
         {
             //Create the sub-folder name
             stringstream outfoldernamess;
-            outfoldernamess <<utils::AppendTraillingSlashIfNotThere(*m_pDestination)
+            outfoldernamess <<utils::TryAppendSlash(*m_pDestination)
                              <<std::setfill('0') <<std::setw(4) <<std::dec <<i;
 
             if( m_pFolderNames != nullptr && m_pFolderNames->size() > i && !m_pFolderNames->at(i).empty() )
@@ -467,7 +467,7 @@ namespace pmd2 { namespace filetypes
                     bmadeafolder = true;
                 }
 
-                strsOutputPath <<utils::AppendTraillingSlashIfNotThere(directoryname) 
+                strsOutputPath <<utils::TryAppendSlash(directoryname) 
                                <<setfill('0') <<setw(4) <<static_cast<uint32_t>(j); 
 
                 if( m_pSubEntryNames != nullptr && m_pSubEntryNames->size() > j )

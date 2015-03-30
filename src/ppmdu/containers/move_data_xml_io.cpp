@@ -98,7 +98,7 @@ namespace pmd2 { namespace stats
             using namespace movesXML;
             auto         itcurname = m_itnames;
             auto         itcurdesc = m_itdescs;
-            const string dirprefix = utils::AppendTraillingSlashIfNotThere( destdir );
+            const string dirprefix = utils::TryAppendSlash( destdir );
             stringstream fname;
 
             if( m_src1.size() != m_src2.size() )
@@ -133,7 +133,7 @@ namespace pmd2 { namespace stats
             using namespace movesXML;
             auto         itcurname = m_itnames;
             auto         itcurdesc = m_itdescs;
-            const string dirprefix = utils::AppendTraillingSlashIfNotThere( destdir );
+            const string dirprefix = utils::TryAppendSlash( destdir );
             stringstream fname;
 
             for( unsigned int i = 0; i < m_src1.size(); ++i, ++itcurname, ++itcurdesc )

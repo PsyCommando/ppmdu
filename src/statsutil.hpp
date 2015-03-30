@@ -62,6 +62,7 @@ namespace statsutil
         int DoExportMovesData();
         int DoImportGameStrings();
         int DoExportGameStrings();
+
         int DoImportAll();
         int DoExportAll();
 
@@ -77,9 +78,9 @@ namespace statsutil
 
         //Default filenames names
         static const std::string                                 DefExportStrName;
-        static const std::string                                 DefExportPkmnOutDir;
-        static const std::string                                 DefExportMvDir;
-        static const std::string                                 DefExportItemsDir;
+        //static const std::string                                 DefExportPkmnOutDir;
+        //static const std::string                                 DefExportMvDir;
+        //static const std::string                                 DefExportItemsDir;
         static const std::string                                 DefExportAllDir;
 
         static const std::string                                 DefLangConfFile;
