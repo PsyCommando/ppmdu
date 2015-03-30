@@ -94,7 +94,7 @@ namespace pmd2{ namespace stats
             std::ifstream ingamelang( confFilePath );
             xml_document  langconf;
 
-            if( ingamelang.bad() )
+            if( ingamelang.bad() || !ingamelang.is_open() )
             {
                 stringstream sstr;
                 sstr << "Error: The XML file with info on the game's string data \""
@@ -373,7 +373,7 @@ namespace pmd2{ namespace stats
                 m_gameVersion = eGameVersion::EoTEoD;
         }
         else
-            m_gameVersion = eGameVersion::Invalid;
+            throw runtime_error( "Specified data directory is invalid! : " + m_dataFolder );
 
         if( utils::LibWide().isLogOn() )
         {
@@ -388,6 +388,8 @@ namespace pmd2{ namespace stats
         /*
             Load game language file
         */
+        if( !utils::isFile(m_gamelangfile) )
+            throw runtime_error("Path specified is an invalid gamelang file! : " + m_gamelangfile);
         m_possibleLang = GameLanguageLoader( m_gamelangfile, m_gameVersion );
 
         /*
@@ -472,8 +474,8 @@ namespace pmd2{ namespace stats
         {
             _LoadGameStrings();
             _LoadPokemonAndMvData();
-            //LoadItemData();
-            //LoadDungeonData();
+            //_LoadItemData();
+            //_LoadDungeonData();
         }
         else
             throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
@@ -558,14 +560,39 @@ namespace pmd2{ namespace stats
             stringstream sstrMovedat;
             sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
 
-            cout << "-- Loading moves Data --\n";
+            cout << "-- Loading moves data --\n";
             auto allmovedat = ParseMoveAndLearnsets(sstrMovedat.str());
 
             //Set move data
             m_moveData1 = std::move(allmovedat.first.first);
             m_moveData2 = std::move(allmovedat.first.second);
 
-            cout << "Done loading moves data!\n";
+            cout << "-- Done loading moves data! --\n";
+        }
+        else
+            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+    }
+
+    void CGameStats::LoadItems( const std::string & rootdatafolder )
+    {
+        using namespace filetypes;
+
+        if( !rootdatafolder.empty() )
+            m_dataFolder = rootdatafolder;
+
+        AnalyzeGameDir();
+
+        if( m_gameVersion != eGameVersion::Invalid )
+        {
+            _LoadGameStrings();
+            stringstream sstrMovedat;
+            sstrMovedat << utils::AppendTraillingSlashIfNotThere(m_dataFolder) << BalanceDirectory;
+
+            cout << "-- Loading items data --\n";
+
+            assert(false);
+
+            cout << "-- Done loading moves data! --\n";
         }
         else
             throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
@@ -727,8 +754,7 @@ namespace pmd2{ namespace stats
         auto prevGameVer = m_gameVersion;
 
         //Identify target game if we have no info
-        if( m_gameTextFName.empty() )
-            AnalyzeGameDir();
+        AnalyzeGameDir();
 
         //Warn about game mismatch
         if( prevGameVer != eGameVersion::Invalid && prevGameVer != m_gameVersion )
@@ -754,7 +780,35 @@ namespace pmd2{ namespace stats
         //cout << "Done!\n";
     }
     
+    void CGameStats::WriteItems( const std::string & rootdatafolder )
+    {
+        using namespace filetypes;
+        if( !rootdatafolder.empty() )
+            m_dataFolder = rootdatafolder;
 
+        auto prevGameVer = m_gameVersion;
+
+        //Identify target game if we have no info
+        AnalyzeGameDir();
+
+        if( m_gameStrings.empty() )
+            _LoadGameStrings();
+
+        //Warn about game mismatch
+        if( prevGameVer != eGameVersion::Invalid && prevGameVer != m_gameVersion )
+        {
+            cerr <<"WARNING: Game version mismatch. The target game data directory is from a different game than the current item data!\n"
+                 <<"This will result in unforceen consequences. Continuing..\n";
+        }
+
+        if( m_gameVersion != eGameVersion::Invalid )
+        {
+            _WriteItemData();
+            _WriteGameStrings();
+        }
+        else
+            throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
+    }
 
     void CGameStats::_WriteItemData()
     {
@@ -851,10 +905,43 @@ namespace pmd2{ namespace stats
         cout<<"Done importing strings!\n";
     }
 
-    /*
-        Text Strings Access
-            Use those to get the correct string depending on the current game version.
-    */
+    void CGameStats::ExportItems( const std::string & directory )
+    {
+        cout<<"-- Exporting items to XML --\n";
+
+        if( m_itemsData.empty() )
+            throw runtime_error( "No item data to export!" );
+
+        throw exception("Not Implemented!");
+    }
+
+    void CGameStats::ImportItems( const std::string & directory )
+    {
+        cout<<"-- Importing items from XML --\n";
+
+        throw exception("Not Implemented!");
+    }
+
+    void CGameStats::ExportAll( const std::string & directory )
+    {
+        cout<<"-- Exporting everything to XML --\n";
+
+        if( m_pokemonStats.empty() && m_gameStrings.empty() && m_moveData1.empty() && m_itemsData.empty() )
+            throw runtime_error( "No data to export!" );
+
+        throw exception("Not Implemented!");
+    }
+
+    void CGameStats::ImportAll( const std::string & directory )
+    {
+        cout<<"-- Importing everything from XML --\n";
+
+        throw exception("Not Implemented!");
+    }
+
+//--------------------------------------------------------------
+//  Text Strings Access
+//--------------------------------------------------------------
 
     std::vector<std::string>::const_iterator CGameStats::GetPokemonNameBeg()const
     {

@@ -42,6 +42,7 @@ namespace statsutil
         bool ParseOptionForceImport( const std::vector<std::string> & optdata );
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
+        bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -76,18 +77,12 @@ namespace statsutil
 
         //Default filenames names
         static const std::string                                 DefExportStrName;
-        static const std::string                                 DefExportPkmnName;
         static const std::string                                 DefExportPkmnOutDir;
         static const std::string                                 DefExportMvDir;
-        static const std::string                                 DefExportItemsName;
+        static const std::string                                 DefExportItemsDir;
+        static const std::string                                 DefExportAllDir;
 
         static const std::string                                 DefLangConfFile;
-
-        enum struct eOutFormat
-        {
-            XML,
-            TXT,
-        };
 
         enum struct eOpForce
         {
@@ -99,8 +94,6 @@ namespace statsutil
         enum struct eOpMode
         {
             Invalid,
-            ImportGameData,
-            ExportGameData,
 
             ImportPokemonData,
             ExportPokemonData,

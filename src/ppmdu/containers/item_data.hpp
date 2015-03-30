@@ -175,8 +175,9 @@ namespace pmd2 { namespace stats
         */
         void CopyCtor( const ItemsDB & other );
 
-        inline std::size_t size()const { return m_itemData.size(); }
-        inline void        resize(size_t newsz)    { return m_itemData.resize(newsz);}
+        inline std::size_t size()const          { return m_itemData.size(); }
+        inline bool        empty()const         { return m_itemData.empty(); }
+        inline void        resize(size_t newsz) { return m_itemData.resize(newsz);}
 
         //The items are guaranteed to stay allocated as long as the object exists!
         inline const itemdata & Item( uint16_t itemindex )const { return *(m_itemData[itemindex]); }

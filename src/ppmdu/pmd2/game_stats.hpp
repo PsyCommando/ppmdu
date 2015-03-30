@@ -177,11 +177,13 @@ namespace pmd2{ namespace stats
         void LoadStrings( const std::string & rootdatafolder = "" );
         void LoadPkmn   ( const std::string & rootdatafolder = "" );
         void LoadMoves  ( const std::string & rootdatafolder = "" );
+        void LoadItems  ( const std::string & rootdatafolder = "" );
 
         void Write       ( const std::string & rootdatafolder = "" );
         void WritePkmn   ( const std::string & rootdatafolder = "" );
         void WriteMoves  ( const std::string & rootdatafolder = "" );
         void WriteStrings( const std::string & rootdatafolder = "" );
+        void WriteItems  ( const std::string & rootdatafolder = "" );
 
         //Export
         /*
@@ -189,9 +191,11 @@ namespace pmd2{ namespace stats
             folder the data is exported from !
             Unless everything was loaded!
         */
+        void ExportAll    ( const std::string & directory );
         void ExportPkmn   ( const std::string & directory );
         void ExportMoves  ( const std::string & directory );
         void ExportStrings( const std::string & file );
+        void ExportItems  ( const std::string & directory );
 
         //Import
         /*
@@ -199,9 +203,11 @@ namespace pmd2{ namespace stats
             folder where the data will be imported to ! This is
             to allow determining the target game version, nothing will be overwritten!
         */
+        void ImportAll    ( const std::string & directory );
         void ImportPkmn   ( const std::string & directory );
         void ImportMoves  ( const std::string & directory );
         void ImportStrings( const std::string & file );
+        void ImportItems  ( const std::string & directory );
         
     public:
         /*
@@ -326,7 +332,7 @@ namespace pmd2{ namespace stats
 
         //Gameplay Data
         PokemonDB           m_pokemonStats;
-        //ItemsDB             m_itemsData;
+        ItemsDB             m_itemsData;
 
         //#TODO: Combine those two. The move DB should abstract game specific details!!
         MoveDB              m_moveData1;
