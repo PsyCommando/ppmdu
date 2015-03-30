@@ -2,7 +2,7 @@
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
 Version	   : 0.1
-Released   : 2015/03/01
+Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
 The entire sourcecode for all my tools that are part of this suite is available here:
@@ -17,7 +17,7 @@ Changelog:
 ----------------------------------------------------------------------------------------------------
 License info:
 ----------------------------------------------------------------------------------------------------
-My code and tools are basically public domain / CC0. 
+My code and tools are basically CC0. 
 Free to re-use in any ways you may want to!
 No crappyrights, all wrongs reversed! :3
 
@@ -33,17 +33,19 @@ Special Thanks:
 -> A big thanks to TruePikachu for his help !
 -> A big thanks to Evandixon for his help !
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
--> Thanks to MNChino for helping with testing !
+-> Thanks to MNChino for helping with some of my tools !
 -> ..and anyone else I may have forgotten about !
 
 ----------------------------------------------------------------------------------------------------
 About:
 ----------------------------------------------------------------------------------------------------
 
-** The data files pkmn_*.txt are there temporarily. Once we can properly find how to cross-reference 
-   all that data with the game'strings file we'll get rid of those! **
+This tool can export various data from the Pokemon Mystery Dungeon : Explorers of Sky/Time/Darkness 
+games(Only tested with Sky for now).
 
-** Several of the pkmn_*.txt files were made using data collected by Jellynater, OgreGunner, and nhahtdh **
+Right now it supports:
+- Move data (Base power, type, name, descritpion, etc.. )
+- Pokemon data (Name, category, type, stats growth, level-up moves, hm/tm moves, egg moves, etc..)
 
 ------------------------------
 --Random Uninteresting Fact--:
@@ -56,6 +58,124 @@ And, I just love that pokemon, so yeah, that's pretty much it..
 ----------------------------------------------------------------------------------------------------
 How to use:
 ----------------------------------------------------------------------------------------------------
+
+Exporting:
+----------
+
+* Exporting Pokemon data to XML:
+    Type this at the command line (without the first set of quotes): 
+        "ppmd_statsutil.exe -e -pk "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        Replace the paths with the appropriate paths! You can omit the output path, 
+        and the xml data will be exported to a default directory.
+
+* Exporting move data to XML:
+    Type this at the command line (without the first set of quotes): 
+        "ppmd_statsutil.exe -e -mv "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        Replace the paths with the appropriate paths! You can omit the output path, 
+        and the xml data will be exported to a default directory.
+
+* Exporting game text to text file:
+    Type this at the command line (without the first set of quotes): 
+        "ppmd_statsutil.exe -e -str "path/To/PMD2/ROM/DataDir" "Path/To/Output/File/text.txt""
+        Replace the paths with the appropriate paths! And replace the filenames as desired. 
+        You can omit the output path, and the text data will be exported to a text file with the default name.
+
+Importing:
+----------
+
+* Importing Pokemon data from XML back into the game:
+    Enter this at the commandline (without the first set of quotes):
+        "ppmd_statsutil.exe -i -pk "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
+        Replace the paths with the appropriate paths! The output path is mandatory!
+
+* Importing moves data from XML back into the game:
+    Enter this at the commandline (without the first set of quotes):
+        "ppmd_statsutil.exe -i -mv "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
+        Replace the paths with the appropriate paths! The output path is mandatory!
+
+* Importing game text from a text file back into the game:
+    Enter this at the commandline (without the first set of quotes):
+        "ppmd_statsutil.exe -i -str "Path/To/Input/File/text.txt" "path/To/PMD2/ROM/DataDir""
+        Replace the paths with the appropriate paths! The output path is mandatory!
+
+
+More Details:
+-------------
+
+* Pokemon Data:
+    The Pokemon data is outputed to several xml files. One for every Pokemon. Its name contains the
+    index of its primary gender in the game data, followed by the Pokemon's name in the game strings
+    at the moment of export.
+    Most Pokemon files contains 2 "gender entities" those are basically how the game deals with
+    pokemon having more than one gender. Even mono-gendered species, or genderless ones have a 
+    "secondary gender entity". 
+    Only special Pokemon don't have 2, and those appears to be mainly dummies used during cutscenes.
+
+    If the data was exported from Explorers of Sky, the Pokemon will also have 2 moveset tags,
+    one for each of its entries in the game files. For some reasons EoS has duplicate entries
+    for all Pokemon movesets, some are slightly different.
+
+* Move Data:
+    The move data is exported in a similar way to Pokemon data. If the game it was exported from
+    is Explorers of Sky, a duplicate entry of the move's data will be present. That's because the
+    EoS game has a copy of all move data, and its unclear if its even used, but better 
+    output it with the rest I guess.
+
+* Text Data:
+    The text data is exported in the simplest method possible, as a raw text file!
+    Each line is a single string in the game. All special characters are escaped with a backslash!
+    So, end of lines are "\n", end of string are "\0" and other unprintable characters are "\ddd" where
+    'd' is a decimal digit.
+
+    Be sure not to use your enter key ever in that text file, or you'll create new text 
+    entries for each new lines you make! And since the game looks for those entries by 
+    the order they appear in, you'd only screw up all the text for the entire game!
+
+    Also, keep in mind that, if you export other game data, that allow editing a few strings,
+    like Pokemon data, importing a the text data afterwards might overwrite the changes you've
+    made, as the text data file that is exported also contains those strings! It does contains every
+    strings used in the entire game after all !
+
+
+To edit those, a reference sheet might come in handy, and you can pick one over there: 
+http://apointlessplace.net/wms (look for a item_p.xlsx excel sheet, and go to the keyvalue tab)
+Those numbers next to all those things are the same values that end up in the XML data!
+You can also go on the Project Pokemon Wiki and look at the monster.md and the waza_p.bin page!.
+
+----------------------------------------------------------------------------------------------------
+Readme:
+----------------------------------------------------------------------------------------------------
+ppmd_statsutil.exe (option) input path (output path) 
+  ->option          : An option from the list below..(optional)
+  ->input path      : Path to the file to export, or the directory to assemble.
+  ->output path(opt): Output path. The result of the operation will be placed, and named according to this path!
+
+
+Options:
+  -i     : Specifying this will force import!
+  -e     : Specifying this will force export!
+  -pk    : Specifying this will import or export only Pokemon data!
+  -mv    : Specifying this will import or export only move data!
+  -items : Specifying this will import or export only items data!
+  -str   : Specifying this will import or export only the game strings specified!
+  -locale: Force the utility to use the following locale string when importing/exporting the string file!
+  -gl    : Set the path to the file to use as the "gamelang.xml" file!
+
+
+Examples:
+ppmd_statsutil.exe -i -e -pk -mv -items -str -locale "C" -gl "PathToGameLangFile/gamelang.xml" "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
+
+Description:
+To export game data to XML, you have to append "-e" to the
+commandline, followed with the option corresponding to what to export.
+You can import data from XML into a PMD2 game's data, by
+specifying "-i" at the commandline, followed with the
+option corresponding to what to export.
+
+When importing data from XML, the output path must be a PMD2
+game's root data directory!
+When exporting the input path must be a PMD2 game's
+root data directory!
 
 ----------------------------------------------------------------------------------------------------
 Documentation :
