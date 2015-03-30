@@ -11,6 +11,7 @@ Header file with some handy tools for working with files.
 No crappyrights. All wrongs reversed!
 */
 #include <string>
+#include <locale>
 
 namespace utils 
 {
@@ -44,6 +45,12 @@ namespace utils
               to mention the issue with the path passed to the function !
     ************************************************************************/
     std::string RemEscapedDblQuoteFromPath( const std::string &path, bool printwarning = false );
+
+    /************************************************************************
+        CleanFilename
+            Remove special invalid characters from a filename.
+    ************************************************************************/
+    std::string CleanFilename( const std::string & fname, std::locale loc = std::locale::classic() );
 
 };
 

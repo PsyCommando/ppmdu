@@ -46,7 +46,7 @@ namespace utils{ namespace cmdl
         m_filebuf.open( filename, std::ios::out );
 
         if( ! m_filebuf.is_open() )
-            throw runtime_error("WARNING: Encountered an IO problem while creating the logfile!");
+            throw runtime_error("Encountered an IO problem while creating the logfile!");
 
         std::clog.rdbuf( &m_filebuf );
         m_bIsRedirecting = true;
@@ -339,7 +339,7 @@ namespace utils{ namespace cmdl
         if( !refMyOpts.empty() )
         {
             cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
-                 << " option" <<": An option from the list below..(optional)\n";
+                 << "option" <<": An option from the list below..(optional)\n";
             if(bDisplayOptValLegend)
             {
                 cout <<"  " <<BulletChr <<left <<setw(longestargname) <<setfill(' ') 
@@ -424,7 +424,7 @@ namespace utils{ namespace cmdl
                 if( ! refParams[i].myParseFun( params[argorder] ) )
                 {
                     stringstream strserror;
-                    strserror <<"<!>- Error while parsing \"" <<params[argorder] 
+                    strserror <<"Error while parsing \"" <<params[argorder] 
                               <<"\"\nas parameter \"" <<refParams[i].name <<"\"!";
                     throw std::runtime_error(strserror.str());
                 }
@@ -432,7 +432,7 @@ namespace utils{ namespace cmdl
             else if( !(refParams[i].isoptional) )
             {
                 stringstream strserror;
-                strserror <<"<!>- Error! Command line is missing the parameter: \"" <<refParams[i].name <<"\"!";
+                strserror <<"Error! Command line is missing the parameter: \"" <<refParams[i].name <<"\"!";
                 throw exMissingParameter(strserror.str());
             }
             //else // We missed an optional param, no big deal!
@@ -460,7 +460,7 @@ namespace utils{ namespace cmdl
             {
                 //If parsing fails !
                 stringstream strserror;
-                strserror <<"<!>- Error while parsing option : \"" <<(anopt.optionsymbol) <<"\"";
+                strserror <<"Error while parsing option : \"" <<(anopt.optionsymbol) <<"\"";
 
                 if( itFoundRaw->size() > 1  )
                 {
@@ -488,7 +488,7 @@ namespace utils{ namespace cmdl
             if( ! refExtraParam->myParseFun(aparam) )
             {
                 stringstream strserror;
-                strserror <<"<!>- Warning! Error parsing extra parameter : " <<aparam <<"\n"
+                strserror <<"Warning! Error parsing extra parameter : " <<aparam <<"\n"
                           <<"Skipping..\n";
 
                 if( bAbortOnError )

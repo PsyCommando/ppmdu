@@ -208,11 +208,72 @@ namespace utils
     }
 
     /*********************************************************************************************
+        IsolateBits
+            Isolate some adjacent bits inside a value of type T, 
+            and shift them back to offset 0. 
+
+            * nbbits    : Nb of bits to isolate. Used to make the bitmask.
+            * bitoffset : Offset of the bits from the right to the left. From the last bit. 
+
+            Ex1 : we want those bits 0000 1110, the params are ( 0xE, 3, 1 ),  returns 0000 0111
+            Ex2 : we want those bits 0011 0000, the params are ( 0x30, 2, 4 ), returns 0000 0011
+    *********************************************************************************************/
+    template<class T>
+        inline T IsolateBits( T src, unsigned int nbBits, unsigned int bitoffset )
+    {
+        static_assert( std::is_pod<T>::value, "IsolateBits(): Tried to isolate bits of a non-POD type!!" );
+        T mask = static_cast<T>( ( pow( 2, nbBits ) - 1u ) ); //Subtact one to get the correct mask
+        return ( ( src & (mask << bitoffset) ) >> bitoffset );
+    }
+
+    /*********************************************************************************************
         Helper method to get whether a certain bit's state as a boolean, 
         instead of only isolating it.
     *********************************************************************************************/
     template< class T >
         inline bool IsBitOn( T containinginteger, uint32_t offsetrighttoleft  ) { return GetBit( containinginteger, offsetrighttoleft ) > 0; }
+
+    /*
+        WriteStrToByteContainer
+            Write a c string to a byte container, via iterator.
+            strl is the length of the string!
+    */
+    template<class _init> 
+        _init WriteStrToByteContainer( _init itwhere, const char * str, size_t strl )
+    {
+        //#FIXME: The static assert below is broken with non-backinsert iterators
+        //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        
+        return std::copy_n( reinterpret_cast<const typename _init::container_type::value_type*>(str), strl,  itwhere );
+        //for( unsigned int i = 0; i < strl; ++i, ++itwhere )
+        //{
+        //    if( isalnum( str[i] ) )
+        //        itwhere = static_cast<uint8_t>(str[i]);
+        //    else 
+        //    {
+        //        //For non-ASCII characters, write them as an 
+        //    }
+        //}
+    }
+
+    /*
+        WriteStrToByteContainer
+            Write a std::string as a null-terminated string into a byte container!
+
+            If is the string has only a \0 character, only that character will be written!
+    */
+    template<class _init> 
+        _init WriteStrToByteContainer( _init itwhere, const std::string & str )
+    {
+        //if( str.empty() )
+        //{
+        //    (*itwhere) = '\0';
+        //    ++itwhere;
+        //    return itwhere;
+        //}
+        //else
+            return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
+    }
 
 //===============================================================================
 //								Utility

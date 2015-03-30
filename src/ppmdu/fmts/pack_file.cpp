@@ -82,6 +82,11 @@ namespace pmd2 { namespace filetypes
 
     }
 
+    CPack::CPack( std::vector<std::vector<uint8_t>> && subfiles )
+        :m_ForcedFirstFileOffset(0), m_SubFiles(subfiles)
+    {
+    }
+
     void CPack::ClearState()
     {
         //Clear all current data
@@ -121,7 +126,7 @@ namespace pmd2 { namespace filetypes
 
     void CPack::LoadPack( types::constitbyte_t beg, types::constitbyte_t end )
     {
-        utils::MrChronometer chronopacker( "PackFile Loader" );
+        //utils::MrChronometer chronopacker( "PackFile Loader" );
 
         //Clear all current data
         ClearState();
@@ -148,7 +153,7 @@ namespace pmd2 { namespace filetypes
 
     void CPack::LoadFolder( const std::string & pathdir )
     {
-        utils::MrChronometer chronofolderloader("Folder Loader");
+        //utils::MrChronometer chronofolderloader("Folder Loader");
 
         //Check folder exists
         if( !utils::isFolder(pathdir) )
@@ -199,10 +204,12 @@ namespace pmd2 { namespace filetypes
     //void CPack::OutputToFile( const std::string & pathfile )
     types::bytevec_t CPack::OutputPack()
     {
-        utils::MrChronometer chronotwat("Writing Pack File");
-
+        //utils::MrChronometer chronotwat("Writing Pack File");
         //Build the FOT
         BuildFOT();
+
+        if( m_OffsetTable.empty() )
+            throw std::runtime_error( "Couldn't fill the FoT!" );
 
         types::bytevec_t result( PredictTotalFileSize() );
         types::itbyte_t  ittwritepos = WriteFullHeader( result.begin() );
@@ -246,7 +253,6 @@ namespace pmd2 { namespace filetypes
 
     uint32_t CPack::CalcAmountHeaderPaddingBytes()const
     {
-        assert( !m_OffsetTable.empty() );
         uint32_t headerlengthwithpadding = PredictHeaderSizeWithPadding( m_OffsetTable.size() );
         
         if( m_ForcedFirstFileOffset > headerlengthwithpadding ) //Calculate the extra forced padding
@@ -280,7 +286,10 @@ namespace pmd2 { namespace filetypes
 
     void CPack::ReadSubFilesFromPackFileUsingFOT( types::constitbyte_t itbegin )
     {
-        assert( !m_OffsetTable.empty() ); //If this happens, the method was probably called before the FOT was built..
+        if( m_OffsetTable.empty() )
+            throw std::runtime_error( "The FoT contains no entries!" );
+
+        //assert( !m_OffsetTable.empty() ); //If this happens, the method was probably called before the FOT was built..
         const auto NB_SUBFILES = m_OffsetTable.size(); //Avoid doing function calls all the time, and also allow compiler optimization for constants
         m_SubFiles.resize( NB_SUBFILES );
 

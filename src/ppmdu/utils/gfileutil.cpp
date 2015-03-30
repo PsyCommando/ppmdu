@@ -13,10 +13,9 @@ No crappyrights. All wrongs reversed!
 #include "gstringutils.hpp"
 #include <sstream>
 #include <iostream>
-using std::string;
-using std::cout;
-using std::endl;
-using std::stringstream;
+#include <string>
+#include <locale>
+using namespace std;
 
 namespace utils 
 {
@@ -66,6 +65,30 @@ namespace utils
             return path.substr( 0, path.size()-1 );
         }
         return path;
+    }
+
+    /*
+        CleanFilename
+            Remove special invalid characters from a filename.
+    */
+    std::string CleanFilename( const std::string & fname, std::locale loc )
+    {
+        using namespace std;
+        stringstream outsstr;
+        for( char c : fname )
+        {
+            if( isprint( c, loc ) /*&& ! isgraph( c, loc )*/ && ! isspace( c, loc ) )
+            {
+                //Skip any punctuation but dots
+                if( ispunct(c,loc) && c != '.' )
+                    outsstr << '_';
+                else
+                    outsstr << c;
+            }
+            else
+                outsstr << '_';
+        }
+        return outsstr.str();
     }
 
 };

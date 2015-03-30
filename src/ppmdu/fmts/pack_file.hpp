@@ -94,6 +94,7 @@ namespace pmd2 { namespace filetypes
         //Constructors & Destructors
         //-------------------------------
         CPack();
+        CPack( std::vector<std::vector<uint8_t>> && subfiles );
 
         //-------------------------------
         //Accessors

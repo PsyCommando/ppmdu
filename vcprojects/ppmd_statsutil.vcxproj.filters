@@ -1,0 +1,373 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\ppmdu">
+      <UniqueIdentifier>{2efd80ea-1063-4234-9fe6-eff0642755f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats">
+      <UniqueIdentifier>{2cf2aa50-0295-46ff-bab5-94cb0a8eaf35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\external formats">
+      <UniqueIdentifier>{fb30a13a-8099-410b-b942-c628a2facf13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats">
+      <UniqueIdentifier>{7ef6af80-7059-407b-b2e4-a0e3167c4543}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\utility">
+      <UniqueIdentifier>{ce424d06-0270-4b0b-8fd4-2980287513f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu">
+      <UniqueIdentifier>{63d8b3a5-6b24-4651-b877-6ce0aad5a50f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats">
+      <UniqueIdentifier>{5ca44863-04eb-489e-9132-b61fc6ee5de1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\external formats">
+      <UniqueIdentifier>{14ca073a-6dba-456a-912e-dc8cf6fe52f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats">
+      <UniqueIdentifier>{ff5a5ff0-b301-4feb-818d-5762b32b81a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\utility">
+      <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pugixml">
+      <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\ppmdu\containers\color.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\png_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\kao.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\pkdpx.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\px_compression.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan_writer.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\statsutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
+      <Filter>Source Files\pugixml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\utils\config_io.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\ppmdu\basetypes.hpp">
+      <Filter>Header Files\ppmdu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\color.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_io.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\png_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\riff_palette.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\kao.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\pkdpx.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\px_compression.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\sir0.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\statsutil.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\config_io.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\utils\pugixml_utils.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\resources\pkmn_types.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_abilities.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_moves.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\readmes\ppmd_statsutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_names.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pkmn_iq.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\resources\gamelang.conf">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\resources\gamelang.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

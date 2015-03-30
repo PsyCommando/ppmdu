@@ -30,7 +30,6 @@ namespace pmd2 { namespace filetypes
     namespace magicnumbers
     {
         //#TODO: Not sure if we should put those in here :/
-
 	    //Common Magic Numbers 
         static const std::array<uint8_t,4> SIR0_MAGIC_NUMBER     = { 0x53, 0x49, 0x52, 0x30 };       //"SIR0"
         static const uint32_t              SIR0_MAGIC_NUMBER_INT = 0x53495230;                       //"SIR0", stored as unsigned int for convenience
@@ -53,6 +52,7 @@ namespace pmd2 { namespace filetypes
     static const std::string SIR0_PKDPX_FILEX        = "sir0pkdpx";    //For a sir0 wrapped pkdpx
     static const std::string SIR0_AT4PX_FILEX        = "sir0at4px";    //For a sir0 wrapped at4px
     static const std::string RGBX32_RAW_PAL_FILEX    = "rgbx32";       //For a file containing only a raw RGBX32 palette
+    static const std::string MD_FILEX                = "md";           //For the monster.md file
 
     //Padding bytes
     static const uint8_t COMMON_PADDING_BYTE        = 0xAA; //The most common padding byte in all PMD2 files !
@@ -101,6 +101,7 @@ namespace pmd2 { namespace filetypes
         WTU_FILE,
         BGP_FILE,
         RAW_RGBX32_PAL_FILE,
+        MONSTER_MD_FILE,
 
         //#If you add any more, be sure to modify GetContentTypeName
         UNKNOWN_CONTENT,

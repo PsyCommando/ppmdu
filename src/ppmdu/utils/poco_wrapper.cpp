@@ -53,8 +53,13 @@ namespace utils
         return Poco::File(inputpath).exists();
     }
 
+    std::string getCWD()
+    {
+        return Poco::Path::current();
+    }
+
     //Read entire directory content to string vector
-    std::vector<std::string> ListDirContent_FilesAndDirectories( const std::string & dirpath, bool bFilenameOnly )
+    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly )
     {
         vector<string>          dircontent;
         Poco::DirectoryIterator itdir(dirpath);

@@ -1,0 +1,101 @@
+<StringIndexData>
+    <!--This file contains the string indexes for where the strings for certain things are stored at in the text_*.str file.
+        Since the text_*.str file has a different amount of strings depending on the native language, this
+        file is there to make sure new entry for new languages can be easily added.-->
+    
+    <!--Begin List for Explorers of Sky-->
+    <Game name="EoS">
+        <Language name="English" strfile="text_e.str" locale="en-US">
+            <StringBlock>
+                <Name>Pokemon Names</Name> 
+                <Begin>8734</Begin>
+                <End>9334</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Pokemon Categories</Name> 
+                <Begin>9334</Begin>
+                <End>9934</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Move Names</Name> 
+                <Begin>8173</Begin>
+                <End>8734</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Descriptions</Name>
+              <Begin>10145</Begin>
+              <End>10704</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Item Names</Name> 
+                <Begin>6773</Begin>
+                <End>8173</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Item Short Descriptions</Name>
+              <Begin>12104</Begin>
+              <End>13504</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Item Long Descriptions</Name>
+              <Begin>10704</Begin>
+              <End>12104</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Ability Names</Name>
+              <Begin>13789</Begin>
+              <End>13913</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Ability Descriptions</Name>
+              <Begin>13913</Begin>
+              <End>14037</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Type Names</Name>
+              <Begin>13770</Begin>
+              <End>13989</End>
+            </StringBlock>
+        </Language>
+        <Language name="Japanese" strfile="text_j.str" locale=".932">
+            <StringBlock>
+              <Name>Pokemon Names</Name>
+              <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Pokemon Categories</Name>
+              <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Names</Name>
+              <Begin></Begin>
+            </StringBlock>
+             <StringBlock>
+               <Name>Item Names</Name>
+               <Begin></Begin>
+            </StringBlock>
+        </Language>
+    </Game>
+
+    <!--Begin List for Explorers of Time/Darkness-->
+    <Game name="EoTD">
+        <Language name="English" strfile="text_e.str" locale="en-US">
+            <StringBlock>
+              <Name>Pokemon Names</Name>
+                <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Pokemon Categories</Name>
+                <Begin></Begin>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Names</Name>
+                <Begin></Begin>
+            </StringBlock>
+             <StringBlock>
+               <Name>Item Names</Name>
+               <Begin></Begin>
+            </StringBlock>
+        </Language>
+    </Game>
+</StringIndexData>

@@ -44,7 +44,7 @@
       <UniqueIdentifier>{c25f43c4-7a4a-4b65-82b9-c514756db7f9}</UniqueIdentifier>
     </Filter>
     <Filter Include="pugixml">
-      <UniqueIdentifier>{884ce8be-47dd-46cf-9e4e-406aaf00633e}</UniqueIdentifier>
+      <UniqueIdentifier>{b9e5d948-9f99-41b5-91f0-ace9e3f18324}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
