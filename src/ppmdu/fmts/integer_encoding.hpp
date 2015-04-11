@@ -24,11 +24,10 @@ namespace utils
 
     /***********************************************************************************
     ***********************************************************************************/
-    //template<class T>
-        inline uint8_t HandleEncodeByte( uint8_t thebyte, bool islowest, bool hasHigherNonZero /*T curEncodedRes*/ )
+    inline uint8_t HandleEncodeByte( uint8_t thebyte, bool islowest, bool hasHigherNonZero )
     {
         uint8_t curbyte = thebyte & 0x7Fu;
-        if( islowest || /*curEncodedRes == 0 &&*/ !hasHigherNonZero && curbyte == 0 ) //If we're the last byte OR we don't have a higher non-zero byte, and the byte we're handling is 0, return the current byte as-is !
+        if( islowest || !hasHigherNonZero && curbyte == 0 ) //If we're the last byte OR we don't have a higher non-zero byte, and the byte we're handling is 0, return the current byte as-is !
              return curbyte;
         else
             return ( curbyte | 0x80 );
@@ -36,62 +35,9 @@ namespace utils
 
     /***********************************************************************************
     ***********************************************************************************/
-    //template<class T>
-    //    T EncodeAnInteger( T val )
-    //{
-    //    static_assert( std::is_integral<T>::value, "EncodeInteger(): Type T is not an integer!" );
-    //    static const int Sz_T     = sizeof(T);
-    //    static const int BitsUsed = (Sz_T * 8) - Sz_T; //The number of bits we can use from the integer (we give up one bit per byte!)
-    //
-    //    if( ( val & ~(utils::do_exponent_of_2_<BitsUsed>::value - 1) ) > 0 )
-    //    {
-    //        std::stringstream sstr;
-    //        sstr << "ERROR: the integer specified has a value too high for being properly encoded! The highest "
-    //             << Sz_T << " bit(s) is/are reserved for the encoding! Strip those bits first!";
-    //        throw std::overflow_error(sstr.str());
-    //    }
-
-    //    if( val == 0 )
-    //        return 0;
-
-    //    T result = 0;
-
-    //    bool hasHigherNonZero = false;
-    //    for( int i = (Sz_T-1); i >= 0; --i )
-    //    {
-    //        uint8_t curbyte = static_cast<uint8_t>( utils::IsolateBits( val, 7, (i * 7) ) );
-    //        if( curbyte == 0 && !hasHigherNonZero )
-    //            continue;
-    //        else
-    //        {
-    //            hasHigherNonZero = true;
-    //            result |= ( HandleEncodeByte( curbyte, 
-    //                                          (i == 0), 
-    //                                          result ) 
-    //                        << (i * 7) );
-    //        }
-    //    }
-
-    //    return result;
-    //}
-
-    /***********************************************************************************
-    ***********************************************************************************/
     template<class T, class _itbackins>
         inline _itbackins EncodeAnInteger( T val, _itbackins itout_encoded )
     {
-        //auto data = EncodeAnInteger( val );
-
-        //for( int i = (sizeof(T)-1); i >= 0; --i )
-        //{
-        //    uint8_t abyte = utils::IsolateBits( data, 8, (i*8) );
-        //    if( abyte != 0 )
-        //    {
-        //        (*itout_encoded) = abyte;
-        //        ++itout_encoded;
-        //    }
-        //}
-
         static_assert( std::is_integral<T>::value, "EncodeInteger(): Type T is not an integer!" );
         static const int Sz_T     = sizeof(T);
         static const int BitsUsed = (Sz_T * 8) - Sz_T; //The number of bits we can use from the integer (we give up one bit per byte!)
@@ -140,7 +86,6 @@ namespace utils
     template<class _init, class _outit>
         inline _outit EncodeIntegers( _init itbeg, _init itend, _outit itout )
     {
-        //static_assert( std::is_integral<typename _init::valu_type>::value, "EncodeIntegers(): list to encode is not a list of integers!" ); 
         for(; itbeg != itend; ++itbeg )
             itout = EncodeAnInteger( *itbeg, itout );
         //Append 0
@@ -169,10 +114,10 @@ namespace utils
 //=========================================================================================================================
 
     /*
-        DecodeAnInteger
+        DecodeAnInteger **This function is recursive.**
             Returns the input iterator position after all the integer's encoded bytes were read.
 
-            **This function is recursive.**
+            Use the DecodeAnInteger below instead of calling this one directly.
     */
     template<class T, class _init>
         inline T DecodeAnInteger( _init & itbeg, _init & itend, unsigned int curbyindex, T curout )
@@ -219,7 +164,8 @@ namespace utils
         _init DecodeIntegers( _init itbeg, _init itend, _outit & itout )
     {
         typedef typename _outit::container_type::value_type val_ty;
-        static_assert( sizeof(val_ty) > sizeof(typename typename _init::value_type), "DecodeIntegers(): Output type is smaller than the input type!" );
+        static_assert( sizeof(val_ty) > sizeof(typename typename _init::value_type), 
+                       "DecodeIntegers(): Output type is smaller than the input type!" );
         
         bool wasNullTerminated = false;
         while( itbeg != itend )
@@ -229,21 +175,21 @@ namespace utils
             //If we're on a byte sequence that begin with zero, don't bother!
             if( (*itbeg) != 0 )
             {
-            value = DecodeAnInteger<val_ty>( itbeg, itend );
-            //if( value != 0 )
-            //{
+                value = DecodeAnInteger<val_ty>( itbeg, itend );
                 (*itout) = value;
                 ++itout;
             }
             else
             {
-            ++itbeg;
+                ++itbeg;
                 wasNullTerminated = true;
                 break;  //Stop when we hit the ending 0 !
             }
         }
+
         if( !wasNullTerminated )
-            throw std::runtime_error("DecodeIntegers(): ERROR: The encoded integer list did not end on a 00 byte! Result is probably invalid!");
+            throw std::runtime_error("DecodeIntegers(): The encoded integer list did not end on a 00 byte! Result is probably invalid!");
+        
         return itbeg;
     }
 

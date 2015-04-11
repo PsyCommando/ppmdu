@@ -16,7 +16,7 @@ namespace pmd2 { namespace filetypes
 //
 //  Constants 
 //
-    static const string        SpecialCharSequ_MusicNote = "\129\244";
+    static const string        SpecialCharSequ_MusicNote = "\129\244"; //~'music note'
     static const unsigned char SpecialChar_CtrlChar      = 129u;
     static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
 
@@ -141,7 +141,6 @@ namespace pmd2 { namespace filetypes
 
                 m_txtstr[i] = out.str();
                 ++i;
-                //cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (i * 100 / PtrTableSize) <<"%";
             }
             cout<<" Done!\n";
         }
@@ -235,18 +234,10 @@ namespace pmd2 { namespace filetypes
                 unsigned short valread = 0; 
                 parse.imbue( txtloc );
                 
-                //if( textafterbs.substr(0,1) == "0x" ) //Hexadecimal is problematic, because hard to tell where number begins and ends, when next to letters!
-                //{
-                //    //If is hexa
-                //    parse << textafterbs.substr(2) << hex;
-                //    parse >> valread;
-                //}
-                //else
-                {
-                    //If is decimal
-                    parse << textafterbs << dec;
-                    parse >> valread;
-                }
+                //If is decimal
+                parse << textafterbs << dec;
+                parse >> valread;
+
                 (*itwrite) = static_cast<unsigned char>(valread);
                 ++itwrite;
 
@@ -271,16 +262,7 @@ namespace pmd2 { namespace filetypes
 
         void Write( const std::string & filepath )
         {
-            //if( ! utils::isFile( filepath ) )
-            //{
-            //    stringstream sstr;
-            //    sstr << "ERROR: File \"" <<filepath <<"\" cannot be opened for writing!";
-            //    string errorstr = sstr.str();
-            //    clog << errorstr <<"\n";
-            //    throw runtime_error(errorstr);
-            //}
-
-            //Re-init ptr write positon
+            //Re-init ptr write positon, just in case someone would re-use the object..
             m_ptrTblWriteAt = 0;
 
             //Reserve ptr table space!
@@ -288,33 +270,35 @@ namespace pmd2 { namespace filetypes
 
             clog << "Writing " <<dec << m_txtstr.size() <<" strings to file \"" <<filepath <<"\"";
 
-            //Write each strings
             auto itbackins = back_inserter( m_fileData );
 
             for( unsigned int cntstr = 0; cntstr < m_txtstr.size();  )
             {
                 const auto & str = m_txtstr[cntstr];
-                utils::WriteIntToByteVector   ( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
+                utils::WriteIntToByteVector( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
                 m_ptrTblWriteAt += PTR_LEN;
 
                 //
                 vector<char> processed;
                 auto         itprocessedbackins = back_inserter( processed );
                 processed.reserve(str.size());
-                for( unsigned int i = 0; i < str.size(); ++i )
+                for( unsigned int i = 0; i < str.size();  )
                 {
                     char c = str[i];
                     if( c == '\\' && i < (str.size()-1) )
                     {   
-                        i+= (HandleEscapedChar( itprocessedbackins, str.substr( i + 1 ), m_locale ) - 1); //Compensate for the ++i the loop will apply
+                        //HandleEscapedChar returns the amount of characters that were handled as part of the escaped char.
+                        i+= HandleEscapedChar( itprocessedbackins, str.substr( i + 1 ), m_locale ) ;
                     }
                     else
+                    {
                         (*itprocessedbackins) = c; //If the character is not a backslash, or if there are no other characters after the backslash
+                        ++i;
+                    }
                 }
 
                 std::copy( processed.begin(), processed.end(), itbackins );
                 ++cntstr;
-                //cout<<"\r"<<setw(3)<<setfill(' ')<<dec<< (cntstr * 100 / m_txtstr.size()) <<"%";
             }
             cout<<" Done!\n";
             //Write file
@@ -322,7 +306,7 @@ namespace pmd2 { namespace filetypes
         }
 
     private:
-        const unsigned int               PTR_LEN = sizeof(uint32_t);
+        static const unsigned int        PTR_LEN = sizeof(uint32_t);
         std::vector<uint8_t>             m_fileData;
         uint32_t                         m_ptrTblWriteAt;    //Position to write current str offset at
         const std::vector<std::string> & m_txtstr;
