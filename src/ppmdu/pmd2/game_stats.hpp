@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: 
     This file contains generic resources for handling the PMD2 game data.
 */
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <ppmdu/containers/item_data.hpp>
 #include <ppmdu/containers/move_data.hpp>
@@ -39,15 +40,15 @@ namespace pmd2{ namespace stats
     //    ItemsStats,
     //};
 
-    /*
-    */
-    enum struct eGameVersion
-    {
-        Invalid,
-        EoS,    //Explorers of Sky
-        EoTEoD, //Explorers of Time/Darkness
-        NBGameVers,
-    };
+    ///*
+    //*/
+    //enum struct eGameVersion
+    //{
+    //    Invalid,
+    //    EoS,    //Explorers of Sky
+    //    EoTEoD, //Explorers of Time/Darkness
+    //    NBGameVers,
+    //};
 
 //==================================================================================
 //  Functions
@@ -72,7 +73,7 @@ namespace pmd2{ namespace stats
     public:
         //static const GameLanguageLoader & GetInstance( const std::string & langFilePath );
         GameLanguageLoader();
-        GameLanguageLoader( const std::string & textFileName, eGameVersion version );
+        GameLanguageLoader( const std::string & textFileName, filetypes::eGameVersion version );
 
         /*
             Using the name of the text_*.str file, this will return the corresponding
@@ -111,8 +112,8 @@ namespace pmd2{ namespace stats
         };
 
         //typedef std::pair< std::string, std::string> glang_t;
-        std::vector<glang_t> m_langData;
-        eGameVersion         m_gameVersion;
+        std::vector<glang_t>    m_langData;
+        filetypes::eGameVersion m_gameVersion;
     };
 
 
@@ -285,7 +286,7 @@ namespace pmd2{ namespace stats
             IdentifyGameVersion();
             IdentifyGameLocaleStr();
             BuildListOfStringOffsets();
-            if( m_gameVersion == eGameVersion::Invalid )
+            if( m_gameVersion == filetypes::eGameVersion::Invalid )
                 throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
         }
 
@@ -312,12 +313,12 @@ namespace pmd2{ namespace stats
 
     private:
 
-        std::string         m_dataFolder;
-        std::string         m_gamelangfile;
-        GameLanguageLoader  m_possibleLang;
-        eGameVersion        m_gameVersion;
-        std::string         m_gameLangLocale;
-        std::string         m_gameTextFName;
+        std::string             m_dataFolder;
+        std::string             m_gamelangfile;
+        GameLanguageLoader      m_possibleLang;
+        filetypes::eGameVersion m_gameVersion;
+        std::string             m_gameLangLocale;
+        std::string             m_gameTextFName;
         
 
 

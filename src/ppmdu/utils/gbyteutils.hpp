@@ -238,13 +238,13 @@ namespace utils
             Write a c string to a byte container, via iterator.
             strl is the length of the string!
     */
-    template<class _init> 
-        _init WriteStrToByteContainer( _init itwhere, const char * str, size_t strl )
+    template<class _outit> 
+        _outit WriteStrToByteContainer( _outit itwhere, const char * str, size_t strl )
     {
         //#FIXME: The static assert below is broken with non-backinsert iterators
         //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
         
-        return std::copy_n( reinterpret_cast<const typename _init::container_type::value_type*>(str), strl,  itwhere );
+        return std::copy_n( reinterpret_cast<const typename _outit::container_type::value_type*>(str), strl,  itwhere );
         //for( unsigned int i = 0; i < strl; ++i, ++itwhere )
         //{
         //    if( isalnum( str[i] ) )
@@ -258,12 +258,30 @@ namespace utils
 
     /*
         WriteStrToByteContainer
+            Write a c string to a byte container, via iterator.
+            strl is the length of the string!
+    */
+    template<class _init> 
+        _init ReadStrFromByteContainer( _init itread, const char * str, size_t strl )
+    {
+        //#FIXME: The static assert below is broken with non-backinsert iterators
+        //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        
+        for( size_t i = 0; i < strl; ++i, ++itread )
+            str[i] = *itread;
+        return itread;
+
+        //return std::copy_n( , strl, reinterpret_cast<const typename _init::container_type::value_type*>(str) );
+    }
+
+    /*
+        WriteStrToByteContainer
             Write a std::string as a null-terminated string into a byte container!
 
             If is the string has only a \0 character, only that character will be written!
     */
-    template<class _init> 
-        _init WriteStrToByteContainer( _init itwhere, const std::string & str )
+    template<class _outit> 
+        _outit WriteStrToByteContainer( _outit itwhere, const std::string & str )
     {
         //if( str.empty() )
         //{

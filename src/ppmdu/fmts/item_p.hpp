@@ -14,15 +14,16 @@ Description:
 namespace pmd2 {namespace filetypes 
 {
 
-//
+//=========================================================================================
 //  Constants
-//
+//=========================================================================================
     static const std::string ItemData_FName          = "item_p.bin";
+    //EoS only
     static const std::string ExclusiveItemData_FName = "item_s_p.bin";
 
-//
+//=========================================================================================
 //  Functions
-//
+//=========================================================================================
     /*
         * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
     */

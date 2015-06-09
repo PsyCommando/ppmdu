@@ -10,12 +10,12 @@ namespace utils{ namespace io
 {
     void ReadFileToByteVector(const std::string & path, std::vector<uint8_t> & out_filedata)
     {
-        ifstream inputfile(path, ios::binary | ios::ate); //ate : Opens the file, with the read pos at the end, to allow getting the file size
+        ifstream inputfile(path, ios::in | ios::binary | ios::ate); //ate : Opens the file, with the read pos at the end, to allow getting the file size
 
         if (!(inputfile.good() && inputfile.is_open()))
         {
             stringstream sstr;
-            sstr <<"ERRO: ReadFileToByteVector() : impossible to open file \"" <<path <<"\"!\n";
+            sstr <<"ReadFileToByteVector() : impossible to open file \"" <<path <<"\"!\n";
             throw runtime_error(sstr.str());
         }
 

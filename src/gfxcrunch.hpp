@@ -79,11 +79,14 @@ namespace gfx_util
         int PackAndImportCharSprites();
         int DecompressAndHandle();
 
+        int ImportMainFontFile();
+        int ExportMainFontFile();
+
         //Utility
-        bool                     DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
-        int                      GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
-        int                      Execute               ();                                 //Handle excution switch case + exceptions
-        void                     PrintOperationMode    ();
+        bool DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
+        int  GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
+        int  Execute               ();                                 //Handle excution switch case + exceptions
+        void PrintOperationMode    ();
 
         void ChkAndHndlUnsupportedRawOutput();
 
@@ -112,14 +115,16 @@ namespace gfx_util
             IMPORT_BGP_Mode,               //Import a BGP image
             IMPORT_WTE_Mode,               //Import a WTE image
             BUILD_POKE_SPRITES_PACK_Mode,  //Import a pack file, and export all its content
-            BUILD_KAOMADO_Mode,            //Export a kaomado file
+            BUILD_KAOMADO_Mode,            //Import a kaomado file
+            IMPORT_MAINFONT,               //Import the main 1bpp font used in PMD2
 
             //Export/Unpack Modes:
             UNPACK_WAN_Mode,               //Export a WAN sprite to a directory structure
             EXPORT_BGP_Mode,               //Export a BGP image
             EXPORT_WTE_Mode,               //Export a WTE image
             UNPACK_POKE_SPRITES_PACK_Mode, //Export a pack file, and export all its content
-            UNPACK_KAOMADO_Mode,           //Import a kaomado file from a directory
+            UNPACK_KAOMADO_Mode,           //Export a kaomado file from a directory
+            EXPORT_MAINFONT,               //Export a folder to a 1bpp main font file!
 
             //Special Modes:
             DECOMPRESS_AND_INDENTIFY_Mode, //Decompress the container and try to figure out what is inside

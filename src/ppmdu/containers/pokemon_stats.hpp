@@ -272,8 +272,17 @@ namespace pmd2 { namespace stats
         CPokemon
             Storage for pokemon statistics.
 
+            Explorers of Sky:
+            -----------------
             MoveSets    : 553
             StatsGrowth : 571
+            MonsterMD   : 1,155
+            Kaomado     : 1,155
+
+            Explorers of Time/Darkness:
+            ---------------------------
+            MoveSets    : 
+            StatsGrowth : 1,192
             MonsterMD   : 1,155
             Kaomado     : 1,155
 

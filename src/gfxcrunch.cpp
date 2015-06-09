@@ -914,6 +914,21 @@ namespace gfx_util
         return 0;
     }
 
+    int CGfxUtil::ImportMainFontFile()
+    {
+        vector<uint8_t> fdata = ReadFileToByteVector( m_inputPath );
+
+        assert(false);
+
+        return 0;
+    }
+    
+    int CGfxUtil::ExportMainFontFile()
+    {
+        assert(false);
+        return 0;
+    }
+
 //--------------------------------------------
 //  Parsing Args Methods
 //--------------------------------------------
@@ -962,12 +977,12 @@ namespace gfx_util
             }
             case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:
             {
-                cout <<"Unpacking Sprites Containing Pack File\n";
+                cout <<"Unpacking Sprites-Containing Pack File\n";
                 break;
             }
             case eExecMode::BUILD_POKE_SPRITES_PACK_Mode:
             {
-                cout <<"Building Sprites Containing Pack File\n";
+                cout <<"Building Sprites-Containing Pack File\n";
                 break;
             }
             case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
@@ -1338,6 +1353,15 @@ namespace gfx_util
                     returnval = PackAndImportCharSprites();
                     break;
                 }
+
+                case eExecMode::IMPORT_MAINFONT:
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"Importing main font file..\n";
+                    returnval = ImportMainFontFile();
+                    break;
+                }
+
                 case eExecMode::INVALID_Mode:
                 {
                     cerr<<"<!>-ERROR  : Nothing can be done here. Exiting..\n";

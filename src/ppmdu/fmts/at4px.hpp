@@ -8,8 +8,6 @@ Description: stuff for handling and building AT4PX files.
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-//#include <ppmdu/pmd2/pmd2_palettes.hpp>
-//#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <array>
@@ -28,9 +26,9 @@ namespace pmd2{ namespace filetypes
     *******************************************************/
     struct at4px_header : public utils::data_array_struct
     {
-        static const unsigned int HEADER_SZ        = 18u;
-        static const unsigned int NB_FLAGS         = 9u;
-        static const unsigned int MAGIC_NUMBER_LEN = 5u;
+        static const unsigned int HEADER_SZ        = 18u; //Bytes
+        static const unsigned int NB_FLAGS         = 9u;  //Nb of PX compression flags
+        static const unsigned int MAGIC_NUMBER_LEN = 5u;  //Bytes
 
         std::array<uint8_t,MAGIC_NUMBER_LEN>  magicn;       //"AT4PX"
         uint16_t                              compressedsz; //The total size of the file compressed
@@ -38,9 +36,9 @@ namespace pmd2{ namespace filetypes
         uint16_t                              decompsz;    //The image size when decompressed as 4 bpp
 
         //Overrides
-        unsigned int                         size()const {return HEADER_SZ;}
-        std::vector<uint8_t>::iterator       WriteToContainer( std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer(  std::vector<uint8_t>::const_iterator itReadfrom );
+        inline unsigned int                  size()const {return HEADER_SZ;}
+        std::vector<uint8_t>::iterator       WriteToContainer ( std::vector<uint8_t>::iterator       itwriteto )const;
+        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
         //Implementations specific to at4px_header
         template<class _outit>
@@ -169,63 +167,6 @@ namespace pmd2{ namespace filetypes
         std::vector<types::bytevec_t>::iterator m_itOutContainers;
     };
 
-
-    /*******************************************************
-        at4px_compress
-            Functor for handling at4px compression!
-    *******************************************************/
-    //class at4px_compress
-    //{
-    //public:
-    //    at4px_compress( types::bytevec_t & out_compressedimg );
-    //    at4px_compress( std::vector<types::bytevec_t>::iterator itoutimgbeg, std::vector<types::bytevec_t>::iterator itoutimgend );
-
-    //    //Compress the data passed as input to the contructor as AT4PX format data
-    //    void operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend );
-
-    //protected:
-    //    //Compress the data passed as input to the contructor as AT4PX format data
-    //    void Compress();
-
-    //    //Make the header
-    //    void WriteHeader();
-
-    //    //Vars
-    //    at4px_header                m_header;
-    //    compression::px_info_header m_compinfo;
-    //    types::constitbyte_t        m_itInBeg,
-    //                                m_itInCur,
-    //                                m_itInEnd;
-
-    //    //Ouput iterators
-    //    bool                               m_isUsingOutputIterators; //Whether we need to use the output iterators
-    //    std::vector<types::bytevec_t>::iterator m_itOutImgBeg,
-    //                                            m_itOutImgCur,
-    //                                            m_itOutImgEnd;
-
-    //    types::bytevec_t * m_outvec;
-
-    //};
-
-
-    //template<class _init, class _randit>
-    //    compression::px_info_header CompressToAT4PX( _init itinputbeg, _init itinputend, _randit itoutputbeg, _randit itouputend )
-    //{
-    //    compression::px_info_header pxinf;
-    //    //compress data
-    //    auto itwriteat = itoutputbeg + at4px_header::HEADER_SZ;
-    //    pxinf = compression::CompressPX( itinputbeg, itinputend, itwriteat, itouputend, compression::ePXCompLevel::LEVEL_3, true );
-
-    //    //write header, before the compressed data
-    //    PXinfoToAT4PXHeader( pxinf ).WriteToContainerT( itoutputbeg );
-    //    return pxinf;
-    //}
-    //template<class _init, class _randit>
-    //    compression::px_info_header CompressToAT4PX( _init itinputbeg, _init itinputend, _randit itoutputbeg, _randit itouputend )
-    //{
-    //    static_assert(false, "Not supported yet !");
-    //}
-
     /*******************************************************
         CompressToAT4PX
             Function to compress a range into another range.
@@ -303,75 +244,6 @@ namespace pmd2{ namespace filetypes
                               std::vector<uint8_t> &                           out_decompressed,
                               bool                                             bdisplayProgress = false,
                               bool                                             blogenable       = false );
-
-
-    /*******************************************************
-        palette_and_at4px_decompress
-            Handles the decompression of a 3 bytes per color 
-            16 color palette, followed by an AT4PX
-            container. Mainly used with the "kaomado.kao" file.
-
-            The image format returned is 8bpp
-    *******************************************************/
-    //class palette_and_at4px_decompress : public at4px_decompress
-    //{
-    //public:
-
-    //    //With this constructor only a single call to the class' 
-    //    // () operator will work. Any subsequent calls will 
-    //    // overwrite the content of the vector with the new
-    //    // decompressed output! The byte vector will
-    //    // have its size adjusted accordingly to the decompressend output
-    //    // size !
-    //    palette_and_at4px_decompress( types::bytevec_t & out_decompimg, graphics::rgb24palette_t & out_palette );
-
-    //    //Read the palette, and decompress the at4px right after.
-    //    void operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend, bool benablelog );
-
-    //protected:
-
-    //    //Parse the palette to the palette vector
-    //    void HandlePalette();
-
-    //    graphics::rgb24palette_t & m_outpal;
-    //};
-
-    /*******************************************************
-        palette_and_at4px_decompress_struct
-            The same functor as above, but it takes a vector
-            of rgb24pal_and_8bpp_tiled instead
-            of a single byte vector and a single palette.
-    *******************************************************/
-    //class palette_and_at4px_decompress_struct : public at4px_decompress
-    //{
-    //public:
-
-    //    //With this constructor, the functor will output the result of each calls
-    //    // to its () operator to a new entry in the vector. 
-    //    // The topmost vector must have the correct size! The byte and palette vectors will
-    //    // have their sizes adjusted accordingly to the decompressend output
-    //    // size !
-    //    palette_and_at4px_decompress_struct( std::vector<graphics::rgb24pal_and_8bpp_tiled>::iterator itoutimgpal );
-
-    //    //Read the palette, and decompress the at4px right after.
-    //    // We expect the calling code to give us as much elements in the output vector 
-    //    // as how many times they'll call this!
-    //    void operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend );
-
-    //    std::vector<graphics::rgb24pal_and_8bpp_tiled>::iterator GetCurrentOutputPos()const
-    //    {
-    //        return m_itOutContainers;
-    //    }
-
-    //protected:
-
-    //    //Parse the palette to the palette vector
-    //    void HandlePalette();
-
-    //    std::vector<graphics::rgb24pal_and_8bpp_tiled>::iterator m_itOutContainers;
-    //};
-
-
 };};
 
 #endif

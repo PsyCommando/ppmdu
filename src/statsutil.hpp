@@ -62,6 +62,7 @@ namespace statsutil
         int DoExportMovesData();
         int DoImportGameStrings();
         int DoExportGameStrings();
+        int DoExportGameStringsFromFile(); //For exporting the game strings from the text_*.str file directly
 
         int DoImportAll();
         int DoExportAll();
@@ -107,6 +108,7 @@ namespace statsutil
 
             ImportGameStrings,
             ExportGameStrings,
+            ExportGameStringsFromFile,
 
             ImportAll,
             ExportAll,
@@ -119,6 +121,7 @@ namespace statsutil
         std::string m_langconf;       //The path to the language configuration file!
         std::string m_flocalestr;     //The forced locale string
 
+        bool        m_forcedLocale;   //Whether the -locale command line option was used at all.
         bool        m_hndlStrings;    //If we need to handle only a game string related OP, this is true!
         bool        m_hndlItems;      //If we handle only items
         bool        m_hndlMoves;      //If we handle only moves

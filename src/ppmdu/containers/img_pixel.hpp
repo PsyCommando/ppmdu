@@ -471,6 +471,7 @@ namespace gimg
 //=============================================================================
 //Common pixel traits types
 //=============================================================================
+    typedef pixel_trait<1,  1>           trait_indexed_1bpp;   //#TODO: 1bpp and anything below 8bpp is pretty space inefficient right now.
     typedef pixel_trait<1,  4>           trait_indexed_4bpp;
     typedef pixel_trait<1,  8>           trait_indexed_8bpp;
     typedef pixel_trait<2, 16>           trait_indexed_16bpp;  //Is it even used ?
@@ -482,6 +483,7 @@ namespace gimg
 //=============================================================================
 //Common pixel types
 //=============================================================================
+    typedef pixel<trait_indexed_1bpp>  pixel_indexed_1bpp;
     typedef pixel<trait_indexed_4bpp>  pixel_indexed_4bpp;
     typedef pixel<trait_indexed_8bpp>  pixel_indexed_8bpp;
     typedef pixel<trait_indexed_16bpp> pixel_indexed_16bpp; //Is it even used ?

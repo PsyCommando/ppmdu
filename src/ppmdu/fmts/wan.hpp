@@ -600,6 +600,7 @@ namespace pmd2 { namespace filetypes
             //Read the assembly table
             auto asmtable = FillAsmTable( itwhere );
 
+            //Log the asm table if logging is on
             if( utils::LibWide().isLogOn() )
             {
                 std::clog << "Assembly Table:\n";
@@ -619,8 +620,6 @@ namespace pmd2 { namespace filetypes
             graphics::ImageInfo imginf;
             imginf.zindex = asmtable.front().zIndex;
             out_imginfo.push_back(imginf);
-
-
 
             if( itfound != metarefs.end() )
             {
@@ -713,9 +712,6 @@ namespace pmd2 { namespace filetypes
                 std::cerr <<strres;
                 std::clog <<strres;
             }
-
-            //Sanity check
-            //assert( nbPixInBytes == (myres.width * myres.height) );
 
             //Parse the image with the best resolution we could find!
             cur_img.setPixelResolution( myres.width, myres.height );

@@ -70,6 +70,56 @@
         <!--Begin English EoT/D-->
         <Language name="English" strfile="text_e.str" locale="en-US">
             <!--#TODO: Fill this up!-->
+            <StringBlock>
+                <Name>Pokemon Names</Name> 
+                <Begin>6488</Begin>
+                <End>7088</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Pokemon Categories</Name> 
+                <Begin>7088</Begin>
+                <End>7688</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Move Names</Name> 
+                <Begin>5927</Begin>
+                <End>6488</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Move Descriptions</Name>
+              <Begin>7897</Begin>
+              <End>8456</End>
+            </StringBlock>
+            <StringBlock>
+                <Name>Item Names</Name> 
+                <Begin>4927</Begin>
+                <End>5927</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Item Short Descriptions</Name>
+              <Begin>9456</Begin>
+              <End>10456</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Item Long Descriptions</Name>
+              <Begin>8456</Begin>
+              <End>9456</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Ability Names</Name>
+              <Begin>10732</Begin>
+              <End>10856</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Ability Descriptions</Name>
+              <Begin>10856</Begin>
+              <End>10980</End>
+            </StringBlock>
+            <StringBlock>
+              <Name>Type Names</Name>
+              <Begin>10713</Begin>
+              <End>10732</End>
+            </StringBlock>
         </Language>
     </Game>
 </StringIndexData>

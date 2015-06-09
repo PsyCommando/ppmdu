@@ -30,7 +30,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.11";
+    const string CStatsUtil::Version             = "0.12";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
@@ -151,7 +151,9 @@ namespace statsutil
         {
             "locale",
             1,
-            "Force the utility to use the following locale string when importing/exporting the string file!",
+            "Force the utility to use the following locale string when importing/exporting the string file!"
+            " Using this option will bypass using the gamelang.xml file to figure out the game's language when"
+            " exporting game strings!",
             "-locale \"C\"",
             std::bind( &CStatsUtil::ParseOptionLocaleStr, &GetInstance(), placeholders::_1 ),
         },
@@ -183,6 +185,7 @@ namespace statsutil
     {
         m_operationMode   = eOpMode::Invalid;
         m_force           = eOpForce::Export; //Default to export
+        m_forcedLocale    = false;
         m_hndlStrings     = false;
         m_hndlItems       = false;
         m_hndlMoves       = false;
@@ -279,10 +282,14 @@ namespace statsutil
                 clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 return false;
             }
-            m_flocalestr = optdata[1];
-            return true;
+            m_flocalestr   = optdata[1];
         }
-        return false;
+        //Will use default locale when no locale string is specified
+        else
+            m_flocalestr   = "";
+
+        m_forcedLocale = true;
+        return true;
     }
 
 
@@ -349,10 +356,19 @@ namespace statsutil
 
         if( infile.exists() )
         {
-            if( infile.isFile() && m_force == eOpForce::Import )
+            if( infile.isFile() )
             {
                 if( m_hndlStrings )
-                    m_operationMode = eOpMode::ImportGameStrings;
+                {
+                    if(m_force == eOpForce::Import)
+                    {
+                        m_operationMode = eOpMode::ImportGameStrings;
+                    }
+                    else if( m_force == eOpForce::Export )
+                    {
+                        m_operationMode = eOpMode::ExportGameStringsFromFile;
+                    }
+                }
                 else
                     throw runtime_error("Can't import anything else than strings from a file!");
             }
@@ -457,6 +473,12 @@ namespace statsutil
                 {
                     cout << "=== Exporting game strings ===\n";
                     returnval = DoExportGameStrings();
+                    break;
+                }
+                case eOpMode::ExportGameStringsFromFile:
+                {
+                    cout << "=== Exporting game strings from file directly ===\n";
+                    returnval = DoExportGameStringsFromFile();
                     break;
                 }
                 case eOpMode::ImportAll:
@@ -673,11 +695,39 @@ namespace statsutil
         else
             outpath = Poco::Path(m_outputPath);
 
-        CGameStats mystats( m_inputPath, m_langconf );
-        mystats.LoadStrings();
-        cout << "Writing...\n";
-        mystats.ExportStrings( outpath.toString() );
-        //WriteTextFileLineByLine( mystats.Strings(), outpath.toString() );
+        if( !m_forcedLocale )
+        {
+            cout << "Detecting game language...\n";
+            CGameStats mystats( m_inputPath, m_langconf );
+            mystats.LoadStrings();
+            cout << "Writing...\n";
+            mystats.ExportStrings( outpath.toString() );
+        }
+        else
+        {
+            cout << "A locale string was specified! Skipping game language detection.\n";
+            vector<string> gamestrings;
+            pmd2::filetypes::ParseTextStrFile( inpath.toString(), std::locale(m_flocalestr) );
+            WriteTextFileLineByLine( gamestrings, outpath.toString() );
+        }
+        return 0;
+    }
+
+    //For exporting the game strings from the text_*.str file directly
+    int CStatsUtil::DoExportGameStringsFromFile()
+    {
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.parent().append(DefExportStrName).makeFile();
+        }
+        else
+            outpath = Poco::Path(m_outputPath);
+
+        vector<string> gamestrings = pmd2::filetypes::ParseTextStrFile( inpath.toString(), std::locale(m_flocalestr) );
+        WriteTextFileLineByLine( gamestrings, outpath.toString() );
         return 0;
     }
 

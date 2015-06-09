@@ -12,6 +12,10 @@ Description:
 
 namespace pmd2{ namespace stats
 {
+
+//=====================================================================================
+//  Constants
+//=====================================================================================
     static const unsigned int NbMoves_EoS = 559; //Nb of moves stored by default in PMD2 Explorers of Sky
 
     enum struct eMvCat : uint8_t
@@ -21,9 +25,9 @@ namespace pmd2{ namespace stats
         Status   = 2,
     };
 
-//
-//
-//
+//=====================================================================================
+//  Structs
+//=====================================================================================
     struct MoveData
     {
         int16_t  basePower = 0;
@@ -51,9 +55,9 @@ namespace pmd2{ namespace stats
         static const unsigned int DataLen = 26; //bytes
     };
 
-//
-//
-//
+//=====================================================================================
+//  Classes
+//=====================================================================================
     //#TODO: The move DB should abstract game specific details, so that we don't need 2 of them for EoS !!
     class MoveDB
     {
@@ -80,9 +84,9 @@ namespace pmd2{ namespace stats
     };
 
 
-//
-//
-//
+//=====================================================================================
+//  Functions
+//=====================================================================================
     /*
         Export move data to XML files.
     */

@@ -16,6 +16,7 @@
 #include <cassert>
 #include <map>
 using namespace std;
+using namespace pmd2::filetypes;
 
 namespace pmd2{ namespace stats
 {

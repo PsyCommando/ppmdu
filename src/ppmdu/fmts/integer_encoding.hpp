@@ -39,14 +39,14 @@ namespace utils
         inline _itbackins EncodeAnInteger( T val, _itbackins itout_encoded )
     {
         static_assert( std::is_integral<T>::value, "EncodeInteger(): Type T is not an integer!" );
-        static const int Sz_T     = sizeof(T);
-        static const int BitsUsed = (Sz_T * 8) - Sz_T; //The number of bits we can use from the integer (we give up one bit per byte!)
+        static const int SizeOfT  = sizeof(T);
+        static const int BitsUsed = (SizeOfT * 8) - SizeOfT; //The number of bits we can use from the integer (we give up one bit per byte!)
     
         if( ( val & ~(utils::do_exponent_of_2_<BitsUsed>::value - 1) ) > 0 )
         {
             std::stringstream sstr;
             sstr << "ERROR: the integer specified has a value too high for being properly encoded! The highest "
-                 << Sz_T << " bit(s) is/are reserved for the encoding! Strip those bits first!";
+                 << SizeOfT << " bit(s) is/are reserved for the encoding! Strip those bits first!";
             throw std::overflow_error(sstr.str());
         }
 
@@ -60,7 +60,7 @@ namespace utils
         T result = 0;
 
         bool hasHigherNonZero = false;
-        for( int i = (Sz_T-1); i >= 0; --i )
+        for( int i = (SizeOfT-1); i >= 0; --i )
         {
             uint8_t curbyte = static_cast<uint8_t>( utils::IsolateBits( val, 7, (i * 7) ) );
             if( curbyte == 0 && !hasHigherNonZero )
@@ -68,9 +68,9 @@ namespace utils
             else
             {
                 hasHigherNonZero = true;
-                (*itout_encoded) = ( HandleEncodeByte/*<uint8_t>*/( curbyte, 
-                                                                (i == 0), 
-                                                                hasHigherNonZero ) );
+                (*itout_encoded) = ( HandleEncodeByte( curbyte, 
+                                                       (i == 0), 
+                                                       hasHigherNonZero ) );
                 ++itout_encoded;
             }
         }

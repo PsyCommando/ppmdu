@@ -14,22 +14,21 @@ Description:
 namespace pmd2 { namespace stats 
 {
 
-//
-//
-//
-    static const uint32_t ItemDataNbEntry_EoS = 1400;
-    static const uint32_t ItemDataExBeg_EoS   = 444;    //Index at which exclusive items begins
-    static const uint32_t ItemDataExEnd_EoS   = 1351;   //Index at which exclusive items end
+//=====================================================================================
+//  Constants
+//=====================================================================================
+    static const uint32_t ItemDataNbEntry_EoS  = 1400;
+    static const uint32_t ItemDataExBeg_EoS    = 444;    //Index at which exclusive items begins
+    static const uint32_t ItemDataExEnd_EoS    = 1351;   //Index at which exclusive items end
+    static const uint32_t ItemDataLen_EoS      = 16; //bytes
+    static const uint32_t ExclusiveItemDataLen = 4;  //bytes
 
     static const uint32_t ItemDataNbEntry_EoTD = 1000;
-
-    static const uint32_t ItemDataLen_EoS      = 16; //bytes
-    static const uint32_t ExclusiveItemDataLen = 4; //bytes
-
     static const uint32_t ItemDataLen_EoTD     = 24; //bytes
-//
-//
-//
+
+//=====================================================================================
+//  Structs
+//=====================================================================================
     struct exclusiveitemdata;
     struct itemdata_EoTD;
     struct itemdata_EoS;
@@ -131,11 +130,11 @@ namespace pmd2 { namespace stats
     */
     struct exclusiveitemdata : public itemdata_EoS
     {
-        exclusiveitemdata()
+        exclusiveitemdata( uint16_t extype = 0, uint16_t exparam = 0 )
             :itemdata_EoS()
         {
-            exlusiveType   = 0;
-            exclusiveParam = 0;
+            exlusiveType   = extype;
+            exclusiveParam = exparam;
         }
         virtual ~exclusiveitemdata(){}
 
@@ -145,6 +144,9 @@ namespace pmd2 { namespace stats
         uint16_t exclusiveParam;
     };
 
+//=====================================================================================
+//  Classes
+//=====================================================================================
 
     /*
         Used to contain all item data for the entire PMD games.
@@ -194,13 +196,6 @@ namespace pmd2 { namespace stats
     private:
         itemptr_t m_itemData;
     };
-
-
-//
-//
-//
-
-
 
 };};
 

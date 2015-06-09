@@ -1,6 +1,7 @@
 #include "m_level.hpp"
 #include <ppmdu/fmts/pack_file.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
+#include <ppmdu/fmts/at4px.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <iostream>
 
@@ -9,18 +10,20 @@ using namespace pmd2::stats;
 
 namespace pmd2 {namespace filetypes 
 {
+//======================================================================================
+//  Constants
+//======================================================================================
     static const uint32_t MLevel_ForcedOffset_EoS = 0x1200; //The forced first file offset used in m_level.bin 
 
-//
-//
-//
+//======================================================================================
+//  MLevelParser
+//======================================================================================
     class MLevelParser
     {
     public:
         MLevelParser( const std::vector<uint8_t> & srcdata )
             :m_rawdata(srcdata)
         {}
-
         
         vector<PokeStatsGrowth> Parse()
         {
@@ -35,9 +38,26 @@ namespace pmd2 {namespace filetypes
             {
                 sir0_header hdr;
                 hdr.ReadFromContainer( pokesubf.begin() );
-                DecompressPKDPX( (pokesubf.begin() + hdr.subheaderptr), 
-                                 (pokesubf.begin() + hdr.ptrPtrOffsetLst), 
-                                 decompBuf );
+
+                //In Explorers of Time/Darkness some pokemon's level data is compressed
+                // as AT4PX!
+                array<uint8_t,5> magicn = {0};
+                copy_n( pokesubf.begin() + hdr.subheaderptr, 5, magicn.begin() );
+
+                //Check what the magic number is
+                if( equal( magicn.begin(), magicn.end(), magicnumbers::AT4PX_MAGIC_NUMBER.begin() ) )
+                {
+                    DecompressAT4PX( (pokesubf.begin() + hdr.subheaderptr), 
+                                     (pokesubf.begin() + hdr.ptrPtrOffsetLst), 
+                                     decompBuf);
+                }
+                else
+                {
+                    DecompressPKDPX( (pokesubf.begin() + hdr.subheaderptr), 
+                                     (pokesubf.begin() + hdr.ptrPtrOffsetLst), 
+                                     decompBuf );
+                }
+
                 ParsePkmnEntry(decompBuf);
             }
 
@@ -80,9 +100,9 @@ namespace pmd2 {namespace filetypes
         vector<PokeStatsGrowth>::iterator m_itcurpoke;
     };
 
-//
-//
-//
+//======================================================================================
+//  MLevelWriter
+//======================================================================================
     class MLevelWriter
     {
     public:
@@ -142,9 +162,9 @@ namespace pmd2 {namespace filetypes
         const vector<PokeStatsGrowth> & m_Pkmns;
     };
 
-//
-//
-//
+//======================================================================================
+//  Functions
+//======================================================================================
     /*
     */
     std::vector<stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string            & inpath, 

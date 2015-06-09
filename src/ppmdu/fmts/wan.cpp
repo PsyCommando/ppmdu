@@ -16,6 +16,14 @@ using namespace pmd2::graphics;
 namespace pmd2{ namespace filetypes
 {
 
+    template<class T>
+        uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
+    {
+        uint32_t cntNullPtrs = 0;
+        for(; (itbeg != itend) && (utils::ReadIntFromByteVector<T>(itbeg) == 0); ++cntNullPtrs );
+        return cntNullPtrs;
+    }
+
 //=============================================================================================
 //  WAN File Specifics
 //=============================================================================================
@@ -185,7 +193,8 @@ namespace pmd2{ namespace filetypes
         if( m_paletteInfo.nullbytes != 0 )
         {
             cerr << "\nUm.. Woops? Null bytes at the end of the palette info weren't null ???\n";
-            assert(false); //The null bytes at the end of the palette info weren't null! WTF do we do now ?
+            //The null bytes at the end of the palette info weren't null! WTF do we do now ?
+            throw std::runtime_error("WAN_Parser::DoParse(): Null bytes at the end of the palette info weren't null ???");
         }
 
         //Get meta-frames + meta-frame groups
@@ -462,15 +471,10 @@ namespace pmd2{ namespace filetypes
         return std::move(anims);
     }
 
-    template<class T>
-        uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
-    {
-        uint32_t cntNullPtrs = 0;
-        for(; (itbeg != itend) && (utils::ReadIntFromByteVector<T>(itbeg) == 0); ++cntNullPtrs );
-        return cntNullPtrs;
-    }
 
-    uint32_t WAN_Parser::CalcFileOffsetBegSeqTable( /*const std::vector<graphics::SpriteAnimationGroup> & groupsPtr*/ )
+    /**************************************************************
+    **************************************************************/
+    uint32_t WAN_Parser::CalcFileOffsetBegSeqTable()
     {
         //Count leading null group entries
         uint32_t nbNullGroups = CountNbAdjacentNullValues<uint64_t>( (m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable),

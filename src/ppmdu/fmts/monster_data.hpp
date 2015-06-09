@@ -14,9 +14,14 @@ Description:
 
 namespace pmd2 { namespace filetypes
 {
+//======================================================================================
+//  Constants
+//======================================================================================
     static const uint32_t    MonsterMD_DefNBPokemons = 1155; //0x483
     static const uint32_t    MonsterMD_DefNBRegulars = 555;
     static const uint32_t    MonsterMD_DefNBSpecials = 45;
+    static const uint32_t    MonsterMD_EntrySizeEoS  = 68; //bytes
+    static const uint32_t    MonsterMD_EntrySizeEoTD = 76; //bytes
     static const std::string MonsterMD_FName         = "monster.md";
 
 //==========================================================================================
@@ -44,7 +49,7 @@ namespace pmd2 { namespace filetypes
 
         //Reading the magic number, and endzero value is solely for validating on read.
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom )
         {
             magicn    = utils::ReadIntFromByteVector<decltype(magicn)>   (itReadfrom, false ); //iterator is incremented
             nbentries = utils::ReadIntFromByteVector<decltype(nbentries)>(itReadfrom); //iterator is incremented
@@ -53,9 +58,9 @@ namespace pmd2 { namespace filetypes
     };
 
 
-//
-//
-//
+//======================================================================================
+//  Function
+//======================================================================================
     /*
         Returns a reference to the output vector passed as parameter!
     */

@@ -26,6 +26,15 @@ namespace pmd2 { namespace filetypes
 // Constants
 //==================================================================
     
+    /*
+    */
+    enum struct eGameVersion
+    {
+        Invalid,
+        EoS,    //Explorers of Sky
+        EoTEoD, //Explorers of Time/Darkness
+        NBGameVers,
+    };
 
     namespace magicnumbers
     {

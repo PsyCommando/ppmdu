@@ -14,23 +14,28 @@ Description:
 
 namespace pmd2{ namespace filetypes 
 {
+
+//=====================================================================================
+//  Constants
+//=====================================================================================
     static const unsigned int MLevel_EoTD_DefNBPokemon = 1192; //Nb of pokemon stats growth entries in the m_level.bin file for Explores of Time/Darkness. 
     static const unsigned int MLevel_EoS_DefNBPokemon  = 571;  //Nb of pokemon stats growth entries in the m_level.bin file for Explorers of Sky. 
 
     static const std::string  MLevel_FName             = "m_level.bin";
-//
-//
-//
+
+//=====================================================================================
+//  Functions:
+//=====================================================================================
     /*
     */
-    std::vector<stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string            & inpath, 
-                                                         std::vector<stats::PokeStatsGrowth> & out_pkmdat );
-    std::vector<stats::PokeStatsGrowth>   ParseLevelGrowthData( const std::string            & inpath );
+    std::vector<stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string                   & inpath, 
+                                                                std::vector<stats::PokeStatsGrowth> & out_pkmdat );
+    std::vector<stats::PokeStatsGrowth>   ParseLevelGrowthData( const std::string                   & inpath );
 
     /*
     */
     void WriteLevelGrowthData( const std::vector<stats::PokeStatsGrowth> & pkmdat, 
-                               const std::string                  & outpath );
+                               const std::string                         & outpath );
 
 };};
 
