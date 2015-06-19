@@ -132,16 +132,49 @@ namespace DSE
 
 
 
+
 //====================================================================================================
 // Class
 //====================================================================================================
+
+
+
+    /*
+        Represents the possible content of a swdl file.
+        Just an additional layer over the swdl loaded to determine if 
+    */
+    //class SWDL_Content
+    //{
+    //public:
+
+    //    SWDL_Content()
+    //    {
+    //    }
+
+    //    /*
+    //        Details on the SWDL file
+    //    */
+    //    bool ContainsSamples()const;
+
+    //    /*
+    //        Convert to generic format
+    //    */
+    //    operator pmd2::audio::PresetBank();
+
+
+    //private:
+    //    pmd2::audio::SampleBank     m_audiodata;
+    //    pmd2::audio::InstrumentBank m_instdata;
+
+
+    //};
 
 //====================================================================================================
 // Functions
 //====================================================================================================
 
-    ParseSWDL();
-    WriteSWDL();
+    pmd2::audio::PresetBank ParseSWDL( const std::string & filename );
+    void                    WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
 
 
 };

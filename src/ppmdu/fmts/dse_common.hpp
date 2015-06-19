@@ -58,25 +58,23 @@ namespace DSE
     struct ChunkHeader
     {
         static const uint32_t Size = 16; //Length of the header
-        uint32_t label   = 0;
-        uint16_t unk1    = 0;
-        uint16_t version = 0;
-        uint32_t hdrlen  = 0;
-        uint32_t datalen = 0;
+        uint32_t label  = 0;
+        uint32_t param1 = 0;
+        uint32_t param2 = 0;
+        uint32_t datlen = 0;
 
         static unsigned int size      ()      { return Size; } //Get the size of the structure in bytes
-        bool                hasLength ()const { return (datalen != SpecialChunkLen); } //Returns whether this chunk has a valid data length
+        bool                hasLength ()const { return (datlen != SpecialChunkLen); } //Returns whether this chunk has a valid data length
         eDSEChunks          GetChunkID()const { return IntToChunkID( label ); } //Returns the enum value representing this chunk's identity, judging from the label
 
         //Write the structure using an iterator to a byte container
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( label,   itwriteto, false );
-            itwriteto = utils::WriteIntToByteVector( unk1,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( version, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( hdrlen,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( datalen, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( label,  itwriteto, false );
+            itwriteto = utils::WriteIntToByteVector( param1, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( param2, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( datlen, itwriteto );
             return itwriteto;
         }
 
@@ -84,11 +82,10 @@ namespace DSE
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            label   = utils::ReadIntFromByteVector<decltype(label)>  (itReadfrom, false ); //iterator is incremented
-            unk1    = utils::ReadIntFromByteVector<decltype(unk1)>   (itReadfrom);
-            version = utils::ReadIntFromByteVector<decltype(version)>(itReadfrom);
-            hdrlen  = utils::ReadIntFromByteVector<decltype(hdrlen)> (itReadfrom);
-            datalen = utils::ReadIntFromByteVector<decltype(datalen)>(itReadfrom);
+            label   = utils::ReadIntFromByteVector<decltype(label)> (itReadfrom, false ); //iterator is incremented
+            param1  = utils::ReadIntFromByteVector<decltype(param1)>(itReadfrom);
+            param2  = utils::ReadIntFromByteVector<decltype(param2)>(itReadfrom);
+            datlen  = utils::ReadIntFromByteVector<decltype(datlen)>(itReadfrom);
             return itReadfrom;
         }
     };

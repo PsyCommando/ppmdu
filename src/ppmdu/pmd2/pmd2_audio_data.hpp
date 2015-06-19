@@ -58,10 +58,27 @@ namespace pmd2 { namespace audio
     class SampleBank
     {
     public:
-        typedef std::vector<uint8_t>          smpldata_t;
-        typedef std::unique_ptr<DSE::WavInfo> wavinfoptr_t;
+        typedef std::vector<uint8_t>                smpldata_t;
+        typedef std::unique_ptr<DSE::WavInfo>       wavinfoptr_t;
+        typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
 
+        SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::vector<smpldata_t> && smplsraw )
+            :m_wavinfotbl(wavitbl),m_SampleData(smplsraw)
+        {
+        }
 
+        //Info
+        int NbSamples()const { return m_SampleData.size(); } //Nb of sample slots with actual data.
+        int NbSlots  ()const { return m_wavinfotbl.size(); } //Nb of slots for samples, empty or not.
+
+        //Access
+        bool                 IsSampleInfoPresent( unsigned int index )const { return m_wavinfotbl[index] != nullptr; }
+
+        DSE::WavInfo       * SampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
+        DSE::WavInfo const * SampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
+
+        smpldata_t         & Sample             ( unsigned int index )      { return m_SampleData[index]; }
+        const smpldata_t   & Sample             ( unsigned int index )const { return m_SampleData[index]; }
 
     private:
 
@@ -94,6 +111,7 @@ namespace pmd2 { namespace audio
 
     /*
         Contains the entries for each instruments
+        Data on what samples an instrument uses, how to play those, the key mapping, etc..
     */
     class InstrumentBank
     {
@@ -131,6 +149,7 @@ namespace pmd2 { namespace audio
     class MusicSequence
     {
     public:
+
         MusicSequence( PresetBank * presets = nullptr );
 
     private:
