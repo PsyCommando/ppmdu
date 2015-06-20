@@ -12,8 +12,11 @@ namespace DSE
 {
 
 //====================================================================================================
-//  Typedefs
+//  Typedefs / Enums
 //====================================================================================================
+
+    //Nb of track events in the event enum
+    static const uint32_t NB_Track_Events = 16;
 
     /************************************************************************
         eTrkEventCodes
@@ -21,6 +24,7 @@ namespace DSE
     ************************************************************************/
     enum struct eTrkEventCodes : uint8_t
     {
+        Invalid       = 0x00,
         NoteOnBeg     = 0x01, //The first event code reserved for play note events.
         NoteOnEnd     = 0x7F, //The last event code that is reserved for playing a note.
 
@@ -49,23 +53,118 @@ namespace DSE
 //====================================================================================================
     
     /************************************************************************
-        TrkEvent
-            Represent a raw track event.
+        TrkEventInfo
+            Contains details specifics on how to parse an event codes.
     ************************************************************************/
-    struct TrkEvent
+    struct TrkEventInfo
     {
-        uint8_t dt     = 0;
-        uint8_t evcode = 0;
-        uint8_t param1 = 0;
-        uint8_t param2 = 0;
+        //Event code range
+        eTrkEventCodes evcodebeg;   //= eTrkEventCodes::Invalid; //Beginning of the range of event codes that can be used to represent this event.
+        eTrkEventCodes evcodeend;   //= eTrkEventCodes::Invalid; //Leave to invalid when is event with single code
+
+        //nb params
+        uint32_t       nbreqparams; //= 0;     //if has any required parameters
+        bool           hasoptparam; //= false; //if has optional param 
+        bool           isEoT;       //= false; //if is end of track marker
+        bool           isLoopPoint; //= false; //if is loop point
     };
+
+    ///************************************************************************
+    //    TrkEvent
+    //        Represent a raw track event.
+    //************************************************************************/
+    //struct TrkEvent
+    //{
+    //    uint8_t dt     = 0;
+    //    uint8_t evcode = 0;
+    //    uint8_t param1 = 0;
+    //    uint8_t param2 = 0;
+    //};
 
     /************************************************************************
         SongChunk
             The raw song chunk.
+            For some reasons, most of the data in this chunk rarely ever 
+            changes in-between games or files.. Only the nb of channels and
+            tracks does..
     ************************************************************************/
     struct SongChunk
     {
+        static const uint32_t SizeNoPadd    = 48; //bytes
+        static const uint32_t LenMaxPadding = 16; //bytes
+
+        unsigned int size()const { return SizeNoPadd + unkpad.size(); }
+
+        uint32_t label   = 0;
+        uint32_t unk1    = 0;
+        uint32_t unk2    = 0;
+        uint32_t unk3    = 0;
+        uint32_t unk4    = 0;
+        uint16_t unk5    = 0;
+        uint8_t  nbtrks  = 0;
+        uint8_t  nbchans = 0;
+        uint32_t unk6    = 0;
+        uint32_t unk7    = 0;
+        uint32_t unk8    = 0;
+        uint32_t unk9    = 0;
+        uint16_t unk10   = 0;
+        uint16_t unk11   = 0;
+        uint32_t unk12   = 0;
+        std::vector<uint8_t> unkpad;
+
+        //
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( static_cast<uint32_t>(eDSEChunks::song), itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToByteVector( unk1,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk2,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk3,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk4,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk5,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nbtrks,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( nbchans, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk6,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk7,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk8,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk9,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk10,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk11,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk12,   itwriteto );
+            itwriteto = std::copy( unkpad.begin(), unkpad.end(), itwriteto );
+            return itwriteto;
+        }
+
+        //
+        template<class _init>
+            _init ReadFromContainer(  _init itReadfrom )
+        {
+            label   = utils::ReadIntFromByteVector<decltype(label)>  (itReadfrom, false ); //iterator is incremented
+            unk1    = utils::ReadIntFromByteVector<decltype(unk1)>   (itReadfrom); 
+            unk2    = utils::ReadIntFromByteVector<decltype(unk2)>   (itReadfrom);
+            unk3    = utils::ReadIntFromByteVector<decltype(unk3)>   (itReadfrom);
+            unk4    = utils::ReadIntFromByteVector<decltype(unk4)>   (itReadfrom);
+            unk5    = utils::ReadIntFromByteVector<decltype(unk5)>   (itReadfrom);
+            nbtrks  = utils::ReadIntFromByteVector<decltype(nbtrks)> (itReadfrom);
+            nbchans = utils::ReadIntFromByteVector<decltype(nbchans)>(itReadfrom);
+            unk6    = utils::ReadIntFromByteVector<decltype(unk6)>   (itReadfrom);
+            unk7    = utils::ReadIntFromByteVector<decltype(unk7)>   (itReadfrom);
+            unk8    = utils::ReadIntFromByteVector<decltype(unk8)>   (itReadfrom);
+            unk9    = utils::ReadIntFromByteVector<decltype(unk9)>   (itReadfrom);
+            unk10   = utils::ReadIntFromByteVector<decltype(unk10)>  (itReadfrom);
+            unk11   = utils::ReadIntFromByteVector<decltype(unk11)>  (itReadfrom);
+            unk12   = utils::ReadIntFromByteVector<decltype(unk12)>  (itReadfrom);
+
+            for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
+            {
+                if( *itReadfrom == 0xFF )
+                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator..
+                else
+                    break;
+            }
+
+            return itReadfrom;
+        }
     };
 
     /*
@@ -121,9 +220,23 @@ namespace DSE
         track_t m_events;
     };
 
+
+//====================================================================================================
+// Constants
+//====================================================================================================
+
+    /************************************************************************
+        TrkEventsTable
+            Contains details specifics on how to parse all event codes.
+    ************************************************************************/
+    static const std::array<TrkEventInfo, NB_Track_Events> TrkEventsTable;
+
 //====================================================================================================
 // Functions
 //====================================================================================================
+
+    pmd2::audio::MusicSequence ParseSMDL( const std::string & file );
+    void                       WriteSMDL( const std::string & file, const pmd2::audio::MusicSequence & seq );
 
 };
 

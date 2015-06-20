@@ -9,6 +9,7 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <cstdint>
+#include <ctime>
 #include <vector>
 #include <array>
 #include <string>
@@ -50,6 +51,48 @@ namespace DSE
 //====================================================================================================
 // Structs
 //====================================================================================================
+
+    /****************************************************************************************
+        DateTime
+            Format used to store a date + time stamp used by all DSE formats.
+    ****************************************************************************************/
+    struct DateTime
+    {
+        uint16_t year;
+        uint8_t  month;
+        uint8_t  day;
+        uint8_t  hour;
+        uint8_t  minute;
+        uint8_t  second;
+        uint8_t  centsec; //100th of a second ? We don't really know what this is for..
+
+        inline DateTime( const std::tm & src )
+        {
+            //http://en.cppreference.com/w/cpp/chrono/c/tm
+            year    = src.tm_year + 1900; //tm_year counts the nb of years since 1900
+            month   = src.tm_mon;
+            day     = src.tm_mday-1;      //tm_mday begins at 1, while the time in the DSE timestamp begins at 0!
+            hour    = src.tm_hour;
+            minute  = src.tm_min;
+            second  = (src.tm_sec == 60)? 59 : src.tm_sec; //We're not dealing with leap seconds...
+        }
+
+        //Convert into the standard std::tm calendar time format 
+        inline operator std::tm()
+        {
+            std::tm result;
+            result.tm_year  = year - 1900;
+            result.tm_mon   = month;
+            result.tm_mday  = day + 1;
+            result.tm_hour  = hour;
+            result.tm_min   = minute;
+            result.tm_sec   = second;
+            result.tm_isdst = -1; //No info available
+            return std::move(result);
+        }
+    };
+
+
     /****************************************************************************************
         ChunkHeader
             Format for chunks used in Procyon's Digital Sound Element SWDL, SMDL, SEDL format, 
@@ -128,6 +171,30 @@ namespace DSE
         uint16_t unk24      = 0;
         uint16_t unk25      = 0;
         uint16_t unk26      = 0;
+    };
+
+    /************************************************************************
+        TrkEvent
+            Represent a raw track event used in the SEDL and SMDL format!
+    ************************************************************************/
+    struct TrkEvent
+    {
+        uint8_t dt     = 0;
+        uint8_t evcode = 0;
+        uint8_t param1 = 0;
+        uint8_t param2 = 0;
+    };
+
+    /*
+        DSE_MetaData
+            Leftover game-specific data from parsing a DSE file format.
+    */
+    struct DSE_MetaData
+    {
+        uint8_t     unk1;       //Some kind of ID
+        uint8_t     unk2;       //Some kind of volume value maybe
+        std::string fname;      //Internal filename
+        DateTime    createtime; //Time this was created on
     };
 
 //====================================================================================================

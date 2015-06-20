@@ -30,9 +30,10 @@ namespace pmd2 { namespace audio
 // Class
 //====================================================================================================
 
-    /*
-        Contains several groups of notes each with an ID.
-    */
+    /*****************************************************************************************
+        KeyGroups
+            Contains several groups of notes each with an ID.
+    *****************************************************************************************/
     class KeyGroups
     {
     public:
@@ -51,6 +52,19 @@ namespace pmd2 { namespace audio
     };
 
     /*****************************************************************************************
+        InstrumentInfo
+            Contains data for a single instrument.
+    *****************************************************************************************/
+    class InstrumentInfo
+    {
+    public:
+        InstrumentInfo(){}
+
+
+    private:
+    };
+
+    /*****************************************************************************************
         SampleBank
             This class is used to maintain references to sample data. 
             The samples in this are refered to by entries in a SampleMap instance.
@@ -63,9 +77,8 @@ namespace pmd2 { namespace audio
         typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
 
         SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::vector<smpldata_t> && smplsraw )
-            :m_wavinfotbl(wavitbl),m_SampleData(smplsraw)
-        {
-        }
+            :m_wavinfotbl(wavitbl), m_SampleData(smplsraw)
+        {}
 
         //Info
         int NbSamples()const { return m_SampleData.size(); } //Nb of sample slots with actual data.
@@ -74,71 +87,168 @@ namespace pmd2 { namespace audio
         //Access
         bool                 IsSampleInfoPresent( unsigned int index )const { return m_wavinfotbl[index] != nullptr; }
 
-        DSE::WavInfo       * SampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
-        DSE::WavInfo const * SampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
+        DSE::WavInfo       * sampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
+        DSE::WavInfo const * sampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
 
-        smpldata_t         & Sample             ( unsigned int index )      { return m_SampleData[index]; }
-        const smpldata_t   & Sample             ( unsigned int index )const { return m_SampleData[index]; }
+        smpldata_t         & sample             ( unsigned int index )      { return m_SampleData[index]; }
+        const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData[index]; }
+
+        smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData[index]; }
+        const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData[index]; }
 
     private:
-
         std::vector<wavinfoptr_t> m_wavinfotbl; //Data on the samples
         std::vector<smpldata_t>   m_SampleData; //Actual samples
     };
 
 
-    /*****************************************************************************************
-        SampleMap
-            Contains meta-data on samples. What notes they're mapped to, what sample they 
-            refer to, and etc..
-
-            All SampleMap refering to a SampleBank must be destroyed, before destroying the
-            SampleBank.
-    *****************************************************************************************/
-    //class SampleMap
-    //{
-    //public:
-    //    SampleMap( std::shared_ptr<SampleBank> samples = nullptr );
-
-    //    void                        setSampleBank( std::shared_ptr<SampleBank> samples ) { m_pSamples = std::move(samples); }
-    //    std::shared_ptr<SampleBank> getSampleBank()const                                 { return m_pSamples;               }
-    //    SampleBank *                getSampleBankPtr()const                              { return m_pSamples.get();         }
-
-    //private:
-
-    //    std::shared_ptr<SampleBank> m_pSamples;
-    //};
-
     /*
-        Contains the entries for each instruments
-        Data on what samples an instrument uses, how to play those, the key mapping, etc..
+        SmplBnkWrap
+            This is used to create an abstraction layer over the ownership of a sample bank.
+
+            So that the user of the class doesn't need to know or care whether they own the
+            sample bank or merely refer to an existing bank.
+
+            This is neccessary because SWDL files may have samples, or may refer to a common
+            sample bank that is shared among other such SWDL.. However there are no way of
+            knowing this in advance.
+
+            Pass a unique_ptr if the object owns the samplebank!
+            Pass a regular pointer if the object only refers to the samplebank!
     */
-    class InstrumentBank
+    class SmplBnkWrap
     {
     public:
-        InstrumentBank();
+
+        SmplBnkWrap()
+            :m_pShared(nullptr), m_pOwned(nullptr)
+        {}
+
+        SmplBnkWrap( std::unique_ptr<SampleBank> && ptrowned )
+            :m_pShared(nullptr), m_pOwned(ptrowned)
+        {}
+
+        SmplBnkWrap( SampleBank * ptrshare )
+            :m_pShared(ptrshare), m_pOwned(nullptr)
+        {}
+
+        SampleBank & operator*()
+        {
+            return *(get());
+        }
+
+        SampleBank * get()
+        {
+            if( m_pOwned != nullptr )
+                return m_pOwned.get();
+            else
+                return m_pShared;
+        }
+
+        void set( SampleBank * ptrshare )
+        {
+            if( m_pOwned != nullptr )
+                m_pOwned.reset(nullptr);
+
+            m_pShared = ptrshare;
+        }
+
+        void set( std::unique_ptr<SampleBank> && ptrowned )
+        {
+            if( m_pShared != nullptr )
+                m_pShared = nullptr;
+
+            m_pOwned.reset(nullptr); //have to do this before moving, to make sure the previously owned object is deleted!
+            m_pOwned = ptrowned;
+        }
+
+        inline void operator=( SampleBank                   * ptrshare ) { set(ptrshare); }
+        inline void operator=( std::unique_ptr<SampleBank> && ptrowned ) { set(ptrowned); }
+
+        inline bool IsOwned ()const { return m_pOwned != nullptr;  }
+        inline bool IsShared()const { return m_pShared != nullptr; }
+        inline bool IsNull  ()const { return (m_pShared == nullptr) && (m_pOwned == nullptr); }
 
     private:
+        std::unique_ptr<SampleBank>  m_pOwned;
+        SampleBank                 * m_pShared;
     };
 
 
+    /*****************************************************************************************
+        InstrumentBank
+            Contains the entries for each instruments
+            Data on what samples an instrument uses, how to play those, the key mapping, etc..
+    *****************************************************************************************/
+    class InstrumentBank
+    {
+    public:
+        typedef std::unique_ptr<InstrumentInfo> ptrinst_t;
 
-    /*
-        Is the combination of a SampleBank, and an InstrumentBank.
-        Or just an instrument bank if samples are not available
-    */
+        InstrumentBank(){}
+
+        ptrinst_t       & operator[]( size_t index )      { return m_instinfoslots[index]; }
+        const ptrinst_t & operator[]( size_t index )const { return m_instinfoslots[index]; }
+
+    private:
+        std::vector<ptrinst_t> m_instinfoslots;
+    };
+
+    /*****************************************************************************************
+        PresetBank
+            Is the combination of a SampleBank, and an InstrumentBank.
+            Or just an instrument bank if samples are not available
+    *****************************************************************************************/
     class PresetBank
     {
     public:
-        PresetBank( const InstrumentBank & instbank, SampleBank * samplesbank = nullptr );
+        typedef std::unique_ptr<InstrumentBank> ptrinst_t;
+        typedef std::unique_ptr<SampleBank>     ptrsmpl_t;
+        
+        PresetBank( InstrumentBank    &  instbank, 
+                    DSE::DSE_MetaData && meta )
+            :m_pInstbnk(instbank), m_meta(meta)
+        {}
 
-        SampleBank *           SamplesBank()                         { return m_pSamples; }
-        void                   SamplesBank(SampleBank * samplesbank) { m_pSamples = samplesbank; }
-        const InstrumentBank & InstrumentBank()const                 { return m_instruments; }
+        //Constructor for all varieties of preset ptr
+        PresetBank( InstrumentBank    &  instbank, 
+                    DSE::DSE_MetaData && meta,
+                    ptrsmpl_t         && samplesbank )
+            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
+        {}
+
+        PresetBank( InstrumentBank    &  instbank, 
+                    DSE::DSE_MetaData && meta,
+                    SampleBank         * samplesbank )
+            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
+        {}
+
+        PresetBank( InstrumentBank    & instbank, 
+                    DSE::DSE_MetaData &&meta,
+                    SmplBnkWrap       &&samplesbank )
+            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
+        {}
+
+        DSE::DSE_MetaData       & metadata()                                 { return m_meta; }
+        const DSE::DSE_MetaData & metadata()const                            { return m_meta; }
+        void                      metadata( const DSE::DSE_MetaData & data ) { m_meta = data; }
+        void                      metadata( DSE::DSE_MetaData && data )      { m_meta = data; }
+
+        SmplBnkWrap              & smplbank()                                 { return m_pSamples; }
+        const SmplBnkWrap        & smplbank()const                            { return m_pSamples; }
+        void                      smplbank( SmplBnkWrap && samplesbank)       { m_pSamples = samplesbank; }
+        void                      smplbank( SampleBank   * samplesbank)       { m_pSamples = samplesbank; }
+        void                      smplbank( ptrsmpl_t   && samplesbank)       { m_pSamples = samplesbank; }
+
+        ptrinst_t               & instbank()                                  { return m_pInstbnk; }
+        const ptrinst_t         & instbank()const                             { return m_pInstbnk; }
+        void                    & instbank( ptrinst_t && pinst )              { m_pInstbnk = pinst;}
+
 
     private:
-        const InstrumentBank & m_instruments;
-        SampleBank           * m_pSamples;
+        DSE::DSE_MetaData   m_meta;
+        ptrinst_t           m_pInstbnk; //An instrument bank may not be shared by many
+        SmplBnkWrap         m_pSamples; //A sample bank may be shared by many
     };
 
     /*****************************************************************************************
@@ -149,12 +259,31 @@ namespace pmd2 { namespace audio
     class MusicSequence
     {
     public:
+        MusicSequence( std::vector< std::vector<DSE::TrkEvent> > && tracks, 
+                       DSE::DSE_MetaData                         && meta,
+                       PresetBank                                 * presets = nullptr )
+            :m_meta(meta), m_tracks(tracks), m_pPresetBank(presets)
+        {}
 
-        MusicSequence( PresetBank * presets = nullptr );
+        PresetBank * presetbnk()                                             { return m_pPresetBank; }
+        void         presetbnk( PresetBank * ptrbnk )                        { m_pPresetBank = ptrbnk; }
+
+        DSE::DSE_MetaData       & metadata()                                 { return m_meta; }
+        const DSE::DSE_MetaData & metadata()const                            { return m_meta; }
+        void                      metadata( const DSE::DSE_MetaData & data ) { m_meta = data; }
+        void                      metadata( DSE::DSE_MetaData && data )      { m_meta = data; }
+
+
+        std::vector<DSE::TrkEvent>       & track( size_t index )             { return m_tracks[index]; }
+        const std::vector<DSE::TrkEvent> & track( size_t index )const        { return m_tracks[index]; }
+
+        std::vector<DSE::TrkEvent>       & operator[]( size_t index )        { return m_tracks[index]; }
+        const std::vector<DSE::TrkEvent> & operator[]( size_t index )const   { return m_tracks[index]; }
 
     private:
-
-        PresetBank * m_pPresetBank;
+        DSE::DSE_MetaData                          m_meta;
+        std::vector< std::vector<DSE::TrkEvent> >  m_tracks;
+        PresetBank                               * m_pPresetBank;
     };
 
 //====================================================================================================
