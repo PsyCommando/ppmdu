@@ -173,8 +173,8 @@ namespace DSE
 // Functions
 //====================================================================================================
 
-    pmd2::audio::PresetBank ParseSWDL( const std::string & filename );
-    void                    WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
+    pmd2::audio::PresetBank && ParseSWDL( const std::string & filename );
+    void                       WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
 
 
 };

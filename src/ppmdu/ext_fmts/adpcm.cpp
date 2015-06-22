@@ -198,7 +198,7 @@ namespace audio
         operator vector<uint8_t>()
         {
             assert(false); //#TODO: Implement me !
-            return ;
+            return vector<uint8_t>();
         }
 
     private:

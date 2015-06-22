@@ -88,13 +88,13 @@ namespace audioutil
     const vector<optionparsing_t> CAudioUtil::Options_List=
     {{
         //Force Import
-        {
-            "i",
-            0,
-            "Specifying this will force import!",
-            "-i",
-            std::bind( &CAudioUtil::ParseOptionForceImport, &GetInstance(), placeholders::_1 ),
-        },
+        //{
+        //    "i",
+        //    0,
+        //    "Specifying this will force import!",
+        //    "-i",
+        //    std::bind( &CAudioUtil::ParseOptionForceImport, &GetInstance(), placeholders::_1 ),
+        //},
     }};
 
 
@@ -157,10 +157,9 @@ namespace audioutil
 //  Parse Options
 //
 
-    bool CAudioUtil::ParseOptionPk( const std::vector<std::string> & optdata )
-    {
-        return m_hndlPkmn = true;
-    }
+    //bool CAudioUtil::ParseOptionPk( const std::vector<std::string> & optdata )
+    //{
+    //}
 
 
 //
@@ -229,6 +228,8 @@ namespace audioutil
             }
             else if( infile.isDirectory() )
             {
+
+
                 //if( m_hndlStrings )
                 //{
                 //    if( m_force == eOpForce::Export )
@@ -282,10 +283,10 @@ namespace audioutil
         {
             switch(m_operationMode)
             {
-                case eOpMode::ImportPokemonData:
+                case eOpMode::ExportSWDLBank:
                 {
                     cout << "=== Importing Pokemon data ===\n";
-                    returnval = DoImportPokemonData();
+                    //returnval = DoImportPokemonData();
                     break;
                 }
                 default:

@@ -6,13 +6,14 @@ dse_common.hpp
 psycommando@gmail.com
 Description: Common data between several of the Procyon Studio Digital Sound Element sound driver.
 */
-#include <ppmdu/pmd2/pmd2_audio_data.hpp>
+//#include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <cstdint>
 #include <ctime>
 #include <vector>
 #include <array>
 #include <string>
+#include <map>
 
 namespace DSE
 {
@@ -43,6 +44,8 @@ namespace DSE
     static const unsigned int NB_DSEChunks    = 11;
     static const uint32_t     SpecialChunkLen = 0xFFFFFFB0; //Value some special chunks have as their length
 
+    extern const std::array<eDSEChunks, NB_DSEChunks> DSEChunksList; //Array containing all chunks labels
+
     //DSE Chunk ID stuff
     inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
     inline uint32_t   ChunkIDToInt( eDSEChunks id    );
@@ -65,6 +68,10 @@ namespace DSE
         uint8_t  minute;
         uint8_t  second;
         uint8_t  centsec; //100th of a second ? We don't really know what this is for..
+
+        inline DateTime()
+            :year(0), month(0), day(0), hour(0), minute(0), second(0), centsec(0)
+        {}
 
         inline DateTime( const std::tm & src )
         {
@@ -100,7 +107,8 @@ namespace DSE
     ****************************************************************************************/
     struct ChunkHeader
     {
-        static const uint32_t Size = 16; //Length of the header
+        static const uint32_t Size          = 16; //Length of the header
+        static const uint32_t OffsetDataLen = 12; //Offset from the start of the header where the length of the chunk is stored
         uint32_t label  = 0;
         uint32_t param1 = 0;
         uint32_t param2 = 0;
@@ -185,12 +193,16 @@ namespace DSE
         uint8_t param2 = 0;
     };
 
-    /*
+    /************************************************************************
         DSE_MetaData
             Leftover game-specific data from parsing a DSE file format.
-    */
+    ************************************************************************/
     struct DSE_MetaData
     {
+        DSE_MetaData()
+            :unk1(0),unk2(0),createtime()
+        {}
+
         uint8_t     unk1;       //Some kind of ID
         uint8_t     unk2;       //Some kind of volume value maybe
         std::string fname;      //Internal filename
@@ -204,6 +216,96 @@ namespace DSE
 //====================================================================================================
 // Functions
 //====================================================================================================
+
+    /************************************************************************
+        DSE_ChunkIDLookup
+            This singleton's "Find" static method returns the first chunk id 
+            whose's highest byte matches the specified byte.
+    ************************************************************************/
+    class DSE_ChunkIDLookup
+    {
+    public:
+        static eDSEChunks Find( uint8_t highbyte )
+        {
+            static DSE_ChunkIDLookup s_instance; //Duff's device
+            auto itfound = s_instance.m_lutbl.find(highbyte);
+
+            if(itfound != s_instance.m_lutbl.end())
+                return itfound->second;
+            else
+                return eDSEChunks::invalid;
+        }
+
+    private:
+        //Build the quick lookup table
+        DSE_ChunkIDLookup()
+        {
+            for( eDSEChunks id : DSEChunksList )
+                m_lutbl.insert( std::make_pair( static_cast<uint8_t>((static_cast<uint32_t>(id) >> 24) & 0xFF) , id ) ); //Isolate highest byte
+        }
+
+        //No copy, no move
+        DSE_ChunkIDLookup( const DSE_ChunkIDLookup & );
+        DSE_ChunkIDLookup( DSE_ChunkIDLookup && );
+        DSE_ChunkIDLookup & operator=( const DSE_ChunkIDLookup & );
+        DSE_ChunkIDLookup & operator=( DSE_ChunkIDLookup && );
+
+        std::map<uint8_t, eDSEChunks> m_lutbl;
+    };
+
+    /************************************************************************
+        FindNextChunk
+            Find the start of the next chunk that has the specified chunk id.
+            Is optimized to jump over recognized, but non-matching chunk ids, and skip any possible padding.
+
+            If the chunk is not found, the function returns "end".
+
+            NOTE: "beg" must be aligned on 4 bytes!
+    ************************************************************************/
+    template<class _init>
+        _init FindNextChunk( _init beg, _init end, eDSEChunks chnkid )
+    {
+        //search
+        while( beg != end ) 
+        {
+            //check if we possibly are at the beginning of a chunk, looking for its highest byte.
+            eDSEChunks possibleid = DSE_ChunkIDLookup::Find( *beg ); 
+
+            if( possibleid != eDSEChunks::invalid )
+            {
+                //Check if its really the chunk's header start, or just a coincidence
+                uint32_t fullchunkid = utils::ReadIntFromByteVector<uint32_t>( _init(beg), false ); //Make a copy of beg, to avoid it being incremented
+
+                if( possibleid == chnkid && (fullchunkid == static_cast<uint32_t>(chnkid)) )
+                    return beg;
+                else if( fullchunkid == static_cast<uint32_t>(possibleid) ) //If it actually matches another chunk's id
+                {
+                    _init backup = beg;
+
+                    //Read the chunk's size and skip if possible
+                    std::advance( beg, ChunkHeader::OffsetDataLen );
+                    uint32_t skipsize = utils::ReadIntFromByteVector<uint32_t>(beg);
+
+                    //Then attempt to skip
+                    try
+                    {
+                        std::advance( beg, skipsize );  //We have to do this like so, because some chunks may use bogus sizes 
+                                                        // for some mindblowingly odd reasons.. It shouldn't happen too often though..
+                    }
+                    catch(std::exception &)
+                    {
+                        beg = backup; //Restore iterator to last valid state if fails
+                    }
+                }
+            }
+
+            //Advance iterator by 4 bytes + check if reached end
+            for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
+        }
+
+        //Return Result
+        return beg;
+    }
 
 };
 

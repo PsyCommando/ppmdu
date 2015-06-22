@@ -262,7 +262,7 @@ namespace utils
             strl is the length of the string!
     */
     template<class _init> 
-        _init ReadStrFromByteContainer( _init itread, const char * str, size_t strl )
+        _init ReadStrFromByteContainer( _init itread,  char * str, size_t strl )
     {
         //#FIXME: The static assert below is broken with non-backinsert iterators
         //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );

@@ -58,7 +58,7 @@ namespace pmd2 { namespace audio
     class InstrumentInfo
     {
     public:
-        InstrumentInfo(){}
+        //InstrumentInfo(){}
 
 
     private:
@@ -103,41 +103,68 @@ namespace pmd2 { namespace audio
 
 
     /*
-        SmplBnkWrap
-            This is used to create an abstraction layer over the ownership of a sample bank.
+        OwnershipWrap
+            This is used to create an abstraction layer over the ownership of a dynamically allocated object.
 
             So that the user of the class doesn't need to know or care whether they own the
-            sample bank or merely refer to an existing bank.
+            object or merely refer to an existing one.
 
             This is neccessary because SWDL files may have samples, or may refer to a common
-            sample bank that is shared among other such SWDL.. However there are no way of
+            sample bank that is shared among other such SWDL, for example.. However there are no way of
             knowing this in advance.
 
-            Pass a unique_ptr if the object owns the samplebank!
-            Pass a regular pointer if the object only refers to the samplebank!
+            Pass a unique_ptr if the object owns the object!
+            Pass a regular pointer if the object only refers to the object!
     */
-    class SmplBnkWrap
+    template<class _OwnedTy>
+        class OwnershipWrap
     {
     public:
+        typedef _OwnedTy owned_t;
 
-        SmplBnkWrap()
+        OwnershipWrap()
             :m_pShared(nullptr), m_pOwned(nullptr)
         {}
 
-        SmplBnkWrap( std::unique_ptr<SampleBank> && ptrowned )
+        explicit OwnershipWrap( std::unique_ptr<owned_t> && ptrowned )
             :m_pShared(nullptr), m_pOwned(ptrowned)
         {}
 
-        SmplBnkWrap( SampleBank * ptrshare )
+        explicit OwnershipWrap( _OwnedTy * ptrshare )
             :m_pShared(ptrshare), m_pOwned(nullptr)
         {}
 
-        SampleBank & operator*()
+        OwnershipWrap( std::nullptr_t )
+            :m_pShared(nullptr), m_pOwned(nullptr)
+        {}
+
+        OwnershipWrap( OwnershipWrap<_OwnedTy> && mv )
+        {
+            m_pOwned  = std::move( mv.m_pOwned  );
+            m_pShared = std::move( mv.m_pShared );
+            
+            //Ensure we leave the other object in a consistent state
+            mv.m_pOwned  = nullptr;
+            mv.m_pShared = nullptr;
+        }
+
+        OwnershipWrap<_OwnedTy> & operator=( OwnershipWrap<_OwnedTy> && mv)
+        {
+            m_pOwned  = std::move( mv.m_pOwned  );
+            m_pShared = std::move( mv.m_pShared );
+
+            //Ensure we leave the other object in a consistent state
+            mv.m_pOwned  = nullptr;
+            mv.m_pShared = nullptr;
+            return *this;
+        }
+
+        owned_t & operator*()
         {
             return *(get());
         }
 
-        SampleBank * get()
+        owned_t * get()
         {
             if( m_pOwned != nullptr )
                 return m_pOwned.get();
@@ -145,7 +172,7 @@ namespace pmd2 { namespace audio
                 return m_pShared;
         }
 
-        void set( SampleBank * ptrshare )
+        void set( owned_t * ptrshare )
         {
             if( m_pOwned != nullptr )
                 m_pOwned.reset(nullptr);
@@ -153,27 +180,32 @@ namespace pmd2 { namespace audio
             m_pShared = ptrshare;
         }
 
-        void set( std::unique_ptr<SampleBank> && ptrowned )
+        void set( std::unique_ptr<owned_t> && ptrowned )
         {
             if( m_pShared != nullptr )
                 m_pShared = nullptr;
 
             m_pOwned.reset(nullptr); //have to do this before moving, to make sure the previously owned object is deleted!
-            m_pOwned = ptrowned;
+            m_pOwned = std::move(ptrowned);
         }
 
-        inline void operator=( SampleBank                   * ptrshare ) { set(ptrshare); }
-        inline void operator=( std::unique_ptr<SampleBank> && ptrowned ) { set(ptrowned); }
+        inline void operator=( owned_t                    * ptrshare ) { set(ptrshare); }
+        inline void operator=( std::unique_ptr<_OwnedTy> && ptrowned ) { set(std::move(ptrowned)); }
+        inline void operator=( std::nullptr_t )                        { set(nullptr); }
 
         inline bool IsOwned ()const { return m_pOwned != nullptr;  }
         inline bool IsShared()const { return m_pShared != nullptr; }
         inline bool IsNull  ()const { return (m_pShared == nullptr) && (m_pOwned == nullptr); }
 
     private:
-        std::unique_ptr<SampleBank>  m_pOwned;
-        SampleBank                 * m_pShared;
-    };
+        //No copies !
+        OwnershipWrap                      ( const OwnershipWrap<_OwnedTy> & );
+        OwnershipWrap<_OwnedTy> & operator=( const OwnershipWrap<_OwnedTy> & );
 
+
+        std::unique_ptr<owned_t>  m_pOwned;
+        owned_t                 * m_pShared;
+    };
 
     /*****************************************************************************************
         InstrumentBank
@@ -187,11 +219,26 @@ namespace pmd2 { namespace audio
 
         InstrumentBank(){}
 
+        InstrumentBank( InstrumentBank && mv )
+        {
+            m_instinfoslots = std::move_if_noexcept(mv.m_instinfoslots);
+        }
+
+        InstrumentBank & operator=(InstrumentBank&& mv)
+        {
+            m_instinfoslots = std::move_if_noexcept(mv.m_instinfoslots);
+            return *this;
+        }
+
         ptrinst_t       & operator[]( size_t index )      { return m_instinfoslots[index]; }
         const ptrinst_t & operator[]( size_t index )const { return m_instinfoslots[index]; }
 
     private:
         std::vector<ptrinst_t> m_instinfoslots;
+
+        //Can't copy
+        InstrumentBank( const InstrumentBank& );
+        InstrumentBank & operator=( const InstrumentBank& );
     };
 
     /*****************************************************************************************
@@ -202,53 +249,47 @@ namespace pmd2 { namespace audio
     class PresetBank
     {
     public:
-        typedef std::unique_ptr<InstrumentBank> ptrinst_t;
-        typedef std::unique_ptr<SampleBank>     ptrsmpl_t;
+        typedef OwnershipWrap<InstrumentBank>   wrapinst_t;
+        typedef OwnershipWrap<SampleBank>       wrapsmpl_t;
+
+        PresetBank( DSE::DSE_MetaData && meta, wrapinst_t && pInstrument, wrapsmpl_t && pSmpl )
+            :m_pInstbnk(std::move(pInstrument)), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
+        {}
+
+        PresetBank( DSE::DSE_MetaData && meta, wrapinst_t && pInstrument )
+            :m_pInstbnk(std::move(pInstrument)), m_pSamples(nullptr), m_meta(std::move(meta))
+        {}
+
+        PresetBank( DSE::DSE_MetaData && meta, wrapsmpl_t && pSmpl )
+            :m_pInstbnk(nullptr), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
+        {}
+
+
+        DSE::DSE_MetaData       & metadata()                                                 { return m_meta; }
+        const DSE::DSE_MetaData & metadata()const                                            { return m_meta; }
+        void                      metadata( const DSE::DSE_MetaData & data )                 { m_meta = data; }
+        void                      metadata( DSE::DSE_MetaData && data )                      { m_meta = data; }
         
-        PresetBank( InstrumentBank    &  instbank, 
-                    DSE::DSE_MetaData && meta )
-            :m_pInstbnk(instbank), m_meta(meta)
-        {}
+        wrapsmpl_t               & smplbank()                                                { return m_pSamples; }
+        const wrapsmpl_t         & smplbank()const                                           { return m_pSamples; }
+        void                      smplbank( wrapsmpl_t && samplesbank)                       { m_pSamples = std::move(samplesbank); }
+        void                      smplbank( SampleBank  * samplesbank)                       { m_pSamples = samplesbank; }
+        void                      smplbank( std::unique_ptr<SampleBank>  && samplesbank)     { m_pSamples = std::move(samplesbank); }
 
-        //Constructor for all varieties of preset ptr
-        PresetBank( InstrumentBank    &  instbank, 
-                    DSE::DSE_MetaData && meta,
-                    ptrsmpl_t         && samplesbank )
-            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
-        {}
-
-        PresetBank( InstrumentBank    &  instbank, 
-                    DSE::DSE_MetaData && meta,
-                    SampleBank         * samplesbank )
-            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
-        {}
-
-        PresetBank( InstrumentBank    & instbank, 
-                    DSE::DSE_MetaData &&meta,
-                    SmplBnkWrap       &&samplesbank )
-            :m_pInstbnk(instbank), m_pSamples(samplesbank), m_meta(meta)
-        {}
-
-        DSE::DSE_MetaData       & metadata()                                 { return m_meta; }
-        const DSE::DSE_MetaData & metadata()const                            { return m_meta; }
-        void                      metadata( const DSE::DSE_MetaData & data ) { m_meta = data; }
-        void                      metadata( DSE::DSE_MetaData && data )      { m_meta = data; }
-
-        SmplBnkWrap              & smplbank()                                 { return m_pSamples; }
-        const SmplBnkWrap        & smplbank()const                            { return m_pSamples; }
-        void                      smplbank( SmplBnkWrap && samplesbank)       { m_pSamples = samplesbank; }
-        void                      smplbank( SampleBank   * samplesbank)       { m_pSamples = samplesbank; }
-        void                      smplbank( ptrsmpl_t   && samplesbank)       { m_pSamples = samplesbank; }
-
-        ptrinst_t               & instbank()                                  { return m_pInstbnk; }
-        const ptrinst_t         & instbank()const                             { return m_pInstbnk; }
-        void                    & instbank( ptrinst_t && pinst )              { m_pInstbnk = pinst;}
-
+        wrapinst_t               & instbank()                                                { return m_pInstbnk; }
+        const wrapinst_t         & instbank()const                                           { return m_pInstbnk; }
+        void                      instbank( wrapinst_t    && instbank)                       { m_pInstbnk = std::move(instbank); }
+        void                      instbank( InstrumentBank * instbank)                       { m_pInstbnk = instbank; }
+        void                      instbank( std::unique_ptr<InstrumentBank>     && instbank) { m_pInstbnk = std::move(instbank); }
 
     private:
-        DSE::DSE_MetaData   m_meta;
-        ptrinst_t           m_pInstbnk; //An instrument bank may not be shared by many
-        SmplBnkWrap         m_pSamples; //A sample bank may be shared by many
+        //Can't copy
+        PresetBank( const PresetBank& );
+        PresetBank& operator=( const PresetBank& );
+
+        DSE::DSE_MetaData m_meta;
+        wrapinst_t        m_pInstbnk; //An instrument bank may not be shared by many
+        wrapsmpl_t        m_pSamples; //A sample bank may be shared by many
     };
 
     /*****************************************************************************************

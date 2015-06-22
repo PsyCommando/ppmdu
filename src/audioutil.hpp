@@ -64,6 +64,15 @@ namespace audioutil
         enum struct eOpMode
         {
             Invalid,
+
+            ExportSWDLBank, //Export the main bank, and takes the presets of all the swd files accompanying each smd files in the same folder to build a soundfont!
+            ExportSWDL,     //Export a SWDL file to a folder. The folder contains the wav, and anything else is turned into XML
+            ExportSMDL,     //Export a SMDL file as a midi
+            ExportSEDL,     //Export the SEDL as a midi and some XML
+
+            BuildSWDL,      //Build a SWDL from a folder. Must contain XML info file. If no preset data present builds a simple wav bank.(samples are imported in the slot corresponding to their file name)
+            BuildSMDL,      //Build a SMDL from a midi file and a similarly named XML file. XML file used to remap instruments from GM to the game's format, and to set the 2 unknown variables.
+            BuildSEDL,      //Build SEDL from a folder a midi file and XML.
         };
 
         //Default filenames names

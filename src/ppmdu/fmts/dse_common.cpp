@@ -4,8 +4,8 @@ using namespace std;
 namespace DSE
 {
 
-    static const std::array<eDSEChunks, NB_DSEChunks> DSEChunksList = 
-    {
+    const std::array<eDSEChunks, NB_DSEChunks> DSEChunksList 
+    {{
         eDSEChunks::wavi, 
         eDSEChunks::prgi, 
         eDSEChunks::kgrp, 
@@ -16,7 +16,7 @@ namespace DSE
         eDSEChunks::mcrl,
         eDSEChunks::eoc,
         eDSEChunks::eod,
-    };
+    }};
 
     inline eDSEChunks IntToChunkID( uint32_t value )
     {
