@@ -1,6 +1,8 @@
 #include "audioutil.hpp"
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
+#include <ppmdu/pmd2/pmd2_audio_data.hpp>
+
 
 #include <iostream>
 #include <iomanip>
@@ -36,6 +38,11 @@ namespace audioutil
         "Free to re-use in any ways you may want to!\n"
         "No crappyrights, all wrongs reversed! :3";
 
+//
+//
+//
+    void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname );
+
 //------------------------------------------------
 //  Arguments Info
 //------------------------------------------------
@@ -47,10 +54,10 @@ namespace audioutil
         //Input Path argument
         { 
             0,      //first arg
-            false,  //mandatory
+            false,  //false == mandatory
             true,   //guaranteed to appear in order
             "input path", 
-            "Path to the file to export, or the directory to assemble.",
+            "Path to the file/directory to export, or the directory to assemble.",
 #ifdef WIN32
             "\"c:/pmd_romdata/data.bin\"",
 #elif __linux__
@@ -61,7 +68,7 @@ namespace audioutil
         //Output Path argument
         { 
             1,      //second arg
-            true,   //optional
+            true,   //true == optional
             true,   //guaranteed to appear in order
             "output path", 
             "Output path. The result of the operation will be placed, and named according to this path!",
@@ -111,7 +118,7 @@ namespace audioutil
     CAudioUtil::CAudioUtil()
         :CommandLineUtility()
     {
-        m_operationMode   = eOpMode::Invalid;
+        m_operationMode = eOpMode::Invalid;
     }
 
     const vector<argumentparsing_t> & CAudioUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -212,23 +219,19 @@ namespace audioutil
         {
             if( infile.isFile() )
             {
-                //if( m_hndlStrings )
-                //{
-                //    if(m_force == eOpForce::Import)
-                //    {
-                //        m_operationMode = eOpMode::ImportGameStrings;
-                //    }
-                //    else if( m_force == eOpForce::Export )
-                //    {
-                //        m_operationMode = eOpMode::ExportGameStringsFromFile;
-                //    }
-                //}
-                //else
-                //    throw runtime_error("Can't import anything else than strings from a file!");
+                const string fext = inpath.getExtension();
+
+                if( fext == pmd2::audio::SMDL_FileExtension )
+                    m_operationMode = eOpMode::ExportSMDL;
+                else if( fext == pmd2::audio::SEDL_FileExtension )
+                    m_operationMode = eOpMode::ExportSEDL;
+                else if( fext == pmd2::audio::SWDL_FileExtension )
+                    m_operationMode = eOpMode::ExportSWDL;
+                else
+                    throw runtime_error("Can't import this file format!");
             }
             else if( infile.isDirectory() )
             {
-
 
                 //if( m_hndlStrings )
                 //{
@@ -285,8 +288,44 @@ namespace audioutil
             {
                 case eOpMode::ExportSWDLBank:
                 {
-                    cout << "=== Importing Pokemon data ===\n";
-                    //returnval = DoImportPokemonData();
+                    cout << "=== Exporting SWD Bank ===\n";
+                    returnval = ExportSWDLBank();
+                    break;
+                }
+                case eOpMode::ExportSWDL:
+                {
+                    cout << "=== Exporting SWD ===\n";
+                    returnval = ExportSWDL();
+                    break;
+                }
+                case eOpMode::ExportSMDL:
+                {
+                    cout << "=== Exporting SMD ===\n";
+                    returnval = ExportSMDL();
+                    break;
+                }
+                case eOpMode::ExportSEDL:
+                {
+                    cout << "=== Exporting SED ===\n";
+                    returnval = ExportSEDL();
+                    break;
+                }
+                case eOpMode::BuildSWDL:
+                {
+                    cout << "=== Building SWD ===\n";
+                    returnval = BuildSWDL();
+                    break;
+                }
+                case eOpMode::BuildSMDL:
+                {
+                    cout << "=== Building SMD ===\n";
+                    returnval = BuildSMDL();
+                    break;
+                }
+                case eOpMode::BuildSEDL:
+                {
+                    cout << "=== Building SED ===\n";
+                    returnval = BuildSEDL();
                     break;
                 }
                 default:
@@ -310,7 +349,71 @@ namespace audioutil
 //--------------------------------------------
 //  Operation
 //--------------------------------------------
+    int CAudioUtil::ExportSWDLBank()
+    {
+        return 0;
+    }
+    
+    int CAudioUtil::ExportSWDL()
+    {
+        return 0;
+    }
 
+    int CAudioUtil::ExportSMDL()
+    {
+        using namespace pmd2::audio;
+        Poco::Path inputfile(m_inputPath);
+        Poco::Path outputfile;
+        string     outfname;
+
+        if( ! m_outputPath.empty() )
+            outputfile = Poco::Path(m_outputPath);
+        else
+            outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeFile();
+
+        outfname = outputfile.getBaseName();
+
+        //Export
+        MusicSequence smd = LoadSequence( inputfile.toString() );
+
+        //Write output
+        ofstream outstr( outputfile.toString() );
+        outstr<<smd.tostr();
+        outstr.flush();
+        outstr.close();
+        /*WriteMusicDump( smd, outputfile.toString() );*/
+
+        //Write meta
+
+        //Finish
+
+        return 0;
+    }
+
+    //void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname )
+    //{
+
+    //}
+
+    int CAudioUtil::ExportSEDL()
+    {
+        return 0;
+    }
+
+    int CAudioUtil::BuildSWDL()
+    {
+        return 0;
+    }
+
+    int CAudioUtil::BuildSMDL()
+    {
+        return 0;
+    }
+
+    int CAudioUtil::BuildSEDL()
+    {
+        return 0;
+    }
 
 //--------------------------------------------
 //  Main Methods

@@ -38,8 +38,8 @@ namespace audioutil
         CAudioUtil();
 
         //Parse Arguments
-        bool ParseInputPath  ( const std::string              & path );
-        bool ParseOutputPath ( const std::string              & path );
+        bool ParseInputPath  ( const std::string & path );
+        bool ParseOutputPath ( const std::string & path );
 
         //Parsing Options
 
@@ -50,6 +50,14 @@ namespace audioutil
         int  GatherArgs        ( int argc, const char * argv[] );
 
         //Exec methods
+        int ExportSWDLBank();
+        int ExportSWDL();
+        int ExportSMDL();
+        int ExportSEDL();
+
+        int BuildSWDL();
+        int BuildSMDL();
+        int BuildSEDL();
 
         //Constants
         static const std::string                                 Exe_Name;

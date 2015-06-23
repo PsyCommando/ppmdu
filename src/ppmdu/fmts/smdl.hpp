@@ -21,7 +21,7 @@ namespace DSE
     static const uint32_t SMDL_MagicNumber = 0x736D646C; //"smdl"
 
     //Nb of track events in the event enum
-    static const uint32_t NB_Track_Events = 16;
+    static const uint32_t NB_Track_Events = 17;
 
     /************************************************************************
         eTrkEventCodes
@@ -36,9 +36,9 @@ namespace DSE
         NoteDTBeg     = 0x80, //The first value reserved for note Delta-Time
         NoteDTEnd     = 0x8F, //The last value reserved for note Delta-Time
 
-        RepeatSilence = 0x90, //Repeat the last silence
-        Silence       = 0x92, //Silence the track for specified duration (uses a uint8)
-        LongSilence   = 0x93, //Silence the track for specified duration (uses a uint16)
+        RepeatLastPause = 0x90, //Repeat the last silence
+        Pause       = 0x92, //Pause the track for specified duration (uses a uint8)
+        LongPause   = 0x93, //Pause the track for specified duration (uses a uint16)
         EndOfTrack    = 0x98, //Marks the end of the track. Also serve as padding.
         LoopPointSet  = 0x99, //Marks the location where the track should loop from.
         SetOctave     = 0xA0, //Sets the octave notes are currently played at.
@@ -46,6 +46,7 @@ namespace DSE
         SetUnk1       = 0xA9, //Set that first unknown value from the track's header
         SetUnk2       = 0xAA, //Set that second unknown value from the track's header
         SetPreset     = 0xAC, //Sets the instrument preset to use
+        SetUnk4       = 0xBE, //Possibly set modulation ?
         Modulate      = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
         SetUnk3       = 0xDB, //Unknown purpose. Used in bgmM0000.smd
         SetTrkVol     = 0xE0, //Sets primary track volume.
@@ -75,6 +76,7 @@ namespace DSE
         bool           isEoT;       //= false; //if is end of track marker
         bool           isLoopPoint; //= false; //if is loop point
         uint8_t        optparammask;// bitmask for the bit that must be on in the first param for the optional param to be present. 
+        std::string    evlbl;       //text label for the event
     };
 
     /************************************************************************
@@ -353,6 +355,10 @@ namespace DSE
         size_t size   ()const                            { return m_events.size();  }
         void   resize ( size_t newsz )                   { m_events.resize(newsz);  }
         void   reserve( size_t ressz )                   { m_events.reserve(ressz); }
+
+        //std::string tostr()const;
+    private:
+        //std::string printevent( const TrkEvent & ev )const;
 
     private:
         track_t m_events;

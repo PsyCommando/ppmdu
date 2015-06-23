@@ -254,5 +254,8 @@
     <ClCompile Include="..\src\ppmdu\fmts\smdl.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_audio_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

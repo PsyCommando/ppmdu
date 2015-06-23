@@ -21,6 +21,10 @@ namespace pmd2 { namespace audio
 //====================================================================================================
 //  Constants
 //====================================================================================================
+    static const std::string SMDL_FileExtension = "smd";
+    static const std::string SWDL_FileExtension = "swd";
+    static const std::string SEDL_FileExtension = "sed";
+
 
 //====================================================================================================
 // Structs
@@ -58,10 +62,7 @@ namespace pmd2 { namespace audio
     class InstrumentInfo
     {
     public:
-        //InstrumentInfo(){}
 
-
-    private:
     };
 
     /*****************************************************************************************
@@ -77,8 +78,32 @@ namespace pmd2 { namespace audio
         typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
 
         SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::vector<smpldata_t> && smplsraw )
-            :m_wavinfotbl(wavitbl), m_SampleData(smplsraw)
+            :m_wavinfotbl(std::move(wavitbl)), m_SampleData(std::move(smplsraw))
         {}
+
+        SampleBank( SampleBank && mv )
+        {
+            m_wavinfotbl = std::move( mv.m_wavinfotbl );
+            m_SampleData = std::move( mv.m_SampleData );
+        }
+
+        SampleBank & operator=( SampleBank && mv )
+        {
+            m_wavinfotbl = std::move( mv.m_wavinfotbl );
+            m_SampleData = std::move( mv.m_SampleData );
+            return *this;
+        }
+
+        SampleBank( const SampleBank & other )
+        {
+            DoCopyFrom(other);
+        }
+
+        SampleBank & operator=( const SampleBank & other )
+        {
+            DoCopyFrom(other);
+            return *this;
+        }
 
         //Info
         int NbSamples()const { return m_SampleData.size(); } //Nb of sample slots with actual data.
@@ -95,6 +120,22 @@ namespace pmd2 { namespace audio
 
         smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData[index]; }
         const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData[index]; }
+
+    private:
+
+        void DoCopyFrom( const SampleBank & other )
+        {
+            m_wavinfotbl.resize( other.m_wavinfotbl.size() );
+
+            for( size_t i = 0; i < other.m_wavinfotbl.size(); ++i  )
+            {
+                if( other.m_wavinfotbl[i] != nullptr )
+                    m_wavinfotbl[i].reset( new DSE::WavInfo( *(other.m_wavinfotbl[i]) ) ); //Copy each objects and make a pointer
+            }
+
+            m_SampleData.resize( other.m_SampleData.size() );
+            std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
+        }
 
     private:
         std::vector<wavinfoptr_t> m_wavinfotbl; //Data on the samples
@@ -217,16 +258,17 @@ namespace pmd2 { namespace audio
     public:
         typedef std::unique_ptr<InstrumentInfo> ptrinst_t;
 
-        InstrumentBank(){}
+        InstrumentBank()
+        {}
 
         InstrumentBank( InstrumentBank && mv )
         {
-            m_instinfoslots = std::move_if_noexcept(mv.m_instinfoslots);
+            m_instinfoslots = std::move(mv.m_instinfoslots);
         }
 
-        InstrumentBank & operator=(InstrumentBank&& mv)
+        InstrumentBank & operator=( InstrumentBank&& mv )
         {
-            m_instinfoslots = std::move_if_noexcept(mv.m_instinfoslots);
+            m_instinfoslots = std::move(mv.m_instinfoslots);
             return *this;
         }
 
@@ -321,6 +363,8 @@ namespace pmd2 { namespace audio
         std::vector<DSE::TrkEvent>       & operator[]( size_t index )        { return m_tracks[index]; }
         const std::vector<DSE::TrkEvent> & operator[]( size_t index )const   { return m_tracks[index]; }
 
+        std::string tostr()const;
+
     private:
         DSE::DSE_MetaData                          m_meta;
         std::vector< std::vector<DSE::TrkEvent> >  m_tracks;
@@ -339,7 +383,8 @@ namespace pmd2 { namespace audio
 
     //3. Individual Bank ( bank.swd )
 
-    //4. 
+    //4. Sequence only
+    MusicSequence LoadSequence( const std::string & file );
 
     //adpcm encoding/decoding
 

@@ -50,6 +50,41 @@ namespace DSE
     inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
     inline uint32_t   ChunkIDToInt( eDSEChunks id    );
 
+    //#######################################################################################################
+    //#TODO: Move all that Notes stuff and obfuscate it, along with everything implementation-specific!
+    //#######################################################################################################
+    /*
+        Values indicating each notes that can be represented in a NoteOn event
+    */
+    enum struct eNote : uint8_t
+    {
+        C  = 0x0,
+        Cs = 0x1,
+        D  = 0x2,
+        Ds = 0x3,
+        E  = 0x4,
+        F  = 0x5,
+        Fs = 0x6,
+        G  = 0x7,
+        Gs = 0x8,
+        A  = 0x9,
+        As = 0xA,
+        B  = 0xB,
+    };
+    
+    /*
+        Values indicating how the play note event deal with the track's current pitch.
+    */
+    enum struct eNotePitch : uint8_t
+    {
+        lower   = 0x10,
+        current = 0x20,
+        higher  = 0x30,
+    };
+
+    static const uint8_t NoteEvParam1NoteMask     = 0x0F; //( 0000 1111 ) The id of the note "eDSENote" is stored in the lower nybble
+    static const uint8_t NoteEvParam1PitchMask    = 0x30; //( 0011 0000 ) The value of those 2 bits in the "param1" of a NoteOn event indicate if/how to modify the track's current pitch.
+    static const uint8_t NoteEvParam1OptParamMask = 0x40; //( 0100 0000 ) If this byte in the first param of a NoteOn event is on, there is a second param to read.
 
 //====================================================================================================
 // Structs
@@ -148,6 +183,12 @@ namespace DSE
     struct WavInfo
     {
         static const uint32_t Size = 64;
+        enum struct eSmplFmt : uint16_t 
+        {
+            invalid,
+            pcm       = 0x100,
+            ima_adpcm = 0x200,
+        };
 
         uint16_t unk1       = 0;
         uint16_t id         = 0; //Index/ID of the sample
@@ -191,6 +232,8 @@ namespace DSE
         uint8_t evcode = 0;
         uint8_t param1 = 0;
         uint8_t param2 = 0;
+
+        std::string tostr()const;
     };
 
     /************************************************************************
@@ -300,7 +343,8 @@ namespace DSE
             }
 
             //Advance iterator by 4 bytes + check if reached end
-            for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
+            ++beg;
+            //for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
         }
 
         //Return Result

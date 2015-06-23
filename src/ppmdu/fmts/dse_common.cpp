@@ -1,4 +1,9 @@
 #include "dse_common.hpp"
+
+#include <ppmdu/fmts/smdl.hpp> //#TODO #MOVEME
+
+#include <sstream>
+#include <iomanip>
 using namespace std;
 
 namespace DSE
@@ -35,4 +40,7 @@ namespace DSE
     {
         return static_cast<uint32_t>(id);
     }
+
+
+
 };
