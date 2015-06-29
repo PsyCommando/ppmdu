@@ -1,5 +1,6 @@
 #include "smdl.hpp"
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
+#include <ppmdu/fmts/dse_sequence.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -16,99 +17,15 @@ namespace DSE
 //====================================================================================================
 
     //Static values of the Parameters for the Trk Chunk
-    static const uint32_t Trk_Chunk_Param1 = 0x1;
+    static const uint32_t Trk_Chunk_Param1 = 0x1000000;
     static const uint32_t Trk_Chunk_Param2 = 0xFF04;
 
-    static const TrkEventInfo InvalidEventInfo = {eTrkEventCodes::Invalid,eTrkEventCodes::Invalid,0,false,false,false,0};
 
-    /***************************************************************************************
-        TrkEventsTable
-            Definition of the TrkEventsTable.
-            
-            Contains important details on how to parse all individual events.
-    ***************************************************************************************/
-    const std::array<TrkEventInfo, NB_Track_Events> TrkEventsTable
-    {{
-        //Play Note event
-        {
-            eTrkEventCodes::NoteOnBeg,  //Event Codes Range Beginning
-            eTrkEventCodes::NoteOnEnd,  //Event Codes Range End
-            1,                          //Nb Required Parameters
-            true,                       //Can Have Optional Parameter
-            false,                      //Is End Of Track Marker
-            false,                      //Is Loop Point Marker
-            0x40,                       //Bitmask for determining if optional parameter is there //0x40 is (0100 0000)
-            "PNote",                    //Event label
-        },
-
-        //RepeatLastPause
-        { eTrkEventCodes::RepeatLastPause, eTrkEventCodes::Invalid, 0, false, false, false, 0, "RLP" },
-
-        //Pause
-        { eTrkEventCodes::Pause,       eTrkEventCodes::Invalid, 1, false, false, false, 0, "Pause" },
-
-        //LongPause
-        { eTrkEventCodes::LongPause,   eTrkEventCodes::Invalid, 2, false, false, false, 0, "LongPause" },
-
-        //EndOfTrack
-        { eTrkEventCodes::EndOfTrack,    eTrkEventCodes::Invalid, 0, false, true, false,  0, "EoT" },
-
-        //LoopPointSet
-        { eTrkEventCodes::LoopPointSet, eTrkEventCodes::Invalid, 0, false, false, true,   0, "Loop" },
-
-        //SetOctave
-        { eTrkEventCodes::SetOctave,    eTrkEventCodes::Invalid, 1, false, false, false,  0, "Pitch" },
-
-        //SetTempo
-        { eTrkEventCodes::SetTempo,     eTrkEventCodes::Invalid, 1, false, false, false,  0, "BPM" },
-
-        //SetUnk1
-        { eTrkEventCodes::SetUnk1,      eTrkEventCodes::Invalid, 1, false, false, false,  0, "Unk1" },
-
-        //SetUnk2
-        { eTrkEventCodes::SetUnk2,      eTrkEventCodes::Invalid, 1, false, false, false,  0, "Unk2" },
-
-        //SetPreset
-        { eTrkEventCodes::SetPreset,    eTrkEventCodes::Invalid, 1, false, false, false,  0, "Prgm" },
-
-        //SetUnk4
-        { eTrkEventCodes::SetUnk4,      eTrkEventCodes::Invalid, 1, false, false, false,  0, "Unk4" },
-
-        //Modulate
-        { eTrkEventCodes::Modulate,     eTrkEventCodes::Invalid, 2, false, false, false,  0, "Mod" },
-
-        //SetUnk3
-        { eTrkEventCodes::SetUnk3,      eTrkEventCodes::Invalid, 1, false, false, false,  0, "Unk3" },
-
-        //SetTrkVol
-        { eTrkEventCodes::SetTrkVol,    eTrkEventCodes::Invalid, 1, false, false, false,  0, "Vol" },
-
-        //SetExpress
-        { eTrkEventCodes::SetExpress,   eTrkEventCodes::Invalid, 1, false, false, false,  0, "Exp" },
-
-        //SetTrkPan
-        { eTrkEventCodes::SetTrkPan,    eTrkEventCodes::Invalid, 1, false, false, false,  0, "Pan" },
-    }};
 
 //====================================================================================================
 // Utility
 //====================================================================================================
-    std::pair<bool,TrkEventInfo> GetEventInfo( eTrkEventCodes ev )
-    {
-        for( auto & entry : TrkEventsTable )
-        {
-            if( ( entry.evcodeend != eTrkEventCodes::Invalid     ) && 
-                ( ev >= entry.evcodebeg && ev <= entry.evcodeend ) )
-            {
-                return make_pair(true, entry );
-            }
-            else if( entry.evcodebeg == ev )
-            {
-                return make_pair( true, entry );
-            }
-        }
-        return make_pair(false, InvalidEventInfo );
-    }
+
 
 
 //====================================================================================================
@@ -297,9 +214,9 @@ namespace DSE
             m_itread = m_song.ReadFromContainer(m_itread);
         }
 
-        std::vector< std::vector<TrkEvent> > ParseAllTracks()
+        std::vector<pmd2::audio::MusicTrack> ParseAllTracks()
         {
-            vector< vector<TrkEvent> > tracks;
+            vector<pmd2::audio::MusicTrack> tracks;
             tracks.reserve( m_song.nbtrks );
 
             try
@@ -307,18 +224,12 @@ namespace DSE
                 while( m_itread != m_itEoC )
                 {
                     //#1 - Find next track chunk
-                    /*auto itfound*/m_itread = DSE::FindNextChunk( m_itread, m_itEoC, DSE::eDSEChunks::trk );
-
-                    if( /*itfound*/m_itread != m_itEoC )
+                    m_itread = DSE::FindNextChunk( m_itread, m_itEoC, DSE::eDSEChunks::trk );
+                    if( m_itread != m_itEoC )
                     {
                         //Parse Track
                         tracks.push_back( ParseTrack() );
-
-                        //Increment
-                        //m_itread = itfound + 1; //+1 so we don't find the same thing over and over again
                     }
-                    //else
-                    //    m_itread = itfound;
                 }
             }
             catch( std::runtime_error & e )
@@ -331,98 +242,108 @@ namespace DSE
             return std::move(tracks);
         }
 
-        std::vector<TrkEvent> ParseTrack()
+        pmd2::audio::MusicTrack ParseTrack()
         {
-            std::vector<TrkEvent> trk;
+            //std::vector<TrkEvent> trk;
             DSE::ChunkHeader      hdr;
-            m_itread = hdr.ReadFromContainer(m_itread);
+            hdr.ReadFromContainer(m_itread); //Don't increment itread
+            auto itend     = m_itread + (hdr.datlen + DSE::ChunkHeader::size());
+            auto itpreread = m_itread;
+            m_itread = itend; //move it past the chunk already
 
-            //Sanity checks
-            if( hdr.label != static_cast<uint32_t>(DSE::eDSEChunks::trk) )
-            {
-                throw std::runtime_error( "SMDL_Parser::ParseTrack() : Unexpected chunk ID ! " + to_string(hdr.label) );
-            }
-            if( hdr.param1 != Trk_Chunk_Param1 )
-            {
-                cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param1 value is non-default " <<hex <<hdr.param1 <<dec <<" !\n";
-            }
-            if( hdr.param2 != Trk_Chunk_Param2 )
-            {
-                cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param2 value is non-default " <<hex <<hdr.param2 <<dec <<" !\n";
-            }
+            auto parsed = DSE::ParseTrkChunk(itpreread, itend);
 
-            //Set End of track
-            auto iteot = m_itread + hdr.datlen;
+            pmd2::audio::MusicTrack mtrk;
+            mtrk.SetMidiChannel( parsed.second.chanid );
+            mtrk.getEvents() = move(parsed.first);
 
-            //Pre-allocate worst case scenario
-            trk.reserve( hdr.datlen );
+            return move(mtrk);
 
-            //Read preamble
-            TrkPreamble pre;
-            m_itread = pre.ReadFromContainer(m_itread);
+            ////Sanity checks
+            //if( hdr.label != static_cast<uint32_t>(DSE::eDSEChunks::trk) )
+            //{
+            //    throw std::runtime_error( "SMDL_Parser::ParseTrack() : Unexpected chunk ID ! " + to_string(hdr.label) );
+            //}
+            //if( hdr.param1 != Trk_Chunk_Param1 )
+            //{
+            //    cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param1 value is non-default " <<hex <<hdr.param1 <<dec <<" !\n";
+            //}
+            //if( hdr.param2 != Trk_Chunk_Param2 )
+            //{
+            //    cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param2 value is non-default " <<hex <<hdr.param2 <<dec <<" !\n";
+            //}
 
-            //Parse events
-            TrkEvent lastev;
-            while( (lastev.evcode != static_cast<uint8_t>(DSE::eTrkEventCodes::EndOfTrack)) && 
-                   (m_itread != m_itEoC) )
-            {
-                lastev = std::move(ParseEvent());
-                if( lastev.dt != 0 && (lastev.dt & 0xF0) != 0x80 )
-                    cout<<"DT isssue" <<endl;
-                trk.push_back(lastev);
-            }
+            ////Set End of track
+            //auto iteot = m_itread + hdr.datlen;
 
-            //Shrink
-            trk.shrink_to_fit();
-            return std::move(trk);
+            ////Pre-allocate worst case scenario
+            //trk.reserve( hdr.datlen );
+
+            ////Read preamble
+            //TrkPreamble pre;
+            //m_itread = pre.ReadFromContainer(m_itread);
+
+            ////Parse events
+            //TrkEvent lastev;
+            //while( (lastev.evcode != static_cast<uint8_t>(DSE::eTrkEventCodes::EndOfTrack)) && 
+            //       (m_itread != m_itEoC) )
+            //{
+            //    lastev = std::move(ParseEvent());
+            //    if( lastev.dt != 0 && (lastev.dt & 0xF0) != 0x80 )
+            //        cout<<"DT isssue" <<endl;
+            //    trk.push_back(lastev);
+            //}
+
+            ////Shrink
+            //trk.shrink_to_fit();
         }
 
-        TrkEvent ParseEvent()
-        {
-            TrkEvent ev;
-            uint8_t  first = *m_itread;
+        //TrkEvent ParseEvent()
+        //{
+        //    TrkEvent ev;
+        //    uint8_t  first = *m_itread;
 
-            //Check if first val is DT
-            if( (first & 0xF0) == 0x80 ) //Check if value begins with 0x8X (1000 XXXX)
-            {
-                ev.dt = first; //& 0xF; //DT is 0x0-0xF //NOTE: we don't know if the DT can't be 0x80.. So we need to leave the full value in there
-                ++m_itread; //increment iter
-            }
-            else
-                ev.dt = 0;
+        //    //Check if first val is DT
+        //    if( (first & 0xF0) == 0x80 ) //Check if value begins with 0x8X (1000 XXXX)
+        //    {
+        //        ev.dt = first; //& 0xF; //DT is 0x0-0xF //NOTE: we don't know if the DT can't be 0x80.. So we need to leave the full value in there
+        //        ++m_itread; //increment iter
+        //    }
+        //    else
+        //        ev.dt = 0;
 
-            //Get the event code
-            ev.evcode = *m_itread;
-            ++m_itread;
+        //    //Get the event code
+        //    ev.evcode = *m_itread;
+        //    ++m_itread;
 
-            //Check if evcode has a/some parameter(s)
-            auto einfo = GetEventInfo( static_cast<DSE::eTrkEventCodes>(ev.evcode) );
+        //    //Check if evcode has a/some parameter(s)
+        //    auto einfo = GetEventInfo( static_cast<DSE::eTrkEventCodes>(ev.evcode) );
 
-            //If event doesn't exist in our database
-            if( ! einfo.first )
-            {
-                stringstream sstr;
-                sstr << "SMDL_Parser::ParseEvent() : Encountered undefined event code 0x" <<hex <<static_cast<uint16_t>(ev.evcode) <<dec <<" !";
-                throw std::runtime_error(sstr.str());
-            }
+        //    //If event doesn't exist in our database
+        //    if( ! einfo.first )
+        //    {
+        //        stringstream sstr;
+        //        sstr << "SMDL_Parser::ParseEvent() : Encountered undefined event code 0x" <<hex <<static_cast<uint16_t>(ev.evcode) <<dec <<" !";
+        //        throw std::runtime_error(sstr.str());
+        //    }
 
-            //Get up to 2 params
-            if( einfo.second.nbreqparams >= 1 )
-            {
-                ev.param1 = *(m_itread);
-                ++m_itread;
-            }
+        //    //Get up to 2 params
+        //    if( einfo.second.nbreqparams >= 1 )
+        //    {
+        //        ev.param1 = *(m_itread);
+        //        ++m_itread;
+        //    }
 
-            if( ( einfo.second.nbreqparams >= 2 ) || 
-                ( einfo.second.hasoptparam && (einfo.second.optparammask & ev.param1) != 0 ) ) //Optional second param
-            {
-                ev.param2 = *(m_itread);
-                ++m_itread;
-            }
+        //    if( ( einfo.second.nbreqparams >= 2 ) || 
+        //        ( einfo.second.hasoptparam && (einfo.second.optparammask & ev.param1) != 0 ) ) //Optional second param
+        //    {
+        //        ev.param2 = *(m_itread);
+        //        ++m_itread;
+        //    }
 
-            //Done
-            return std::move(ev);
-        }
+        //    //Done
+        //    return std::move(ev);
+        //}
 
     private:
         const vector<uint8_t>         & m_src;

@@ -53,38 +53,7 @@ namespace DSE
     //#######################################################################################################
     //#TODO: Move all that Notes stuff and obfuscate it, along with everything implementation-specific!
     //#######################################################################################################
-    /*
-        Values indicating each notes that can be represented in a NoteOn event
-    */
-    enum struct eNote : uint8_t
-    {
-        C  = 0x0,
-        Cs = 0x1,
-        D  = 0x2,
-        Ds = 0x3,
-        E  = 0x4,
-        F  = 0x5,
-        Fs = 0x6,
-        G  = 0x7,
-        Gs = 0x8,
-        A  = 0x9,
-        As = 0xA,
-        B  = 0xB,
-    };
-    
-    /*
-        Values indicating how the play note event deal with the track's current pitch.
-    */
-    enum struct eNotePitch : uint8_t
-    {
-        lower   = 0x10,
-        current = 0x20,
-        higher  = 0x30,
-    };
 
-    static const uint8_t NoteEvParam1NoteMask     = 0x0F; //( 0000 1111 ) The id of the note "eDSENote" is stored in the lower nybble
-    static const uint8_t NoteEvParam1PitchMask    = 0x30; //( 0011 0000 ) The value of those 2 bits in the "param1" of a NoteOn event indicate if/how to modify the track's current pitch.
-    static const uint8_t NoteEvParam1OptParamMask = 0x40; //( 0100 0000 ) If this byte in the first param of a NoteOn event is on, there is a second param to read.
 
 //====================================================================================================
 // Structs
@@ -222,19 +191,7 @@ namespace DSE
         uint16_t unk26      = 0;
     };
 
-    /************************************************************************
-        TrkEvent
-            Represent a raw track event used in the SEDL and SMDL format!
-    ************************************************************************/
-    struct TrkEvent
-    {
-        uint8_t dt     = 0;
-        uint8_t evcode = 0;
-        uint8_t param1 = 0;
-        uint8_t param2 = 0;
 
-        std::string tostr()const;
-    };
 
     /************************************************************************
         DSE_MetaData
@@ -270,7 +227,7 @@ namespace DSE
     public:
         static eDSEChunks Find( uint8_t highbyte )
         {
-            static DSE_ChunkIDLookup s_instance; //Duff's device
+            static DSE_ChunkIDLookup s_instance; //creates it when first called
             auto itfound = s_instance.m_lutbl.find(highbyte);
 
             if(itfound != s_instance.m_lutbl.end())
@@ -299,7 +256,6 @@ namespace DSE
     /************************************************************************
         FindNextChunk
             Find the start of the next chunk that has the specified chunk id.
-            Is optimized to jump over recognized, but non-matching chunk ids, and skip any possible padding.
 
             If the chunk is not found, the function returns "end".
 
@@ -343,7 +299,8 @@ namespace DSE
             }
 
             //Advance iterator by 4 bytes + check if reached end
-            ++beg;
+            if( beg != end )
+                ++beg;
             //for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
         }
 

@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Containers and utilities for data parsed from PMD2's audio, and sequencer files.
 */
 #include <ppmdu/fmts/dse_common.hpp>
+#include <ppmdu/fmts/dse_sequence.hpp>
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -334,6 +335,46 @@ namespace pmd2 { namespace audio
         wrapsmpl_t        m_pSamples; //A sample bank may be shared by many
     };
 
+    /*
+        MusicTrack
+    */
+    class MusicTrack
+    {
+    public:
+        typedef std::vector<DSE::TrkEvent>::iterator       iterator;
+        typedef std::vector<DSE::TrkEvent>::const_iterator const_iterator;
+
+
+        MusicTrack()
+        {
+        }
+
+        DSE::TrkEvent operator[]( size_t index ) {return m_events[index];}
+
+        iterator       begin()      { return m_events.begin(); }
+        const_iterator begin()const { return m_events.begin(); }
+
+        iterator       end()      { return m_events.end(); }
+        const_iterator end()const { return m_events.end(); }
+
+        void reserve( size_t sz ) { m_events.reserve(sz); }
+        void resize(size_t sz) { m_events.resize(sz); } 
+        void shrink_to_fit() {m_events.shrink_to_fit();}
+
+        void push_back( DSE::TrkEvent && ev ) { m_events.push_back(ev); }
+        void push_back( DSE::TrkEvent ev ) { m_events.push_back(std::move(ev)); }
+
+        std::vector<DSE::TrkEvent> & getEvents() {return m_events;}
+        const std::vector<DSE::TrkEvent> & getEvents()const {return m_events;}
+
+        void SetMidiChannel( uint8_t chan ) {m_midichan = chan;}
+        uint8_t GetMidiChannel()const {return m_midichan;}
+
+    private:
+        uint8_t                    m_midichan; //The channel of the track
+        std::vector<DSE::TrkEvent> m_events;
+    };
+
     /*****************************************************************************************
         MusicSequence
             Contains data for a single musical sequence from the PMD2 games.
@@ -342,7 +383,7 @@ namespace pmd2 { namespace audio
     class MusicSequence
     {
     public:
-        MusicSequence( std::vector< std::vector<DSE::TrkEvent> > && tracks, 
+        MusicSequence( std::vector< MusicTrack > && tracks, 
                        DSE::DSE_MetaData                         && meta,
                        PresetBank                                 * presets = nullptr )
             :m_meta(meta), m_tracks(tracks), m_pPresetBank(presets)
@@ -356,19 +397,20 @@ namespace pmd2 { namespace audio
         void                      metadata( const DSE::DSE_MetaData & data ) { m_meta = data; }
         void                      metadata( DSE::DSE_MetaData && data )      { m_meta = data; }
 
+        size_t                             getNbTracks()const                { return m_tracks.size(); }
 
-        std::vector<DSE::TrkEvent>       & track( size_t index )             { return m_tracks[index]; }
-        const std::vector<DSE::TrkEvent> & track( size_t index )const        { return m_tracks[index]; }
+        MusicTrack      & track( size_t index )             { return m_tracks[index]; }
+        const MusicTrack & track( size_t index )const        { return m_tracks[index]; }
 
-        std::vector<DSE::TrkEvent>       & operator[]( size_t index )        { return m_tracks[index]; }
-        const std::vector<DSE::TrkEvent> & operator[]( size_t index )const   { return m_tracks[index]; }
+        MusicTrack      & operator[]( size_t index )        { return m_tracks[index]; }
+        const MusicTrack & operator[]( size_t index )const   { return m_tracks[index]; }
 
         std::string tostr()const;
 
     private:
-        DSE::DSE_MetaData                          m_meta;
-        std::vector< std::vector<DSE::TrkEvent> >  m_tracks;
-        PresetBank                               * m_pPresetBank;
+        DSE::DSE_MetaData        m_meta;
+        std::vector<MusicTrack>  m_tracks;
+        PresetBank             * m_pPresetBank;
     };
 
 //====================================================================================================

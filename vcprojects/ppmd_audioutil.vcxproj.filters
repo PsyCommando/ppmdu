@@ -49,6 +49,9 @@
     <Filter Include="Source Files\ppmdu\file formats\audio">
       <UniqueIdentifier>{1541d000-9c0d-41ce-9c74-4ba21ae499fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="jdksmidilib">
+      <UniqueIdentifier>{b297c6ce-76e2-46cf-867d-ccdbbea4611c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp">
@@ -168,6 +171,105 @@
     <ClInclude Include="..\src\ppmdu\containers\audio_sample.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\dse_sequence.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\advancedsequencer.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\driver.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\driverdump.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\driverwin32.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\edittrack.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\file.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\fileread.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\filereadmultitrack.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\fileshow.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\filewrite.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\filewritemultitrack.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\keysig.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\manager.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\matrix.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\midi.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\msg.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\multitrack.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\parser.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\process.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\queue.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\sequencer.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\showcontrol.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\showcontrolhandler.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\smpte.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\song.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\sysex.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\tempo.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\tick.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\track.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\utils.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\jdksmidi\include\jdksmidi\world.h">
+      <Filter>jdksmidilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\ext_fmts\midi_io.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
@@ -256,6 +358,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_audio_data.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\dse_sequence.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\ext_fmts\midi_io.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

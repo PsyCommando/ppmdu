@@ -73,10 +73,12 @@ About:
 This tool allows to unpack and repack the kaomado.kao file that contains portraits  for all pokemons
 in the game!
 
-It extracts the content of the kaomado file into a directory, containing tons of other sub-directories.
-Each of those sub-directory contains the portraits for a specific pokemon. Each of them has a number
-in its name, which correspond to the index of the pokemon!
-Each of those portraits has a number from 0 to 39 which identify the portrait's slot.
+It extracts the content of the kaomado file into a directory, containing sub-directories, one 
+for each pokemon that actually has portrait data. Each of those directories has a number in its name, 
+which correspond to the index of the pokemon! 
+
+Inside one of those sub-directory are the portraits for a specific pokemon. 
+Each of those portraits has a number from 0 to 39 which identify the portrait's slot. 
 
 It repacks the whole thing, as long as it follow the same file structure and naming as above.
 Only the numbers in the names for files and folders are required, the name added is only a 

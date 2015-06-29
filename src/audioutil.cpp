@@ -3,7 +3,6 @@
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 
-
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -13,6 +12,15 @@
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
+
+#include <jdksmidi/world.h>
+#include <jdksmidi/track.h>
+#include <jdksmidi/multitrack.h>
+#include <jdksmidi/filereadmultitrack.h>
+#include <jdksmidi/fileread.h>
+#include <jdksmidi/fileshow.h>
+#include <jdksmidi/filewritemultitrack.h>
+
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::std;
@@ -41,7 +49,9 @@ namespace audioutil
 //
 //
 //
-    void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname );
+    //void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname );
+    void WriteEventsToMidiFileTest( const std::string & file, const pmd2::audio::MusicSequence & seq );
+    void WriteEventsToMidiFileTest_MF( const std::string & file, const pmd2::audio::MusicSequence & seq );
 
 //------------------------------------------------
 //  Arguments Info
@@ -132,6 +142,12 @@ namespace audioutil
     const string                    & CAudioUtil::getMiscSectionText ()const { return Misc_Text;         }
 
 //--------------------------------------------
+//  Utility
+//--------------------------------------------
+
+
+
+//--------------------------------------------
 //  Parse Args
 //--------------------------------------------
     bool CAudioUtil::ParseInputPath( const string & path )
@@ -219,7 +235,9 @@ namespace audioutil
         {
             if( infile.isFile() )
             {
-                const string fext = inpath.getExtension();
+                stringstream sstr;
+                string fext = inpath.getExtension();
+                std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
 
                 if( fext == pmd2::audio::SMDL_FileExtension )
                     m_operationMode = eOpMode::ExportSMDL;
@@ -381,14 +399,453 @@ namespace audioutil
         outstr<<smd.tostr();
         outstr.flush();
         outstr.close();
-        /*WriteMusicDump( smd, outputfile.toString() );*/
+
+        ofstream outfile( outputfile.toString() );
+        outfile << smd.tostr();
+        outfile.close();
+
+        //WriteEventsToMidiFileTest_MF( outputfile.toString(), smd );
+        outputfile.setExtension("mid");
+        WriteEventsToMidiFileTest( outputfile.toString(), smd );
 
         //Write meta
+        //Write the info that didn't fit in the midi here as XML.
 
         //Finish
 
         return 0;
     }
+
+    void WriteEventsToMidiFileTest( const std::string & file, const pmd2::audio::MusicSequence & seq )
+    {
+        using namespace jdksmidi;
+        MIDIMultiTrack mt( seq.getNbTracks() );
+        mt.SetClksPerBeat(48);
+
+        //Init track 0 with time signature
+        MIDITimedBigMessage timesig;
+        timesig.SetTime( 0 );
+        timesig.SetTimeSig();
+        mt.GetTrack( 0 )->PutEvent( timesig );
+        //mt.GetTrack( 0 )->PutTextEvent(0, META_TRACK_NAME, "Tempo track");
+
+        //Re-assign drumtrack #TODO: It will be important to work out something for tracks set to chan 10 that gets a program change midway !
+        vector<uint8_t> midichan  ( seq.getNbTracks(), 0 );
+        vector<int>    drumtracks;
+        int             wrongdrumtrk = -1;
+        for( int i = 0; i < seq.getNbTracks(); ++i )
+        {
+            midichan[i] = seq.track(i).GetMidiChannel();
+
+            bool Iamdrumtrack = false;
+
+            //Find if we're actually a drum track
+            for( const auto & ev : seq.track(i) )
+            {
+                if( ev.evcode == static_cast<uint8_t>(DSE::eTrkEventCodes::SetPreset) && (ev.params.front() == 0x7F || ev.params.front() == 0x7B || ev.params.front() == 0x7E ) )
+                {
+                    Iamdrumtrack = true;
+                    drumtracks.push_back(i);
+                    break;
+                }
+            }
+
+            if( midichan[i] == 9 && !Iamdrumtrack ) //Keep track of who got track 9
+                wrongdrumtrk = i;
+        }
+
+        //If we can, swap the channel with one of the drumtracks
+        if( wrongdrumtrk != -1 && ! drumtracks.empty() )
+        {
+            uint8_t swapchan = 0;
+            swapchan = midichan[wrongdrumtrk];
+            midichan[wrongdrumtrk] = midichan[drumtracks.front()];
+            midichan[drumtracks.front()] = swapchan;
+            cout <<"!!-- Re-assigned track #" <<wrongdrumtrk <<"'s MIDI channel from 9 to " << static_cast<short>(midichan[wrongdrumtrk]) <<"--!!\n";
+        }
+
+        //Set the remaining drumtracks to 10
+        for( const auto & drumtrk : drumtracks )
+        {
+            cout <<"!!-- Re-assigned track #" <<drumtrk <<"'s MIDI channel from " << static_cast<short>(midichan[drumtrk]) <<" to  9 --!!\n";
+            midichan[drumtrk] = 9;
+        }
+
+        uint32_t lastlasttick = 0; //The nb of ticks of the last track that was handled
+        
+        for( unsigned int trkno = 0; trkno < seq.getNbTracks(); ++trkno )
+        {
+            cout<<"Writing track #" <<trkno <<"\n";
+            uint32_t ticks     = 0;
+            uint32_t lastpause = 0;
+            uint32_t lasthold  = 0; //last duration a note was held
+            int8_t   curoctave = 0;
+            int8_t   lastoctaveevent = 0;
+
+            uint8_t curchannel = midichan[trkno];
+
+            for( const auto & ev : seq.track(trkno) )
+            {
+                MIDITimedBigMessage mess;
+                const auto code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
+
+                //Handle pauses if neccessary
+                if( code == DSE::eTrkEventCodes::LongPause )
+                {
+                    lastpause = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
+                    ticks += lastpause;
+                }
+                else if( code == DSE::eTrkEventCodes::Pause )
+                {
+                    lastpause = ev.params.front();
+                    ticks += lastpause;
+                }
+                else if( code == DSE::eTrkEventCodes::AddToLastPause )
+                {
+                    uint32_t prelastp = lastpause;
+                    lastpause = prelastp + ev.params.front();
+                    ticks += lastpause;
+                }
+                else if( code == DSE::eTrkEventCodes::RepeatLastPause )
+                {
+                    ticks += lastpause;
+                }
+
+                //Handle delta-time
+                if( ev.dt != 0 )
+                    ticks += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) );
+
+                //Set the time properly now
+                mess.SetTime(ticks);
+
+                //Warn if we're writing notes past the ticks of the last track
+                if( lastlasttick!= 0 && ticks > lastlasttick )
+                    cout << "!!-- WARNING: Writing events past the last parsed track's end ! Prev track last ticks : " <<lastlasttick <<", current ticks : " <<ticks <<" --!!\n" ;
+
+                if( trkno == 0 )
+                {
+                    if( code == DSE::eTrkEventCodes::SetTempo )
+                    {
+                        static const uint32_t NbMicrosecPerMinute = 60000000;
+                        uint32_t microspquart= NbMicrosecPerMinute / ev.params.front();
+                        //uint8_t asbytes[3] = { static_cast<uint8_t>(microspquart >> 16), static_cast<uint8_t>(microspquart >> 8), static_cast<uint8_t>(microspquart) };
+                        //mf.addMetaEvent( trkno, ticks, 0x51, vector<uint8_t>{0x03, asbytes[0], asbytes[1], asbytes[2] } );
+                        
+                        mess.SetTempo( microspquart );
+                        mt.GetTrack(trkno)->PutEvent( mess );
+                    }
+                    continue;
+                }
+
+                //Handle play note
+                if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
+                {
+                    if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower) )
+                        curoctave -= 1;
+                    else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) )
+                        curoctave += 1;
+                    else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::undefined) )
+                    {
+                        //cout <<"Undefined pitch ! Reseting\n";
+                        curoctave = lastoctaveevent;
+                    }
+                    else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::current) )
+                    {
+                        //cout <<"Trying to reset pitch\n";
+                    }
+
+                    //MidiEvent mev;
+                    int8_t notenb  = (ev.params.front() & 0x0F);
+                    int8_t mnoteid = notenb + ( (curoctave) * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
+                    //mev.makeNoteOn( mnoteid, ev.evcode, trkno );
+                    //mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOn), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
+                    //MidiEvent mevoff;
+                    //mevoff.makeNoteOff( mnoteid, ev.evcode, trkno );
+                    mess.SetTime(ticks);
+                    mess.SetNoteOn( curchannel, mnoteid, static_cast<uint8_t>(ev.evcode & 0x7F) );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                     
+                    //uint8_t notehold = 0; //By default hold for the shortest note duration
+                    if( ev.params.size() >= 2 )
+                    {
+                        if( ev.params.size() == 2 )
+                            lasthold = ev.params[1];
+                        else if( ev.params.size() == 3 )
+                        {
+                            lasthold = static_cast<uint16_t>( ev.params[1] << 8 ) | ev.params[2];
+                            //cout<<"##Got Note Event with 2 bytes long hold! Parsed as " <<lasthold <<"!##\n";
+                        }
+                        else if( ev.params.size() == 4 )
+                        {
+                            lasthold = static_cast<uint32_t>( ev.params[1] << 16 ) | ( ev.params[2] << 8 ) | ev.params[3];
+                            cout<<"##Got Note Event with 3 bytes long hold! Parsed as " <<lasthold <<"!##\n";
+                            
+                        }
+                    }
+                    MIDITimedBigMessage noteoff;
+                    noteoff.SetTime( ticks + lasthold );
+                    noteoff.SetNoteOff( curchannel, mnoteid, static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
+
+                    mt.GetTrack(trkno)->PutEvent( noteoff );
+
+                    //mf.addEvent( trkno, ticks + notehold, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOff), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
+                }
+                else if( code == DSE::eTrkEventCodes::SetOctave )
+                {
+                    lastoctaveevent = ev.params.front();
+                    curoctave = ev.params.front();
+                }
+                else if( code == DSE::eTrkEventCodes::SetExpress )
+                {
+                    mess.SetControlChange( curchannel, 0x0B, ev.params.front() );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                    //mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0B, ev.params.front() } );
+                }
+                else if( code == DSE::eTrkEventCodes::SetTrkVol )
+                {
+                    mess.SetControlChange( curchannel, 0x07, ev.params.front() );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                    //mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x07, ev.params.front() } );
+                }
+                else if( code == DSE::eTrkEventCodes::SetTrkPan )
+                {
+                    mess.SetControlChange( curchannel, 0x0A, ev.params.front() );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                    //mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0A, ev.params.front() } );
+                }
+                else if( code == DSE::eTrkEventCodes::SetPreset )
+                {
+                    //mess.SetProgramChange( seq.track(trkno).GetMidiChannel(), ev.params.front() );
+                    mess.SetProgramChange( curchannel, 1 ); //For now all pianos !
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                   // mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::PrgmChange), ev.params.front() } );
+                }
+                else if( code == DSE::eTrkEventCodes::Modulate )
+                {
+                    uint16_t pitchw = ( static_cast<uint16_t>( (ev.params.front() & 0xF) << 8 ) | ev.params.back());
+                    cout <<"Pitch Bend ! " <<pitchw <<"\n";
+
+                    //MIDITimedBigMessage portatoggle;
+                    //portatoggle.SetTime(ticks);
+
+                    //if( ev.params.front() != 0 && ev.params.back() != 0 )
+                    //    portatoggle.SetControlChange( curchannel, 65, 64 ); //Toggle portamento on (64 == on)
+                    //else
+                    //    portatoggle.SetControlChange( curchannel, 65, 63 ); //Toggle portamento off (63 == off)
+                    //mt.GetTrack(trkno)->PutEvent( portatoggle );
+
+                    //Fine Portatime 0x25
+                    
+                   // mess.SetControlChange( curchannel, 0x25,  ev.params.back() );
+                    //mess.SetByte5( ev.params.front() );
+
+
+                    //mess.SetPitchBend( seq.track(trkno).GetMidiChannel(), pitchw );
+
+                    mess.SetControlChange( curchannel, 1, ev.params.back() );
+                    mess.SetByte5( ev.params.front() );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                }
+
+            }
+
+            //Track is done, save last tick value
+            lastlasttick = ticks;
+        }
+
+        //After all done
+        mt.SortEventsOrder();
+
+        MIDIFileWriteStreamFileName out_stream( file.c_str() );
+
+        // then output the stream like my example does, except setting num_tracks to match your data
+
+        if( out_stream.IsValid() )
+        {
+            // the object which takes the midi tracks and writes the midifile to the output stream
+            MIDIFileWriteMultiTrack writer( &mt, &out_stream );
+
+            // write the output file
+            if ( writer.Write( mt.GetNumTracks() ) )
+            {
+                cout << "\nOK writing file " << file << endl;
+            }
+            else
+            {
+                cerr << "\nError writing file " << file << endl;
+            }
+        }
+        else
+        {
+            cerr << "\nError opening file " << file << endl;
+        }
+    }
+
+    enum struct eMidiMessCodes : uint8_t
+    {
+        NoteOff     = 0x80,
+        NoteOn      = 0x90,
+        Aftertouch  = 0xA0,
+        CtrlChange  = 0xB0,
+        PrgmChange  = 0xC0,
+        ChanPress   = 0xD0,
+        PitchWheel  = 0xE0,
+        SySexcl     = 0xF0,
+    };
+
+    //midifile::MidiEvent ToMidiEvent( DSE::TrkEvent ev )
+    //{
+    //    const auto code = static_cast<DSE::eTrkEventCodes>( ev.evcode );
+    //    if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
+    //    {
+
+    //    }
+    //    else
+    //    {
+    //        switch( code )
+    //        {
+    //            case DSE::eTrkEventCodes::SetTempo:
+    //            {
+    //                break;
+    //            }
+    //            case DSE::eTrkEventCodes::SetExpress:
+    //            {
+    //                break;
+    //            }
+    //            case DSE::eTrkEventCodes::SetTrkVol:
+    //            {
+    //                break;
+    //            }
+    //            case DSE::eTrkEventCodes::SetTrkPan:
+    //            {
+    //                break;
+    //            }
+    //            case DSE::eTrkEventCodes::SetPreset:
+    //            {
+    //                break;
+    //            }
+    //            case DSE::eTrkEventCodes::Modulate:
+    //            {
+    //                break;
+    //            }
+    //        };
+    //    }
+
+    //    return ;
+    //}
+
+    //void WriteEventsToMidiFileTest_MF( const std::string & file, const pmd2::audio::MusicSequence & seq )
+    //{
+    //    //using namespace midifile;
+    //    MidiFile mf;
+    //    
+    //    mf.absoluteTicks();
+    //    mf.addTrack( (seq.getNbTracks()-1) );
+    //    mf.setTicksPerQuarterNote( 48 );
+
+    //    //Add time sig event on track 0
+    //    mf.addEvent( 0, 0, vector<uint8_t>{ 0xFF, 0x58, 4, 4, 2, 24, 8 } );
+
+    //    for( unsigned int trkno = 0; trkno < seq.getNbTracks(); ++trkno )
+    //    {
+    //        cout<<"Writing track #" <<trkno <<"\n";
+    //        uint32_t ticks     = 0;
+    //        uint32_t lastpause = 0;
+    //        uint8_t  curoctave = 0;
+
+    //        for( const auto & ev : seq.track(trkno) )
+    //        {
+    //            const auto code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
+
+    //            //Handle pauses if neccessary
+    //            if( code == DSE::eTrkEventCodes::LongPause )
+    //            {
+    //                lastpause = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::Pause )
+    //            {
+    //                lastpause = ev.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::AddToLastPause )
+    //            {
+    //                uint32_t prelastp = lastpause;
+    //                lastpause = prelastp + ev.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::RepeatLastPause )
+    //            {
+    //                ticks += lastpause;
+    //            }
+
+    //            //Handle delta-time
+    //            if( ev.dt != 0 )
+    //                ticks += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) );
+
+
+    //            if( trkno == 0 )
+    //            {
+    //                //if( code == DSE::eTrkEventCodes::SetTempo )
+    //                //{
+    //                //    static const uint32_t NbMicrosecPerMinute = 60000000;
+    //                //    uint32_t microspquart= NbMicrosecPerMinute / ev.params.front();
+    //                //    uint8_t asbytes[3] = { static_cast<uint8_t>(microspquart >> 16), static_cast<uint8_t>(microspquart >> 8), static_cast<uint8_t>(microspquart) };
+    //                //    mf.addMetaEvent( trkno, ticks, 0x51, vector<uint8_t>{0x03, asbytes[0], asbytes[1], asbytes[2] } );
+    //                //}
+    //                continue;
+    //            }
+
+    //            //Handle play note
+    //            if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
+    //            {
+    //                //MidiEvent mev;
+    //                uint8_t   mnoteid = ev.params.front() & 0x0F + ( (curoctave+1) * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
+    //                //mev.makeNoteOn( mnoteid, ev.evcode, trkno );
+    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOn), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
+    //                //MidiEvent mevoff;
+    //                //mevoff.makeNoteOff( mnoteid, ev.evcode, trkno );
+    //                 
+    //                uint8_t notehold = 2; //By default hold for the shortest note duration
+    //                if( ev.params.size() >= 2 )
+    //                {
+    //                    notehold = ev.params[1];
+    //                }
+
+    //                mf.addEvent( trkno, ticks + notehold, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOff), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::SetOctave )
+    //            {
+    //                curoctave = ev.params.front();
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::SetExpress )
+    //            {
+    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0B, ev.params.front() } );
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::SetTrkVol )
+    //            {
+    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x07, ev.params.front() } );
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::SetTrkPan )
+    //            {
+    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0A, ev.params.front() } );
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::SetPreset )
+    //            {
+    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::PrgmChange), ev.params.front() } );
+    //            }
+    //        }
+    //    }
+
+    //    //FF 2F 00  == End of track
+
+    //    mf.sortTracks();
+    //    mf.deltaTicks();
+
+    //    stringstream sstr;
+    //    sstr <<file <<".mid";
+    //    mf.write( sstr.str() );
+    //}
 
     //void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname )
     //{
