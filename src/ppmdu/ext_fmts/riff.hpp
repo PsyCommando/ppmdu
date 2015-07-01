@@ -19,6 +19,64 @@ namespace utils{ namespace io
     static const uint32_t RIFF_BigEndian_MagicNumber = 0x52494658; //"RIFX"
 
     /*******************************************************************************************
+        RIFFMap
+            A class that maps the structure of a riff structure's content, without loading 
+            the content fully in-memory. 
+    *******************************************************************************************/
+    template<class _init>
+        class RIFFMap
+    {
+    public:
+        typedef _init inputit_t;
+
+        /*
+            chunkinfo 
+                A struct containing details on the position and content of a chunk within the RIFF structure.
+        */
+        struct chunkinfo
+        {
+            uint32_t               id  = 0;
+            uint32_t               sz  = 0;
+            inputit_t              pos;
+            std::vector<chunkinfo> subchunks;
+        };
+
+        //STDLib equired typedefs
+        typedef std::vector<chunkinfo>::iterator       iterator;
+        typedef std::vector<chunkinfo>::const_iterator const_iterator;
+
+
+        RIFFMap() {}
+
+        /*
+            beg = beginning of the structure containing the riff file's data.
+            end = end of the structure containing the riff file's data
+        */
+        RIFFMap( _init beg, _init end )
+            :m_beg(beg), m_end(end)
+        {}
+
+        //Analyze the RIFF structure
+        void analyze()
+        {
+
+        }
+
+        iterator       begin()      { return m_chunks.begin(); }
+        const_iterator begin()const { return m_chunks.begin(); }
+        iterator       end()        { return m_chunks.end();   }
+        const_iterator end()const   { return m_chunks.end();   }
+
+        std::vector<chunkinfo>       & chunks()      { return m_chunks; }
+        const std::vector<chunkinfo> & chunks()const { return m_chunks; }
+
+    private:
+        inputit_t m_beg;
+        inputit_t m_end;
+        std::vector<chunkinfo> m_chunks;
+    };
+
+    /*******************************************************************************************
         RIFF_Chunk
     *******************************************************************************************/
     class RIFF_Chunk

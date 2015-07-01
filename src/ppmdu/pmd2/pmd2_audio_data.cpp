@@ -51,7 +51,7 @@ namespace pmd2 { namespace audio
                         curpitch -= 1;
                     else if( pitchop == static_cast<uint8_t>(eNotePitch::higher) ) 
                         curpitch += 1;
-                    else if( pitchop == static_cast<uint8_t>(eNotePitch::undefined) ) 
+                    else if( pitchop == static_cast<uint8_t>(eNotePitch::reset) ) 
                         curpitch = lastpitchev;
 
                     outstr <<dec <<static_cast<short>(prevpitch) <<"->" <<dec <<static_cast<short>(curpitch);

@@ -184,7 +184,7 @@ namespace DSE
     ****************************************************************************/
     enum struct eNotePitch : uint8_t
     {
-        undefined = 0x00,
+        reset     = 0x00,
         lower     = 0x10,
         current   = 0x20,
         higher    = 0x30,
@@ -285,7 +285,7 @@ namespace DSE
     /************************************************************************
         TrkPreamble
             First 4 bytes of data of a trk chunk. Contains track-specific
-            info.
+            info such as its trackID and its MIDI channel number.
     ************************************************************************/
     struct TrkPreamble
     {
@@ -341,7 +341,8 @@ namespace DSE
         uint32_t unk1    = 0;
         uint32_t unk2    = 0;
         uint32_t unk3    = 0;
-        uint32_t unk4    = 0;
+        uint16_t unk4    = 0;
+        uint16_t tpqn    = 0;
         uint16_t unk5    = 0;
         uint8_t  nbtrks  = 0;
         uint8_t  nbchans = 0;
@@ -363,6 +364,7 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector( unk2,    itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk3,    itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk4,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( tpqn,    itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk5,    itwriteto );
             itwriteto = utils::WriteIntToByteVector( nbtrks,  itwriteto );
             itwriteto = utils::WriteIntToByteVector( nbchans, itwriteto );
@@ -386,6 +388,7 @@ namespace DSE
             unk2    = utils::ReadIntFromByteVector<decltype(unk2)>   (itReadfrom);
             unk3    = utils::ReadIntFromByteVector<decltype(unk3)>   (itReadfrom);
             unk4    = utils::ReadIntFromByteVector<decltype(unk4)>   (itReadfrom);
+            tpqn    = utils::ReadIntFromByteVector<decltype(tpqn)>   (itReadfrom);
             unk5    = utils::ReadIntFromByteVector<decltype(unk5)>   (itReadfrom);
             nbtrks  = utils::ReadIntFromByteVector<decltype(nbtrks)> (itReadfrom);
             nbchans = utils::ReadIntFromByteVector<decltype(nbchans)>(itReadfrom);
@@ -400,7 +403,7 @@ namespace DSE
             for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
             {
                 if( *itReadfrom == 0xFF )
-                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator..
+                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator when we already know its value..
                 else
                     break;
             }

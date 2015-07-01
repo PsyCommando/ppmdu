@@ -63,7 +63,30 @@ namespace pmd2 { namespace audio
     class InstrumentInfo
     {
     public:
+        //Data on a particular sample mapped to this instrument
+        struct msmpl
+        {
+            uint16_t smplid = 0;
+        };
 
+        InstrumentInfo()
+        {}
+
+
+        bool isDrumkit()const
+        {
+            return false;
+        }
+
+        bool isChromatic()const
+        {
+            return false;
+        }
+
+    private:
+
+
+        std::vector<msmpl> m_mappedsmpls;
     };
 
     /*****************************************************************************************
@@ -349,7 +372,8 @@ namespace pmd2 { namespace audio
         {
         }
 
-        DSE::TrkEvent operator[]( size_t index ) {return m_events[index];}
+        DSE::TrkEvent       & operator[]( size_t index )      {return m_events[index];}
+        const DSE::TrkEvent & operator[]( size_t index )const {return m_events[index];}
 
         iterator       begin()      { return m_events.begin(); }
         const_iterator begin()const { return m_events.begin(); }
@@ -357,6 +381,7 @@ namespace pmd2 { namespace audio
         iterator       end()      { return m_events.end(); }
         const_iterator end()const { return m_events.end(); }
 
+        size_t size()const        { return m_events.size(); }
         void reserve( size_t sz ) { m_events.reserve(sz); }
         void resize(size_t sz) { m_events.resize(sz); } 
         void shrink_to_fit() {m_events.shrink_to_fit();}

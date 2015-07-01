@@ -323,7 +323,7 @@ namespace DSE
         //    if( ! einfo.first )
         //    {
         //        stringstream sstr;
-        //        sstr << "SMDL_Parser::ParseEvent() : Encountered undefined event code 0x" <<hex <<static_cast<uint16_t>(ev.evcode) <<dec <<" !";
+        //        sstr << "SMDL_Parser::ParseEvent() : Encountered reset event code 0x" <<hex <<static_cast<uint16_t>(ev.evcode) <<dec <<" !";
         //        throw std::runtime_error(sstr.str());
         //    }
 
