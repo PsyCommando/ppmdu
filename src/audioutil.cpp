@@ -2,6 +2,7 @@
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
+#include <ppmdu/fmts/content_type_analyser.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -45,6 +46,8 @@ namespace audioutil
         "My tools in binary form are basically Creative Commons 0.\n"
         "Free to re-use in any ways you may want to!\n"
         "No crappyrights, all wrongs reversed! :3";
+
+    const int   CAudioUtil::MaxNbLoops           = 1200;
 
 //
 //
@@ -104,14 +107,36 @@ namespace audioutil
     */
     const vector<optionparsing_t> CAudioUtil::Options_List=
     {{
-        //Force Import
-        //{
-        //    "i",
-        //    0,
-        //    "Specifying this will force import!",
-        //    "-i",
-        //    std::bind( &CAudioUtil::ParseOptionForceImport, &GetInstance(), placeholders::_1 ),
-        //},
+        //Tweak for General Midi format
+        {
+            "gm",
+            0,
+            "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
+            "Pitch are ajusted, instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
+            "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
+            "-gm",
+            std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
+        },
+
+        //Force Loops
+        {
+            "fl",
+            1,
+            "This will export to the MIDI file the \"intro\" once, followed with the notes "
+            "in-between the loop and end marker the specified number of times. Loop markers will also be omitted!",
+            "-fl (nbofloops)",
+            std::bind( &CAudioUtil::ParseOptionForceLoops, &GetInstance(), placeholders::_1 ),
+        },
+
+        //ExportPMD2
+        {
+            "pmd2",
+            0,
+            "Specifying this will tell the program that that input path is the root of the extracted ROM's \"data\" directory."
+            "The utility will export the audio content from the entire game's \"/SOUND\" directory!",
+            "-pmd2",
+            std::bind( &CAudioUtil::ParseOptionPMD2, &GetInstance(), placeholders::_1 ),
+        },
     }};
 
 
@@ -129,6 +154,9 @@ namespace audioutil
         :CommandLineUtility()
     {
         m_operationMode = eOpMode::Invalid;
+        m_bGM           = false;
+        m_isPMD2        = false;
+        m_nbloops       = 0;
     }
 
     const vector<argumentparsing_t> & CAudioUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -180,10 +208,33 @@ namespace audioutil
 //  Parse Options
 //
 
-    //bool CAudioUtil::ParseOptionPk( const std::vector<std::string> & optdata )
-    //{
-    //}
+    bool CAudioUtil::ParseOptionGeneralMidi( const std::vector<std::string> & optdata )
+    {
+        m_bGM = true;
+        return true;
+    }
 
+    bool CAudioUtil::ParseOptionForceLoops ( const std::vector<std::string> & optdata )
+    {
+        stringstream conv;
+        conv << optdata[1];
+        conv >> m_nbloops;
+
+        if( m_nbloops >= 0 && m_nbloops < MaxNbLoops )
+            return true;
+        else
+        {
+            if( m_nbloops > MaxNbLoops )
+                cerr <<"Too many loops requested! " <<m_nbloops <<" loops is a little too much to handle !! Use a number below " <<MaxNbLoops <<" please !\n";
+            return false;
+        }
+    }
+
+    bool CAudioUtil::ParseOptionPMD2( const std::vector<std::string> & optdata )
+    {
+        m_isPMD2 = true;
+        return true;
+    }
 
 //
 //  Program Setup and Execution
@@ -222,11 +273,12 @@ namespace audioutil
 
     void CAudioUtil::DetermineOperation()
     {
+        using namespace pmd2::filetypes;
         Poco::Path inpath( m_inputPath );
         Poco::File infile( inpath );
 
         if( m_operationMode != eOpMode::Invalid )
-            return; //Skip if we have a forced mode         
+            return; //Skip if we have a forced mode
 
         if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
             throw runtime_error("Specified output path does not exists!");
@@ -235,58 +287,58 @@ namespace audioutil
         {
             if( infile.isFile() )
             {
-                stringstream sstr;
-                string fext = inpath.getExtension();
-                std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+                //Working on a file
+                vector<uint8_t> tmp    = utils::io::ReadFileToByteVector(infile.path());
+                auto            cntty  = DetermineCntTy(tmp.begin(), tmp.end(), inpath.getExtension());
 
-                if( fext == pmd2::audio::SMDL_FileExtension )
+                if( cntty._type == pmd2::filetypes::e_ContentType::SMDL_FILE )
+                {
                     m_operationMode = eOpMode::ExportSMDL;
-                else if( fext == pmd2::audio::SEDL_FileExtension )
-                    m_operationMode = eOpMode::ExportSEDL;
-                else if( fext == pmd2::audio::SWDL_FileExtension )
+                }
+                else if( cntty._type == pmd2::filetypes::e_ContentType::SWDL_FILE )
+                {
                     m_operationMode = eOpMode::ExportSWDL;
-                else
-                    throw runtime_error("Can't import this file format!");
+                }
+                else if( cntty._type == pmd2::filetypes::e_ContentType::SEDL_FILE )
+                {
+                    m_operationMode = eOpMode::ExportSEDL;
+                }
+                else 
+                    throw runtime_error("Unknown file format!");
+
+                //#TODO: Analyze the file types instead of relying on file extension !!
+                //stringstream sstr;
+                //string fext = inpath.getExtension();
+                //std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+                //if( fext == pmd2::audio::SMDL_FileExtension )
+                //    m_operationMode = eOpMode::ExportSMDL;
+                //else if( fext == pmd2::audio::SEDL_FileExtension )
+                //    m_operationMode = eOpMode::ExportSEDL;
+                //else if( fext == pmd2::audio::SWDL_FileExtension )
+                //    m_operationMode = eOpMode::ExportSWDL;
+                //else
+                    //throw runtime_error("Can't import this file format!");
             }
             else if( infile.isDirectory() )
             {
+                if( m_isPMD2 )
+                {
+                    //Find if the /SOUND sub-directory exists
+                    Poco::File soundir = Poco::Path(inpath).append("SOUND");
 
-                //if( m_hndlStrings )
-                //{
-                //    if( m_force == eOpForce::Export )
-                //        m_operationMode = eOpMode::ExportGameStrings;
-                //    else
-                //        throw runtime_error("Can't import game strings from a directory : " + m_inputPath);
-                //}
-                //else if( m_hndlItems )
-                //{
-                //    if( m_force == eOpForce::Export )
-                //        m_operationMode = eOpMode::ExportItemsData;
-                //    else
-                //        m_operationMode = eOpMode::ImportItemsData;
-                //}
-                //else if( m_hndlMoves )
-                //{
-                //    if( m_force == eOpForce::Export )
-                //        m_operationMode = eOpMode::ExportMovesData;
-                //    else
-                //        m_operationMode = eOpMode::ImportMovesData;
-
-                //}
-                //else if( m_hndlPkmn )
-                //{
-                //    if( m_force == eOpForce::Export )
-                //        m_operationMode = eOpMode::ExportPokemonData;
-                //    else
-                //        m_operationMode = eOpMode::ImportPokemonData;
-                //}
-                //else
-                //{
-                //    if( m_force == eOpForce::Import || isImportAllDir(m_inputPath) )
-                //        m_operationMode = eOpMode::ImportAll;
-                //    else
-                //        m_operationMode = eOpMode::ExportAll; //If all else fails, try an export all!
-                //}
+                    if( soundir.exists() && soundir.isDirectory() )
+                    {
+                        m_operationMode = eOpMode::ExportPMD2;
+                    }
+                    else
+                        throw std::runtime_error("Couldn't find the directory \"./SOUND\" under the path specified!");
+                }
+                else
+                {
+                    //Handle assembling things
+                    throw std::exception("Feature not implemented yet!");
+                }
             }
             else
                 throw runtime_error("Cannot determine the desired operation!");
@@ -328,6 +380,13 @@ namespace audioutil
                     returnval = ExportSEDL();
                     break;
                 }
+                case eOpMode::ExportPMD2:
+                {
+                    cout <<"=== Exporting PMD2 /SOUND Directory ===\n"
+                         <<"Friendly friends~\n";
+                    returnval = ExportPMD2Audio();
+                    break;
+                }
                 case eOpMode::BuildSWDL:
                 {
                     cout << "=== Building SWD ===\n";
@@ -367,13 +426,113 @@ namespace audioutil
 //--------------------------------------------
 //  Operation
 //--------------------------------------------
+
+    //#TODO: not sure if this is still relevant..
     int CAudioUtil::ExportSWDLBank()
     {
+        return -1;
+    }
+
+    /*
+        Extract the content of the PMD2
+    */
+    int CAudioUtil::ExportPMD2Audio()
+    {
+        using namespace pmd2::audio;
+        Poco::Path inputdir(m_inputPath);
+
+        //validate the /SOUND/BGM directory
+        Poco::File bgmdir( Poco::Path(inputdir).append( "SOUND" ).append("BGM") );
+
+        if( bgmdir.exists() && bgmdir.isDirectory() )
+        {
+            //Export the /BGM tracks
+
+            //  1. Grab the main sample bank.
+            //  2. Grab all the swd and smd pairs in the folder
+            //  3. Assign each instruments to a preset. 
+            //     Put duplicates preset IDs into different bank for the same preset ID.
+            //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+
+        }
+        else
+            cout<<"Skipping missing /SOUND/BGM directory\n";
+
+        //validate the /SOUND/ME directory
+        Poco::File medir( Poco::Path(inputdir).append( "SOUND" ).append("ME") );
+
+        //Export the /ME tracks
+        if( medir.exists() && medir.isDirectory() )
+        {
+            //  Same as with BGM
+        }
+        else
+            cout<<"Skipping missing /SOUND/ME directory\n";
+
+        //validate the /SOUND/SE directory
+        Poco::File sedir( Poco::Path(inputdir).append( "SOUND" ).append("SE") );
+        //Export the /SE sounds
+        if( sedir.exists() && sedir.isDirectory() )
+        {
+        }
+        else
+            cout<<"Skipping missing /SOUND/SE directory\n";
+
+        //validate the /SOUND/SWD directory
+        Poco::File swddir( Poco::Path(inputdir).append( "SOUND" ).append("SWD") );
+        //Export the /SWD samples
+        if( swddir.exists() && swddir.isDirectory() )
+        {
+        }
+        else
+            cout<<"Skipping missing /SOUND/SWD directory\n";
+
+        //validate the /SOUND/SYSTEM directory
+        Poco::File sysdir( Poco::Path(inputdir).append( "SOUND" ).append("SYSTEM") );
+
+        //Export the /SYSTEM sounds
+        if( sysdir.exists() && sysdir.isDirectory() )
+        {
+        }
+        else
+            cout<<"Skipping missing /SOUND/SYSTEM directory\n";
+
+        cout <<"Done!\n";
+
         return 0;
     }
+
     
     int CAudioUtil::ExportSWDL()
     {
+        using namespace pmd2::audio;
+        Poco::Path inputfile(m_inputPath);
+        Poco::Path outputfile;
+        string     outfname;
+
+        if( ! m_outputPath.empty() )
+            outputfile = Poco::Path(m_outputPath);
+        else
+            outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeDirectory();
+
+        outfname = outputfile.getBaseName();
+
+        // The only thing we can do with a single swd file is to output its content to a directory
+
+        //Create directory
+        Poco::File outNewDir(outputfile);
+        if( ! outNewDir.createDirectory() && !outNewDir.exists() )
+        {
+            throw std::runtime_error( "Couldn't create output directory " + outNewDir.path() );
+        }
+
+        //Load SWDL
+        PresetBank swd = LoadSwdBank( inputfile.toString() );
+
+        //Export Samples
+
+        //Export XML data
+
         return 0;
     }
 
@@ -395,12 +554,7 @@ namespace audioutil
         MusicSequence smd = LoadSequence( inputfile.toString() );
 
         //Write output
-        ofstream outstr( outputfile.toString() );
-        outstr<<smd.tostr();
-        outstr.flush();
-        outstr.close();
-
-        ofstream outfile( outputfile.toString() );
+        ofstream outfile( (outputfile.toString() + ".txt") );
         outfile << smd.tostr();
         outfile.close();
 
@@ -689,7 +843,8 @@ namespace audioutil
 
         //Build midi file
         MIDIMultiTrack mt( seq.getNbTracks() );
-        mt.SetClksPerBeat(48);
+        mt.SetClksPerBeat( seq.metadata().tpqn );
+        cout <<"\n" << seq.printinfo() <<"\n";
 
         //Init track 0 with time signature
         MIDITimedBigMessage timesig;
@@ -821,24 +976,19 @@ namespace audioutil
                 //if( lastlasttick!= 0 && ticks > lastlasttick )
                 //    cout << "!!-- WARNING: Writing events past the last parsed track's end ! Prev track last ticks : " <<lastlasttick <<", current ticks : " <<ticks <<" --!!" <<"( trk#" <<trkno <<", evt #" <<eventno << ")" <<"\n" ;
 
-                if( trkno == 0 )
-                {
-                    if( code == DSE::eTrkEventCodes::SetTempo )
-                    {
-                        //Function convert Tempo BPM to MicSecPerBeat/Quarter Note
-                        uint32_t microspquart = 0;
-                        {
-                            static const uint32_t NbMicrosecPerMinute = 60000000;
-                            microspquart= NbMicrosecPerMinute / ev.params.front();
-                        }
-                        mess.SetTempo( microspquart );
-                        mt.GetTrack(trkno)->PutEvent( mess );
-                    }
-                    continue;
-                }
-
                 
-                if( code == DSE::eTrkEventCodes::LongPause )
+                if( code == DSE::eTrkEventCodes::SetTempo )
+                {
+                    //Function convert Tempo BPM to MicSecPerBeat/Quarter Note
+                    uint32_t microspquart = 0;
+                    {
+                        static const uint32_t NbMicrosecPerMinute = 60000000;
+                        microspquart= NbMicrosecPerMinute / ev.params.front();
+                    }
+                    mess.SetTempo( microspquart );
+                    mt.GetTrack(trkno)->PutEvent( mess );
+                }
+                else if( code == DSE::eTrkEventCodes::LongPause )
                 {
                     lastpause = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
                     ticks += lastpause;
@@ -908,14 +1058,14 @@ namespace audioutil
 
                     //#TOOD: implement some kind of proper pitch correction lookup table..
                     // Should be done only when exporting to GM ! Or else the sample's pitch won't match anymore..
-                    if( currentprog == 0x19 || currentprog == 0x1A || currentprog == 0x1D || currentprog == 0x33 || 
-                        currentprog == 0x34 || currentprog == 0x47 || currentprog == 0x48 || currentprog == 0x40 || 
-                        currentprog == 0x41 || currentprog == 0x42 || currentprog == 0xA  || currentprog == 0xB  ||
-                        currentprog == 0x79)
-                    {
-                        cout <<"Correcting instrument pitch from " <<static_cast<uint16_t>(lastoctaveevent) <<" to " <<static_cast<uint16_t>(lastoctaveevent-1) <<"..\n";
-                        --lastoctaveevent;
-                    }
+                    //if( currentprog == 0x19 || currentprog == 0x1A || currentprog == 0x1D || currentprog == 0x33 || 
+                    //    currentprog == 0x34 || currentprog == 0x47 || currentprog == 0x48 || currentprog == 0x40 || 
+                    //    currentprog == 0x41 || currentprog == 0x42 || currentprog == 0xA  || currentprog == 0xB  ||
+                    //    currentprog == 0x79 || currentprog == 0x30)
+                    //{
+                    //    cout <<"Correcting instrument pitch from " <<static_cast<uint16_t>(lastoctaveevent) <<" to " <<static_cast<uint16_t>(lastoctaveevent-1) <<"..\n";
+                    //    --lastoctaveevent;
+                    //}
                     
                     curoctave = lastoctaveevent;
                 }
@@ -946,47 +1096,39 @@ namespace audioutil
                     currentprog = ev.params.front();
 
                     //#TODO: Handle drum preset changes better
-                    //if( ev.params.front() < 0x7E )
-                    //    mess.SetProgramChange( curchannel, RemapInstrumentProg(ev.params.front()) ); //NOT DRUMS
-                    //else
+                    if( ev.params.front() < 0x7E )
+                        mess.SetProgramChange( curchannel, RemapInstrumentProg(ev.params.front()) ); //NOT DRUMS
+                    else
                         mess.SetProgramChange( curchannel, 0 ); //DRUMS
 
                     mt.GetTrack(trkno)->PutEvent( mess );
                 }
-                else if( code == DSE::eTrkEventCodes::Modulate )
+                else if( code == DSE::eTrkEventCodes::PitchBend )
                 {
-                    uint16_t mod  = ( static_cast<uint16_t>( (ev.params.front() & 0xF) << 8 ) | ev.params.back());
-                    uint16_t FtoCmod = ((mod * 127) / 0x3FFF); //Convert fine mod to coarse, knowing the max for fine is 0x3FFF. finemod / 0x3FFF -> coarsemod/127
-                    cout <<"CC#1 Modwheel : " <<FtoCmod <<"\n";
+                    //uint16_t mod  = ( static_cast<uint16_t>( (ev.params.front() & 0xF) << 8 ) | ev.params.back());
+                    //uint16_t FtoCmod = ((mod * 127) / 0x3FFF); //Convert fine mod to coarse, knowing the max for fine is 0x3FFF. finemod / 0x3FFF -> coarsemod/127
+                    //cout <<"CC#1 Modwheel : " <<FtoCmod <<"\n";
 
-                    //MIDITimedBigMessage portatoggle;
-                    //portatoggle.SetTime(ticks);
-
-                    //if( ev.params.front() != 0 && ev.params.back() != 0 )
-                    //    portatoggle.SetControlChange( curchannel, 65, 64 ); //Toggle portamento on (64 == on)
-                    //else
-                    //    portatoggle.SetControlChange( curchannel, 65, 63 ); //Toggle portamento off (63 == off)
-                    //mt.GetTrack(trkno)->PutEvent( portatoggle );
-
-                    //Fine Portatime 0x25
-                    
-                   // mess.SetControlChange( curchannel, 0x25,  ev.params.back() );
+                    //mess.SetControlChange( curchannel, 1, FtoCmod /*ev.params.back()*/ ); //Coarse Modulation Wheel
                     //mess.SetByte5( ev.params.front() );
 
+                    cout <<ticks <<"t -> Pitch Bend : 0x" <<hex <<uppercase 
+                         <<static_cast<uint16_t>(ev.params.front()) 
+                         <<nouppercase <<" 0x" <<uppercase
+                         <<static_cast<uint16_t>(ev.params.back())
+                         <<dec <<nouppercase <<"\n";
 
-                    //mess.SetPitchBend( seq.track(trkno).GetMidiChannel(), pitchw );
-
-                    mess.SetControlChange( curchannel, 1, FtoCmod /*ev.params.back()*/ ); //Coarse Modulation Wheel
-                    mess.SetByte5( ev.params.front() );
+                    //mess.SetPitchBend( curchannel, (ev.params.front() & 0x7F), (ev.params.back() & 0x7F) );
+                    mess.SetPitchBend( curchannel, ( (ev.params.front() << 8) | ev.params.back() ) );
                     mt.GetTrack(trkno)->PutEvent( mess );
                 }
                 else if( code == DSE::eTrkEventCodes::HoldNote )
                 {
-                    cout<<"Got hold note event ! Trying a sustainato!\n";
+                    cout <<ticks <<"t -> *****Got hold note event ! Trying a sustainato!*****\n";
                     //Put text here to mark the loop point for software that can't handle loop events
                     static const std::string TXT_HoldNote = "HoldNote";
                     mt.GetTrack(trkno)->PutTextEvent( ticks, META_GENERIC_TEXT, TXT_HoldNote.c_str(), TXT_HoldNote.size() );
-
+                    
                     //Put a sustenato
                     sustainon = true;
                     mess.SetControlChange( curchannel, 66, 127 ); //sustainato
@@ -1033,7 +1175,7 @@ namespace audioutil
                 {
                     stringstream sstr;
                     sstr << "UNK(" <<ev.evcode;
-                    cout<<"Got event 0x" <<uppercase <<hex <<static_cast<uint16_t>(code) <<dec <<nouppercase <<" ! With";
+                    cout<<ticks <<"t -> Got event 0x" <<uppercase <<hex <<static_cast<uint16_t>(code) <<dec <<nouppercase <<" ! With";
 
                     for( const auto & param : ev.params )
                     {
@@ -1093,165 +1235,6 @@ namespace audioutil
         PitchWheel  = 0xE0,
         SySexcl     = 0xF0,
     };
-
-    //midifile::MidiEvent ToMidiEvent( DSE::TrkEvent ev )
-    //{
-    //    const auto code = static_cast<DSE::eTrkEventCodes>( ev.evcode );
-    //    if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
-    //    {
-
-    //    }
-    //    else
-    //    {
-    //        switch( code )
-    //        {
-    //            case DSE::eTrkEventCodes::SetTempo:
-    //            {
-    //                break;
-    //            }
-    //            case DSE::eTrkEventCodes::SetExpress:
-    //            {
-    //                break;
-    //            }
-    //            case DSE::eTrkEventCodes::SetTrkVol:
-    //            {
-    //                break;
-    //            }
-    //            case DSE::eTrkEventCodes::SetTrkPan:
-    //            {
-    //                break;
-    //            }
-    //            case DSE::eTrkEventCodes::SetPreset:
-    //            {
-    //                break;
-    //            }
-    //            case DSE::eTrkEventCodes::Modulate:
-    //            {
-    //                break;
-    //            }
-    //        };
-    //    }
-
-    //    return ;
-    //}
-
-    //void WriteEventsToMidiFileTest_MF( const std::string & file, const pmd2::audio::MusicSequence & seq )
-    //{
-    //    //using namespace midifile;
-    //    MidiFile mf;
-    //    
-    //    mf.absoluteTicks();
-    //    mf.addTrack( (seq.getNbTracks()-1) );
-    //    mf.setTicksPerQuarterNote( 48 );
-
-    //    //Add time sig event on track 0
-    //    mf.addEvent( 0, 0, vector<uint8_t>{ 0xFF, 0x58, 4, 4, 2, 24, 8 } );
-
-    //    for( unsigned int trkno = 0; trkno < seq.getNbTracks(); ++trkno )
-    //    {
-    //        cout<<"Writing track #" <<trkno <<"\n";
-    //        uint32_t ticks     = 0;
-    //        uint32_t lastpause = 0;
-    //        uint8_t  curoctave = 0;
-
-    //        for( const auto & ev : seq.track(trkno) )
-    //        {
-    //            const auto code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
-
-    //            //Handle pauses if neccessary
-    //            if( code == DSE::eTrkEventCodes::LongPause )
-    //            {
-    //                lastpause = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
-    //                ticks += lastpause;
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::Pause )
-    //            {
-    //                lastpause = ev.params.front();
-    //                ticks += lastpause;
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::AddToLastPause )
-    //            {
-    //                uint32_t prelastp = lastpause;
-    //                lastpause = prelastp + ev.params.front();
-    //                ticks += lastpause;
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::RepeatLastPause )
-    //            {
-    //                ticks += lastpause;
-    //            }
-
-    //            //Handle delta-time
-    //            if( ev.dt != 0 )
-    //                ticks += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) );
-
-
-    //            if( trkno == 0 )
-    //            {
-    //                //if( code == DSE::eTrkEventCodes::SetTempo )
-    //                //{
-    //                //    static const uint32_t NbMicrosecPerMinute = 60000000;
-    //                //    uint32_t microspquart= NbMicrosecPerMinute / ev.params.front();
-    //                //    uint8_t asbytes[3] = { static_cast<uint8_t>(microspquart >> 16), static_cast<uint8_t>(microspquart >> 8), static_cast<uint8_t>(microspquart) };
-    //                //    mf.addMetaEvent( trkno, ticks, 0x51, vector<uint8_t>{0x03, asbytes[0], asbytes[1], asbytes[2] } );
-    //                //}
-    //                continue;
-    //            }
-
-    //            //Handle play note
-    //            if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
-    //            {
-    //                //MidiEvent mev;
-    //                uint8_t   mnoteid = ev.params.front() & 0x0F + ( (curoctave+1) * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
-    //                //mev.makeNoteOn( mnoteid, ev.evcode, trkno );
-    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOn), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
-    //                //MidiEvent mevoff;
-    //                //mevoff.makeNoteOff( mnoteid, ev.evcode, trkno );
-    //                 
-    //                uint8_t notehold = 2; //By default hold for the shortest note duration
-    //                if( ev.params.size() >= 2 )
-    //                {
-    //                    notehold = ev.params[1];
-    //                }
-
-    //                mf.addEvent( trkno, ticks + notehold, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::NoteOff), static_cast<uint8_t>(mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) } );
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::SetOctave )
-    //            {
-    //                curoctave = ev.params.front();
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::SetExpress )
-    //            {
-    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0B, ev.params.front() } );
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::SetTrkVol )
-    //            {
-    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x07, ev.params.front() } );
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::SetTrkPan )
-    //            {
-    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::CtrlChange), 0x0A, ev.params.front() } );
-    //            }
-    //            else if( code == DSE::eTrkEventCodes::SetPreset )
-    //            {
-    //                mf.addEvent( trkno, ticks, vector<uint8_t>{ static_cast<uint8_t>(eMidiMessCodes::PrgmChange), ev.params.front() } );
-    //            }
-    //        }
-    //    }
-
-    //    //FF 2F 00  == End of track
-
-    //    mf.sortTracks();
-    //    mf.deltaTicks();
-
-    //    stringstream sstr;
-    //    sstr <<file <<".mid";
-    //    mf.write( sstr.str() );
-    //}
-
-    //void WriteMusicDump( const pmd2::audio::MusicSequence & seq, const std::string & fname )
-    //{
-
-    //}
 
     int CAudioUtil::ExportSEDL()
     {

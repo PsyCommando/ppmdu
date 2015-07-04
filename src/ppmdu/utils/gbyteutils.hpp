@@ -129,6 +129,7 @@ namespace utils
         return itout;
     }
 
+
     /*********************************************************************************************
         ReadIntFromByteVector
             Tool to read integer values from a byte vector!
@@ -158,6 +159,19 @@ namespace utils
         }
 
         return out_val;
+    }
+
+    /*********************************************************************************************
+        ReadIntFromByteContainer
+            Tool to read integer values from a byte container!
+            
+            #NOTE :The iterator is passed by copy here !! And the incremented iterator is returned!
+    *********************************************************************************************/
+    template<class T, class _init> 
+        inline _init ReadIntFromByteContainer( T & dest, _init itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+    {
+        dest = ReadIntFromByteVector<typename T>( itin, basLittleEndian );
+        return itin;
     }
 
     /*********************************************************************************************
@@ -231,7 +245,10 @@ namespace utils
         instead of only isolating it.
     *********************************************************************************************/
     template< class T >
-        inline bool IsBitOn( T containinginteger, uint32_t offsetrighttoleft  ) { return GetBit( containinginteger, offsetrighttoleft ) > 0; }
+        inline bool IsBitOn( T containinginteger, uint32_t offsetrighttoleft  ) 
+    { 
+        return GetBit( containinginteger, offsetrighttoleft ) > 0; 
+    }
 
     /*
         WriteStrToByteContainer
@@ -244,16 +261,15 @@ namespace utils
         //#FIXME: The static assert below is broken with non-backinsert iterators
         //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
         
-        return std::copy_n( reinterpret_cast<const typename _outit::container_type::value_type*>(str), strl,  itwhere );
-        //for( unsigned int i = 0; i < strl; ++i, ++itwhere )
-        //{
-        //    if( isalnum( str[i] ) )
-        //        itwhere = static_cast<uint8_t>(str[i]);
-        //    else 
-        //    {
-        //        //For non-ASCII characters, write them as an 
-        //    }
-        //}
+        //#FIXME: Highly stupid... If we cast the values inside the string to the target type, that means we could easily
+        //        go out of bound if the target container isn't containing bytes..
+        //return std::copy_n( reinterpret_cast<const typename _outit::container_type::value_type*>(str), strl,  itwhere );
+
+        for( size_t i = 0; i < strl; ++i, ++itwhere )
+        {
+            (*itwhere) = str[i];/*static_cast<typename _outit::container_type::value_type>(str[i]);*/
+        }
+        return itwhere;
     }
 
     /*

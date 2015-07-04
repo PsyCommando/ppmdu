@@ -5,6 +5,9 @@ smdl.hpp
 2015/05/20
 psycommando@gmail.com
 Description: Utilities for handling Pokemon Mystery Dungeon: Explorers of Sky/Time/Darkness's .smd files.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/fmts/dse_common.hpp>
 

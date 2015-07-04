@@ -77,8 +77,8 @@ namespace DSE
         //Unk_0xD4
         { eTrkEventCodes::Unk_0xD4,     eTrkEventCodes::Invalid, 3, false, false, false,  "Unk_0xD4" },
 
-        //Modulate
-        { eTrkEventCodes::Modulate,     eTrkEventCodes::Invalid, 2, false, false, false,  "Mod" },
+        //PitchBend
+        { eTrkEventCodes::PitchBend,    eTrkEventCodes::Invalid, 2, false, false, false,  "PitchBend" },
 
         //Unk_0xDB
         { eTrkEventCodes::Unk_0xDB,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xDB" },

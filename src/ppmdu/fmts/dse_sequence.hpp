@@ -119,7 +119,7 @@ namespace DSE
 
         Unk_0xD4        = 0xD4, //Unknown
 
-        Modulate        = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
+        PitchBend       = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
         Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
         Unk_0xDC        = 0xDC, //Unknown
 

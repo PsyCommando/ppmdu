@@ -5,6 +5,9 @@ pkdpx.hpp
 2014/09/18/
 psycommando@gmail.com
 Description: Tools for handling PKDPX files.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/utils/utility.hpp>

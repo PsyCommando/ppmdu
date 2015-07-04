@@ -10,6 +10,8 @@ Description:  Code for handling "pack files".
  - rewrite this mess into something simpler
  - Read directly into raw buffer instead of copying to another vector!
 
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <exception>
 #include <string>

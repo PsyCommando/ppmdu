@@ -89,7 +89,7 @@ namespace DSE
         }
 
         //Convert into the standard std::tm calendar time format 
-        inline operator std::tm()
+        inline operator std::tm()const
         {
             std::tm result;
             result.tm_year  = year - 1900;
@@ -101,6 +101,8 @@ namespace DSE
             result.tm_isdst = -1; //No info available
             return std::move(result);
         }
+
+        friend std::ostream & operator<<(std::ostream &os, const DateTime &obj );
     };
 
 
@@ -189,6 +191,83 @@ namespace DSE
         uint16_t unk24      = 0;
         uint16_t unk25      = 0;
         uint16_t unk26      = 0;
+
+        //Write the structure using an iterator to a byte container
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( unk1,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( id, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk2, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk3, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk4, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk5, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk6, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk7, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( version, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplfmt, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk9, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk14, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk10, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk11, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk12, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk13, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplrate, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplpos, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( loopspos, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( looplen, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk17, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk18, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk19, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk20, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk21, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk22, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk23, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk24, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk25, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk26, itwriteto );
+
+            return itwriteto;
+        }
+
+        //Read the structure from an iterator on a byte container
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            unk1       = utils::ReadIntFromByteVector<decltype(unk1)>     (itReadfrom); //iterator is incremented
+            id         = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
+            unk2       = utils::ReadIntFromByteVector<decltype(unk2)>     (itReadfrom);
+            unk3       = utils::ReadIntFromByteVector<decltype(unk3)>     (itReadfrom);
+            unk4       = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
+            unk5       = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
+            unk6       = utils::ReadIntFromByteVector<decltype(unk6)>     (itReadfrom);
+            unk7       = utils::ReadIntFromByteVector<decltype(unk7)>     (itReadfrom);
+            version    = utils::ReadIntFromByteVector<decltype(version)>  (itReadfrom);
+            smplfmt    = utils::ReadIntFromByteVector<decltype(smplfmt)>  (itReadfrom);
+            unk9       = utils::ReadIntFromByteVector<decltype(unk9)>     (itReadfrom); 
+            unk14      = utils::ReadIntFromByteVector<decltype(unk14)>    (itReadfrom); 
+            unk10      = utils::ReadIntFromByteVector<decltype(unk10)>    (itReadfrom); 
+            unk11      = utils::ReadIntFromByteVector<decltype(unk11)>    (itReadfrom); 
+            unk12      = utils::ReadIntFromByteVector<decltype(unk12)>    (itReadfrom); 
+            unk13      = utils::ReadIntFromByteVector<decltype(unk13)>    (itReadfrom); 
+            smplrate   = utils::ReadIntFromByteVector<decltype(smplrate)> (itReadfrom); 
+            smplpos    = utils::ReadIntFromByteVector<decltype(smplpos)>  (itReadfrom); 
+            loopspos   = utils::ReadIntFromByteVector<decltype(loopspos)> (itReadfrom);
+            looplen    = utils::ReadIntFromByteVector<decltype(looplen)>  (itReadfrom);
+            unk17      = utils::ReadIntFromByteVector<decltype(unk17)>    (itReadfrom);
+            unk18      = utils::ReadIntFromByteVector<decltype(unk18)>    (itReadfrom);
+            unk19      = utils::ReadIntFromByteVector<decltype(unk19)>    (itReadfrom);
+            unk20      = utils::ReadIntFromByteVector<decltype(unk20)>    (itReadfrom);
+            unk21      = utils::ReadIntFromByteVector<decltype(unk21)>    (itReadfrom);
+            unk22      = utils::ReadIntFromByteVector<decltype(unk22)>    (itReadfrom);
+            unk23      = utils::ReadIntFromByteVector<decltype(unk23)>    (itReadfrom);
+            unk24      = utils::ReadIntFromByteVector<decltype(unk24)>    (itReadfrom);
+            unk25      = utils::ReadIntFromByteVector<decltype(unk25)>    (itReadfrom);
+            unk26      = utils::ReadIntFromByteVector<decltype(unk26)>    (itReadfrom);
+
+
+            return itReadfrom;
+        }
     };
 
 
@@ -207,6 +286,25 @@ namespace DSE
         uint8_t     unk2;       //Some kind of volume value maybe
         std::string fname;      //Internal filename
         DateTime    createtime; //Time this was created on
+    };
+
+    struct DSE_MetaMusicSeq : public DSE_MetaData
+    {
+        DSE_MetaMusicSeq()
+            :DSE_MetaData(), tpqn(0)
+        {}
+
+        uint16_t tpqn; //ticks per quarter note
+    };
+
+    struct DSE_MetaBank : public DSE_MetaData
+    {
+        DSE_MetaBank()
+            :DSE_MetaData(), nbwavislots(0), nbprgislots(0)
+        {}
+
+        uint16_t nbwavislots;
+        uint16_t nbprgislots;
     };
 
 //====================================================================================================

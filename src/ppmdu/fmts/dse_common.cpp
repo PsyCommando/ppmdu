@@ -41,6 +41,16 @@ namespace DSE
         return static_cast<uint32_t>(id);
     }
 
-
+    //Global stream operator
+    std::ostream & operator<<(std::ostream &os, const DateTime &obj )
+    {
+        os << static_cast<unsigned long>(obj.year) <<"/" 
+           <<static_cast<unsigned long>(obj.month) <<"/" 
+           <<static_cast<unsigned long>(obj.day) <<"-" 
+           <<static_cast<unsigned long>(obj.hour) <<"h" 
+           <<static_cast<unsigned long>(obj.minute) <<"m" 
+           <<static_cast<unsigned long>(obj.second) <<"s";
+        return os;
+    }
 
 };

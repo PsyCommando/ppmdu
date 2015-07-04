@@ -6,6 +6,9 @@ monster_data.hpp
 psycommando@gmail.com
 Description:
     Utilities for handling the monster.md file format from PMD2!
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <string>

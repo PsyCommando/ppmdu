@@ -103,6 +103,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\dse_common.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\dse_interpreter.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\dse_sequence.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -244,11 +245,13 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\sedl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\smdl.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\swdl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>

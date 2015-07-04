@@ -6,6 +6,9 @@ content_type_analyser.hpp
 psycommando@gmail.com
 Description: Handler to analyse data content and return the type of content it is.
              New handling rules and new handlers can be added by registering them into the singleton.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>

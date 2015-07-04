@@ -5,6 +5,9 @@ swdl.hpp
 2015/05/20
 psycommando@gmail.com
 Description: Utilities for handling Pokemon Mystery Dungeon: Explorers of Sky/Time/Darkness's .swd files.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/fmts/dse_common.hpp>
@@ -49,20 +52,25 @@ namespace DSE
         uint8_t  unk2            = 0;
         uint32_t unk3            = 0;
         uint32_t unk4            = 0;
-        uint16_t unk5            = 0;
-        uint16_t unk6            = 0;
-        uint8_t  unk7            = 0;
-        uint8_t  unk8            = 0;
-        uint16_t unk9            = 0;
+
+        uint16_t year            = 0;
+        uint8_t  month           = 0;
+        uint8_t  day             = 0;
+        uint8_t  hour            = 0;
+        uint8_t  minute          = 0;
+        uint8_t  second          = 0;
+        uint8_t  centisec        = 0;
+
         std::array<char,FNameLen> fname;
         uint32_t unk10           = 0;
         uint32_t unk11           = 0;
+
         uint32_t unk12           = 0;
         uint32_t unk13           = 0;
         uint32_t pcmdlen         = 0;
         uint16_t unk14           = 0;
         uint16_t nbwavislots     = 0;
-        uint16_t unk16           = 0;
+        uint16_t nbprgislots     = 0;
         uint16_t unk17           = 0;
         uint16_t wavilen         = 0;
 
@@ -78,12 +86,17 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector   ( unk2,             itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk3,             itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk4,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk5,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk6,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk7,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk8,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk9,             itwriteto );
+
+            itwriteto = utils::WriteIntToByteVector   ( year,             itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( month,            itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( day,              itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( hour,             itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( minute,           itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( second,           itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( centisec,         itwriteto );
+
             itwriteto = utils::WriteStrToByteContainer( itwriteto,        fname, fname.size() );
+
             itwriteto = utils::WriteIntToByteVector   ( unk10,            itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk11,            itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk12,            itwriteto );
@@ -91,7 +104,7 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector   ( pcmdlen,          itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk14,            itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( nbwavislots,      itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk16,            itwriteto );
+            itwriteto = utils::WriteIntToByteVector   ( nbprgislots,      itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( unk17,            itwriteto );
             itwriteto = utils::WriteIntToByteVector   ( wavilen,          itwriteto );
             return itwriteto;
@@ -109,12 +122,17 @@ namespace DSE
             unk2        = utils::ReadIntFromByteVector<decltype(unk2)>       (itReadfrom);
             unk3        = utils::ReadIntFromByteVector<decltype(unk3)>       (itReadfrom);
             unk4        = utils::ReadIntFromByteVector<decltype(unk4)>       (itReadfrom);
-            unk5        = utils::ReadIntFromByteVector<decltype(unk5)>       (itReadfrom);
-            unk6        = utils::ReadIntFromByteVector<decltype(unk6)>       (itReadfrom);
-            unk7        = utils::ReadIntFromByteVector<decltype(unk7)>       (itReadfrom);
-            unk8        = utils::ReadIntFromByteVector<decltype(unk8)>       (itReadfrom);
-            unk9        = utils::ReadIntFromByteVector<decltype(unk9)>       (itReadfrom);
-            itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname, FNameLen );
+
+            year        = utils::ReadIntFromByteVector<decltype(year)>       (itReadfrom);
+            month       = utils::ReadIntFromByteVector<decltype(month)>      (itReadfrom);
+            day         = utils::ReadIntFromByteVector<decltype(day)>        (itReadfrom);
+            hour        = utils::ReadIntFromByteVector<decltype(hour)>       (itReadfrom);
+            minute      = utils::ReadIntFromByteVector<decltype(minute)>     (itReadfrom);
+            second      = utils::ReadIntFromByteVector<decltype(second)>     (itReadfrom);
+            centisec    = utils::ReadIntFromByteVector<decltype(centisec)>   (itReadfrom);
+
+            itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
+
             unk10       = utils::ReadIntFromByteVector<decltype(unk10)>      (itReadfrom);
             unk11       = utils::ReadIntFromByteVector<decltype(unk11)>      (itReadfrom);
             unk12       = utils::ReadIntFromByteVector<decltype(unk12)>      (itReadfrom);
@@ -122,7 +140,7 @@ namespace DSE
             pcmdlen     = utils::ReadIntFromByteVector<decltype(pcmdlen)>    (itReadfrom);
             unk14       = utils::ReadIntFromByteVector<decltype(unk14)>      (itReadfrom);
             nbwavislots = utils::ReadIntFromByteVector<decltype(nbwavislots)>(itReadfrom);
-            unk16       = utils::ReadIntFromByteVector<decltype(unk16)>      (itReadfrom);
+            nbprgislots = utils::ReadIntFromByteVector<decltype(nbprgislots)>(itReadfrom);
             unk17       = utils::ReadIntFromByteVector<decltype(unk17)>      (itReadfrom);
             wavilen     = utils::ReadIntFromByteVector<decltype(wavilen)>    (itReadfrom);
             return itReadfrom;
@@ -173,8 +191,8 @@ namespace DSE
 // Functions
 //====================================================================================================
 
-    pmd2::audio::PresetBank && ParseSWDL( const std::string & filename );
-    void                       WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
+    pmd2::audio::PresetBank ParseSWDL( const std::string & filename );
+    void                    WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
 
 
 };
