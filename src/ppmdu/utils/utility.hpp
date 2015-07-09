@@ -166,6 +166,20 @@ namespace utils
               ++first_1, ++first_2, ++cpt );
         return cpt;
     }
+
+    /*
+    */
+    template<class _Ty, class _Ty2>
+        _Ty Clamp( _Ty val, _Ty2 min, _Ty2 max )
+    {
+        static_assert( std::is_assignable<_Ty,_Ty2>::value, "utiliy.hpp/Clamp(): Can't assign min/max to val ! Types are incompatible!" );
+        if( val < min )
+            return min;
+        else if( val > max )
+            return max;
+        else
+            return val;
+    }
 };
 
 

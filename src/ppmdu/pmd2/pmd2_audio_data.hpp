@@ -119,7 +119,8 @@ namespace pmd2 { namespace audio
 
             uint16_t id        = 0;
             uint16_t nbsmpls   = 0;
-            uint16_t unk2      = 0;
+            uint8_t  insvol    = 0;
+            uint8_t  inspan    = 0;
             uint16_t unk3      = 0;
             uint16_t unk4      = 0;
             uint8_t  unk5      = 0;
@@ -133,7 +134,8 @@ namespace pmd2 { namespace audio
             {
                 return ( id      == other.id      && 
                          nbsmpls == other.nbsmpls && 
-                         unk2    == other.unk2    && 
+                         insvol  == other.insvol  && 
+                         inspan  == other.inspan  && 
                          unk3    == other.unk3    && 
                          unk4    == other.unk4    && 
                          unk5    == other.unk5    &&  
@@ -154,7 +156,8 @@ namespace pmd2 { namespace audio
             {
                 itwriteto = utils::WriteIntToByteVector( id,        itwriteto );
                 itwriteto = utils::WriteIntToByteVector( nbsmpls,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk2,      itwriteto );
+                itwriteto = utils::WriteIntToByteVector( insvol,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( inspan,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk3,      itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk4,      itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk5,      itwriteto );
@@ -172,7 +175,10 @@ namespace pmd2 { namespace audio
             {
                 id        = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
                 nbsmpls   = utils::ReadIntFromByteVector<decltype(nbsmpls)>  (itReadfrom);
-                unk2      = utils::ReadIntFromByteVector<decltype(unk2)>     (itReadfrom);
+
+                insvol    = utils::ReadIntFromByteVector<decltype(insvol)>   (itReadfrom);
+                inspan    = utils::ReadIntFromByteVector<decltype(inspan)>   (itReadfrom);
+
                 unk3      = utils::ReadIntFromByteVector<decltype(unk3)>     (itReadfrom);
                 unk4      = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
                 unk5      = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
@@ -250,8 +256,9 @@ namespace pmd2 { namespace audio
             uint8_t  unk11    = 0; //0x2
             uint8_t  unk25    = 0; //0x3
 
-            int8_t   unk12    = 0; //0x4
-            int8_t   unk45    = 0; //0x5
+            int8_t   lowkey   = 0; //0x4
+            int8_t   hikey    = 0; //0x5
+
             int8_t   unk13    = 0; //0x6
             int8_t   unk46    = 0; //0x7
             int8_t   unk14    = 0; //0x8
@@ -262,8 +269,10 @@ namespace pmd2 { namespace audio
             uint32_t unk16    = 0; //0xC
             uint16_t unk17    = 0; //0x10
             uint16_t smplid   = 0; //0x12
+
             uint16_t unk18    = 0; //0x14
             uint16_t unk19    = 0; //0x16
+
             uint16_t unk20    = 0; //0x18
             uint8_t  smplgain = 0; //0x1A
             uint8_t  unk22    = 0; //0x1B
@@ -290,8 +299,8 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk11,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk25,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( unk12,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk45,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( lowkey,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( hikey,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk13,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk46,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk14,    itwriteto );
@@ -334,8 +343,8 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk11,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk25,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( unk12,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk45,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( lowkey,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( hikey,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk13,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk46,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk14,    itReadfrom );
@@ -911,6 +920,50 @@ namespace pmd2 { namespace audio
     public:
         typedef std::pair< MusicSequence, PresetBank > smdswdpair_t;
 
+
+        /*
+            mergedInstData
+                Structure containing references to presets, ordered by banks. While also maintaining a list of references to 
+                the files those were originally from.
+                This allows handling conflicting Preset ID from multiple files.
+        */
+        struct mergedInstData
+        {
+            typedef uint16_t                             presetid_t;           //The ID of a DSE Preset
+            typedef uint16_t                             conpresindex_t;       //The index of a conflicting preset within a conflictingpresets_t list!
+            typedef std::vector<InstrumentInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
+
+            /*
+                GetPresetByFile
+                    For a given file index, within the list of loaded swd files, returns the correct preset at "presid".
+            */
+            inline InstrumentInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
+            {
+                return mergedpresets[ presid ][ filetopreset[fileindex].at(presid) ];
+            }
+
+            /*
+                GetPresetByBank
+                    For a given bank, returns the preset at preset ID !
+            */
+            inline InstrumentInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
+            {
+                return mergedpresets[presid][bank];
+            }
+
+            std::vector<conflictingpresets_t>                   mergedpresets; //Each slots in the vector correspond to a DSE Preset ID.
+                                                                               //Each slot contains a vector of pointers to "InstrumentInfo"
+                                                                               // objects. Each of those pointers is a Preset that shares the 
+                                                                               // same preset ID as the others in this "row".
+                                                                               // So if mergedpresets[Y][X], Y is the DSE PresetID,
+                                                                               // and X is a "bank" for this ID, with a different instrument that shares the same DSE Preset ID.
+
+            std::vector< std::map<presetid_t, conpresindex_t> > filetopreset;  //Each slot in the vector is a file from the m_pair vector.
+                                                                               //Each key values in the map, is a preset ID.
+                                                                               //Each value for each key value is the "bank" or the index within the 
+                                                                               // conflictingpresets_t list of presets sharing the same preset ID
+        };
+
     //-----------------------------
     // Construction
     //-----------------------------
@@ -936,7 +989,7 @@ namespace pmd2 { namespace audio
             Any duplicate presets are ignored if they're identical, or they're placed into
             other banks for the same preset ID.
         */
-        void ExportSoundfont        ( const std::string & destf )const;
+        mergedInstData ExportSoundfont( const std::string & destf )const;
 
         /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
@@ -960,6 +1013,9 @@ namespace pmd2 { namespace audio
         void ExportSoundfontAsGM( const std::string & destf, const std::map< std::string, std::vector<int> > & dsetogm )const;
 
     private:
+
+
+
         /*
             Read all loaded smd/swd pairs and compile a list of instruments presets info, and a list of
             where each instrument preset from each smd+swd pair was put into that compiled instrument info list.
@@ -970,8 +1026,7 @@ namespace pmd2 { namespace audio
             The list containing the position of each presets from each smd+swd pairs uses a map to associate 
             an instrument ID (uint16_t) to a position in the second dimension of the merged instrument info list.
         */
-        std::pair< std::vector< std::vector<InstrumentInfo*> >, 
-                   std::vector< std::map<uint16_t,std::size_t> > > PrepareMergedInstrumentTable()const;
+        mergedInstData PrepareMergedInstrumentTable()const;
 
     private:
         std::string               m_mbankpath;

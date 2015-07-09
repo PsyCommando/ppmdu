@@ -19,11 +19,11 @@ namespace audio
     //
     //  ADPCM Encoding/Decoding
     //
-    std::vector<audio::pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t>         & rawadpcmdata,
-                                                  unsigned int                         nbchannels   = 1 );
+    std::vector<pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t>  & rawadpcmdata,
+                                           unsigned int                  nbchannels   = 1 );
 
-    std::vector<uint8_t>         EncodeADPCM_IMA( const std::vector<audio::pcm16s_t> & pcmdata, 
-                                                  unsigned int                         nbchannels   = 1 );
+    std::vector<uint8_t>  EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata, 
+                                           unsigned int                  nbchannels   = 1 );
 
 };
 

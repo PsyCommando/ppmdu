@@ -105,6 +105,8 @@
     <ClInclude Include="..\src\ppmdu\fmts\dse_common.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\dse_interpreter.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\dse_sequence.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\dse_to_sf.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\dse_to_xml.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -211,6 +213,7 @@
     <ClCompile Include="..\src\audioutil.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\adpcm.cpp" />
     <ClCompile Include="..\src\ppmdu\ext_fmts\midi_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\ext_fmts\sf2.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -220,7 +223,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\dse_common.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\dse_interpreter.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\dse_sequence.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\dse_to_sf.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

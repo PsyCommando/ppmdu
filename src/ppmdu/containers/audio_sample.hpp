@@ -9,8 +9,6 @@ Description: Various tools for representing raw audio data.
 #include <cstdint>
 #include <vector>
 
-namespace audio
-{
     /*
         A few typedefs to pave the way for making specialized types and containers, with minimal code re-writing.
     */
@@ -53,6 +51,6 @@ namespace audio
     //private:
     //    std::vector<block_t> m_blocks;
     //};
-};
+
 
 #endif

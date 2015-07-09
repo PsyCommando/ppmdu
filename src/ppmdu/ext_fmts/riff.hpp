@@ -13,10 +13,71 @@ Description: Utilities for working with RIFF files.
 #include <iostream>
 
 
-namespace utils{ namespace io
+namespace riff
 {
-    static const uint32_t RIFF_MagicNumber           = 0x52494646; //"RIFF"
-    static const uint32_t RIFF_BigEndian_MagicNumber = 0x52494658; //"RIFX"
+    //static const uint32_t RIFF_MagicNumber           = 0x52494646; //"RIFF"
+    //static const uint32_t RIFF_BigEndian_MagicNumber = 0x52494658; //"RIFX"
+
+    enum struct eChunkIDs : uint32_t
+    {
+        RIFF  = 0x52494646, //"RIFF"
+        RIFFX = 0x52494658, //"RIFX" Big-endian RIFF format
+        LIST  = 0x4C495354, //"LIST"
+        JUNK  = 0x4A554E4B, //"JUNK" Basically padding chunks to skip completely
+    };
+
+
+    /************************************************************************************
+        ChunkHeader
+            Represents a simple RIFF Chunk Header.
+    ************************************************************************************/
+    struct ChunkHeader
+    {
+        static const uint32_t SIZE = 4;//bytes
+        uint32_t chunk_id = 0;
+        uint32_t length   = 0;
+
+        /*
+            Return new read position, after the chunk header that was parsed.
+        */
+        template<class _init>
+            _init Read( _init itbeg, _init itfileend )
+        {
+
+            chunk_id = utils::ReadIntFromByteVector<decltype(chunk_id)>(itbeg, false);
+            length   = utils::ReadIntFromByteVector<decltype(length)>  (itbeg);
+
+            return itbeg;
+        }
+
+        /*
+            Return new write position.
+        */
+        template<class _outit>
+            _outit Write( _outit itwhere )
+        {
+            itwhere = utils::WriteIntToByteVector(chunk_id, itwhere, false );
+            itwhere = utils::WriteIntToByteVector(length,   itwhere );
+            return itwhere;
+        }
+
+    };
+
+
+    /*
+        chunkinfo 
+            A struct containing details on the position and content of a chunk within the RIFF structure.
+    */
+    struct ChunkInfo
+    {
+        ChunkInfo()
+            :pos(0)
+        {}
+
+        ChunkHeader            hdr;
+        size_t                 pos;
+        std::vector<ChunkInfo> subchunks;
+    };
 
     /*******************************************************************************************
         RIFFMap
@@ -27,211 +88,101 @@ namespace utils{ namespace io
         class RIFFMap
     {
     public:
-        typedef _init inputit_t;
+        typedef _init    inputit_t;
+        typedef size_t   offset_t;
+        typedef uint32_t fmtid_t;
 
-        /*
-            chunkinfo 
-                A struct containing details on the position and content of a chunk within the RIFF structure.
-        */
-        struct chunkinfo
-        {
-            uint32_t               id  = 0;
-            uint32_t               sz  = 0;
-            inputit_t              pos;
-            std::vector<chunkinfo> subchunks;
-        };
+
 
         //STDLib equired typedefs
-        typedef std::vector<chunkinfo>::iterator       iterator;
-        typedef std::vector<chunkinfo>::const_iterator const_iterator;
+        typedef std::vector<ChunkInfo>::iterator       iterator;
+        typedef std::vector<ChunkInfo>::const_iterator const_iterator;
 
 
-        RIFFMap() {}
+        RIFFMap() 
+            :m_fmt(0)
+        {}
 
         /*
             beg = beginning of the structure containing the riff file's data.
             end = end of the structure containing the riff file's data
         */
         RIFFMap( _init beg, _init end )
-            :m_beg(beg), m_end(end)
+            :m_beg(beg), m_end(end), m_fmt(0)
         {}
 
         //Analyze the RIFF structure
         void analyze()
         {
+            auto     itread    = m_beg;
+            offset_t curoffset = 0;     //Keep track of the file offset to avoid doing std::distance calls all the time..
 
+            //Read the RIFF header
+            ChunkHeader riffhdr;
+            itread = riffhdr.Read(itread);
+            curoffset += ChunkHeader::SIZE;
+
+            if( riffhdr.chunk_id != eChunkIDs::RIFF && riffhdr.chunk_id != eChunkIDs::RIFFX )
+                throw std::runtime_error( "RIFFMap::analyze(): Unrecognized RIFF header!" );
+            else if( riffhdr.chunk_id == eChunkIDs::RIFFX )
+                throw std::runtime_error( "RIFFMap::analyze(): RIFFX(Big endian RIFF) format not supported." );
+
+            //Read the content type tag
+            itread = utils::ReadIntFromByteContainer( m_fmt, itread, false );
+            curoffset += sizeof(m_fmt);
+
+            //Make a list of all the contained chunks
+            while( itread != m_end )
+                m_chunks.push_back( ParseAChunk(itread,curoffset) );
         }
 
-        iterator       begin()      { return m_chunks.begin(); }
-        const_iterator begin()const { return m_chunks.begin(); }
-        iterator       end()        { return m_chunks.end();   }
-        const_iterator end()const   { return m_chunks.end();   }
-
-        std::vector<chunkinfo>       & chunks()      { return m_chunks; }
-        const std::vector<chunkinfo> & chunks()const { return m_chunks; }
-
-    private:
-        inputit_t m_beg;
-        inputit_t m_end;
-        std::vector<chunkinfo> m_chunks;
-    };
-
-    /*******************************************************************************************
-        RIFF_Chunk
-    *******************************************************************************************/
-    class RIFF_Chunk
-    {
-    public:
-        RIFF_Chunk( uint32_t id = 0, uint32_t len = 0 )
-            :chunk_id(0),length(0)
-        {}
-
-        virtual ~RIFF_Chunk(){}
-
-        /*
-            Will determine length itself.
-            Return new read position, after the chunk that was parsed.
-        */
-        template<class _init>
-            virtual _init parseChunk( _init itbeg, _init itfileend )
-        {
-
-            chunk_id = utils::ReadIntFromByteVector<decltype(chunk_id)>(itbeg);
-            length   = utils::ReadIntFromByteVector<decltype(length)>  (itbeg);
-
-            if( length > 0 )
-            {
-                content.reserve( length );
-                _init itdatend = itbeg;
-                std::advance( itdatend, length );
-
-                for( _init itdat = itbeg; itdat != itdatend; ++itdat )
-                {
-                    content.push_back( *itdat );
-                }
-            }
-
-            return itbeg;
-        }
-
-        /*
-            Return new write position.
-        */
-        template<class _outit>
-            virtual _outit writeChunk( _outit itwhere )
-        {
-            itwhere = utils::WriteIntToByteVector(chunk_id, itwhere );
-            itwhere = utils::WriteIntToByteVector(length,   itwhere );
-            return std::copy( content.begin(), content.end(), itwhere );
-        }
-
-        std::vector<uint8_t> content;
-        uint32_t             chunk_id;
-        uint32_t             length;
-    };
-
-
-    /*******************************************************************************************
-        RIFF_Handler
-            An object template to be specialized, that is passed as template to the CRIFF_File 
-            to handle the file's content.
-    *******************************************************************************************/
-    class RIFF_Handler
-    {
-    public:
+        inline iterator                       begin()            { return m_chunks.begin(); }
+        inline const_iterator                 begin()const       { return m_chunks.begin(); }
+        inline iterator                       end()              { return m_chunks.end();   }
+        inline const_iterator                 end()const         { return m_chunks.end();   }
+        inline std::vector<ChunkInfo>       & chunks()           { return m_chunks; }
+        inline const std::vector<ChunkInfo> & chunks()const      { return m_chunks; }
+        inline fmtid_t                        GetFormatID()const { return m_fmt; }
 
     private:
 
-    };
-
-    /*******************************************************************************************
-        RIFF_File
-            Parse a RIFF file as-is chunks by chunks for further processing by more specialized
-            code.
-    *******************************************************************************************/
-    /*template<class _RIFF_Handler>*/
-        class RIFF_File 
-    {
-    public:
-        /*typedef _RIFF_Handler handler_t;*/
-
-        RIFF_File()
+        ChunkInfo ParseAChunk( inputit_t & itread, offset_t & curoffset ) //Iter is incremented by ref
         {
-        }
+            ChunkInfo   cinf;
+            itread     = cinf.hdr.Read(itread);
+            curoffset += ChunkHeader::SIZE;
 
-        void parse( const std::string & file )
-        {
-            std::vector<uint8_t> fdata  = utils::io::ReadFileToByteVector( file );
-            auto                 itread = fdata.begin(); 
+            //Mark our position
+            cinf.pos = curoffset;
 
-            std::clog << "Parsing RIFF file \"" << file <<"\"\n";
-
-            uint32_t magic = utils::ReadIntFromByteVector<uint32_t>(itread);
-            if( magic == RIFF_MagicNumber )
+            //Handle LIST chunks differently to list their content.
+            if( cinf.hdr.chunk_id == eChunkIDs::LIST )
             {
-                uint32_t lengthtotal = utils::ReadIntFromByteVector<uint32_t>(itread);
-                std::clog << "Data length : " << lengthtotal <<"\n";
+                //Get an iterator to the end of the chunk
+                auto itchnkend = itread;
+                std::advance( itchnkend, cinf.hdr.length );
 
-                ParseChunks( itread, (itread + lengthtotal) );
-            }
-            else if( magic == RIFF_BigEndian_MagicNumber )
-            {
-                throw std::runtime_error( "RIFX format not supported!" );
+                //Recursively look for known chunks that have sub-chunks
+                while( itread != itchnkend && itread != m_end )
+                    cinf.subchunks.push_back( ParseAChunk( itread, curoffset ) );
             }
             else
-                throw std::runtime_error( "File is not a RIFF file!" );
-        }
-
-        void write( const std::string & file )
-        {
-        }
-
-        /*handler_t                & handler() { return m_handler; }*/
-        std::vector<RIFF_Chunk> & chunks()  { return m_chunks;  }
-
-    private:
-
-        template<class _init>
-            void ParseChunks( _init itbeg, _init endofdata )
-        {
-            //Get the content's magic number
-            uint32_t datatype    = utils::ReadIntFromByteVector<uint32_t>(itread);
-
-            //Not pretty, but is only for testing
-            char *   datatypestr = reinterpret_cast<char*>(&datatype);
-            std::clog << "Content type : " 
-                      << datatypestr[0] << datatypestr[1] << datatypestr[2] << datatypestr[3] <<"\n";
-
-            while( itbeg != endofdata )
             {
-                itbeg = ParseAChunk( itbeg, endofdata );
+                //Jump to after the end of the chunk
+                std::advance( itread, cinf.hdr.length );
+                curoffset += cinf.hdr.length;
             }
+
+            return std::move(cinf);
         }
 
-        template<class _init>
-            _init ParseAChunk( _init itbeg, _init endofdata )
-        {
-            RIFF_Chunk curchunk;
-            curchunk.parseChunk( itbeg, endofdata );
-            char * cidstr = reinterpret_cast<char*>(&curchunk.chunk_id);
-
-            std::clog << "# Sub-Chunk : " 
-                      << cidstr[0] << cidstr[1] << cidstr[2] << cidstr[3] <<"\n"
-                      <<"  Size: " <<curchunk.length <<" byte(s)\n";
-
-            /*m_handler.handle(curchunk);*/
-            m_chunks.push_back( std::move(curchunk) );
-        }
-
-        void WriteChunks( std::back_insert_iterator<std::vector<uint8_t>> itout )
-        {
-        }
 
     private:
-        /*handler_t                m_handler;*/
-        std::vector<RIFF_Chunk> m_chunks;
+        inputit_t              m_beg;
+        inputit_t              m_end;
+        fmtid_t                m_fmt;
+        std::vector<ChunkInfo> m_chunks;
     };
-
-};};
+};
 
 #endif

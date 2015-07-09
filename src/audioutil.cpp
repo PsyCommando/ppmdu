@@ -447,12 +447,31 @@ namespace audioutil
         if( bgmdir.exists() && bgmdir.isDirectory() )
         {
             //Export the /BGM tracks
-
+            BatchAudioLoader bal( Poco::Path(inputdir).append( "SOUND" ).append("BGM").append("bgm.swd").makeFile().toString() );
             //  1. Grab the main sample bank.
+            bal.LoadMasterBank();
             //  2. Grab all the swd and smd pairs in the folder
+
+            Poco::DirectoryIterator dirit(Poco::Path(inputdir).append( "SOUND" ).append("BGM"));
+            Poco::DirectoryIterator diritend;
+            while( dirit != diritend )
+            {
+                //Check all smd/swd file pairs
+                if( dirit.path().getExtension() == SMDL_FileExtension )
+                {
+                    Poco::File matchingswd( Poco::Path(dirit.path()).setExtension(SWDL_FileExtension) );
+                    
+                    if( matchingswd.exists() && matchingswd.isFile() )
+                        bal.LoadSmdSwdPair( dirit.path().toString(), matchingswd.path() );
+                    else
+                        cout<<"File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
+                }
+                ++dirit;
+            }
             //  3. Assign each instruments to a preset. 
             //     Put duplicates preset IDs into different bank for the same preset ID.
             //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+            bal.ExportSoundfontAndMIDIs( m_outputPath );
 
         }
         else
@@ -1029,7 +1048,13 @@ namespace audioutil
                         curoctave = lastoctaveevent;
 
                     int8_t notenb  = (ev.params.front() & 0x0F);
+                    if( notenb > 0xB )
+                        cout<<"Warning: Got a note higher than 0xB !\n";
+
                     int8_t mnoteid = notenb + ( (curoctave) * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
+                    if( static_cast<uint8_t>(mnoteid) > 127 )
+                        cout<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
+
                     mess.SetTime(ticks);
                     mess.SetNoteOn( curchannel, mnoteid, static_cast<uint8_t>(ev.evcode & 0x7F) );
                     mt.GetTrack(trkno)->PutEvent( mess );
@@ -1058,14 +1083,14 @@ namespace audioutil
 
                     //#TOOD: implement some kind of proper pitch correction lookup table..
                     // Should be done only when exporting to GM ! Or else the sample's pitch won't match anymore..
-                    //if( currentprog == 0x19 || currentprog == 0x1A || currentprog == 0x1D || currentprog == 0x33 || 
-                    //    currentprog == 0x34 || currentprog == 0x47 || currentprog == 0x48 || currentprog == 0x40 || 
-                    //    currentprog == 0x41 || currentprog == 0x42 || currentprog == 0xA  || currentprog == 0xB  ||
-                    //    currentprog == 0x79 || currentprog == 0x30)
-                    //{
-                    //    cout <<"Correcting instrument pitch from " <<static_cast<uint16_t>(lastoctaveevent) <<" to " <<static_cast<uint16_t>(lastoctaveevent-1) <<"..\n";
-                    //    --lastoctaveevent;
-                    //}
+                    if( currentprog == 0x19 || currentprog == 0x1A || currentprog == 0x1D || currentprog == 0x33 || 
+                        currentprog == 0x34 || currentprog == 0x47 || currentprog == 0x48 || currentprog == 0x40 || 
+                        currentprog == 0x41 || currentprog == 0x42 || currentprog == 0xA  || currentprog == 0xB  ||
+                        currentprog == 0x79 || currentprog == 0x30)
+                    {
+                        cout <<"Correcting instrument pitch from " <<static_cast<uint16_t>(lastoctaveevent) <<" to " <<static_cast<uint16_t>(lastoctaveevent-1) <<"..\n";
+                        --lastoctaveevent;
+                    }
                     
                     curoctave = lastoctaveevent;
                 }

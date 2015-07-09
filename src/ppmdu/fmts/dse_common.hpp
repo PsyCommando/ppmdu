@@ -50,10 +50,6 @@ namespace DSE
     inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
     inline uint32_t   ChunkIDToInt( eDSEChunks id    );
 
-    //#######################################################################################################
-    //#TODO: Move all that Notes stuff and obfuscate it, along with everything implementation-specific!
-    //#######################################################################################################
-
 
 //====================================================================================================
 // Structs

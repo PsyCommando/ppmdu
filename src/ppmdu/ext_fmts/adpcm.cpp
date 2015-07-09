@@ -192,7 +192,7 @@ namespace audio
     class IMA_ADPCM_Encoder
     {
     public:
-        IMA_ADPCM_Encoder( const vector<audio::pcm16s_t> & samples, unsigned int nbchannels = 1 )
+        IMA_ADPCM_Encoder( const vector<pcm16s_t> & samples, unsigned int nbchannels = 1 )
         {}
 
         operator vector<uint8_t>()
@@ -207,13 +207,13 @@ namespace audio
 //==============================================================================================
 // Functions
 //==============================================================================================
-    std::vector<audio::pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
-                                                  unsigned int                 nbchannels  )
+    std::vector<pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
+                                           unsigned int                 nbchannels  )
     {
         return IMA_APCM_Decoder(rawadpcmdata,nbchannels);
     }
 
-    std::vector<uint8_t> EncodeADPCM_IMA( const std::vector<audio::pcm16s_t> & pcmdata,
+    std::vector<uint8_t> EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata,
                                                   unsigned int                 nbchannels )
     {
         return IMA_ADPCM_Encoder(pcmdata,nbchannels);

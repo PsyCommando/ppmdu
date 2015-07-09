@@ -12,9 +12,18 @@ All wrongs reversed, no crappyrights :P
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/fmts/dse_common.hpp>
 #include <ppmdu/fmts/dse_sequence.hpp>
+#include <vector>
+#include <map>
+#include <cstdint>
 
 namespace DSE
 {
+
+
+    /*
+        -presetbanks : The list for each presets of the bank to use
+    */
+    void SequenceToMidi( const std::string & outmidi, const pmd2::audio::MusicSequence & seq, const std::map<uint16_t,uint16_t> & presetbanks );
 
     /****************************************************************************************
         IRenderEngine

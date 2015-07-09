@@ -1,6 +1,8 @@
 #include "pmd2_audio_data.hpp"
 #include <ppmdu/fmts/dse_common.hpp>
 #include <ppmdu/fmts/dse_sequence.hpp>
+#include <ppmdu/fmts/dse_interpreter.hpp>
+
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
 #include <ppmdu/fmts/swdl.hpp>
@@ -10,6 +12,9 @@
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
+
+#include <ppmdu/ext_fmts/adpcm.hpp>
+#include <ppmdu/ext_fmts/sf2.hpp>
 
 using namespace std;
 using namespace DSE;
@@ -232,13 +237,18 @@ namespace pmd2 { namespace audio
         m_pairs.push_back( move( pmd2::audio::LoadSmdSwdPair( smd, swd ) ) );
     }
 
-    pair< vector< vector<InstrumentInfo*> >, 
-          vector< map<uint16_t,size_t> > >   BatchAudioLoader::PrepareMergedInstrumentTable()const
+    /*
+        This builds a merged list of all instruments presets from all the swd files loaded.
+        vector< vector<InstrumentInfo*>[F][I]  Where F is a swd file in the same order as in the m_pair vector, and I is an instrument in that file.
+
+        It also builds a list where duplicate
+    */
+    BatchAudioLoader::mergedInstData BatchAudioLoader::PrepareMergedInstrumentTable()const
     {
         std::vector< std::vector<InstrumentInfo*> > merged( m_master.metadata().nbprgislots );
         
         //List of what slot the instruments were put into for each SMD+SWD pair
-        std::vector< std::map<uint16_t,std::size_t> > smdlPresLocation (m_pairs.size()); 
+        std::vector< std::map<uint16_t,uint16_t> > smdlPresLocation (m_pairs.size()); 
 
         for( size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair ) //Iterate through all SWDs
         {
@@ -251,7 +261,7 @@ namespace pmd2 { namespace audio
 
                 for( size_t cntinst = 0; cntinst < curinstlist.size();  ++cntinst ) //Test all the individual instruments and add them to their slot
                 {
-                    //Check if we have a duplicate
+                    //Check all presets from all swd files, and see if we have duplicates
                     if( curinstlist[cntinst] != nullptr )
                     {
                         auto founddup = find_if( merged[cntinst].begin(), 
@@ -283,25 +293,172 @@ namespace pmd2 { namespace audio
             }
         }
 
-        return make_pair( std::move(merged), std::move(smdlPresLocation) );
+        return std::move(mergedInstData{ std::move(merged), std::move(smdlPresLocation) });
     }
 
-    void BatchAudioLoader::ExportSoundfont( const std::string & destf )const
+
+    /*
+        DSEInstrumentToSf2Instrument
+            Turns a DSE Preset's "Instrument" into a SF2 Instrument. And add it to the Soundfont!
+            - dseinst       : The instruemnt to convert.
+            - smplIdConvTbl : A map mapping the Sample IDs from the DSE swd, to their new ID within the Soundfont file!
+            - pres          : The SF2 Preset this instrument shall be added to.
+    */
+    void DSEInstrumentToSf2Instrument( const InstrumentInfo::PrgiSmplEntry & dseinst, 
+                                       const std::map<uint16_t,size_t>     & smplIdConvTbl, 
+                                       sf2::Preset                         & pres )
     {
+        using namespace sf2;
+        //Make the instrument's name
+        std::array<char,20> insame;
+        sprintf_s( insame.data(), 20, "%s.Inst#%i", pres.GetName().c_str(), dseinst.id ); //Had to use this, as stringstreams are just too slow for this..
+
+        Instrument inst( string( insame.begin(), insame.end() ) );
+
+        //Set the generators
+        inst.SetKeyRange( dseinst.lowkey, dseinst.hikey ); //Key range in first
+
+        //#TODO: Add more generators here.
+
+        //Sample ID in last
+        inst.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
+    }
+
+    /*
+        DSEPresetToSf2Preset
+            Turns a DSE Preset into a SF2 Preset. And add it to the Soundfont!
+            - dsePres       : The Preset to convert.
+            - smplIdConvTbl : A map mapping the Sample IDs from the DSE swd, to their new ID within the Soundfont file!
+    */
+    void DSEPresetToSf2Preset( const std::string               & presname, 
+                               uint16_t                          bankno, 
+                               const InstrumentInfo            & dsePres, 
+                               const std::map<uint16_t,size_t> & smplIdConvTbl, 
+                               sf2::SoundFont                  & sf,
+                               uint16_t                        & instidcnt )
+    {
+        using namespace sf2;
+
+        Preset pre(presname, dsePres.m_hdr.id, bankno );
+
+        //#1 - Setup Generators
+        pre.SetInitAtt( (0x7F - dsePres.m_hdr.insvol) ); //Use the difference between full volume and the current volume to attenuate the preset's volume
+                
+        // Range of DSE Pan : 0x00 - 0x40 - 0x7F
+        // (curpresinf.m_hdr.inspan - 64) * 7.8125f (64 fits 7.8125 times within 500, and 500 is the maximum pan value for soundfont generators)
+        double convpan = ((dsePres.m_hdr.inspan - 0x40) * 7.8125); // Remove 64(0x40) to bring the middle to 0.  
+        pre.SetPan( lround(convpan) ); 
+
+        //#2 - Setup Modulators
+
+        //#3 - Handle Table 1
+        //  #TODO: Handle the data that's in there!!
+
+        //#4 - Convert instruments
+        for( uint16_t cntinst = 0; cntinst < dsePres.m_mappedsmpls.size(); ++cntinst )
+        {
+            const auto & curinst = dsePres.m_mappedsmpls[cntinst];
+            DSEInstrumentToSf2Instrument( curinst, smplIdConvTbl, pre );
+
+            //Instrument IDs in last
+            pre.SetInstrumentId(instidcnt);
+            ++instidcnt; //Increase the instrument count
+        }
+    }
+
+
+    BatchAudioLoader::mergedInstData BatchAudioLoader::ExportSoundfont( const std::string & destf )const
+    {
+        using namespace sf2;
         //First build a master instrument list from all our pairs, with multiple entries per instruments
-        auto merged = PrepareMergedInstrumentTable();
+        mergedInstData merged = std::move( PrepareMergedInstrumentTable() ); //MSVC is too dumb to trust with implicit move constructor calls..
 
         //#TODO: Find a way to pass elegantly the list of all the positions of the instrument presets from the smd+swd pairs in the merged instrument list !
+        SoundFont sf( m_master.metadata().fname ); 
 
+        //Make a map with as key a the sample id in the Wavi table, and as value the sample id in the sounfont!
+        map<uint16_t,size_t> swdsmplofftosf;
+
+        //Prepare samples list
+        auto samples = m_master.smplbank().lock();
+        for( size_t cntsmpl = 0; cntsmpl < samples->NbSamples(); ++cntsmpl )
+        {
+            if( samples->sampleInfo(cntsmpl) != nullptr ) 
+            {
+                const auto & cursminf = *(samples->sampleInfo(cntsmpl));
+
+                if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
+                {
+                    Sample sm( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmpl) ), 1 ), 0, samples->sample(cntsmpl).size() );
+                    
+                    //Make sample info
+                    sm.SetName( "smpl#" + to_string(cntsmpl) );
+                    
+                    if( cursminf.looplen != 0 )
+                        sm.SetSampleType( Sample::eSmplTy::monoSample );
+
+                    sm.SetSampleRate( cursminf.smplrate );
+
+                    swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );
+                }
+                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
+                {
+                    Sample sm( &samples->sample(cntsmpl), 0, samples->sample(cntsmpl).size() );
+                    
+                    //Make sample info
+                    sm.SetName( "smpl#" + to_string(cntsmpl) );
+                    
+                    if( cursminf.looplen != 0 )
+                        sm.SetSampleType( Sample::eSmplTy::monoSample );
+
+                    sm.SetSampleRate( cursminf.smplrate );
+
+                    swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );
+                }
+            }
+        }
+
+        //Now build the Preset and instrument list !
+        auto & presets      = merged.mergedpresets;
+        uint16_t instsf2cnt = 0; //Used to assign unique instrument IDs
+
+        for( size_t cntpres = 0; cntpres < presets.size(); ++cntpres )
+        {
+            for( size_t cntbank = 0; cntbank < presets[cntpres].size(); ++cntbank )
+            {
+                if( presets[cntpres][cntbank] != nullptr )
+                {
+                    DSEPresetToSf2Preset( "Preset#" + to_string(cntpres), 
+                                          cntbank, 
+                                          *(presets[cntpres][cntbank]), 
+                                          swdsmplofftosf, 
+                                          sf, 
+                                          instsf2cnt );
+                }
+            }
+
+        }
 
         //Then send that to the Soundfont writing function.
 
         //Write the soundfont
+        sf.Write( destf );
+
+        return std::move(merged);
     }
 
     void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir )const
     {
+        //Export the soundfont first
+        Poco::Path outsoundfont(destdir);
+        outsoundfont.append("bgm.sf2").makeFile();
+        mergedInstData merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
+        //Then the MIDIs
+        for( size_t i = 0; i < m_pairs.size(); ++i )
+        {
+            DSE::SequenceToMidi( "file"+to_string(i), m_pairs[i].first, merged.filetopreset[i] );
+        }
     }
 
     void BatchAudioLoader::ExportSoundfontAsGM( const std::string                               & destf, 
