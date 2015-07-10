@@ -19,11 +19,41 @@ All wrongs reversed, no crappyrights :P
 namespace DSE
 {
 
+    /*
+        eMIDIFormat
+            The standard MIDI file format to use to export the MIDI data.
+            - SingleTrack : Is format 0, a single track for all events.
+            - MultiTrack  : Is format 1, one dedicated tempo track, and all the other tracks for events.
+    */
+    enum struct eMIDIFormat
+    {
+        SingleTrack,
+        MultiTrack,
+    };
+
+
+    /*
+        eMIDIMode
+            The MIDI file's "sub-standard".
+            - GS inserts a GS Mode reset SysEx event, and then turns the drum channel off.
+            - XG insets a XG reset Sysex event.
+            - GM doesn't insert any special SysEx events.
+    */
+    enum struct eMIDIMode
+    {
+        GM,
+        GS,
+        XG,
+    };
 
     /*
         -presetbanks : The list for each presets of the bank to use
     */
-    void SequenceToMidi( const std::string & outmidi, const pmd2::audio::MusicSequence & seq, const std::map<uint16_t,uint16_t> & presetbanks );
+    void SequenceToMidi( const std::string                 & outmidi, 
+                         const pmd2::audio::MusicSequence  & seq, 
+                         const std::map<uint16_t,uint16_t> & presetbanks,
+                         eMIDIFormat                         midfmt      = eMIDIFormat::MultiTrack,
+                         eMIDIMode                           midmode     = eMIDIMode::XG );
 
     /****************************************************************************************
         IRenderEngine

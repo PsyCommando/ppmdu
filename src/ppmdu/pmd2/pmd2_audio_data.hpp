@@ -522,7 +522,7 @@ namespace pmd2 { namespace audio
         typedef std::unique_ptr<DSE::WavInfo>       wavinfoptr_t;
         typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
 
-        SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::vector<smpldata_t> && smplsraw )
+        SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::map<size_t,smpldata_t> && smplsraw )
             :m_wavinfotbl(std::move(wavitbl)), //MSVC is too derp to use the correct constructor..
              m_SampleData(std::move(smplsraw))
         {}
@@ -553,7 +553,7 @@ namespace pmd2 { namespace audio
 
     public:
         //Info
-        int NbSamples()const { return m_SampleData.size(); } //Nb of sample slots with actual data.
+        int NbSamples()const { return m_SampleData.size(); } //Nb of actual sample slots with actual data.
         int NbSlots  ()const { return m_wavinfotbl.size(); } //Nb of slots for samples, empty or not.
 
         //Access
@@ -562,11 +562,11 @@ namespace pmd2 { namespace audio
         DSE::WavInfo       * sampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
         DSE::WavInfo const * sampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
 
-        smpldata_t         & sample             ( unsigned int index )      { return m_SampleData[index]; }
-        const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData[index]; }
+        smpldata_t         & sample             ( unsigned int index )      { return m_SampleData.at(index); }
+        const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData.at(index); }
 
-        smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData[index]; }
-        const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData[index]; }
+        smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData.at(index); }
+        const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData.at(index); }
 
     private:
 
@@ -580,13 +580,15 @@ namespace pmd2 { namespace audio
                     m_wavinfotbl[i].reset( new DSE::WavInfo( *(other.m_wavinfotbl[i]) ) ); //Copy each objects and make a pointer
             }
 
-            m_SampleData.resize( other.m_SampleData.size() );
-            std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
+            m_SampleData = other.m_SampleData;
+
+            //m_SampleData.resize( other.m_SampleData.size() );
+            //std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
         }
 
     private:
-        std::vector<wavinfoptr_t> m_wavinfotbl; //Data on the samples
-        std::vector<smpldata_t>   m_SampleData; //Actual samples
+        std::vector<wavinfoptr_t>     m_wavinfotbl; //Data on the samples
+        std::map<size_t,smpldata_t>   m_SampleData; //Actual samples
     };
 
 

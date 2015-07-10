@@ -447,13 +447,21 @@ namespace audioutil
         if( bgmdir.exists() && bgmdir.isDirectory() )
         {
             //Export the /BGM tracks
-            BatchAudioLoader bal( Poco::Path(inputdir).append( "SOUND" ).append("BGM").append("bgm.swd").makeFile().toString() );
+            Poco::Path mbankpath(Poco::Path(inputdir).append( "SOUND" ).append("BGM").append("bgm.swd").makeFile().toString());
+            BatchAudioLoader bal( mbankpath.toString() );
+            
             //  1. Grab the main sample bank.
+            cout <<"\n<*>- Loading master bank " << mbankpath.toString() <<"..\n";
             bal.LoadMasterBank();
+            cout <<"..done\n";
             //  2. Grab all the swd and smd pairs in the folder
 
-            Poco::DirectoryIterator dirit(Poco::Path(inputdir).append( "SOUND" ).append("BGM"));
+            Poco::Path bgmdirpath( Poco::Path(inputdir).append( "SOUND" ).append("BGM") );
+            Poco::DirectoryIterator dirit(bgmdirpath);
             Poco::DirectoryIterator diritend;
+            cout << "<*>- Loading matched smd/swd pairs in the " << bgmdirpath.toString() <<"..\n";
+
+            unsigned int cntparsed = 0;
             while( dirit != diritend )
             {
                 //Check all smd/swd file pairs
@@ -462,16 +470,24 @@ namespace audioutil
                     Poco::File matchingswd( Poco::Path(dirit.path()).setExtension(SWDL_FileExtension) );
                     
                     if( matchingswd.exists() && matchingswd.isFile() )
+                    {
+                        cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<" pairs loaded] - Currently loading : " <<dirit.path().getFileName() <<"..";
                         bal.LoadSmdSwdPair( dirit.path().toString(), matchingswd.path() );
+                        ++cntparsed;
+                    }
                     else
-                        cout<<"File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
+                        cout<<"<!>- File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
                 }
                 ++dirit;
             }
+            cout <<"\n..done\n";
+
             //  3. Assign each instruments to a preset. 
             //     Put duplicates preset IDs into different bank for the same preset ID.
             //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+            cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
             bal.ExportSoundfontAndMIDIs( m_outputPath );
+            cout <<"..done\n";
 
         }
         else

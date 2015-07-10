@@ -44,6 +44,9 @@ namespace DSE
         //LoopPointSet
         { eTrkEventCodes::LoopPointSet, eTrkEventCodes::Invalid, 0, false, false, true,   "Loop" },
 
+        //Unk_0x9C
+        { eTrkEventCodes::Unk_0x9C,     eTrkEventCodes::Invalid, 1, false, false, true,   "Unk_0x9C" },
+
         //SetOctave
         { eTrkEventCodes::SetOctave,    eTrkEventCodes::Invalid, 1, false, false, false,  "Pitch" },
 
@@ -68,14 +71,32 @@ namespace DSE
         //Unk_0xB4
         { eTrkEventCodes::Unk_0xB4,     eTrkEventCodes::Invalid, 2, false, false, false,  "Unk_0xB4" },
 
+        //Unk_0xB5
+        { eTrkEventCodes::Unk_0xB5,     eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xB5" },
+
         //Unk_0xBE
         { eTrkEventCodes::Unk_0xBE,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xBE" },
+
+        //Unk_0xBF
+        { eTrkEventCodes::Unk_0xBF,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xBF" },
 
         //HoldNote
         { eTrkEventCodes::HoldNote,      eTrkEventCodes::Invalid, 0, false, false, false,  "Hold" },
 
+        //Unk_0xD0
+        { eTrkEventCodes::Unk_0xD0,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD0" },
+
+        //Unk_0xD1
+        { eTrkEventCodes::Unk_0xD1,      eTrkEventCodes::Invalid, 2, false, false, false,  "Unk_0xD1" },
+
+        //Unk_0xD2
+        { eTrkEventCodes::Unk_0xD2,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD2" },
+
         //Unk_0xD4
         { eTrkEventCodes::Unk_0xD4,     eTrkEventCodes::Invalid, 3, false, false, false,  "Unk_0xD4" },
+
+        //Unk_0xD6
+        { eTrkEventCodes::Unk_0xD6,     eTrkEventCodes::Invalid, 2, false, false, false,  "Unk_0xD6" },
 
         //PitchBend
         { eTrkEventCodes::PitchBend,    eTrkEventCodes::Invalid, 2, false, false, false,  "PitchBend" },
@@ -97,6 +118,9 @@ namespace DSE
 
         //SetTrkPan
         { eTrkEventCodes::SetTrkPan,    eTrkEventCodes::Invalid, 1, false, false, false,  "Pan" },
+
+        //Unk_0xEA
+        { eTrkEventCodes::Unk_0xEA,    eTrkEventCodes::Invalid, 3, false, false, false,  "Unk_0xEA" },
 
         //Unk_0xEC
         { eTrkEventCodes::Unk_0xEC,    eTrkEventCodes::Invalid, 5, false, false, false,  "Unk_0xEC" },

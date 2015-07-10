@@ -251,6 +251,8 @@ namespace DSE
             auto itend     = m_itread + (hdr.datlen + DSE::ChunkHeader::size());
             auto itpreread = m_itread;
             m_itread = itend; //move it past the chunk already
+            //And skip padding bytes
+            for( ;m_itread != m_itEoC && (*m_itread) == static_cast<uint8_t>(eTrkEventCodes::EndOfTrack); ++m_itread );
 
             auto parsed = DSE::ParseTrkChunk(itpreread, itend);
 

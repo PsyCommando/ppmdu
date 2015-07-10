@@ -319,15 +319,25 @@ namespace DSE
     class DSE_ChunkIDLookup
     {
     public:
-        static eDSEChunks Find( uint8_t highbyte )
+        static std::vector<eDSEChunks> Find( uint8_t highbyte )
         {
             static DSE_ChunkIDLookup s_instance; //creates it when first called
-            auto itfound = s_instance.m_lutbl.find(highbyte);
+            auto lambdaFId = [&highbyte]( const std::pair<uint8_t,eDSEChunks>& val )->bool
+            { 
+                return (val.first == highbyte); 
+            };
 
-            if(itfound != s_instance.m_lutbl.end())
-                return itfound->second;
-            else
-                return eDSEChunks::invalid;
+            std::vector<eDSEChunks> possiblematches;
+
+            for( auto itfound = s_instance.m_lutbl.find(highbyte);  //Search once, if no match will not loop once.
+                 itfound != s_instance.m_lutbl.end(); 
+                 itfound = std::find_if( ++itfound, s_instance.m_lutbl.end(), lambdaFId ) ) //If we had a match search again, one slot after our last match
+            {
+                if( itfound->second != eDSEChunks::invalid )
+                    possiblematches.push_back(itfound->second);
+            }
+
+            return std::move( possiblematches );
         }
 
     private:
@@ -362,40 +372,50 @@ namespace DSE
         while( beg != end ) 
         {
             //check if we possibly are at the beginning of a chunk, looking for its highest byte.
-            eDSEChunks possibleid = DSE_ChunkIDLookup::Find( *beg ); 
+            vector<eDSEChunks> possibleid = std::move( DSE_ChunkIDLookup::Find( *beg ) ); 
+            size_t             skipsize = 4; //Default byte skip size on each loop (The NDS makes 4 bytes aligned reads)
 
-            if( possibleid != eDSEChunks::invalid )
+            //Check all found results
+            for( auto & potential : possibleid )
             {
                 //Check if its really the chunk's header start, or just a coincidence
-                uint32_t fullchunkid = utils::ReadIntFromByteVector<uint32_t>( _init(beg), false ); //Make a copy of beg, to avoid it being incremented
+                uint32_t actualid = utils::ReadIntFromByteVector<uint32_t>( _init(beg), false ); //Make a copy of beg, to avoid it being incremented
 
-                if( possibleid == chnkid && (fullchunkid == static_cast<uint32_t>(chnkid)) )
+                if( actualid == static_cast<uint32_t>(chnkid) ) //Check if we match the chunk we're looking for
                     return beg;
-                else if( fullchunkid == static_cast<uint32_t>(possibleid) ) //If it actually matches another chunk's id
+                else if( actualid == static_cast<uint32_t>(potential) ) //If it actually matches another chunk's id
                 {
                     _init backup = beg;
 
                     //Read the chunk's size and skip if possible
                     std::advance( beg, ChunkHeader::OffsetDataLen );
-                    uint32_t skipsize = utils::ReadIntFromByteVector<uint32_t>(beg);
+                    uint32_t chnksz = utils::ReadIntFromByteVector<uint32_t>(beg);
 
-                    //Then attempt to skip
-                    try
+                    if( chnksz != DSE::SpecialChunkLen ) //Some chunks have an invalid length that is equal to this value.
                     {
-                        std::advance( beg, skipsize );  //We have to do this like so, because some chunks may use bogus sizes 
-                                                        // for some mindblowingly odd reasons.. It shouldn't happen too often though..
+                        //Then attempt to skip
+                        try
+                        {
+                            skipsize = chnksz;  //We have to do this like so, because some chunks may use bogus sizes 
+                                                // for some mindblowingly odd reasons.. It shouldn't happen too often though..
+                        }
+                        catch(std::exception &)
+                        {
+                            beg = backup; //Restore iterator to last valid state if fails
+                        }
                     }
-                    catch(std::exception &)
-                    {
-                        beg = backup; //Restore iterator to last valid state if fails
-                    }
+                    else
+                        skipsize = 0; //otherwise, just continue on, without further incrementing the iterator
+
+                    break; //After all this we know its an actual chunk, just kick us out of the loop, as other matches don't matter anymore!
                 }
             }
 
-            //Advance iterator by 4 bytes + check if reached end
-            if( beg != end )
-                ++beg;
-            //for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
+            //Skip the required ammount of bytes
+            if( skipsize != 4 )
+                std::advance( beg, skipsize ); //Advance is much faster, and here we're certain we're not supposed to go out of bounds.
+            else
+                for( int cnt = 0; cnt < 4 && beg != end; ++cnt, ++beg ); //SMDL files chunk headers are always 4 bytes aligned
         }
 
         //Return Result

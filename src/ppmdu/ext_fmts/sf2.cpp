@@ -39,6 +39,9 @@ namespace sf2
         isng = 0x69736E67, //"isng" 
         INAM = 0x494E414D, //"INAM"
 
+        //Mandatory sdta
+        smpl = 0x736D706C, //"smpl"
+
         //Optionals INFO
         irom = 0x69726F6D, //"irom"
         iver = 0x69766572, //"iver"
@@ -176,7 +179,7 @@ namespace sf2
         std::fill_n( newvecins, 4, sample[loopbeg] );
 
         //Then add the ending zeros
-        newvec.resize( (newvecsz - newvec.size()), 0 );
+        /*newvec.resize( (newvecsz - newvec.size()), 0 );*/
 
         //Shift the loop points accordingly
         //loopbeg += 4;
@@ -192,6 +195,7 @@ namespace sf2
     class SounFontRIFFWriter
     {
         typedef std::function<std::ofstream::streampos()> listmethodfun_t;
+        //typedef std::ofstream::streampos(SounFontRIFFWriter::*listmethodfun_t)();
     public:
         SounFontRIFFWriter( const SoundFont & sf )
             :m_sf(sf)
@@ -216,10 +220,10 @@ namespace sf2
             datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
 
             //Build and write the sample data
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
+            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSdataList, this ) ) );
 
             //Build and write the HYDRA
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
+            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePdataList, this ) ) );
 
             //Seek back to start
             //const std::ofstream::streampos postwrite = m_out.tellp();
@@ -259,19 +263,27 @@ namespace sf2
         */
         ofstream::streampos WriteListChunk( uint32_t fmttag, listmethodfun_t method )
         {
-            listmethodfun_t mymethod = std::move(method);
-
             //Save pre-write pos
             const std::ofstream::streampos prewrite = m_out.tellp(); //Must be Tellp because we're seeking with this value
+            std::ostreambuf_iterator<char> itout(m_out);
 
             //Skip header size
-            std::fill_n( std::ostreambuf_iterator<char>(m_out), riff::ChunkHeader::SIZE, 0 );
+            itout = std::fill_n( itout, riff::ChunkHeader::SIZE, 0 );
+#ifdef _DEBUG
+            m_out.flush();
+#endif
 
             //Write format tag
-            utils::WriteIntToByteVector( static_cast<uint32_t>(fmttag), ostreambuf_iterator<char>(m_out), false );
+            itout = utils::WriteIntToByteVector( static_cast<uint32_t>(fmttag), itout, false );
+#ifdef _DEBUG
+            m_out.flush();
+#endif
 
             //Write the sub-chunks
             ofstream::streampos datalen = sizeof(fmttag) + method(); //Count the format tag
+#ifdef _DEBUG
+            m_out.flush();
+#endif
 
             //Save Post-write pos
             const std::ofstream::streampos postwrite = m_out.tellp();
@@ -283,6 +295,8 @@ namespace sf2
             riff::ChunkHeader listhdr;
             listhdr.chunk_id = static_cast<uint32_t>(riff::eChunkIDs::LIST);
             listhdr.length   = static_cast<uint32_t>(postwrite - prewrite) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            itout = listhdr.Write(itout);
 
             //Seek back to end
             m_out.seekp(postwrite);
@@ -302,10 +316,9 @@ namespace sf2
         */
         ofstream::streampos WriteChunk( eSF2Tags tag, listmethodfun_t method )
         {
-            listmethodfun_t mymethod = std::move(method);
-
             //Save pre-write pos
             const std::ofstream::streampos prewrite = m_out.tellp(); //Must be Tellp because we're seeking with this value
+            std::ostreambuf_iterator<char> itout(m_out);
 
             //Skip header size
             std::fill_n( std::ostreambuf_iterator<char>(m_out), riff::ChunkHeader::SIZE, 0 );
@@ -323,6 +336,8 @@ namespace sf2
             riff::ChunkHeader listhdr;
             listhdr.chunk_id = static_cast<uint32_t>(tag);
             listhdr.length   = static_cast<uint32_t>(postwrite - prewrite) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            itout = listhdr.Write(itout);
 
             //Seek back to end
             m_out.seekp(postwrite);
@@ -354,10 +369,12 @@ namespace sf2
         */
         void WriteifilChunk()
         {
+            ostreambuf_iterator<char> itout(m_out);
             riff::ChunkHeader ifilchnk;
             ifilchnk.chunk_id = static_cast<uint32_t>( eSF2Tags::ifil );
             ifilchnk.length   = 4; //Always 4 bytes
-            ifilchnk.Write( ostreambuf_iterator<char>(m_out) );
+            itout = ifilchnk.Write( itout );
+            itout = SF_VersChnkData.Write( itout );
         }
 
         void WriteisngChunk()
@@ -417,7 +434,15 @@ namespace sf2
         ofstream::streampos WriteSdataList()
         {
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
-            ifstream                       infile;
+
+            WriteChunk( eSF2Tags::smpl, listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSmplChunk,  this ) ) );
+
+            return (GetCurTotalNbByWritten() - prewrite);
+        }
+
+        ofstream::streampos WriteSmplChunk()
+        {
+            const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             m_smplswritepos.resize(0);
             m_smplswritepos.reserve(m_sf.GetNbSamples());
@@ -439,7 +464,7 @@ namespace sf2
                     itout = utils::WriteIntToByteVector( static_cast<char>(point>>8), itout );
                 }
 
-                //Save the end position and begining position within the sdata chunk before padding
+                //Save the begining and end position within the sdata chunk before padding
                 m_smplswritepos.push_back( make_pair( smplstart, (GetCurTotalNbByWritten() - prewrite) ) );
 
                 if( (m_out.tellp() - prewrite) % 2 == 0 )
@@ -469,7 +494,7 @@ namespace sf2
             WriteHYDRAInstruments();
 
             //Write Sample Headers 
-            WriteHYDRASampleHeaders();
+            WriteChunk( eSF2Tags::shdr, std::bind(&SounFontRIFFWriter::WriteHYDRASampleHeaders,  this ) );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -479,16 +504,16 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write phdr chunk
-            WriteChunk( eSF2Tags::phdr, std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) );
+            WriteChunk( eSF2Tags::phdr, listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) ) );
 
             //Write pbag
-            WriteChunk( eSF2Tags::pbag, std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) );
+            WriteChunk( eSF2Tags::pbag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) ) );
 
             //Write pmod
-            WriteChunk( eSF2Tags::pmod, std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) );
+            WriteChunk( eSF2Tags::pmod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) ) );
 
             //Write pgen
-            WriteChunk( eSF2Tags::pgen, std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) );
+            WriteChunk( eSF2Tags::pgen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) ) );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -498,16 +523,16 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write inst chunk
-            WriteChunk( eSF2Tags::inst, std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) );
+            WriteChunk( eSF2Tags::inst, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) ) );
 
             //Write ibag chunk
-            WriteChunk( eSF2Tags::ibag, std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) );
+            WriteChunk( eSF2Tags::ibag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) ) );
 
             //Write imod chunk
-            WriteChunk( eSF2Tags::imod, std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) );
+            WriteChunk( eSF2Tags::imod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) ) );
 
             //Write igen chunk
-            WriteChunk( eSF2Tags::igen, std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) );
+            WriteChunk( eSF2Tags::igen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) ) );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -557,7 +582,9 @@ namespace sf2
             }
 
             //End the list with a zeroed out entry
-            std::fill_n( itout, SfEntrySHDR_Len, 0 );
+            static const std::array<char,4> EOSMarker{{'E','O','S',0}};
+            itout = std::copy  ( EOSMarker.begin(), EOSMarker.end(),itout );
+            itout = std::fill_n( itout, (SfEntrySHDR_Len - EOSMarker.size()), 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -594,7 +621,9 @@ namespace sf2
             }
 
             //End the list with a zeroed out entry
-            std::fill_n( itout, SfEntryPHDR_Len, 0 );
+            static const std::array<char,4> EOPMarker{{'E','O','P',0}};
+            itout = std::copy  ( EOPMarker.begin(), EOPMarker.end(),itout );
+            itout = std::fill_n( itout, (SfEntryPHDR_Len - EOPMarker.size()), 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -636,7 +665,7 @@ namespace sf2
 
                 for( size_t cntmod = 0; cntmod < preset.GetNbModulators(); ++cntmod )
                 {
-                    const auto & modu = preset.GetModulator(i);
+                    const auto & modu = preset.GetModulator(cntmod);
 
                     itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
                     itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
@@ -690,7 +719,7 @@ namespace sf2
 
                 for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
                 {
-                    const auto & inst = preset.GetInstument(i);
+                    const auto & inst = preset.GetInstument(cntinst);
 
                     const size_t charstocopy = std::min( inst.GetName().size(), (ShortNameLen-1) ); 
                     const size_t charstozero = ShortNameLen - charstocopy;                          //Nb of zeros to append
@@ -704,7 +733,9 @@ namespace sf2
             }
 
             //End the list with a zeroed out entry
-            std::fill_n( itout, SfEntryInst_Len, 0 );
+            static const std::array<char,4> EOIMarker{{'E','O','I',0}};
+            itout = std::copy  ( EOIMarker.begin(), EOIMarker.end(),itout );
+            itout = std::fill_n( itout, (SfEntryInst_Len - EOIMarker.size()), 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -723,7 +754,7 @@ namespace sf2
 
                 for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
                 {
-                    const auto & inst = preset.GetInstument(i);
+                    const auto & inst = preset.GetInstument(cntinst);
 
                     itout = utils::WriteIntToByteVector( igenndx, itout );
                     itout = utils::WriteIntToByteVector( imodndx, itout );
@@ -752,7 +783,7 @@ namespace sf2
 
                 for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
                 {
-                    for( const auto & modu : preset.GetInstument(i).GetModulators() )
+                    for( const auto & modu : preset.GetInstument(cntinst).GetModulators() )
                     {
                         itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
                         itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
@@ -781,7 +812,7 @@ namespace sf2
 
                 for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
                 {
-                    for( const auto & gene : preset.GetInstument(i).GetGenerators() )
+                    for( const auto & gene : preset.GetInstument(cntinst).GetGenerators() )
                     {
                         itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
                         itout = utils::WriteIntToByteVector( gene.second.uword,                 itout );
@@ -885,27 +916,27 @@ namespace sf2
 //  Sample
 //=========================================================================================
     Sample::Sample( const std::string & fpath, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedFile), m_fpath(fpath), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedFile), m_fpath(fpath), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
     
     Sample::Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedRawVec), m_pRawVec(prawvec), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedRawVec), m_pRawVec(prawvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
     
     Sample::Sample( uint8_t * praw, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedRaw), m_pRaw(praw), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedRaw), m_pRaw(praw), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
     
     Sample::Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedPCMVec), m_pPcmVec(ppcmvec), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedPCMVec), m_pPcmVec(ppcmvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
     
     Sample::Sample( std::weak_ptr<pcm16s_t> ppcm, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedPCM), m_pPcm(ppcm), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedPCM), m_pPcm(ppcm), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
 
     Sample::Sample( loadfun_t && funcload, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedFunc), m_loadfun(std::move(funcload)), m_begoff(begoff), m_endoff(endoff)
+        :m_loadty(eLoadType::DelayedFunc), m_loadfun(std::move(funcload)), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
     {}
 
     /*

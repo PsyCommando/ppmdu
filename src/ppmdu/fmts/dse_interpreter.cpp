@@ -18,20 +18,7 @@ namespace DSE
     //
     //
 
-    enum struct eMIDIFormat : uint8_t
-    {
-        SingleTrack,
-        MultiTrack,
-        Fmt3,
-    };
 
-
-    enum struct eMIDIMode
-    {
-        GM,
-        GS,
-        XG,
-    };
 
     class DSESequenceToMidi
     {
@@ -83,8 +70,16 @@ namespace DSE
                 MIDIFileWriteMultiTrack writer( &m_midiout, &out_stream );
 
                 // write the output file
-                if ( writer.Write( m_midiout.GetNumTracks() ) )
-                    throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
+                if( m_midifmt == eMIDIFormat::SingleTrack )
+                {
+                    if ( !writer.Write( 1 ) )
+                        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
+                }
+                else if( m_midifmt == eMIDIFormat::MultiTrack )
+                {
+                    if ( !writer.Write( m_midiout.GetNumTracks() ) )
+                        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
+                }
             }
             else
             {
@@ -117,11 +112,21 @@ namespace DSE
             }
 
             if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower) )
-                state.octave_ -= - 1;
+            {
+                state.octave_ -= 1;
+                if( state.octave_ < 1 || state.octave_ > 9 )
+                    cout<<"Decremented octave too low! " <<state.octave_ <<" \n";
+            }
             else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) )
+            {
                 state.octave_ += 1;
+                if( state.octave_ < 1 || state.octave_ > 9 )
+                    cout<<"Incremented octave too high! " <<state.octave_ <<" \n";
+            }
             else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::reset) )
+            {
                 state.octave_ = state.lastoctaveev_;
+            }
 
             int8_t notenb  = (ev.params.front() & 0x0F);
             if( notenb > 0xB )
@@ -211,7 +216,10 @@ namespace DSE
                 //
                 case eTrkEventCodes::SetOctave:
                 {
-                    state.lastoctaveev_ = ev.params.front();                     
+                    state.lastoctaveev_ = ev.params.front();    
+                    if( state.lastoctaveev_ > 9 )
+                        cout<<"New octave value set is too high !" <<state.lastoctaveev_ <<"\n";
+
                     state.octave_       = state.lastoctaveev_;
                     break;
                 }
@@ -296,49 +304,59 @@ namespace DSE
         {
             using namespace jdksmidi;
             //Setup Common Data
-            m_midiout = MIDIMultiTrack( m_trkstates.size() );
+            //m_midiout = MIDIMultiTrack( m_trkstates.size() );
             m_midiout.SetClksPerBeat( m_seq.metadata().tpqn );
 
             //Put a XG or GS sysex message if specified
             if( m_midimode == eMIDIMode::GS )
             {
-                MIDITimedBigMessage gsreset;
-                gsreset.SetTime(0);
-                gsreset.SetSysEx(jdksmidi::SYSEX_START_N);
-                gsreset.GetSysEx()->PutEXC();
-                gsreset.GetSysEx()->PutByte(0x41); //Roland's ID
-                gsreset.GetSysEx()->PutByte(0x10); //Device ID, 0x10 is default 
-                gsreset.GetSysEx()->PutByte(0x42); //Model ID, 0x42 is universal for Roland
-                gsreset.GetSysEx()->PutByte(0x12); //0x12 means we're sending data 
+                {
+                    MIDITimedBigMessage gsreset;
 
-                gsreset.GetSysEx()->PutByte(0x40); //highest byte of address
-                gsreset.GetSysEx()->PutByte(0x00); //mid byte of address
-                gsreset.GetSysEx()->PutByte(0x7F); //lowest byte of address
+                    gsreset.SetTime(0);
+                    gsreset.SetSysEx(jdksmidi::SYSEX_START_N);
 
-                gsreset.GetSysEx()->PutByte(0x00); //data
+                    MIDISystemExclusive mygssysex;
+                    mygssysex.PutEXC();
+                    mygssysex.PutByte(0x41); //Roland's ID
+                    mygssysex.PutByte(0x10); //Device ID, 0x10 is default 
+                    mygssysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
+                    mygssysex.PutByte(0x12); //0x12 means we're sending data 
 
-                gsreset.GetSysEx()->PutByte(0x41); //checksum
-                gsreset.GetSysEx()->PutEOX();
+                    mygssysex.PutByte(0x40); //highest byte of address
+                    mygssysex.PutByte(0x00); //mid byte of address
+                    mygssysex.PutByte(0x7F); //lowest byte of address
 
-                m_midiout.GetTrack(0)->PutEvent(gsreset);
+                    mygssysex.PutByte(0x00); //data
 
-                //Now send the message to turn off the drum channel!
-                MIDITimedBigMessage gsoffdrums;
-                gsoffdrums.SetSysEx(jdksmidi::SYSEX_START_N);
-                gsoffdrums.GetSysEx()->PutByte(0x41); //Roland's ID
-                gsoffdrums.GetSysEx()->PutByte(0x10); //Device ID, 0x10 is default 
-                gsoffdrums.GetSysEx()->PutByte(0x42); //Model ID, 0x42 is universal for Roland
-                gsoffdrums.GetSysEx()->PutByte(0x12); //0x12 means we're sending data 
+                    mygssysex.PutByte(0x41); //checksum
+                    mygssysex.PutEOX();
 
-                gsoffdrums.GetSysEx()->PutByte(0x40); //highest byte of address
-                gsoffdrums.GetSysEx()->PutByte(0x10); //mid byte of address
-                gsoffdrums.GetSysEx()->PutByte(0x15); //lowest byte of address
+                    gsreset.CopySysEx( &mygssysex );
+                    m_midiout.GetTrack(0)->PutEvent(gsreset);
+                }
+                {
+                    //Now send the message to turn off the drum channel!
+                    MIDITimedBigMessage gsoffdrums;
+                    gsoffdrums.SetSysEx(jdksmidi::SYSEX_START_N);
 
-                gsoffdrums.GetSysEx()->PutByte(0x00); //data
+                    MIDISystemExclusive drumsysex;
+                    drumsysex.PutByte(0x41); //Roland's ID
+                    drumsysex.PutByte(0x10); //Device ID, 0x10 is default 
+                    drumsysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
+                    drumsysex.PutByte(0x12); //0x12 means we're sending data 
 
-                gsoffdrums.GetSysEx()->PutByte(0x1B); //checksum
-                gsoffdrums.GetSysEx()->PutEOX();
-                m_midiout.GetTrack(0)->PutEvent(gsoffdrums);
+                    drumsysex.PutByte(0x40); //highest byte of address
+                    drumsysex.PutByte(0x10); //mid byte of address
+                    drumsysex.PutByte(0x15); //lowest byte of address
+
+                    drumsysex.PutByte(0x00); //data
+
+                    drumsysex.PutByte(0x1B); //checksum
+                    drumsysex.PutEOX();
+                    gsoffdrums.CopySysEx( &drumsysex );
+                    m_midiout.GetTrack(0)->PutEvent(gsoffdrums);
+                }
             }
             else if( m_midimode == eMIDIMode::XG )
             {
@@ -348,16 +366,24 @@ namespace DSE
                 // Though I've actually seen worse..
                 MIDITimedBigMessage xgreset;
                 xgreset.SetTime(0);
+                //xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
+
+                std::array<uint8_t,9> XG_SysEx{{0x43,0x10,0x4C,0x00,0x00,0x7E,0x00}};
+                MIDISystemExclusive mysysex( XG_SysEx.data(), XG_SysEx.size(), XG_SysEx.size(), false );
+                xgreset.SetDataLength(9);
+                //mysysex.PutEXC();
+                //mysysex.PutByte(0x43); //Yamaha's ID
+                //mysysex.PutByte(0x10); //Device ID, 0x10 is default 
+                //mysysex.PutByte(0x4c);
+                //mysysex.PutByte(0x00);
+                //mysysex.PutByte(0x00);
+                //mysysex.PutByte(0x7E);
+                //mysysex.PutByte(0x00);
+                //mysysex.PutEOX();
+
+                xgreset.CopySysEx( &mysysex );
                 xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
-                xgreset.GetSysEx()->PutEXC();
-                xgreset.GetSysEx()->PutByte(0x43); //Yamaha's ID
-                xgreset.GetSysEx()->PutByte(0x10); //Device ID, 0x10 is default 
-                xgreset.GetSysEx()->PutByte(0x4c);
-                xgreset.GetSysEx()->PutByte(0x00);
-                xgreset.GetSysEx()->PutByte(0x00);
-                xgreset.GetSysEx()->PutByte(0x7E);
-                xgreset.GetSysEx()->PutByte(0x00);
-                xgreset.GetSysEx()->PutEOX();
+                
                 m_midiout.GetTrack(0)->PutEvent(xgreset);
             }
 
@@ -420,7 +446,7 @@ namespace DSE
         {
             using namespace jdksmidi;
             //Setup our track states
-            m_trkstates.resize(1);
+            m_trkstates.resize(m_seq.getNbTracks());
 
             //Setup the time signature and etc..
             PrepareMidiFile();
@@ -483,8 +509,10 @@ namespace DSE
     //
     void SequenceToMidi( const std::string                 & outmidi, 
                          const pmd2::audio::MusicSequence  & seq, 
-                         const std::map<uint16_t,uint16_t> & presetbanks )
+                         const std::map<uint16_t,uint16_t> & presetbanks,
+                         eMIDIFormat                         midfmt,
+                         eMIDIMode                           midmode )
     {
-        DSESequenceToMidi( outmidi, seq, presetbanks, eMIDIFormat::SingleTrack, eMIDIMode::XG )();
+        DSESequenceToMidi( outmidi, seq, presetbanks, midfmt, midmode )();
     }
 };

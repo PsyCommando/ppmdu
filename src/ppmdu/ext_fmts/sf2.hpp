@@ -1234,6 +1234,8 @@ namespace sf2
         std::vector<pcm16s_t> Data()const;
 
 
+        size_t GetDataLength()const { return (m_endoff - m_begoff); }
+
         /*
             Get/Set Name
                 Name will be truncated to the first 19 characters.

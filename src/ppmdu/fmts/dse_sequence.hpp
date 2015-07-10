@@ -100,6 +100,9 @@ namespace DSE
 
         EndOfTrack      = 0x98, //Marks the end of the track. Also serve as padding.
         LoopPointSet    = 0x99, //Marks the location where the track should loop from.
+
+        Unk_0x9C        = 0x9C, //Unknown
+
         SetOctave       = 0xA0, //Sets the octave notes are currently played at.
 
         SetTempo        = 0xA4, //Sets the tempo of the track in BPM.
@@ -112,13 +115,20 @@ namespace DSE
         Unk_0xB2        = 0xB2, //Unknown
 
         Unk_0xB4        = 0xB4, //Unknown
+        Unk_0xB5        = 0xB5, //Unknown
 
         Unk_0xBE        = 0xBE, //Possibly set modulation ?
+        Unk_0xBF        = 0xBF, //Unknown
 
         HoldNote        = 0xC0, //Holds the last note indefinitely until another note is played
 
+        Unk_0xD0        = 0xD0, //Unknown
+        Unk_0xD1        = 0xD1, //Unknown
+        Unk_0xD2        = 0xD2, //Unknown
+
         Unk_0xD4        = 0xD4, //Unknown
 
+        Unk_0xD6        = 0xD6, //Unkown
         PitchBend       = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
         Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
         Unk_0xDC        = 0xDC, //Unknown
@@ -129,6 +139,8 @@ namespace DSE
         SetExpress      = 0xE3, //Sets secondary volume control. AKA expression or GM CC#11.
 
         SetTrkPan       = 0xE8, //Sets the panning of the track.
+
+        Unk_0xEA        = 0xEA, //Unknonw
 
         Unk_0xEC        = 0xEC, //Unknown
 

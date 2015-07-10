@@ -49,7 +49,7 @@ namespace DSE
 
         void ParseMeta()
         {
-            m_meta.fname              = string( m_hdr.fname.begin(), m_hdr.fname.end() );
+            m_meta.fname = string( m_hdr.fname.data() );
             m_meta.unk1               = m_hdr.unk1;
             m_meta.unk2               = m_hdr.unk2;
             m_meta.createtime.year    = m_hdr.year;
@@ -144,25 +144,33 @@ namespace DSE
             itpcmd = pcmdhdr.ReadFromContainer( itpcmd ); //Move iter after header
 
             //Grab each samples from the pcmd chunk
-            vector<SampleBank::smpldata_t> smpldat;
-            smpldat.reserve(winf.size());
+            map<size_t,SampleBank::smpldata_t> smpldat;
+            //smpldat.reserve(winf.size());
 
             //Build sample bounds table
-            vector<vector<uint8_t>::const_iterator> smplbounds;
-            smplbounds.reserve(winf.size() + 1);
+            map<size_t,vector<uint8_t>::const_iterator> boundmap; //Each key is the sample that own this sample start location
+            //smplbounds.reserve(winf.size() + 1);
 
-            for( const auto & asmpl : winf )
+            for( size_t cntsmpl = 0; cntsmpl < winf.size(); ++cntsmpl )
             {
-                if( asmpl != nullptr )
-                    smplbounds.push_back( (itpcmd + asmpl->smplpos) );
+                if( winf[cntsmpl] != nullptr )
+                    boundmap.emplace( cntsmpl, (itpcmd + winf[cntsmpl]->smplpos) );
             }
 
             //Append the end of the pcmd chunk to grab the last sample
-            smplbounds.push_back( ( itpcmd + pcmdhdr.datlen) );
+            //smplbounds.push_back( ( itpcmd + pcmdhdr.datlen) );
 
             //Read the raw sample data, using the sample bounds
-            for( size_t i = 0; i < (smplbounds.size()-1); ++i ) //Stop one before the end, because we use 2 entries each step of the way
-                smpldat.push_back( SampleBank::smpldata_t( smplbounds[i], smplbounds[i+1] ) ); 
+            for( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
+            {
+                auto nextit = it;
+                ++nextit;
+
+                if( nextit != boundmap.end() )
+                    smpldat.emplace( it->first, SampleBank::smpldata_t( it->second, nextit->second ) ); 
+                else //For the last element before the end, use the end of the chunk as terminator
+                    smpldat.emplace( it->first, SampleBank::smpldata_t( it->second, ( itpcmd + pcmdhdr.datlen) ) );
+            }
 
             return std::unique_ptr<SampleBank>( new SampleBank( move(winf), move(smpldat) ) );
         }

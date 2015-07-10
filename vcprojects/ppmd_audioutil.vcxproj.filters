@@ -177,9 +177,6 @@
     <ClInclude Include="..\src\ppmdu\fmts\dse_interpreter.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\dse_to_sf.hpp">
-      <Filter>Header Files\ppmdu\file formats\audio</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\dse_to_xml.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
@@ -286,9 +283,6 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\ext_fmts\sf2.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\dse_to_sf.cpp">
-      <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\dse_interpreter.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>

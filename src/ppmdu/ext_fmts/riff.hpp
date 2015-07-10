@@ -33,7 +33,7 @@ namespace riff
     ************************************************************************************/
     struct ChunkHeader
     {
-        static const uint32_t SIZE = 4;//bytes
+        static const uint32_t SIZE = 8;//bytes
         uint32_t chunk_id = 0;
         uint32_t length   = 0;
 

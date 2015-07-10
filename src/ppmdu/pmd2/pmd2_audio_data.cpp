@@ -322,6 +322,8 @@ namespace pmd2 { namespace audio
 
         //Sample ID in last
         inst.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
+
+        pres.AddInstrument( std::move(inst) );
     }
 
     /*
@@ -364,6 +366,8 @@ namespace pmd2 { namespace audio
             pre.SetInstrumentId(instidcnt);
             ++instidcnt; //Increase the instrument count
         }
+
+        sf.AddPreset( std::move(pre) );
     }
 
 
@@ -381,40 +385,59 @@ namespace pmd2 { namespace audio
 
         //Prepare samples list
         auto samples = m_master.smplbank().lock();
-        for( size_t cntsmpl = 0; cntsmpl < samples->NbSamples(); ++cntsmpl )
+        for( size_t cntsmslot = 0; cntsmslot < samples->NbSlots(); ++cntsmslot )
         {
-            if( samples->sampleInfo(cntsmpl) != nullptr ) 
+            if( samples->sampleInfo(cntsmslot) != nullptr ) 
             {
-                const auto & cursminf = *(samples->sampleInfo(cntsmpl));
+                const auto & cursminf = *(samples->sampleInfo(cntsmslot));
 
                 if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
                 {
-                    Sample sm( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmpl) ), 1 ), 0, samples->sample(cntsmpl).size() );
+                    Sample sm( Sample::loadfun_t( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmslot) ), 1 ) ), 
+                               0, 
+                               samples->sample(cntsmslot).size() );
                     
                     //Make sample info
-                    sm.SetName( "smpl#" + to_string(cntsmpl) );
+                    sm.SetName( "smpl#" + to_string(cntsmslot) );
                     
                     if( cursminf.looplen != 0 )
-                        sm.SetSampleType( Sample::eSmplTy::monoSample );
+                    {
+                        if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataLength() )
+                            cerr<<"errrrr....";
 
+                        sm.SetLoopBounds( cursminf.loopspos, cursminf.looplen );
+                    }
+                    
+                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
                     sm.SetSampleRate( cursminf.smplrate );
 
-                    swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );
+                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
+                    /*swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );*/
                 }
                 else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
                 {
-                    Sample sm( &samples->sample(cntsmpl), 0, samples->sample(cntsmpl).size() );
+                    Sample sm( &samples->sample(cntsmslot), 0, samples->sample(cntsmslot).size() );
                     
                     //Make sample info
-                    sm.SetName( "smpl#" + to_string(cntsmpl) );
+                    sm.SetName( "smpl#" + to_string(cntsmslot) );
                     
-                    if( cursminf.looplen != 0 )
-                        sm.SetSampleType( Sample::eSmplTy::monoSample );
 
+                    if( cursminf.looplen != 0 )
+                    {
+                        if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataLength() )
+                            cerr<<"errrrr....";
+
+                        sm.SetLoopBounds( cursminf.loopspos, cursminf.looplen );
+                    }
+
+                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
                     sm.SetSampleRate( cursminf.smplrate );
 
-                    swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );
+                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
+                    /*swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );*/
                 }
+                else
+                    cerr <<"Unknown sample format (0x" <<hex <<uppercase <<cursminf.smplfmt <<nouppercase <<dec  <<") encountered !\n" ;
             }
         }
 
@@ -457,7 +480,11 @@ namespace pmd2 { namespace audio
         //Then the MIDIs
         for( size_t i = 0; i < m_pairs.size(); ++i )
         {
-            DSE::SequenceToMidi( "file"+to_string(i), m_pairs[i].first, merged.filetopreset[i] );
+            Poco::Path fpath(destdir);
+            fpath.append(m_pairs[i].first.metadata().fname);
+            fpath.makeFile();
+            fpath.setExtension("mid");
+            DSE::SequenceToMidi( fpath.toString(), m_pairs[i].first, merged.filetopreset[i] );
         }
     }
 
