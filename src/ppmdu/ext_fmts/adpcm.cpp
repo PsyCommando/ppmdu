@@ -14,7 +14,9 @@ namespace audio
 // Constants
 //==============================================================================================
 
-    struct IMA_ADPCM
+    static const uint32_t IMA_ADPCM_PreambleLen = 4;//bytes
+
+    struct IMA_ADPCM    //#FIXME: When did I write that ? This ain't Java !!
     {
         static const int NbBitsPerSample = 4;
         static const int NbPossibleCodes = utils::do_exponent_of_2_<NbBitsPerSample>::value;
@@ -44,6 +46,11 @@ namespace audio
         5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 
         15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767 
     };
+
+
+//
+//
+//
 
 //==============================================================================================
 // IMA ADPCM Decoder
@@ -217,5 +224,10 @@ namespace audio
                                                   unsigned int                 nbchannels )
     {
         return IMA_ADPCM_Encoder(pcmdata,nbchannels);
+    }
+
+    size_t ADPCMSzToPCM16Sz( size_t adpcmbytesz )
+    {
+        return (adpcmbytesz - IMA_ADPCM_PreambleLen) * 2;
     }
 };

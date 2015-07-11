@@ -12,7 +12,10 @@ using namespace std;
 
 namespace DSE
 {
-    static const string UtilityID = "ExportedWith: ppmd_audioutil.exe ver0.1";
+    static const string UtilityID     = "ExportedWith: ppmd_audioutil.exe ver0.1";
+    static const string TXT_LoopStart = "LoopStart";
+    static const string TXT_LoopEnd   = "LoopEnd";
+    static const string TXT_HoldNote  = "HoldNote";
 
     //
     //
@@ -44,7 +47,8 @@ namespace DSE
                            eMIDIFormat                        midfmt,
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
-            :m_fnameout(outmidiname), m_seq(seq), m_banktable(presetconvtable), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops)
+            :m_fnameout(outmidiname), m_seq(seq), m_banktable(presetconvtable), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
+             m_bLoopBegSet(false), m_bLoopEndSet(false)
         {}
 
         void operator()()
@@ -107,7 +111,7 @@ namespace DSE
                 MIDITimedBigMessage susoff;
                 susoff.SetTime(state.ticks_);
                 susoff.SetControlChange( trkchan, 66, 0 ); //sustainato
-                m_midiout.GetTrack(trkno)->PutEvent( susoff );
+                outtrack.PutEvent( susoff );
                 state.sustainon = false;
             }
 
@@ -115,13 +119,13 @@ namespace DSE
             {
                 state.octave_ -= 1;
                 if( state.octave_ < 1 || state.octave_ > 9 )
-                    cout<<"Decremented octave too low! " <<state.octave_ <<" \n";
+                    cout<<"Decremented octave too low! " <<static_cast<unsigned short>(state.octave_) <<" \n";
             }
             else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) )
             {
                 state.octave_ += 1;
                 if( state.octave_ < 1 || state.octave_ > 9 )
-                    cout<<"Incremented octave too high! " <<state.octave_ <<" \n";
+                    cout<<"Incremented octave too high! " <<static_cast<unsigned short>(state.octave_) <<" \n";
             }
             else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::reset) )
             {
@@ -137,8 +141,8 @@ namespace DSE
                 cout<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
 
             mess.SetTime(state.ticks_);
-            mess.SetNoteOn( trkchan, mnoteid, static_cast<uint8_t>(ev.evcode & 0x7F) );
-            m_midiout.GetTrack(trkno)->PutEvent( mess );
+            mess.SetNoteOn( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) );
+            outtrack.PutEvent( mess );
                      
             if( ev.params.size() >= 2 )
             {
@@ -154,16 +158,16 @@ namespace DSE
             }
             MIDITimedBigMessage noteoff;
             noteoff.SetTime( state.ticks_ + state.lasthold_ );
-            noteoff.SetNoteOff( trkchan, mnoteid, static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
+            noteoff.SetNoteOff( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
 
-            m_midiout.GetTrack(trkno)->PutEvent( noteoff );
+            outtrack.PutEvent( noteoff );
         }
 
         void HandleEvent( uint16_t trkno, uint16_t trkchan, TrkState & state, const DSE::TrkEvent & ev, jdksmidi::MIDITrack & outtrack )
         {
             using namespace jdksmidi;
             MIDITimedBigMessage mess;
-            const auto code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
+            const auto          code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
 
             //Handle delta-time
             if( ev.dt != 0 )
@@ -181,12 +185,6 @@ namespace DSE
 
             switch( code )
             {
-                case eTrkEventCodes::SetTempo:
-                {
-                    mess.SetTempo( ConvertTempoToMicrosecPerQuarterNote(ev.params.front()) );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
-                    break;
-                }
                 //Pauses
                 case eTrkEventCodes::LongPause:
                 {
@@ -214,81 +212,97 @@ namespace DSE
                 }
 
                 //
+                case eTrkEventCodes::SetTempo:
+                {
+                    mess.SetTempo( ConvertTempoToMicrosecPerQuarterNote(ev.params.front()) );
+                    outtrack.PutEvent( mess );
+                    break;
+                }
                 case eTrkEventCodes::SetOctave:
                 {
                     state.lastoctaveev_ = ev.params.front();    
                     if( state.lastoctaveev_ > 9 )
-                        cout<<"New octave value set is too high !" <<state.lastoctaveev_ <<"\n";
-
+                        cout<<"New octave value set is too high !" <<static_cast<unsigned short>(state.lastoctaveev_) <<"\n";
                     state.octave_       = state.lastoctaveev_;
                     break;
                 }
-
                 case eTrkEventCodes::SetExpress:
                 {
                     mess.SetControlChange( trkchan, 0x0B, ev.params.front() );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::SetTrkVol:
                 {
                     mess.SetControlChange( trkchan, 0x07, ev.params.front() );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::SetTrkPan:
                 {
                     mess.SetControlChange( trkchan, 0x0A, ev.params.front() );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::SetPreset:
                 {
                     //Select the correct bank
-                    MIDITimedBigMessage banksel;
-                    banksel.SetTime(state.ticks_);
-                    state.curbank_ = static_cast<uint8_t>(m_banktable.at(ev.params.front()));
-                    banksel.SetControlChange( m_seq[trkno].GetMidiChannel(), jdksmidi::C_GM_BANK, state.curbank_ );
-                    m_midiout.GetTrack(trkno)->PutEvent(banksel);
+                    auto found = m_banktable.find(ev.params.front()); 
+                    if( found != m_banktable.end() ) //Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
+                    {                                //So to avoid crashing, verify before looking up a bank.
+                        MIDITimedBigMessage banksel;
+                        banksel.SetTime(state.ticks_);
+                        state.curbank_ = static_cast<uint8_t>(found->second);
+                        banksel.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, state.curbank_ );
+                        outtrack.PutEvent(banksel);
+                    }
 
                     //Then preset
                     //Keep track of the current program to apply pitch correction on instruments that need it..
                     state.prgm_ = ev.params.front();
                     mess.SetProgramChange( trkchan, state.prgm_ );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::PitchBend:
                 {
                     mess.SetPitchBend( trkchan, ( (ev.params.front() << 8) | ev.params.back() ) );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::HoldNote:
                 {
-                    static const std::string TXT_HoldNote = "HoldNote";
-                    m_midiout.GetTrack(trkno)->PutTextEvent( state.ticks_, META_GENERIC_TEXT, TXT_HoldNote.c_str(), TXT_HoldNote.size() );
+                    outtrack.PutTextEvent( state.ticks_, META_GENERIC_TEXT, TXT_HoldNote.c_str(), TXT_HoldNote.size() );
 
                     //Put a sustenato
                     state.sustainon = true;
                     mess.SetControlChange( trkchan, 66, 127 ); //sustainato
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutEvent( mess );
                     break;
                 }
                 case eTrkEventCodes::LoopPointSet:
                 {
+                    //For single track mode, we only put a single loop start marker
+                    if( m_midifmt == eMIDIFormat::SingleTrack )
+                    {
+                        if( m_bLoopBegSet )
+                            break;
+                        else
+                            m_bLoopBegSet = true;
+                    }
+
                     mess.SetMetaType(META_TRACK_LOOP);
-                    static const std::string TXT_Loop = "LoopStart";
-                    m_midiout.GetTrack(trkno)->PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_Loop.c_str(), TXT_Loop.size() );
-                    m_midiout.GetTrack(trkno)->PutEvent( mess );
+                    outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_LoopStart.c_str(), TXT_LoopStart.size() );
+                    outtrack.PutEvent( mess );
                     break;
                 }
+
 
                 //
                 default:
                 {
                     //Play note are handled here
-                    if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd ) //Handle play note
+                    if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
                         HandlePlayNote( trkno, trkchan, state, ev, outtrack );
                     else
                     {
@@ -422,7 +436,10 @@ namespace DSE
 
                     HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(trkno)) );
                 }
+                //Insert loop end event, for all tracks
+                m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
             }
+
 
             //Then, if we're set to loop, then loop
             for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
@@ -453,6 +470,7 @@ namespace DSE
 
             vector<size_t>   looppoints(m_seq.getNbTracks(), 0);
             vector<TrkState> savedstates(m_seq.getNbTracks()); //Save the channel's state right before the loop point
+            uint32_t         verylasttick = 0;
 
             //Play all tracks at least once
             for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
@@ -466,9 +484,20 @@ namespace DSE
                         savedstates[trkno] = m_trkstates[trkno]; //Save the track state
                     }
 
-                    HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(0)) );
+                    HandleEvent( trkno, 
+                                 m_seq[trkno].GetMidiChannel(), 
+                                 m_trkstates[trkno], 
+                                 m_seq[trkno][evno], 
+                                 *(m_midiout.GetTrack(0)) );
                 }
+
+                //Keep track of the very last tick of the song
+                if( verylasttick < m_trkstates[trkno].ticks_ )
+                    verylasttick = m_trkstates[trkno].ticks_;
             }
+
+            //Insert a single loop end event!
+            m_midiout.GetTrack(0)->PutTextEvent( verylasttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
 
             //Then, if we're set to loop, then loop
             for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
@@ -482,7 +511,11 @@ namespace DSE
 
                     for( size_t evno = looppoints[trkno]; evno < m_seq.track(trkno).size(); ++evno ) //Begin at the loop point!
                     {
-                        HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(0)) );
+                        HandleEvent( trkno, 
+                                     m_seq[trkno].GetMidiChannel(), 
+                                     m_trkstates[trkno], 
+                                     m_seq[trkno][evno], 
+                                     *(m_midiout.GetTrack(0)) );
                     }
                 }
             }
@@ -498,6 +531,9 @@ namespace DSE
 
         //State variables
         std::vector<TrkState>              m_trkstates;
+        //Those two only apply to single track mode !
+        bool                               m_bLoopBegSet;
+        bool                               m_bLoopEndSet;
 
         jdksmidi::MIDIMultiTrack           m_midiout;
     };

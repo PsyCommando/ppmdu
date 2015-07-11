@@ -8,8 +8,11 @@
 #include <cassert>
 using namespace std;
 
+#define SF2_ADD_EXTRA_LOOP_BYTES 1
+
 namespace sf2
 {
+    static const uint32_t    SfSampleLoopEdgeCopies  = 8;  //The amount of sample points to copy on either sides of the loop within a sample.
     static const uint32_t    RIFF_HeaderTotalLen = 12; //bytes The length of the header + the format tag
     static const size_t      SfMinSampleZeroPad  = 46; //Minimum amount of bytes of zero padding to append a sample
     static const uint32_t    SfEntrySHDR_Len     = 46;
@@ -165,26 +168,39 @@ namespace sf2
         PrepareSampleLoopPoints
             This method simply copy 8 times the first sample point of the loop. Puts for of those copies
             before loopbeg, and 4 after loopend.
+
+            loopbeg and loop end must be in nb of samples, not in bytes !!!
     */
     std::vector<pcm16s_t> PrepareSampleLoopPoints( std::vector<pcm16s_t> && sample, uint32_t loopbeg, uint32_t loopend )
     {
+        if( loopbeg == loopend )
+            return std::move(sample);
+
         vector<pcm16s_t> newvec;
         auto             newvecins = back_inserter( newvec );
-        size_t           newvecsz  = 8 + sample.size();
+#if SF2_ADD_EXTRA_LOOP_BYTES
+        size_t           newvecsz  = (SfSampleLoopEdgeCopies*2) + sample.size();//(2 * SfSampleLoopEdgeCopies) + sample.size();
+#else
+        size_t           newvecsz  = sample.size();//(2 * SfSampleLoopEdgeCopies) + sample.size();
+#endif
         newvec.reserve(newvecsz);
 
-        //Copy the 4 copied samples at the end and at the beginning + the old vector's data
-        std::fill_n( newvecins, 4, sample[loopbeg] );
-        std::copy( sample.begin(), sample.end(), newvecins );
-        std::fill_n( newvecins, 4, sample[loopbeg] );
+#ifdef _DEBUG
+        if( loopbeg > sample.size() || loopend > sample.size() )
+            assert(false);
+#endif
 
-        //Then add the ending zeros
-        /*newvec.resize( (newvecsz - newvec.size()), 0 );*/
+#if SF2_ADD_EXTRA_LOOP_BYTES
+        //Copy the 8 copied sample points at the end and at the beginning + the old vector's data
+        std::copy_n( sample.begin(), loopbeg, newvecins );                       //Copy any samples before loop beg
+        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopEdgeCopies, newvecins );       //Put the 8 looping samples
+        std::copy_n( sample.begin() + loopbeg, (loopend - loopbeg), newvecins ); //Copy the rest of the loop
+        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopEdgeCopies, newvecins );       //Put the 8 looping samples
+        std::copy  ( sample.begin() + loopend, sample.end(), newvecins );        //Copy the rest of the sample
+#else
+        std::copy  ( sample.begin(), sample.end(), newvecins );        //Copy the rest of the sample
+#endif
 
-        //Shift the loop points accordingly
-        //loopbeg += 4;
-        //loopend += 4;
-        
         //Move over the new smaple data 
         return std::move(newvec);
     }
@@ -451,26 +467,29 @@ namespace sf2
             for( const auto & smpl : m_sf.GetSamples() )
             {
                 //Write down position
-                std::streampos smplstart = (GetCurTotalNbByWritten() - prewrite);
+                std::streampos smplstart = GetCurTotalNbByWritten();
+                auto           loadedsmpl = smpl.Data();
+
+                
                 
                 auto                      loopbounds = smpl.GetLoopBounds();
-                vector<pcm16s_t>          data(std::move( PrepareSampleLoopPoints( smpl, loopbounds.first, loopbounds.second ) ));
+                if( loopbounds.second > loadedsmpl.size() )
+                    cout<<"OMFG..\n";
+
+                vector<pcm16s_t>          data(std::move( PrepareSampleLoopPoints( std::move(loadedsmpl), loopbounds.first, loopbounds.second ) ));
                 ostreambuf_iterator<char> itout(m_out);
 
                 //Write sample data
-                for( const auto & point : data )
-                {
-                    itout = utils::WriteIntToByteVector( static_cast<char>(point),    itout );
-                    itout = utils::WriteIntToByteVector( static_cast<char>(point>>8), itout );
-                }
+                for( const pcm16s_t & point : data )
+                    itout = utils::WriteIntToByteVector( point, itout );
 
                 //Save the begining and end position within the sdata chunk before padding
-                m_smplswritepos.push_back( make_pair( smplstart, (GetCurTotalNbByWritten() - prewrite) ) );
+                m_smplswritepos.push_back( make_pair( (smplstart - prewrite), (GetCurTotalNbByWritten() - prewrite) ) );
 
-                if( (m_out.tellp() - prewrite) % 2 == 0 )
+                //if( (GetCurTotalNbByWritten() - prewrite) % 2 == 0 )
                     itout = std::fill_n( itout, SfMinSampleZeroPad, 0 ); //if byte count is even, just add 46 zeros
-                else
-                    itout = std::fill_n( itout, SfMinSampleZeroPad+1, 0 ); //If byte count is odd, make it even by adding 1
+                //else
+                //    itout = std::fill_n( itout, SfMinSampleZeroPad+1, 0 ); //If byte count is odd, make it even by adding 1
             }
 
             return (GetCurTotalNbByWritten() - prewrite);
@@ -551,12 +570,31 @@ namespace sf2
                 const size_t charstozero = ShortNameLen - charstocopy;                          //Nb of zeros to append
                 auto         loop        = smpl.GetLoopBounds();
                 
-               
-                //Calculate those first, to avoid casting.. 
-                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first);
-                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second);
-                const uint32_t loopbeg = smplbeg + static_cast<uint32_t>(loop.first)  + 4; //Shift by 4, because of the extra data points added for looping
-                const uint32_t loopend = smplbeg + static_cast<uint32_t>(loop.second) + 4; //Shift by 4, because of the extra data points added for looping
+#if SF2_ADD_EXTRA_LOOP_BYTES
+                //Calculate those first, to avoid casting all the time.. 
+                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
+                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t);
+                uint32_t       loopbeg = 0;
+                uint32_t       loopend = 0;
+
+                if( loop.second != 0 )
+                {
+                    loopbeg = smplbeg + (static_cast<uint32_t>(loop.first)  + SfSampleLoopEdgeCopies ); //Shift by 8, because of the extra data points added for looping
+                    loopend = smplbeg + (static_cast<uint32_t>(loop.second) + SfSampleLoopEdgeCopies ); //Shift by 8, because of the extra data points added for looping
+                }
+#else
+                //Calculate those first, to avoid casting all the time.. 
+                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
+                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t);
+                uint32_t       loopbeg = 0;
+                uint32_t       loopend = 0;
+
+                if( loop.second != 0 )
+                {
+                    loopbeg = smplbeg + (static_cast<uint32_t>(loop.first)   ); //Shift by 8, because of the extra data points added for looping
+                    loopend = smplbeg + (static_cast<uint32_t>(loop.second)  ); //Shift by 8, because of the extra data points added for looping
+                }
+#endif
 
                 //Put sample name + following zeros
                 itout = std::copy_n( smpl.GetName().begin(), charstocopy, itout );
@@ -915,28 +953,36 @@ namespace sf2
 //=========================================================================================
 //  Sample
 //=========================================================================================
-    Sample::Sample( const std::string & fpath, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedFile), m_fpath(fpath), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
-    {}
-    
-    Sample::Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedRawVec), m_pRawVec(prawvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
-    {}
-    
-    Sample::Sample( uint8_t * praw, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedRaw), m_pRaw(praw), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
-    {}
-    
-    Sample::Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedPCMVec), m_pPcmVec(ppcmvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
-    {}
-    
-    Sample::Sample( std::weak_ptr<pcm16s_t> ppcm, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedPCM), m_pPcm(ppcm), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
-    {}
+    //Sample::Sample( const std::string & fpath, size_t begoff, size_t endoff )
+    //    :m_loadty(eLoadType::DelayedFile), m_fpath(fpath), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+    //    m_pRaw(nullptr),m_pRawVec(nullptr)
+    //{}
+    //
+    //Sample::Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff )
+    //    :m_loadty(eLoadType::DelayedRawVec), m_pRawVec(prawvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+    //    m_pRaw(nullptr)
+    //{}
+    //
+    //Sample::Sample( uint8_t * praw, size_t begoff, size_t endoff )
+    //    :m_loadty(eLoadType::DelayedRaw), m_pRaw(praw), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+    //    m_pRawVec(nullptr)
+    //{}
+    //
+    //Sample::Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff )
+    //    :m_loadty(eLoadType::DelayedPCMVec), m_pPcmVec(ppcmvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+    //    m_pRaw(nullptr),m_pRawVec(nullptr)
+    //{}
+    //
+    //Sample::Sample( std::weak_ptr<pcm16s_t> ppcm, size_t begoff, size_t endoff )
+    //    :m_loadty(eLoadType::DelayedPCM), m_pPcm(ppcm), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+    //    m_pRaw(nullptr),m_pRawVec(nullptr)
+    //{}
 
-    Sample::Sample( loadfun_t && funcload, size_t begoff, size_t endoff )
-        :m_loadty(eLoadType::DelayedFunc), m_loadfun(std::move(funcload)), m_begoff(begoff), m_endoff(endoff), m_loopbeg(begoff), m_loopend(endoff)
+    Sample::Sample( loadfun_t && funcload, smplcount_t samplelen)
+        //:m_loadty(eLoadType::DelayedFunc), m_loadfun(std::move(funcload)), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
+        //m_pRaw(nullptr),m_pRawVec(nullptr)
+        :m_samplety(eSmplTy::monoSample), m_linkedsmpl(0), m_loadfun(funcload), m_loopbeg(0), m_loopend(0), m_origkey(60),//MIDI middle C
+         m_pitchcorr(0), m_smplrate(44100), m_smpllen(samplelen)
     {}
 
     /*
@@ -953,137 +999,141 @@ namespace sf2
     */
     std::vector<pcm16s_t> Sample::Data()const
     {
-        vector<pcm16s_t> pcmdata;
-
-        switch( m_loadty )
-        {
-            case eLoadType::DelayedFile:
-            {
-                const unsigned int datsz = (m_endoff - m_begoff);
-
-                if( datsz % 2 != 0 )
-                    throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-                ifstream infile( m_fpath, ios::in | ios::binary );
-                infile.seekg( m_begoff );
-
-                pcmdata.resize(datsz);
-
-                for( auto  & sample : pcmdata )
-                {
-                    sample = static_cast<pcm16s_t>( infile.get() );
-                    sample |= static_cast<pcm16s_t>( infile.get() ) << 8;
-                }
-                break;
-            }
-            case eLoadType::DelayedFunc:
-            {
-                if( m_begoff == 0 && m_endoff == pcmdata.size() )
-                    return std::move( m_loadfun() );
-                else
-                {
-                    pcmdata = std::move( m_loadfun() );
-
-                    if( m_endoff != pcmdata.size() )
-                        return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), (pcmdata.begin() + m_endoff) );
-                    else
-                        return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), pcmdata.end() );
-                }
-            }
-            case eLoadType::DelayedPCM:
-            {
-                auto ptr = m_pPcm.lock();
-
-                if( ptr )
-                    return std::vector<pcm16s_t>( (ptr.get() + m_begoff), (ptr.get() + m_endoff) );
-                else
-                {
-                    throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCM loading failed! Pointer has expired, or is null!");
-                }
-            }
-            case eLoadType::DelayedPCMVec:
-            {
-                auto ptr = m_pPcmVec.lock();
-
-                if( ptr )
-                    return std::vector<pcm16s_t>( (ptr.get()->begin() + m_begoff), (ptr.get()->begin() + m_endoff) );
-                else
-                {
-                    throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCMVec loading failed! Pointer has expired, or is null!");
-                }
-            }
-            case eLoadType::DelayedRaw:
-            {
-                if( m_pRaw )
-                {
-                    const size_t datsz = (m_endoff - m_begoff);
-
-                    if( datsz % 2 != 0 )
-                        throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-                    pcmdata.resize( (datsz / 2) );
-
-                    size_t cntby = 0;
-                    for( auto & sample : pcmdata )
-                    {
-                        sample  = static_cast<pcm16s_t>( *(m_pRaw + cntby) );
-                        ++cntby;
-                        sample |= static_cast<pcm16s_t>( *(m_pRaw + cntby) ) << 8;
-                        ++cntby;
-                    }
-                }
-                else
-                {
-                    throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
-                }
-                break;
-            }
-            case eLoadType::DelayedRawVec:
-            {
-                if( m_pRawVec )
-                {
-                    const size_t datsz = (m_endoff - m_begoff);
-
-                    if( datsz % 2 != 0 )
-                        throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-                    pcmdata.resize( (datsz / 2) );
-
-                    size_t cntby = 0;
-                    for( auto & sample : pcmdata )
-                    {
-                        sample  = static_cast<pcm16s_t>( (*m_pRawVec)[cntby] );
-                        ++cntby;
-                        sample |= static_cast<pcm16s_t>( (*m_pRawVec)[cntby] ) << 8;
-                        ++cntby;
-                    }
-                }
-                else
-                {
-                    throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
-                }
-                break;
-            }
-            default:
-            {
-                throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Unknown loading scheme!");
-            }
-        };
-
-        return std::move(pcmdata);
+        return std::move( m_loadfun() );;
     }
+    //{
+        //vector<pcm16s_t> pcmdata;
 
-    void Sample::SetLoopBounds( size_t beg, size_t end )
+        //switch( m_loadty )
+        //{
+        //    case eLoadType::DelayedFile:
+        //    {
+        //        const unsigned int datsz = (m_endoff - m_begoff);
+
+        //        if( datsz % 2 != 0 )
+        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
+
+        //        ifstream infile( m_fpath, ios::in | ios::binary );
+        //        infile.seekg( m_begoff );
+
+        //        pcmdata.resize(datsz);
+
+        //        for( auto  & sample : pcmdata )
+        //        {
+        //            sample = static_cast<pcm16s_t>( infile.get() );
+        //            sample |= static_cast<pcm16s_t>( infile.get() ) << 8;
+        //        }
+        //        break;
+        //    }
+        //    case eLoadType::DelayedFunc:
+        //    {
+                //if( m_begoff == 0 && m_endoff == pcmdata.size() )
+                //    return std::move( m_loadfun() );
+                //else
+                //{
+                    //pcmdata = std::move( m_loadfun() );
+
+                    //if( m_endoff != pcmdata.size() )
+                    //    return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), (pcmdata.begin() + m_endoff) );
+                    //else
+                    //    return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), pcmdata.end() );
+                //}
+        //        break;
+        //    }
+        //    case eLoadType::DelayedPCM:
+        //    {
+        //        auto ptr = m_pPcm.lock();
+
+        //        if( ptr )
+        //            return std::vector<pcm16s_t>( (ptr.get() + m_begoff), (ptr.get() + m_endoff) );
+        //        else
+        //        {
+        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCM loading failed! Pointer has expired, or is null!");
+        //        }
+        //    }
+        //    case eLoadType::DelayedPCMVec:
+        //    {
+        //        auto ptr = m_pPcmVec.lock();
+
+        //        if( ptr )
+        //            return std::vector<pcm16s_t>( (ptr.get()->begin() + m_begoff), (ptr.get()->begin() + m_endoff) );
+        //        else
+        //        {
+        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCMVec loading failed! Pointer has expired, or is null!");
+        //        }
+        //    }
+        //    case eLoadType::DelayedRaw:
+        //    {
+        //        if( m_pRaw )
+        //        {
+        //            const size_t datsz = (m_endoff - m_begoff);
+
+        //            if( datsz % 2 != 0 )
+        //                throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
+
+        //            pcmdata.resize( (datsz / 2) );
+
+        //            size_t cntby = 0;
+        //            for( auto & sample : pcmdata )
+        //            {
+        //                sample  = static_cast<pcm16s_t>( *(m_pRaw + cntby) );
+        //                ++cntby;
+        //                sample |= static_cast<pcm16s_t>( *(m_pRaw + cntby) ) << 8;
+        //                ++cntby;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
+        //        }
+        //        break;
+        //    }
+        //    case eLoadType::DelayedRawVec:
+        //    {
+        //        if( m_pRawVec )
+        //        {
+        //            const size_t datsz = (m_endoff - m_begoff);
+
+        //            if( datsz % 2 != 0 )
+        //                throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
+
+        //            pcmdata.resize( (datsz / 2) );
+
+        //            size_t cntby = 0;
+        //            for( auto & sample : pcmdata )
+        //            {
+        //                sample  = static_cast<pcm16s_t>( (*m_pRawVec)[cntby] );
+        //                ++cntby;
+        //                sample |= static_cast<pcm16s_t>( (*m_pRawVec)[cntby] ) << 8;
+        //                ++cntby;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
+        //        }
+        //        break;
+        //    }
+        //    default:
+        //    {
+        //        throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Unknown loading scheme!");
+        //    }
+        //};
+
+        //return std::move(pcmdata);
+    //}
+
+    void Sample::SetLoopBounds( smplcount_t beg, smplcount_t end )
     {
-        if( (m_begoff + beg) < m_endoff )
+        //if( (m_begoff + beg) < m_endoff )
             m_loopbeg = beg;
-        else
-            throw std::out_of_range( "Sample::SetLoopBounds(): Loop beginning position is out of range !" );
+        //else
+        //    throw std::out_of_range( "Sample::SetLoopBounds(): Loop beginning position is out of range !" );
 
-        if( (m_begoff + end) <= m_endoff )
+        //if( (m_begoff + end) <= m_endoff )
             m_loopend = end;
-        else
-            throw std::out_of_range( "Sample::SetLoopBounds(): Loop end position is out of range !" );
+        //else
+        //    throw std::out_of_range( "Sample::SetLoopBounds(): Loop end position is out of range !" );
     }
 
 

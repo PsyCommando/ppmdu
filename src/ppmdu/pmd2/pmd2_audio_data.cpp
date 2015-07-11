@@ -21,6 +21,31 @@ using namespace DSE;
 
 namespace pmd2 { namespace audio
 {
+//
+//
+//
+    std::vector<pcm16s_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    {
+        std::vector<pcm16s_t> out;
+        auto                  itread = praw->begin();
+        auto                  itend  = praw->end();
+        out.reserve(praw->size()/2);
+
+        while( itread != itend )
+            out.push_back( utils::ReadIntFromByteVector<pcm16s_t>( itread ) ); //Iterator is incremented
+
+        return std::move(out);
+    }
+
+    std::vector<pcm16s_t> DecodeADPCMAndAppendLoopBuff( const std::vector<uint8_t> & adpcm, size_t loopbufpos, size_t loopbuflen )
+    {
+        std::vector<pcm16s_t> decompressed = std::move(::audio::DecodeADPCM_IMA(adpcm));
+        decompressed.reserve( decompressed.size() + loopbuflen );
+        std::copy_n( decompressed.begin() + loopbufpos, loopbuflen, back_inserter(decompressed) );
+        return std::move(decompressed);
+    }
+
+
     class TrackPlaybackState
     {
     public:
@@ -306,7 +331,8 @@ namespace pmd2 { namespace audio
     */
     void DSEInstrumentToSf2Instrument( const InstrumentInfo::PrgiSmplEntry & dseinst, 
                                        const std::map<uint16_t,size_t>     & smplIdConvTbl, 
-                                       sf2::Preset                         & pres )
+                                       sf2::Preset                         & pres,
+                                       const vector<bool>                  & loopedsmpls )
     {
         using namespace sf2;
         //Make the instrument's name
@@ -320,9 +346,13 @@ namespace pmd2 { namespace audio
 
         //#TODO: Add more generators here.
 
+        if( loopedsmpls[dseinst.smplid] )
+        {
+            inst.SetSmplMode( eSmplMode::loop );
+        }
+
         //Sample ID in last
         inst.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
-
         pres.AddInstrument( std::move(inst) );
     }
 
@@ -337,7 +367,8 @@ namespace pmd2 { namespace audio
                                const InstrumentInfo            & dsePres, 
                                const std::map<uint16_t,size_t> & smplIdConvTbl, 
                                sf2::SoundFont                  & sf,
-                               uint16_t                        & instidcnt )
+                               uint16_t                        & instidcnt,
+                               const vector<bool>              & loopedsmpls )
     {
         using namespace sf2;
 
@@ -360,7 +391,7 @@ namespace pmd2 { namespace audio
         for( uint16_t cntinst = 0; cntinst < dsePres.m_mappedsmpls.size(); ++cntinst )
         {
             const auto & curinst = dsePres.m_mappedsmpls[cntinst];
-            DSEInstrumentToSf2Instrument( curinst, smplIdConvTbl, pre );
+            DSEInstrumentToSf2Instrument( curinst, smplIdConvTbl, pre, loopedsmpls );
 
             //Instrument IDs in last
             pre.SetInstrumentId(instidcnt);
@@ -375,71 +406,170 @@ namespace pmd2 { namespace audio
     {
         using namespace sf2;
         //First build a master instrument list from all our pairs, with multiple entries per instruments
-        mergedInstData merged = std::move( PrepareMergedInstrumentTable() ); //MSVC is too dumb to trust with implicit move constructor calls..
-
-        //#TODO: Find a way to pass elegantly the list of all the positions of the instrument presets from the smd+swd pairs in the merged instrument list !
-        SoundFont sf( m_master.metadata().fname ); 
-
-        //Make a map with as key a the sample id in the Wavi table, and as value the sample id in the sounfont!
-        map<uint16_t,size_t> swdsmplofftosf;
+        mergedInstData        merged = std::move( PrepareMergedInstrumentTable() ); //MSVC is too dumb to trust with implicit move constructor calls..
+        SoundFont             sf( m_master.metadata().fname ); 
+        map<uint16_t,size_t>  swdsmplofftosf; //Make a map with as key a the sample id in the Wavi table, and as value the sample id in the sounfont!
+        
 
         //Prepare samples list
         auto samples = m_master.smplbank().lock();
+        vector<bool>            loopedsmpls( samples->NbSlots(), false ); //Keep track of which samples are looped
+
         for( size_t cntsmslot = 0; cntsmslot < samples->NbSlots(); ++cntsmslot )
         {
             if( samples->sampleInfo(cntsmslot) != nullptr ) 
             {
                 const auto & cursminf = *(samples->sampleInfo(cntsmslot));
 
+                Sample::loadfun_t   loadfun;
+                Sample::smplcount_t smpllen = 0;
+                Sample::smplcount_t loopbeg = 0;
+                Sample::smplcount_t loopend = 0;
+
                 if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
                 {
-                    Sample sm( Sample::loadfun_t( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmslot) ), 1 ) ), 
-                               0, 
-                               samples->sample(cntsmslot).size() );
-                    
-                    //Make sample info
-                    sm.SetName( "smpl#" + to_string(cntsmslot) );
-                    
-                    if( cursminf.looplen != 0 )
-                    {
-                        if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataLength() )
-                            cerr<<"errrrr....";
+                    loadfun = std::move( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmslot) ), 1 ) );
+                    smpllen = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot).size());
+                    loopbeg = cursminf.loopspos * 2 + cursminf.looplen * 2;
+                    loopend = smpllen;
 
-                        sm.SetLoopBounds( cursminf.loopspos, cursminf.looplen );
-                    }
-                    
-                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
-                    sm.SetSampleRate( cursminf.smplrate );
-
-                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
-                    /*swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );*/
+                    //if( (loopend - loopbeg) > 32 && loopbeg >= 8 )
+                    //    loadfun = std::move( std::bind( DecodeADPCMAndAppendLoopBuff, std::ref( samples->sample(cntsmslot) ), cursminf.loopspos * 2, cursminf.looplen * 2 ) );
+                    //else
+                    //    loadfun = std::move( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmslot) ), 1 ) );
                 }
                 else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
                 {
-                    Sample sm( &samples->sample(cntsmslot), 0, samples->sample(cntsmslot).size() );
-                    
-                    //Make sample info
-                    sm.SetName( "smpl#" + to_string(cntsmslot) );
-                    
-
-                    if( cursminf.looplen != 0 )
-                    {
-                        if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataLength() )
-                            cerr<<"errrrr....";
-
-                        sm.SetLoopBounds( cursminf.loopspos, cursminf.looplen );
-                    }
-
-                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
-                    sm.SetSampleRate( cursminf.smplrate );
-
-                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
-                    /*swdsmplofftosf[cntsmpl] = sf.AddSample( std::move(sm) );*/
+                    loadfun = std::move( std::bind( &RawBytesToPCM16Vec, &(samples->sample(cntsmslot)) ) );
+                    smpllen = samples->sample(cntsmslot).size()/2;
+                    loopbeg = cursminf.loopspos/2 + cursminf.looplen/2;
+                    loopend = smpllen;
                 }
                 else
-                    cerr <<"Unknown sample format (0x" <<hex <<uppercase <<cursminf.smplfmt <<nouppercase <<dec  <<") encountered !\n" ;
+                {
+                    stringstream sstrerr;
+                    sstrerr << "Unknown sample format (0x" <<hex <<uppercase <<cursminf.smplfmt <<nouppercase <<dec  <<") encountered !";
+                    throw std::runtime_error( sstrerr.str() );
+                }
+
+#ifdef _DEBUG
+                if( loopbeg > smpllen || loopend > smpllen )
+                    assert(false);
+#endif
+
+                Sample sm( std::move( loadfun ), smpllen );
+                sm.SetName( "smpl#" + to_string(cntsmslot) );
+                sm.SetSampleRate ( cursminf.smplrate );
+                sm.SetOriginalKey( cursminf.rootkey );
+                sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
+
+                if( (loopend - loopbeg) > 32 && loopbeg >= 8 ) //SF2 min loop len
+                {
+                    sm.SetLoopBounds ( loopbeg, loopend );
+                    loopedsmpls[cntsmslot].flip();
+                }
+                
+                swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
             }
         }
+
+//                if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
+//                {
+//                    //Since our sample is ADPCM, substract the preamble, and multiply by 2!
+//                    uint32_t smplsize = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot).size());// (samples->sample(cntsmslot).size() - 4) * 2; 
+//
+//
+//                    Sample sm( std::bind( ::audio::DecodeADPCM_IMA, std::ref( samples->sample(cntsmslot) ), 1 ), 
+//                               smplsize );
+//                    
+//                    //Make sample info
+//                    sm.SetName( "smpl#" + to_string(cntsmslot) );
+//                    
+//                    //Because the sample is ADPCM encoded, we need to multiply by 2 the sample bounds!!
+//                    uint32_t curloopbeg = cursminf.looplen * 2;//cursminf.looplen * 2;//cursminf.loopspos * 2;
+//                    uint32_t curloopend = sm.GetDataSampleLength(); //curloopbeg + (cursminf.loopspos * 4);//curloopbeg + (cursminf.loopspos * 2);//( sm.GetDataByteLength()*2 - (cursminf.looplen  * 2) );
+//
+//                    //#TODO: Re-work validation logic once we fix the logic issues behind Samples..
+//
+//                    if( /*cursminf.looplen >= 64*/ (curloopend - curloopbeg) >= 64 ) //64 bytes is the minimum loop len
+//                    {
+//                        //if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataByteLength() )
+//                        //{
+//                        //    stringstream sstrerr;
+//                        //    sstrerr << "BatchAudioLoader::ExportSoundfont(): The loop points of the ADPCM sound sample #" <<cntsmslot <<" are out of range of the sample's data!";
+//                        //    throw std::out_of_range(sstrerr.str());
+//                        //}
+//
+//#ifdef _DEBUG
+//                        if( curloopbeg > smplsize || curloopend > smplsize )
+//                            assert(false);
+//#endif
+//
+//                        sm.SetLoopBounds(
+//                            curloopbeg, //beg 
+//                            curloopend //end
+//                        );
+//
+//                        //sm.SetLoopBounds(
+//                        //(sm.GetDataByteLength() - (cursminf.loopspos + cursminf.looplen) ), //beg 
+//                        //(sm.GetDataByteLength() - cursminf.loopspos) //end
+//                        //);
+//
+//                        //sm.SetLoopBounds( cursminf.loopspos, cursminf.loopspos + cursminf.looplen );
+//                        loopedsmpls[cntsmslot].flip();
+//                    }
+//                    
+//                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
+//                    sm.SetSampleRate( cursminf.smplrate );
+//
+//                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
+//                }
+//                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
+//                {
+//                    Sample sm( std::bind( &RawBytesToPCM16Vec, &(samples->sample(cntsmslot)) ), 
+//                               samples->sample(cntsmslot).size() );
+//                    
+//                    //Make sample info
+//                    sm.SetName( "smpl#" + to_string(cntsmslot) );
+//
+//                    uint32_t curloopbeg = cursminf.looplen;          //Use the value as-is, PCM size never changes, like war ;)
+//                    uint32_t curloopend = sm.GetDataSampleLength();
+//
+//                    //#TODO: Re-work validation logic once we fix the logic issues behind Samples..
+//
+//                    //if( cursminf.looplen >= 64 ) //64 bytes is the minimum loop len
+//                    //{
+//                        //if( (cursminf.loopspos + cursminf.looplen) > sm.GetDataByteLength() )
+//                        //{
+//                        //    stringstream sstrerr;
+//                        //    sstrerr << "BatchAudioLoader::ExportSoundfont(): The loop points of the PCM sound sample #" <<cntsmslot <<" are out of range of the sample's data!";
+//                        //    throw std::out_of_range(sstrerr.str());
+//                        //}
+//
+//                        //sm.SetLoopBounds(
+//                        //(sm.GetDataByteLength() - (cursminf.loopspos + cursminf.looplen) ), //beg
+//                        //(sm.GetDataByteLength() - cursminf.loopspos) //end
+//                        //);
+//#ifdef _DEBUG
+//                        if( curloopbeg > samples->sample(cntsmslot).size() || curloopend > samples->sample(cntsmslot).size() )
+//                            assert(false);
+//#endif
+//
+//                        sm.SetLoopBounds( curloopbeg, curloopend );
+//
+//                        loopedsmpls[cntsmslot].flip();
+//                    //}
+//
+//                    sm.SetOriginalKey( cursminf.rootkey );
+//                    sm.SetSampleType( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
+//                    sm.SetSampleRate( cursminf.smplrate );
+//
+//                    swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
+//                }
+//                else
+//                    cerr <<"Unknown sample format (0x" <<hex <<uppercase <<cursminf.smplfmt <<nouppercase <<dec  <<") encountered !\n" ;
+        //    }
+        //}
 
         //Now build the Preset and instrument list !
         auto & presets      = merged.mergedpresets;
@@ -456,7 +586,8 @@ namespace pmd2 { namespace audio
                                           *(presets[cntpres][cntbank]), 
                                           swdsmplofftosf, 
                                           sf, 
-                                          instsf2cnt );
+                                          instsf2cnt,
+                                          loopedsmpls );
                 }
             }
 
@@ -475,6 +606,7 @@ namespace pmd2 { namespace audio
         //Export the soundfont first
         Poco::Path outsoundfont(destdir);
         outsoundfont.append("bgm.sf2").makeFile();
+        cerr<<"Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
         mergedInstData merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
         //Then the MIDIs
@@ -484,6 +616,8 @@ namespace pmd2 { namespace audio
             fpath.append(m_pairs[i].first.metadata().fname);
             fpath.makeFile();
             fpath.setExtension("mid");
+
+            cerr<<"Currently exporting smd to " <<fpath.toString() <<"\n";
             DSE::SequenceToMidi( fpath.toString(), m_pairs[i].first, merged.filetopreset[i] );
         }
     }

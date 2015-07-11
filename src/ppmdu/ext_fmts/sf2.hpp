@@ -8,6 +8,9 @@ Description: Utilities for reading and writing SF2 soundfonts files.
 
 Used this page as reference:
 http://www.pjb.com.au/midi/sfspec21.html
+
+#TODO:
+    - I'd like to encapsulate better sample IDs. Because right now, because some sample 
 */
 #include <ppmdu/containers/audio_sample.hpp>
 #include <string>
@@ -266,489 +269,6 @@ namespace sf2
         int16_t decay   = 0;
         int16_t release = 0;
     };
-
-    ///***********************************************************************************
-    //    SFSamples
-    //        Maintain a list of sample data, and their data source.
-    //        Wraps the "SHDR", and "sdat-list" chunks.
-    //***********************************************************************************/
-    //class SFSamples
-    //{
-    //    enum struct eSmplTy : uint32_t 
-    //    {
-    //        monoSample      = 1,        //Mono
-    //        rightSample     = 2,        //Unsupported..
-    //        leftSample      = 4,        //Unsupported..
-    //        linkedSample    = 8,        //Stereo
-    //        //..Unsupported below..
-    //        RomMonoSample   = 32769, 
-    //        RomRightSample  = 32770, 
-    //        RomLeftSample   = 32772, 
-    //        RomLinkedSample = 32776,
-    //    };
-
-    //    /*
-    //        Entry from the SHDR chunk
-    //        Contains details on the location of the sample within the sdata-list
-    //        along with other things to properly play the sample
-    //    */
-    //    struct sfSample
-    //    {
-    //       std::array<char,20>  name;
-    //       uint32_t             Start; 
-    //       uint32_t             End;
-    //       uint32_t             Startloop; 
-    //       uint32_t             Endloop;
-    //       uint32_t             SampleRate;  
-    //       uint8_t              OriginalPitch;  
-    //       int8_t               PitchCorrection;
-    //       uint16_t             SampleLink;     //Index of a sample linked to this one, to be played at the same time.
-    //       eSmplTy              SampleType;
-    //    };
-
-    //public:
-    //    /*
-    //        The type of a function that returns the data of an entire 16 bits sample.
-    //        Sounfont supports only 16 bits signed.
-    //    */
-    //    typedef std::function<std::vector<int16_t>()> smplreadfun_t;
-
-
-    //    /*
-    //        AddSample
-    //            Add a sample to the sample manager.
-
-    //            - sdatfun   : A function that when executed will return a vector of
-    //                          signed int16 samples containing the samples for this sample.
-    //            - smpllength: The length of the sample, in samples(int16).
-    //            - name      : A 19 character max string to identify this sample.
-    //            - loopbeg   : The position in samples, where the loop for this sample begin.
-    //                            If no loop, leave to 0.
-    //            - loopend   : The position in samples, where the loop for this sample ends.
-    //                            If no loop, leave to 0.
-    //            - smplrate  : The sample rate of the sample in Hertz.
-    //            - midikey   : The root MIDI key number of the sample. AKA the MIDI note number 
-    //                          corresponding to the note the instrument was playing when recorded.
-    //            - pitchcorr : A correction in cent (1/100th of a semitone) to apply to sample going
-    //                          from -127 to 127.
-    //            - ismono    : Whether the sample is mono or stereo. 
-
-    //            Returns the index to refer to this sample in the rest of the soundfont (SHDR index)
-
-    //            **NOTE: At this time matched left and right samples are not supported. Neither are ROM samples!
-    //    */
-    //    uint32_t AddSample( smplreadfun_t       sdatfun,
-    //                        size_t              smpllength,
-    //                        const std::string & name, 
-    //                        uint32_t            loopbeg   = 0,
-    //                        uint32_t            loopend   = 0,
-    //                        uint32_t            smplrate  = 22050,
-    //                        uint8_t             midikey   = 60,
-    //                        int8_t              pitchcorr = 0,
-    //                        bool                ismono    = true );
-
-    //    /*
-    //        Access to the shdr content for each samples
-    //    */
-    //    sfSample       & operator[]( uint32_t index );
-    //    const sfSample & operator[]( uint32_t index )const;
-
-    //    /*
-    //        WriteSdat
-    //            Write the entire sdata-list chunk, chunk header included.
-
-    //            - out: a binary stream where to append the content of the chunk.
-
-    //            Return the offsets of the begining of each samples
-    //            from the begining of the sdat list chunk, in samples count(int16).
-    //            (You should feed that to the "WriteSHDR" method *hint*)
-    //    */
-    //    std::vector<uint32_t> WriteSdat( std::ofstream & out );
-
-    //    /*
-    //        WriteSHDR
-    //            Write the entire SHDR chunk, chunk header included.
-
-    //            - out            : a binary stream where to append the content of the chunk.
-    //            - sdatsmploffsets: The location of each samples within the sdat chunk, in samples count(int16).
-
-    //            Return the nb of bytes written.
-    //    */
-    //    size_t WriteSHDR( std::ofstream & out, const std::vector<uint32_t> & sdatsmploffsets );
-
-    //private:
-    //    std::vector<sfSample>      m_shdr;
-    //    std::vector<smplreadfun_t> m_sdata;
-    //};
-
-
-    ///***********************************************************************************
-    //    SFInstruments
-    //        Represent data on soundfont instruments.
-
-    //        Wraps the "inst", "ibag", "imod", and "igen" chunks.
-    //***********************************************************************************/
-    //class SFInstruments
-    //{
-    //    struct sfInst
-    //    {
-    //       std::array<char,20> InstName; 
-    //       uint16_t            InstBagNdx;
-    //    };
-
-    //    struct sfInstBag
-    //    {
-    //        uint16_t InstGenNdx; 
-    //        uint16_t InstModNdx;
-    //    };
-
-    //public:
-
-    //    /*
-    //        Instance this and pass it to AddInstrument to add one !
-    //    */
-    //    struct Instrument
-    //    {
-    //        std::string            name_;
-    //        std::vector<SFGenZone> gens_;
-    //        std::vector<SFModZone> mods_;
-    //    };
-
-
-    //    /*
-    //        AddInstrument
-    //            Add an instrument, and its modulators and generators.
-
-    //            This will also sort the generators and modulators in the standard required order !
-    //            
-    //            -> KeyRange Generators always first.
-    //            -> Velocity Range generator can only be preceeded by a Keyrange generator.
-    //            -> SampleID Generators always last.
-
-    //            **NOTE: It is not neccessary to add a terminating null Instrument at the end of the list! 
-    //                    Its handled automatically.
-
-    //            Return the index the instrument was added to in the INST chunk
-    //    */
-    //    int16_t AddInstrument( Instrument && inst );
-
-    //    
-    //    size_t       GetNbInstruments()const;
-    //    Instrument & operator[]      ( size_t index );
-
-
-    //    /*
-    //        WriteAllInstChunks
-    //            Writes the 4 instrument chunks one after the other.
-    //            inst, ibag, imod, igen.
-
-    //            Return the nb of bytes written.
-    //    */
-    //    size_t WriteAllInstChunks( std::ofstream & out );
-
-    //private:
-    //    std::vector<Instrument> m_inst;
-    //};
-
-    ///***********************************************************************************
-    //    SFPresets
-
-    //    Wraps the "PHDR", "pbag", "pmod", and "pgen" chunks.
-    //***********************************************************************************/
-    //class SFPresets
-    //{
-    //    struct sfPresetBag
-    //    {
-    //       uint16_t GenNdx; 
-    //       uint16_t ModNdx;
-    //    };
-
-    //public:
-
-    //    struct Preset
-    //    {
-    //       std::array<char,20>    PresetName; 
-    //       uint16_t               Bank       = 0; 
-    //       std::vector<SFGenZone> Gens;
-    //       std::vector<SFGenZone> Mods;
-    //    };
-
-    //    /*
-    //        AddPreset
-    //            Add a preset to the list.
-    //            Returns the position in the preset list.(PHDR)
-    //    */
-    //    uint16_t AddPreset( Preset && pres );
-
-    //    /*
-    //    */
-    //    Preset & operator[]( uint16_t index );
-
-    //    /*
-    //    */
-    //    size_t GetNbPresets()const;
-
-    //    /*
-    //        WriteAllPresetChunks
-    //            Writes the 4 Preset chunks one after the other.
-    //            phdr, pbag, pmod, pgen.
-
-    //            Return the nb of bytes written.
-    //    */
-    //    size_t WriteAllPresetChunks( std::ofstream & out );
-
-    //private:
-    //    std::vector<Preset> m_presets;
-    //};
-
-    ///***********************************************************************************
-    //    SoundFont
-    //***********************************************************************************/
-    //class SoundFont
-    //{
-    //public:
-    ////--------------------------------
-    ////  Types Stuff
-    ////--------------------------------
-    //    typedef size_t   sampleid_t;
-    //    typedef uint16_t presetid_t;
-
-    //    friend class SounFontRIFFWriter;
-
-    //public:
-    ////--------------------------------
-    ////  Nested Classes Stuff
-    ////--------------------------------
-    //    //Contains details about a sample to be added to the soundfont
-    //    struct smplinfo
-    //    {
-    //        std::array<char,20> name; //Unused characters must be set to 0
-    //        uint32_t loopbeg     = 0;    //Begining sample of the loop
-    //        uint32_t loopend     = 0;    //Ending sample of the loop (leave to 0 if no loop)
-    //        uint32_t smplrate    = 0;    //Hertz
-    //        uint8_t  midirootkey = 0;    //Also known as "Original Pitch" The midi key the sampled instrument was recorded playing.
-    //        int8_t   pitchcorr   = 0;    //Pitch correction value in cent.. -127 to 127 
-    //    };
-
-    //    //Contains needed details to add a preset
-    //    struct presetinfo
-    //    {
-    //        std::array<char,20> name;
-    //        uint32_t            id     = 0;
-    //        uint32_t            bankid = 0;
-
-    //        //amount of samples linked to this preset
-    //        uint32_t            nbsmpls = 1;
-    //        //We'll use this to compute our nb of pbags, pmods, and pgens entries in the soundfount
-    //    };
-
-    //    /*
-    //        sampleloc
-    //            Represent a sample's location.
-    //            Can be a location in a file, or a location in a container in memory of either raw bytes or pcm16 samples.
-    //    */
-    //    struct sampleloc
-    //    {
-    //        sampleloc( const std::string & path = std::string(), size_t begoffset = 0, size_t endoffset = 0 )
-    //            :offbeg_(begoffset), offend_(endoffset), fpath_(path)
-    //        {}
-
-    //        sampleloc( std::weak_ptr<std::vector<uint8_t>> && praw, size_t begoffset = 0, size_t endoffset = 0  )
-    //            :offbeg_(begoffset), offend_(endoffset), prawdata_(praw)
-    //        {}
-
-    //        sampleloc( std::weak_ptr<std::vector<pcm16s_t>> && ppcm, size_t begoffset = 0, size_t endoffset = 0  )
-    //            :offbeg_(begoffset), offend_(endoffset), ppcmdata_(ppcm)
-    //        {}
-
-    //        std::weak_ptr<std::vector<pcm16s_t>> ppcmdata_;
-    //        std::weak_ptr<std::vector<uint8_t>>  prawdata_;
-    //        std::string                          fpath_;
-    //        size_t                               offbeg_; //Offset in the specified file or byte container where the raw samples begin.
-    //        size_t                               offend_; //Offset in the specified file or byte container where the raw samples ends.
-    //    };
-
-
-
-    //public:
-    ////--------------------------------
-    ////  Constructors
-    ////--------------------------------
-    //    /*
-    //        path          : path to sf2 file to load, or write.
-    //        sounfontfname : the name to give this soundfont internally
-    //    */
-    //    SoundFont( const std::string & path, const std::string & sounfontfname )
-    //        :m_path(path), m_sfname(sounfontfname)
-    //    {}
-
-    ////--------------------------------
-    ////  IO Stuff
-    ////--------------------------------
-
-    //    /*
-    //        Write
-    //            Write data structures and samples to disk
-    //    */
-    //    void Write();
-
-    //    /*
-    //        Read
-    //            Parse data structures to memory, samples stays in the file and are loaded on demand.
-    //    */
-    //    void Read();
-
-    ////--------------------------------
-    ////  Simplified 
-    ////--------------------------------
-
-    //    /*
-    //        AddPreset
-    //            Adds an empty preset to the list, with the specified name, preset number, and bank.
-
-    //                - name     : Internal name. 20 characters max, the rest will be truncated.
-    //                - presetid : The preset number to give this preset. (0-128 are valid for MIDI. 128 is reserved for drums)
-    //                - bankno   : The bank indice for this preset. 
-
-    //                Returns the unique index in the internal preset table. Use this index to refer to this preset in the future.
-    //    */
-    //    size_t AddPreset( const std::string & name, 
-    //                      presetid_t          presetid, 
-    //                      uint16_t            bankno );
-
-
-    //    /*
-    //        AddInstrument
-    //            Adds a minimal instrument to the soundfont. 
-
-    //            Instruments are the link between samples and presets. Each instruments
-    //            can refer to a single sample, have a single key range, a single velocity range,
-    //            volume envelope, and etc..
-    //            A preset can have several instruments, thus several samples, key ranges, velocity ranges..
-    //    */
-    //    size_t AddInstrument( const std::string & name,
-    //                          size_t              preset,
-    //                          size_t              smplid );
-
-
-
-    //    /*
-    //        AddSampleToPreset
-    //            Adds a sample, and directly assign it to a preset. Takes the sample from a memory location.
-
-    //                - presetindex: The index of the preset to assign this sample to.
-    //                - pdat       : A pointer to the data of the sample.
-    //                - info       : Information on the sample.
-    //                - keyrange   : Range of MIDI keys that this sample will be played on.
-    //                - velrange   : Range of MIDI velocity that this sample will be played on.
-
-    //            Return the index to the sample in the internal sample table. Use this value to refer to this 
-    //            particular sample.
-
-    //            **NOTE: The user must ensure that the data pointed to by the pointer is valid for the 
-    //                    lifetime of the SoundFont object !
-    //    */
-    //    size_t AddSampleToPreset( size_t                  presetindex, 
-    //                              std::weak_ptr<uint8_t>  pdat,  
-    //                              smplinfo                info,
-    //                              MidiKeyRange            keyrange  = MidiKeyRange(), 
-    //                              MidiVeloRange           velorange = MidiVeloRange() );
-
-    //    /*
-    //        AddSampleToPreset
-    //            Adds a sample, and directly assign it to a preset. Takes the sample from a file.
-
-    //                - presetindex: The index of the preset to assign this sample to.
-    //                - fpath      : The path to the file containing the sample.
-    //                - foffset    : The offset to read the sample at.
-    //                - smpllen    : The length of the sample, in 16 bits samples.
-    //                - info       : Information on the sample.
-    //                - keyrange   : Range of MIDI keys that this sample will be played on.
-    //                - velrange   : Range of MIDI velocity that this sample will be played on.
-
-    //            Return the index to the sample in the internal sample table. Use this value to refer to this 
-    //            particular sample.
-    //    */
-    //    size_t AddSample( size_t                 presetindex, 
-    //                      const std::string     &fpath, 
-    //                      size_t                 foffset, 
-    //                      size_t                 smpllen, 
-    //                      smplinfo               info,
-    //                      MidiKeyRange           keyrange  = MidiKeyRange(), 
-    //                      MidiVeloRange          velorange = MidiVeloRange() );
-
-    //    /*
-    //        LinkSampleToPreset
-    //            Links an existing sample to an existing preset. 
-    //            (Internally creates a new sfinstrument with that sample assigned, and link it to the preset)
-
-    //            - presetindex : the index inside the internal preset table obtained when adding the preset.
-    //            - sampleindex : the index inside the internal sample table obtained when adding the sample.
-    //            - lokey       : The lowest MIDI key that this sample will be played on.
-    //            - hikey       : The highest MIDI key that this sample will be played on.
-    //            - lovel       : The lowest MIDI velocity that this sample will be played on.
-    //            - hivel       : The highest MIDI velocity that this sample will be played on.
-    //    */
-    //    void LinkSampleToPreset( size_t        presetindex, 
-    //                             size_t        sampleindex,
-    //                             MidiKeyRange  keyrange    = MidiKeyRange(), 
-    //                             MidiVeloRange velorange   = MidiVeloRange() );
-    //    void LinkSampleToPreset( size_t        presetindex, 
-    //                             size_t        sampleindex,
-    //                             MidiKeyRange  keyrange    = MidiKeyRange(), 
-    //                             MidiVeloRange velorange   = MidiVeloRange(),
-    //                             Envelope      volenv      = Envelope(), 
-    //                             Envelope      modenv      = Envelope() );
-
-
-    ////--------------------------------
-    ////  Advanced
-    ////--------------------------------
-
-    //    /*
-    //        Those return references to the underlying soundfont chunks
-    //        wrappers. 
-    //        Use those to assign uncommon generators, modulators, and
-    //        etc..
-    //    */
-    //    SFSamples     & GetSamplesWrapper()    { return m_smpldb;   }
-    //    SFInstruments & GetInstrumentWrapper() { return m_instdb;   }
-    //    SFPresets     & GetPresetWrapper()     { return m_presetdb; }
-
-    //private:
-
-    //    /*
-    //        LoadSmpl
-    //            This is the function passed to the underlying SFSamples
-    //            for loading samples. It must be binded first.
-    //    */
-    //    static std::vector<int16_t> LoadSmpl( const sampleloc & location );
-
-    //    /*
-    //        MakeLoadSampleFun
-    //            This Makes the binded function object passed to the underlying SFSamples
-    //            object.
-    //    */
-    //    static SFSamples::smplreadfun_t MakeLoadSampleFun( const sampleloc & location );
-
-    //private:
-    //    std::string            m_path;
-    //    std::string            m_sfname;
-
-    //    // This is a vector containing the data to merge transparently delayed samples loading and direct samples loading.
-    //    // It containes details on where to fetch the sample data for each samples registered using the simplified sample.
-    //    // loading. **Note that, if the underlying SFSamples object has samples loaded, objects in this vector will be ignored.
-    //    std::vector<sampleloc> m_smplsfstrs;
-
-    //    //Managers
-    //    SFSamples     m_smpldb;
-    //    SFInstruments m_instdb;
-    //    SFPresets     m_presetdb;
-
-    //    //No copy plz
-    //    SoundFont(const SoundFont&)            = delete;
-    //    SoundFont& operator=(const SoundFont&) = delete;
-    //};
 
     /***********************************************************************************
         BaseGeneratorUser
@@ -1061,20 +581,21 @@ namespace sf2
 
     /***********************************************************************************
         Instrument
+            Represent a single instrument. Or something that links a sample to a set of
+            velocities or keys.
     ***********************************************************************************/
     class Instrument : public BaseGeneratorUser, public BaseModulatorUser
     {
     public:
-        //
-        //
-        //
+        //----------------
+        //  Construction
+        //----------------
         Instrument();
         Instrument( const std::string & name );
 
         //----------------
-        //  Generic
+        //  Properties
         //----------------
-
         /*
             Get/Set Name
                 Name will be truncated to the first 19 characters.
@@ -1101,7 +622,7 @@ namespace sf2
         Preset( const std::string & name, uint16_t presetno, uint16_t bankno = 0, uint32_t lib = 0, uint32_t genre = 0, uint32_t morpho = 0 );
 
         //------------
-        //  
+        //  Properties
         //------------
         /*
 
@@ -1132,6 +653,7 @@ namespace sf2
 
         /*
             Set/Get Bank Number
+                Set the Soundfont bank index to assign to this particular preset.
         */
         void     SetBankNo( uint16_t no ) { m_bankNo = no; }
         uint16_t GetBankNo()const         { return m_bankNo; }
@@ -1168,22 +690,33 @@ namespace sf2
     /***********************************************************************************
         Sample
     ***********************************************************************************/
+
+    /*
+        ##########################################################################################################
+        #TODO: Obfuscate sample handling and sample sizes better !!
+        #      We need to know the actual PCM16 len for a lot of calculations, and the begoffset and endoffsets
+        #      are usually byte offsets, but could also be pcm16 offsets.. This is way too confusing and error 
+        #      prone..
+        ##########################################################################################################
+    */
+
     class Sample
     {
-        enum struct eLoadType
-        {
-            DelayedRawVec,
-            DelayedPCMVec,
-            DelayedRaw,
-            DelayedPCM,
+        //enum struct eLoadType
+        //{
+        //    DelayedRawVec,
+        //    DelayedPCMVec,
+        //    DelayedRaw,
+        //    DelayedPCM,
 
-            DelayedFile,
-            DelayedFunc,
-        };
+        //    DelayedFile,
+        //    DelayedFunc,
+        //};
     public:
         /*
         */
         typedef std::function<std::vector<pcm16s_t>()> loadfun_t;
+        typedef uint32_t                               smplcount_t; //Express a quantity in amount of pcm16 samples
 
         /*
         */
@@ -1203,38 +736,54 @@ namespace sf2
         /*
             Load from a file. begoff and endoff are in bytes.
         */
-        Sample( const std::string & fpath,                    size_t begoff, size_t endoff );
+        //Sample( const std::string & fpath,                    size_t begoff, size_t endoff );
+
+        ///*
+        //    Load from a vector. begoff and endoff are in bytes.
+        //*/
+        //Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff );
+        //Sample( uint8_t              * praw,    size_t begoff, size_t endoff );
+
+        ///*
+        //    Load from a vector. begoff and endoff are in int16 !
+        //*/
+        //Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff );
+        //Sample( std::weak_ptr<pcm16s_t>              ppcm,    size_t begoff, size_t endoff );
 
         /*
-            Load from a vector. begoff and endoff are in bytes.
+            Load from a function. "samplelen" is the length in pcm16 data points of the sound sample that 
+            the function "funcload" will return!
         */
-        Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff );
-        Sample( uint8_t              * praw,    size_t begoff, size_t endoff );
-
-        /*
-            Load from a vector. begoff and endoff are in int16 !
-        */
-        Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff );
-        Sample( std::weak_ptr<pcm16s_t>              ppcm,    size_t begoff, size_t endoff );
-
-        /*
-            Load from a function. begoff and endoff are in int16 !
-        */
-        Sample( loadfun_t && funcload,                        size_t begoff, size_t endoff );
+        Sample( loadfun_t && funcload, smplcount_t samplelen );
 
         /*
             Obtain the data from the sample.
+            This execute the function passed to the constructor, and move the result out!
         */
         operator std::vector<pcm16s_t>()const;
 
         /*
             Obtain the data from the sample.
             Wrapper over delayed read operations
+            This execute the function passed to the constructor, and move the result out!
         */
         std::vector<pcm16s_t> Data()const;
 
+        /*
+            Return the length of the data in bytes.
+        */
+        //inline size_t GetDataByteLength()const { return (m_endoff - m_begoff); }
 
-        size_t GetDataLength()const { return (m_endoff - m_begoff); }
+        /*
+            Returns the length of the data in sample points !
+        */
+        inline smplcount_t GetDataSampleLength()const { return m_smpllen; }
+
+        /*
+            Returns the length of the data in sample points ! If the beg and end offset were the range in byte containing the ADPCM data.
+            Basically, it multiplies the byte len by 2, then substract the 4 bytes preamble.
+        */
+        //inline smplcount_t GetDataSampleLengthADPCM()const { return ((GetDataByteLength() - 4) * sizeof(pcm16s_t)); }
 
         /*
             Get/Set Name
@@ -1245,10 +794,13 @@ namespace sf2
 
         /*
             Set/Get the loop points for this sample.
-                beg and end must be relative to the beginning of the sample's data!
+                The loop points in pcm16 data points to be used with this sound sample.
         */
-        void                            SetLoopBounds( size_t beg, size_t end );
-        inline std::pair<size_t,size_t> GetLoopBounds()const                    { return std::make_pair( m_loopbeg, m_loopend ); }
+        void                                      SetLoopBounds( smplcount_t beg, smplcount_t end );
+        inline std::pair<smplcount_t,smplcount_t> GetLoopBounds()const                    
+        { 
+            return std::make_pair( m_loopbeg, m_loopend ); 
+        }
 
         /*
             Set/Get Sample Rate
@@ -1287,24 +839,25 @@ namespace sf2
     private:
 
         //Sample Loading Details
-        eLoadType                            m_loadty;
+        //eLoadType                            m_loadty;
 
         loadfun_t                            m_loadfun;
-        std::string                          m_fpath;
+        //std::string                          m_fpath;
 
-        std::vector<uint8_t>               * m_pRawVec;
-        uint8_t                            * m_pRaw;
+        //std::vector<uint8_t>               * m_pRawVec;
+        //uint8_t                            * m_pRaw;
 
-        std::weak_ptr<std::vector<pcm16s_t>> m_pPcmVec;
-        std::weak_ptr<pcm16s_t>              m_pPcm;
+        //std::weak_ptr<std::vector<pcm16s_t>> m_pPcmVec;
+        //std::weak_ptr<pcm16s_t>              m_pPcm;
 
         //Actual Sample Data
         std::string                          m_name;
-        size_t                               m_begoff;
-        size_t                               m_endoff;
+        //size_t                               m_begoff; //Offset are
+        //size_t                               m_endoff;
+        smplcount_t                          m_smpllen;
 
-        size_t                               m_loopbeg;
-        size_t                               m_loopend;
+        smplcount_t                          m_loopbeg;
+        smplcount_t                          m_loopend;
 
         uint32_t                             m_smplrate;
         uint8_t                              m_origkey;

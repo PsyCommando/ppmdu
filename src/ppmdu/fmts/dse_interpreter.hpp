@@ -52,7 +52,7 @@ namespace DSE
     void SequenceToMidi( const std::string                 & outmidi, 
                          const pmd2::audio::MusicSequence  & seq, 
                          const std::map<uint16_t,uint16_t> & presetbanks,
-                         eMIDIFormat                         midfmt      = eMIDIFormat::MultiTrack,
+                         eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
                          eMIDIMode                           midmode     = eMIDIMode::XG );
 
     /****************************************************************************************

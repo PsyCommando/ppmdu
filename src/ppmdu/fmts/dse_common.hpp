@@ -160,7 +160,7 @@ namespace DSE
         uint16_t unk1       = 0;
         uint16_t id         = 0; //Index/ID of the sample
         uint16_t unk2       = 0;
-        uint16_t unk3       = 0;
+        uint16_t rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
         uint16_t unk4       = 0;
         uint16_t unk5       = 0;
         uint16_t unk6       = 0;
@@ -175,8 +175,10 @@ namespace DSE
         uint32_t unk13      = 0;
         uint32_t smplrate   = 0; //Sampling rate of the sample
         uint32_t smplpos    = 0; //Offset within pcmd chunk of the sample
-        uint32_t loopspos   = 0; //Position in sample, of the beginning of the loop 
+
         uint32_t looplen    = 0; //Length in number of samples of the loop
+        uint32_t loopspos   = 0; //Position in sample, of the beginning of the loop 
+
         uint8_t  unk17      = 0;
         uint8_t  unk18      = 0;
         uint8_t  unk19      = 0;
@@ -195,7 +197,7 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector( unk1,  itwriteto );
             itwriteto = utils::WriteIntToByteVector( id, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk2, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk3, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( rootkey, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk4, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk5, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk6, itwriteto );
@@ -210,8 +212,10 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector( unk13, itwriteto );
             itwriteto = utils::WriteIntToByteVector( smplrate, itwriteto );
             itwriteto = utils::WriteIntToByteVector( smplpos, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( loopspos, itwriteto );
+
             itwriteto = utils::WriteIntToByteVector( looplen, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( loopspos, itwriteto );
+
             itwriteto = utils::WriteIntToByteVector( unk17, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk18, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk19, itwriteto );
@@ -233,7 +237,7 @@ namespace DSE
             unk1       = utils::ReadIntFromByteVector<decltype(unk1)>     (itReadfrom); //iterator is incremented
             id         = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
             unk2       = utils::ReadIntFromByteVector<decltype(unk2)>     (itReadfrom);
-            unk3       = utils::ReadIntFromByteVector<decltype(unk3)>     (itReadfrom);
+            rootkey    = utils::ReadIntFromByteVector<decltype(rootkey)>  (itReadfrom);
             unk4       = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
             unk5       = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
             unk6       = utils::ReadIntFromByteVector<decltype(unk6)>     (itReadfrom);
@@ -247,9 +251,11 @@ namespace DSE
             unk12      = utils::ReadIntFromByteVector<decltype(unk12)>    (itReadfrom); 
             unk13      = utils::ReadIntFromByteVector<decltype(unk13)>    (itReadfrom); 
             smplrate   = utils::ReadIntFromByteVector<decltype(smplrate)> (itReadfrom); 
-            smplpos    = utils::ReadIntFromByteVector<decltype(smplpos)>  (itReadfrom); 
-            loopspos   = utils::ReadIntFromByteVector<decltype(loopspos)> (itReadfrom);
+
+            smplpos    = utils::ReadIntFromByteVector<decltype(smplpos)>  (itReadfrom);
             looplen    = utils::ReadIntFromByteVector<decltype(looplen)>  (itReadfrom);
+            loopspos   = utils::ReadIntFromByteVector<decltype(loopspos)> (itReadfrom);
+
             unk17      = utils::ReadIntFromByteVector<decltype(unk17)>    (itReadfrom);
             unk18      = utils::ReadIntFromByteVector<decltype(unk18)>    (itReadfrom);
             unk19      = utils::ReadIntFromByteVector<decltype(unk19)>    (itReadfrom);

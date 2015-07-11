@@ -16,6 +16,15 @@ namespace audio
 // Functions
 //====================================================================================================
 
+    /*
+        ADPCMSzToPCM16Sz
+            This converts the size of a IMA ADPCM compressed block, to the size of the 
+            equivalent block of uncompressed PCM16 samples.
+            Use this to predict the decompressed size of a ADPCM block of data !
+    */
+    size_t ADPCMSzToPCM16Sz( size_t adpcmbytesz );
+
+
     //
     //  ADPCM Encoding/Decoding
     //
