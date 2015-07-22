@@ -9,8 +9,6 @@ Description: Utilities for reading and writing SF2 soundfonts files.
 Used this page as reference:
 http://www.pjb.com.au/midi/sfspec21.html
 
-#TODO:
-    - I'd like to encapsulate better sample IDs. Because right now, because some sample 
 */
 #include <ppmdu/containers/audio_sample.hpp>
 #include <string>
@@ -20,6 +18,53 @@ http://www.pjb.com.au/midi/sfspec21.html
 #include <memory>
 #include <array>
 #include <functional>
+
+
+/***************************************************************************************************************
+                                ===========================================
+                                == Simplified Layout of a SoundFont file ==
+                                ===========================================
+
+                                ----------------------------------------
+                                |           SoundFont File             |
+                                ----------------------------------------
+                                                   | 1
+                                                   |
+                                                   |
+                -----------------------------------------------------------------------
+                |                                  |                                  |
+                V 1..n                             |                                  V 1..n
+    ------------------------------                 |                    ------------------------------
+    |         Samples            |                 |                    |           Presets          |
+    ------------------------------                 V 1..n               ------------------------------
+                ^ 1                   ------------------------------ 1                | 1        
+                |                     |         Instruments        |<--               |
+                |                     ------------------------------  |               V 1..n
+                |                                  | 1                | ------------------------------
+                |                                  |                  | |            PBag            |
+                |                                  V 1..n             | ------------------------------
+                |                     ------------------------------  |               | 1
+                |                     |           IBag             |  |               |
+                |                     ------------------------------  | 1             V 1..n
+                |                                  | 1                | ------------------------------
+                |                                  |                  --|          PMod/PGen **      |
+                |                                  V 1..n               ------------------------------
+                |                   1 ------------------------------
+                ----------------------|         IMod/IGen **       |
+                                      ------------------------------
+
+
+        **NOTE: PGens/PMods and IGens/IMods aren't solely for linking to instruments or samples. 
+                Only Generators may link to samples or instruments. And there are many different
+                types of Generators, most of which do not link to a sample or instrument.
+
+                But, you still need one Bag per links to one Sample or Instrument. More Bags if you're linking
+                to more Instruments or Samples. Because, while you can have many generators per Bag 
+                you can only have a single Instrument or Sample ID Generator per PBag/IBag!
+
+                Which is something I feel the official documentation doesn't insists enough on..
+                
+***************************************************************************************************************/
 
 namespace sf2
 {
@@ -210,23 +255,36 @@ namespace sf2
     };
 
     /***********************************************************************************
-        SFGenZone
+        genparam_t
+            The parameter for the generator can be interpreted in those ways.
+    ***********************************************************************************/
+    typedef uint16_t genparam_t;
+    //union genparam_t
+    //{
+    //    uint16_t                            uword = 0;
+    //    int16_t                             word;
+    //    union{ uint8_t by1; uint8_t by2; }  twouby;
+    //    union{ int8_t  by1;  int8_t  by2; } twosby;
+    //};
+
+    /***********************************************************************************
+        SFGenEntry
             http://www.pjb.com.au/midi/sfspec21.html#7.5
             Basically represent a generator entry for either a Preset or Instrument.
     ***********************************************************************************/
-    struct SFGenZone
+    struct SFGenEntry  
     {
         static const uint32_t SIZE = 4; //bytes
-        eSFGen   GenOper   = eSFGen::startAddrsOffset;  //Is == 0
-        uint16_t genAmount = 0; //Can be used a uint16, a int16, or 2 bytes. But that's based on the generator, and up to the user.
+        eSFGen     GenOper   = eSFGen::startAddrsOffset;  //Is == 0
+        genparam_t genAmount; //Can be used a uint16, a int16, or 2 bytes. But that's based on the generator, and up to the user.
     };
 
     /***********************************************************************************
-        SFModZone
+        SFModEntry
             http://www.pjb.com.au/midi/sfspec21.html#7.4
             Basically represent a modulator entry for a Preset or Instrument
     ***********************************************************************************/
-    struct SFModZone
+    struct SFModEntry
     {
         static const uint32_t SIZE = 10; //bytes
 
@@ -270,6 +328,26 @@ namespace sf2
         int16_t release = 0;
     };
 
+    //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()
+    //{
+    //    static const Envelope Sf2MaxVolEnv
+    //    {
+    //        5000, //20sec
+    //        8000, //100sec
+    //        5000, //20sec
+    //        1440, //144db
+    //        8000, //100sec
+    //        8000, //100sec
+    //    }; //The Maximum value of each parameters in the envelope for a volume envelope
+    //    static const Envelope Sf2MinVolEnv; //The Minimum value of each parameters in the envelope for a volume envelope
+
+
+
+    //    return ;
+    //}
+
+
+
     /***********************************************************************************
         BaseGeneratorUser
             Base class that implements methods common to all generator users.
@@ -277,17 +355,6 @@ namespace sf2
     class BaseGeneratorUser
     {
     public:
-        /*
-            The parameter for the generator can be interpreted in those ways
-        */
-        typedef union 
-        {
-            uint16_t                            uword;
-            int16_t                             word;
-            union{ uint8_t by1; uint8_t by2; }  twouby;
-            union{ int8_t  by1;  int8_t  by2; } twosby;
-        } genparam_t;
-
         virtual ~BaseGeneratorUser(){}
 
         /*
@@ -515,6 +582,14 @@ namespace sf2
         void     SetChorusSend( uint16_t send );
         uint16_t GetChorusSend()const;
 
+        /*
+            Set or Get the Root Key
+                (def:-1, min:0, max:127)
+                This overrides the root key from the sample's smaple header.
+                A value of -1, does nothing.
+        */
+        void    SetRootKey( int16_t key );
+        int16_t GetRootKey()const;
 
     protected:
         /*
@@ -553,17 +628,17 @@ namespace sf2
             AddModulator
                 Return modulator index in this instrument's list.
         */
-        size_t AddModulator( SFModZone && mod );
+        size_t AddModulator( SFModEntry && mod );
 
         /*
             GetModulator
                 Return the modulator at the index specified.
         */
-        SFModZone       & GetModulator( size_t index );
-        const SFModZone & GetModulator( size_t index )const;
+        SFModEntry       & GetModulator( size_t index );
+        const SFModEntry & GetModulator( size_t index )const;
 
-        std::vector<SFModZone>       & GetModulators()      { return m_mods; }
-        const std::vector<SFModZone> & GetModulators()const { return m_mods; }
+        std::vector<SFModEntry>       & GetModulators()      { return m_mods; }
+        const std::vector<SFModEntry> & GetModulators()const { return m_mods; }
 
         /*
             GetNbModulators
@@ -575,16 +650,51 @@ namespace sf2
         //---------------------
 
     protected:
-        std::vector<SFModZone> m_mods;
+        std::vector<SFModEntry> m_mods;
+    };
+
+    /***********************************************************************************
+        ZoneBag
+            Represent a list of pbag, or ibag.
+
+            Basically, each instruments and presets may have several zones, 
+            or ibag, and pbag. 
+            Those zones are what contains the generator and modulators.
+
+            Each zones can only have a single Instrument or SampleID generator.
+            Thus having several Zone/Bag allows to have either several instruments linked 
+            to a preset, or several samples linked to an instrument!
+            (Still, its overcomplicated for nothing.. But I didn't write this format..)
+    ***********************************************************************************/
+    class ZoneBag : public BaseModulatorUser, public BaseGeneratorUser
+    {}; //Not much to put in here..
+
+    /***********************************************************************************
+        BaseZoneBagOwner
+            Class for handling common tasks to all Bag users.
+
+            Handle assigning new zone, and accessing them.
+    ***********************************************************************************/
+    class BaseZoneBagOwner
+    {
+    public:
+        virtual ~BaseZoneBagOwner(){}
+
+        size_t          AddZone(ZoneBag && zone)      { m_zones.push_back(std::move(zone)); return (m_zones.size()-1); } //Can't trust MSVC with move op..
+        ZoneBag       & GetZone( size_t index )       { return m_zones[index]; }
+        const ZoneBag & GetZone( size_t index )const  { return m_zones[index]; }
+        size_t          GetNbZone()const              { return m_zones.size(); }
+
+    protected:
+        std::vector<ZoneBag> m_zones;
     };
 
 
     /***********************************************************************************
         Instrument
-            Represent a single instrument. Or something that links a sample to a set of
-            velocities or keys.
+            Represent a single Soundfont instrument entry.
     ***********************************************************************************/
-    class Instrument : public BaseGeneratorUser, public BaseModulatorUser
+    class Instrument : public BaseZoneBagOwner
     {
     public:
         //----------------
@@ -604,14 +714,14 @@ namespace sf2
         inline const std::string & GetName()const                     { return m_name; }
 
     private:
-        std::string m_name;
+        std::string          m_name;
     };
 
 
     /***********************************************************************************
         Preset
     ***********************************************************************************/
-    class Preset : public BaseGeneratorUser, public BaseModulatorUser
+    class Preset : public BaseZoneBagOwner
     {
     public:
 
@@ -624,19 +734,6 @@ namespace sf2
         //------------
         //  Properties
         //------------
-        /*
-
-        */
-        size_t AddInstrument( Instrument && inst );
-
-        /*
-        */
-        inline Instrument       & GetInstument( size_t index )      { return m_instruments[index]; }
-        inline const Instrument & GetInstument( size_t index )const { return m_instruments[index]; }
-
-        /*
-        */
-        inline size_t GetNbInstruments()const            { return m_instruments.size(); }
 
         /*
             Get/Set Name
@@ -684,7 +781,7 @@ namespace sf2
         uint32_t                      m_genre;
         uint32_t                      m_morpho;
 
-        std::vector<Instrument>       m_instruments;
+        //std::vector<Instrument>       m_instruments;
     };
 
     /***********************************************************************************
@@ -887,8 +984,15 @@ namespace sf2
         const std::vector<Preset> & GetPresets()const;
         Preset                    & GetPreset( size_t index );
         const Preset              & GetPreset( size_t index )const;
-
         inline size_t               GetNbPresets()const       { return m_presets.size(); }
+                                    
+        size_t                      AddInstrument( Instrument && inst );
+        inline Instrument         & GetInstument( size_t index )      { return m_instruments[index]; }
+        inline const Instrument   & GetInstument( size_t index )const { return m_instruments[index]; }
+
+        /*
+        */
+        inline size_t GetNbInstruments()const            { return m_instruments.size(); }
 
 
         /*
@@ -915,10 +1019,11 @@ namespace sf2
         size_t Read( const std::string & sf2path );
 
     private:
-        std::string         m_sfname;
+        std::string             m_sfname;
 
-        std::vector<Sample> m_samples;
-        std::vector<Preset> m_presets;
+        std::vector<Sample>     m_samples;
+        std::vector<Preset>     m_presets;
+        std::vector<Instrument> m_instruments;
     };
 
 };

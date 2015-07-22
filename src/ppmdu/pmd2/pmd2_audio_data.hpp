@@ -270,10 +270,15 @@ namespace pmd2 { namespace audio
             uint16_t unk17    = 0; //0x10
             uint16_t smplid   = 0; //0x12
 
-            uint16_t unk18    = 0; //0x14
-            uint16_t unk19    = 0; //0x16
+            int8_t  tune      = 0; //0x14
+            int8_t  group     = 0; //0x15
 
-            uint16_t unk20    = 0; //0x18
+            int8_t  rootkey   = 0; //0x16
+            int8_t  unk49     = 0; //0x17
+
+            uint8_t smplvol   = 0; //0x18
+            uint8_t smplpan   = 0; //0x19
+
             uint8_t  smplgain = 0; //0x1A
             uint8_t  unk22    = 0; //0x1B
             uint16_t unk23    = 0; //0x1C
@@ -285,11 +290,18 @@ namespace pmd2 { namespace audio
             uint8_t  unk38      = 0; //0x23
             uint16_t unk39      = 0; //0x24
             uint16_t unk40      = 0; //0x26
-            uint16_t unk41      = 0; //0x28
-            uint16_t unk42      = 0; //0x2A
-            uint16_t unk43      = 0; //0x2C
-            int8_t   smplrel    = 0; //0x2E
-            int8_t   unk49      = 0; //0x2F
+
+            int8_t   firate     = 0; //0x28
+            int8_t   fidur      = 0; //0x29
+
+            int8_t   susdelay   = 0; //0x2A
+            int8_t   susvol     = 0; //0x2B
+
+            int8_t   fodelay    = 0; //0x2C
+            int8_t   forate     = 0; //0x2D
+
+            int8_t   release    = 0; //0x2E
+            int8_t   reldecay   = 0; //0x2F
 
             template<class _outit>
                 _outit WriteToContainer( _outit itwriteto )const
@@ -299,7 +311,7 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk11,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk25,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( lowkey,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( lowkey,   itwriteto );
                 itwriteto = utils::WriteIntToByteVector( hikey,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk13,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk46,    itwriteto );
@@ -311,9 +323,16 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk16,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk17,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( smplid,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk18,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk19,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk20,    itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( tune,     itwriteto );
+                itwriteto = utils::WriteIntToByteVector( group,    itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( rootkey,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( unk49,    itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( smplvol,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( smplpan,  itwriteto );
+
                 itwriteto = utils::WriteIntToByteVector( smplgain, itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk22,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk23,    itwriteto );
@@ -325,12 +344,18 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk38,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk39,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk40,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk41,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk42,    itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk43,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( smplrel,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk48,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( firate,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( fidur,    itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( susdelay, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( susvol,   itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( fodelay,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( forate,   itwriteto );
+
+                itwriteto = utils::WriteIntToByteVector( release,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( reldecay, itwriteto );
                 return itwriteto;
             }
 
@@ -343,7 +368,7 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk11,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk25,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( lowkey,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( lowkey,   itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( hikey,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk13,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk46,    itReadfrom );
@@ -355,9 +380,16 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk16,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk17,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( smplid,   itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk18,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk19,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk20,    itReadfrom );
+
+                itReadfrom = utils::ReadIntFromByteContainer( tune,     itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( group,    itReadfrom );
+
+                itReadfrom = utils::ReadIntFromByteContainer( rootkey,  itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( unk49,    itReadfrom );
+
+                itReadfrom = utils::ReadIntFromByteContainer( smplvol,  itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( smplpan,  itReadfrom );
+
                 itReadfrom = utils::ReadIntFromByteContainer( smplgain, itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk22,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk23,    itReadfrom );
@@ -369,47 +401,19 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk38,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk39,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk40,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk41,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk42,    itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk43,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( smplrel,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk48,  itReadfrom );
-                //unk10      = utils::ReadIntFromByteVector<decltype(unk10)>   (itReadfrom);
-                //id         = utils::ReadIntFromByteVector<decltype(id)>      (itReadfrom);
-                //unk11      = utils::ReadIntFromByteVector<decltype(unk11)>   (itReadfrom);
-                //unk25      = utils::ReadIntFromByteVector<decltype(unk25)>   (itReadfrom);
+                itReadfrom = utils::ReadIntFromByteContainer( firate,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( fidur,    itReadfrom );
 
-                //unk12      = utils::ReadIntFromByteVector<decltype(unk12)>   (itReadfrom);
-                //unk45      = utils::ReadIntFromByteVector<decltype(unk45)>   (itReadfrom);
-                //unk13      = utils::ReadIntFromByteVector<decltype(unk13)>   (itReadfrom);
-                //unk46      = utils::ReadIntFromByteVector<decltype(unk46)>   (itReadfrom);
-                //unk14      = utils::ReadIntFromByteVector<decltype(unk14)>   (itReadfrom);
-                //unk47      = utils::ReadIntFromByteVector<decltype(unk47)>   (itReadfrom);
-                //unk15      = utils::ReadIntFromByteVector<decltype(unk15)>   (itReadfrom);
-                //unk48      = utils::ReadIntFromByteVector<decltype(unk48)>   (itReadfrom);
+                itReadfrom = utils::ReadIntFromByteContainer( susdelay, itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( susvol,   itReadfrom );
 
-                //unk16      = utils::ReadIntFromByteVector<decltype(unk16)>   (itReadfrom);
-                //unk17      = utils::ReadIntFromByteVector<decltype(unk17)>   (itReadfrom);
-                //smplid     = utils::ReadIntFromByteVector<decltype(smplid)>  (itReadfrom);
-                //unk18      = utils::ReadIntFromByteVector<decltype(unk18)>   (itReadfrom);
-                //unk19      = utils::ReadIntFromByteVector<decltype(unk19)>   (itReadfrom);
-                //unk20      = utils::ReadIntFromByteVector<decltype(unk20)>   (itReadfrom);
-                //smplgain   = utils::ReadIntFromByteVector<decltype(smplgain)>(itReadfrom);
-                //unk22      = utils::ReadIntFromByteVector<decltype(unk22)>   (itReadfrom);
-                //unk23      = utils::ReadIntFromByteVector<decltype(unk23)>   (itReadfrom);
-                //unk24      = utils::ReadIntFromByteVector<decltype(unk24)>   (itReadfrom);
+                itReadfrom = utils::ReadIntFromByteContainer( fodelay,  itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( forate,   itReadfrom );
 
-                //unk35      = utils::ReadIntFromByteVector<decltype(unk35)>   (itReadfrom);
-                //unk36      = utils::ReadIntFromByteVector<decltype(unk36)>   (itReadfrom);
-                //unk37      = utils::ReadIntFromByteVector<decltype(unk37)>   (itReadfrom);
-                //unk38      = utils::ReadIntFromByteVector<decltype(unk38)>   (itReadfrom);
-                //unk39      = utils::ReadIntFromByteVector<decltype(unk39)>   (itReadfrom);
-                //unk40      = utils::ReadIntFromByteVector<decltype(unk40)>   (itReadfrom);
-                //unk41      = utils::ReadIntFromByteVector<decltype(unk41)>   (itReadfrom);
-                //unk42      = utils::ReadIntFromByteVector<decltype(unk42)>   (itReadfrom);
-                //unk43      = utils::ReadIntFromByteVector<decltype(unk43)>   (itReadfrom);
-                //unk44      = utils::ReadIntFromByteVector<decltype(unk44)>   (itReadfrom);
+                itReadfrom = utils::ReadIntFromByteContainer( release,  itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( reldecay, itReadfrom );
+
                 return itReadfrom;
             }
         };
@@ -510,6 +514,9 @@ namespace pmd2 { namespace audio
         std::vector<PrgiSmplEntry>    m_mappedsmpls;
     };
 
+    /*
+    */
+
     /*****************************************************************************************
         SampleBank
             This class is used to maintain references to sample data. 
@@ -518,24 +525,46 @@ namespace pmd2 { namespace audio
     class SampleBank
     {
     public:
-        typedef std::vector<uint8_t>                smpldata_t;
-        typedef std::unique_ptr<DSE::WavInfo>       wavinfoptr_t;
-        typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
+        typedef std::unique_ptr<std::vector<uint8_t>> smpl_t;            //Pointer to a vector of raw sample data
+        typedef std::unique_ptr<DSE::WavInfo>         wavinfoptr_t;      //Pointer to wavinfo
 
-        SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::map<size_t,smpldata_t> && smplsraw )
-            :m_wavinfotbl(std::move(wavitbl)), //MSVC is too derp to use the correct constructor..
-             m_SampleData(std::move(smplsraw))
+        struct SampleBlock
+        {
+            wavinfoptr_t pinfo_;
+            smpl_t       pdata_;
+
+            inline bool isnull() { return (pinfo_ == nullptr) && (pdata_ == nullptr); }
+
+            SampleBlock(){}
+            SampleBlock(const SampleBlock&)             = delete;
+            SampleBlock & operator=(const SampleBlock&) = delete;
+
+            SampleBlock( SampleBlock && other )
+            {
+                pinfo_.reset( other.pinfo_.release() );
+                pdata_.reset( other.pdata_.release() );
+            }
+
+            SampleBlock & operator=( SampleBlock && other )
+            {
+                pinfo_.reset( other.pinfo_.release() );
+                pdata_.reset( other.pdata_.release() );
+                return *this;
+            }
+        };
+        typedef SampleBlock smpldata_t;
+
+        SampleBank( std::vector<smpldata_t> && smpls )
+            :m_SampleData(std::move(smpls)) //MSVC is too derp to use the correct constructor..
         {}
 
         SampleBank( SampleBank && mv )
         {
-            m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
             m_SampleData = std::move( (mv.m_SampleData) );
         }
 
         SampleBank & operator=( SampleBank && mv )
         {
-            m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
             m_SampleData = std::move( (mv.m_SampleData) );
             return *this;
         }
@@ -553,43 +582,125 @@ namespace pmd2 { namespace audio
 
     public:
         //Info
-        int NbSamples()const { return m_SampleData.size(); } //Nb of actual sample slots with actual data.
-        int NbSlots  ()const { return m_wavinfotbl.size(); } //Nb of slots for samples, empty or not.
+
+        //Nb of sample slots with or without data
+        int                                 NbSlots()const     { return m_SampleData.size(); } 
 
         //Access
-        bool                 IsSampleInfoPresent( unsigned int index )const { return m_wavinfotbl[index] != nullptr; }
+        bool                                IsInfoPresent      ( unsigned int index )const { return m_SampleData[index].pinfo_ != nullptr; }
+        bool                                IsDataPresent      ( unsigned int index )const { return m_SampleData[index].pdata_ != nullptr; }
 
-        DSE::WavInfo       * sampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
-        DSE::WavInfo const * sampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
+        inline DSE::WavInfo               * sampleInfo         ( unsigned int index )      { return m_SampleData[index].pinfo_.get(); }
+        inline DSE::WavInfo const         * sampleInfo         ( unsigned int index )const { return m_SampleData[index].pinfo_.get(); }
 
-        smpldata_t         & sample             ( unsigned int index )      { return m_SampleData.at(index); }
-        const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData.at(index); }
+        inline std::vector<uint8_t>       * sample             ( unsigned int index )      { return m_SampleData[index].pdata_.get(); }
+        inline const std::vector<uint8_t> * sample             ( unsigned int index )const { return m_SampleData[index].pdata_.get(); }
 
-        smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData.at(index); }
-        const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData.at(index); }
+        inline std::vector<uint8_t>       * operator[]         ( unsigned int index )      { return sample(index); }
+        inline const std::vector<uint8_t> * operator[]         ( unsigned int index )const { return sample(index); }
 
     private:
 
+        //Copy the content pointed by the pointers, and not just the pointers themselves !
         void DoCopyFrom( const SampleBank & other )
         {
-            m_wavinfotbl.resize( other.m_wavinfotbl.size()/*, nullptr*/ ); //MSVC doesn't like to have a default value in there..
+            m_SampleData.resize( other.m_SampleData.size() );
 
-            for( size_t i = 0; i < other.m_wavinfotbl.size(); ++i  )
+            for( size_t i = 0; i < other.m_SampleData.size(); ++i  )
             {
-                if( other.m_wavinfotbl[i] != nullptr )
-                    m_wavinfotbl[i].reset( new DSE::WavInfo( *(other.m_wavinfotbl[i]) ) ); //Copy each objects and make a pointer
+                if( other.m_SampleData[i].pdata_ != nullptr )
+                    m_SampleData[i].pdata_.reset( new std::vector<uint8_t>( *(other.m_SampleData[i].pdata_) ) ); //Copy each objects and make a pointer
+
+                if( other.m_SampleData[i].pinfo_ != nullptr )
+                    m_SampleData[i].pinfo_.reset( new DSE::WavInfo( *(other.m_SampleData[i].pinfo_) ) ); //Copy each objects and make a pointer
             }
-
-            m_SampleData = other.m_SampleData;
-
-            //m_SampleData.resize( other.m_SampleData.size() );
-            //std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
         }
 
     private:
-        std::vector<wavinfoptr_t>     m_wavinfotbl; //Data on the samples
-        std::map<size_t,smpldata_t>   m_SampleData; //Actual samples
+        std::vector<smpldata_t>         m_SampleData;
     };
+    //{
+    //public:
+
+    //    typedef std::vector<uint8_t>                smpldata_t;
+    //    typedef std::unique_ptr<DSE::WavInfo>       wavinfoptr_t;
+    //    typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
+
+    //    //struct SampleBlock
+    //    //{
+    //    //    wavinfoptr_t         pinfo_;
+    //    //    std::vector<uint8_t> data_;
+    //    //};
+    //    //typedef SampleBlock                smpldata_t;
+
+    //    SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::map<size_t,smpldata_t> && smplsraw )
+    //        :m_wavinfotbl(std::move(wavitbl)), //MSVC is too derp to use the correct constructor..
+    //         m_SampleData(std::move(smplsraw))
+    //    {}
+
+    //    SampleBank( SampleBank && mv )
+    //    {
+    //        m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
+    //        m_SampleData = std::move( (mv.m_SampleData) );
+    //    }
+
+    //    SampleBank & operator=( SampleBank && mv )
+    //    {
+    //        m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
+    //        m_SampleData = std::move( (mv.m_SampleData) );
+    //        return *this;
+    //    }
+
+    //    SampleBank( const SampleBank & other )
+    //    {
+    //        DoCopyFrom(other);
+    //    }
+
+    //    const SampleBank & operator=( const SampleBank & other )
+    //    {
+    //        DoCopyFrom(other);
+    //        return *this;
+    //    }
+
+    //public:
+    //    //Info
+    //    int NbSamples()const { return m_SampleData.size(); } //Nb of actual sample slots with actual data.
+    //    int NbSlots  ()const { return m_wavinfotbl.size(); } //Nb of slots for samples, empty or not.
+
+    //    //Access
+    //    bool                 IsSampleInfoPresent( unsigned int index )const { return m_wavinfotbl[index] != nullptr; }
+
+    //    DSE::WavInfo       * sampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
+    //    DSE::WavInfo const * sampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
+
+    //    smpldata_t         & sample             ( unsigned int index )      { return m_SampleData.at(index); }
+    //    const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData.at(index); }
+
+    //    smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData.at(index); }
+    //    const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData.at(index); }
+
+    //private:
+
+    //    void DoCopyFrom( const SampleBank & other )
+    //    {
+    //        m_wavinfotbl.resize( other.m_wavinfotbl.size()/*, nullptr*/ ); //MSVC doesn't like to have a default value in there..
+
+    //        for( size_t i = 0; i < other.m_wavinfotbl.size(); ++i  )
+    //        {
+    //            if( other.m_wavinfotbl[i] != nullptr )
+    //                m_wavinfotbl[i].reset( new DSE::WavInfo( *(other.m_wavinfotbl[i]) ) ); //Copy each objects and make a pointer
+    //        }
+
+    //        m_SampleData = other.m_SampleData;
+
+    //        //m_SampleData.resize( other.m_SampleData.size() );
+    //        //std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
+    //    }
+
+    //private:
+    //    std::vector<wavinfoptr_t>     m_wavinfotbl; //Data on the samples
+    //    std::map<size_t,smpldata_t>   m_SampleData; //Actual samples
+    //};
 
 
     /*
@@ -1016,7 +1127,12 @@ namespace pmd2 { namespace audio
 
     private:
 
-
+        /*
+            GetSizeLargestPrgiChunk
+                Search the entire list of loaded swdl files, and pick the largest prgi chunk.
+                This will avoid crashing when a song has more presets than the master bank !
+        */
+        uint16_t GetSizeLargestPrgiChunk()const;
 
         /*
             Read all loaded smd/swd pairs and compile a list of instruments presets info, and a list of

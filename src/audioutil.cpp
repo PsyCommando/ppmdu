@@ -464,8 +464,10 @@ namespace audioutil
             unsigned int cntparsed = 0;
             while( dirit != diritend )
             {
+                string fext = dirit.path().getExtension();
+                std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
                 //Check all smd/swd file pairs
-                if( dirit.path().getExtension() == SMDL_FileExtension )
+                if( fext == SMDL_FileExtension )
                 {
                     Poco::File matchingswd( Poco::Path(dirit.path()).setExtension(SWDL_FileExtension) );
                     
@@ -765,7 +767,6 @@ namespace audioutil
         return std::move( trackremapinfo );
     }
 
-
     /*
     */
     uint8_t RemapInstrumentProg( uint8_t progid )
@@ -1056,9 +1057,9 @@ namespace audioutil
                     }
 
 
-                    if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower) )
+                    if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower)  && curoctave > 0 )
                         --curoctave;
-                    else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) )
+                    else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher)  && curoctave < 9 )
                         ++curoctave;
                     else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::reset) )
                         curoctave = lastoctaveevent;
@@ -1067,7 +1068,7 @@ namespace audioutil
                     if( notenb > 0xB )
                         cout<<"Warning: Got a note higher than 0xB !\n";
 
-                    int8_t mnoteid = notenb + ( (curoctave) * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
+                    int8_t mnoteid = notenb + ( curoctave * 12 ); //Midi notes begins at -1 octave, while DSE ones at 0..
                     if( static_cast<uint8_t>(mnoteid) > 127 )
                         cout<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
 

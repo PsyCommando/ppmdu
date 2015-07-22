@@ -12,19 +12,22 @@ using namespace std;
 
 namespace sf2
 {
-    static const uint32_t    SfSampleLoopEdgeCopies  = 8;  //The amount of sample points to copy on either sides of the loop within a sample.
-    static const uint32_t    RIFF_HeaderTotalLen = 12; //bytes The length of the header + the format tag
-    static const size_t      SfMinSampleZeroPad  = 46; //Minimum amount of bytes of zero padding to append a sample
-    static const uint32_t    SfEntrySHDR_Len     = 46;
-    static const uint32_t    SfEntryPHDR_Len     = 38;
-    static const uint32_t    SfEntryPBag_Len     = 4;
-    static const uint32_t    SfEntryPMod_Len     = 10;
-    static const uint32_t    SfEntryPGen_Len     = 4;
-    static const uint32_t    SfEntryInst_Len     = 22;
-    static const uint32_t    SfEntryIBag_Len     = 4;
-    static const uint32_t    SfEntryIMod_Len     = 10;
-    static const uint32_t    SfEntryIGen_Len     = 4;
-    static const std::string SF_DefIsng          = "EMU8000";
+    static const uint32_t    RIFF_HeaderTotalLen     = 12; //bytes The length of the header + the format tag
+
+    static const uint32_t    SfSampleLoopMinEdgeDist =  8;  //The amount of sample points to copy on either sides of the loop within a sample.
+    static const uint32_t    SfSampleLoopMinLen      = 32;  //Minimum distance between the start of a loop and the end, for it to be SF2 loopable.
+    static const size_t      SfMinSampleZeroPad      = 46; //Minimum amount of bytes of zero padding to append a sample
+
+    static const uint32_t    SfEntrySHDR_Len         = 46;
+    static const uint32_t    SfEntryPHDR_Len         = 38;
+    static const uint32_t    SfEntryPBag_Len         =  4;
+    static const uint32_t    SfEntryPMod_Len         = 10;
+    static const uint32_t    SfEntryPGen_Len         =  4;
+    static const uint32_t    SfEntryInst_Len         = 22;
+    static const uint32_t    SfEntryIBag_Len         =  4;
+    static const uint32_t    SfEntryIMod_Len         = 10;
+    static const uint32_t    SfEntryIGen_Len         =  4;
+    static const std::string SF_DefIsng              = "EMU8000";
 
     /*
         Format tags for the chunks used in the SF2 format.
@@ -164,46 +167,125 @@ namespace sf2
     //    }
     //}
 
-    /*
+    /**************************************************************************************
+        MakeSampleLoopLegal
+            This coppy the looped data points of a sample a few times, if the sample 
+            is too short to be looped according to the SF2 format's specs.
+
+            It also copy the first 8 data points if the loopbeg is the same pos as the
+            beginning of the sample. 
+            It does the same with the end.
+
+            So that :
+                - loopbeg > (beg + 7)
+                - loopend < (end - 7)
+                - (loopend - loopend) >= 32 
+    **************************************************************************************/
+    std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t loopbeg, uint32_t loopend )
+    {
+        const size_t          smpllen      = sample.size();
+        const int32_t         looplen      = loopend - loopbeg;
+        size_t                allocsz      = smpllen;
+        uint32_t              loopntimes   = 1;                 //The nb of times the samples should be loop to be legal
+
+        //#0 - Determine what to do with this sample
+        const bool bPrefixSmpls = loopbeg < SfSampleLoopMinEdgeDist;             //Whether we need to insert samples between beg and loopbeg
+        const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEdgeDist; //Whether we need to insert samples between loopend and end
+        const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
+
+        if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
+            return sample; //Nothing to do here !
+
+        const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
+        const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
+
+        //#1 - Compute size to reserve
+        if( bExtraLoops )
+        {
+            loopntimes = SfSampleLoopMinLen / looplen; //Compute the amount of times to loop the sample to reach the legal length
+
+            //If there is any remainder, just loop it another time !
+            if( (SfSampleLoopMinLen % looplen) != 0 )
+                ++loopntimes;
+
+            allocsz += ( loopntimes * looplen ); //Add those extra loop samples to the amount to reserve
+        }
+
+        if( bPrefixSmpls )
+            allocsz += (SfSampleLoopMinEdgeDist - distbeglp2beg); //Add the nb of dummy samples to prefix
+        if( bSuffixSmpls )
+            allocsz += (SfSampleLoopMinEdgeDist - distlpend2end ); //Add the nb of dummy samples to append
+
+        //#2 - Allocate
+        std::vector<pcm16s_t> legalloop;
+        legalloop.reserve( allocsz );
+
+        //#3 - Assemble the new sample
+        auto legalloopins = back_inserter( legalloop );
+
+        if( bPrefixSmpls )
+            std::fill_n( legalloopins, (SfSampleLoopMinEdgeDist - distbeglp2beg), sample.front() ); //Copy the first data point a few times
+
+        //Copy whatever is between beg and loopbeg
+        std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
+
+        //Put the data between the loop points as many times as needed
+        auto itlpbeg = sample.begin() + distbeglp2beg;
+        for( unsigned int cntlp = 0; cntlp < loopntimes; ++cntlp ) //Copy the sample's looped zone as many times as needed
+            std::copy_n( itlpbeg, looplen, legalloopins );
+
+        //Copy whatever is between loopend and end
+        std::copy_n( sample.begin(), distlpend2end, legalloopins );
+
+        if( bSuffixSmpls )
+            std::fill_n( legalloopins, (SfSampleLoopMinEdgeDist - distlpend2end ), sample.front() ); //Copy the first data point a few times
+
+        //#4 - Move the legal sample into the old one
+        sample = std::move(legalloop);
+        return sample;
+    }
+
+
+    /**************************************************************************************
         PrepareSampleLoopPoints
-            This method simply copy 8 times the first sample point of the loop. Puts for of those copies
-            before loopbeg, and 4 after loopend.
+            This method simply copy 8 times the first sample point of the loop. Puts for 
+            of those copies before loopbeg, and 4 after loopend.
 
             loopbeg and loop end must be in nb of samples, not in bytes !!!
-    */
-    std::vector<pcm16s_t> PrepareSampleLoopPoints( std::vector<pcm16s_t> && sample, uint32_t loopbeg, uint32_t loopend )
-    {
-        if( loopbeg == loopend )
-            return std::move(sample);
-
-        vector<pcm16s_t> newvec;
-        auto             newvecins = back_inserter( newvec );
-#if SF2_ADD_EXTRA_LOOP_BYTES
-        size_t           newvecsz  = (SfSampleLoopEdgeCopies*2) + sample.size();//(2 * SfSampleLoopEdgeCopies) + sample.size();
-#else
-        size_t           newvecsz  = sample.size();//(2 * SfSampleLoopEdgeCopies) + sample.size();
-#endif
-        newvec.reserve(newvecsz);
-
-#ifdef _DEBUG
-        if( loopbeg > sample.size() || loopend > sample.size() )
-            assert(false);
-#endif
-
-#if SF2_ADD_EXTRA_LOOP_BYTES
-        //Copy the 8 copied sample points at the end and at the beginning + the old vector's data
-        std::copy_n( sample.begin(), loopbeg, newvecins );                       //Copy any samples before loop beg
-        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopEdgeCopies, newvecins );       //Put the 8 looping samples
-        std::copy_n( sample.begin() + loopbeg, (loopend - loopbeg), newvecins ); //Copy the rest of the loop
-        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopEdgeCopies, newvecins );       //Put the 8 looping samples
-        std::copy  ( sample.begin() + loopend, sample.end(), newvecins );        //Copy the rest of the sample
-#else
-        std::copy  ( sample.begin(), sample.end(), newvecins );        //Copy the rest of the sample
-#endif
-
-        //Move over the new smaple data 
-        return std::move(newvec);
-    }
+    **************************************************************************************/
+//    std::vector<pcm16s_t> PrepareSampleLoopPoints( std::vector<pcm16s_t> && sample, uint32_t loopbeg, uint32_t loopend )
+//    {
+//        if( loopbeg == loopend )
+//            return std::move(sample);
+//
+//        vector<pcm16s_t> newvec;
+//        auto             newvecins = back_inserter( newvec );
+//#if SF2_ADD_EXTRA_LOOP_BYTES
+//        size_t           newvecsz  = (SfSampleLoopMinEdgeDist/**2*/) + sample.size();//(2 * SfSampleLoopMinEdgeDist) + sample.size();
+//#else
+//        size_t           newvecsz  = sample.size();//(2 * SfSampleLoopMinEdgeDist) + sample.size();
+//#endif
+//        newvec.reserve(newvecsz);
+//
+//#ifdef _DEBUG
+//        if( loopbeg > sample.size() || loopend > sample.size() )
+//            assert(false);
+//#endif
+//
+//#if SF2_ADD_EXTRA_LOOP_BYTES
+//        //Copy the 8 copied sample points at the end and at the beginning + the old vector's data
+//        std::copy_n( sample.begin(), loopbeg, newvecins );                       //Copy any samples before loop beg
+//        //std::copy_n( (sample.begin() + loopbeg), SfSampleLoopMinEdgeDist, newvecins );       //Put the 8 looping samples
+//        std::copy_n( sample.begin() + loopbeg, (loopend - loopbeg), newvecins ); //Copy the rest of the loop
+//        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopMinEdgeDist, newvecins );       //Put the 8 looping samples
+//        std::copy  ( sample.begin() + loopend, sample.end(), newvecins );        //Copy the rest of the sample
+//#else
+//        std::copy  ( sample.begin(), sample.end(), newvecins );        //Copy the rest of the sample
+//#endif
+//
+//        //Move over the new smaple data 
+//        return std::move(newvec);
+//    }
 
 //=========================================================================================
 //  SounFontRIFFWriter
@@ -467,20 +549,21 @@ namespace sf2
             for( const auto & smpl : m_sf.GetSamples() )
             {
                 //Write down position
-                std::streampos smplstart = GetCurTotalNbByWritten();
-                auto           loadedsmpl = smpl.Data();
+                std::streampos smplstart  = GetCurTotalNbByWritten();
+                auto           loadedsmpl = std::move( smpl.Data() );   //Never trust MSVC with move constructors and static type abstraction
+                auto           loopbounds = smpl.GetLoopBounds();
 
-                
-                
-                auto                      loopbounds = smpl.GetLoopBounds();
+#ifdef _DEBUG
                 if( loopbounds.second > loadedsmpl.size() )
-                    cout<<"OMFG..\n";
+                    cout<<"OMFG.. Loop end out of bound, WTF!?\n";
+#endif
+                if( labs(loopbounds.second - loopbounds.first) != 0 )
+                    MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
 
-                vector<pcm16s_t>          data(std::move( PrepareSampleLoopPoints( std::move(loadedsmpl), loopbounds.first, loopbounds.second ) ));
                 ostreambuf_iterator<char> itout(m_out);
 
                 //Write sample data
-                for( const pcm16s_t & point : data )
+                for( const pcm16s_t & point : loadedsmpl )
                     itout = utils::WriteIntToByteVector( point, itout );
 
                 //Save the begining and end position within the sdata chunk before padding
@@ -577,10 +660,23 @@ namespace sf2
                 uint32_t       loopbeg = 0;
                 uint32_t       loopend = 0;
 
-                if( loop.second != 0 )
+                if( labs(loop.second - loop.first) != 0 ) //abs because we're not sure yet what the values means in the original SWDL
                 {
-                    loopbeg = smplbeg + (static_cast<uint32_t>(loop.first)  + SfSampleLoopEdgeCopies ); //Shift by 8, because of the extra data points added for looping
-                    loopend = smplbeg + (static_cast<uint32_t>(loop.second) + SfSampleLoopEdgeCopies ); //Shift by 8, because of the extra data points added for looping
+                    uint32_t extrasmpls = 0; //Any extra samples that were added to compensate for a possible non-legal loop
+
+                    if( loop.first < SfSampleLoopMinEdgeDist ) //Check if we actually moved the loopbeg
+                    {
+                        extrasmpls += std::min( 0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - loop.first) );
+                        loopbeg     = smplbeg + (static_cast<uint32_t>(loop.first) + extrasmpls ); //Compensate for extra required data points for being made loop legal
+                    }
+                    else
+                        loopbeg = smplbeg + static_cast<uint32_t>(loop.first);
+                    
+                    //if( (smplend - loop.second) < SfSampleLoopMinEdgeDist ) //Check if we actually moved the loopend
+                    //{
+                    //    extrasmpls += std::min( 0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - (smplend - loop.second)) );
+                        loopend = smplbeg + (static_cast<uint32_t>(loop.second) + extrasmpls ); //Compensate for extra required data points for being made loop legal
+                    //}
                 }
 #else
                 //Calculate those first, to avoid casting all the time.. 
@@ -591,8 +687,8 @@ namespace sf2
 
                 if( loop.second != 0 )
                 {
-                    loopbeg = smplbeg + (static_cast<uint32_t>(loop.first)   ); //Shift by 8, because of the extra data points added for looping
-                    loopend = smplbeg + (static_cast<uint32_t>(loop.second)  ); //Shift by 8, because of the extra data points added for looping
+                    loopbeg = smplbeg + (static_cast<uint32_t>(loop.first)   );
+                    loopend = smplbeg + (static_cast<uint32_t>(loop.second)  );
                 }
 #endif
 
@@ -621,7 +717,7 @@ namespace sf2
 
             //End the list with a zeroed out entry
             static const std::array<char,4> EOSMarker{{'E','O','S',0}};
-            itout = std::copy  ( EOSMarker.begin(), EOSMarker.end(),itout );
+            itout = std::copy  ( EOSMarker.begin(), EOSMarker.end(), itout );
             itout = std::fill_n( itout, (SfEntrySHDR_Len - EOSMarker.size()), 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
@@ -634,6 +730,7 @@ namespace sf2
         {
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
             ostreambuf_iterator<char>      itout(m_out);
+            uint16_t                       pbagndx = 0; //Keep track of the nb of pbags so far
 
             for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
             {
@@ -648,8 +745,13 @@ namespace sf2
                 itout = utils::WriteIntToByteVector( preset.GetPresetNo(), itout );
                 //Write Bank #
                 itout = utils::WriteIntToByteVector( preset.GetBankNo(), itout );
+
                 //Write Preset Bag Index
-                itout = utils::WriteIntToByteVector( static_cast<uint16_t>(i), itout );
+                itout = utils::WriteIntToByteVector( pbagndx, itout );
+
+                //Increment pbag!
+                pbagndx += preset.GetNbZone();
+
                 //Write Library 
                 itout = utils::WriteIntToByteVector( preset.GetLibrary(), itout );
                 //Write Genre
@@ -660,8 +762,25 @@ namespace sf2
 
             //End the list with a zeroed out entry
             static const std::array<char,4> EOPMarker{{'E','O','P',0}};
+
+            //Set some compile time constants here, so less chances for me to derp again! :D
+            static const size_t             LenFirstPart = sizeof( result_of<decltype(&Preset::GetPresetNo)(Preset)>::type) +
+                                                           sizeof( result_of<decltype(&Preset::GetBankNo)  (Preset)>::type);
+            static const size_t             LenLastPart  = sizeof( result_of<decltype(&Preset::GetLibrary) (Preset)>::type) +
+                                                           sizeof( result_of<decltype(&Preset::GetGenre)   (Preset)>::type) +
+                                                           sizeof( result_of<decltype(&Preset::GetMorpho)  (Preset)>::type);
+
             itout = std::copy  ( EOPMarker.begin(), EOPMarker.end(),itout );
-            itout = std::fill_n( itout, (SfEntryPHDR_Len - EOPMarker.size()), 0 );
+            itout = std::fill_n( itout, (ShortNameLen - EOPMarker.size()),  0  ); //Put the zeros after the string
+
+            //Write the preset# and bank#
+            itout = std::fill_n( itout, LenFirstPart,  0 );
+
+            //** Write the very last bag index to the dummy terminal ibag entry **
+            itout = utils::WriteIntToByteVector( pbagndx, itout );
+            
+            //Then write the library genre and morphology
+            itout = std::fill_n( itout, LenLastPart, 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -673,17 +792,9 @@ namespace sf2
             uint16_t                       pgenndx = 0;
             uint16_t                       pmodndx = 0;
 
-            //Write the indexed of each preset's modulator and generators list in the pgen and pmod chunks
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
-            {
-                const auto & preset = m_sf.GetPresets()[i];
-
-                itout = utils::WriteIntToByteVector( pgenndx, itout );
-                itout = utils::WriteIntToByteVector( pmodndx, itout );
-
-                pgenndx += preset.GetNbGenerators();
-                pmodndx += preset.GetNbModulators();
-            }
+            //Write the index of each preset's modulator and generators list in the pgen and pmod chunks
+            for( size_t cntpres = 0; cntpres < m_sf.GetNbPresets(); ++cntpres )
+                WriteBagEntries( m_sf.GetPreset(cntpres), pgenndx, pmodndx, itout );
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryPBag_Len, 0 );
@@ -696,22 +807,8 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
             ostreambuf_iterator<char>      itout(m_out);
 
-            //Write the indexed of each preset's modulator and generators list in the pgen and pmod chunks
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
-            {
-                const auto & preset = m_sf.GetPresets()[i];
-
-                for( size_t cntmod = 0; cntmod < preset.GetNbModulators(); ++cntmod )
-                {
-                    const auto & modu = preset.GetModulator(cntmod);
-
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
-                    itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
-                }
-            }
+            for( size_t cntpres = 0; cntpres < m_sf.GetNbPresets(); ++cntpres )
+                WriteModulatorEntries( m_sf.GetPreset(cntpres), itout );
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryPMod_Len, 0 );
@@ -724,17 +821,8 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
             ostreambuf_iterator<char>      itout(m_out);
 
-            //Write the indexed of each preset's modulator and generators list in the pgen and pmod chunks
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
-            {
-                const auto & preset = m_sf.GetPresets()[i];
-
-                for( const auto & gene : preset.GetGenerators() )
-                {
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
-                    itout = utils::WriteIntToByteVector( gene.second.uword,                 itout );
-                }
-            }
+            for( size_t cntpres = 0; cntpres < m_sf.GetNbPresets(); ++cntpres )
+                WriteGeneratorEntries( m_sf.GetPreset(cntpres), itout );
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryPGen_Len, 0 );
@@ -749,31 +837,35 @@ namespace sf2
         {
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
             ostreambuf_iterator<char>      itout(m_out);
+            uint16_t                       instbagndx = 0; //Keep track of the total amount of ibags this far
 
-            //Write the indexed of each preset's modulator and generators list in the pgen and pmod chunks
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
+            //Make an entry for each instrument, and put an index to the start of each instrument's bag list
+            for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
             {
-                const auto & preset = m_sf.GetPreset(i);
+                const auto & curinst = m_sf.GetInstument(cntinst);
 
-                for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
-                {
-                    const auto & inst = preset.GetInstument(cntinst);
+                const size_t charstocopy = std::min( curinst.GetName().size(), (ShortNameLen-1) ); 
+                const size_t charstozero = ShortNameLen - charstocopy;                          //Nb of zeros to append
 
-                    const size_t charstocopy = std::min( inst.GetName().size(), (ShortNameLen-1) ); 
-                    const size_t charstozero = ShortNameLen - charstocopy;                          //Nb of zeros to append
+                //Write Name
+                itout = std::copy_n( curinst.GetName().begin(), charstocopy, itout );
+                itout = std::fill_n( itout, charstozero, 0 );
 
-                    //Write Name
-                    itout = std::copy_n( inst.GetName().begin(), charstocopy, itout );
-                    itout = std::fill_n( itout, charstozero, 0 );
-                    //Write bag index
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(cntinst), itout );
-                }
+                //Write bag index
+                itout = utils::WriteIntToByteVector( instbagndx, itout );
+
+                //Increment bag index
+                instbagndx += curinst.GetNbZone();
             }
 
             //End the list with a zeroed out entry
-            static const std::array<char,4> EOIMarker{{'E','O','I',0}};
+            static const std::array<char,4> EOIMarker{{'E','O','I', 0}};
+
             itout = std::copy  ( EOIMarker.begin(), EOIMarker.end(),itout );
-            itout = std::fill_n( itout, (SfEntryInst_Len - EOIMarker.size()), 0 );
+            itout = std::fill_n( itout, (ShortNameLen - EOIMarker.size()),  0  ); //Put the zeros after the string
+
+            //And write the very last bag index to the dummy terminal ibag entry
+            itout = utils::WriteIntToByteVector( instbagndx, itout );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -785,21 +877,22 @@ namespace sf2
             uint16_t                       igenndx = 0;
             uint16_t                       imodndx = 0;
 
-            //Write the indexed of each preset's modulator and generators list in the pgen and pmod chunks
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
+            //Write the index of each bagzone's modulator and generators
+            for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
             {
-                const auto & preset = m_sf.GetPreset(i);
+                WriteBagEntries( m_sf.GetInstument(cntinst), igenndx, imodndx, itout );
+                //const auto & curinst = m_sf.GetInstument(cntinst);
 
-                for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
-                {
-                    const auto & inst = preset.GetInstument(cntinst);
+                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); cntzone++ )
+                //{
+                //    const auto & curzone = curinst.GetZone(cntzone);
 
-                    itout = utils::WriteIntToByteVector( igenndx, itout );
-                    itout = utils::WriteIntToByteVector( imodndx, itout );
+                //    itout = utils::WriteIntToByteVector( igenndx, itout );
+                //    itout = utils::WriteIntToByteVector( imodndx, itout );
 
-                    igenndx += inst.GetNbGenerators();
-                    imodndx += inst.GetNbModulators();
-                }
+                //    igenndx += curzone.GetNbGenerators();
+                //    imodndx += curzone.GetNbModulators();
+                //}
             }
 
             //End the list with a zeroed out entry
@@ -815,21 +908,24 @@ namespace sf2
 
 
             //Write each Modulators for each instruments one after the other
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
+            for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
             {
-                const auto & preset = m_sf.GetPreset(i);
+                WriteModulatorEntries( m_sf.GetInstument(cntinst), itout );
+                //const auto & curinst = m_sf.GetInstument(cntinst);
 
-                for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
-                {
-                    for( const auto & modu : preset.GetInstument(cntinst).GetModulators() )
-                    {
-                        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
-                        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
-                        itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
-                        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
-                        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
-                    }
-                }
+                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); cntzone++ )
+                //{
+                //    const auto & curzone = curinst.GetZone(cntzone);
+
+                //    for( const auto & modu : curzone.GetModulators() )
+                //    {
+                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
+                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
+                //        itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
+                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
+                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
+                //    }
+                //}
             }
 
             //End the list with a zeroed out entry
@@ -843,25 +939,85 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
             ostreambuf_iterator<char>      itout(m_out);
 
-            //Write the generators for every instruments one after the other
-            for( size_t i = 0; i < m_sf.GetNbPresets(); ++i )
+            for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
             {
-                const auto & preset = m_sf.GetPreset(i);
+                WriteGeneratorEntries( m_sf.GetInstument(cntinst), itout );
+                //const auto & curinst = m_sf.GetInstument(cntinst);
 
-                for( size_t cntinst = 0; cntinst < preset.GetNbInstruments(); ++cntinst )
-                {
-                    for( const auto & gene : preset.GetInstument(cntinst).GetGenerators() )
-                    {
-                        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
-                        itout = utils::WriteIntToByteVector( gene.second.uword,                 itout );
-                    }
-                }
+                ////Get each zone
+                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); ++cntzone )
+                //{
+                //    const auto & curzone = curinst.GetZone(cntzone);
+
+                //    for( const auto & gene : curzone.GetGenerators() )
+                //    {
+                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
+                //        itout = utils::WriteIntToByteVector( gene.second.uword,                 itout );
+                //    }
+                //}
             }
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryIGen_Len, 0 );
 
             return (GetCurTotalNbByWritten() - prewrite);
+        }
+
+
+
+        //
+        //  Utilities
+        //
+        template<class _ZoneOwnerCollection>
+            void WriteGeneratorEntries( _ZoneOwnerCollection content, ostreambuf_iterator<char> & itout )
+        {
+            //Get each zone
+            for( size_t cntzone = 0; cntzone < content.GetNbZone(); ++cntzone )
+            {
+                const auto & curzone = content.GetZone(cntzone);
+
+                for( const auto & gene : curzone.GetGenerators() )
+                {
+                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
+                    itout = utils::WriteIntToByteVector( gene.second,                       itout );
+                }
+            }
+        }
+
+        template<class _ZoneOwnerCollection>
+            void WriteModulatorEntries( _ZoneOwnerCollection content, ostreambuf_iterator<char> & itout )
+        {
+            //Get each zone
+            for( size_t cntzone = 0; cntzone < content.GetNbZone(); ++cntzone )
+            {
+                const auto & curzone = content.GetZone(cntzone);
+
+                for( const auto & modu : curzone.GetModulators() )
+                {
+                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
+                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
+                    itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
+                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
+                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
+                }
+            }
+        }
+
+        template<class _ZoneOwnerCollection>
+            void WriteBagEntries(_ZoneOwnerCollection content, uint16_t & gencnt, uint16_t & modcnt, ostreambuf_iterator<char> & itout )
+        {
+            //Write the index of each bagzone's modulator and generators
+            for( size_t cntzone = 0; cntzone < content.GetNbZone(); cntzone++ )
+            {
+                const auto & curzone = content.GetZone(cntzone);
+
+                itout = utils::WriteIntToByteVector( gencnt, itout );
+                itout = utils::WriteIntToByteVector( modcnt, itout );
+
+                gencnt += curzone.GetNbGenerators();
+                modcnt += curzone.GetNbModulators();
+            }
+
         }
 
 
@@ -934,6 +1090,13 @@ namespace sf2
     Sample & SoundFont::GetSample( size_t index )
     {
         return m_samples[index];
+    }
+
+    size_t SoundFont::AddInstrument( Instrument && inst )
+    {
+        size_t index = m_instruments.size();
+        m_instruments.push_back( std::move(inst) );
+        return index;
     }
 
     size_t SoundFont::Write( const std::string & sf2path )
@@ -1152,13 +1315,6 @@ namespace sf2
         :m_name(name), m_presetNo(presetno), m_bankNo(bankno), m_library(lib), m_genre(genre), m_morpho(morpho)
     {}
 
-    size_t Preset::AddInstrument( Instrument && inst )
-    {
-        size_t index = m_instruments.size();
-        m_instruments.push_back( std::move(inst) );
-        return index;
-    }
-
 //=========================================================================================
 //  Instrument
 //=========================================================================================
@@ -1221,7 +1377,7 @@ namespace sf2
             Return a pointer to the specified generator's value, 
             or null if it doesn't exist.
     */
-    BaseGeneratorUser::genparam_t * BaseGeneratorUser::GetGenerator( eSFGen gen )
+    genparam_t * BaseGeneratorUser::GetGenerator( eSFGen gen )
     {
         auto itfound = m_gens.find( gen );
 
@@ -1231,7 +1387,7 @@ namespace sf2
             return nullptr;
     }
 
-    const BaseGeneratorUser::genparam_t * BaseGeneratorUser::GetGenerator( eSFGen gen )const
+    const genparam_t * BaseGeneratorUser::GetGenerator( eSFGen gen )const
     {
         auto itfound = m_gens.find( gen );
 
@@ -1245,7 +1401,7 @@ namespace sf2
         GetGenerator
             Return a reference to the specified generator's value.
     */
-    BaseGeneratorUser::genparam_t & BaseGeneratorUser::GetGenerator( size_t index )
+    genparam_t & BaseGeneratorUser::GetGenerator( size_t index )
     {
         if( index < m_gens.size() )
         {
@@ -1257,7 +1413,7 @@ namespace sf2
             throw std::out_of_range("BaseGeneratorUser::GetGenerator() : Index out of bound !");
     }
 
-    const BaseGeneratorUser::genparam_t & BaseGeneratorUser::GetGenerator( size_t index )const
+    const genparam_t & BaseGeneratorUser::GetGenerator( size_t index )const
     {
         if( index < m_gens.size() )
         {
@@ -1286,9 +1442,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetSampleId( size_t sampleid )
     {
-        genparam_t val;
-        val.uword = static_cast<uint16_t>(sampleid);
-        AddGenerator( eSFGen::sampleID, val );
+        AddGenerator( eSFGen::sampleID, static_cast<uint16_t>(sampleid) );
     }
 
     std::pair<bool,size_t> BaseGeneratorUser::GetSampleId()const
@@ -1296,7 +1450,7 @@ namespace sf2
         auto res = GetGenerator( eSFGen::sampleID );
 
         if( res != nullptr )
-            return make_pair(true, res->uword);
+            return make_pair(true, *res );
         else
             return make_pair(false, 0);
     }
@@ -1311,9 +1465,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetInstrumentId( size_t instrumentid )
     {
-        genparam_t val;
-        val.uword = static_cast<uint16_t>(instrumentid);
-        AddGenerator( eSFGen::instrument, val );
+        AddGenerator( eSFGen::instrument, static_cast<uint16_t>(instrumentid) );
     }
 
     std::pair<bool,size_t> BaseGeneratorUser::GetInstrumentId()const
@@ -1321,7 +1473,7 @@ namespace sf2
         auto res = GetGenerator( eSFGen::instrument );
 
         if( res != nullptr )
-            return make_pair(true, res->uword);
+            return make_pair(true, *res);
         else
             return make_pair(false, 0);
     }
@@ -1332,10 +1484,10 @@ namespace sf2
     */
     void BaseGeneratorUser::SetKeyRange( int8_t lokey, int8_t hikey )
     {
-        genparam_t val;
-        val.twosby.by1 = lokey; //MSB is lowest key
-        val.twosby.by2 = hikey;
-        AddGenerator( eSFGen::keyRange, val );
+        //genparam_t val = (lokey << 8) | hikey;
+        //val.twosby.by1 = lokey; //MSB is lowest key
+        //val.twosby.by2 = hikey;
+        AddGenerator( eSFGen::keyRange, static_cast<uint16_t>(lokey | (hikey << 8) ) );
     }
     
     MidiKeyRange BaseGeneratorUser::GetKeyRange()const
@@ -1345,8 +1497,8 @@ namespace sf2
 
         if( res != nullptr )
         {
-            kr.lokey = res->twosby.by1;
-            kr.hikey = res->twosby.by2;
+            kr.lokey = (*res) & 0xFF /*->twosby.by1*/;
+            kr.hikey = (*res) >>   8 /*->twosby.by2*/;
         }
 
         return std::move(kr);
@@ -1358,10 +1510,10 @@ namespace sf2
     */
     void BaseGeneratorUser::SetVelRange( int8_t lokvel, int8_t hivel )
     {
-        genparam_t val;
-        val.twosby.by1 = lokvel; //MSB is lowest key
-        val.twosby.by2 = hivel;
-        AddGenerator( eSFGen::velRange, val );
+        //genparam_t val;
+        //val.twosby.by1 = lokvel; //MSB is lowest key
+        //val.twosby.by2 = hivel;
+        AddGenerator( eSFGen::velRange, static_cast<uint16_t>(lokvel | (hivel << 8) ) );
     }
 
     MidiVeloRange BaseGeneratorUser::GetVelRange()const
@@ -1371,8 +1523,8 @@ namespace sf2
 
         if( res != nullptr )
         {
-            vr.lovel = res->twosby.by1;
-            vr.hivel = res->twosby.by2;
+            vr.lovel = (*res) & 0xFF /*->twosby.by1*/;
+            vr.hivel = (*res) >>   8/*->twosby.by2*/;
         }
 
         return std::move(vr);
@@ -1390,17 +1542,17 @@ namespace sf2
     void BaseGeneratorUser::SetVolEnvelope( const Envelope & env )
     {
         genparam_t param;
-        param.word = env.delay;
+        param = static_cast<uint16_t>(env.delay);
         AddGenerator( eSFGen::delayVolEnv,  param );
-        param.word = env.attack;
+        param = static_cast<uint16_t>(env.attack);
         AddGenerator( eSFGen::attackVolEnv, param );
-        param.word = env.hold;
+        param = static_cast<uint16_t>(env.hold);
         AddGenerator( eSFGen::holdVolEnv,   param );
-        param.word = env.decay;
+        param = static_cast<uint16_t>(env.decay);
         AddGenerator( eSFGen::decayVolEnv,  param );
-        param.word = env.sustain;
+        param = static_cast<uint16_t>(env.sustain);
         AddGenerator( eSFGen::sustainVolEnv,param );
-        param.word = env.release;
+        param = static_cast<uint16_t>(env.release);
         AddGenerator( eSFGen::releaseVolEnv,param );
     }
 
@@ -1415,17 +1567,17 @@ namespace sf2
         Envelope result;
 
         if( delay != nullptr )
-            result.delay   = delay->word;
+            result.delay   = static_cast<int16_t>(*delay);
         if( attack != nullptr )
-            result.attack  = attack->word;
+            result.attack  = static_cast<int16_t>(*attack);
         if( hold != nullptr )
-            result.hold    = hold->word;
+            result.hold    = static_cast<int16_t>(*hold);
         if( decay != nullptr )
-            result.decay   = decay->word;
+            result.decay   = static_cast<int16_t>(*decay);
         if( sustain != nullptr )
-            result.sustain = sustain->word;
+            result.sustain = static_cast<int16_t>(*sustain);
         if( release != nullptr )
-            result.release = release->word;
+            result.release = static_cast<int16_t>(*release);
 
         return result;
     }
@@ -1442,17 +1594,17 @@ namespace sf2
     void BaseGeneratorUser::SetModEnvelope( const Envelope & env )
     {
         genparam_t param;
-        param.word = env.delay;
+        param = static_cast<uint16_t>(env.delay);
         AddGenerator( eSFGen::delayModEnv,  param );
-        param.word = env.attack;
+        param = static_cast<uint16_t>(env.attack);
         AddGenerator( eSFGen::attackModEnv, param );
-        param.word = env.hold;
+        param = static_cast<uint16_t>(env.hold);
         AddGenerator( eSFGen::holdModEnv,   param );
-        param.word = env.decay;
+        param = static_cast<uint16_t>(env.decay);
         AddGenerator( eSFGen::decayModEnv,  param );
-        param.word = env.sustain;
+        param = static_cast<uint16_t>(env.sustain);
         AddGenerator( eSFGen::sustainModEnv,param );
-        param.word = env.release;
+        param = static_cast<uint16_t>(env.release);
         AddGenerator( eSFGen::releaseModEnv,param );
     }
 
@@ -1467,17 +1619,17 @@ namespace sf2
         Envelope result;
 
         if( delay != nullptr )
-            result.delay   = delay->word;
+            result.delay   = static_cast<int16_t>(*delay);
         if( attack != nullptr )
-            result.attack  = attack->word;
+            result.attack  = static_cast<int16_t>(*attack);
         if( hold != nullptr )
-            result.hold    = hold->word;
+            result.hold    = static_cast<int16_t>(*hold);
         if( decay != nullptr )
-            result.decay   = decay->word;
+            result.decay   = static_cast<int16_t>(*decay);
         if( sustain != nullptr )
-            result.sustain = sustain->word;
+            result.sustain = *sustain;
         if( release != nullptr )
-            result.release = release->word;
+            result.release = static_cast<int16_t>(*release);
 
         return result;
     }
@@ -1492,9 +1644,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetCoarseTune( int16_t tune )
     {
-        genparam_t val;
-        val.word = tune; 
-        AddGenerator( eSFGen::coarseTune, val );
+        AddGenerator( eSFGen::coarseTune, tune );
     }
     
     int16_t BaseGeneratorUser::GetCoarseTune()const
@@ -1502,7 +1652,7 @@ namespace sf2
         auto ctune = GetGenerator( eSFGen::coarseTune );
 
         if( ctune != nullptr )
-            return ctune->word;
+            return *ctune;
         else
             return 0;
     }
@@ -1515,11 +1665,9 @@ namespace sf2
             Its additive with the "CoarseTune" generator.
                 
     */
-    void BaseGeneratorUser::SetFineTune( int16_t tune )
+    void BaseGeneratorUser::SetFineTune( int16_t ftune )
     {
-        genparam_t val;
-        val.word = tune; 
-        AddGenerator( eSFGen::fineTune, val );
+        AddGenerator( eSFGen::fineTune, ftune );
     }
 
     int16_t BaseGeneratorUser::GetFineTune()const
@@ -1527,7 +1675,7 @@ namespace sf2
         auto ftune = GetGenerator( eSFGen::fineTune );
 
         if( ftune != nullptr )
-            return ftune->word;
+            return *ftune;
         else
             return 0;
     }
@@ -1538,9 +1686,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetSmplMode( eSmplMode mode )
     {
-        genparam_t val;
-        val.word = static_cast<uint16_t>(mode); 
-        AddGenerator( eSFGen::sampleMode, val );
+        AddGenerator( eSFGen::sampleMode, static_cast<uint16_t>(mode) );
     }
 
     eSmplMode BaseGeneratorUser::GetSmplMode()const
@@ -1548,7 +1694,7 @@ namespace sf2
         auto smpmode = GetGenerator( eSFGen::sampleMode );
 
         if( smpmode != nullptr )
-            return static_cast<eSmplMode>(smpmode->word);
+            return static_cast<eSmplMode>(*smpmode);
         else
             return eSmplMode::noloop;
     }
@@ -1562,9 +1708,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetScaleTuning( uint16_t scale )
     {
-        genparam_t val;
-        val.uword = scale; 
-        AddGenerator( eSFGen::scaleTuning, val );
+        AddGenerator( eSFGen::scaleTuning, scale );
     }
 
     uint16_t BaseGeneratorUser::GetScaleTuning()const
@@ -1572,7 +1716,7 @@ namespace sf2
         auto scaletune = GetGenerator( eSFGen::scaleTuning );
 
         if( scaletune != nullptr )
-            return scaletune->uword;
+            return *scaletune;
         else
             return 100;
     }
@@ -1586,9 +1730,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetInitAtt( uint16_t att )
     {
-        genparam_t val;
-        val.uword = att; 
-        AddGenerator( eSFGen::initialAttenuation, val );
+        AddGenerator( eSFGen::initialAttenuation, att );
     }
 
     uint16_t BaseGeneratorUser::GetInitAtt()const
@@ -1596,7 +1738,7 @@ namespace sf2
         auto initatt = GetGenerator( eSFGen::initialAttenuation );
 
         if( initatt != nullptr )
-            return initatt->uword;
+            return *initatt;
         else
             return 0;
     }
@@ -1608,9 +1750,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetPan( int16_t pan )
     {
-        genparam_t val;
-        val.word = pan; 
-        AddGenerator( eSFGen::pan, val );
+        AddGenerator( eSFGen::pan, pan );
     }
 
     int16_t BaseGeneratorUser::GetPan()const
@@ -1618,7 +1758,7 @@ namespace sf2
         auto pan = GetGenerator( eSFGen::pan );
 
         if( pan != nullptr )
-            return pan->word;
+            return *pan;
         else
             return 0;
     }
@@ -1632,9 +1772,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetExclusiveClass( uint16_t id )
     {
-        genparam_t val;
-        val.uword = id; 
-        AddGenerator( eSFGen::exclusiveClass, val );
+        AddGenerator( eSFGen::exclusiveClass, id );
     }
 
     uint16_t BaseGeneratorUser::GetExclusiveClass()const
@@ -1642,7 +1780,7 @@ namespace sf2
         auto exclass = GetGenerator( eSFGen::exclusiveClass );
 
         if( exclass != nullptr )
-            return exclass->uword;
+            return *exclass;
         else
             return 0;
     }
@@ -1656,9 +1794,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetReverbSend( uint16_t send )
     {
-        genparam_t val;
-        val.uword = send; 
-        AddGenerator( eSFGen::reverbEffectsSend, val );
+        AddGenerator( eSFGen::reverbEffectsSend, send );
     }
 
     uint16_t BaseGeneratorUser::GetReverbSend()const
@@ -1666,7 +1802,7 @@ namespace sf2
         auto send = GetGenerator( eSFGen::reverbEffectsSend );
 
         if( send != nullptr )
-            return send->uword;
+            return *send;
         else
             return 0;
     }
@@ -1680,9 +1816,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetChorusSend( uint16_t send )
     {
-        genparam_t val;
-        val.uword = send; 
-        AddGenerator( eSFGen::chorusEffectsSend, val );
+        AddGenerator( eSFGen::chorusEffectsSend, send );
     }
 
     uint16_t BaseGeneratorUser::GetChorusSend()const
@@ -1690,9 +1824,24 @@ namespace sf2
         auto send = GetGenerator( eSFGen::chorusEffectsSend );
 
         if( send != nullptr )
-            return send->uword;
+            return *send;
         else
             return 0;
+    }
+
+    void BaseGeneratorUser::SetRootKey( int16_t key )
+    {
+        AddGenerator( eSFGen::overridingRootKey, key );
+    }
+
+    int16_t BaseGeneratorUser::GetRootKey()const
+    {
+        auto overrideroot = GetGenerator( eSFGen::overridingRootKey );
+
+        if( overrideroot != nullptr )
+            return *overrideroot;
+        else
+            return -1;
     }
 
 //=========================================================================================
@@ -1703,7 +1852,7 @@ namespace sf2
         AddModulator
             Return modulator index in this instrument's list.
     */
-    size_t BaseModulatorUser::AddModulator( SFModZone && mod )
+    size_t BaseModulatorUser::AddModulator( SFModEntry && mod )
     {
         //Search for a modulator with the same set of 
         // ModSrcOper, ModDestOper, and ModSrcAmtOper
@@ -1732,12 +1881,12 @@ namespace sf2
         GetModulator
             Return the modulator at the index specified.
     */
-    SFModZone & BaseModulatorUser::GetModulator( size_t index )
+    SFModEntry & BaseModulatorUser::GetModulator( size_t index )
     {
         return m_mods[index];
     }
 
-    const SFModZone & BaseModulatorUser::GetModulator( size_t index )const
+    const SFModEntry & BaseModulatorUser::GetModulator( size_t index )const
     {
         return m_mods[index];
     }
@@ -1749,68 +1898,5 @@ namespace sf2
     {
         return m_mods.size();
     }
-
-
-    /*
-        template<class _init>
-            _init ReadIGENEntries( _init itbeg, _init itend )const
-        {
-            bool bgotkeyrange = false;
-            bool isglobalzone = false; 
-            assert(false); //#TODO: Need to write code to detect if this is a global zone !
-
-            while( itbeg != itend )
-            {
-                eSFGen     gen   = utils::ReadIntFromByteContainer<uint16_t>(itbeg);
-                genparam_t param = utils::ReadIntFromByteContainer<uint16_t>(itbeg);
-
-                //Any Key Range generator must be the first in the list! Or be ignored.
-                if( (gen == eSFGen::keyRange) )
-                {
-                    if( m_gens.size() > 0 )
-                    {
-                        cerr << "<!>- Ignored Key Range generator not at the top of the generator list!\n";
-                        continue;
-                    }
-                    else
-                        bgotkeyrange = true;
-                }
-
-                //Any present Velocity Range generator must be only preceeded by a Key Range generator ! Or be ignored.
-                if( (gen == eSFGen::velRange) && (m_gens.size() > 1) && !bgotkeyrange )
-                {
-                    cerr << "<!>- Ignored Velocity Range generator not at the top, or after a Key Range generator, in the generator list!\n";
-                    continue;
-                }
-
-                //Non-global zone must end with a SampleID generator, or be ignored!
-                if( itbeg == itend && !isglobalzone && gen != eSFGen::sampleID )
-                {
-                    throw std::runtime_error("Instrument::ReadIGENEntries(): Non-global Instrument generator zone doesn't end with a sample ID generator!\n");
-                }
-
-                if( m_gens.find(gen) != m_gens.end() )
-                    m_gens.insert( gen, param );
-                else
-                    throw std::runtime_error( "Instrument::ReadIGENEntries(): Duplicate Generator entry encountered!" );
-            }
-            return itbeg;
-        }
-
-        template<class _init>
-            _init ReadIMODEntries( _init itbeg, _init itend )const
-        {
-            while( itbeg != itend )
-            {
-                SFModZone curzone = SFModZone(); //Refresh object state after move
-                curzone.ModSrcOper    = utils::ReadIntFromByteContainer<uint16_t>(itbeg); //iter incremented
-                curzone.ModDestOper   = utils::ReadIntFromByteContainer<uint16_t>(itbeg); //iter incremented
-                curzone.modAmount     = utils::ReadIntFromByteContainer<int16_t> (itbeg); //iter incremented
-                curzone.ModAmtSrcOper = utils::ReadIntFromByteContainer<int16_t> (itbeg); //iter incremented
-                curzone.ModTransOper  = utils::ReadIntFromByteContainer<int16_t> (itbeg); //iter incremented
-                m_mods.push_back(std::move(curzone));
-            }
-            return itbeg;
-        }*/
 
 };

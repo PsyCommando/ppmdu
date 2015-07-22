@@ -83,6 +83,9 @@ namespace DSE
         //HoldNote
         { eTrkEventCodes::HoldNote,      eTrkEventCodes::Invalid, 0, false, false, false,  "Hold" },
 
+        //Unk_0xCB
+        { eTrkEventCodes::Unk_0xCB,      eTrkEventCodes::Invalid, 2, false, false, false,  "Unk_0xCB" },
+
         //Unk_0xD0
         { eTrkEventCodes::Unk_0xD0,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD0" },
 

@@ -51,6 +51,9 @@ namespace DSE
     inline uint32_t   ChunkIDToInt( eDSEChunks id    );
 
 
+    static const int16_t DSERootKey = 60; //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
+
+
 //====================================================================================================
 // Structs
 //====================================================================================================
@@ -159,8 +162,8 @@ namespace DSE
 
         uint16_t unk1       = 0;
         uint16_t id         = 0; //Index/ID of the sample
-        uint16_t unk2       = 0;
-        uint16_t rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
+        int16_t  pitchoffst = 0; //Possibly the pitch offset from the root key in 1/250th of a semitone
+        int16_t  rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
         uint16_t unk4       = 0;
         uint16_t unk5       = 0;
         uint16_t unk6       = 0;
@@ -196,7 +199,7 @@ namespace DSE
         {
             itwriteto = utils::WriteIntToByteVector( unk1,  itwriteto );
             itwriteto = utils::WriteIntToByteVector( id, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk2, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( pitchoffst, itwriteto );
             itwriteto = utils::WriteIntToByteVector( rootkey, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk4, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk5, itwriteto );
@@ -236,7 +239,7 @@ namespace DSE
         {
             unk1       = utils::ReadIntFromByteVector<decltype(unk1)>     (itReadfrom); //iterator is incremented
             id         = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
-            unk2       = utils::ReadIntFromByteVector<decltype(unk2)>     (itReadfrom);
+            pitchoffst = utils::ReadIntFromByteVector<decltype(pitchoffst)>(itReadfrom);
             rootkey    = utils::ReadIntFromByteVector<decltype(rootkey)>  (itReadfrom);
             unk4       = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
             unk5       = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
@@ -316,6 +319,44 @@ namespace DSE
 //====================================================================================================
 // Functions
 //====================================================================================================
+
+    /*
+        This converts the pitch value used for samples pitch correction in SWDL files, into semitones.
+    */
+    static int16_t DSESamplePitchToSemitone( int16_t dsesmplpitch )
+    {
+        static const int16_t NbUnitPerSemitone = 250;
+        return ( dsesmplpitch / NbUnitPerSemitone );
+    }
+
+    /*
+        This converts the pitch value used for samples pitch correction in SWDL files, into cents(1/100th of a semitone).
+    */
+    static int16_t DSESamplePitchToCents( int16_t dsesmplpitch )
+    {
+        static const double NbUnitPerSemitone = 250.0;
+        double result = ( static_cast<double>(dsesmplpitch) / NbUnitPerSemitone ) * 100.0;
+        return static_cast<int16_t>( lround(result) );
+    }
+
+    /*
+        This converts the pitch value used for pitch bend events (0xD7) into semitones.
+    */
+    static int16_t DSEPitchBendToSemitone( int16_t dsepitchbend )
+    {
+        static const int16_t NbUnitPerSemitone = 500;
+        return ( dsepitchbend / NbUnitPerSemitone );
+    }
+
+    /*
+        This converts the pitch value used for pitch bend events (0xD7) into cents(1/100th of a semitone).
+    */
+    static int16_t DSEPitchBendToCents( int16_t dsepitchbend )
+    {
+        static const double NbUnitPerSemitone = 500.0;
+        double result = ( static_cast<double>(dsepitchbend) / NbUnitPerSemitone ) * 100.0;
+        return static_cast<int16_t>( lround(result) );
+    }
 
     /************************************************************************
         DSE_ChunkIDLookup

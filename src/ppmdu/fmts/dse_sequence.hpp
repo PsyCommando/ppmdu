@@ -18,7 +18,8 @@ namespace DSE
 //====================================================================================================
 
     //Default tick rate of the Digital Sound Element Sound Driver for sequence playback.
-    static const uint16_t DefaultTickRte = 48; 
+    static const uint16_t     DefaultTickRte   = 48; 
+    static const unsigned int NbTrkDelayValues = 16; //The nb of track delay prefixes in the DSE format
 
 
 //  Track Events Specifics Constants
@@ -44,8 +45,8 @@ namespace DSE
         _two3rdsof16th  =  8, // (1/16 note)/3 * 2
         _32nd           =  6, // 1/32 note
         _dot64th        =  4, // dotted 1/64 note
-        _two3rdsof32th  =  3, // (1/32 note)/3 * 2  #NOTE: Its not truly 2/3 of a 32th note, because the game seems to round the notes, so its not identical to the last one.
-        _64th           =  2, // 1/64 note          #NOTE: Its not truly a 64th note, because the game seems to round the notes, so its not identical to the last one.
+        _two3rdsof32th  =  3, // (1/32 note)/3 * 2  #NOTE: Its not truly 2/3 of a 32th note, because the game seems to round the duration, so its not identical to the last one.
+        _64th           =  2, // 1/64 note          #NOTE: Its not truly a 64th note, because the game seems to round the duration, so its not identical to the last one.
     };
 
     /****************************************************************************
@@ -72,6 +73,91 @@ namespace DSE
         { 0x8E, eTrkDelays::_two3rdsof32th  },
         { 0x8F, eTrkDelays::_64th           },
     }};
+
+
+    /****************************************************************************
+        TickDelayToTrkDelayCodes
+            The track delay values from eTrkDelays, but in an map to 
+            facilitate getting the corred DSE track Delay code from 
+            a delay in ticks!
+    ****************************************************************************/
+    static const std::array<uint8_t, NbTrkDelayValues> TickDelayToTrkDelayCodes
+    {{
+        static_cast<uint8_t>(eTrkDelays::_half),
+        static_cast<uint8_t>(eTrkDelays::_dotqtr),
+        static_cast<uint8_t>(eTrkDelays::_two3rdsofahalf),
+
+        static_cast<uint8_t>(eTrkDelays::_qtr),
+        static_cast<uint8_t>(eTrkDelays::_dot8th),
+        static_cast<uint8_t>(eTrkDelays::_two3rdsofqtr),
+
+        static_cast<uint8_t>(eTrkDelays::_8th),
+        static_cast<uint8_t>(eTrkDelays::_dot16th),
+        static_cast<uint8_t>(eTrkDelays::_two3rdsof8th),
+
+        static_cast<uint8_t>(eTrkDelays::_16th),
+        static_cast<uint8_t>(eTrkDelays::_dot32nd),
+        static_cast<uint8_t>(eTrkDelays::_two3rdsof16th),
+
+        static_cast<uint8_t>(eTrkDelays::_32nd),
+        static_cast<uint8_t>(eTrkDelays::_dot64th),
+        static_cast<uint8_t>(eTrkDelays::_two3rdsof32th),
+
+        static_cast<uint8_t>(eTrkDelays::_64th),
+    }};
+    //static const std::map<uint8_t, uint8_t> TickDelayToTrkDelayCodes
+    //{{
+    //    { static_cast<uint8_t>(eTrkDelays::_half),            0x80 },
+    //    { static_cast<uint8_t>(eTrkDelays::_dotqtr),          0x81 },
+    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsofahalf),  0x82 },
+
+    //    { static_cast<uint8_t>(eTrkDelays::_qtr),             0x83 },
+    //    { static_cast<uint8_t>(eTrkDelays::_dot8th),          0x84 },
+    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsofqtr),    0x85 },
+
+    //    { static_cast<uint8_t>(eTrkDelays::_8th),             0x86 },
+    //    { static_cast<uint8_t>(eTrkDelays::_dot16th),         0x87 },
+    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof8th),    0x88 },
+
+    //    { static_cast<uint8_t>(eTrkDelays::_16th),            0x89 },
+    //    { static_cast<uint8_t>(eTrkDelays::_dot32nd),         0x8A },
+    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof16th),   0x8B },
+
+    //    { static_cast<uint8_t>(eTrkDelays::_32nd),            0x8C },
+    //    { static_cast<uint8_t>(eTrkDelays::_dot64th),         0x8D },
+    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof32th),   0x8E },
+
+    //    { static_cast<uint8_t>(eTrkDelays::_64th),            0x8F },
+    //}};
+
+    static uint8_t FindClosestTrkDelayCode( uint8_t delayticks )
+    {
+        for( size_t i = 0; i < TickDelayToTrkDelayCodes.size(); ++i )
+        {
+            if( delayticks == TickDelayToTrkDelayCodes[i] ) //Exact match
+            {
+                return TickDelayToTrkDelayCodes[i];
+            }
+            else if( (i + 1) < (TickDelayToTrkDelayCodes.size()-1) )
+            {
+                //Check if the next value is smaller than the delay. If it is, we can't get a value any closer to "delayticks".
+                if( delayticks > TickDelayToTrkDelayCodes[i+1] )
+                {
+                    //Compare this value and the next and see which one we're closest to
+                    uint8_t diff = TickDelayToTrkDelayCodes[i] - TickDelayToTrkDelayCodes[i+1];
+
+                    if( delayticks < (diff/2) )
+                        return TickDelayToTrkDelayCodes[i+1]; //The closest value in this case is the next one
+                    else
+                        return TickDelayToTrkDelayCodes[i];   //The closest value in this case is the current one
+                }
+            }
+        }
+
+        //If all else fails, return the last!
+        return TickDelayToTrkDelayCodes.back();
+    }
+
 
     //Nb of track events in the event enum
     //static const uint32_t NB_Track_Events = 18;
@@ -121,6 +207,8 @@ namespace DSE
         Unk_0xBF        = 0xBF, //Unknown
 
         HoldNote        = 0xC0, //Holds the last note indefinitely until another note is played
+
+        Unk_0xCB        = 0xCB, //Holds the last note indefinitely until another note is played
 
         Unk_0xD0        = 0xD0, //Unknown
         Unk_0xD1        = 0xD1, //Unknown
@@ -521,7 +609,7 @@ namespace DSE
             {
                 std::stringstream sstr;
                 sstr << "Unknown event type 0x" <<std::hex <<static_cast<uint16_t>(by) <<std::dec 
-                        <<" encountered! Cannot continue..";
+                     <<" encountered! Cannot continue due to unknown parameter length and possibly mis-alignment..";
                 throw std::runtime_error( sstr.str() );
             }
 
@@ -537,12 +625,13 @@ namespace DSE
             }
         }
         
+        //This reads the parameter bytes for a given event. And reduce the nb of bytes to read counter
         void fillEvent( uint8_t by )
         {
             m_curEvent.params.push_back(by);
 
             if( m_curEvent.params.size() == 1 && (m_curEventInf.evcodebeg == eTrkEventCodes::NoteOnBeg) )
-                m_bytesToRead += (m_curEvent.params.front() & NoteEvParam1NbParamsMask) >> 6;
+                m_bytesToRead += (m_curEvent.params.front() & NoteEvParam1NbParamsMask) >> 6; //For play notes events, the nb of extra bytes of data to read is contained in bits 7 and 8
 
             --m_bytesToRead;
 

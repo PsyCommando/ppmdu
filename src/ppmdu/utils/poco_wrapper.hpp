@@ -55,6 +55,25 @@ namespace utils
             Return the absolute path to the current working directory!
     ************************************************************************/
     std::string getCWD();
+
+    /************************************************************************
+        GetBaseNameOnly
+            The basename is the the last dir in the path, or the name of the 
+            file without extension.
+    ************************************************************************/
+    std::string GetBaseNameOnly( const std::string & path );
+
+    /************************************************************************
+        GetFileExtension
+            Return the file extension only.
+    ************************************************************************/
+    std::string GetFileExtension( const std::string & path );
+
+    /************************************************************************
+        GetFilename
+            Return the file name and extension only.
+    ************************************************************************/
+    std::string GetFilename( const std::string & path );
 };
 
 #endif

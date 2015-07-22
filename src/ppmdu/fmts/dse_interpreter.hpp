@@ -19,6 +19,14 @@ All wrongs reversed, no crappyrights :P
 namespace DSE
 {
 
+    //#TODO: Put this into a MIDI utility header, or something like that..
+    inline uint32_t ConvertTempoToMicrosecPerQuarterNote( uint32_t bpm )
+    {
+        static const uint32_t NbMicrosecPerMinute = 60000000;
+        return NbMicrosecPerMinute / bpm;
+    }
+
+
     /*
         eMIDIFormat
             The standard MIDI file format to use to export the MIDI data.
@@ -53,7 +61,22 @@ namespace DSE
                          const pmd2::audio::MusicSequence  & seq, 
                          const std::map<uint16_t,uint16_t> & presetbanks,
                          eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
-                         eMIDIMode                           midmode     = eMIDIMode::XG );
+                         eMIDIMode                           midmode     = eMIDIMode::GM );
+
+    /*
+        Exports the track, and make sure as much as possible that playback on GM
+        compatible devices and software is optimal. 
+
+        It uses XG or GS to switch track states for drum tracks, and forces single track midi mode.
+
+        -presetconv : Each indices in this vector represents a preset used in the source music sequence.
+                      Each entries at those indices indicates what preset to use instead when exporting the
+                      MIDI file.
+    */
+    void SequenceToGM_MIDI( const std::string                 & outmidi, 
+                            const pmd2::audio::MusicSequence  & seq, 
+                            const std::vector<uint8_t>        & presetconv,
+                            eMIDIMode                           midmode     = eMIDIMode::GM );
 
     /****************************************************************************************
         IRenderEngine

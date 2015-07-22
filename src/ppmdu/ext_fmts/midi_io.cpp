@@ -13,17 +13,6 @@ using namespace std;
 namespace pmd2 { namespace audio 
 {
 
-    /*
-        
-    */
-    class DSEToMid
-    {
-    public:
-
-
-
-    private:
-    };
 
 //
 //  Functions:
@@ -54,5 +43,8 @@ namespace pmd2 { namespace audio
     //MusicSequence ReadMIDIToSequence( const std::string & filename )
     //{
     //}
+
+
+
 
 };};

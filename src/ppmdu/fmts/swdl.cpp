@@ -25,20 +25,25 @@ namespace DSE
             ParseHeader();
             ParseMeta();
 
+//#ifdef _DEBUG
+//            if( m_hdr.nbprgislots > 0x80 )
+//                assert(false); //PRGI slot is too big wtf !
+//#endif
+
             //Parse instruments + keygroups
             auto pinst = ParseInstruments();
 
             //Parse pcmd + wavi
-            if( m_hdr.pcmdlen != 0 && m_hdr.pcmdlen != SWDL_PCMDSpecialSize )
+            if( m_hdr.pcmdlen != 0 && (m_hdr.pcmdlen & 0xFFFF0000) != SWDL_PCMDSpecialSize )
             {
                 auto psmpls = ParseSamples();
-                return PresetBank( move(m_meta), 
+                return std::move( PresetBank( move(m_meta), 
                                    move(pinst), 
-                                   move(psmpls) );
+                                   move(psmpls) ) );
             }
             else
-                return PresetBank( move(m_meta), 
-                                   move(pinst) );
+                return std::move( PresetBank( move(m_meta), 
+                                   move(pinst) ) );
         }
 
     private:
@@ -131,7 +136,7 @@ namespace DSE
             using pmd2::audio::SampleBank;
 
             //Grab the info on every samples
-            vector<SampleBank::wavinfoptr_t> winf = move( ParseWaviChunk() );
+            vector<SampleBank::smpldata_t> smpldat(std::move( ParseWaviChunk() ));
 
             //Find the PCMD chunk
             auto itpcmd = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::pcmd );
@@ -144,38 +149,41 @@ namespace DSE
             itpcmd = pcmdhdr.ReadFromContainer( itpcmd ); //Move iter after header
 
             //Grab each samples from the pcmd chunk
-            map<size_t,SampleBank::smpldata_t> smpldat;
+            //map<size_t,SampleBank::smpldata_t> smpldat;
+
+
             //smpldat.reserve(winf.size());
 
             //Build sample bounds table
             map<size_t,vector<uint8_t>::const_iterator> boundmap; //Each key is the sample that own this sample start location
             //smplbounds.reserve(winf.size() + 1);
 
-            for( size_t cntsmpl = 0; cntsmpl < winf.size(); ++cntsmpl )
+            for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
             {
-                if( winf[cntsmpl] != nullptr )
-                    boundmap.emplace( cntsmpl, (itpcmd + winf[cntsmpl]->smplpos) );
+                if( smpldat[cntsmpl].pinfo_ != nullptr )
+                    boundmap.emplace( cntsmpl, (itpcmd + (smpldat[cntsmpl].pinfo_->smplpos) ) );
             }
 
             //Append the end of the pcmd chunk to grab the last sample
             //smplbounds.push_back( ( itpcmd + pcmdhdr.datlen) );
 
             //Read the raw sample data, using the sample bounds
-            for( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
+            auto itbounds = boundmap.begin();
+            for( size_t i = 0; i < boundmap.size(); ++i, ++itbounds )//( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
             {
-                auto nextit = it;
+                auto nextit = itbounds;
                 ++nextit;
 
                 if( nextit != boundmap.end() )
-                    smpldat.emplace( it->first, SampleBank::smpldata_t( it->second, nextit->second ) ); 
+                    smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, nextit->second ) ); 
                 else //For the last element before the end, use the end of the chunk as terminator
-                    smpldat.emplace( it->first, SampleBank::smpldata_t( it->second, ( itpcmd + pcmdhdr.datlen) ) );
+                    smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, (itpcmd + pcmdhdr.datlen) ) );
             }
 
-            return std::unique_ptr<SampleBank>( new SampleBank( move(winf), move(smpldat) ) );
+            return std::unique_ptr<SampleBank>( new SampleBank( move(smpldat) ) );
         }
 
-        vector<pmd2::audio::SampleBank::wavinfoptr_t> ParseWaviChunk()
+        vector<pmd2::audio::SampleBank::smpldata_t> ParseWaviChunk()
         {
             auto itwavi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::wavi );
 
@@ -186,11 +194,11 @@ namespace DSE
             itwavi = wavihdr.ReadFromContainer( itwavi ); //Move iterator past the header
 
             //Create the vector with the nb of slots mentioned in the header
-            vector<pmd2::audio::SampleBank::wavinfoptr_t> waviptrs( m_hdr.nbwavislots );
+            vector<pmd2::audio::SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
             
             auto itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
 
-            for( auto & aptr : waviptrs )
+            for( auto & ablock : waviptrs )
             {
                 //Read a ptr
                 uint16_t smplinfoffset = utils::ReadIntFromByteVector<uint16_t>(itreadptr); //Iterator is incremented
@@ -199,7 +207,7 @@ namespace DSE
                 {
                     WavInfo winf;
                     winf.ReadFromContainer( smplinfoffset + itwavi );
-                    aptr.reset( new WavInfo(winf) );
+                    ablock.pinfo_.reset( new WavInfo(winf) );
                 }
             }
 
@@ -217,7 +225,7 @@ namespace DSE
 //========================================================================================================
     pmd2::audio::PresetBank ParseSWDL( const std::string & filename )
     {
-        return SWDLParser( utils::io::ReadFileToByteVector( filename ) );
+        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator pmd2::audio::PresetBank() );
     }
 };
 

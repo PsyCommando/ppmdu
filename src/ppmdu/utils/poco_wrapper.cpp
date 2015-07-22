@@ -83,4 +83,31 @@ namespace utils
 
         return std::move( dircontent );
     }
+
+    /*
+        GetBaseNameOnly
+            The basename is the the last dir in the path, or the name of the file without extension.
+    */
+    string GetBaseNameOnly( const string & path )
+    {
+        return std::move(Poco::Path(path).getBaseName());
+    }
+
+    /*
+        GetFileExtension
+            Return the file extension only.
+    */
+    string GetFileExtension( const string & path )
+    {
+        return std::move(Poco::Path(path).getExtension());
+    }
+
+    /*
+        GetFilename
+            Return the file name and extension only.
+    */
+    string GetFilename( const string & path )
+    {
+        return std::move(Poco::Path(path).getFileName());
+    }
 };
