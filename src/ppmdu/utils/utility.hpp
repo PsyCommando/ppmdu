@@ -172,7 +172,9 @@ namespace utils
     template<class _Ty, class _Ty2>
         _Ty Clamp( _Ty val, _Ty2 min, _Ty2 max )
     {
+#if 0 //This is broken on MSVC..
         static_assert( std::is_assignable<_Ty,_Ty2>::value, "utiliy.hpp/Clamp(): Can't assign min/max to val ! Types are incompatible!" );
+#endif
         if( val < min )
             return min;
         else if( val > max )

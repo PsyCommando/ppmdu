@@ -177,11 +177,11 @@ namespace pmd2 { namespace audio
         Convert the parameters of a DSE envelope to SF2
     */
     sf2::Envelope RemapDSEVolEnvToSF2( int8_t inrate, 
-                                       int8_t indel, 
+                                       int8_t inlvl, 
                                        int8_t hold, 
                                        int8_t sustain, 
-                                       int8_t decay, 
-                                       int8_t outrate, 
+                                       int8_t susrte, 
+                                       int8_t decrte, 
                                        int8_t rel, 
                                        int8_t reldecay )
     {
@@ -202,14 +202,23 @@ namespace pmd2 { namespace audio
         //          shift it back into the SF2 envelope value range. The actual calculation is a simple rule of three!
         //          That way we still have the full 17000 possible values, but all in the positive, which makes it all much easier
         //          to work with !
-        if( indel != 0 )
-            volenv.delay   = static_cast<int16_t>( ((indel  * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
+
+
+        //#TODO: Find a way to include the attack level, sustain rate, and RX parameter!!
+
+//        if( inlvl != 0 )
+//            volenv.delay   = static_cast<int16_t>( ((inlvl  * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
         if( inrate != 0 )
-            volenv.attack  = static_cast<int16_t>( ((inrate * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
+            volenv.attack  = static_cast<int16_t>( (( inrate * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
         if( hold != 0 )
-            volenv.hold    = static_cast<int16_t>( ((hold *  (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
-        if( decay != 0 )
-            volenv.decay   = static_cast<int16_t>( ((decay * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
+        {
+            volenv.hold   = static_cast<int16_t>( (( hold *  (labs(MinEnvTimeCent) + Max20sec ) ) / MaxSignedInt8) + MinEnvTimeCent );
+            //volenv.hold  += static_cast<int16_t>( (( susrte * (labs(MinEnvTimeCent) + (Max20sec/2) ) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+        }
+        if( decrte != 0 )
+        {
+            volenv.decay   = static_cast<int16_t>( (( decrte * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+        }
         if( sustain != 0 )
             volenv.sustain = static_cast<int16_t>( (MaxSignedInt8 - sustain) * 10  );
         if( rel != 0 )
@@ -525,6 +534,13 @@ namespace pmd2 { namespace audio
     {
         using namespace sf2;
 
+        //Make a global instrument zone
+        //ZoneBag globalzone;
+
+        //#TODO: Add stuff here if needed.
+
+        //inst.AddZone( std::move(globalzone) );
+
         //Make a zone for this entry
         ZoneBag myzone;
 
@@ -536,16 +552,16 @@ namespace pmd2 { namespace audio
         if( loopedsmpls[dseinst.smplid] )
             myzone.SetSmplMode( eSmplMode::loop );
 
-        Envelope myenv = RemapDSEVolEnvToSF2( dseinst.firate, 
-                                              dseinst.fidur, 
-                                              dseinst.susdelay, 
-                                              dseinst.susvol, 
-                                              dseinst.fodelay, 
-                                              dseinst.forate, 
+        Envelope myenv = RemapDSEVolEnvToSF2( dseinst.atkrte, 
+                                              dseinst.atklvl, 
+                                              dseinst.hold, 
+                                              dseinst.suslvl, 
+                                              dseinst.susrte,
+                                              dseinst.decrte, 
                                               dseinst.release, 
                                               dseinst.reldecay );
 
-        //myzone.SetVolEnvelope( myenv );
+        myzone.SetVolEnvelope( myenv );
 
         //int16_t coarse = (dseinst.pitch1 / 250); /*(dseinst.pitch1 / 1000) + *///(dseinst.pitch2 / 1000);
         //int16_t fine   = (/*dseinst.pitch1 +*/ dseinst.pitch2) - (coarse * 1000); //Remove the highest part of the coarse tuning, and keep only the cent
@@ -555,10 +571,10 @@ namespace pmd2 { namespace audio
         //myzone.SetFineTune( finetune ); //cents -99 to 99
         //myzone.SetCoarseTune( (pitchshift / 100) );                  //semitones -120 to 120
         //myzone.SetCoarseTune( dseinst.tune /*DSESamplePitchToSemitone(dseinst.pitch2)*/ );
-        myzone.SetCoarseTune( dseinst.unk49 );
+        myzone.SetCoarseTune( dseinst.ctune );
 
         //#TEST: Try overriding rootkey for setting the pitch !
-        myzone.SetRootKey( dseinst.rootkey );
+        myzone.SetRootKey( dseinst.rootkey);
 
         //if( dsepresetid == 0x7F ) //Non-chromatic percussion
             //myzone.SetScaleTuning( 0 ); //Never change pitch on midi key
@@ -620,7 +636,7 @@ namespace pmd2 { namespace audio
 
         sf.AddInstrument( std::move(myinst) );
         instzone.SetInstrumentId(instidcnt);
-        pre.AddZone( std::move(instzone) );
+        pre.AddZone( std::move(instzone) ); //Add the instrument zone after the global zone!
         ++instidcnt; //Increase the instrument count
 
         sf.AddPreset( std::move(pre) );
@@ -655,15 +671,15 @@ namespace pmd2 { namespace audio
                 {
                     loadfun = std::move( std::bind( ::audio::DecodeADPCM_IMA, std::ref( *samples->sample(cntsmslot) ), 1 ) );
                     smpllen = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot)->size() );
-                    loopbeg = cursminf.loopspos; /** 2 + cursminf.looplen * 2;*/ //ADPCM samples turn to pcm16, 
-                    loopend = cursminf.looplen;//smpllen;
+                    loopbeg = cursminf.loopspos * 4; /** 2 + cursminf.looplen * 2;*/ //ADPCM samples turn to pcm16, 
+                    loopend = smpllen;
                 }
                 else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
                 {
                     loadfun = std::move( std::bind( &RawBytesToPCM16Vec, samples->sample(cntsmslot) ) );
                     smpllen = samples->sample(cntsmslot)->size()/2;
-                    loopbeg = cursminf.loopspos/2 + cursminf.looplen/2;
-                    loopend = smpllen;
+                    loopbeg = cursminf.loopspos/2;
+                    loopend = smpllen;//(cursminf.looplen + cursminf.loopspos) /2;
                 }
                 else
                 {
@@ -684,14 +700,12 @@ namespace pmd2 { namespace audio
                 //Add the pitch offset to the root key 
                 //int16_t rootkey = 72;//67 + DSESamplePitchToSemitone(cursminf.pitchoffst); //When set to 72, "C5", its ~5 semitones off, with all the other pitch correction on.
                 sm.SetOriginalKey( cursminf.rootkey ); //Default to this for now, but it will be overriden in the instrument anyways
-
                 sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
-                //sm.SetPitchCorrection( DSESamplePitchToCents( cursminf.rootkey ) );
 
                 //#TODO:Come up with a better loop detection logic !!!
 
 
-                if( loopbeg && loopend /*(loopend - loopbeg) > 32 && loopbeg >= 8*/ ) //SF2 min loop len
+                if( loopend > 0 /*(loopend - loopbeg) > 32 && loopbeg >= 8*/ ) //SF2 min loop len
                 {
                     sm.SetLoopBounds ( loopbeg, loopend );
                     loopedsmpls[cntsmslot].flip();
@@ -736,7 +750,7 @@ namespace pmd2 { namespace audio
         //Export the soundfont first
         Poco::Path outsoundfont(destdir);
         outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
-        cerr<<"Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
+        cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
         mergedInstData merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
         //Then the MIDIs
@@ -747,7 +761,7 @@ namespace pmd2 { namespace audio
             fpath.makeFile();
             fpath.setExtension("mid");
 
-            cerr<<"Currently exporting smd to " <<fpath.toString() <<"\n";
+            cerr<<"<*>- Currently exporting smd to " <<fpath.toString() <<"\n";
             DSE::SequenceToMidi( fpath.toString(), m_pairs[i].first, merged.filetopreset[i] );
         }
     }

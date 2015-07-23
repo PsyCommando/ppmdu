@@ -49,6 +49,9 @@ namespace audioutil
         bool ParseOptionForceLoops ( const std::vector<std::string> & optdata ); //Loop a track and omit loop markers
         bool ParseOptionPMD2       ( const std::vector<std::string> & optdata ); //Export the content of the PMD2 "SOUND" directory
 
+        bool ParseOptionMBAT       ( const std::vector<std::string> & optdata ); //Export Master Bank And Tracks using the specified folder.
+        bool ParseOptionLog        ( const std::vector<std::string> & optdata ); //Redirects clog to the file specified
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -102,6 +105,8 @@ namespace audioutil
         bool        m_bGM;            //Whether we export to general midi compatible format or not
         int         m_nbloops;        //The amount of times to loop a track, 0 if should use loop markers instead
         bool        m_isPMD2;         //Whether we should treat the input path as the PMD2 ROM's root data folder
+
+        utils::cmdl::RAIIClogRedirect m_redirectClog;
     };
 };
 

@@ -137,6 +137,26 @@ namespace audioutil
             "-pmd2",
             std::bind( &CAudioUtil::ParseOptionPMD2, &GetInstance(), placeholders::_1 ),
         },
+
+        //Export Main Bank And Tracks
+        {
+            "mbat",
+            0,
+            "Specifying this will tell the program that that input path is the root of the directory containing a main bank and its tracks."
+            "The utility will export everything to MIDI files, and to a Sounfont file.",
+            "-mbat",
+            std::bind( &CAudioUtil::ParseOptionMBAT, &GetInstance(), placeholders::_1 ),
+        },
+
+
+        //Redirect clog to file
+        {
+            "log",
+            1,
+            "This option writes a log to the file specified as parameter.",
+            "-log \"logfilename.txt\"",
+            std::bind( &CAudioUtil::ParseOptionLog, &GetInstance(), placeholders::_1 ),
+        },
     }};
 
 
@@ -235,6 +255,20 @@ namespace audioutil
         m_isPMD2 = true;
         return true;
     }
+
+    bool CAudioUtil::ParseOptionMBAT( const std::vector<std::string> & optdata )
+    {
+        m_operationMode = eOpMode::ExportSWDLBank;
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionLog( const std::vector<std::string> & optdata )
+    {
+        m_redirectClog.Redirect(optdata[1]);
+        return true;
+    }
+
+
 
 //
 //  Program Setup and Execution

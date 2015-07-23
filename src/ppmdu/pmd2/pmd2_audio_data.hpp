@@ -274,7 +274,7 @@ namespace pmd2 { namespace audio
             int8_t  group     = 0; //0x15
 
             int8_t  rootkey   = 0; //0x16
-            int8_t  unk49     = 0; //0x17
+            int8_t  ctune     = 0; //0x17
 
             uint8_t smplvol   = 0; //0x18
             uint8_t smplpan   = 0; //0x19
@@ -291,14 +291,14 @@ namespace pmd2 { namespace audio
             uint16_t unk39      = 0; //0x24
             uint16_t unk40      = 0; //0x26
 
-            int8_t   firate     = 0; //0x28
-            int8_t   fidur      = 0; //0x29
+            int8_t   atklvl     = 0; //0x28
+            int8_t   atkrte     = 0; //0x29
 
-            int8_t   susdelay   = 0; //0x2A
-            int8_t   susvol     = 0; //0x2B
+            int8_t   hold       = 0; //0x2A
+            int8_t   suslvl     = 0; //0x2B
 
-            int8_t   fodelay    = 0; //0x2C
-            int8_t   forate     = 0; //0x2D
+            int8_t   susrte     = 0; //0x2C
+            int8_t   decrte     = 0; //0x2D
 
             int8_t   release    = 0; //0x2E
             int8_t   reldecay   = 0; //0x2F
@@ -328,7 +328,7 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( group,    itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( rootkey,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( unk49,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( ctune,    itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( smplvol,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( smplpan,  itwriteto );
@@ -345,14 +345,14 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk39,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk40,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( firate,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( fidur,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( atklvl,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( atkrte,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( susdelay, itwriteto );
-                itwriteto = utils::WriteIntToByteVector( susvol,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( hold, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( suslvl,   itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( fodelay,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( forate,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( susrte,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( decrte,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( release,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( reldecay, itwriteto );
@@ -385,7 +385,7 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( group,    itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( rootkey,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( unk49,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( ctune,    itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( smplvol,  itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( smplpan,  itReadfrom );
@@ -402,14 +402,14 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk39,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk40,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( firate,   itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( fidur,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( atklvl,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( atkrte,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( susdelay, itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( susvol,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( hold, itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( suslvl,   itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( fodelay,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( forate,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( susrte,  itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( decrte,   itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( release,  itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( reldecay, itReadfrom );

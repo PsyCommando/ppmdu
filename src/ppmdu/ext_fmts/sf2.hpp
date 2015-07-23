@@ -320,12 +320,12 @@ namespace sf2
     ***********************************************************************************/
     struct Envelope
     {
-        int16_t delay   = 0;
-        int16_t attack  = 0;
-        int16_t hold    = 0;
+        int16_t delay   = -12000;
+        int16_t attack  = -12000;
+        int16_t hold    = -12000;
         int16_t sustain = 0;
-        int16_t decay   = 0;
-        int16_t release = 0;
+        int16_t decay   = -12000;
+        int16_t release = -12000;
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()

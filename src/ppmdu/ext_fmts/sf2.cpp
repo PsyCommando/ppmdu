@@ -16,7 +16,7 @@ namespace sf2
 
     static const uint32_t    SfSampleLoopMinEdgeDist =  8;  //The amount of sample points to copy on either sides of the loop within a sample.
     static const uint32_t    SfSampleLoopMinLen      = 32;  //Minimum distance between the start of a loop and the end, for it to be SF2 loopable.
-    static const size_t      SfMinSampleZeroPad      = 46; //Minimum amount of bytes of zero padding to append a sample
+    static const size_t      SfMinSampleZeroPad      = 92;//46; //Minimum amount of bytes of zero padding to append a sample
 
     static const uint32_t    SfEntrySHDR_Len         = 46;
     static const uint32_t    SfEntryPHDR_Len         = 38;
@@ -27,7 +27,8 @@ namespace sf2
     static const uint32_t    SfEntryIBag_Len         =  4;
     static const uint32_t    SfEntryIMod_Len         = 10;
     static const uint32_t    SfEntryIGen_Len         =  4;
-    static const std::string SF_DefIsng              = "EMU8000";
+    static const string      SF_DefIsng              = "EMU8000";
+    static const string      SF_DefSft               = "ppmd_audioutil";
 
     /*
         Format tags for the chunks used in the SF2 format.
@@ -69,6 +70,69 @@ namespace sf2
         igen = 0x6967656E, //"igen"
         shdr = 0x73686472, //"shdr"
     };
+
+    //SF2 Limits
+    template<class _ValTy>
+        struct value_limits
+    {
+        typedef _ValTy myty;
+        myty min_;
+        myty def_;
+        myty max_;
+    };
+
+    //Values ranges for the Generators!
+    static const value_limits<int16_t>  SF_GenLimitsModLfoToPitch      { -12000,      0, 12000 };
+    static const value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      { -12000,      0, 12000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   { -12000,      0, 12000 };
+    static const value_limits<uint16_t> SF_GenLimitsInitFilterFc       {   1500,  13500, 13500 };
+    static const value_limits<uint16_t> SF_GenLimitsInitFilterQ        {      0,      0,   960 };
+    static const value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   { -12000,      0, 12000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{ -12000,      0, 12000 };
+    static const value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {   -960,      0,   960 };
+    static const value_limits<uint16_t> SF_GenLimitsChorusSend         {      0,      0,  1000 };
+    static const value_limits<uint16_t> SF_GenLimitsReverbSend         {      0,      0,  1000 };
+    static const value_limits<int16_t>  SF_GenLimitsPan                {   -500,      0,   500 };
+
+    static const value_limits<int16_t>  SF_GenLimitsModLfoDelay        { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsModLfoFreq         { -16000,      0,  4500 };
+    static const value_limits<int16_t>  SF_GenLimitsVibLfoDelay        { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsVibLfoFreq         { -16000,      0,  4500 };
+
+    static const value_limits<int16_t>  SF_GenLimitsModEnvDelay        { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvAttack       { -12000, -12000,  8000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvHold         { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvDecay        { -12000, -12000,  8000 };
+    static const value_limits<uint16_t> SF_GenLimitsModEnvSustain      {      0,      0,  1000 };
+    static const value_limits<int16_t>  SF_GenLimitsModEnvRelease      { -12000, -12000,  8000 };
+
+    static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200 };
+    static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200 };
+
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { -12000, -12000,  8000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvHold         { -12000, -12000,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { -12000, -12000,  8000 };
+    static const value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { -12000, -12000,  8000 };
+
+    static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200 };
+    static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200 };
+
+    static const value_limits<uint16_t> SF_GenLimitsKeyRange           { 0x0000, 0x007F, 0x7F7F};
+    static const value_limits<uint16_t> SF_GenLimitsVelRange           { 0x0000, 0x007F, 0x7F7F};
+
+    static const value_limits<int16_t> SF_GenLimitsKeynum              {      0,     -1,   127 };
+    static const value_limits<int16_t> SF_GenLimitsVelocity            {      0,     -1,   127 };
+
+    static const value_limits<int16_t> SF_GenLimitsInitAttenuation     {      0,      0,  1440 };
+
+    static const value_limits<int16_t> SF_GenLimitsCoarseTune          {   -120,      0,   120 };
+    static const value_limits<int16_t> SF_GenLimitsFineTune            {    -99,      0,    99 };
+
+    static const value_limits<uint16_t> SF_GenLimitsScaleTuning        {      0,    100,  1200 };
+    static const value_limits<uint16_t> SF_GenLimitsExcClass           {      0,      0,   127 };
+    static const value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127 };
 
 //=========================================================================================
 //  Structs
@@ -198,6 +262,8 @@ namespace sf2
 
         const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
         const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
+        const uint32_t nbdummyprefx  = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distbeglp2beg) );
+        const uint32_t nbdummypost   = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distlpend2end) );
 
         //#1 - Compute size to reserve
         if( bExtraLoops )
@@ -212,9 +278,9 @@ namespace sf2
         }
 
         if( bPrefixSmpls )
-            allocsz += (SfSampleLoopMinEdgeDist - distbeglp2beg); //Add the nb of dummy samples to prefix
+            allocsz += nbdummyprefx; //Add the nb of dummy samples to prefix
         if( bSuffixSmpls )
-            allocsz += (SfSampleLoopMinEdgeDist - distlpend2end ); //Add the nb of dummy samples to append
+            allocsz += nbdummypost; //Add the nb of dummy samples to append
 
         //#2 - Allocate
         std::vector<pcm16s_t> legalloop;
@@ -224,8 +290,12 @@ namespace sf2
         auto legalloopins = back_inserter( legalloop );
 
         if( bPrefixSmpls )
-            std::fill_n( legalloopins, (SfSampleLoopMinEdgeDist - distbeglp2beg), sample.front() ); //Copy the first data point a few times
-
+        {
+            auto itcpbeg = sample.begin();
+            std::advance( itcpbeg, distbeglp2beg );
+            std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
+            //std::fill_n( legalloopins, nbdummyprefx, sample.front() ); //Copy the first data point a few times
+        }
         //Copy whatever is between beg and loopbeg
         std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
 
@@ -238,8 +308,12 @@ namespace sf2
         std::copy_n( sample.begin(), distlpend2end, legalloopins );
 
         if( bSuffixSmpls )
-            std::fill_n( legalloopins, (SfSampleLoopMinEdgeDist - distlpend2end ), sample.front() ); //Copy the first data point a few times
-
+        {
+            auto itcpbeg = sample.begin();
+            std::advance( itcpbeg, distbeglp2beg );
+            std::copy_n( itcpbeg, nbdummypost, legalloopins );
+            //std::fill_n( legalloopins, nbdummypost, sample.front() ); //Copy the first data point a few times
+        }
         //#4 - Move the legal sample into the old one
         sample = std::move(legalloop);
         return sample;
@@ -457,6 +531,7 @@ namespace sf2
             WriteifilChunk();
             WriteisngChunk();
             WriteINAMChunk();
+            WriteISFTChunk();
 
             //Return our total
             return (m_out.tellp() - prewrite);
@@ -525,6 +600,31 @@ namespace sf2
                 m_out.put(0);
         }
 
+        void WriteISFTChunk()
+        {
+            auto              itout = ostreambuf_iterator<char>(m_out);
+            riff::ChunkHeader ISFTchnk;
+            ISFTchnk.chunk_id = static_cast<uint32_t>( eSF2Tags::ISFT );
+
+            if( m_out.tellp() % 2 != 0 )
+                ISFTchnk.length = SF_DefSft.size() + 2; //For the extra padding 0 byte
+            else
+                ISFTchnk.length = SF_DefSft.size() + 1;
+
+            //Write the chunk header
+            ISFTchnk.Write( itout );
+
+            //Write the string
+            std::copy( SF_DefSft.begin(), SF_DefSft.end(), itout );
+
+            //Terminate it with a null character
+            m_out.put(0);
+            
+            //Add extra Zero if ends on non-even byte count
+            if( m_out.tellp() % 2 != 0 )
+                m_out.put(0);
+        }
+
     //----------------------------------------------------------------
     //  SData-list
     //----------------------------------------------------------------
@@ -566,13 +666,18 @@ namespace sf2
                 for( const pcm16s_t & point : loadedsmpl )
                     itout = utils::WriteIntToByteVector( point, itout );
 
-                //Save the begining and end position within the sdata chunk before padding
+                //Save the begining and end position within the sdata chunk before zeros
                 m_smplswritepos.push_back( make_pair( (smplstart - prewrite), (GetCurTotalNbByWritten() - prewrite) ) );
 
-                //if( (GetCurTotalNbByWritten() - prewrite) % 2 == 0 )
-                    itout = std::fill_n( itout, SfMinSampleZeroPad, 0 ); //if byte count is even, just add 46 zeros
+                //Write the stupid zeros..
+                const uint32_t finalsmpllen = loadedsmpl.size();
+
+                //if( finalsmpllen < SfMinSampleZeroPad )
+                    itout = std::fill_n( itout, SfMinSampleZeroPad, 0 ); 
+                //else if( finalsmpllen % 2 == 0 )
+                //    itout = std::fill_n( itout, finalsmpllen, 0 );
                 //else
-                //    itout = std::fill_n( itout, SfMinSampleZeroPad+1, 0 ); //If byte count is odd, make it even by adding 1
+                //    itout = std::fill_n( itout, finalsmpllen + 1, 0 ); // Add one to make the byte count even
             }
 
             return (GetCurTotalNbByWritten() - prewrite);
@@ -655,8 +760,8 @@ namespace sf2
                 
 #if SF2_ADD_EXTRA_LOOP_BYTES
                 //Calculate those first, to avoid casting all the time.. 
-                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
-                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t);
+                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //Convert from samples to bytes
+                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t); //Convert from samples to bytes
                 uint32_t       loopbeg = 0;
                 uint32_t       loopend = 0;
 
@@ -666,7 +771,7 @@ namespace sf2
 
                     if( loop.first < SfSampleLoopMinEdgeDist ) //Check if we actually moved the loopbeg
                     {
-                        extrasmpls += std::min( 0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - loop.first) );
+                        extrasmpls += std::max( 0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - loop.first) );
                         loopbeg     = smplbeg + (static_cast<uint32_t>(loop.first) + extrasmpls ); //Compensate for extra required data points for being made loop legal
                     }
                     else
@@ -796,8 +901,8 @@ namespace sf2
             for( size_t cntpres = 0; cntpres < m_sf.GetNbPresets(); ++cntpres )
                 WriteBagEntries( m_sf.GetPreset(cntpres), pgenndx, pmodndx, itout );
 
-            //End the list with a zeroed out entry
-            std::fill_n( itout, SfEntryPBag_Len, 0 );
+            //End the list with a pbag entry that will be used to determine the size of the PGen and PMod chunks
+            WriteABag( itout, pgenndx, pmodndx );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -879,24 +984,10 @@ namespace sf2
 
             //Write the index of each bagzone's modulator and generators
             for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
-            {
                 WriteBagEntries( m_sf.GetInstument(cntinst), igenndx, imodndx, itout );
-                //const auto & curinst = m_sf.GetInstument(cntinst);
 
-                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); cntzone++ )
-                //{
-                //    const auto & curzone = curinst.GetZone(cntzone);
-
-                //    itout = utils::WriteIntToByteVector( igenndx, itout );
-                //    itout = utils::WriteIntToByteVector( imodndx, itout );
-
-                //    igenndx += curzone.GetNbGenerators();
-                //    imodndx += curzone.GetNbModulators();
-                //}
-            }
-
-            //End the list with a zeroed out entry
-            std::fill_n( itout, SfEntryIBag_Len, 0 );
+            //Write the last entry that will be used to find out the size of the IMod and IGen chunk
+            WriteABag( itout, igenndx, imodndx );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -909,24 +1000,7 @@ namespace sf2
 
             //Write each Modulators for each instruments one after the other
             for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
-            {
                 WriteModulatorEntries( m_sf.GetInstument(cntinst), itout );
-                //const auto & curinst = m_sf.GetInstument(cntinst);
-
-                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); cntzone++ )
-                //{
-                //    const auto & curzone = curinst.GetZone(cntzone);
-
-                //    for( const auto & modu : curzone.GetModulators() )
-                //    {
-                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
-                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
-                //        itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
-                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
-                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
-                //    }
-                //}
-            }
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryIMod_Len, 0 );
@@ -940,22 +1014,7 @@ namespace sf2
             ostreambuf_iterator<char>      itout(m_out);
 
             for( size_t cntinst = 0; cntinst < m_sf.GetNbInstruments(); ++cntinst )
-            {
                 WriteGeneratorEntries( m_sf.GetInstument(cntinst), itout );
-                //const auto & curinst = m_sf.GetInstument(cntinst);
-
-                ////Get each zone
-                //for( size_t cntzone = 0; cntzone < curinst.GetNbZone(); ++cntzone )
-                //{
-                //    const auto & curzone = curinst.GetZone(cntzone);
-
-                //    for( const auto & gene : curzone.GetGenerators() )
-                //    {
-                //        itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
-                //        itout = utils::WriteIntToByteVector( gene.second.uword,                 itout );
-                //    }
-                //}
-            }
 
             //End the list with a zeroed out entry
             std::fill_n( itout, SfEntryIGen_Len, 0 );
@@ -1011,8 +1070,9 @@ namespace sf2
             {
                 const auto & curzone = content.GetZone(cntzone);
 
-                itout = utils::WriteIntToByteVector( gencnt, itout );
-                itout = utils::WriteIntToByteVector( modcnt, itout );
+                WriteABag( itout, gencnt, modcnt );
+                //itout = utils::WriteIntToByteVector( gencnt, itout );
+                //itout = utils::WriteIntToByteVector( modcnt, itout );
 
                 gencnt += curzone.GetNbGenerators();
                 modcnt += curzone.GetNbModulators();
@@ -1020,6 +1080,11 @@ namespace sf2
 
         }
 
+        inline void WriteABag( ostreambuf_iterator<char> & itwhere, uint16_t genndx, uint16_t modndx )
+        {
+            itwhere = utils::WriteIntToByteVector( genndx, itwhere );
+            itwhere = utils::WriteIntToByteVector( modndx, itwhere );
+        }
 
         //
         SounFontRIFFWriter( const SounFontRIFFWriter & )           = delete;
@@ -1487,7 +1552,7 @@ namespace sf2
         //genparam_t val = (lokey << 8) | hikey;
         //val.twosby.by1 = lokey; //MSB is lowest key
         //val.twosby.by2 = hikey;
-        AddGenerator( eSFGen::keyRange, static_cast<uint16_t>(lokey | (hikey << 8) ) );
+        AddGenerator( eSFGen::keyRange, static_cast<uint16_t>( (lokey & 0x7F) | ( (hikey & 0x7F) << 8) ) );
     }
     
     MidiKeyRange BaseGeneratorUser::GetKeyRange()const
@@ -1513,7 +1578,7 @@ namespace sf2
         //genparam_t val;
         //val.twosby.by1 = lokvel; //MSB is lowest key
         //val.twosby.by2 = hivel;
-        AddGenerator( eSFGen::velRange, static_cast<uint16_t>(lokvel | (hivel << 8) ) );
+        AddGenerator( eSFGen::velRange, static_cast<uint16_t>( (lokvel & 0x7F) | ( (hivel & 0x7F) << 8) ) );
     }
 
     MidiVeloRange BaseGeneratorUser::GetVelRange()const
@@ -1541,19 +1606,19 @@ namespace sf2
     */
     void BaseGeneratorUser::SetVolEnvelope( const Envelope & env )
     {
-        genparam_t param;
-        param = static_cast<uint16_t>(env.delay);
-        AddGenerator( eSFGen::delayVolEnv,  param );
-        param = static_cast<uint16_t>(env.attack);
-        AddGenerator( eSFGen::attackVolEnv, param );
-        param = static_cast<uint16_t>(env.hold);
-        AddGenerator( eSFGen::holdVolEnv,   param );
-        param = static_cast<uint16_t>(env.decay);
-        AddGenerator( eSFGen::decayVolEnv,  param );
-        param = static_cast<uint16_t>(env.sustain);
-        AddGenerator( eSFGen::sustainVolEnv,param );
-        param = static_cast<uint16_t>(env.release);
-        AddGenerator( eSFGen::releaseVolEnv,param );
+        //genparam_t param;
+        //param = static_cast<uint16_t>(env.delay);
+        AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_ ) ) );
+        //param = static_cast<uint16_t>(env.attack);
+        AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>( utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ ) ) );
+        //param = static_cast<uint16_t>(env.hold);
+        AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ ) ) );
+        //param = static_cast<uint16_t>(env.decay);
+        AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ ) ) );
+        //param = static_cast<uint16_t>(env.sustain);
+        AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ ) ) );
+        //param = static_cast<uint16_t>(env.release);
+        AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ ) ) );
     }
 
     Envelope BaseGeneratorUser::GetVolEnvelope()const
@@ -1595,17 +1660,17 @@ namespace sf2
     {
         genparam_t param;
         param = static_cast<uint16_t>(env.delay);
-        AddGenerator( eSFGen::delayModEnv,  param );
+        AddGenerator( eSFGen::delayModEnv,  utils::Clamp( param, SF_GenLimitsModEnvDelay.min_, SF_GenLimitsModEnvDelay.max_ ) );
         param = static_cast<uint16_t>(env.attack);
-        AddGenerator( eSFGen::attackModEnv, param );
+        AddGenerator( eSFGen::attackModEnv, utils::Clamp( param, SF_GenLimitsModEnvAttack.min_, SF_GenLimitsModEnvAttack.max_ ) );
         param = static_cast<uint16_t>(env.hold);
-        AddGenerator( eSFGen::holdModEnv,   param );
+        AddGenerator( eSFGen::holdModEnv,   utils::Clamp( param, SF_GenLimitsModEnvHold.min_, SF_GenLimitsModEnvHold.max_ ) );
         param = static_cast<uint16_t>(env.decay);
-        AddGenerator( eSFGen::decayModEnv,  param );
+        AddGenerator( eSFGen::decayModEnv,  utils::Clamp( param, SF_GenLimitsModEnvDecay.min_, SF_GenLimitsModEnvDecay.max_ ) );
         param = static_cast<uint16_t>(env.sustain);
-        AddGenerator( eSFGen::sustainModEnv,param );
+        AddGenerator( eSFGen::sustainModEnv,utils::Clamp( param, SF_GenLimitsModEnvSustain.min_, SF_GenLimitsModEnvSustain.max_ ) );
         param = static_cast<uint16_t>(env.release);
-        AddGenerator( eSFGen::releaseModEnv,param );
+        AddGenerator( eSFGen::releaseModEnv,utils::Clamp( param, SF_GenLimitsModEnvRelease.min_, SF_GenLimitsModEnvRelease.max_ ) );
     }
 
     Envelope BaseGeneratorUser::GetModEnvelope()const
@@ -1644,7 +1709,11 @@ namespace sf2
     */
     void BaseGeneratorUser::SetCoarseTune( int16_t tune )
     {
+#if 1
+        AddGenerator( eSFGen::coarseTune, utils::Clamp( tune, SF_GenLimitsCoarseTune.min_, SF_GenLimitsCoarseTune.max_ ) );
+#else
         AddGenerator( eSFGen::coarseTune, tune );
+#endif
     }
     
     int16_t BaseGeneratorUser::GetCoarseTune()const
@@ -1654,7 +1723,7 @@ namespace sf2
         if( ctune != nullptr )
             return *ctune;
         else
-            return 0;
+            return SF_GenLimitsCoarseTune.def_;
     }
 
     /*
@@ -1667,7 +1736,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetFineTune( int16_t ftune )
     {
-        AddGenerator( eSFGen::fineTune, ftune );
+        AddGenerator( eSFGen::fineTune, utils::Clamp( ftune, SF_GenLimitsFineTune.min_, SF_GenLimitsFineTune.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetFineTune()const
@@ -1677,7 +1746,7 @@ namespace sf2
         if( ftune != nullptr )
             return *ftune;
         else
-            return 0;
+            return SF_GenLimitsFineTune.def_;
     }
 
     /*
@@ -1708,7 +1777,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetScaleTuning( uint16_t scale )
     {
-        AddGenerator( eSFGen::scaleTuning, scale );
+        AddGenerator( eSFGen::scaleTuning, utils::Clamp( scale, SF_GenLimitsScaleTuning.min_, SF_GenLimitsScaleTuning.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetScaleTuning()const
@@ -1718,7 +1787,7 @@ namespace sf2
         if( scaletune != nullptr )
             return *scaletune;
         else
-            return 100;
+            return SF_GenLimitsScaleTuning.def_;
     }
 
     /*
@@ -1730,7 +1799,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetInitAtt( uint16_t att )
     {
-        AddGenerator( eSFGen::initialAttenuation, att );
+        AddGenerator( eSFGen::initialAttenuation, utils::Clamp( att, SF_GenLimitsInitAttenuation.min_, SF_GenLimitsInitAttenuation.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetInitAtt()const
@@ -1740,7 +1809,7 @@ namespace sf2
         if( initatt != nullptr )
             return *initatt;
         else
-            return 0;
+            return SF_GenLimitsInitAttenuation.def_;
     }
 
     /*
@@ -1750,7 +1819,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetPan( int16_t pan )
     {
-        AddGenerator( eSFGen::pan, pan );
+        AddGenerator( eSFGen::pan, utils::Clamp( pan, SF_GenLimitsPan.min_, SF_GenLimitsPan.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetPan()const
@@ -1760,7 +1829,7 @@ namespace sf2
         if( pan != nullptr )
             return *pan;
         else
-            return 0;
+            return SF_GenLimitsPan.def_;
     }
 
     /*
@@ -1772,7 +1841,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetExclusiveClass( uint16_t id )
     {
-        AddGenerator( eSFGen::exclusiveClass, id );
+        AddGenerator( eSFGen::exclusiveClass, utils::Clamp( id, SF_GenLimitsExcClass.min_, SF_GenLimitsExcClass.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetExclusiveClass()const
@@ -1782,7 +1851,7 @@ namespace sf2
         if( exclass != nullptr )
             return *exclass;
         else
-            return 0;
+            return SF_GenLimitsExcClass.def_;
     }
 
     /*
@@ -1794,7 +1863,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetReverbSend( uint16_t send )
     {
-        AddGenerator( eSFGen::reverbEffectsSend, send );
+        AddGenerator( eSFGen::reverbEffectsSend, utils::Clamp( send, SF_GenLimitsReverbSend.min_, SF_GenLimitsReverbSend.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetReverbSend()const
@@ -1804,7 +1873,7 @@ namespace sf2
         if( send != nullptr )
             return *send;
         else
-            return 0;
+            return SF_GenLimitsReverbSend.def_;
     }
 
     /*
@@ -1816,7 +1885,7 @@ namespace sf2
     */
     void BaseGeneratorUser::SetChorusSend( uint16_t send )
     {
-        AddGenerator( eSFGen::chorusEffectsSend, send );
+        AddGenerator( eSFGen::chorusEffectsSend, utils::Clamp( send, SF_GenLimitsChorusSend.min_, SF_GenLimitsChorusSend.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetChorusSend()const
@@ -1826,12 +1895,12 @@ namespace sf2
         if( send != nullptr )
             return *send;
         else
-            return 0;
+            return SF_GenLimitsChorusSend.def_;
     }
 
     void BaseGeneratorUser::SetRootKey( int16_t key )
     {
-        AddGenerator( eSFGen::overridingRootKey, key );
+        AddGenerator( eSFGen::overridingRootKey, utils::Clamp( key, SF_GenLimitsOverrideRootKey.min_, SF_GenLimitsOverrideRootKey.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetRootKey()const
@@ -1841,7 +1910,7 @@ namespace sf2
         if( overrideroot != nullptr )
             return *overrideroot;
         else
-            return -1;
+            return SF_GenLimitsOverrideRootKey.def_;
     }
 
 //=========================================================================================
