@@ -7,6 +7,8 @@ psycommando@gmail.com
 Description: 
     Contains a singleton holding information relevant to how most of the library should behave.
     Basically, a form of clean "globals" !
+
+    #TODO: Use a map with named parameters instead ! It'll make it much more versatile.
 */
 #include <ppmdu/basetypes.hpp>
 #include<locale>

@@ -1,7 +1,9 @@
 #include "sf2.hpp"
 #include <ppmdu/ext_fmts/riff.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <array>
 #include <functional>
@@ -12,11 +14,66 @@ using namespace std;
 
 namespace sf2
 {
+//=========================================================================================
+//  Structs
+//=========================================================================================
+
+    /*
+        ifilDat
+            Chunk data idicating the SoundFont specification revision that the file 
+            complies to.
+    */
+    struct ifilDat
+    {
+       static const uint32_t SIZE = 4;//bytes
+       ifilDat( uint16_t maj = 2, uint16_t min = 1 )
+           :major(maj), minor(min)
+       {}
+
+       uint16_t major; //Soundfont 2.01 by default
+       uint16_t minor;
+
+        template<class _outit> _outit Write( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteVector( major, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( minor, itwriteto );
+            return itwriteto;
+        }
+
+
+        template<class _init> _init Read( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( major, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( minor, itReadfrom );
+            return itReadfrom;
+        }
+    };
+
+    /*
+        value_limit
+            Struct meant to store the limits for a given value.
+            Useful for validating ranges while parsing for instance.
+    */
+    template<class _ValTy>
+        struct value_limits
+    {
+        typedef _ValTy myty;
+        myty min_; //Minimum Value
+        myty def_; //Default Value
+        myty max_; //Maximum Vale
+        myty mid_; //Middle Value
+    };
+
+
+//=========================================================================================
+//  Constants
+//=========================================================================================
     static const uint32_t    RIFF_HeaderTotalLen     = 12; //bytes The length of the header + the format tag
 
     static const uint32_t    SfSampleLoopMinEdgeDist =  8;  //The amount of sample points to copy on either sides of the loop within a sample.
+    static const uint32_t    SfSampleLoopMinEndEdgeDist = 16;
     static const uint32_t    SfSampleLoopMinLen      = 32;  //Minimum distance between the start of a loop and the end, for it to be SF2 loopable.
-    static const size_t      SfMinSampleZeroPad      = 92;//46; //Minimum amount of bytes of zero padding to append a sample
+    static const size_t      SfMinSampleZeroPad      = 92;  //Minimum amount of bytes of zero padding to append a sample. 46 samples
 
     static const uint32_t    SfEntrySHDR_Len         = 46;
     static const uint32_t    SfEntryPHDR_Len         = 38;
@@ -29,6 +86,7 @@ namespace sf2
     static const uint32_t    SfEntryIGen_Len         =  4;
     static const string      SF_DefIsng              = "EMU8000";
     static const string      SF_DefSft               = "ppmd_audioutil";
+    static const ifilDat     SF_VersChnkData         ( 2, 1 );  //Soundfont 2.01
 
     /*
         Format tags for the chunks used in the SF2 format.
@@ -69,16 +127,6 @@ namespace sf2
         imod = 0x696D6F64, //"imod"
         igen = 0x6967656E, //"igen"
         shdr = 0x73686472, //"shdr"
-    };
-
-    //SF2 Limits
-    template<class _ValTy>
-        struct value_limits
-    {
-        typedef _ValTy myty;
-        myty min_;
-        myty def_;
-        myty max_;
     };
 
     //Values ranges for the Generators!
@@ -135,44 +183,13 @@ namespace sf2
     static const value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127 };
 
 //=========================================================================================
-//  Structs
-//=========================================================================================
-
-    /*
-        ifilDat
-            Chunk data idicating the SoundFont specification revision that the file 
-            complies to.
-    */
-    struct ifilDat
-    {
-       static const uint32_t SIZE = 4;//bytes
-       ifilDat( uint16_t maj = 2, uint16_t min = 1 )
-           :major(maj), minor(min)
-       {}
-
-       uint16_t major; //Soundfont 2.01 by default
-       uint16_t minor;
-
-        template<class _outit> _outit Write( _outit itwriteto )const
-        {
-            itwriteto = utils::WriteIntToByteVector( major, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( minor, itwriteto );
-            return itwriteto;
-        }
-
-
-        template<class _init> _init Read( _init itReadfrom )
-        {
-            itReadfrom = utils::ReadIntFromByteContainer( major, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( minor, itReadfrom );
-            return itReadfrom;
-        }
-    };
-
-//
 //  Constants
-//
-    static const ifilDat SF_VersChnkData( 2, 1 );
+//=========================================================================================
+    
+
+//=========================================================================================
+//  Logging
+//=========================================================================================
 
 
 //=========================================================================================
@@ -250,12 +267,25 @@ namespace sf2
         const size_t          smpllen      = sample.size();
         const int32_t         looplen      = loopend - loopbeg;
         size_t                allocsz      = smpllen;
-        uint32_t              loopntimes   = 1;                 //The nb of times the samples should be loop to be legal
+        uint32_t              loopntimes   = 1;                 //The nb of times the samples should be looped to be legal
 
         //#0 - Determine what to do with this sample
         const bool bPrefixSmpls = loopbeg < SfSampleLoopMinEdgeDist;             //Whether we need to insert samples between beg and loopbeg
-        const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEdgeDist; //Whether we need to insert samples between loopend and end
+        const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEndEdgeDist; //Whether we need to insert samples between loopend and end
         const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
+
+        if( utils::LibWide().isLogOn() )
+        {
+            clog << "\tMakeSampleLoopLegal():\n" <<setw(10) <<setfill(' ')
+                 << "\t\tLength"    <<": " << smpllen <<" smpls\n" <<setw(10)
+                 << "\t\tLoopBeg"   <<": " << loopbeg <<" smpls\n" <<setw(10)
+                 << "\t\tLoopEnd"   <<": " << loopend <<" smpls\n" <<setw(10)
+                 << "\t\tLoopLen"   <<": " << looplen <<" smpls\n" <<setw(10)
+                 <<boolalpha 
+                 << "\t\tDoPrefix"  <<": " << bPrefixSmpls <<"\n" <<setw(10)
+                 << "\t\tDoSufix"   <<": " << bSuffixSmpls <<"\n" <<setw(10)
+                 << "\t\tDoExtraLp" <<": " << bExtraLoops <<"\n";
+        }
 
         if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
             return sample; //Nothing to do here !
@@ -289,15 +319,19 @@ namespace sf2
         //#3 - Assemble the new sample
         auto legalloopins = back_inserter( legalloop );
 
+        //Copy whatever is between beg and loopbeg
+        std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
+
         if( bPrefixSmpls )
         {
             auto itcpbeg = sample.begin();
-            std::advance( itcpbeg, distbeglp2beg );
-            std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
-            //std::fill_n( legalloopins, nbdummyprefx, sample.front() ); //Copy the first data point a few times
+            //std::advance( itcpbeg, distbeglp2beg );
+
+            //if( distbeglp2beg <= 1 )
+                std::fill_n( legalloopins, nbdummyprefx, *itcpbeg );
+            //else
+            //    std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
         }
-        //Copy whatever is between beg and loopbeg
-        std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
 
         //Put the data between the loop points as many times as needed
         auto itlpbeg = sample.begin() + distbeglp2beg;
@@ -312,8 +346,16 @@ namespace sf2
             auto itcpbeg = sample.begin();
             std::advance( itcpbeg, distbeglp2beg );
             std::copy_n( itcpbeg, nbdummypost, legalloopins );
-            //std::fill_n( legalloopins, nbdummypost, sample.front() ); //Copy the first data point a few times
         }
+
+
+        if( utils::LibWide().isLogOn() )
+        {
+            clog <<setw(10) << "\t\tDistBegLpToBeg" <<": " <<distbeglp2beg <<"\n"
+                 <<setw(10) << "\t\tDistEndLpToEnd" <<": " <<distlpend2end <<"\n"
+                 <<setw(10) << "\t\tLoopNTimes"     <<": " <<loopntimes <<"\n";
+        }
+
         //#4 - Move the legal sample into the old one
         sample = std::move(legalloop);
         return sample;
@@ -392,10 +434,10 @@ namespace sf2
             datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
 
             //Build and write the sample data
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSdataList, this ) ) );
+            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
 
             //Build and write the HYDRA
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePdataList, this ) ) );
+            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
 
             //Seek back to start
             //const std::ofstream::streampos postwrite = m_out.tellp();
@@ -1966,6 +2008,14 @@ namespace sf2
     size_t BaseModulatorUser::GetNbModulators()const
     {
         return m_mods.size();
+    }
+
+//=====================================================================================
+//  ZoneBag
+//=====================================================================================
+    void ZoneBag::Sort()
+    {
+        //
     }
 
 };

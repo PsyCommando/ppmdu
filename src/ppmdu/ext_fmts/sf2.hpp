@@ -41,14 +41,14 @@ http://www.pjb.com.au/midi/sfspec21.html
                 |                     |         Instruments        |<--               |
                 |                     ------------------------------  |               V 1..n
                 |                                  | 1                | ------------------------------
-                |                                  |                  | |            PBag            |
+                |                                  |                  | |         PBagEntry          |
                 |                                  V 1..n             | ------------------------------
                 |                     ------------------------------  |               | 1
-                |                     |           IBag             |  |               |
-                |                     ------------------------------  | 1             V 1..n
+                |                     |        IBagEntry           |  |               |
+                |                     ------------------------------  | 1             V 0..n
                 |                                  | 1                | ------------------------------
                 |                                  |                  --|          PMod/PGen **      |
-                |                                  V 1..n               ------------------------------
+                |                                  V 0..n               ------------------------------
                 |                   1 ------------------------------
                 ----------------------|         IMod/IGen **       |
                                       ------------------------------
@@ -58,9 +58,10 @@ http://www.pjb.com.au/midi/sfspec21.html
                 Only Generators may link to samples or instruments. And there are many different
                 types of Generators, most of which do not link to a sample or instrument.
 
-                But, you still need one Bag per links to one Sample or Instrument. More Bags if you're linking
-                to more Instruments or Samples. Because, while you can have many generators per Bag 
-                you can only have a single Instrument or Sample ID Generator per PBag/IBag!
+                But, you still need at least one Bag entry per link to one Sample or Instrument. 
+                More Bag entries if you're linking to more Instruments or Samples. 
+                Because, while you can have many generators all of different types refered to by 
+                a Bag entry, you can only have a single Instrument or Sample ID Generator per Bag entry!
 
                 Which is something I feel the official documentation doesn't insists enough on..
                 
@@ -68,8 +69,23 @@ http://www.pjb.com.au/midi/sfspec21.html
 
 namespace sf2
 {
-    static const uint32_t ShortNameLen = 20; //20 characters max for Presets, Instruments and Samples.
 
+//===========================================================================================
+//  Utility Functions
+//===========================================================================================
+    /***********************************************************************************
+        SecondsToTimecents
+            Convert a duration in seconds to a duration in timecents.
+    ***********************************************************************************/
+    inline int32_t SecondsToTimecents( int32_t seconds )
+    {
+        return lround( log2(seconds) * 1200.00 );
+    }
+
+//===========================================================================================
+//  Constants
+//===========================================================================================
+    static const uint32_t ShortNameLen = 20; //20 characters max for Presets, Instruments and Samples.
 
     /***********************************************************************************
         eSFGen
@@ -143,10 +159,10 @@ namespace sf2
         Invalid                         = 0xBEEF,
     };
 
-    /*
+    /************************************************************************************
         eSmplMode
             Special enum value for the sample mod generator
-    */
+    ************************************************************************************/
     enum struct eSmplMode : uint16_t
     {
         noloop        = 0,
@@ -155,19 +171,23 @@ namespace sf2
         loopWhileHold = 3, //Loop while holding the key, then play the rest of the sample
     };
 
-    /***********************************************************************************
+
+//===========================================================================================
+//  Structures and Enums
+//===========================================================================================
+    /************************************************************************************
         SFModulator
             http://www.pjb.com.au/midi/sfspec21.html#8.2
             Represent a single modulator.
-    ***********************************************************************************/
+    ************************************************************************************/
     struct SFModulator
     {
         //-------------
         //  Enums
         //-------------
 
-        /*
-            eCtrlPal
+        /* 
+            eCtrlPal 
         */
         enum struct eCtrlPal : uint8_t
         {
@@ -256,7 +276,7 @@ namespace sf2
 
     /***********************************************************************************
         genparam_t
-            The parameter for the generator can be interpreted in those ways.
+           *Got rid of the union, because I'd have had to deal with union issues..*
     ***********************************************************************************/
     typedef uint16_t genparam_t;
     //union genparam_t
@@ -320,12 +340,12 @@ namespace sf2
     ***********************************************************************************/
     struct Envelope
     {
-        int16_t delay   = -12000;
-        int16_t attack  = -12000;
-        int16_t hold    = -12000;
-        int16_t sustain = 0;
-        int16_t decay   = -12000;
-        int16_t release = -12000;
+        int16_t delay   = -12000; //timecents
+        int16_t attack  = -12000; //timecents
+        int16_t hold    = -12000; //timecents
+        int16_t sustain =      0; //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = -12000; //timecents
+        int16_t release = -12000; //timecents
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()
@@ -348,6 +368,9 @@ namespace sf2
 
 
 
+//==================================================================================
+//  SoundFont Classes
+//==================================================================================
     /***********************************************************************************
         BaseGeneratorUser
             Base class that implements methods common to all generator users.
@@ -648,6 +671,7 @@ namespace sf2
         //---------------------
         //  Common Modulators
         //---------------------
+        //None. Modulators are very rarely used !
 
     protected:
         std::vector<SFModEntry> m_mods;
@@ -655,19 +679,24 @@ namespace sf2
 
     /***********************************************************************************
         ZoneBag
-            Represent a list of pbag, or ibag.
-
-            Basically, each instruments and presets may have several zones, 
-            or ibag, and pbag. 
-            Those zones are what contains the generator and modulators.
+            Represent a list of generator and modulators for a given Zone.
 
             Each zones can only have a single Instrument or SampleID generator.
-            Thus having several Zone/Bag allows to have either several instruments linked 
-            to a preset, or several samples linked to an instrument!
+
+
             (Still, its overcomplicated for nothing.. But I didn't write this format..)
     ***********************************************************************************/
     class ZoneBag : public BaseModulatorUser, public BaseGeneratorUser
-    {}; //Not much to put in here..
+    {
+    public:
+        /*
+            Sort
+                Sort the Generators and Modulators in the order the SF2 format requires.
+                Copies of generators/modulators that should appear only once are moved
+                at the end of the list, and will be ignored by anything conforming to the SF2 standard.
+        */
+        void Sort();
+    }; //Not much to put in here..
 
     /***********************************************************************************
         BaseZoneBagOwner

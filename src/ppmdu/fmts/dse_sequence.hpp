@@ -49,6 +49,7 @@ namespace DSE
         _64th           =  2, // 1/64 note          #NOTE: Its not truly a 64th note, because the game seems to round the duration, so its not identical to the last one.
     };
 
+
     /****************************************************************************
         TrkDelayCodeVals
             Lookup table for the value of the delay prefix codes used by events 
@@ -571,8 +572,9 @@ namespace DSE
 //====================================================================================================
     /*
         EventParser
-            Pass the bytes of an event track, after the preamble, and it will eat bytes and turn them 
-            into events within the container refered to by the iterator !
+            Pass the bytes of an event track, after the preamble, 
+            and it will eat bytes and turn them into events within 
+            the container refered to by the iterator !
     */
     template<class _outit>
         class EventParser
@@ -587,7 +589,7 @@ namespace DSE
         //Feed bytes to this 
         void operator()( uint8_t by )
         {
-            if( !m_hasBegun ) //If we haven't begun parsing
+            if( !m_hasBegun ) //If we haven't begun parsing an event
             {
                 if( isDelayCode(by) )   //If we read a delay code, just put it in our upcoming event
                     m_curEvent.dt = by;
@@ -605,7 +607,7 @@ namespace DSE
         {
             auto einfo = GetEventInfo( static_cast<eTrkEventCodes>(by) );
 
-            if( ! einfo.first )
+            if( ! einfo.first ) //If the event was not found
             {
                 std::stringstream sstr;
                 sstr << "Unknown event type 0x" <<std::hex <<static_cast<uint16_t>(by) <<std::dec 
@@ -617,7 +619,7 @@ namespace DSE
             m_curEvent.evcode = by;
 
             if( m_curEventInf.nbreqparams == 0 )
-                endEvent();
+                endEvent(); //If its an event with 0 parameters end it now
             else
             {
                 m_bytesToRead     = m_curEventInf.nbreqparams; //Parse the required params first
@@ -649,47 +651,50 @@ namespace DSE
         }
 
     private:
-        outit_t             m_itDest;      // Output for assembled events
-        bool                m_hasBegun;   // Whether we're working on an event right now
-        uint32_t            m_bytesToRead; // this contains the amount of bytes to read before the event is fully parsed
-        TrkEvent            m_curEvent;    // The event being assembled currently.
-        TrkEventInfo        m_curEventInf; // Info on the current event type
+        outit_t      m_itDest;      // Output for assembled events
+        bool         m_hasBegun;    // Whether we're working on an event right now
+        uint32_t     m_bytesToRead; // this contains the amount of bytes to read before the event is fully parsed
+        TrkEvent     m_curEvent;    // The event being assembled currently.
+        TrkEventInfo m_curEventInf; // Info on the current event type
     };
 
 //====================================================================================================
 // Functions
 //====================================================================================================
 
+    /*****************************************************************
+        ParseTrkChunk
+            This function can be used to parse a track of DSE events 
+            into a vector of track events, and a track preamble.
+    *****************************************************************/
     template<class _itin>
         std::pair<std::vector<TrkEvent>,TrkPreamble> ParseTrkChunk( _itin beg, _itin end )
     {
+        using namespace std;
         ChunkHeader hdr;
         beg = hdr.ReadFromContainer(beg);
 
         if( hdr.label != static_cast<uint32_t>(eDSEChunks::trk) )
-            throw std::runtime_error("ParseTrkChunk(): Unexpected chunk label !");
+            throw runtime_error("ParseTrkChunk(): Unexpected chunk label !");
 
         if( std::distance(beg,end) < hdr.datlen )
-            throw std::runtime_error("ParseTrkChunk(): Track chunk continues beyond the expected end !");
+            throw runtime_error("ParseTrkChunk(): Track chunk continues beyond the expected end !");
 
         //Set the actual end of the events track
         _itin itendevents = beg;
         std::advance( itendevents, hdr.datlen );
 
-        std::vector<TrkEvent>   events;
-        TrkPreamble             preamb;
+        vector<TrkEvent> events;
+        TrkPreamble      preamb;
         beg = preamb.ReadFromContainer(beg);
 
-        //#TODO: Eventually do something with the preamble if its even of any use !
-
-        
         events.reserve( hdr.datlen ); //Reserve worst case scenario
+        for_each( beg, 
+                  itendevents, 
+                  EventParser<back_insert_iterator<vector<TrkEvent>>>(back_inserter(events)) );
+        events.shrink_to_fit();       //Dealloc unused space
 
-        std::for_each( beg, itendevents, EventParser<std::back_insert_iterator<std::vector<TrkEvent>>>(std::back_inserter(events)) );
-
-        events.shrink_to_fit(); //Dealloc unused space
-
-        return std::make_pair( std::move(events), std::move(preamb) );
+        return make_pair( std::move(events), std::move(preamb) );
     }
 
 };

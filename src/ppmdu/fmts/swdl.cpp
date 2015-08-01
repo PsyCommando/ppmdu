@@ -1,5 +1,8 @@
 #include "swdl.hpp"
 #include <ppmdu/fmts/content_type_analyser.hpp>
+#include <ppmdu/utils/library_wide.hpp>
+#include <iostream>
+#include <iomanip>
 using namespace std;
 
 namespace DSE
@@ -25,10 +28,6 @@ namespace DSE
             ParseHeader();
             ParseMeta();
 
-//#ifdef _DEBUG
-//            if( m_hdr.nbprgislots > 0x80 )
-//                assert(false); //PRGI slot is too big wtf !
-//#endif
 
             //Parse instruments + keygroups
             auto pinst = ParseInstruments();
@@ -75,12 +74,19 @@ namespace DSE
             //Handle keygroups first
             auto kgrps = ParseKeygroups();
 
+            if( utils::LibWide().isLogOn() )
+                clog <<"\t== Parsing Programs ==\n";
+
             //Find the prgi chunk
             auto itprgi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::prgi );
 
             //Its possible there are no instruments
             if( itprgi == m_src.end() )
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"\t\tNo Programs found!\n";
                 return nullptr;
+            }
 
             //Read chunk header
             ChunkHeader prgihdr;
@@ -98,23 +104,33 @@ namespace DSE
 
                 if( instinfblk != 0 )
                 {
-                    InstrumentInfo curblock;
+                    ProgramInfo curblock;
                     curblock.ReadFromContainer( instinfblk + itprgi );
-                    infslot.reset( new InstrumentInfo(curblock) );
+                    infslot.reset( new ProgramInfo(curblock) );
+
+                    if( utils::LibWide().isLogOn() )
+                        clog <<"\tInstrument ID#" <<infslot->m_hdr.id <<":\n" <<*infslot <<"\n";
                 }
             }
-
+            if( utils::LibWide().isLogOn() )
+                clog << endl;
             return move( unique_ptr<InstrumentBank>( new InstrumentBank( move(instinf), move(kgrps) ) ) );
         }
 
         vector<pmd2::audio::KeyGroup> ParseKeygroups()
         {
             using namespace pmd2::audio;
+
+            if( utils::LibWide().isLogOn() )
+                clog <<"\t== Parsing Keygroups ==\n";
+
             //Find the KGRP chunk
             auto itkgrp = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::kgrp );
 
             if( itkgrp == m_src.end() )
             {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"\t\tNo Keygroups found!\n";
                 return vector<pmd2::audio::KeyGroup>(); //Return empty vector when no keygrp chunk found
             }
 
@@ -126,7 +142,16 @@ namespace DSE
             
             //Read all keygroups
             for( auto & grp : keygroups )
+            {
                 itkgrp = grp.ReadFromContainer(itkgrp);
+
+                if( utils::LibWide().isLogOn() )
+                    clog <<"\tKeygroup ID#" <<grp.id <<":\n" <<grp <<"\n";
+                
+            }
+
+            if( utils::LibWide().isLogOn() )
+                clog << endl;
 
             return move(keygroups);
         }
@@ -225,6 +250,12 @@ namespace DSE
 //========================================================================================================
     pmd2::audio::PresetBank ParseSWDL( const std::string & filename )
     {
+        if( utils::LibWide().isLogOn() )
+        {
+            clog <<"--------------------------------------------------------------------------\n"
+                 <<"Parsing SWDL \"" <<filename <<"\"\n"
+                 <<"--------------------------------------------------------------------------\n";
+        }
         return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator pmd2::audio::PresetBank() );
     }
 };

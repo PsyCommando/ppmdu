@@ -14,6 +14,7 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <array>
 #include <string>
 #include <map>
+#include <cassert>
 
 namespace DSE
 {
@@ -156,8 +157,10 @@ namespace DSE
         enum struct eSmplFmt : uint16_t 
         {
             invalid,
-            pcm       = 0x100,
+            pcm8      = 0x000,
+            pcm16     = 0x100,
             ima_adpcm = 0x200,
+            psg       = 0x300,
         };
 
         uint16_t unk1       = 0;
@@ -179,8 +182,8 @@ namespace DSE
         uint32_t smplrate   = 0; //Sampling rate of the sample
         uint32_t smplpos    = 0; //Offset within pcmd chunk of the sample
 
-        uint32_t looplen    = 0; //Length in number of samples of the loop
-        uint32_t loopspos   = 0; //Position in sample, of the beginning of the loop 
+        uint32_t loopbeg    = 0; //Loop start in int32 (based on the resulting PCM16)
+        uint32_t looplen    = 0; //Length of the sample in int32
 
         uint8_t  unk17      = 0;
         uint8_t  unk18      = 0;
@@ -216,8 +219,8 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector( smplrate, itwriteto );
             itwriteto = utils::WriteIntToByteVector( smplpos, itwriteto );
 
+            itwriteto = utils::WriteIntToByteVector( loopbeg, itwriteto );
             itwriteto = utils::WriteIntToByteVector( looplen, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( loopspos, itwriteto );
 
             itwriteto = utils::WriteIntToByteVector( unk17, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk18, itwriteto );
@@ -237,38 +240,38 @@ namespace DSE
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            unk1       = utils::ReadIntFromByteVector<decltype(unk1)>     (itReadfrom); //iterator is incremented
-            id         = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
-            pitchoffst = utils::ReadIntFromByteVector<decltype(pitchoffst)>(itReadfrom);
-            rootkey    = utils::ReadIntFromByteVector<decltype(rootkey)>  (itReadfrom);
-            unk4       = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
-            unk5       = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
-            unk6       = utils::ReadIntFromByteVector<decltype(unk6)>     (itReadfrom);
-            unk7       = utils::ReadIntFromByteVector<decltype(unk7)>     (itReadfrom);
-            version    = utils::ReadIntFromByteVector<decltype(version)>  (itReadfrom);
-            smplfmt    = utils::ReadIntFromByteVector<decltype(smplfmt)>  (itReadfrom);
-            unk9       = utils::ReadIntFromByteVector<decltype(unk9)>     (itReadfrom); 
-            unk14      = utils::ReadIntFromByteVector<decltype(unk14)>    (itReadfrom); 
-            unk10      = utils::ReadIntFromByteVector<decltype(unk10)>    (itReadfrom); 
-            unk11      = utils::ReadIntFromByteVector<decltype(unk11)>    (itReadfrom); 
-            unk12      = utils::ReadIntFromByteVector<decltype(unk12)>    (itReadfrom); 
-            unk13      = utils::ReadIntFromByteVector<decltype(unk13)>    (itReadfrom); 
-            smplrate   = utils::ReadIntFromByteVector<decltype(smplrate)> (itReadfrom); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk1,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( id,         itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( pitchoffst, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( rootkey,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk4,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk5,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk6,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk7,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( version,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( smplfmt,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk9,       itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk14,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk10,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk11,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk12,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( unk13,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( smplrate,   itReadfrom ); 
 
-            smplpos    = utils::ReadIntFromByteVector<decltype(smplpos)>  (itReadfrom);
-            looplen    = utils::ReadIntFromByteVector<decltype(looplen)>  (itReadfrom);
-            loopspos   = utils::ReadIntFromByteVector<decltype(loopspos)> (itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( smplpos,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( loopbeg,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( looplen,    itReadfrom );
 
-            unk17      = utils::ReadIntFromByteVector<decltype(unk17)>    (itReadfrom);
-            unk18      = utils::ReadIntFromByteVector<decltype(unk18)>    (itReadfrom);
-            unk19      = utils::ReadIntFromByteVector<decltype(unk19)>    (itReadfrom);
-            unk20      = utils::ReadIntFromByteVector<decltype(unk20)>    (itReadfrom);
-            unk21      = utils::ReadIntFromByteVector<decltype(unk21)>    (itReadfrom);
-            unk22      = utils::ReadIntFromByteVector<decltype(unk22)>    (itReadfrom);
-            unk23      = utils::ReadIntFromByteVector<decltype(unk23)>    (itReadfrom);
-            unk24      = utils::ReadIntFromByteVector<decltype(unk24)>    (itReadfrom);
-            unk25      = utils::ReadIntFromByteVector<decltype(unk25)>    (itReadfrom);
-            unk26      = utils::ReadIntFromByteVector<decltype(unk26)>    (itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unk17,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk18,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk19,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk20,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk21,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk22,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk23,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk24,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk25,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk26,      itReadfrom );
 
 
             return itReadfrom;
@@ -344,6 +347,7 @@ namespace DSE
     */
     static int16_t DSEPitchBendToSemitone( int16_t dsepitchbend )
     {
+        assert(false); //pitch bend range can be changed in the swd !!! So this doesn't work!
         static const int16_t NbUnitPerSemitone = 500;
         return ( dsepitchbend / NbUnitPerSemitone );
     }
@@ -353,10 +357,25 @@ namespace DSE
     */
     static int16_t DSEPitchBendToCents( int16_t dsepitchbend )
     {
+        
         static const double NbUnitPerSemitone = 500.0;
         double result = ( static_cast<double>(dsepitchbend) / NbUnitPerSemitone ) * 100.0;
         return static_cast<int16_t>( lround(result) );
     }
+
+    /*
+        DSEEnveloppeDurationToMSec
+            This turns an envelope's duration parameter(0-127) into miliseconds.
+
+            The multiplier is usually 1
+    */
+    int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier );
+
+    /*
+        DSEEnveloppeVolumeTocB
+            Turns an envelope's volume param(0-127) into centibels.
+    */
+    int32_t DSEEnveloppeVolumeTocB( int8_t param );
 
     /************************************************************************
         DSE_ChunkIDLookup

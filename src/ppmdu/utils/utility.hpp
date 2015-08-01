@@ -14,6 +14,8 @@ Description: A header with a bunch of useful includes for the PPMD utilities.
 #include "gbyteutils.hpp"
 #include "poco_wrapper.hpp"
 #include <iosfwd>
+#include <type_traits>
+#include <vector>
 
 namespace utils
 {
@@ -132,7 +134,7 @@ namespace utils
             Simply write the exception's "what()" function output to "cerr", 
             and triggers an assert in debug.
     ************************************************************************/
-    void SimpleHandleException( std::exception & e );
+    void SimpleHandleException( const std::exception & e );
 
 
     /************************************************************************************
@@ -167,14 +169,14 @@ namespace utils
         return cpt;
     }
 
-    /*
-    */
-    template<class _Ty, class _Ty2>
+    /************************************************************************************
+        Clamp
+            Clamps a a value between min and max. 
+            Uses bigger than and smaller than operators.
+    ************************************************************************************/
+    template< class _Ty, class _Ty2 > inline
         _Ty Clamp( _Ty val, _Ty2 min, _Ty2 max )
     {
-#if 0 //This is broken on MSVC..
-        static_assert( std::is_assignable<_Ty,_Ty2>::value, "utiliy.hpp/Clamp(): Can't assign min/max to val ! Types are incompatible!" );
-#endif
         if( val < min )
             return min;
         else if( val > max )
@@ -182,6 +184,7 @@ namespace utils
         else
             return val;
     }
+
 };
 
 

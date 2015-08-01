@@ -143,7 +143,7 @@ namespace DSE
         */
         void HandleSetPreset( const DSE::TrkEvent           & ev, 
                               uint16_t                        trkno, 
-                              uint16_t                        trkchan, 
+                              uint8_t                         trkchan, 
                               TrkState                      & state, 
                               jdksmidi::MIDITimedBigMessage & mess, 
                               jdksmidi::MIDITrack           & outtrack )
@@ -175,7 +175,7 @@ namespace DSE
             //Then preset
             //Keep track of the current program to apply pitch correction on instruments that need it..
             state.prgm_ = ev.params.front();
-            mess.SetProgramChange( trkchan, state.prgm_ );
+            mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
             outtrack.PutEvent( mess );
         }
 
@@ -214,7 +214,7 @@ namespace DSE
                 Main conditional structure for converting events from the DSE format into MIDI messages.
         */
         void HandleEvent( uint16_t              trkno, 
-                          uint16_t              trkchan, 
+                          uint8_t               trkchan, 
                           TrkState            & state, 
                           const DSE::TrkEvent & ev, 
                           jdksmidi::MIDITrack & outtrack )
@@ -249,7 +249,7 @@ namespace DSE
                 {
                     state.lastoctaveev_ = ev.params.front();    
                     if( state.lastoctaveev_ > DSE_MaxOctave )
-                        cout<<"New octave value set is too high !" <<static_cast<unsigned short>(state.lastoctaveev_) <<"\n";
+                        cerr<<"New octave value set is too high !" <<static_cast<unsigned short>(state.lastoctaveev_) <<"\n";
                     state.octave_       = state.lastoctaveev_;
                     break;
                 }
@@ -351,7 +351,7 @@ namespace DSE
                 Handle converting a Playnote event into a MIDI key on and key off message !
         */
         void HandlePlayNote( uint16_t              trkno, 
-                             uint16_t              trkchan, 
+                             uint8_t               trkchan, 
                              TrkState            & state, 
                              const DSE::TrkEvent & ev, 
                              jdksmidi::MIDITrack & outtrack )

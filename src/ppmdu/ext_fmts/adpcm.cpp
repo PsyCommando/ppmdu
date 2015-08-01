@@ -14,8 +14,6 @@ namespace audio
 // Constants
 //==============================================================================================
 
-    static const uint32_t IMA_ADPCM_PreambleLen = 4;//bytes
-
     struct IMA_ADPCM    //#FIXME: When did I write that ? This ain't Java !!
     {
         static const int NbBitsPerSample = 4;
@@ -49,15 +47,94 @@ namespace audio
 
 
 //
+//  ADPCMTraits
 //
-//
+    //----------------
+    //  IMA ADPCM
+    //----------------
+    /*
+    */
+    class ADPCM_Trait_IMA
+    {
+    public:
+
+        static inline int32_t ClampStepIndex( int32_t index )
+        {
+            if(index < 0)
+                return 0;
+
+            if(index >= IMA_ADPCM::StepSizes.size())
+                return (IMA_ADPCM::StepSizes.size() - 1);
+
+            return index;
+        }
+
+        static inline int32_t ClampPredictor( int32_t predictor )
+        {
+            if (predictor > std::numeric_limits<int16_t>::max() ) 
+			    return std::numeric_limits<int16_t>::max();
+		    else if (predictor < std::numeric_limits<int16_t>::min())
+			    return std::numeric_limits<int16_t>::min();
+            else
+                return predictor;
+        }
+
+
+        static const array<int8_t,  IMA_ADPCM::NbPossibleCodes> & IndexTable;
+        static const array<int16_t, IMA_ADPCM::NbSteps>         & StepSizes; 
+    };
+    const array<int8_t,  IMA_ADPCM::NbPossibleCodes> & ADPCM_Trait_IMA::IndexTable = IMA_ADPCM::IndexTable;
+    const array<int16_t, IMA_ADPCM::NbSteps>         & ADPCM_Trait_IMA::StepSizes  = IMA_ADPCM::StepSizes;
+
+
+    //----------------
+    //  NDS ADPCM
+    //----------------
+    /*
+        The NDS clamps samples differently.
+    */
+    class ADPCM_Trait_NDS
+    {
+    public:
+
+        static inline int32_t ClampStepIndex( int32_t index )
+        {
+            if(index < 0)
+                return 0;
+
+            if(index >= IMA_ADPCM::StepSizes.size())
+                return (IMA_ADPCM::StepSizes.size() - 1);
+
+            return index;
+        }
+
+        static inline int32_t ClampPredictor( int32_t predictor )
+        {
+            if (predictor > SignedMaxSample ) 
+			    return SignedMaxSample;
+		    else if (predictor < SignedMinSample)
+			    return SignedMinSample;
+            else
+                return predictor;
+        }
+
+        static const array<int8_t,  IMA_ADPCM::NbPossibleCodes> & IndexTable;
+        static const array<int16_t, IMA_ADPCM::NbSteps>         & StepSizes;
+        static const int16_t                                      SignedMaxSample =  0x7FFF;
+        static const int16_t                                      SignedMinSample = -0x7FFF;
+    };
+    const array<int8_t,  IMA_ADPCM::NbPossibleCodes> & ADPCM_Trait_NDS::IndexTable = IMA_ADPCM::IndexTable;
+    const array<int16_t, IMA_ADPCM::NbSteps>         & ADPCM_Trait_NDS::StepSizes  = IMA_ADPCM::StepSizes;
 
 //==============================================================================================
 // IMA ADPCM Decoder
 //==============================================================================================
 
-    class IMA_APCM_Decoder 
+    template<class _ADPCM_Trait>
+        class IMA_APCM_Decoder 
     {
+        typedef _ADPCM_Trait mytrait;
+
         //For decoding multi-channels adpcm
         struct chanstate
         {
@@ -83,7 +160,6 @@ namespace audio
         operator std::vector<uint8_t>()
         {
             //We could really just cast the entire vector, but that wouldn't be implementation nor architecture safe..
-
             std::vector<pcm16s_t> pcmdat = DoParse();
             std::vector<uint8_t>  rawdat;
             rawdat.reserve( pcmdat.size() * 2 );
@@ -97,26 +173,7 @@ namespace audio
         }
 
     private:
-        static inline int32_t ClampStepIndex( int32_t index )
-        {
-            if(index < 0)
-                return 0;
 
-            if(index >= IMA_ADPCM::StepSizes.size())
-                return (IMA_ADPCM::StepSizes.size() - 1);
-
-            return index;
-        }
-
-        static inline int32_t ClampPredictor( int32_t predictor )
-        {
-            if (predictor > std::numeric_limits<int16_t>::max() ) 
-			    return std::numeric_limits<int16_t>::max();
-		    else if (predictor < std::numeric_limits<int16_t>::min())
-			    return std::numeric_limits<int16_t>::min();
-            else
-                return predictor;
-        }
 
         std::vector<pcm16s_t> DoParse()
         {
@@ -137,8 +194,8 @@ namespace audio
         {
             //Init channels with initial values for the predictor and step index
             ach.predictor = ReadIntFromByteVector<int16_t>(m_itread); //Increments iterator
-            ach.stepindex = ClampStepIndex( ReadIntFromByteVector<int16_t>(m_itread) );
-            ach.step      = IMA_ADPCM::StepSizes[ach.stepindex];
+            ach.stepindex = mytrait::ClampStepIndex( ReadIntFromByteVector<int16_t>(m_itread) );
+            ach.step      = mytrait::StepSizes[ach.stepindex];
         }
 
         std::vector<pcm16s_t> ParseSamples()
@@ -167,7 +224,7 @@ namespace audio
 
         pcm16s_t ParseSample( uint8_t smpl, chanstate & curchan )
         {
-		    curchan.step = IMA_ADPCM::StepSizes[curchan.stepindex];
+		    curchan.step = mytrait::StepSizes[curchan.stepindex];
             int32_t diff = curchan.step >> 3;
 
 		    if (smpl & 1)
@@ -177,11 +234,11 @@ namespace audio
 		    if (smpl & 4)
 			    diff += curchan.step;
 		    if (smpl & 8)
-                curchan.predictor = ClampPredictor( curchan.predictor - diff );
+                curchan.predictor = mytrait::ClampPredictor( curchan.predictor - diff );
             else
-                curchan.predictor = ClampPredictor( curchan.predictor + diff );
+                curchan.predictor = mytrait::ClampPredictor( curchan.predictor + diff );
 
-		    curchan.stepindex = ClampStepIndex( curchan.stepindex + IMA_ADPCM::IndexTable[smpl] );
+		    curchan.stepindex = mytrait::ClampStepIndex( curchan.stepindex + mytrait::IndexTable[smpl] );
 
             return curchan.predictor;
         }
@@ -214,14 +271,16 @@ namespace audio
 //==============================================================================================
 // Functions
 //==============================================================================================
+    
+    
     std::vector<pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
                                            unsigned int                 nbchannels  )
     {
-        return IMA_APCM_Decoder(rawadpcmdata,nbchannels);
+        return IMA_APCM_Decoder<ADPCM_Trait_IMA>(rawadpcmdata,nbchannels);
     }
 
     std::vector<uint8_t> EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata,
-                                                  unsigned int                 nbchannels )
+                                          unsigned int                 nbchannels )
     {
         return IMA_ADPCM_Encoder(pcmdata,nbchannels);
     }
@@ -230,4 +289,11 @@ namespace audio
     {
         return (adpcmbytesz - IMA_ADPCM_PreambleLen) * 2;
     }
+
+    std::vector<pcm16s_t> DecodeADPCM_NDS( const std::vector<uint8_t> & rawadpcmdata,
+                                           unsigned int                 nbchannels  )
+    {
+        return IMA_APCM_Decoder<ADPCM_Trait_NDS>(rawadpcmdata,nbchannels);
+    }
+    
 };

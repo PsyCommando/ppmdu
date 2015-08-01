@@ -3,6 +3,7 @@
 #include <ppmdu/utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -148,7 +149,6 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionMBAT, &GetInstance(), placeholders::_1 ),
         },
 
-
         //Redirect clog to file
         {
             "log",
@@ -265,6 +265,7 @@ namespace audioutil
     bool CAudioUtil::ParseOptionLog( const std::vector<std::string> & optdata )
     {
         m_redirectClog.Redirect(optdata[1]);
+        utils::LibWide().isLogOn(true);
         return true;
     }
 

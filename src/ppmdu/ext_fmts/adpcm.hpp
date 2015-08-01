@@ -13,6 +13,11 @@ Description: Utilities for handling ADPCM data.
 namespace audio
 {
 //====================================================================================================
+//  Constants
+//====================================================================================================
+    static const uint32_t IMA_ADPCM_PreambleLen = 4;//bytes
+
+//====================================================================================================
 // Functions
 //====================================================================================================
 
@@ -32,6 +37,18 @@ namespace audio
                                            unsigned int                  nbchannels   = 1 );
 
     std::vector<uint8_t>  EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata, 
+                                           unsigned int                  nbchannels   = 1 );
+
+
+    //
+    //  NDS ADPCM
+    //
+    /*
+        DecodeADPCM_NDS
+            The NDS's ADPCM format has a slight difference in the way it clamps the 
+            sample's values. 
+    */
+    std::vector<pcm16s_t> DecodeADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
                                            unsigned int                  nbchannels   = 1 );
 
 };

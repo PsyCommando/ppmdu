@@ -2,6 +2,7 @@
 #include <ppmdu/fmts/dse_common.hpp>
 #include <ppmdu/fmts/dse_sequence.hpp>
 #include <ppmdu/fmts/dse_interpreter.hpp>
+#include <ppmdu/utils/library_wide.hpp>
 
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
@@ -22,6 +23,11 @@ using namespace DSE;
 
 namespace pmd2 { namespace audio
 {
+    /*
+        The size of the ADPCM preamble in int32, the unit the NDS uses to store the loop positions
+        Mainly here to make things more readable.
+    */
+    static const int SizeADPCMPreambleWords = ::audio::IMA_ADPCM_PreambleLen / sizeof(int32_t);
 
     static const std::vector<uint8_t> PMD2PresetsToGM 
     {
@@ -149,6 +155,110 @@ namespace pmd2 { namespace audio
         0, //0x7F
     };
 
+
+//==========================================================================================
+//  StreamOperators
+//==========================================================================================
+    std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::KeyGroup & other )
+    {
+        strm <<"\t== Keygroup ==\n"
+            << "\tID        : " << other.id                           <<"\n"
+            << "\tPolyphony : " << static_cast<short>(other.poly)     <<"\n"
+            << "\tPriority  : " << static_cast<short>(other.priority) <<"\n"
+            << "\tVc.Low    : " << static_cast<short>(other.vclow)    <<"\n"
+            << "\tVc.High   : " << static_cast<short>(other.vchigh)   <<"\n"
+            << "\tunk50     : " << static_cast<short>(other.unk50)    <<"\n"
+            << "\tunk51     : " << static_cast<short>(other.unk51)    <<"\n";
+
+        return strm;
+    }
+
+    std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::ProgramInfo & other )
+    {
+        strm << "\t== ProgramInfo ==\n"
+             << "\tID        : " << other.m_hdr.id     <<"\n"
+             << "\tNbSplits  : " << other.m_hdr.nbsplits <<"\n"
+             << "\tVol       : " << static_cast<short>(other.m_hdr.insvol) <<"\n"
+             << "\tPan       : " << static_cast<short>(other.m_hdr.inspan) <<"\n"
+             << "\tUnk3      : " << other.m_hdr.unk3 <<"\n"
+             << "\tUnk4      : " << other.m_hdr.unk4 <<"\n"
+             << "\tUnk5      : " << static_cast<short>(other.m_hdr.unk5) <<"\n"
+             << "\tnblfos    : " << static_cast<short>(other.m_hdr.nblfos) <<"\n"
+             << "\tpadbyte   : " << static_cast<short>(other.m_hdr.padbyte) <<"\n"
+             << "\tUnk7      : " << static_cast<short>(other.m_hdr.unk7) <<"\n"
+             << "\tUnk8      : " << static_cast<short>(other.m_hdr.unk8) <<"\n"
+             << "\tUnk9      : " << static_cast<short>(other.m_hdr.unk9) <<"\n";
+
+        //Write the LFOs
+        int cntlfo = 0;
+        for( const auto & lfoen : other.m_lfotbl )
+        {
+            strm << "\t-- LFO #" <<cntlfo <<" --\n"
+                << "\tUnk34        : " << static_cast<short>(lfoen.unk34)     <<"\n"
+                << "\tUnk52        : " << static_cast<short>(lfoen.unk52)     <<"\n"
+                << "\tUnk26        : " << static_cast<short>(lfoen.unk26)     <<"\n"
+                << "\tUnk27        : " << static_cast<short>(lfoen.unk27)     <<"\n"
+                << "\tUnk28        : " << lfoen.unk28     <<"\n"
+                << "\tUnk29        : " << lfoen.unk29     <<"\n"
+                << "\tUnk30        : " << lfoen.unk30     <<"\n"
+                << "\tUnk31        : " << lfoen.unk31     <<"\n"
+                << "\tUnk32        : " << lfoen.unk32     <<"\n"
+                << "\tUnk33        : " << lfoen.unk33     <<"\n";
+            ++cntlfo;
+        }
+
+        //Write the Splits
+        int cntsplits = 0;
+        for( const auto & split : other.m_splitstbl )
+        {
+            strm << "\t-- Split #" <<cntlfo <<" --\n"
+                << "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
+                << "\tID           : " << static_cast<short>(split.id)        <<"\n"
+                << "\tUnk11        : " << static_cast<short>(split.unk11)     <<"\n"
+                << "\tUnk25        : " << static_cast<short>(split.unk25)     <<"\n"
+                << "\tlowkey       : " << static_cast<short>(split.lowkey)    <<"\n"
+                << "\thikey        : " << static_cast<short>(split.hikey)     <<"\n"
+                << "\tunk13        : " << static_cast<short>(split.unk13)     <<"\n"
+                << "\tunk46        : " << static_cast<short>(split.unk46)     <<"\n"
+                << "\tunk14        : " << static_cast<short>(split.unk14)     <<"\n"
+                << "\tunk47        : " << static_cast<short>(split.unk47)     <<"\n"
+                << "\tunk15        : " << static_cast<short>(split.unk15)     <<"\n"
+                << "\tunk48        : " << static_cast<short>(split.unk48)     <<"\n"
+                << "\tunk16        : " << split.unk16     <<"\n"
+                << "\tunk17        : " << split.unk17     <<"\n"
+                << "\tsmplid       : " << static_cast<short>(split.smplid)     <<"\n"
+                << "\ttune         : " << static_cast<short>(split.tune)     <<"\n"
+                << "\tgroup        : " << static_cast<short>(split.group)     <<"\n"
+                << "\trootkey      : " << static_cast<short>(split.rootkey)   <<"\n"
+                << "\tctune        : " << static_cast<short>(split.ctune)     <<"\n"
+                << "\tsmplvol      : " << static_cast<short>(split.smplvol)   <<"\n"
+                << "\tsmplpan      : " << static_cast<short>(split.smplpan)   <<"\n"
+                << "\tsmplgain?    : " << static_cast<short>(split.smplgain)  <<"\n"
+                << "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
+                << "\tunk23        : " << split.unk23     <<"\n"
+                << "\tunk24        : " << split.unk24     <<"\n"
+                << "\tunk35        : " << static_cast<short>(split.unk35)     <<"\n"
+                << "\tunk36        : " << static_cast<short>(split.unk36)     <<"\n"
+                << "\tunk37        : " << static_cast<short>(split.unk37)     <<"\n"
+                << "\tunk38        : " << static_cast<short>(split.unk38)     <<"\n"
+                << "\tunk39        : " << split.unk39     <<"\n"
+                << "\tunk40        : " << split.unk40     <<"\n"
+                << "\tatkvol       : " << static_cast<short>(split.atkvol)     <<"\n"
+                << "\tattack       : " << static_cast<short>(split.attack)     <<"\n"
+                << "\tdecay        : " << static_cast<short>(split.decay)     <<"\n"
+                << "\tsustain      : " << static_cast<short>(split.sustain)     <<"\n"
+                << "\thold         : " << static_cast<short>(split.hold)     <<"\n"
+                << "\tdecay2       : " << static_cast<short>(split.decay2)     <<"\n"
+                << "\trelease      : " << static_cast<short>(split.release)     <<"\n"
+                << "\trx           : " << static_cast<short>(split.rx)     <<"\n"
+                ;
+            ++cntsplits;
+        }
+
+        return strm;
+    }
+
+
 //
 //
 //
@@ -165,9 +275,22 @@ namespace pmd2 { namespace audio
         return std::move(out);
     }
 
+    std::vector<pcm16s_t> PCM8RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    {
+        std::vector<pcm16s_t> out;
+        auto                  itread = praw->begin();
+        auto                  itend  = praw->end();
+        out.reserve(praw->size()*2);
+
+        for(; itread != itend; ++itread )
+            out.push_back( static_cast<pcm16s_t>(*itread) );
+
+        return std::move(out);
+    }
+
     std::vector<pcm16s_t> DecodeADPCMAndAppendLoopBuff( const std::vector<uint8_t> & adpcm, size_t loopbufpos, size_t loopbuflen )
     {
-        std::vector<pcm16s_t> decompressed = std::move(::audio::DecodeADPCM_IMA(adpcm));
+        std::vector<pcm16s_t> decompressed = std::move(::audio::DecodeADPCM_NDS(adpcm));
         decompressed.reserve( decompressed.size() + loopbuflen );
         std::copy_n( decompressed.begin() + loopbufpos, loopbuflen, back_inserter(decompressed) );
         return std::move(decompressed);
@@ -176,14 +299,16 @@ namespace pmd2 { namespace audio
     /*
         Convert the parameters of a DSE envelope to SF2
     */
-    sf2::Envelope RemapDSEVolEnvToSF2( int8_t inrate, 
-                                       int8_t inlvl, 
+    sf2::Envelope RemapDSEVolEnvToSF2( int8_t atkvol, 
+                                       int8_t attack, 
                                        int8_t hold, 
+                                       int8_t decay, 
                                        int8_t sustain, 
-                                       int8_t susrte, 
-                                       int8_t decrte, 
+                                       int8_t decay2, 
                                        int8_t rel, 
-                                       int8_t reldecay )
+                                       int8_t rx,
+                                       int8_t mulatk,
+                                       int8_t mul2 )
     {
         sf2::Envelope volenv;
 
@@ -196,6 +321,22 @@ namespace pmd2 { namespace audio
         static const int16_t SustainMinVolume=   1440; //The higher the value, the more attenuated the sound is. 0 is max volume
         static const int16_t MaxSignedInt8   =    127;
 
+
+        if( utils::LibWide().isLogOn() )
+        {
+            clog<<"\tRemaping DSE (atkvol, atk, dec, sus, hold, dec2, rel, rx)( " 
+                << static_cast<short>(atkvol)       <<", "
+                << static_cast<short>(attack)       <<", "
+                << static_cast<short>(decay)         <<", "
+                << static_cast<short>(sustain)        <<", "
+                << static_cast<short>(hold)      <<", "
+                << static_cast<short>(decay2)       <<", "
+                << static_cast<short>(rel)          <<", "
+                << static_cast<short>(rx)           <<" )\n";
+        }
+
+
+
         //Basically : ( (indel * 17000) / 127 ) - 12000
         //          Since the envelope's values range from -12000 to 5000, and the range of our DSE value is 0 to 127, 
         //          we want to shift all SF2 related values into positive ranges only, and after the calculation is done,
@@ -203,30 +344,105 @@ namespace pmd2 { namespace audio
         //          That way we still have the full 17000 possible values, but all in the positive, which makes it all much easier
         //          to work with !
 
+        //Handle Attack
+        if( attack != 0x7F && attack != 0 )
+        {
+            //double logatk = 1200.0 * log2( (attack * DSE_MaxAttackDur) / MaxSignedInt8 );
+            //volenv.attack = static_cast<int16_t>( lround(logatk) );
+            volenv.attack = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( attack, mulatk ) );
+        }
 
-        //#TODO: Find a way to include the attack level, sustain rate, and RX parameter!!
+        //Handle Hold
+        if( hold != 0x7F && hold != 0 )
+        {
+            //double loghold = 1200.0 * log2( (hold * DSE_MaxHoldDur) / MaxSignedInt8 );
+            //volenv.hold = static_cast<int16_t>( lround(loghold) );
+            volenv.hold = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( hold, mul2 ) );
+        }
+
+        //Handle Decay
+        if( decay != 0x7F && decay != 0 )
+        {
+            //double logdecay = 1200.0 * log2( (decay * DSE_MaxDecayDur) / MaxSignedInt8 );
+            //volenv.decay = static_cast<int16_t>( lround(logdecay) );
+            volenv.decay = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( decay, mul2 ) );
+        }
+
+        //#TODO: Fix Decay2 logic !
+
+        //DSE uses an AHDSDR envelope. There is a second decay after the sustain, and before the key is released. 
+        // Its usually disabled (set to 0x7F), but when its enabled, we can simulate it easily by adding its duration to
+        // the duration of the first decay, and set sustain to 0!
+        //if( decay2 == 0x7F  && decay2 != 0 )
+        //{
+            //Second decay is disabled, handle decay + sustain as usual!
+
+            //Use a rule of three to get the equivalent attenuation proportion. And subtract the max attenuation, so the
+            // the sound is more attenuated the closer the DSE sustain value is to 0!
+            volenv.sustain = ( SustainMinVolume - ( ( sustain * SustainMinVolume ) / MaxSignedInt8 ) );
+            clog <<"Sustain : " <<volenv.sustain <<"\n";
+            
+            //Test Logarithmic attenuation
+            double attn = sustain;
+            attn = 100.00 * log( 128.00 / attn ); //128 possible values
+            uint16_t logsustain = static_cast<uint16_t>( lround( attn ) );
+            if( utils::LibWide().isLogOn() )
+                clog << "\t\tLog Sustain    : " <<logsustain     <<" cB\n"
+                     << "\t\tActual Sustain : " <<volenv.sustain <<" cB\n";
+        //}
+        //else
+        //{
+        //    //Second decay is enabled, add duration of first decay, and set sustain volume to 0 !
+        //    //double logdecay2  = 1200.0 * log2( (decay2 * DSE_MaxDecayDur) / MaxSignedInt8 ); //Timecents are dumb
+        //    volenv.decay     += sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( decay2, mul2 ) * 1000 );//static_cast<int16_t>(logdecay2);
+
+        //    //Set sustain to the maximum attenuation to simulate the second decay parameter ramping volume down to 0!
+        //    volenv.sustain = SustainMinVolume; //144.0 dB of attenuation
+        //}
+
+
+        //Handle Release
+        if( rel != 0 )
+        {
+            //double logrel  = 1200.0 * log2( ( (rel * DSE_MaxReleaseDur) / MaxSignedInt8 ) );
+            volenv.release = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) );//static_cast<int16_t>( lround(logrel) );
+        }
 
 //        if( inlvl != 0 )
 //            volenv.delay   = static_cast<int16_t>( ((inlvl  * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
-        if( inrate != 0 )
-            volenv.attack  = static_cast<int16_t>( (( inrate * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
-        if( hold != 0 )
+        //if( inrate != 0 )
+        //    volenv.attack  = static_cast<int16_t>( (( inrate * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+        //if( hold != 0 )
+        //{
+        //    volenv.hold   = static_cast<int16_t>( (( hold *  (labs(MinEnvTimeCent) + Max20sec ) ) / MaxSignedInt8) + MinEnvTimeCent );
+        //    //volenv.hold  += static_cast<int16_t>( (( susrte * (labs(MinEnvTimeCent) + (Max20sec/2) ) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+        //}
+        //if( decrte != 0 )
+        //{
+        //    volenv.decay   = static_cast<int16_t>( (( decrte * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+        //}
+        //if( sustain != 0 )
+        //    volenv.sustain = static_cast<int16_t>( (MaxSignedInt8 - sustain) * 10  );
+        //if( rel != 0 )
+        //    volenv.release = static_cast<int16_t>( ((rel * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
+
+        if( utils::LibWide().isLogOn() )
         {
-            volenv.hold   = static_cast<int16_t>( (( hold *  (labs(MinEnvTimeCent) + Max20sec ) ) / MaxSignedInt8) + MinEnvTimeCent );
-            //volenv.hold  += static_cast<int16_t>( (( susrte * (labs(MinEnvTimeCent) + (Max20sec/2) ) ) / MaxSignedInt8 ) + MinEnvTimeCent );
+            clog<<"\tRemaped to (del, atk, hold, dec, sus, rel) ( " 
+                << static_cast<short>(volenv.delay)   <<", "
+                << static_cast<short>(volenv.attack)  <<", "
+                << static_cast<short>(volenv.hold)    <<", "
+                << static_cast<short>(volenv.decay)   <<", "
+                << static_cast<short>(volenv.sustain) <<", "
+                << static_cast<short>(volenv.release) <<" )" <<endl;
         }
-        if( decrte != 0 )
-        {
-            volenv.decay   = static_cast<int16_t>( (( decrte * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
-        }
-        if( sustain != 0 )
-            volenv.sustain = static_cast<int16_t>( (MaxSignedInt8 - sustain) * 10  );
-        if( rel != 0 )
-            volenv.release = static_cast<int16_t>( ((rel * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
 
         return volenv;
     }
 
+//
+//TrackPlaybackState
+//
     class TrackPlaybackState
     {
     public:
@@ -273,23 +489,6 @@ namespace pmd2 { namespace audio
                     
                     outstr <<", note: " <<DSE::NoteNames.at( (ev.params.front() & NoteEvParam1NoteMask) );
                     
-                    //Ugly but just for debug...
-                    //switch( static_cast<eNote>(ev.param1 & NoteEvParam1NoteMask) )
-                    //{
-
-                    //    case eNote::C:  outstr <<"C";  break;
-                    //    case eNote::Cs: outstr <<"C#"; break;
-                    //    case eNote::D:  outstr <<"D";  break;
-                    //    case eNote::Ds: outstr <<"D#"; break;
-                    //    case eNote::E:  outstr <<"E";  break;
-                    //    case eNote::F:  outstr <<"F";  break;
-                    //    case eNote::Fs: outstr <<"F#"; break;
-                    //    case eNote::G:  outstr <<"G";  break;
-                    //    case eNote::Gs: outstr <<"G#";  break;
-                    //    case eNote::A:  outstr <<"A";  break;
-                    //    case eNote::As: outstr <<"A#"; break;
-                    //    case eNote::B:  outstr <<"B";  break;
-                    //};
                     outstr <<dec <<static_cast<short>(curpitch) <<" )";
                 }
                 else if( evinf.second.evcodebeg == eTrkEventCodes::SetOctave )
@@ -418,9 +617,9 @@ namespace pmd2 { namespace audio
         return sstr.str();
     }
 
-//
+//========================================================================================
 //  BatchAudioLoader
-//
+//========================================================================================
 
     BatchAudioLoader::BatchAudioLoader( const std::string & mbank )
         :m_mbankpath(mbank)
@@ -466,7 +665,7 @@ namespace pmd2 { namespace audio
     BatchAudioLoader::mergedInstData BatchAudioLoader::PrepareMergedInstrumentTable()const
     {
         //A list of all the shared presets between files merged together. Where non-duplicates are stacked into the second dimension of the table
-        std::vector< std::vector<InstrumentInfo*> > merged( GetSizeLargestPrgiChunk() );
+        std::vector< std::vector<ProgramInfo*> > merged( GetSizeLargestPrgiChunk() );
         
         //List of what slot the instruments were put into for each SMD+SWD pair
         std::vector< std::map<uint16_t,uint16_t> > smdlPresLocation (m_pairs.size()); 
@@ -487,10 +686,10 @@ namespace pmd2 { namespace audio
                     {
                         auto founddup = find_if( merged[cntinst].begin(), 
                                                  merged[cntinst].end(), 
-                                                 [&]( const InstrumentInfo * inf )->bool
+                                                 [&]( const ProgramInfo * inf )->bool
                         { 
                             if( inf != nullptr )
-                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != InstrumentInfo::eCompareRes::different );
+                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != ProgramInfo::eCompareRes::different );
                             else
                             {
                                 throw std::exception("BatchAudioLoader::PrepareMergedInstrumentTable(): Null instrument pointer?!");
@@ -525,7 +724,7 @@ namespace pmd2 { namespace audio
             - smplIdConvTbl : A map mapping the Sample IDs from the DSE swd, to their new ID within the Soundfont file!
             - inst          : The SF2 Instruemnt this dse sample/instrument shall be added to.
     */
-    void DSEInstrumentToSf2InstrumentZone( const InstrumentInfo::PrgiSmplEntry & dseinst, 
+    void DSEInstrumentToSf2InstrumentZone( const ProgramInfo::SplitEntry & dseinst, 
                                            const std::map<uint16_t,size_t>     & smplIdConvTbl, 
                                            sf2::SoundFont                      & sf,
                                            sf2::Instrument                     & inst,
@@ -552,14 +751,16 @@ namespace pmd2 { namespace audio
         if( loopedsmpls[dseinst.smplid] )
             myzone.SetSmplMode( eSmplMode::loop );
 
-        Envelope myenv = RemapDSEVolEnvToSF2( dseinst.atkrte, 
-                                              dseinst.atklvl, 
+        Envelope myenv = RemapDSEVolEnvToSF2( dseinst.atkvol, 
+                                              dseinst.attack, 
                                               dseinst.hold, 
-                                              dseinst.suslvl, 
-                                              dseinst.susrte,
-                                              dseinst.decrte, 
+                                              dseinst.decay,
+                                              dseinst.sustain,
+                                              dseinst.decay2, 
                                               dseinst.release, 
-                                              dseinst.reldecay );
+                                              dseinst.rx,
+                                              dseinst.unk35,
+                                              dseinst.unk36 );
 
         myzone.SetVolEnvelope( myenv );
 
@@ -571,10 +772,12 @@ namespace pmd2 { namespace audio
         //myzone.SetFineTune( finetune ); //cents -99 to 99
         //myzone.SetCoarseTune( (pitchshift / 100) );                  //semitones -120 to 120
         //myzone.SetCoarseTune( dseinst.tune /*DSESamplePitchToSemitone(dseinst.pitch2)*/ );
-        myzone.SetCoarseTune( dseinst.ctune );
+        uint8_t tunesemitones  = DSESamplePitchToSemitone(dseinst.ctune);
+        uint8_t extrasemitones = abs( tunesemitones - 120 );
+        myzone.SetCoarseTune( (tunesemitones - extrasemitones) );
 
         //#TEST: Try overriding rootkey for setting the pitch !
-        myzone.SetRootKey( dseinst.rootkey);
+        myzone.SetRootKey( dseinst.rootkey + extrasemitones );
 
         //if( dsepresetid == 0x7F ) //Non-chromatic percussion
             //myzone.SetScaleTuning( 0 ); //Never change pitch on midi key
@@ -593,7 +796,7 @@ namespace pmd2 { namespace audio
     */
     void DSEPresetToSf2Preset( const std::string               & presname, 
                                uint16_t                          bankno, 
-                               const InstrumentInfo            & dsePres, 
+                               const ProgramInfo            & dsePres, 
                                const std::map<uint16_t,size_t> & smplIdConvTbl, 
                                sf2::SoundFont                  & sf,
                                uint16_t                        & instidcnt,
@@ -631,8 +834,8 @@ namespace pmd2 { namespace audio
         ZoneBag    instzone;
 
         //Iterate through each DSE Preset's associated samples
-        for( uint16_t cntsmpl = 0; cntsmpl < dsePres.m_mappedsmpls.size(); ++cntsmpl )
-            DSEInstrumentToSf2InstrumentZone( dsePres.m_mappedsmpls[cntsmpl], smplIdConvTbl, sf, myinst, loopedsmpls, dsePres.m_hdr.id );
+        for( uint16_t cntsmpl = 0; cntsmpl < dsePres.m_splitstbl.size(); ++cntsmpl )
+            DSEInstrumentToSf2InstrumentZone( dsePres.m_splitstbl[cntsmpl], smplIdConvTbl, sf, myinst, loopedsmpls, dsePres.m_hdr.id );
 
         sf.AddInstrument( std::move(myinst) );
         instzone.SetInstrumentId(instidcnt);
@@ -669,17 +872,30 @@ namespace pmd2 { namespace audio
 
                 if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
                 {
-                    loadfun = std::move( std::bind( ::audio::DecodeADPCM_IMA, std::ref( *samples->sample(cntsmslot) ), 1 ) );
+                    loadfun = std::move( std::bind( ::audio::DecodeADPCM_NDS, std::ref( *samples->sample(cntsmslot) ), 1 ) );
                     smpllen = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot)->size() );
-                    loopbeg = cursminf.loopspos * 4; /** 2 + cursminf.looplen * 2;*/ //ADPCM samples turn to pcm16, 
+                    loopbeg = (cursminf.loopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
                     loopend = smpllen;
                 }
-                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm ) )
+                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm16 ) )
                 {
                     loadfun = std::move( std::bind( &RawBytesToPCM16Vec, samples->sample(cntsmslot) ) );
-                    smpllen = samples->sample(cntsmslot)->size()/2;
-                    loopbeg = cursminf.loopspos/2;
-                    loopend = smpllen;//(cursminf.looplen + cursminf.loopspos) /2;
+                    smpllen = samples->sample(cntsmslot)->size() / 2;
+                    loopbeg = cursminf.loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
+                    loopend = smpllen;
+                }
+                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm8 ) )
+                {
+                    loadfun = std::move( std::bind( &PCM8RawBytesToPCM16Vec, samples->sample(cntsmslot) ) );
+                    smpllen = samples->sample(cntsmslot)->size() * 2; //PCM8 -> PCM16
+                    loopbeg = cursminf.loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
+                    loopend = smpllen;
+                }
+                else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::psg ) )
+                {
+                    stringstream sstrerr;
+                    sstrerr << "PSG instruments unsuported!";
+                    throw std::runtime_error( sstrerr.str() );
                 }
                 else
                 {
@@ -703,9 +919,7 @@ namespace pmd2 { namespace audio
                 sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
 
                 //#TODO:Come up with a better loop detection logic !!!
-
-
-                if( loopend > 0 /*(loopend - loopbeg) > 32 && loopbeg >= 8*/ ) //SF2 min loop len
+                if( loopbeg != 0 ) 
                 {
                     sm.SetLoopBounds ( loopbeg, loopend );
                     loopedsmpls[cntsmslot].flip();

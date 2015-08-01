@@ -30,6 +30,10 @@ namespace pmd2 { namespace audio
     static const std::string SWDL_FileExtension = "swd";
     static const std::string SEDL_FileExtension = "sed";
 
+    static const uint32_t    DSE_MaxDecayDur    =  8; //second
+    static const uint32_t    DSE_MaxAttackDur   = 10; //second
+    static const uint32_t    DSE_MaxHoldDur     = 10; //second
+    static const uint32_t    DSE_MaxReleaseDur  =  8; //second
 
 //====================================================================================================
 // Structs
@@ -68,23 +72,29 @@ namespace pmd2 { namespace audio
 
     struct KeyGroup
     {
+        friend std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::KeyGroup & other );
+
         static const uint32_t SIZE = 8; //bytes
         static uint32_t size() {return SIZE;}
 
-        uint16_t id   = 0;
-        uint8_t  unk1 = 0;
-        uint8_t  unk2 = 0;
-        uint16_t unk3 = 0;
-        uint16_t unk4 = 0;
+        uint16_t id       = 0;
+        uint8_t  poly     = 0;
+        uint8_t  priority = 0;
+        uint8_t  vclow    = 0;
+        uint8_t  vchigh   = 0;
+        uint8_t  unk50    = 0;
+        uint8_t  unk51    = 0;
 
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( id,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk1, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk2, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk3, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk4, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( id,       itwriteto );
+            itwriteto = utils::WriteIntToByteVector( poly,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( priority, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( vclow,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( vchigh,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk50,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk51,    itwriteto );
             return itwriteto;
         }
 
@@ -92,22 +102,27 @@ namespace pmd2 { namespace audio
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            id   = utils::ReadIntFromByteVector<decltype(id)>  (itReadfrom);
-            unk1 = utils::ReadIntFromByteVector<decltype(unk1)>(itReadfrom);
-            unk2 = utils::ReadIntFromByteVector<decltype(unk2)>(itReadfrom);
-            unk3 = utils::ReadIntFromByteVector<decltype(unk3)>(itReadfrom);
-            unk4 = utils::ReadIntFromByteVector<decltype(unk4)>(itReadfrom);
+            id       = utils::ReadIntFromByteVector<decltype(id)>  (itReadfrom);
+            poly     = utils::ReadIntFromByteVector<decltype(poly)>(itReadfrom);
+            priority = utils::ReadIntFromByteVector<decltype(priority)>(itReadfrom);
+            vclow    = utils::ReadIntFromByteVector<decltype(vclow)>(itReadfrom);
+            vchigh   = utils::ReadIntFromByteVector<decltype(vchigh)>(itReadfrom);
+            unk50    = utils::ReadIntFromByteVector<decltype(unk50)>(itReadfrom);
+            unk51    = utils::ReadIntFromByteVector<decltype(unk51)>(itReadfrom);
             return itReadfrom;
         }
     };
 
     /*****************************************************************************************
-        InstrumentInfo
+        ProgramInfo
             Contains data for a single instrument.
     *****************************************************************************************/
-    class InstrumentInfo
+    class ProgramInfo
     {
     public:
+
+        friend std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::ProgramInfo & other );
+
         /*---------------------------------------------------------------------
             InstInfoHeader
                 First 16 bytes of an instrument info block
@@ -118,13 +133,13 @@ namespace pmd2 { namespace audio
             static uint32_t size() { return SIZE; }
 
             uint16_t id        = 0;
-            uint16_t nbsmpls   = 0;
+            uint16_t nbsplits  = 0;
             uint8_t  insvol    = 0;
             uint8_t  inspan    = 0;
             uint16_t unk3      = 0;
             uint16_t unk4      = 0;
             uint8_t  unk5      = 0;
-            uint8_t  nbentries = 0; //Nb entries in the first table 
+            uint8_t  nblfos    = 0; //Nb entries in the first table 
             uint8_t  padbyte   = 0; //character used for padding
             uint8_t  unk7      = 0;
             uint8_t  unk8      = 0;
@@ -132,18 +147,18 @@ namespace pmd2 { namespace audio
 
             inline bool operator==( const InstInfoHeader & other )const
             {
-                return ( id      == other.id      && 
-                         nbsmpls == other.nbsmpls && 
-                         insvol  == other.insvol  && 
-                         inspan  == other.inspan  && 
-                         unk3    == other.unk3    && 
-                         unk4    == other.unk4    && 
-                         unk5    == other.unk5    &&  
-                         nbentries == other.nbentries &&
-                         padbyte == other.padbyte &&
-                         unk7    == other.unk7    &&
-                         unk8    == other.unk8    &&
-                         unk9    == other.unk9    );
+                return ( id       == other.id       && 
+                         nbsplits == other.nbsplits && 
+                         insvol   == other.insvol   && 
+                         inspan   == other.inspan   && 
+                         unk3     == other.unk3     && 
+                         unk4     == other.unk4     && 
+                         unk5     == other.unk5     &&  
+                         nblfos   == other.nblfos   &&
+                         padbyte  == other.padbyte  &&
+                         unk7     == other.unk7     &&
+                         unk8     == other.unk8     &&
+                         unk9     == other.unk9     );
             }
 
             inline bool operator!=( const InstInfoHeader & other )const
@@ -155,13 +170,13 @@ namespace pmd2 { namespace audio
                 _outit WriteToContainer( _outit itwriteto )const
             {
                 itwriteto = utils::WriteIntToByteVector( id,        itwriteto );
-                itwriteto = utils::WriteIntToByteVector( nbsmpls,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( nbsplits,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( insvol,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( inspan,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk3,      itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk4,      itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk5,      itwriteto );
-                itwriteto = utils::WriteIntToByteVector( nbentries, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( nblfos,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( padbyte,   itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk7,      itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk8,      itwriteto );
@@ -174,7 +189,7 @@ namespace pmd2 { namespace audio
                 _init ReadFromContainer( _init itReadfrom )
             {
                 id        = utils::ReadIntFromByteVector<decltype(id)>       (itReadfrom);
-                nbsmpls   = utils::ReadIntFromByteVector<decltype(nbsmpls)>  (itReadfrom);
+                nbsplits  = utils::ReadIntFromByteVector<decltype(nbsplits)> (itReadfrom);
 
                 insvol    = utils::ReadIntFromByteVector<decltype(insvol)>   (itReadfrom);
                 inspan    = utils::ReadIntFromByteVector<decltype(inspan)>   (itReadfrom);
@@ -182,7 +197,7 @@ namespace pmd2 { namespace audio
                 unk3      = utils::ReadIntFromByteVector<decltype(unk3)>     (itReadfrom);
                 unk4      = utils::ReadIntFromByteVector<decltype(unk4)>     (itReadfrom);
                 unk5      = utils::ReadIntFromByteVector<decltype(unk5)>     (itReadfrom);
-                nbentries = utils::ReadIntFromByteVector<decltype(nbentries)>(itReadfrom);
+                nblfos    = utils::ReadIntFromByteVector<decltype(nblfos)>   (itReadfrom);
                 padbyte   = utils::ReadIntFromByteVector<decltype(padbyte)>  (itReadfrom);
                 unk7      = utils::ReadIntFromByteVector<decltype(unk7)>     (itReadfrom);
                 unk8      = utils::ReadIntFromByteVector<decltype(unk8)>     (itReadfrom);
@@ -192,15 +207,16 @@ namespace pmd2 { namespace audio
         };
 
         /*---------------------------------------------------------------------
-            PrgiPresTblEntry
+            LFOTblEntry
                 First table after the header
         ---------------------------------------------------------------------*/
-        struct PrgiPresTblEntry
+        struct LFOTblEntry
         {
             static const uint32_t SIZE = 16; //bytes
             static uint32_t size() { return SIZE; }
 
-            uint16_t unk34 = 0;
+            uint8_t  unk34 = 0;
+            uint8_t  unk52 = 0;
             uint8_t  unk26 = 0;
             uint8_t  unk27 = 0;
             uint16_t unk28 = 0;
@@ -214,6 +230,7 @@ namespace pmd2 { namespace audio
                 _outit WriteToContainer( _outit itwriteto )const
             {
                 itwriteto = utils::WriteIntToByteVector( unk34, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( unk52, itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk26, itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk27, itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk28, itwriteto );
@@ -230,6 +247,7 @@ namespace pmd2 { namespace audio
                 _init ReadFromContainer( _init itReadfrom )
             {
                 unk34      = utils::ReadIntFromByteVector<decltype(unk34)>(itReadfrom);
+                unk52      = utils::ReadIntFromByteVector<decltype(unk52)>(itReadfrom);
                 unk26      = utils::ReadIntFromByteVector<decltype(unk26)>(itReadfrom);
                 unk27      = utils::ReadIntFromByteVector<decltype(unk27)>(itReadfrom);
                 unk28      = utils::ReadIntFromByteVector<decltype(unk28)>(itReadfrom);
@@ -243,10 +261,10 @@ namespace pmd2 { namespace audio
         };
 
         /*---------------------------------------------------------------------
-            PrgiSmplEntry
+            SplitEntry
                 Data on a particular sample mapped to this instrument
         ---------------------------------------------------------------------*/
-        struct PrgiSmplEntry
+        struct SplitEntry
         {
             static const uint32_t SIZE = 48; //bytes
             static uint32_t size() { return SIZE; }
@@ -289,19 +307,19 @@ namespace pmd2 { namespace audio
             uint8_t  unk37      = 0; //0x22
             uint8_t  unk38      = 0; //0x23
             uint16_t unk39      = 0; //0x24
-            uint16_t unk40      = 0; //0x26
+            int16_t  unk40      = 0; //0x26
 
-            int8_t   atklvl     = 0; //0x28
-            int8_t   atkrte     = 0; //0x29
+            int8_t   atkvol     = 0; //0x28
+            int8_t   attack     = 0; //0x29
 
-            int8_t   hold       = 0; //0x2A
-            int8_t   suslvl     = 0; //0x2B
+            int8_t   decay      = 0; //0x2A
+            int8_t   sustain    = 0; //0x2B
 
-            int8_t   susrte     = 0; //0x2C
-            int8_t   decrte     = 0; //0x2D
+            int8_t   hold       = 0; //0x2C
+            int8_t   decay2     = 0; //0x2D
 
             int8_t   release    = 0; //0x2E
-            int8_t   reldecay   = 0; //0x2F
+            int8_t   rx         = 0; //0x2F
 
             template<class _outit>
                 _outit WriteToContainer( _outit itwriteto )const
@@ -345,17 +363,17 @@ namespace pmd2 { namespace audio
                 itwriteto = utils::WriteIntToByteVector( unk39,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk40,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( atklvl,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( atkrte,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( atkvol,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( attack,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( hold, itwriteto );
-                itwriteto = utils::WriteIntToByteVector( suslvl,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( decay, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( sustain,   itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( susrte,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( decrte,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( hold,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( decay2,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( release,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( reldecay, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( rx, itwriteto );
                 return itwriteto;
             }
 
@@ -402,51 +420,40 @@ namespace pmd2 { namespace audio
                 itReadfrom = utils::ReadIntFromByteContainer( unk39,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk40,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( atklvl,   itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( atkrte,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( atkvol,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( attack,   itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( hold, itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( suslvl,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( decay,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( sustain,  itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( susrte,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( decrte,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( hold,     itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( decay2,   itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( release,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( reldecay, itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( rx,       itReadfrom );
 
                 return itReadfrom;
             }
         };
 
         //----------------------------
-        //  InstrumentInfo
+        //  ProgramInfo
         //----------------------------
-        InstrumentInfo()
+        ProgramInfo()
         {}
-
-
-        bool isDrumkit()const
-        {
-            return false;
-        }
-
-        bool isChromatic()const
-        {
-            return false;
-        }
 
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
             itwriteto = m_hdr.WriteToContainer(itwriteto);
 
-            for( const auto & entry : m_prestbl )
+            for( const auto & entry : m_lfotbl )
                 itwriteto = entry.WriteToContainer(itwriteto);
 
             //16 bytes of padding
             itwriteto = std::fill_n( itwriteto, 16, m_hdr.padbyte );
 
-            for( const auto & smpl : m_mappedsmpls )
+            for( const auto & smpl : m_splitstbl )
                 itwriteto = smpl.WriteToContainer(itwriteto);
 
             return itwriteto;
@@ -458,16 +465,16 @@ namespace pmd2 { namespace audio
         {
             itReadfrom = m_hdr.ReadFromContainer(itReadfrom);
 
-            m_prestbl    .resize(m_hdr.nbentries);
-            m_mappedsmpls.resize(m_hdr.nbsmpls);
+            m_lfotbl   .resize(m_hdr.nblfos);
+            m_splitstbl.resize(m_hdr.nbsplits);
 
-            for( auto & entry : m_prestbl )
+            for( auto & entry : m_lfotbl )
                 itReadfrom = entry.ReadFromContainer(itReadfrom);
 
             //16 bytes of padding
             std::advance( itReadfrom, 16 );
 
-            for( auto & smpl : m_mappedsmpls )
+            for( auto & smpl : m_splitstbl )
                 itReadfrom = smpl.ReadFromContainer(itReadfrom);
 
             return itReadfrom;
@@ -480,23 +487,23 @@ namespace pmd2 { namespace audio
             identical,
         };
 
-        eCompareRes isSimilar( const InstrumentInfo & other )const
+        eCompareRes isSimilar( const ProgramInfo & other )const
         {
             //
             size_t  nbmatchsmpls   = 0;
 
             //Test shared samples first (We don't care about slight variations in the samples parameters)
-            for( const auto & asmpl : m_mappedsmpls )
+            for( const auto & asmpl : m_splitstbl )
             {
-                auto found = std::find_if( other.m_mappedsmpls.begin(), 
-                                           other.m_mappedsmpls.end(), 
-                                           [&asmpl](const PrgiSmplEntry& entry){ return (entry.smplid == asmpl.smplid); } );
+                auto found = std::find_if( other.m_splitstbl.begin(), 
+                                           other.m_splitstbl.end(), 
+                                           [&asmpl](const SplitEntry& entry){ return (entry.smplid == asmpl.smplid); } );
                 
-                if( found != other.m_mappedsmpls.end() )
+                if( found != other.m_splitstbl.end() )
                     ++nbmatchsmpls;
             }
 
-            if( nbmatchsmpls != std::max( m_mappedsmpls.size(), m_mappedsmpls.size() ) )
+            if( nbmatchsmpls != std::max( m_splitstbl.size(), m_splitstbl.size() ) )
                 return eCompareRes::sharesamples;
             else if( nbmatchsmpls == 0 )
                 return eCompareRes::different;
@@ -509,9 +516,9 @@ namespace pmd2 { namespace audio
         }
 
     /*private:*/
-        InstInfoHeader                m_hdr;
-        std::vector<PrgiPresTblEntry> m_prestbl;
-        std::vector<PrgiSmplEntry>    m_mappedsmpls;
+        InstInfoHeader           m_hdr;
+        std::vector<LFOTblEntry> m_lfotbl;
+        std::vector<SplitEntry>  m_splitstbl;
     };
 
     /*
@@ -619,194 +626,7 @@ namespace pmd2 { namespace audio
     private:
         std::vector<smpldata_t>         m_SampleData;
     };
-    //{
-    //public:
 
-    //    typedef std::vector<uint8_t>                smpldata_t;
-    //    typedef std::unique_ptr<DSE::WavInfo>       wavinfoptr_t;
-    //    typedef std::unique_ptr<const DSE::WavInfo> constwavinfoptr_t;
-
-    //    //struct SampleBlock
-    //    //{
-    //    //    wavinfoptr_t         pinfo_;
-    //    //    std::vector<uint8_t> data_;
-    //    //};
-    //    //typedef SampleBlock                smpldata_t;
-
-    //    SampleBank( std::vector<wavinfoptr_t> && wavitbl, std::map<size_t,smpldata_t> && smplsraw )
-    //        :m_wavinfotbl(std::move(wavitbl)), //MSVC is too derp to use the correct constructor..
-    //         m_SampleData(std::move(smplsraw))
-    //    {}
-
-    //    SampleBank( SampleBank && mv )
-    //    {
-    //        m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
-    //        m_SampleData = std::move( (mv.m_SampleData) );
-    //    }
-
-    //    SampleBank & operator=( SampleBank && mv )
-    //    {
-    //        m_wavinfotbl = std::move( (mv.m_wavinfotbl) );
-    //        m_SampleData = std::move( (mv.m_SampleData) );
-    //        return *this;
-    //    }
-
-    //    SampleBank( const SampleBank & other )
-    //    {
-    //        DoCopyFrom(other);
-    //    }
-
-    //    const SampleBank & operator=( const SampleBank & other )
-    //    {
-    //        DoCopyFrom(other);
-    //        return *this;
-    //    }
-
-    //public:
-    //    //Info
-    //    int NbSamples()const { return m_SampleData.size(); } //Nb of actual sample slots with actual data.
-    //    int NbSlots  ()const { return m_wavinfotbl.size(); } //Nb of slots for samples, empty or not.
-
-    //    //Access
-    //    bool                 IsSampleInfoPresent( unsigned int index )const { return m_wavinfotbl[index] != nullptr; }
-
-    //    DSE::WavInfo       * sampleInfo         ( unsigned int index )      { return m_wavinfotbl[index].get(); }
-    //    DSE::WavInfo const * sampleInfo         ( unsigned int index )const { return m_wavinfotbl[index].get(); }
-
-    //    smpldata_t         & sample             ( unsigned int index )      { return m_SampleData.at(index); }
-    //    const smpldata_t   & sample             ( unsigned int index )const { return m_SampleData.at(index); }
-
-    //    smpldata_t         & operator[]         ( unsigned int index )      { return m_SampleData.at(index); }
-    //    const smpldata_t   & operator[]         ( unsigned int index )const { return m_SampleData.at(index); }
-
-    //private:
-
-    //    void DoCopyFrom( const SampleBank & other )
-    //    {
-    //        m_wavinfotbl.resize( other.m_wavinfotbl.size()/*, nullptr*/ ); //MSVC doesn't like to have a default value in there..
-
-    //        for( size_t i = 0; i < other.m_wavinfotbl.size(); ++i  )
-    //        {
-    //            if( other.m_wavinfotbl[i] != nullptr )
-    //                m_wavinfotbl[i].reset( new DSE::WavInfo( *(other.m_wavinfotbl[i]) ) ); //Copy each objects and make a pointer
-    //        }
-
-    //        m_SampleData = other.m_SampleData;
-
-    //        //m_SampleData.resize( other.m_SampleData.size() );
-    //        //std::copy( other.m_SampleData.begin(), other.m_SampleData.end(), m_SampleData.begin() );
-    //    }
-
-    //private:
-    //    std::vector<wavinfoptr_t>     m_wavinfotbl; //Data on the samples
-    //    std::map<size_t,smpldata_t>   m_SampleData; //Actual samples
-    //};
-
-
-    /*
-        OwnershipWrap
-            This is used to create an abstraction layer over the ownership of a dynamically allocated object.
-
-            So that the user of the class doesn't need to know or care whether they own the
-            object or merely refer to an existing one.
-
-            This is neccessary because SWDL files may have samples, or may refer to a common
-            sample bank that is shared among other such SWDL, for example.. However there are no way of
-            knowing this in advance.
-
-            Pass a unique_ptr if the object owns the object!
-            Pass a regular pointer if the object only refers to the object!
-    */
-    //template<class _OwnedTy>
-    //    class OwnershipWrap
-    //{
-    //public:
-    //    typedef _OwnedTy owned_t;
-
-    //    OwnershipWrap()
-    //        :m_pShared(nullptr), m_pOwned(nullptr)
-    //    {}
-
-    //    explicit OwnershipWrap( std::unique_ptr<owned_t> && ptrowned )
-    //        :m_pShared(nullptr), m_pOwned(ptrowned)
-    //    {}
-
-    //    explicit OwnershipWrap( _OwnedTy * ptrshare )
-    //        :m_pShared(ptrshare), m_pOwned(nullptr)
-    //    {}
-
-    //    OwnershipWrap( std::nullptr_t )
-    //        :m_pShared(nullptr), m_pOwned(nullptr)
-    //    {}
-
-    //    OwnershipWrap( OwnershipWrap<_OwnedTy> && mv )
-    //    {
-    //        m_pOwned  = std::move( mv.m_pOwned  );
-    //        m_pShared = std::move( mv.m_pShared );
-    //        
-    //        //Ensure we leave the other object in a consistent state
-    //        mv.m_pOwned  = nullptr;
-    //        mv.m_pShared = nullptr;
-    //    }
-
-    //    OwnershipWrap<_OwnedTy> & operator=( OwnershipWrap<_OwnedTy> && mv)
-    //    {
-    //        m_pOwned  = std::move( mv.m_pOwned  );
-    //        m_pShared = std::move( mv.m_pShared );
-
-    //        //Ensure we leave the other object in a consistent state
-    //        mv.m_pOwned  = nullptr;
-    //        mv.m_pShared = nullptr;
-    //        return *this;
-    //    }
-
-    //    owned_t & operator*()
-    //    {
-    //        return *(get());
-    //    }
-
-    //    owned_t * get()
-    //    {
-    //        if( m_pOwned != nullptr )
-    //            return m_pOwned.get();
-    //        else
-    //            return m_pShared;
-    //    }
-
-    //    void set( owned_t * ptrshare )
-    //    {
-    //        if( m_pOwned != nullptr )
-    //            m_pOwned.reset(nullptr);
-
-    //        m_pShared = ptrshare;
-    //    }
-
-    //    void set( std::unique_ptr<owned_t> && ptrowned )
-    //    {
-    //        if( m_pShared != nullptr )
-    //            m_pShared = nullptr;
-
-    //        m_pOwned.reset(nullptr); //have to do this before moving, to make sure the previously owned object is deleted!
-    //        m_pOwned = std::move(ptrowned);
-    //    }
-
-    //    inline void operator=( owned_t                    * ptrshare ) { set(ptrshare); }
-    //    inline void operator=( std::unique_ptr<_OwnedTy> && ptrowned ) { set(std::move(ptrowned)); }
-    //    inline void operator=( std::nullptr_t )                        { set(nullptr); }
-
-    //    inline bool IsOwned ()const { return m_pOwned != nullptr;  }
-    //    inline bool IsShared()const { return m_pShared != nullptr; }
-    //    inline bool IsNull  ()const { return (m_pShared == nullptr) && (m_pOwned == nullptr); }
-
-    //private:
-    //    //No copies !
-    //    OwnershipWrap                      ( const OwnershipWrap<_OwnedTy> & );
-    //    OwnershipWrap<_OwnedTy> & operator=( const OwnershipWrap<_OwnedTy> & );
-
-
-    //    std::unique_ptr<owned_t>  m_pOwned;
-    //    owned_t                 * m_pShared;
-    //};
 
     /*****************************************************************************************
         InstrumentBank
@@ -816,7 +636,7 @@ namespace pmd2 { namespace audio
     class InstrumentBank
     {
     public:
-        typedef std::unique_ptr<InstrumentInfo> ptrinst_t;
+        typedef std::unique_ptr<ProgramInfo> ptrinst_t;
 
         InstrumentBank( std::vector<ptrinst_t> && instinf, std::vector<KeyGroup> && kgrp )
             :m_instinfoslots(std::move(instinf)),  //MSVC is too derp to use the correct constructor..
@@ -1044,13 +864,13 @@ namespace pmd2 { namespace audio
         {
             typedef uint16_t                             presetid_t;           //The ID of a DSE Preset
             typedef uint16_t                             conpresindex_t;       //The index of a conflicting preset within a conflictingpresets_t list!
-            typedef std::vector<InstrumentInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
+            typedef std::vector<ProgramInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
 
             /*
                 GetPresetByFile
                     For a given file index, within the list of loaded swd files, returns the correct preset at "presid".
             */
-            inline InstrumentInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
+            inline ProgramInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
             {
                 return mergedpresets[ presid ][ filetopreset[fileindex].at(presid) ];
             }
@@ -1059,13 +879,13 @@ namespace pmd2 { namespace audio
                 GetPresetByBank
                     For a given bank, returns the preset at preset ID !
             */
-            inline InstrumentInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
+            inline ProgramInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
             {
                 return mergedpresets[presid][bank];
             }
 
             std::vector<conflictingpresets_t>                   mergedpresets; //Each slots in the vector correspond to a DSE Preset ID.
-                                                                               //Each slot contains a vector of pointers to "InstrumentInfo"
+                                                                               //Each slot contains a vector of pointers to "ProgramInfo"
                                                                                // objects. Each of those pointers is a Preset that shares the 
                                                                                // same preset ID as the others in this "row".
                                                                                // So if mergedpresets[Y][X], Y is the DSE PresetID,
@@ -1200,5 +1020,9 @@ namespace pmd2 { namespace audio
     */
 
 };};
+
+
+//Ostream operators
+
 
 #endif 
