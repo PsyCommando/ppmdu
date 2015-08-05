@@ -113,10 +113,17 @@ namespace DSE
         //..then divided by 10,000, to give us a tick quantity
         static const uint32_t UnitDivisor = 10000;
 
+#if 1
+        if( multiplier == 0 )
+            return (Duration_Lookup_Table_NullMulti[labs(param)]);
+        else
+            return (Duration_Lookup_Table[labs(param)] * multiplier);
+#else
         if( multiplier == 0 )
             return lround( ( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * MysteryRate );
         else
             return lround( ( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * MysteryRate );
+#endif
     }
 
     int32_t DSEEnveloppeVolumeTocB( int8_t param )

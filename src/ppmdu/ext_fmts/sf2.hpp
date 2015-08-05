@@ -82,6 +82,16 @@ namespace sf2
         return lround( log2(seconds) * 1200.00 );
     }
 
+    /***********************************************************************************
+        MSecsToTimecents
+            Convert a duration in milliseconds to a duration in timecents.
+    ***********************************************************************************/
+    inline int32_t MSecsToTimecents( int32_t msecs )
+    {
+        double dmsec = (msecs / 1000.0);
+        return lround( 1200 * log2(dmsec) );
+    }
+
 //===========================================================================================
 //  Constants
 //===========================================================================================
@@ -340,12 +350,12 @@ namespace sf2
     ***********************************************************************************/
     struct Envelope
     {
-        int16_t delay   = -12000; //timecents
-        int16_t attack  = -12000; //timecents
-        int16_t hold    = -12000; //timecents
-        int16_t sustain =      0; //Attenuation in cB (144 dB is 1440 cB for instance)
-        int16_t decay   = -12000; //timecents
-        int16_t release = -12000; //timecents
+        int16_t delay   = SHRT_MIN; //timecents
+        int16_t attack  = SHRT_MIN; //timecents
+        int16_t hold    = SHRT_MIN; //timecents
+        int16_t sustain =        0; //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = SHRT_MIN; //timecents
+        int16_t release = SHRT_MIN; //timecents
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()
@@ -378,6 +388,35 @@ namespace sf2
     class BaseGeneratorUser
     {
     public:
+        //Functor to replace the generator map sort predicate!
+        struct CmpPriority
+        {
+            inline bool operator()(eSFGen gen1, eSFGen gen2 ) 
+            { 
+                //Keyrange always in first !
+                if( gen1 == eSFGen::keyRange )
+                    return true;
+                else if( gen2 == eSFGen::keyRange )
+                    return false;
+
+                //Vel range is next if there isn't a key range being compared
+                if( gen1 == eSFGen::velRange )
+                    return true;
+                else if( gen2 == eSFGen::velRange )
+                    return false;
+
+                //Then if its either the Sample ID or instrument id, make them always loose a comparison, so they end up at the bottom!
+                if( gen1 == eSFGen::sampleID || gen1 == eSFGen::instrument )
+                    return false;   // Always bigger than gen2
+                else if( gen2 == eSFGen::sampleID || gen2 == eSFGen::instrument )
+                    return true;  //Always bigger than gen1
+
+                //If not one of the special cases above, just compare their enum value
+                return gen1 < gen2; 
+            } 
+        };
+        typedef std::map<eSFGen,genparam_t,CmpPriority> genlist_t;
+
         virtual ~BaseGeneratorUser(){}
 
         /*
@@ -420,8 +459,8 @@ namespace sf2
             GetGenerators
                 Return a reference to the specified generator's value.
         */
-        std::map<eSFGen,genparam_t>       & GetGenerators()      { return m_gens; }
-        const std::map<eSFGen,genparam_t> & GetGenerators()const { return m_gens; }
+        genlist_t       & GetGenerators()      { return m_gens; }
+        const genlist_t & GetGenerators()const { return m_gens; }
 
         /*
             GetNbGenerators
@@ -617,24 +656,28 @@ namespace sf2
     protected:
         /*
             genpriority_t
-                A number from 0-255 indicating the priority of a generator in the list.
-                The default value for regular priority is 127. Lowest priority is 0, highest is 255.
+                A number indicating the priority of a generator in the list.
                 High priority generators will be placed at the begining, ordered by priority.
                 Low priority generators will be placed at the end, ordered by priority.
+
+                Its really stupid, but since I'm using an std::map, and that
+                the comparison predicate used to sort elements is also used to 
+                determine whether 2 keys are identical or not, we need to assign
+                a unique priority value to each generator type..
         */
-        typedef uint8_t genpriority_t;
-        static const genpriority_t DefaultPriority = 127;
-        static const genpriority_t HighPriority    = 255;
+        typedef uint16_t genpriority_t;
+        static const genpriority_t DefaultPriority = USHRT_MAX/2; 
+        static const genpriority_t HighPriority    = USHRT_MAX;
         static const genpriority_t LowPriority     = 0;
 
         /*
             GetGenPriority
                 This method returns the priority of a generator. 
         */
-        virtual genpriority_t GetGenPriority( eSFGen gen )const;
+        static genpriority_t GetGenPriority( eSFGen gen );
 
     protected:
-        std::map<eSFGen,genparam_t> m_gens; //There can only be a single generator of a given type
+        genlist_t m_gens; //There can only be a single generator of a given type
     };
 
     /***********************************************************************************
@@ -695,7 +738,7 @@ namespace sf2
                 Copies of generators/modulators that should appear only once are moved
                 at the end of the list, and will be ignored by anything conforming to the SF2 standard.
         */
-        void Sort();
+        /*void Sort();*/
     }; //Not much to put in here..
 
     /***********************************************************************************
@@ -713,6 +756,16 @@ namespace sf2
         ZoneBag       & GetZone( size_t index )       { return m_zones[index]; }
         const ZoneBag & GetZone( size_t index )const  { return m_zones[index]; }
         size_t          GetNbZone()const              { return m_zones.size(); }
+
+        /*
+            SortZonesGens
+                Sorts the generators in all of the preset's zones!
+        */
+        //inline void SortZonesGens()
+        //{
+        //    for( auto & zone : m_zones )
+        //        zone.Sort();
+        //}
 
     protected:
         std::vector<ZoneBag> m_zones;
@@ -801,6 +854,11 @@ namespace sf2
         */
         void     SetMorpho( uint32_t morpho ) { m_morpho = morpho; }
         uint32_t GetMorpho()const             { return m_morpho; }
+
+        //
+        //
+        //
+
 
     private:
         std::string                   m_name;

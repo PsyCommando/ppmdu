@@ -47,8 +47,8 @@ namespace DSE
             uint32_t eventno_      = 0; //Event counter to identify a single problematic event
             uint32_t lastpause_    = 0;
             uint32_t lasthold_     = 0; //last duration a note was held
-            int8_t   octave_       = 0;
-            int8_t   lastoctaveev_ = 0;
+            uint8_t  octave_       = 0;
+            uint8_t  lastoctaveev_ = 0;
             
             uint8_t  prgm_         = 0; //Keep track of the current program to apply pitch correction on specific instruments
             bool     sustainon     = false; //When a note is sustained, it must be let go of at the next play note event
@@ -369,54 +369,67 @@ namespace DSE
                 state.sustainon = false;
             }
 
-            if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower) && state.octave_ > 0 )
-            {
-                state.octave_ -= 1;
-                if( state.octave_ < 1 || state.octave_ > 9 )
-                    cerr<<"Decremented octave too low! " <<static_cast<unsigned short>(state.octave_) <<" \n";
-            }
-            else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) && state.octave_ < 9 )
-            {
-                state.octave_ += 1;
-                if( state.octave_ < 1 || state.octave_ > 9 )
-                    cerr<<"Incremented octave too high! " <<static_cast<unsigned short>(state.octave_) <<" \n";
-            }
-            else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::reset) )
-            {
-                state.octave_ = state.lastoctaveev_;
-            }
 
-            int8_t notenb  = (ev.params.front() & 0x0F);
-            if( notenb > 0xB )
-                cerr<<"Warning: Got a note higher than 0xB! 0x" <<uppercase <<hex <<static_cast<unsigned short>(notenb) <<dec <<nouppercase <<" !\n";
+            //if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::lower) && state.octave_ > 0 )
+            //{
+            //    state.octave_ -= 1;
+            //    if( state.octave_ < 1 || state.octave_ > 9 )
+            //        cerr<<"Decremented octave too low! " <<static_cast<unsigned short>(state.octave_) <<" \n";
+            //}
+            //else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::higher) && state.octave_ < 9 )
+            //{
+            //    state.octave_ += 1;
+            //    if( state.octave_ < 1 || state.octave_ > 9 )
+            //        cerr<<"Incremented octave too high! " <<static_cast<unsigned short>(state.octave_) <<" \n";
+            //}
+            //else if( (ev.params.front() & DSE::NoteEvParam1PitchMask) == static_cast<uint8_t>(DSE::eNotePitch::reset) )
+            //{
+            //    state.octave_ = state.lastoctaveev_;
+            //}
 
-#if 1
-            int8_t mnoteid = notenb + ( state.octave_ * 12 ); // 12 is amount of notes per octave. Midi notes begins at -1 octave, while DSE ones at 0..
-            if( static_cast<uint8_t>(mnoteid) > 127 )
-                cerr<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
-#else
-            int8_t mnoteid = notenb + ( (( state.octave_ * 12 ) * 100) + state.pitchoffset_ ) / 100;
-            if( static_cast<uint8_t>(mnoteid) > 127 )
-                cerr<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
+//            int8_t notenb  = (ev.params.front() & 0x0F);
+//            if( notenb > 0xB )
+//                cerr<<"Warning: Got a note higher than 0xB! 0x" <<uppercase <<hex <<static_cast<unsigned short>(notenb) <<dec <<nouppercase <<" !\n";
+//
+//#if 1
+//            int8_t mnoteid = notenb + ( state.octave_ * 12 ); // 12 is amount of notes per octave. Midi notes begins at -1 octave, while DSE ones at 0..
+//            if( static_cast<uint8_t>(mnoteid) > 127 )
+//                cerr<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
+//#else
+//            int8_t mnoteid = notenb + ( (( state.octave_ * 12 ) * 100) + state.pitchoffset_ ) / 100;
+//            if( static_cast<uint8_t>(mnoteid) > 127 )
+//                cerr<<"Warning: Got a MIDI note ID higher than 127 ! (0x" <<hex <<uppercase <<static_cast<unsigned short>(mnoteid) <<nouppercase <<dec <<")\n";
+//
+//#endif
+            //Interpret the first parameter byte of the play note event
+            uint8_t mnoteid   = 0;
+            uint8_t param2len = 0; //length in bytes of param2
+            ParsePlayNoteParam1( ev.params.front(), state.octave_, param2len, mnoteid );
 
-#endif
+            //Parse the note hold duration bytes
+            uint32_t holdtime = 0;
+            for( int cntby = 1; cntby <= param2len; ++cntby )
+                holdtime = (holdtime << 8) | ev.params[cntby];
+
+            if(holdtime > 0)
+                state.lasthold_ = holdtime;
 
             mess.SetTime(state.ticks_);
             mess.SetNoteOn( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) );
             outtrack.PutEvent( mess );
                      
-            if( ev.params.size() >= 2 )
-            {
-                if( ev.params.size() == 2 )
-                    state.lasthold_ = ev.params[1];
-                else if( ev.params.size() == 3 )
-                    state.lasthold_ = static_cast<uint16_t>( ev.params[1] << 8 ) | ev.params[2];
-                else if( ev.params.size() == 4 )
-                {
-                    state.lasthold_ = static_cast<uint32_t>( ev.params[1] << 16 ) | ( ev.params[2] << 8 ) | ev.params[3];
-                    cerr<<"##Got Note Event with 3 bytes long hold! Parsed as " <<state.lasthold_ <<"!##" <<"( trk#" <<trkno <<", evt #" <<state.eventno_ << ")" <<"\n";
-                }
-            }
+            //if( ev.params.size() >= 2 )
+            //{
+            //    if( ev.params.size() == 2 )
+            //        state.lasthold_ = ev.params[1];
+            //    else if( ev.params.size() == 3 )
+            //        state.lasthold_ = static_cast<uint16_t>( ev.params[1] << 8 ) | ev.params[2];
+            //    else if( ev.params.size() == 4 )
+            //    {
+            //        state.lasthold_ = static_cast<uint32_t>( ev.params[1] << 16 ) | ( ev.params[2] << 8 ) | ev.params[3];
+            //        cerr<<"##Got Note Event with 3 bytes long hold! Parsed as " <<state.lasthold_ <<"!##" <<"( trk#" <<trkno <<", evt #" <<state.eventno_ << ")" <<"\n";
+            //    }
+            //}
             MIDITimedBigMessage noteoff;
             noteoff.SetTime( state.ticks_ + state.lasthold_ );
             noteoff.SetNoteOff( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!

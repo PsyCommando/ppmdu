@@ -278,18 +278,18 @@ namespace DSE
         "B",
     }};
 
-    /****************************************************************************
-        eNotePitch
-            Values indicating how the play note event deal with the track's current 
-            pitch.
-    ****************************************************************************/
-    enum struct eNotePitch : uint8_t
-    {
-        reset     = 0x00,
-        lower     = 0x10,
-        current   = 0x20,
-        higher    = 0x30,
-    };
+    ///****************************************************************************
+    //    eNotePitch
+    //        Values indicating how the play note event deal with the track's current 
+    //        pitch.
+    //****************************************************************************/
+    //enum struct eNotePitch : uint8_t
+    //{
+    //    reset     = 0x00,
+    //    lower     = 0x10,
+    //    current   = 0x20,
+    //    higher    = 0x30,
+    //};
 
 
 
@@ -297,9 +297,12 @@ namespace DSE
     static const uint8_t NoteEvParam1NoteMask     = 0x0F; //( 0000 1111 ) The id of the note "eDSENote" is stored in the lower nybble
     static const uint8_t NoteEvParam1PitchMask    = 0x30; //( 0011 0000 ) The value of those 2 bits in the "param1" of a NoteOn event indicate if/how to modify the track's current pitch.
     static const uint8_t NoteEvParam1NbParamsMask = 0xC0; //( 1100 0000 ) The value of those two bits indicates the amount of bytes to be parsed as parameters for the note on event
+    static const int8_t  NoteEvOctaveShiftRange   =    2; //The Nb of octave the note event can modify the track's current octave
 
     static const uint8_t EventDelayMask           = 0xF0; // Apply this to get the part where the delay code is
     static const uint8_t EventDelayCode           = 0x80; // Compare the result after applying the above mask to this to know if its a prefixed delay
+
+
 
     /************************************************************************
         TrkEventsTable
@@ -696,6 +699,16 @@ namespace DSE
 
         return make_pair( std::move(events), std::move(preamb) );
     }
+
+    /*****************************************************************
+        ParsePlayNoteParam1
+            This interpret and returns the 3 values that are 
+            stored in the playnote event's first parameter.
+    *****************************************************************/
+    void ParsePlayNoteParam1(  uint8_t   noteparam1, 
+                               uint8_t & inout_curoctave, 
+                               uint8_t & out_param2len, 
+                               uint8_t & out_midinote );
 
 };
 

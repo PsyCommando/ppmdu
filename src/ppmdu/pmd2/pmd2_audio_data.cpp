@@ -321,6 +321,8 @@ namespace pmd2 { namespace audio
         static const int16_t SustainMinVolume=   1440; //The higher the value, the more attenuated the sound is. 0 is max volume
         static const int16_t MaxSignedInt8   =    127;
 
+        static const int16_t BaseDuration = 0;//MinEnvTimeCent;
+
 
         if( utils::LibWide().isLogOn() )
         {
@@ -345,67 +347,73 @@ namespace pmd2 { namespace audio
         //          to work with !
 
         //Handle Attack
-        if( attack != 0x7F && attack != 0 )
+        if( attack != 0 )
         {
             //double logatk = 1200.0 * log2( (attack * DSE_MaxAttackDur) / MaxSignedInt8 );
             //volenv.attack = static_cast<int16_t>( lround(logatk) );
-            volenv.attack = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( attack, mulatk ) );
+            volenv.attack = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( attack, mulatk ) );
         }
 
         //Handle Hold
-        if( hold != 0x7F && hold != 0 )
+        if( hold != 0 )
         {
             //double loghold = 1200.0 * log2( (hold * DSE_MaxHoldDur) / MaxSignedInt8 );
             //volenv.hold = static_cast<int16_t>( lround(loghold) );
-            volenv.hold = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( hold, mul2 ) );
+            volenv.hold = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( hold, mul2 ) );
         }
 
         //Handle Decay
-        if( decay != 0x7F && decay != 0 )
+        uint32_t decaytime = 0;
+        if( decay != 0 )
         {
-            //double logdecay = 1200.0 * log2( (decay * DSE_MaxDecayDur) / MaxSignedInt8 );
-            //volenv.decay = static_cast<int16_t>( lround(logdecay) );
-            volenv.decay = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( decay, mul2 ) );
+            decaytime = DSEEnveloppeDurationToMSec( decay, mul2 );
         }
+        if( decay2 != 0x7F )
+        {
+            decaytime += DSEEnveloppeDurationToMSec( decay2, mul2 );
+        }
+
+        volenv.decay = sf2::MSecsToTimecents( decaytime );
 
         //#TODO: Fix Decay2 logic !
 
         //DSE uses an AHDSDR envelope. There is a second decay after the sustain, and before the key is released. 
         // Its usually disabled (set to 0x7F), but when its enabled, we can simulate it easily by adding its duration to
         // the duration of the first decay, and set sustain to 0!
-        //if( decay2 == 0x7F  && decay2 != 0 )
-        //{
+        if( decay2 == 0x7F )
+        {
             //Second decay is disabled, handle decay + sustain as usual!
 
             //Use a rule of three to get the equivalent attenuation proportion. And subtract the max attenuation, so the
             // the sound is more attenuated the closer the DSE sustain value is to 0!
-            volenv.sustain = ( SustainMinVolume - ( ( sustain * SustainMinVolume ) / MaxSignedInt8 ) );
-            clog <<"Sustain : " <<volenv.sustain <<"\n";
+            //volenv.sustain = ( SustainMinVolume - ( ( sustain * SustainMinVolume ) / MaxSignedInt8 ) );
+            //clog <<"Sustain : " <<volenv.sustain <<"\n";
             
             //Test Logarithmic attenuation
             double attn = sustain;
             attn = 100.00 * log( 128.00 / attn ); //128 possible values
             uint16_t logsustain = static_cast<uint16_t>( lround( attn ) );
-            if( utils::LibWide().isLogOn() )
-                clog << "\t\tLog Sustain    : " <<logsustain     <<" cB\n"
-                     << "\t\tActual Sustain : " <<volenv.sustain <<" cB\n";
-        //}
-        //else
-        //{
-        //    //Second decay is enabled, add duration of first decay, and set sustain volume to 0 !
-        //    //double logdecay2  = 1200.0 * log2( (decay2 * DSE_MaxDecayDur) / MaxSignedInt8 ); //Timecents are dumb
-        //    volenv.decay     += sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( decay2, mul2 ) * 1000 );//static_cast<int16_t>(logdecay2);
+            //if( utils::LibWide().isLogOn() )
+            //    clog << "\t\tLog Sustain    : " <<logsustain     <<" cB\n"
+            //         << "\t\tActual Sustain : " <<volenv.sustain <<" cB\n";
+            volenv.sustain = logsustain;
+        }
+        else
+        {
+            //Second decay is enabled, add duration of first decay, and set sustain volume to 0 !
+            //double logdecay2  = 1200.0 * log2( (decay2 * DSE_MaxDecayDur) / MaxSignedInt8 ); //Timecents are dumb
+            //volenv.decay     = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, mul2 ) );//static_cast<int16_t>(logdecay2);
 
-        //    //Set sustain to the maximum attenuation to simulate the second decay parameter ramping volume down to 0!
-        //    volenv.sustain = SustainMinVolume; //144.0 dB of attenuation
-        //}
+            //Set sustain to the maximum attenuation to simulate the second decay parameter ramping volume down to 0!
+            volenv.sustain = SustainMinVolume; //144.0 dB of attenuation
+        }
 
 
         //Handle Release
-        if( rel != 0 )
+        if( rel != 0  )
         {
             //double logrel  = 1200.0 * log2( ( (rel * DSE_MaxReleaseDur) / MaxSignedInt8 ) );
-            volenv.release = sf2::SecondsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) );//static_cast<int16_t>( lround(logrel) );
+            volenv.release = (BaseDuration + sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) ) );//static_cast<int16_t>( lround(logrel) );
         }
 
 //        if( inlvl != 0 )
@@ -443,166 +451,168 @@ namespace pmd2 { namespace audio
 //
 //TrackPlaybackState
 //
-    class TrackPlaybackState
-    {
-    public:
 
-        TrackPlaybackState()
-            :curpitch(0), curbpm(0), lastsilence(0), curvol(0), curexp(0), curpreset(0), curpan(0),lastpitchev(0)
-        {}
+    //#REMOVEME!!!
+    //class TrackPlaybackState
+    //{
+    //public:
 
-        std::string printevent( const TrkEvent & ev )
-        {
-            stringstream outstr;
-        
-            //Print Delta Time
-            if( ev.dt != 0 )
-            {
-                outstr <<dec <<static_cast<uint16_t>( DSE::TrkDelayCodeVals.at(ev.dt) )  <<" ticks-";
-            }
+    //    TrackPlaybackState()
+    //        :curpitch(0), curbpm(0), lastsilence(0), curvol(0), curexp(0), curpreset(0), curpan(0),lastpitchev(0)
+    //    {}
 
-            auto evinf = GetEventInfo( static_cast<eTrkEventCodes>(ev.evcode) );
+    //    std::string printevent( const TrkEvent & ev )
+    //    {
+    //        stringstream outstr;
+    //    
+    //        //Print Delta Time
+    //        if( ev.dt != 0 )
+    //        {
+    //            outstr <<dec <<static_cast<uint16_t>( DSE::TrkDelayCodeVals.at(ev.dt) )  <<" ticks-";
+    //        }
 
-            //Print Event Label
-            if( evinf.first )
-                outstr << evinf.second.evlbl << "-";
-            else
-                outstr << "INVALID-";
+    //        auto evinf = GetEventInfo( static_cast<eTrkEventCodes>(ev.evcode) );
 
-            //Print Parameters and Event Specifics
-            if( evinf.second.nbreqparams == 1 )
-            {
-                if( evinf.second.evcodebeg == eTrkEventCodes::NoteOnBeg )
-                {
-                    outstr << "( vel:" <<dec << static_cast<unsigned short>(ev.evcode) <<", TrkPitch:";
-                    uint8_t prevpitch = curpitch;
-                    uint8_t pitchop   = (NoteEvParam1PitchMask & ev.params.front());
+    //        //Print Event Label
+    //        if( evinf.first )
+    //            outstr << evinf.second.evlbl << "-";
+    //        else
+    //            outstr << "INVALID-";
 
-                    if( pitchop == static_cast<uint8_t>(eNotePitch::lower) ) 
-                        curpitch -= 1;
-                    else if( pitchop == static_cast<uint8_t>(eNotePitch::higher) ) 
-                        curpitch += 1;
-                    else if( pitchop == static_cast<uint8_t>(eNotePitch::reset) ) 
-                        curpitch = lastpitchev;
+    //        //Print Parameters and Event Specifics
+    //        if( evinf.second.nbreqparams == 1 )
+    //        {
+    //            if( evinf.second.evcodebeg == eTrkEventCodes::NoteOnBeg )
+    //            {
+    //                outstr << "( vel:" <<dec << static_cast<unsigned short>(ev.evcode) <<", TrkPitch:";
+    //                uint8_t prevpitch = curpitch;
+    //                uint8_t pitchop   = (NoteEvParam1PitchMask & ev.params.front());
 
-                    outstr <<dec <<static_cast<short>(prevpitch) <<"->" <<dec <<static_cast<short>(curpitch);
-                    
-                    outstr <<", note: " <<DSE::NoteNames.at( (ev.params.front() & NoteEvParam1NoteMask) );
-                    
-                    outstr <<dec <<static_cast<short>(curpitch) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetOctave )
-                {
-                    outstr <<"( TrkPitch: ";
-                    uint8_t prevpitch = curpitch;
-                    lastpitchev = ev.params.front();
-                    curpitch    = ev.params.front();
-                    outstr <<dec <<static_cast<short>(prevpitch) <<"->" <<dec <<static_cast<short>(curpitch) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetExpress )
-                {
-                    outstr <<"( TrkExp: ";
-                    int8_t prevexp = curexp;
-                    curexp = ev.params.front();
-                    outstr <<dec <<static_cast<short>(prevexp) <<"->" <<dec <<static_cast<short>(curexp) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetTrkVol )
-                {
-                    outstr <<"( Vol: ";
-                    int8_t prevvol = curvol;
-                    curvol = ev.params.front();
-                    outstr <<dec <<static_cast<short>(prevvol) <<"->" <<dec <<static_cast<short>(curvol) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetTrkPan )
-                {
-                    outstr <<"( pan: ";
-                    int8_t prevpan = curpan;
-                    curpan = ev.params.front();
-                    outstr <<dec <<static_cast<short>(prevpan) <<"->" <<dec <<static_cast<short>(curpan) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetPreset )
-                {
-                    outstr <<"( Prgm: ";
-                    uint8_t prevpreset = curpreset;
-                    curpreset = ev.params.front();
-                    outstr <<dec <<static_cast<unsigned short>(prevpreset) <<"->" <<dec <<static_cast<unsigned short>(curpreset) <<" )";
-                }
-                else if( evinf.second.evcodebeg == eTrkEventCodes::SetTempo )
-                {
-                    outstr <<"( tempo: ";
-                    int8_t prevbpm = curbpm;
-                    curbpm = ev.params.front();
-                    outstr <<dec <<static_cast<short>(prevbpm) <<"->" <<dec <<static_cast<short>(curbpm) <<" )";
-                }
-                else
-                    outstr << "( param1: 0x" <<hex <<static_cast<unsigned short>(ev.params.front()) <<" )" <<dec;
-            }
+    //                if( pitchop == static_cast<uint8_t>(eNotePitch::lower) ) 
+    //                    curpitch -= 1;
+    //                else if( pitchop == static_cast<uint8_t>(eNotePitch::higher) ) 
+    //                    curpitch += 1;
+    //                else if( pitchop == static_cast<uint8_t>(eNotePitch::reset) ) 
+    //                    curpitch = lastpitchev;
 
-            //Print Event with 2 params or a int16 as param
-            if( ( evinf.second.nbreqparams == 2 ) )
-            {
-                if( evinf.second.evcodebeg == eTrkEventCodes::LongPause )
-                {
-                    uint16_t duration = ( static_cast<uint16_t>(ev.params[1] << 8) | static_cast<uint16_t>(ev.params.front()) );
-                    outstr << "( duration: 0x" <<hex <<duration <<" )" <<dec;
-                }
-                else
-                    outstr << "( param1: 0x"  <<hex <<static_cast<unsigned short>(ev.params[0]) <<" , param2: 0x" <<static_cast<unsigned short>(ev.params[1]) <<" )" <<dec;
-            }
+    //                outstr <<dec <<static_cast<short>(prevpitch) <<"->" <<dec <<static_cast<short>(curpitch);
+    //                
+    //                outstr <<", note: " <<DSE::NoteNames.at( (ev.params.front() & NoteEvParam1NoteMask) );
+    //                
+    //                outstr <<dec <<static_cast<short>(curpitch) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetOctave )
+    //            {
+    //                outstr <<"( TrkPitch: ";
+    //                uint8_t prevpitch = curpitch;
+    //                lastpitchev = ev.params.front();
+    //                curpitch    = ev.params.front();
+    //                outstr <<dec <<static_cast<short>(prevpitch) <<"->" <<dec <<static_cast<short>(curpitch) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetExpress )
+    //            {
+    //                outstr <<"( TrkExp: ";
+    //                int8_t prevexp = curexp;
+    //                curexp = ev.params.front();
+    //                outstr <<dec <<static_cast<short>(prevexp) <<"->" <<dec <<static_cast<short>(curexp) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetTrkVol )
+    //            {
+    //                outstr <<"( Vol: ";
+    //                int8_t prevvol = curvol;
+    //                curvol = ev.params.front();
+    //                outstr <<dec <<static_cast<short>(prevvol) <<"->" <<dec <<static_cast<short>(curvol) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetTrkPan )
+    //            {
+    //                outstr <<"( pan: ";
+    //                int8_t prevpan = curpan;
+    //                curpan = ev.params.front();
+    //                outstr <<dec <<static_cast<short>(prevpan) <<"->" <<dec <<static_cast<short>(curpan) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetPreset )
+    //            {
+    //                outstr <<"( Prgm: ";
+    //                uint8_t prevpreset = curpreset;
+    //                curpreset = ev.params.front();
+    //                outstr <<dec <<static_cast<unsigned short>(prevpreset) <<"->" <<dec <<static_cast<unsigned short>(curpreset) <<" )";
+    //            }
+    //            else if( evinf.second.evcodebeg == eTrkEventCodes::SetTempo )
+    //            {
+    //                outstr <<"( tempo: ";
+    //                int8_t prevbpm = curbpm;
+    //                curbpm = ev.params.front();
+    //                outstr <<dec <<static_cast<short>(prevbpm) <<"->" <<dec <<static_cast<short>(curbpm) <<" )";
+    //            }
+    //            else
+    //                outstr << "( param1: 0x" <<hex <<static_cast<unsigned short>(ev.params.front()) <<" )" <<dec;
+    //        }
 
-            //if( evinf.second.evcodebeg == eTrkEventCodes::NoteOnBeg  )
-            if( ev.params.size() > 2 )
-            {
-                //const uint8_t nbextraparams = (ev.params.front() & NoteEvParam1NbParamsMask) >> 6; // Get the two highest bits (1100 0000)
+    //        //Print Event with 2 params or a int16 as param
+    //        if( ( evinf.second.nbreqparams == 2 ) )
+    //        {
+    //            if( evinf.second.evcodebeg == eTrkEventCodes::LongPause )
+    //            {
+    //                uint16_t duration = ( static_cast<uint16_t>(ev.params[1] << 8) | static_cast<uint16_t>(ev.params.front()) );
+    //                outstr << "( duration: 0x" <<hex <<duration <<" )" <<dec;
+    //            }
+    //            else
+    //                outstr << "( param1: 0x"  <<hex <<static_cast<unsigned short>(ev.params[0]) <<" , param2: 0x" <<static_cast<unsigned short>(ev.params[1]) <<" )" <<dec;
+    //        }
 
-                outstr << "( ";
+    //        //if( evinf.second.evcodebeg == eTrkEventCodes::NoteOnBeg  )
+    //        if( ev.params.size() > 2 )
+    //        {
+    //            //const uint8_t nbextraparams = (ev.params.front() & NoteEvParam1NbParamsMask) >> 6; // Get the two highest bits (1100 0000)
 
-                for( unsigned int i = 0; i < ev.params.size(); ++i )
-                {
-                    outstr << "param" <<dec <<i <<": 0x" <<hex <<static_cast<unsigned short>(ev.params[i]) <<dec;
+    //            outstr << "( ";
 
-                    if( i != (ev.params.size()-1) )
-                        outstr << ",";
-                    else
-                        outstr <<" )";
-                }
-                
-            }
+    //            for( unsigned int i = 0; i < ev.params.size(); ++i )
+    //            {
+    //                outstr << "param" <<dec <<i <<": 0x" <<hex <<static_cast<unsigned short>(ev.params[i]) <<dec;
 
-            return outstr.str();
-        }
+    //                if( i != (ev.params.size()-1) )
+    //                    outstr << ",";
+    //                else
+    //                    outstr <<" )";
+    //            }
+    //            
+    //        }
 
-    private:
-        //ittrk_t m_beg;
-        //ittrk_t m_loop;
-        //ittrk_t m_cur;
-        //ittrk_t m_end;
+    //        return outstr.str();
+    //    }
 
-        int8_t   curvol;
-        int8_t   curpan;
-        int8_t   curexp;
-        uint8_t  curpitch;
-        uint8_t  lastpitchev;
-        uint8_t  curbpm;
-        uint8_t  curpreset;
-        uint16_t lastsilence;
-    };
+    //private:
+    //    //ittrk_t m_beg;
+    //    //ittrk_t m_loop;
+    //    //ittrk_t m_cur;
+    //    //ittrk_t m_end;
+
+    //    int8_t   curvol;
+    //    int8_t   curpan;
+    //    int8_t   curexp;
+    //    uint8_t  curpitch;
+    //    uint8_t  lastpitchev;
+    //    uint8_t  curbpm;
+    //    uint8_t  curpreset;
+    //    uint16_t lastsilence;
+    //};
 
     std::string MusicSequence::tostr()const
     {
         stringstream sstr;
-        int cnt = 0;
-        for( const auto & track : m_tracks )
-        {
-            sstr <<"==== Track" <<cnt << " ====\n\n";
-            TrackPlaybackState st;
-            for( const auto & ev : track )
-            {
-                sstr << st.printevent( ev ) << "\n";
-            }
-            ++cnt;
-        }
-
+        //int cnt = 0;
+        //for( const auto & track : m_tracks )
+        //{
+        //    sstr <<"==== Track" <<cnt << " ====\n\n";
+        //    TrackPlaybackState st;
+        //    for( const auto & ev : track )
+        //    {
+        //        sstr << st.printevent( ev ) << "\n";
+        //    }
+        //    ++cnt;
+        //}
+        assert(false); //Deprecated!!
         return move(sstr.str());
     }
 
@@ -660,7 +670,7 @@ namespace pmd2 { namespace audio
     }
 
     /*
-
+        #FIXME: This thing doesn't work at all. It keeps assigning wrong presets..
     */
     BatchAudioLoader::mergedInstData BatchAudioLoader::PrepareMergedInstrumentTable()const
     {
@@ -684,25 +694,28 @@ namespace pmd2 { namespace audio
                     //Compare against all presets for the same prgi slot, to find out whether this is a duplicate or not.
                     if( curinstlist[cntinst] != nullptr )
                     {
-                        auto founddup = find_if( merged[cntinst].begin(), 
-                                                 merged[cntinst].end(), 
-                                                 [&]( const ProgramInfo * inf )->bool
-                        { 
-                            if( inf != nullptr )
-                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != ProgramInfo::eCompareRes::different );
-                            else
-                            {
-                                throw std::exception("BatchAudioLoader::PrepareMergedInstrumentTable(): Null instrument pointer?!");
-                                return false;
-                            }
-                        });
+//                        auto founddup = find_if( merged[cntinst].begin(), 
+//                                                 merged[cntinst].end(), 
+//                                                 [&]( const ProgramInfo * inf )->bool
+//                        { 
+//                            if( inf != nullptr )
+//                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != ProgramInfo::eCompareRes::different );
+//                            else
+//                            {
+//#ifdef _DEBUG
+//                                assert(false);
+//#endif
+//                                cerr <<"Null instrument pointer encountered !\n";
+//                                return false;
+//                            }
+//                        });
 
-                        if( founddup != merged[cntinst].end() )
-                        {
-                            //If its a duplicate, set the existing copy of this instrument as what this SWDL+SMDL pair should use
-                            smdlPresLocation[cntpair].insert( make_pair( cntinst, distance( merged[cntinst].begin(), founddup) ) );
-                        }
-                        else
+                        //if( founddup != merged[cntinst].end() )
+                        //{
+                        //    //If its a duplicate, set the existing copy of this instrument as what this SWDL+SMDL pair should use
+                        //    smdlPresLocation[cntpair].insert( make_pair( cntinst, distance( merged[cntinst].begin(), founddup) ) );
+                        //}
+                        //else
                         {
                             //Push into merged list for this prgi slot number, if nothing similar found
                             merged[cntinst].push_back( curinstlist[cntinst].get() );
@@ -724,7 +737,7 @@ namespace pmd2 { namespace audio
             - smplIdConvTbl : A map mapping the Sample IDs from the DSE swd, to their new ID within the Soundfont file!
             - inst          : The SF2 Instruemnt this dse sample/instrument shall be added to.
     */
-    void DSEInstrumentToSf2InstrumentZone( const ProgramInfo::SplitEntry & dseinst, 
+    void DSEInstrumentToSf2InstrumentZone( const ProgramInfo::SplitEntry       & dseinst, 
                                            const std::map<uint16_t,size_t>     & smplIdConvTbl, 
                                            sf2::SoundFont                      & sf,
                                            sf2::Instrument                     & inst,
@@ -746,6 +759,8 @@ namespace pmd2 { namespace audio
         //Set the generators
         myzone.SetKeyRange( dseinst.lowkey, dseinst.hikey ); //Key range in first
 
+        myzone.SetVelRange( dseinst.unk14, dseinst.unk47 );
+
         //#TODO: Add more generators here.
 
         if( loopedsmpls[dseinst.smplid] )
@@ -764,28 +779,57 @@ namespace pmd2 { namespace audio
 
         myzone.SetVolEnvelope( myenv );
 
-        //int16_t coarse = (dseinst.pitch1 / 250); /*(dseinst.pitch1 / 1000) + *///(dseinst.pitch2 / 1000);
-        //int16_t fine   = (/*dseinst.pitch1 +*/ dseinst.pitch2) - (coarse * 1000); //Remove the highest part of the coarse tuning, and keep only the cent
-        
-        //int16_t pitchshift = DSESamplePitchToCents(dseinst.pitch2); /*+ DSESamplePitchToCents(dseinst.pitch2)*/
-        //int16_t finetune   = (pitchshift - (pitchshift/100) *100 );
-        //myzone.SetFineTune( finetune ); //cents -99 to 99
-        //myzone.SetCoarseTune( (pitchshift / 100) );                  //semitones -120 to 120
-        //myzone.SetCoarseTune( dseinst.tune /*DSESamplePitchToSemitone(dseinst.pitch2)*/ );
-        uint8_t tunesemitones  = DSESamplePitchToSemitone(dseinst.ctune);
-        uint8_t extrasemitones = abs( tunesemitones - 120 );
-        myzone.SetCoarseTune( (tunesemitones - extrasemitones) );
+        //Shift
+        //myzone.SetFineTune( dseinst.ctune );
 
         //#TEST: Try overriding rootkey for setting the pitch !
-        myzone.SetRootKey( dseinst.rootkey + extrasemitones );
-
-        //if( dsepresetid == 0x7F ) //Non-chromatic percussion
-            //myzone.SetScaleTuning( 0 ); //Never change pitch on midi key
+        myzone.SetRootKey( dseinst.rootkey );
 
         //Sample ID in last
         myzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
-        
+
+        //### In order to handle atkvol correctly, we'll make a copy of the Instrument, with a very short envelope!
+        if( dseinst.atkvol != 0 && dseinst.attack != 0 )
+        {
+            ZoneBag atkvolzone( myzone );
+
+            //Set attenuation to the atkvol value
+            double attn = dseinst.atkvol;
+            //attn = 100.00 * log( 128.00 / attn ); //128 possible values
+            //uint16_t logatkvol = static_cast<uint16_t>( lround( attn ) );
+            uint16_t logatkvol = ( 1440 - ( ( dseinst.atkvol * 1440 ) / CHAR_MAX ) );
+            atkvolzone.SetInitAtt( logatkvol );
+
+            //Set hold to the attack's duration
+            Envelope atkvolenv;
+            atkvolenv.hold = myenv.attack;
+
+            //Leave everything else to default
+            atkvolzone.SetVolEnvelope( atkvolenv );
+            inst.AddZone( std::move(atkvolzone) );
+        }
+
         inst.AddZone( std::move(myzone) );
+
+        //Handle Decay2, by adding an instrument with a delay of (Attack + Hold)
+        //if( dseinst.decay2 != 0 && dseinst.decay2 != 0x7F )
+        //{
+        //    ZoneBag decay2env( myzone ); //copy
+
+        //    //Set hold to the attack's duration
+        //    Envelope dec2volenv;
+        //    dec2volenv.delay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( dseinst.attack, dseinst.unk35 ) + 
+        //                                                DSEEnveloppeDurationToMSec( dseinst.hold,   dseinst.unk36 ) ); 
+        //    dec2volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( dseinst.decay2, dseinst.unk36 ) );
+        //    dec2volenv.sustain = 1440;
+        //    dec2volenv.release = myenv.release;
+
+        //    //Leave everything else to default
+        //    decay2env.SetVolEnvelope( dec2volenv );
+        //    inst.AddZone( std::move(decay2env) );
+        //}
+        
+        
     }
 
     /*
@@ -915,7 +959,7 @@ namespace pmd2 { namespace audio
 
                 //Add the pitch offset to the root key 
                 //int16_t rootkey = 72;//67 + DSESamplePitchToSemitone(cursminf.pitchoffst); //When set to 72, "C5", its ~5 semitones off, with all the other pitch correction on.
-                sm.SetOriginalKey( cursminf.rootkey ); //Default to this for now, but it will be overriden in the instrument anyways
+                //sm.SetOriginalKey( cursminf.rootkey ); //Default to this for now, but it will be overriden in the instrument anyways
                 sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
 
                 //#TODO:Come up with a better loop detection logic !!!

@@ -1,7 +1,7 @@
 #ifndef DSE_TO_XML_HPP
 #define DSE_TO_XML_HPP
 /*
-dse_to_sf.hpp
+dse_to_xml.hpp
 2015/07/07
 psycommando@gmail.com
 Descritpton: Contains utilities for converting DSE audio parameters to XML data.

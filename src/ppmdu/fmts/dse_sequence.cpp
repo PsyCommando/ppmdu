@@ -154,6 +154,26 @@ namespace DSE
     }
 
 
+    /*****************************************************************
+        ParsePlayNoteParam1
+            This interpret and returns the 3 values that are 
+            stored in the playnote event's first parameter.
+    *****************************************************************/
+    void ParsePlayNoteParam1(  uint8_t   noteparam1, 
+                               uint8_t & inout_curoctave, 
+                               uint8_t & out_param2len, 
+                               uint8_t & out_midinote )
+    {
+        //1. Get param2's len
+        out_param2len = ( ( noteparam1 & NoteEvParam1NbParamsMask ) >> 6 ) & 0x3; //(0011) just to be sure no sign bits slip through somehow
+
+        //2. Get and apply the octave modifiere
+        int8_t octavemod = ( ( (noteparam1 & NoteEvParam1PitchMask) >> 4 ) & 0x3 ) - NoteEvOctaveShiftRange;
+        inout_curoctave  = static_cast<int8_t>(inout_curoctave) + octavemod; 
+
+        //3. Get the midi note
+        out_midinote = ( inout_curoctave * static_cast<uint8_t>(eNote::nbNotes) ) + (noteparam1 & 0xF);
+    }
 
 //====================================================================================================
 //====================================================================================================

@@ -74,6 +74,7 @@ namespace sf2
     static const uint32_t    SfSampleLoopMinEndEdgeDist = 16;
     static const uint32_t    SfSampleLoopMinLen      = 32;  //Minimum distance between the start of a loop and the end, for it to be SF2 loopable.
     static const size_t      SfMinSampleZeroPad      = 92;  //Minimum amount of bytes of zero padding to append a sample. 46 samples
+    static const size_t      SfMaxLongCString        = 256; //Maximum size of a long c-string. For example the ISFT chunk's software name.
 
     static const uint32_t    SfEntrySHDR_Len         = 46;
     static const uint32_t    SfEntryPHDR_Len         = 38;
@@ -157,12 +158,12 @@ namespace sf2
     static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200 };
     static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200 };
 
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { -12000, -12000,  8000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvHold         { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { -12000, -12000,  8000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000 };
     static const value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { -12000, -12000,  8000 };
+    static const value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000 };
 
     static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200 };
     static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200 };
@@ -645,26 +646,20 @@ namespace sf2
         void WriteISFTChunk()
         {
             auto              itout = ostreambuf_iterator<char>(m_out);
-            riff::ChunkHeader ISFTchnk;
-            ISFTchnk.chunk_id = static_cast<uint32_t>( eSF2Tags::ISFT );
-
-            if( m_out.tellp() % 2 != 0 )
-                ISFTchnk.length = SF_DefSft.size() + 2; //For the extra padding 0 byte
-            else
-                ISFTchnk.length = SF_DefSft.size() + 1;
-
-            //Write the chunk header
-            ISFTchnk.Write( itout );
-
-            //Write the string
-            std::copy( SF_DefSft.begin(), SF_DefSft.end(), itout );
-
-            //Terminate it with a null character
-            m_out.put(0);
+            riff::Chunk       ISFTchnk( static_cast<uint32_t>( eSF2Tags::ISFT ) );
+            size_t            sftnamelen = std::min( SF_DefSft.size(), (SfMaxLongCString-1) ); //Limit to the max len of the string - 1 for the terminating 0!
             
-            //Add extra Zero if ends on non-even byte count
-            if( m_out.tellp() % 2 != 0 )
-                m_out.put(0);
+            ISFTchnk.data_.reserve(sftnamelen + 2); //Reserve 2 extra bytes for the terminator(s)
+
+            //copy as much of the string as we can
+            copy_n( SF_DefSft.begin(), sftnamelen, back_inserter(ISFTchnk.data_) );
+            ISFTchnk.data_.push_back('\0'); //Add terminating 0
+
+            if( ( (ISFTchnk.data_.size()) % 2 ) != 0 ) //Add extra terminating zero if string len is non even
+                ISFTchnk.data_.push_back('\0');
+
+            //Write the chunk 
+            ISFTchnk.Write( itout );
         }
 
     //----------------------------------------------------------------
@@ -697,7 +692,10 @@ namespace sf2
 
 #ifdef _DEBUG
                 if( loopbounds.second > loadedsmpl.size() )
+                {
                     cout<<"OMFG.. Loop end out of bound, WTF!?\n";
+                    assert(false);
+                }
 #endif
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
                     MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
@@ -807,6 +805,8 @@ namespace sf2
                 uint32_t       loopbeg = 0;
                 uint32_t       loopend = 0;
 
+                //#FIXME: I really don't like having a separate computation here for loop points..
+                //        It should all happens when we make samples loop legal, but we don't want to modify the sample container's data..
                 if( labs(loop.second - loop.first) != 0 ) //abs because we're not sure yet what the values means in the original SWDL
                 {
                     uint32_t extrasmpls = 0; //Any extra samples that were added to compensate for a possible non-legal loop
@@ -1111,11 +1111,7 @@ namespace sf2
             for( size_t cntzone = 0; cntzone < content.GetNbZone(); cntzone++ )
             {
                 const auto & curzone = content.GetZone(cntzone);
-
                 WriteABag( itout, gencnt, modcnt );
-                //itout = utils::WriteIntToByteVector( gencnt, itout );
-                //itout = utils::WriteIntToByteVector( modcnt, itout );
-
                 gencnt += curzone.GetNbGenerators();
                 modcnt += curzone.GetNbModulators();
             }
@@ -1208,6 +1204,7 @@ namespace sf2
 
     size_t SoundFont::Write( const std::string & sf2path )
     {
+        //Then output stuff
         ofstream output( sf2path, std::ios::out | std::ios::binary );
         SounFontRIFFWriter sfw(*this);
         output = std::move( sfw.Write( std::move(output) ) );
@@ -1223,34 +1220,8 @@ namespace sf2
 //=========================================================================================
 //  Sample
 //=========================================================================================
-    //Sample::Sample( const std::string & fpath, size_t begoff, size_t endoff )
-    //    :m_loadty(eLoadType::DelayedFile), m_fpath(fpath), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-    //    m_pRaw(nullptr),m_pRawVec(nullptr)
-    //{}
-    //
-    //Sample::Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff )
-    //    :m_loadty(eLoadType::DelayedRawVec), m_pRawVec(prawvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-    //    m_pRaw(nullptr)
-    //{}
-    //
-    //Sample::Sample( uint8_t * praw, size_t begoff, size_t endoff )
-    //    :m_loadty(eLoadType::DelayedRaw), m_pRaw(praw), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-    //    m_pRawVec(nullptr)
-    //{}
-    //
-    //Sample::Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff )
-    //    :m_loadty(eLoadType::DelayedPCMVec), m_pPcmVec(ppcmvec), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-    //    m_pRaw(nullptr),m_pRawVec(nullptr)
-    //{}
-    //
-    //Sample::Sample( std::weak_ptr<pcm16s_t> ppcm, size_t begoff, size_t endoff )
-    //    :m_loadty(eLoadType::DelayedPCM), m_pPcm(ppcm), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-    //    m_pRaw(nullptr),m_pRawVec(nullptr)
-    //{}
 
     Sample::Sample( loadfun_t && funcload, smplcount_t samplelen)
-        //:m_loadty(eLoadType::DelayedFunc), m_loadfun(std::move(funcload)), m_begoff(begoff), m_endoff(endoff), m_loopbeg(0), m_loopend(0), m_linkedsmpl(0),
-        //m_pRaw(nullptr),m_pRawVec(nullptr)
         :m_samplety(eSmplTy::monoSample), m_linkedsmpl(0), m_loadfun(funcload), m_loopbeg(0), m_loopend(0), m_origkey(60),//MIDI middle C
          m_pitchcorr(0), m_smplrate(44100), m_smpllen(samplelen)
     {}
@@ -1271,139 +1242,11 @@ namespace sf2
     {
         return std::move( m_loadfun() );;
     }
-    //{
-        //vector<pcm16s_t> pcmdata;
-
-        //switch( m_loadty )
-        //{
-        //    case eLoadType::DelayedFile:
-        //    {
-        //        const unsigned int datsz = (m_endoff - m_begoff);
-
-        //        if( datsz % 2 != 0 )
-        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-        //        ifstream infile( m_fpath, ios::in | ios::binary );
-        //        infile.seekg( m_begoff );
-
-        //        pcmdata.resize(datsz);
-
-        //        for( auto  & sample : pcmdata )
-        //        {
-        //            sample = static_cast<pcm16s_t>( infile.get() );
-        //            sample |= static_cast<pcm16s_t>( infile.get() ) << 8;
-        //        }
-        //        break;
-        //    }
-        //    case eLoadType::DelayedFunc:
-        //    {
-                //if( m_begoff == 0 && m_endoff == pcmdata.size() )
-                //    return std::move( m_loadfun() );
-                //else
-                //{
-                    //pcmdata = std::move( m_loadfun() );
-
-                    //if( m_endoff != pcmdata.size() )
-                    //    return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), (pcmdata.begin() + m_endoff) );
-                    //else
-                    //    return std::vector<pcm16s_t>( (pcmdata.begin() + m_begoff), pcmdata.end() );
-                //}
-        //        break;
-        //    }
-        //    case eLoadType::DelayedPCM:
-        //    {
-        //        auto ptr = m_pPcm.lock();
-
-        //        if( ptr )
-        //            return std::vector<pcm16s_t>( (ptr.get() + m_begoff), (ptr.get() + m_endoff) );
-        //        else
-        //        {
-        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCM loading failed! Pointer has expired, or is null!");
-        //        }
-        //    }
-        //    case eLoadType::DelayedPCMVec:
-        //    {
-        //        auto ptr = m_pPcmVec.lock();
-
-        //        if( ptr )
-        //            return std::vector<pcm16s_t>( (ptr.get()->begin() + m_begoff), (ptr.get()->begin() + m_endoff) );
-        //        else
-        //        {
-        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedPCMVec loading failed! Pointer has expired, or is null!");
-        //        }
-        //    }
-        //    case eLoadType::DelayedRaw:
-        //    {
-        //        if( m_pRaw )
-        //        {
-        //            const size_t datsz = (m_endoff - m_begoff);
-
-        //            if( datsz % 2 != 0 )
-        //                throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-        //            pcmdata.resize( (datsz / 2) );
-
-        //            size_t cntby = 0;
-        //            for( auto & sample : pcmdata )
-        //            {
-        //                sample  = static_cast<pcm16s_t>( *(m_pRaw + cntby) );
-        //                ++cntby;
-        //                sample |= static_cast<pcm16s_t>( *(m_pRaw + cntby) ) << 8;
-        //                ++cntby;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
-        //        }
-        //        break;
-        //    }
-        //    case eLoadType::DelayedRawVec:
-        //    {
-        //        if( m_pRawVec )
-        //        {
-        //            const size_t datsz = (m_endoff - m_begoff);
-
-        //            if( datsz % 2 != 0 )
-        //                throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Raw sample data is not a multiple of 2 !");
-
-        //            pcmdata.resize( (datsz / 2) );
-
-        //            size_t cntby = 0;
-        //            for( auto & sample : pcmdata )
-        //            {
-        //                sample  = static_cast<pcm16s_t>( (*m_pRawVec)[cntby] );
-        //                ++cntby;
-        //                sample |= static_cast<pcm16s_t>( (*m_pRawVec)[cntby] ) << 8;
-        //                ++cntby;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): DelayedRaw loading failed! Pointer has expired, or is null!");
-        //        }
-        //        break;
-        //    }
-        //    default:
-        //    {
-        //        throw std::runtime_error("Sample::operator std::vector<pcm16s_t>(): Unknown loading scheme!");
-        //    }
-        //};
-
-        //return std::move(pcmdata);
-    //}
 
     void Sample::SetLoopBounds( smplcount_t beg, smplcount_t end )
     {
-        //if( (m_begoff + beg) < m_endoff )
-            m_loopbeg = beg;
-        //else
-        //    throw std::out_of_range( "Sample::SetLoopBounds(): Loop beginning position is out of range !" );
-
-        //if( (m_begoff + end) <= m_endoff )
-            m_loopend = end;
-        //else
-        //    throw std::out_of_range( "Sample::SetLoopBounds(): Loop end position is out of range !" );
+        m_loopbeg = beg;
+        m_loopend = end;
     }
 
 
@@ -1437,7 +1280,7 @@ namespace sf2
 //  BaseGeneratorUser
 //=========================================================================================
 
-    BaseGeneratorUser::genpriority_t BaseGeneratorUser::GetGenPriority( eSFGen gen )const
+    BaseGeneratorUser::genpriority_t BaseGeneratorUser::GetGenPriority( eSFGen gen )
     {
         if( gen == eSFGen::keyRange )
             return HighPriority;
@@ -1448,7 +1291,7 @@ namespace sf2
         else if( gen == eSFGen::instrument)
             return LowPriority;
         else
-            return DefaultPriority;
+            return ( DefaultPriority - static_cast<int8_t>(gen) ); //Do this to get a unique priority ID for each value.
     }
 
 
@@ -2013,9 +1856,15 @@ namespace sf2
 //=====================================================================================
 //  ZoneBag
 //=====================================================================================
-    void ZoneBag::Sort()
-    {
-        //
-    }
+    //void ZoneBag::Sort()
+    //{
+    //    //Sort Generators:
+    //    //std::sort( m_gens.begin(), m_gens.end(), 
+    //    //    []( const map<eSFGen,genparam_t>::value_type & v1, 
+    //    //        const map<eSFGen,genparam_t>::value_type & v2 )
+    //    //    {
+    //    //        return ( GetGenPriority(v1.first) > GetGenPriority(v2.first) ); //Normally the comparison is "<", but since higher values means higher priority we reverse it !
+    //    //    });
+    //}
 
 };

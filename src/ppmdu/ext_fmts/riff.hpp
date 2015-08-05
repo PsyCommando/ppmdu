@@ -11,10 +11,17 @@ Description: Utilities for working with RIFF files.
 #include <vector>
 #include <cstdint>
 #include <iostream>
-
+#include <fstream>
 
 namespace riff
 {
+    /*
+        NOTE to myself:
+        The riff format has only 2 different types of chunk, LIST and RIFF are the first, and the second are regular
+        chunks that can't have subchunks.
+    */
+
+
     //static const uint32_t RIFF_MagicNumber           = 0x52494646; //"RIFF"
     //static const uint32_t RIFF_BigEndian_MagicNumber = 0x52494658; //"RIFX"
 
@@ -33,6 +40,10 @@ namespace riff
     ************************************************************************************/
     struct ChunkHeader
     {
+        ChunkHeader( uint32_t chnkid = 0, uint32_t len = 0 )
+            :chunk_id(chnkid), length(len)
+        {}
+
         static const uint32_t SIZE = 8;//bytes
         uint32_t chunk_id = 0;
         uint32_t length   = 0;
@@ -43,10 +54,8 @@ namespace riff
         template<class _init>
             _init Read( _init itbeg, _init itfileend )
         {
-
             chunk_id = utils::ReadIntFromByteVector<decltype(chunk_id)>(itbeg, false);
             length   = utils::ReadIntFromByteVector<decltype(length)>  (itbeg);
-
             return itbeg;
         }
 
@@ -61,6 +70,59 @@ namespace riff
             return itwhere;
         }
 
+    };
+
+    /*
+        Chunk
+            Represent a regular RIFF chunk and its content.
+    */
+    struct Chunk
+    {
+    public:
+        Chunk( uint32_t fourcc )
+            :fourcc_(fourcc)
+        {}
+
+        Chunk( uint32_t fourcc, std::vector<uint8_t> && data )
+            :fourcc_(fourcc), data_(std::move(data))
+        {}
+
+
+        ///*
+        //*/
+        //template<class _init>
+        //    _init Read( _init itbeg, _init itfileend )
+        //{
+        //    return itbeg;
+        //}
+
+        //#TODO: It might be a good thing to put an abstraction layer over the data of a chunk
+        //       using iterators maybe ? That way, if the chunk is loaded from file, we don't have to load
+        //       it completely, and the parent of the chunk will insure that the file stream is kept valid.
+        //
+        //       We really have 3 cases to take into account:
+        //       1- Chunk is loaded from a file.
+        //       2- Chunk is being written to a file.
+        //          - However, this means that, we can't just edit chunks once they've been added to the riff file object, because we'd 
+        //            end up overwriting other chunks if we'd add more data and etc, and it would frankly be a mess..
+        //       3- Chunk is being written to memory.
+        //
+
+        /*
+            Return new write position.
+        */
+        template<class _outit>
+            _outit Write( _outit itwhere )
+        {
+            //Make Header
+            itwhere = ChunkHeader( fourcc_, data_.size() ).Write( itwhere );
+
+            //Write our data
+            return std::copy( data_.begin(), data_.end(), itwhere );
+        }
+
+        uint32_t             fourcc_;
+        std::vector<uint8_t> data_;
     };
 
 
