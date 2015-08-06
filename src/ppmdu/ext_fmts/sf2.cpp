@@ -8,6 +8,7 @@
 #include <array>
 #include <functional>
 #include <cassert>
+#include <sstream>
 using namespace std;
 
 #define SF2_ADD_EXTRA_LOOP_BYTES 1
@@ -420,6 +421,29 @@ namespace sf2
         std::ofstream Write( std::ofstream && output )
         {
             m_out = std::move(output);
+
+            //Validate
+            if( m_sf.GetNbInstruments() > numeric_limits<uint16_t>::max() )
+            {
+                stringstream sstr;
+                sstr << "The number of instruments in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
+                     << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbInstruments() <<"!\n";
+                throw std::overflow_error(sstr.str());
+            }
+            if( m_sf.GetNbPresets() > numeric_limits<uint16_t>::max() )
+            {
+                stringstream sstr;
+                sstr << "The number of presets in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
+                     << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbPresets() <<"!\n";
+                throw std::overflow_error(sstr.str());
+            }
+            if( m_sf.GetNbSamples() > numeric_limits<uint16_t>::max() )
+            {
+                stringstream sstr;
+                sstr << "The number of samples in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
+                     << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbSamples() <<"!\n";
+                throw std::overflow_error(sstr.str());
+            }
 
             //Save pre-write pos to go back to for writing the header later
             const std::ofstream::streampos prewriteoffset = m_out.tellp();

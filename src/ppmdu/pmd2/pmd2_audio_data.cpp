@@ -337,15 +337,6 @@ namespace pmd2 { namespace audio
                 << static_cast<short>(rx)           <<" )\n";
         }
 
-
-
-        //Basically : ( (indel * 17000) / 127 ) - 12000
-        //          Since the envelope's values range from -12000 to 5000, and the range of our DSE value is 0 to 127, 
-        //          we want to shift all SF2 related values into positive ranges only, and after the calculation is done,
-        //          shift it back into the SF2 envelope value range. The actual calculation is a simple rule of three!
-        //          That way we still have the full 17000 possible values, but all in the positive, which makes it all much easier
-        //          to work with !
-
         //Handle Attack
         if( attack != 0 )
         {
@@ -364,10 +355,11 @@ namespace pmd2 { namespace audio
 
         //Handle Decay
         uint32_t decaytime = 0;
-        if( decay != 0 )
+        if( /*decay != 0 &&*/ decay != 0x7F )
         {
             decaytime = DSEEnveloppeDurationToMSec( decay, mul2 );
         }
+
         if( decay2 != 0x7F )
         {
             decaytime += DSEEnveloppeDurationToMSec( decay2, mul2 );
@@ -375,64 +367,32 @@ namespace pmd2 { namespace audio
 
         volenv.decay = sf2::MSecsToTimecents( decaytime );
 
-        //#TODO: Fix Decay2 logic !
-
         //DSE uses an AHDSDR envelope. There is a second decay after the sustain, and before the key is released. 
         // Its usually disabled (set to 0x7F), but when its enabled, we can simulate it easily by adding its duration to
         // the duration of the first decay, and set sustain to 0!
         if( decay2 == 0x7F )
         {
             //Second decay is disabled, handle decay + sustain as usual!
-
-            //Use a rule of three to get the equivalent attenuation proportion. And subtract the max attenuation, so the
-            // the sound is more attenuated the closer the DSE sustain value is to 0!
             //volenv.sustain = ( SustainMinVolume - ( ( sustain * SustainMinVolume ) / MaxSignedInt8 ) );
-            //clog <<"Sustain : " <<volenv.sustain <<"\n";
-            
             //Test Logarithmic attenuation
             double attn = sustain;
             attn = 100.00 * log( 128.00 / attn ); //128 possible values
-            uint16_t logsustain = static_cast<uint16_t>( lround( attn ) );
-            //if( utils::LibWide().isLogOn() )
-            //    clog << "\t\tLog Sustain    : " <<logsustain     <<" cB\n"
-            //         << "\t\tActual Sustain : " <<volenv.sustain <<" cB\n";
-            volenv.sustain = logsustain;
+            volenv.sustain = static_cast<uint16_t>( lround( attn ) );
         }
         else
         {
             //Second decay is enabled, add duration of first decay, and set sustain volume to 0 !
-            //double logdecay2  = 1200.0 * log2( (decay2 * DSE_MaxDecayDur) / MaxSignedInt8 ); //Timecents are dumb
-            //volenv.decay     = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, mul2 ) );//static_cast<int16_t>(logdecay2);
-
             //Set sustain to the maximum attenuation to simulate the second decay parameter ramping volume down to 0!
             volenv.sustain = SustainMinVolume; //144.0 dB of attenuation
         }
 
 
         //Handle Release
-        if( rel != 0  )
+        if( rel != 0 )
         {
             //double logrel  = 1200.0 * log2( ( (rel * DSE_MaxReleaseDur) / MaxSignedInt8 ) );
-            volenv.release = (BaseDuration + sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) ) );//static_cast<int16_t>( lround(logrel) );
+            volenv.release = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) );
         }
-
-//        if( inlvl != 0 )
-//            volenv.delay   = static_cast<int16_t>( ((inlvl  * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
-        //if( inrate != 0 )
-        //    volenv.attack  = static_cast<int16_t>( (( inrate * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
-        //if( hold != 0 )
-        //{
-        //    volenv.hold   = static_cast<int16_t>( (( hold *  (labs(MinEnvTimeCent) + Max20sec ) ) / MaxSignedInt8) + MinEnvTimeCent );
-        //    //volenv.hold  += static_cast<int16_t>( (( susrte * (labs(MinEnvTimeCent) + (Max20sec/2) ) ) / MaxSignedInt8 ) + MinEnvTimeCent );
-        //}
-        //if( decrte != 0 )
-        //{
-        //    volenv.decay   = static_cast<int16_t>( (( decrte * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8 ) + MinEnvTimeCent );
-        //}
-        //if( sustain != 0 )
-        //    volenv.sustain = static_cast<int16_t>( (MaxSignedInt8 - sustain) * 10  );
-        //if( rel != 0 )
-        //    volenv.release = static_cast<int16_t>( ((rel * (labs(MinEnvTimeCent) + Max100sec) ) / MaxSignedInt8) + MinEnvTimeCent );
 
         if( utils::LibWide().isLogOn() )
         {
@@ -809,27 +769,7 @@ namespace pmd2 { namespace audio
             inst.AddZone( std::move(atkvolzone) );
         }
 
-        inst.AddZone( std::move(myzone) );
-
-        //Handle Decay2, by adding an instrument with a delay of (Attack + Hold)
-        //if( dseinst.decay2 != 0 && dseinst.decay2 != 0x7F )
-        //{
-        //    ZoneBag decay2env( myzone ); //copy
-
-        //    //Set hold to the attack's duration
-        //    Envelope dec2volenv;
-        //    dec2volenv.delay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( dseinst.attack, dseinst.unk35 ) + 
-        //                                                DSEEnveloppeDurationToMSec( dseinst.hold,   dseinst.unk36 ) ); 
-        //    dec2volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( dseinst.decay2, dseinst.unk36 ) );
-        //    dec2volenv.sustain = 1440;
-        //    dec2volenv.release = myenv.release;
-
-        //    //Leave everything else to default
-        //    decay2env.SetVolEnvelope( dec2volenv );
-        //    inst.AddZone( std::move(decay2env) );
-        //}
-        
-        
+        inst.AddZone( std::move(myzone) );        
     }
 
     /*
@@ -898,6 +838,14 @@ namespace pmd2 { namespace audio
         SoundFont             sf( m_master.metadata().fname ); 
         map<uint16_t,size_t>  swdsmplofftosf; //Make a map with as key a the sample id in the Wavi table, and as value the sample id in the sounfont!
         
+        //
+        if( merged.mergedpresets.size() > numeric_limits<uint16_t>::max() )
+        {
+            stringstream sstr;
+            sstr << "The merged preset list has grown larger than " << numeric_limits<uint16_t>::max()
+                 << ", the soundfont format doesn't support that much presets!\n";
+            throw std::overflow_error(sstr.str());
+        }
 
         //Prepare samples list
         shared_ptr<SampleBank>  samples = m_master.smplbank().lock();
@@ -963,7 +911,8 @@ namespace pmd2 { namespace audio
                 sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
 
                 //#TODO:Come up with a better loop detection logic !!!
-                if( loopbeg != 0 ) 
+                //if( loopbeg != 0 ) 
+                if( cursminf.smplloop != 0 )
                 {
                     sm.SetLoopBounds ( loopbeg, loopend );
                     loopedsmpls[cntsmslot].flip();
@@ -998,7 +947,18 @@ namespace pmd2 { namespace audio
         //Then send that to the Soundfont writing function.
 
         //Write the soundfont
-        sf.Write( destf );
+        try
+        {
+            sf.Write( destf );
+        }
+        catch( const overflow_error & e )
+        {
+            stringstream sstr;
+            sstr <<"There are too many different parameters throughout the music files in the folder to extract them to a single soundfont file!\n"
+                 << e.what() 
+                 << "\n";
+            throw runtime_error( sstr.str() );
+        }
 
         return std::move(merged);
     }
@@ -1020,7 +980,11 @@ namespace pmd2 { namespace audio
             fpath.setExtension("mid");
 
             cerr<<"<*>- Currently exporting smd to " <<fpath.toString() <<"\n";
-            DSE::SequenceToMidi( fpath.toString(), m_pairs[i].first, merged.filetopreset[i] );
+            DSE::SequenceToMidi( fpath.toString(), 
+                                 m_pairs[i].first, 
+                                 merged.filetopreset[i], 
+                                 DSE::eMIDIFormat::SingleTrack,
+                                 DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
         }
     }
 

@@ -174,7 +174,7 @@ namespace DSE
         uint16_t version    = 0; //
         uint16_t smplfmt    = 0; //Format of the sample 0x100 == PCM 16, 0x200 == IMA ADPCM
         uint8_t  unk9       = 0; 
-        uint8_t  unk14      = 0;
+        uint8_t  smplloop   = 0; //loop flag, 1 = loop, 0 = no loop
         uint16_t unk10      = 0;
         uint16_t unk11      = 0;
         uint16_t unk12      = 0;
@@ -211,7 +211,7 @@ namespace DSE
             itwriteto = utils::WriteIntToByteVector( version, itwriteto );
             itwriteto = utils::WriteIntToByteVector( smplfmt, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk9, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk14, itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplloop, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk10, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk11, itwriteto );
             itwriteto = utils::WriteIntToByteVector( unk12, itwriteto );
@@ -251,7 +251,7 @@ namespace DSE
             itReadfrom = utils::ReadIntFromByteContainer( version,    itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( smplfmt,    itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( unk9,       itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( unk14,      itReadfrom ); 
+            itReadfrom = utils::ReadIntFromByteContainer( smplloop,   itReadfrom ); 
             itReadfrom = utils::ReadIntFromByteContainer( unk10,      itReadfrom ); 
             itReadfrom = utils::ReadIntFromByteContainer( unk11,      itReadfrom ); 
             itReadfrom = utils::ReadIntFromByteContainer( unk12,      itReadfrom ); 

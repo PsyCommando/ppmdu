@@ -61,7 +61,7 @@ namespace DSE
                          const pmd2::audio::MusicSequence  & seq, 
                          const std::map<uint16_t,uint16_t> & presetbanks,
                          eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
-                         eMIDIMode                           midmode     = eMIDIMode::GM );
+                         eMIDIMode                           midmode     = eMIDIMode::GS );
 
     /*
         Exports the track, and make sure as much as possible that playback on GM
@@ -76,7 +76,7 @@ namespace DSE
     void SequenceToGM_MIDI( const std::string                 & outmidi, 
                             const pmd2::audio::MusicSequence  & seq, 
                             const std::vector<uint8_t>        & presetconv,
-                            eMIDIMode                           midmode     = eMIDIMode::GM );
+                            eMIDIMode                           midmode     = eMIDIMode::GS );
 
     /****************************************************************************************
         IRenderEngine
