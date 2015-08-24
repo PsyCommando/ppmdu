@@ -11,7 +11,7 @@ Description: A bunch of utilities for dealing with the image formats
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <array>
 
 //#TODO: Clean up this file. Its not very true to its name right now !

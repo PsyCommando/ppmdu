@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include <ppmdu\utils\utility.hpp>
+#include <utils\utility.hpp>
 #include <ppmdu\basetypes.hpp>
 using namespace std;
 

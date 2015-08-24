@@ -16,7 +16,7 @@ Description: A set of utilities for dealing with and storing tiled images for
 #include <cmath>
 #include <sstream>
 #include "color.hpp"
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 //#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include "index_iterator.hpp"
 #include "img_pixel.hpp"

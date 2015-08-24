@@ -1,5 +1,5 @@
 #include "txt_palette_io.hpp"
-#include <ppmdu/utils/gfileio.hpp>
+#include <utils/gfileio.hpp>
 #include <sstream>
 #include <iomanip>
 using namespace utils;

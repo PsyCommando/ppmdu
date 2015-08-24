@@ -18,7 +18,7 @@ All wrongs reversed, no crappyrights :P
 #include <vector>
 #include <memory>
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 
 namespace pmd2 { namespace filetypes 
 {

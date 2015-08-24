@@ -10,8 +10,9 @@ License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicd
 All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
-#include <ppmdu/fmts/dse_common.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <dse/dse_common.hpp>
+#include <dse/dse_containers.hpp>
+#include <utils/utility.hpp>
 #include <cstdint>
 #include <vector>
 #include <array>
@@ -191,8 +192,8 @@ namespace DSE
 // Functions
 //====================================================================================================
 
-    pmd2::audio::PresetBank ParseSWDL( const std::string & filename );
-    void                    WriteSWDL( const std::string & filename, const pmd2::audio::PresetBank & audiodata );
+    PresetBank ParseSWDL( const std::string & filename );
+    void       WriteSWDL( const std::string & filename, const PresetBank & audiodata );
 
 
 };

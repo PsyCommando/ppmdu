@@ -9,7 +9,7 @@ Description: Code for the audioutil utility for Pokemon Mystery Dungeon : Explor
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/cmdline_util.hpp>
 #include <string>
 #include <vector>
 

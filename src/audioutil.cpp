@@ -1,9 +1,10 @@
 #include "audioutil.hpp"
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/utility.hpp>
+#include <utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/library_wide.hpp>
+
 
 #include <iostream>
 #include <iomanip>
@@ -26,6 +27,7 @@
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::std;
+using namespace ::DSE;
 
 namespace audioutil
 {
@@ -109,25 +111,25 @@ namespace audioutil
     const vector<optionparsing_t> CAudioUtil::Options_List=
     {{
         //Tweak for General Midi format
-        {
-            "gm",
-            0,
-            "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
-            "Pitch are ajusted, instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
-            "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
-            "-gm",
-            std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
-        },
+        //{
+        //    "gm",
+        //    0,
+        //    "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
+        //    "Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
+        //    "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
+        //    "-gm",
+        //    std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
+        //},
 
         //Force Loops
-        {
-            "fl",
-            1,
-            "This will export to the MIDI file the \"intro\" once, followed with the notes "
-            "in-between the loop and end marker the specified number of times. Loop markers will also be omitted!",
-            "-fl (nbofloops)",
-            std::bind( &CAudioUtil::ParseOptionForceLoops, &GetInstance(), placeholders::_1 ),
-        },
+        //{
+        //    "fl",
+        //    1,
+        //    "This will export to the MIDI file the \"intro\" once, followed with the notes "
+        //    "in-between the loop and end marker the specified number of times. Loop markers will also be omitted!",
+        //    "-fl (nbofloops)",
+        //    std::bind( &CAudioUtil::ParseOptionForceLoops, &GetInstance(), placeholders::_1 ),
+        //},
 
         //ExportPMD2
         {
@@ -140,14 +142,51 @@ namespace audioutil
         },
 
         //Export Main Bank And Tracks
-        {
-            "mbat",
-            0,
-            "Specifying this will tell the program that that input path is the root of the directory containing a main bank and its tracks."
-            "The utility will export everything to MIDI files, and to a Sounfont file.",
-            "-mbat",
-            std::bind( &CAudioUtil::ParseOptionMBAT, &GetInstance(), placeholders::_1 ),
-        },
+        //{
+        //    "mbat",
+        //    0,
+        //    "Specifying this will tell the program that that input path is the root of the directory containing a main bank and its tracks."
+        //    "The utility will export everything to MIDI files, and to a Sounfont file.",
+        //    "-mbat",
+        //    std::bind( &CAudioUtil::ParseOptionMBAT, &GetInstance(), placeholders::_1 ),
+        //},
+
+
+        //#TODO : New Implementation for loading DSE stuff. Work in progress!
+        //#################################################
+
+        ////Set Main Bank
+        //{
+        //    "mbank",
+        //    1,
+        //    "Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!"
+        //    "Is also used to specify where to put the assembled ",
+        //    "-mbank \"SOUND/BGM/bgm.swd\"",
+        //    std::bind( &CAudioUtil::ParseOptionMBank, &GetInstance(), placeholders::_1 ),
+        //},
+
+        ////Set SWDLPath
+        //{
+        //    "swdlpath",
+        //    1,
+        //    "Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored."
+        //    "Is also used to specify where to put assembled DSE Preset during import.",
+        //    "-swdlpath \"SOUND/BGM\"",
+        //    std::bind( &CAudioUtil::ParseOptionSWDLPath, &GetInstance(), placeholders::_1 ),
+        //},
+
+        ////Set SMDLPath
+        //{
+        //    "smdlpath",
+        //    1,
+        //    "Use this to specify the path to the folder where the SMDLs to export are stored."
+        //    "Is also used to specify where to put MIDI files converted to SMDL format.",
+        //    "-smdlpath \"SOUND/BGM\"",
+        //    std::bind( &CAudioUtil::ParseOptionSMDLPath, &GetInstance(), placeholders::_1 ),
+        //},
+
+
+        //#################################################
 
         //Redirect clog to file
         {
@@ -601,9 +640,28 @@ namespace audioutil
         //Load SWDL
         PresetBank swd = LoadSwdBank( inputfile.toString() );
 
-        //Export Samples
+        ExportPresetBank( outNewDir.path(), swd );
 
-        //Export XML data
+        //auto instptr  = swd.instbank().lock();
+        //auto smplsptr = swd.smplbank().lock();
+
+        //Export Samples
+        //if( smplsptr != nullptr )
+        //{
+        //}
+        //else
+        //{
+        //    cout <<"No samples to export!\n";
+        //}
+
+        ////Export instrument data
+        //if( instptr != nullptr )
+        //{
+        //}
+        //else
+        //{
+        //    cout <<"No instrument data to export!\n";
+        //}
 
         return 0;
     }
@@ -659,7 +717,7 @@ namespace audioutil
             Tries to read a track from the position specified to the end. If it finds a program change it stops.
             It returns details on the sequence of event it was able to read before hitting a program change event!
     */
-    trkremappoint PrepRemapSeq( const pmd2::audio::MusicTrack & curtrk, size_t pos, uint8_t curprogid, uint32_t & lastpause )
+    trkremappoint PrepRemapSeq( const MusicTrack & curtrk, size_t pos, uint8_t curprogid, uint32_t & lastpause )
     {
         //static const uint8_t SETPresetCode = static_cast<uint8_t>(DSE::eTrkEventCodes::SetPreset);
         //static const uint8_t DrumProgIdBeg = 0x78;
@@ -715,11 +773,8 @@ namespace audioutil
         This function reads a music sequence and make a list of sequences of events sharing the same program no per tracks.
         It determines depending on the type of instrument on what MIDI track to put it on!
     */
-    vector<vector<trkremappoint>> AnalyzeForRemaps( const pmd2::audio::MusicSequence & seq )
+    vector<vector<trkremappoint>> AnalyzeForRemaps( const MusicSequence & seq )
     {
-        using pmd2::audio::MusicTrack;
-        using pmd2::audio::MusicSequence;
-        using namespace DSE;
         vector<MusicTrack>    fixedtracks;
 
         vector<vector<trkremappoint>> trackremapinfo(seq.getNbTracks());

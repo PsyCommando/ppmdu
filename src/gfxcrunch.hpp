@@ -7,8 +7,8 @@ psycommando@gmail.com
 Description: Main code for the Sprite utility !
 */
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/ext_fmts/supported_io.hpp>
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <ext_fmts/supported_io.hpp>
+#include <utils/cmdline_util.hpp>
 #include <atomic>
 #include <future>
 

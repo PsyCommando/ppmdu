@@ -1,6 +1,6 @@
 #include "statsutil.hpp"
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/utility.hpp>
+#include <utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
@@ -34,7 +34,7 @@ namespace statsutil
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
-        "You can import data from XML into a PMD2 game's data, by\nspecifying \"-i\" at the commandline, followed with the\noption corresponding to what to export.\n"
+        "You can import data from XML into a PMD2 game's data, by\nspecifying \"-i\" at the commandline, followed with the\noption corresponding to what to import.\n"
         "\n"
         "When importing data from XML, the output path must be a PMD2\ngame's root data directory!\n"
         "When exporting the input path must be a PMD2 game's\nroot data directory!\n";

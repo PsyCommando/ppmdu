@@ -4,8 +4,8 @@
 #include <array>
 #include <algorithm>
 #include <ppmdu/containers/color.hpp>
-#include <ppmdu/utils/gbyteutils.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/gbyteutils.hpp>
+#include <utils/utility.hpp>
 
 using namespace std;
 using namespace utils;

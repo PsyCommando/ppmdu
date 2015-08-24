@@ -1,7 +1,7 @@
 #include "item_p.hpp"
 #include <ppmdu/fmts/sir0.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/poco_wrapper.hpp>
+#include <utils/utility.hpp>
 #include <sstream>
 #include <iostream>
 #include <cassert>

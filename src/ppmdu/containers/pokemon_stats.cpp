@@ -1,7 +1,7 @@
 #include "pokemon_stats.hpp"
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/utility.hpp>
+#include <utils/poco_wrapper.hpp>
+#include <utils/library_wide.hpp>
 #include <ppmdu/fmts/monster_data.hpp>
 #include <iostream>
 #include <sstream>

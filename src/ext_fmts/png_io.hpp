@@ -7,7 +7,7 @@ psycommando@gmail.com
 Description: Utilities for importing and exporting PNG images and their palettes into the formats used in the lib.
 */
 #include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/ext_fmts/supported_io_info.hpp>
+#include <ext_fmts/supported_io_info.hpp>
 #include <string>
 
 

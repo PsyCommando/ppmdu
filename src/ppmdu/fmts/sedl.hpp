@@ -9,7 +9,7 @@ Description: Utilities for handling Pokemon Mystery Dungeon: Explorers of Sky/Ti
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/fmts/dse_common.hpp>
+#include <dse/dse_common.hpp>
 
 namespace DSE
 {

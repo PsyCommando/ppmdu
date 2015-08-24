@@ -11,6 +11,7 @@ http://www.pjb.com.au/midi/sfspec21.html
 
 */
 #include <ppmdu/containers/audio_sample.hpp>
+#include <utils/utility.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -181,16 +182,78 @@ namespace sf2
         loopWhileHold = 3, //Loop while holding the key, then play the rest of the sample
     };
 
+//===========================================================================================
+//  SF2 Values Limits
+//===========================================================================================
+    //Values ranges for the Generators!
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToPitch      { -12000,      0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      { -12000,      0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   { -12000,      0, 12000,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterFc       {   1500,  13500, 13500, 1500 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterQ        {      0,      0,   960,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   { -12000,      0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{ -12000,      0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {   -960,      0,   960,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsChorusSend         {      0,      0,  1000,  500 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsReverbSend         {      0,      0,  1000,  500 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsPan                {   -500,      0,   500,    0 };
+
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoDelay        { -12000, -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoFreq         { -16000,      0,  4500,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoDelay        { -12000, -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoFreq         { -16000,      0,  4500,    0 };
+
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDelay        { -12000, -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvAttack       { -12000, -12000,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvHold         { -12000, -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDecay        { -12000, -12000,  8000,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsModEnvSustain      {      0,      0,  1000,  500 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvRelease      { -12000, -12000,  8000,    0 };
+
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200,        0 };
+
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440,      720 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000,    0 };
+
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200,    0 };
+
+    static const utils::value_limits<uint16_t> SF_GenLimitsKeyRange           { 0x0000, 0x007F, 0x7F7F, 0x0};
+    static const utils::value_limits<uint16_t> SF_GenLimitsVelRange           { 0x0000, 0x007F, 0x7F7F, 0x0};
+
+    static const utils::value_limits<int16_t> SF_GenLimitsKeynum              {      0,     -1,   127,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsVelocity            {      0,     -1,   127,    0 };
+
+    static const utils::value_limits<int16_t> SF_GenLimitsInitAttenuation     {      0,      0,  1440,    0 };
+
+    static const utils::value_limits<int16_t> SF_GenLimitsCoarseTune          {   -120,      0,   120,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsFineTune            {    -99,      0,    99,    0 };
+
+    static const utils::value_limits<uint16_t> SF_GenLimitsScaleTuning        {      0,    100,  1200,  600 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsExcClass           {      0,      0,   127,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127,    0 };
 
 //===========================================================================================
 //  Structures and Enums
 //===========================================================================================
     /************************************************************************************
-        SFModulator
+        SFModulatorSrc
             http://www.pjb.com.au/midi/sfspec21.html#8.2
-            Represent a single modulator.
+            Represent a single modulator source. 
+            Not to be confused with a modulator entry.
+
+            The Modulator source is basically a int16 crammed full of details 
+            about the source of the data modulating the selected output value/state.
+
+            This is mainly a convenience struct to make it easier than
+            to edit all the bits manually each times.
     ************************************************************************************/
-    struct SFModulator
+    struct SFModulatorSrc
     {
         //-------------
         //  Enums
@@ -227,11 +290,11 @@ namespace sf2
         //------------
 
         //Constructor
-        SFModulator( eSrc     type      = eSrc::Linear, 
-                     eCtrlPal index     = eCtrlPal::NoCtrlr,
-                     bool     contctrl  = false,
-                     bool     direction = false,
-                     bool     polarity  = false )
+        SFModulatorSrc( eSrc     type      = eSrc::Linear, 
+                        eCtrlPal index     = eCtrlPal::NoCtrlr,
+                        bool     contctrl  = false,
+                        bool     direction = false,
+                        bool     polarity  = false )
             :type_(type), index_(index), contctrlrf_(contctrl), direction_(direction), polarity_(polarity)
         {}
 
@@ -250,7 +313,7 @@ namespace sf2
         }
 
         //Cast operator
-        SFModulator & operator=( uint16_t other )
+        SFModulatorSrc & operator=( uint16_t other )
         {
             /*
             15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00
@@ -318,11 +381,11 @@ namespace sf2
     {
         static const uint32_t SIZE = 10; //bytes
 
-        SFModulator  ModSrcOper;                               //By default is 0  
-        eSFGen       ModDestOper   = eSFGen::startAddrsOffset; //Is == 0
-        int16_t      modAmount     = 0;  
-        SFModulator  ModAmtSrcOper;                            //By default is 0 
-        eSFTransform ModTransOper  = eSFTransform::linear;     //Is == 0
+        SFModulatorSrc ModSrcOper;                               //By default is 0  
+        eSFGen         ModDestOper   = eSFGen::startAddrsOffset; //Is == 0
+        int16_t        modAmount     = 0;  
+        SFModulatorSrc ModAmtSrcOper;                            //By default is 0 
+        eSFTransform   ModTransOper  = eSFTransform::linear;     //Is == 0
     };
 
     /***********************************************************************************
@@ -334,7 +397,7 @@ namespace sf2
         int8_t lokey = 0;
         int8_t hikey = 127;
     };
-        
+    
     /***********************************************************************************
         MidiVeloRange
             A range of velocities.
@@ -350,12 +413,12 @@ namespace sf2
     ***********************************************************************************/
     struct Envelope
     {
-        int16_t delay   = SHRT_MIN; //timecents
-        int16_t attack  = SHRT_MIN; //timecents
-        int16_t hold    = SHRT_MIN; //timecents
-        int16_t sustain =        0; //Attenuation in cB (144 dB is 1440 cB for instance)
-        int16_t decay   = SHRT_MIN; //timecents
-        int16_t release = SHRT_MIN; //timecents
+        int16_t delay   = SHRT_MIN;                       //timecents
+        int16_t attack  = SHRT_MIN;                       //timecents
+        int16_t hold    = SHRT_MIN;                       //timecents
+        int16_t sustain =        0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = SF_GenLimitsVolEnvDecay.min_;   //timecents
+        int16_t release = SF_GenLimitsVolEnvRelease.min_; //timecents
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()

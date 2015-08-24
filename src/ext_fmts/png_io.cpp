@@ -1,8 +1,8 @@
 #include "png_io.hpp"
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/handymath.hpp>
 #include <png++/png.hpp>
 #include <iostream>
 using namespace std;

@@ -1,7 +1,7 @@
 #include "pmd2_image_formats.hpp"
-#include <ppmdu/utils/gbyteutils.hpp>
-#include <ppmdu/utils/handymath.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/gbyteutils.hpp>
+#include <utils/handymath.hpp>
+#include <utils/utility.hpp>
 #include <algorithm>
 #include <vector>
 #include <array>

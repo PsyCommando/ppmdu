@@ -1,6 +1,7 @@
 #include "smdl.hpp"
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
-#include <ppmdu/fmts/dse_sequence.hpp>
+#include <dse/dse_sequence.hpp>
+#include <dse/dse_containers.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -172,7 +173,7 @@ namespace DSE
             :m_src(filedata)
         {}
 
-        operator pmd2::audio::MusicSequence()
+        operator MusicSequence()
         {
             //Set our iterator
             m_itread = m_src.begin();
@@ -183,7 +184,7 @@ namespace DSE
             ParseSong();
 
             //Build Meta-info
-            DSE::DSE_MetaMusicSeq meta;
+            DSE::DSE_MetaDataSMDL meta;
             meta.createtime.year    = m_hdr.year;
             meta.createtime.month   = m_hdr.month;
             meta.createtime.day     = m_hdr.day;
@@ -197,7 +198,7 @@ namespace DSE
             meta.tpqn               = m_song.tpqn;
 
             //Parse tracks and return
-            return pmd2::audio::MusicSequence( ParseAllTracks(), std::move(meta) );
+            return std::move( MusicSequence( ParseAllTracks(), std::move(meta) ) );
         }
 
     private:
@@ -216,9 +217,9 @@ namespace DSE
             m_itread = m_song.ReadFromContainer(m_itread);
         }
 
-        std::vector<pmd2::audio::MusicTrack> ParseAllTracks()
+        std::vector<MusicTrack> ParseAllTracks()
         {
-            vector<pmd2::audio::MusicTrack> tracks;
+            vector<MusicTrack> tracks;
             tracks.reserve( m_song.nbtrks );
 
             try
@@ -244,7 +245,7 @@ namespace DSE
             return std::move(tracks);
         }
 
-        pmd2::audio::MusicTrack ParseTrack()
+        MusicTrack ParseTrack()
         {
             DSE::ChunkHeader      hdr;
             hdr.ReadFromContainer(m_itread); //Don't increment itread
@@ -256,7 +257,7 @@ namespace DSE
 
             auto parsed = DSE::ParseTrkChunk(itpreread, itend);
 
-            pmd2::audio::MusicTrack mtrk;
+            MusicTrack mtrk;
             mtrk.SetMidiChannel( parsed.second.chanid );
             mtrk.getEvents() = move(parsed.first);
 
@@ -364,12 +365,12 @@ namespace DSE
 // Functions
 //====================================================================================================
 
-    pmd2::audio::MusicSequence ParseSMDL( const std::string & file )
+    MusicSequence ParseSMDL( const std::string & file )
     {
-        return std::move(SMDL_Parser( utils::io::ReadFileToByteVector(file) )); //Apparently it being an implicit move isn't enough for MSVC..
+        return std::move( SMDL_Parser( utils::io::ReadFileToByteVector(file) )); //Apparently it being an implicit move isn't enough for MSVC..
     }
 
-    void WriteSMDL( const std::string & file, const pmd2::audio::MusicSequence & seq )
+    void WriteSMDL( const std::string & file, const MusicSequence & seq )
     {
 
     }

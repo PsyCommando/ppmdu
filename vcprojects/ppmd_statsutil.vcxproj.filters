@@ -48,19 +48,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\bmp_io.cpp">
+    <ClCompile Include="..\src\ext_fmts\bmp_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\png_io.cpp">
+    <ClCompile Include="..\src\ext_fmts\png_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\rawimg_io.cpp">
+    <ClCompile Include="..\src\ext_fmts\rawimg_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\riff_palette.cpp">
+    <ClCompile Include="..\src\ext_fmts\riff_palette.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\ext_fmts\supported_io.cpp">
+    <ClCompile Include="..\src\ext_fmts\supported_io.cpp">
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -87,31 +87,31 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
+    <ClCompile Include="..\src\utils\cmdline_util.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
+    <ClCompile Include="..\src\utils\gbyteutils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
+    <ClCompile Include="..\src\utils\gfileio.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
+    <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
+    <ClCompile Include="..\src\utils\gstringutils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
+    <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
+    <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
+    <ClCompile Include="..\src\utils\poco_wrapper.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
+    <ClCompile Include="..\src\utils\utility.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\statsutil.cpp">
@@ -141,7 +141,7 @@
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\config_io.cpp">
+    <ClCompile Include="..\src\utils\config_io.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
@@ -158,19 +158,19 @@
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter>Header Files\ppmdu</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\bmp_io.hpp">
+    <ClInclude Include="..\src\ext_fmts\bmp_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\png_io.hpp">
+    <ClInclude Include="..\src\ext_fmts\png_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\rawimg_io.hpp">
+    <ClInclude Include="..\src\ext_fmts\rawimg_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\riff_palette.hpp">
+    <ClInclude Include="..\src\ext_fmts\riff_palette.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\ext_fmts\supported_io.hpp">
+    <ClInclude Include="..\src\ext_fmts\supported_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
@@ -197,37 +197,37 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
+    <ClInclude Include="..\src\utils\cmdline_util.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
+    <ClInclude Include="..\src\utils\gbyteutils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
+    <ClInclude Include="..\src\utils\gfileio.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
+    <ClInclude Include="..\src\utils\gfileutils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
+    <ClInclude Include="..\src\utils\gstringutils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
+    <ClInclude Include="..\src\utils\handymath.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
+    <ClInclude Include="..\src\utils\library_wide.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
+    <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
+    <ClInclude Include="..\src\utils\poco_wrapper.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
+    <ClInclude Include="..\src\utils\readme_writer.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
+    <ClInclude Include="..\src\utils\utility.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\statsutil.hpp">
@@ -263,13 +263,13 @@
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\config_io.hpp">
+    <ClInclude Include="..\src\utils\config_io.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp">
+    <ClInclude Include="..\src\utils\parse_utils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\pugixml_utils.hpp">
+    <ClInclude Include="..\src\utils\pugixml_utils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
   </ItemGroup>

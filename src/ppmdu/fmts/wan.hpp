@@ -7,16 +7,16 @@ psycommando@gmail.com
 Description: Utilities for reading ".wan" sprite files, and its derivatives.
 */
 #include <ppmdu/fmts/sir0.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/utility.hpp>
+#include <utils/handymath.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <ppmdu/containers/sprite_io.hpp>
 #include <ppmdu/containers/color.hpp>
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/handymath.hpp>
 #include <atomic>
 #include <algorithm>
 #include <type_traits>

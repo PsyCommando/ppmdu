@@ -1,5 +1,5 @@
 #include "dse_interpreter.hpp"
-#include <ppmdu/utils/poco_wrapper.hpp>
+#include <utils/poco_wrapper.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 
 #include <jdksmidi/world.h>
@@ -59,13 +59,13 @@ namespace DSE
         };
     public:
         DSESequenceToMidi( const std::string                & outmidiname, 
-                           const pmd2::audio::MusicSequence & seq, 
+                           const MusicSequence              & seq, 
                            const std::map<uint16_t,uint16_t>& presetconvtable,
                            eMIDIFormat                        midfmt,
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
             :m_fnameout(outmidiname), m_seq(seq), m_banktable(presetconvtable), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
-             m_bLoopBegSet(false), m_bLoopEndSet(false)
+             m_bLoopBegSet(false), m_bLoopEndSet(false), m_bshouldloop(false)
         {}
 
         /*
@@ -130,7 +130,10 @@ namespace DSE
                 if( (ev.dt & 0xF0) != 0x80 )
                     cerr << "Bad delta-time ! The source DSE event track might be corrupted or invalid ! ( trk#" <<trkno <<", evt #" <<state.eventno_ << ")\n";
                 else
-                    state.ticks_ += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) );
+                {
+                    state.ticks_    += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) );
+                    state.lastpause_ = static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( ev.dt ) ); //Dt counts as pause !
+                }
             }
 
             //Set the time properly now
@@ -187,7 +190,12 @@ namespace DSE
                                   const DSE::TrkEvent & ev,
                                   TrkState            & state )
         {
-            if( code == eTrkEventCodes::LongPause )
+            if( code == eTrkEventCodes::VLongPause )
+            {
+                state.lastpause_ = (static_cast<uint32_t>(ev.params[2]) << 16) | (static_cast<uint32_t>(ev.params[1]) << 8) | ev.params[0];
+                state.ticks_     += state.lastpause_;
+            }
+            else if( code == eTrkEventCodes::LongPause )
             {
                 state.lastpause_ = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
                 state.ticks_     += state.lastpause_;
@@ -309,6 +317,7 @@ namespace DSE
                         else
                             m_bLoopBegSet = true;
                     }
+                    m_bshouldloop = true; //If we got a loop pos, then the track is loopable
 
                     mess.SetMetaType(META_TRACK_LOOP);
                     outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_LoopStart.c_str(), TXT_LoopStart.size() );
@@ -525,23 +534,26 @@ namespace DSE
                     HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(trkno)) );
                 }
                 //Insert loop end event, for all tracks
-                m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
+                if( m_bshouldloop )
+                    m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
             }
 
-
-            //Then, if we're set to loop, then loop
-            for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
+            if( m_bshouldloop )
             {
-                for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
+                //Then, if we're set to loop, then loop
+                for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
                 {
-                    //Restore track state
-                    uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
-                    m_trkstates[trkno]        = savedstates[trkno];        //Overwrite state
-                    m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
-
-                    for( size_t evno = looppoints[trkno]; evno < m_seq.track(trkno).size(); ++evno ) //Begin at the loop point!
+                    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
                     {
-                        HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(trkno)) );
+                        //Restore track state
+                        uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
+                        m_trkstates[trkno]        = savedstates[trkno];        //Overwrite state
+                        m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+
+                        for( size_t evno = looppoints[trkno]; evno < m_seq.track(trkno).size(); ++evno ) //Begin at the loop point!
+                        {
+                            HandleEvent( trkno, m_seq[trkno].GetMidiChannel(), m_trkstates[trkno], m_seq[trkno][evno], *(m_midiout.GetTrack(trkno)) );
+                        }
                     }
                 }
             }
@@ -589,25 +601,28 @@ namespace DSE
             }
 
             //Insert a single loop end event!
-            m_midiout.GetTrack(0)->PutTextEvent( verylasttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
-
-            //Then, if we're set to loop, then loop
-            for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
+            if( m_bshouldloop )
             {
-                for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
-                {
-                    //Restore track state
-                    uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
-                    m_trkstates[trkno]        = savedstates[trkno];        //Overwrite state
-                    m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+                m_midiout.GetTrack(0)->PutTextEvent( verylasttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
 
-                    for( size_t evno = looppoints[trkno]; evno < m_seq.track(trkno).size(); ++evno ) //Begin at the loop point!
+                //Then, if we're set to loop, then loop
+                for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
+                {
+                    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
                     {
-                        HandleEvent( trkno, 
-                                     m_seq[trkno].GetMidiChannel(), 
-                                     m_trkstates[trkno], 
-                                     m_seq[trkno][evno], 
-                                     *(m_midiout.GetTrack(0)) );
+                        //Restore track state
+                        uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
+                        m_trkstates[trkno]        = savedstates[trkno];        //Overwrite state
+                        m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+
+                        for( size_t evno = looppoints[trkno]; evno < m_seq.track(trkno).size(); ++evno ) //Begin at the loop point!
+                        {
+                            HandleEvent( trkno, 
+                                         m_seq[trkno].GetMidiChannel(), 
+                                         m_trkstates[trkno], 
+                                         m_seq[trkno][evno], 
+                                         *(m_midiout.GetTrack(0)) );
+                        }
                     }
                 }
             }
@@ -624,7 +639,7 @@ namespace DSE
 
     private:
         const std::string                & m_fnameout;
-        const pmd2::audio::MusicSequence & m_seq;
+        const MusicSequence              & m_seq;
         const std::map<uint16_t,uint16_t>& m_banktable;
         uint32_t                           m_nbloops;
         eMIDIFormat                        m_midifmt;
@@ -632,9 +647,10 @@ namespace DSE
 
         //State variables
         std::vector<TrkState>              m_trkstates;
+        bool                               m_bshouldloop;
         //Those two only apply to single track mode !
         bool                               m_bLoopBegSet;
-        bool                               m_bLoopEndSet;
+        bool                               m_bLoopEndSet;   //#REMOVEME
 
         jdksmidi::MIDIMultiTrack           m_midiout;
     };
@@ -668,7 +684,7 @@ namespace DSE
             :m_srcpath(srcmidi)
         {}
 
-        pmd2::audio::MusicSequence operator()()
+        MusicSequence operator()()
         {
             using namespace jdksmidi;
 
@@ -682,7 +698,7 @@ namespace DSE
                 throw runtime_error( "JDKSMIDI: File parsing failed. Reason not specified.." );
 
             //Convert the MIDI to a sequence
-            DSE::DSE_MetaMusicSeq dseMeta;
+            DSE::DSE_MetaDataSMDL dseMeta;
             dseMeta.fname = utils::GetBaseNameOnly(m_srcpath);
             dseMeta.tpqn  = tracks.GetClksPerBeat();
 
@@ -691,10 +707,10 @@ namespace DSE
 
     private:
 
-        pmd2::audio::MusicSequence ConvertMIDI( const jdksmidi::MIDIMultiTrack & midi, DSE::DSE_MetaMusicSeq & dseMeta )
+        MusicSequence ConvertMIDI( const jdksmidi::MIDIMultiTrack & midi, DSE::DSE_MetaDataSMDL & dseMeta )
         {
             using namespace jdksmidi;
-            vector<pmd2::audio::MusicTrack> tracks;
+            vector<MusicTrack> tracks;
 
             //Determine if multi-tracks
             const bool ismultitrk = midi.GetNumTracks() > 1;
@@ -714,21 +730,21 @@ namespace DSE
                 ConvertFromSingleTrackMidi( tracks, midi, dseMeta );
             }
 
-            return std::move( pmd2::audio::MusicSequence( std::move(tracks), std::move(dseMeta) ) );
+            return std::move( MusicSequence( std::move(tracks), std::move(dseMeta) ) );
         }
 
         //
-        void ConvertFromMultiTracksMidi( vector<pmd2::audio::MusicTrack> & tracks, 
+        void ConvertFromMultiTracksMidi( vector<MusicTrack>              & tracks, 
                                          const jdksmidi::MIDIMultiTrack  & midi, 
-                                         DSE::DSE_MetaMusicSeq           & dseMeta )
+                                         DSE::DSE_MetaDataSMDL           & dseMeta )
         {
             using namespace jdksmidi;
         }
 
         //
-        void ConvertFromSingleTrackMidi( vector<pmd2::audio::MusicTrack> & tracks, 
+        void ConvertFromSingleTrackMidi( vector<MusicTrack>              & tracks, 
                                          const jdksmidi::MIDIMultiTrack  & midi, 
-                                         DSE::DSE_MetaMusicSeq           & dseMeta )
+                                         DSE::DSE_MetaDataSMDL           & dseMeta )
         {
             using namespace jdksmidi;
             if( midi.GetTrack(0) == nullptr )
@@ -760,7 +776,7 @@ namespace DSE
             calculate the delta time of each events on each separate tracks.
         */
         void HandleSingleTrackEvent( const jdksmidi::MIDITimedBigMessage & ev,
-                                     pmd2::audio::MusicTrack             & trk,
+                                     MusicTrack                          & trk,
                                      TrkState                            & state,
                                      ticks_t                             & globalticks ) 
         {
@@ -896,7 +912,7 @@ namespace DSE
 
         void HandleEvent( const jdksmidi::MIDITimedBigMessage & ev,
                           TrkState                            & state,
-                          pmd2::audio::MusicTrack             & trk )
+                          MusicTrack                          & trk )
         {
             using namespace jdksmidi;
 
@@ -934,7 +950,7 @@ namespace DSE
 //  Functions
 //======================================================================================
     void SequenceToMidi( const std::string                 & outmidi, 
-                         const pmd2::audio::MusicSequence  & seq, 
+                         const MusicSequence               & seq, 
                          const std::map<uint16_t,uint16_t> & presetbanks,
                          eMIDIFormat                         midfmt,
                          eMIDIMode                           midmode )

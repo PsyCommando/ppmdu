@@ -6,8 +6,8 @@ dse_to_xml.hpp
 psycommando@gmail.com
 Descritpton: Contains utilities for converting DSE audio parameters to XML data.
 */
-#include <ppmdu/fmts/dse_common.hpp>
-#include <ppmdu/fmts/dse_sequence.hpp>
+#include <dse/dse_common.hpp>
+#include <dse/dse_sequence.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <string>
 

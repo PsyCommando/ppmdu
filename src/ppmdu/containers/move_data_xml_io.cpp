@@ -1,8 +1,8 @@
 #include "move_data.hpp"
-#include <ppmdu/utils/parse_utils.hpp>
-#include <ppmdu/utils/pugixml_utils.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/parse_utils.hpp>
+#include <utils/pugixml_utils.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/utility.hpp>
 #include <pugixml.hpp>
 #include <string>
 #include <iostream>

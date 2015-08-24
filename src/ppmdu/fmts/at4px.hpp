@@ -11,7 +11,7 @@ All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <array>
 

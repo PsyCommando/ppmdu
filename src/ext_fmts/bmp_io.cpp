@@ -1,7 +1,7 @@
 #include "bmp_io.hpp"
 #include <EasyBMP/EasyBMP.h>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/handymath.hpp>
 #include <iostream>
 #include <algorithm>
 using namespace std;

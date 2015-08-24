@@ -10,7 +10,7 @@ License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicd
 All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 
 

@@ -7,7 +7,7 @@ psycommando@gmail.com
 Description: Interface for loading bmp files into common containers, encapsulating the library used to read it.
 */
 #include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/ext_fmts/supported_io_info.hpp>
+#include <ext_fmts/supported_io_info.hpp>
 #include <string>
 
 namespace utils{ namespace io

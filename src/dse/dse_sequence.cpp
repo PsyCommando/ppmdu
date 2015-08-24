@@ -38,6 +38,9 @@ namespace DSE
         //LongPause
         { eTrkEventCodes::LongPause,   eTrkEventCodes::Invalid, 2, false, false, false, "LongPause" },
 
+        //VLongPause
+        { eTrkEventCodes::VLongPause,   eTrkEventCodes::Invalid, 3, false, false, false, "VLongPause" },
+
         //EndOfTrack
         { eTrkEventCodes::EndOfTrack,    eTrkEventCodes::Invalid, 0, false, true, false,  "EoT" },
 

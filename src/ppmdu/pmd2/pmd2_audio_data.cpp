@@ -1,8 +1,9 @@
 #include "pmd2_audio_data.hpp"
-#include <ppmdu/fmts/dse_common.hpp>
-#include <ppmdu/fmts/dse_sequence.hpp>
-#include <ppmdu/fmts/dse_interpreter.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <dse/dse_common.hpp>
+#include <dse/dse_sequence.hpp>
+#include <dse/dse_interpreter.hpp>
+#include <dse/dse_containers.hpp>
+#include <utils/library_wide.hpp>
 
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
@@ -15,14 +16,24 @@
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
 
-#include <ppmdu/ext_fmts/adpcm.hpp>
-#include <ppmdu/ext_fmts/sf2.hpp>
+#include <ext_fmts/adpcm.hpp>
+#include <ext_fmts/sf2.hpp>
 
 using namespace std;
 using namespace DSE;
 
 namespace pmd2 { namespace audio
 {
+    static const uint16_t DSE_InfiniteAttenuation_cB = 1440; //sf2::SF_GenLimitsInitAttenuation.max_;
+    static const uint16_t DSE_LowestAttenuation_cB   =  200; //20dB
+
+
+    //A multiplier to use to convert from DSE Pan to Soundfont Pan
+    static const double BytePanToSoundfontPanMulti = static_cast<double>(sf2::SF_GenLimitsPan.max_ + (-sf2::SF_GenLimitsPan.min_)) / static_cast<double>(DSE_LimitsPan.max_);
+
+    //A multiplier to use to convert from DSE volume to soundfont attenuation.
+    static const double ByteVolToSounfontAttnMulti = static_cast<double>(DSE_LowestAttenuation_cB) / static_cast<double>(DSE_LimitsVol.max_);
+
     /*
         The size of the ADPCM preamble in int32, the unit the NDS uses to store the loop positions
         Mainly here to make things more readable.
@@ -156,112 +167,51 @@ namespace pmd2 { namespace audio
     };
 
 
-//==========================================================================================
-//  StreamOperators
-//==========================================================================================
-    std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::KeyGroup & other )
-    {
-        strm <<"\t== Keygroup ==\n"
-            << "\tID        : " << other.id                           <<"\n"
-            << "\tPolyphony : " << static_cast<short>(other.poly)     <<"\n"
-            << "\tPriority  : " << static_cast<short>(other.priority) <<"\n"
-            << "\tVc.Low    : " << static_cast<short>(other.vclow)    <<"\n"
-            << "\tVc.High   : " << static_cast<short>(other.vchigh)   <<"\n"
-            << "\tunk50     : " << static_cast<short>(other.unk50)    <<"\n"
-            << "\tunk51     : " << static_cast<short>(other.unk51)    <<"\n";
 
-        return strm;
+
+
+//===========================================================================================
+//  Utility Functions
+//===========================================================================================
+
+
+    inline int16_t DsePanToSf2Pan( int8_t dsepan )
+    {
+        dsepan = abs(dsepan);
+
+        if( dsepan == DSE_LimitsPan.max_ )
+            return sf2::SF_GenLimitsPan.max_;
+        else if( dsepan == DSE_LimitsPan.min_ )
+            return sf2::SF_GenLimitsPan.min_;
+        else
+            return round( ( dsepan - DSE_LimitsPan.mid_ ) * BytePanToSoundfontPanMulti );
     }
 
-    std::ostream & operator<<( std::ostream &  strm, const pmd2::audio::ProgramInfo & other )
+    //#FIXME: MOST LIKELY INNACURATE !
+    inline uint16_t DseVolToSf2Attenuation( int8_t dsevol )
     {
-        strm << "\t== ProgramInfo ==\n"
-             << "\tID        : " << other.m_hdr.id     <<"\n"
-             << "\tNbSplits  : " << other.m_hdr.nbsplits <<"\n"
-             << "\tVol       : " << static_cast<short>(other.m_hdr.insvol) <<"\n"
-             << "\tPan       : " << static_cast<short>(other.m_hdr.inspan) <<"\n"
-             << "\tUnk3      : " << other.m_hdr.unk3 <<"\n"
-             << "\tUnk4      : " << other.m_hdr.unk4 <<"\n"
-             << "\tUnk5      : " << static_cast<short>(other.m_hdr.unk5) <<"\n"
-             << "\tnblfos    : " << static_cast<short>(other.m_hdr.nblfos) <<"\n"
-             << "\tpadbyte   : " << static_cast<short>(other.m_hdr.padbyte) <<"\n"
-             << "\tUnk7      : " << static_cast<short>(other.m_hdr.unk7) <<"\n"
-             << "\tUnk8      : " << static_cast<short>(other.m_hdr.unk8) <<"\n"
-             << "\tUnk9      : " << static_cast<short>(other.m_hdr.unk9) <<"\n";
+        dsevol = abs(dsevol);
 
-        //Write the LFOs
-        int cntlfo = 0;
-        for( const auto & lfoen : other.m_lfotbl )
+        //Because of the rounding, we need to make sure our limits match the SF limits
+        if( dsevol == DSE_LimitsVol.max_ )
+            return sf2::SF_GenLimitsInitAttenuation.min_;
+        else if( dsevol ==  DSE_LimitsVol.min_ )
+            return DSE_InfiniteAttenuation_cB;
+        else
         {
-            strm << "\t-- LFO #" <<cntlfo <<" --\n"
-                << "\tUnk34        : " << static_cast<short>(lfoen.unk34)     <<"\n"
-                << "\tUnk52        : " << static_cast<short>(lfoen.unk52)     <<"\n"
-                << "\tUnk26        : " << static_cast<short>(lfoen.unk26)     <<"\n"
-                << "\tUnk27        : " << static_cast<short>(lfoen.unk27)     <<"\n"
-                << "\tUnk28        : " << lfoen.unk28     <<"\n"
-                << "\tUnk29        : " << lfoen.unk29     <<"\n"
-                << "\tUnk30        : " << lfoen.unk30     <<"\n"
-                << "\tUnk31        : " << lfoen.unk31     <<"\n"
-                << "\tUnk32        : " << lfoen.unk32     <<"\n"
-                << "\tUnk33        : " << lfoen.unk33     <<"\n";
-            ++cntlfo;
-        }
+            //Convert to NDS Register attenuation
+            //int32_t diff = (0x7F << 0x17) - static_cast<int32_t>(dsevol << 0x17);
+            //diff = diff >> 0x18;
+            //diff = diff << 0x18;
+            //return 20 * log10((double)(0x16980-diff)/(double)0x16980);
 
-        //Write the Splits
-        int cntsplits = 0;
-        for( const auto & split : other.m_splitstbl )
-        {
-            strm << "\t-- Split #" <<cntlfo <<" --\n"
-                << "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
-                << "\tID           : " << static_cast<short>(split.id)        <<"\n"
-                << "\tUnk11        : " << static_cast<short>(split.unk11)     <<"\n"
-                << "\tUnk25        : " << static_cast<short>(split.unk25)     <<"\n"
-                << "\tlowkey       : " << static_cast<short>(split.lowkey)    <<"\n"
-                << "\thikey        : " << static_cast<short>(split.hikey)     <<"\n"
-                << "\tunk13        : " << static_cast<short>(split.unk13)     <<"\n"
-                << "\tunk46        : " << static_cast<short>(split.unk46)     <<"\n"
-                << "\tunk14        : " << static_cast<short>(split.unk14)     <<"\n"
-                << "\tunk47        : " << static_cast<short>(split.unk47)     <<"\n"
-                << "\tunk15        : " << static_cast<short>(split.unk15)     <<"\n"
-                << "\tunk48        : " << static_cast<short>(split.unk48)     <<"\n"
-                << "\tunk16        : " << split.unk16     <<"\n"
-                << "\tunk17        : " << split.unk17     <<"\n"
-                << "\tsmplid       : " << static_cast<short>(split.smplid)     <<"\n"
-                << "\ttune         : " << static_cast<short>(split.tune)     <<"\n"
-                << "\tgroup        : " << static_cast<short>(split.group)     <<"\n"
-                << "\trootkey      : " << static_cast<short>(split.rootkey)   <<"\n"
-                << "\tctune        : " << static_cast<short>(split.ctune)     <<"\n"
-                << "\tsmplvol      : " << static_cast<short>(split.smplvol)   <<"\n"
-                << "\tsmplpan      : " << static_cast<short>(split.smplpan)   <<"\n"
-                << "\tsmplgain?    : " << static_cast<short>(split.smplgain)  <<"\n"
-                << "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
-                << "\tunk23        : " << split.unk23     <<"\n"
-                << "\tunk24        : " << split.unk24     <<"\n"
-                << "\tunk35        : " << static_cast<short>(split.unk35)     <<"\n"
-                << "\tunk36        : " << static_cast<short>(split.unk36)     <<"\n"
-                << "\tunk37        : " << static_cast<short>(split.unk37)     <<"\n"
-                << "\tunk38        : " << static_cast<short>(split.unk38)     <<"\n"
-                << "\tunk39        : " << split.unk39     <<"\n"
-                << "\tunk40        : " << split.unk40     <<"\n"
-                << "\tatkvol       : " << static_cast<short>(split.atkvol)     <<"\n"
-                << "\tattack       : " << static_cast<short>(split.attack)     <<"\n"
-                << "\tdecay        : " << static_cast<short>(split.decay)     <<"\n"
-                << "\tsustain      : " << static_cast<short>(split.sustain)     <<"\n"
-                << "\thold         : " << static_cast<short>(split.hold)     <<"\n"
-                << "\tdecay2       : " << static_cast<short>(split.decay2)     <<"\n"
-                << "\trelease      : " << static_cast<short>(split.release)     <<"\n"
-                << "\trx           : " << static_cast<short>(split.rx)     <<"\n"
-                ;
-            ++cntsplits;
+            //static const double attmax = 20.0;
+            //double test = (dsevol * 100.0) / 127.0; //Get a percent
+            //return round( (attmax * log10( test )) * 10 );
+            return DSE_LowestAttenuation_cB - round( dsevol * ByteVolToSounfontAttnMulti );
         }
-
-        return strm;
     }
 
-
-//
-//
-//
     std::vector<pcm16s_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
     {
         std::vector<pcm16s_t> out;
@@ -340,20 +290,32 @@ namespace pmd2 { namespace audio
         //Handle Attack
         if( attack != 0 )
         {
-            //double logatk = 1200.0 * log2( (attack * DSE_MaxAttackDur) / MaxSignedInt8 );
-            //volenv.attack = static_cast<int16_t>( lround(logatk) );
-            volenv.attack = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( attack, mulatk ) );
+            if( utils::LibWide().isLogOn() )
+                clog<<"Handling Attack..\n";
+            //if( attack!= 0x7F )
+                volenv.attack = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( attack, mul2 ) );
+            //else
+            //    volenv.attack = SHRT_MAX; //Infinite
         }
+        else if( utils::LibWide().isLogOn() )
+            clog<<"Skipping Attack..\n";
 
         //Handle Hold
         if( hold != 0 )
         {
-            //double loghold = 1200.0 * log2( (hold * DSE_MaxHoldDur) / MaxSignedInt8 );
-            //volenv.hold = static_cast<int16_t>( lround(loghold) );
-            volenv.hold = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( hold, mul2 ) );
+            if( utils::LibWide().isLogOn() )
+                clog<<"Handling Hold..\n";
+
+            //if( hold!= 0x7F )
+                volenv.hold = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( hold, mul2 ) );
+            //else
+            //    volenv.hold = SHRT_MAX; //Infinite
         }
+        else if( utils::LibWide().isLogOn() )
+            clog<<"Skipping Hold..\n";
 
         //Handle Decay
+#if 0
         uint32_t decaytime = 0;
         if( /*decay != 0 &&*/ decay != 0x7F )
         {
@@ -365,7 +327,10 @@ namespace pmd2 { namespace audio
             decaytime += DSEEnveloppeDurationToMSec( decay2, mul2 );
         }
 
-        volenv.decay = sf2::MSecsToTimecents( decaytime );
+        if( decay != 0x7F || decay2 != 0x7F )
+            volenv.decay = sf2::MSecsToTimecents( decaytime );
+        else
+            volenv.decay = SHRT_MIN;
 
         //DSE uses an AHDSDR envelope. There is a second decay after the sustain, and before the key is released. 
         // Its usually disabled (set to 0x7F), but when its enabled, we can simulate it easily by adding its duration to
@@ -376,8 +341,13 @@ namespace pmd2 { namespace audio
             //volenv.sustain = ( SustainMinVolume - ( ( sustain * SustainMinVolume ) / MaxSignedInt8 ) );
             //Test Logarithmic attenuation
             double attn = sustain;
-            attn = 100.00 * log( 128.00 / attn ); //128 possible values
-            volenv.sustain = static_cast<uint16_t>( lround( attn ) );
+            if( sustain == 0 )
+                volenv.sustain = SustainMinVolume;
+            else
+            {
+                attn = 144.00 * log( 127.00 / attn ); //128 possible values
+                volenv.sustain = static_cast<uint16_t>(  lround( attn ) );
+            }
         }
         else
         {
@@ -385,14 +355,65 @@ namespace pmd2 { namespace audio
             //Set sustain to the maximum attenuation to simulate the second decay parameter ramping volume down to 0!
             volenv.sustain = SustainMinVolume; //144.0 dB of attenuation
         }
+#else
+        //if( sustain != 0x7F )
+        //{
+            volenv.sustain = DseVolToSf2Attenuation( sustain ); //DSE_MaxAttenuation_cB - ( sustain * DSE_MaxAttenuation_cB / MaxSignedInt8 );
+            //double attn = sustain;
+            //if( sustain == 0 )
+            //    volenv.sustain = SustainMinVolume;
+            //else
+            //{
+            //    attn = static_cast<double>(SustainMinVolume) * log( 127.00 / attn ); //128 possible values
+            //    volenv.sustain = static_cast<uint16_t>(  lround( attn ) );
+            //}
+            //volenv.sustain = ( DSE_MaxAttenuation_cB - ( ( sustain * DSE_MaxAttenuation_cB ) / MaxSignedInt8 ) );
+        ///}
 
+        if( decay != 0 )
+        {
+            if( utils::LibWide().isLogOn() )
+                clog <<"Handling Decay..\n";
+
+            //We use Decay
+            if( decay!= 0x7F )
+                volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, mul2 ) );
+            else
+                volenv.sustain = 0; //No decay
+            //else
+            //    volenv.decay = SHRT_MAX; //Infinite
+        }
+        else 
+        {
+            if( utils::LibWide().isLogOn() )
+                clog<<"Decay was 0, falling back to decay 2..\n";
+
+            if( decay2 != 0x7F )
+            {
+                //We want to fake the volume going down until complete silence, while the key is still held down 
+                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, mul2 ) );
+                volenv.sustain = DSE_InfiniteAttenuation_cB;
+            }
+            else
+                volenv.sustain = 0; //No decay at all
+        }
+
+
+#endif
 
         //Handle Release
         if( rel != 0 )
         {
-            //double logrel  = 1200.0 * log2( ( (rel * DSE_MaxReleaseDur) / MaxSignedInt8 ) );
-            volenv.release = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) );
+            if( utils::LibWide().isLogOn() )
+                clog <<"Handling Release..\n";
+
+            //if( rel != 0x7F )
+                volenv.release = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, mul2 ) );
+            //else
+            //    volenv.release = SHRT_MAX; //Infinite
         }
+        else if( utils::LibWide().isLogOn() )
+            clog <<"Skipping Release..\n";
 
         if( utils::LibWide().isLogOn() )
         {
@@ -558,34 +579,7 @@ namespace pmd2 { namespace audio
     //    uint16_t lastsilence;
     //};
 
-    std::string MusicSequence::tostr()const
-    {
-        stringstream sstr;
-        //int cnt = 0;
-        //for( const auto & track : m_tracks )
-        //{
-        //    sstr <<"==== Track" <<cnt << " ====\n\n";
-        //    TrackPlaybackState st;
-        //    for( const auto & ev : track )
-        //    {
-        //        sstr << st.printevent( ev ) << "\n";
-        //    }
-        //    ++cnt;
-        //}
-        assert(false); //Deprecated!!
-        return move(sstr.str());
-    }
 
-    std::string MusicSequence::printinfo()const
-    {
-        stringstream sstr;
-        sstr << " ==== " <<m_meta.fname <<" ==== \n"
-             << "CREATE ITME : " <<m_meta.createtime <<"\n"
-             << "NB TRACKS   : " <<m_tracks.size()   <<"\n"
-             << "TPQN        : " <<m_meta.tpqn       <<"\n";
-
-        return sstr.str();
-    }
 
 //========================================================================================
 //  BatchAudioLoader
@@ -632,7 +626,7 @@ namespace pmd2 { namespace audio
     /*
         #FIXME: This thing doesn't work at all. It keeps assigning wrong presets..
     */
-    BatchAudioLoader::mergedInstData BatchAudioLoader::PrepareMergedInstrumentTable()const
+    BatchAudioLoader::mergedProgData BatchAudioLoader::PrepareMergedInstrumentTable()const
     {
         //A list of all the shared presets between files merged together. Where non-duplicates are stacked into the second dimension of the table
         std::vector< std::vector<ProgramInfo*> > merged( GetSizeLargestPrgiChunk() );
@@ -687,7 +681,7 @@ namespace pmd2 { namespace audio
             }
         }
 
-        return std::move(mergedInstData{ std::move(merged), std::move(smdlPresLocation) });
+        return std::move(mergedProgData{ std::move(merged), std::move(smdlPresLocation) });
     }
 
     /*
@@ -706,6 +700,9 @@ namespace pmd2 { namespace audio
     {
         using namespace sf2;
 
+        if( utils::LibWide().isLogOn() )
+            clog <<"\t--- Split#" <<static_cast<unsigned short>(dseinst.id) <<" ---\n";
+
         //Make a global instrument zone
         //ZoneBag globalzone;
 
@@ -716,16 +713,21 @@ namespace pmd2 { namespace audio
         //Make a zone for this entry
         ZoneBag myzone;
 
-        //Set the generators
+        //  --- Set the generators ---
+
+        //Key Range
         myzone.SetKeyRange( dseinst.lowkey, dseinst.hikey ); //Key range in first
 
+        //Velocity Range
         myzone.SetVelRange( dseinst.unk14, dseinst.unk47 );
 
-        //#TODO: Add more generators here.
+        //## Add new generators below ##
 
+        //Loop Flag
         if( loopedsmpls[dseinst.smplid] )
             myzone.SetSmplMode( eSmplMode::loop );
 
+        //Volume Envelope
         Envelope myenv = RemapDSEVolEnvToSF2( dseinst.atkvol, 
                                               dseinst.attack, 
                                               dseinst.hold, 
@@ -734,13 +736,20 @@ namespace pmd2 { namespace audio
                                               dseinst.decay2, 
                                               dseinst.release, 
                                               dseinst.rx,
-                                              dseinst.unk35,
-                                              dseinst.unk36 );
+                                              dseinst.mulatk,
+                                              dseinst.mul2 );
 
         myzone.SetVolEnvelope( myenv );
 
-        //Shift
+        //Pitch Correction 
         //myzone.SetFineTune( dseinst.ctune );
+
+        //Volume
+        uint16_t attenuation = DseVolToSf2Attenuation(dseinst.smplvol);
+        //myzone.SetInitAtt( attenuation );
+
+        //Pan
+        myzone.SetPan( DsePanToSf2Pan(dseinst.smplpan) );
 
         //#TEST: Try overriding rootkey for setting the pitch !
         myzone.SetRootKey( dseinst.rootkey );
@@ -754,11 +763,12 @@ namespace pmd2 { namespace audio
             ZoneBag atkvolzone( myzone );
 
             //Set attenuation to the atkvol value
-            double attn = dseinst.atkvol;
+            //double attn = dseinst.atkvol;
             //attn = 100.00 * log( 128.00 / attn ); //128 possible values
             //uint16_t logatkvol = static_cast<uint16_t>( lround( attn ) );
-            uint16_t logatkvol = ( 1440 - ( ( dseinst.atkvol * 1440 ) / CHAR_MAX ) );
-            atkvolzone.SetInitAtt( logatkvol );
+            //uint16_t logatkvol = ( DSE_MaxAttenuation_cB - ( ( dseinst.atkvol * DSE_MaxAttenuation_cB ) / CHAR_MAX ) );
+            //atkvolzone.SetInitAtt( /*attenuation +*/ logatkvol );
+            atkvolzone.SetInitAtt( DseVolToSf2Attenuation( dseinst.atkvol ) );
 
             //Set hold to the attack's duration
             Envelope atkvolenv;
@@ -768,6 +778,44 @@ namespace pmd2 { namespace audio
             atkvolzone.SetVolEnvelope( atkvolenv );
             inst.AddZone( std::move(atkvolzone) );
         }
+
+        //if( dseinst.decay == 0 /*&& dseinst.decay2 != 0*/ && dseinst.decay2 != 0x7F /*&& dseinst.sustain != 0x7F*/ )
+        //{
+        //    ZoneBag decay2zone( myzone );
+
+        //    //Set attenuation to the sustain value
+        //    //double attn = dseinst.sustain;
+        //    //attn = 100.00 * log( 128.00 / attn ); //128 possible values
+        //    //uint16_t logatkvol = static_cast<uint16_t>( lround( attn ) );
+        //    //uint16_t logatkvol = ( DSE_MaxAttenuation_cB - ( ( dseinst.atkvol * DSE_MaxAttenuation_cB ) / CHAR_MAX ) );
+        //    decay2zone.SetInitAtt( myenv.sustain );///*attenuation +*/ logatkvol );
+
+        //    //Delay the envelope to the duration at which Decay2 would take over
+        //    Envelope decay2env;
+
+        //    int16_t delaysum = 0;
+
+        //    if( dseinst.attack != 0x7F )
+        //        delaysum = DSEEnveloppeDurationToMSec(dseinst.attack, dseinst.mul2);
+
+        //    if( dseinst.hold != 0x7F )
+        //        delaysum += DSEEnveloppeDurationToMSec(dseinst.hold, dseinst.mul2);
+
+        //    if( delaysum != 0 )
+        //        decay2env.delay = sf2::MSecsToTimecents( delaysum );
+
+        //    //Set decay to the decay2's duration
+        //    decay2env.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec(dseinst.decay2, dseinst.mul2) );
+
+        //    decay2env.sustain = DSE_MaxAttenuation_cB; //Set to highest attenuation
+
+
+        //    decay2env.release = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec(dseinst.release, dseinst.mul2) );
+
+        //    //Leave everything else to default
+        //    decay2zone.SetVolEnvelope( decay2env );
+        //    inst.AddZone( std::move(decay2zone) );
+        //}
 
         inst.AddZone( std::move(myzone) );        
     }
@@ -789,17 +837,21 @@ namespace pmd2 { namespace audio
         using namespace sf2;
         Preset pre(presname, dsePres.m_hdr.id, bankno );
 
+        if( utils::LibWide().isLogOn() )
+            clog <<"======================\nHandling " <<presname <<"\n======================\n";
+
         //#0 - Add a global zone for global preset settings
         {
             ZoneBag global;
 
             //#1 - Setup Generators
-            global.SetInitAtt( (0x7F - dsePres.m_hdr.insvol) ); //Use the difference between full volume and the current volume to attenuate the preset's volume
-        
+            //global.SetInitAtt( (0x7F - dsePres.m_hdr.insvol) ); //Use the difference between full volume and the current volume to attenuate the preset's volume
+            //global.SetInitAtt( DseVolToSf2Attenuation(dsePres.m_hdr.insvol) );
+
             // Range of DSE Pan : 0x00 - 0x40 - 0x7F
             // (curpresinf.m_hdr.inspan - 64) * 7.8125f (64 fits 7.8125 times within 500, and 500 is the maximum pan value for soundfont generators)
-            double convpan = ((dsePres.m_hdr.inspan - 0x40) * 7.8125); // Remove 64(0x40) to bring the middle to 0.  
-            global.SetPan( lround(convpan) ); 
+            //double convpan = ((dsePres.m_hdr.inspan - 0x40) * 7.8125); // Remove 64(0x40) to bring the middle to 0.  
+            global.SetPan( DsePanToSf2Pan(dsePres.m_hdr.inspan) );//lround(convpan) ); 
             
             //#2 - Setup Modulators
 
@@ -830,11 +882,11 @@ namespace pmd2 { namespace audio
     }
 
 
-    BatchAudioLoader::mergedInstData BatchAudioLoader::ExportSoundfont( const std::string & destf )const
+    BatchAudioLoader::mergedProgData BatchAudioLoader::ExportSoundfont( const std::string & destf )const
     {
         using namespace sf2;
         //First build a master instrument list from all our pairs, with multiple entries per instruments
-        mergedInstData        merged = std::move( PrepareMergedInstrumentTable() ); //MSVC is too dumb to trust with implicit move constructor calls..
+        mergedProgData        merged = std::move( PrepareMergedInstrumentTable() ); //MSVC is too dumb to trust with implicit move constructor calls..
         SoundFont             sf( m_master.metadata().fname ); 
         map<uint16_t,size_t>  swdsmplofftosf; //Make a map with as key a the sample id in the Wavi table, and as value the sample id in the sounfont!
         
@@ -848,11 +900,13 @@ namespace pmd2 { namespace audio
         }
 
         //Prepare samples list
-        shared_ptr<SampleBank>  samples = m_master.smplbank().lock();
-        vector<bool>            loopedsmpls( samples->NbSlots(), false ); //Keep track of which samples are looped
+        shared_ptr<SampleBank> samples = m_master.smplbank().lock();
+        vector<bool>           loopedsmpls( samples->NbSlots(), false ); //Keep track of which samples are looped
 
+        //Check all our sample slots and prepare loading them in the soundfont
         for( size_t cntsmslot = 0; cntsmslot < samples->NbSlots(); ++cntsmslot )
         {
+            //#TODO: What's below should have its own method..
             if( samples->IsInfoPresent(cntsmslot) && samples->IsDataPresent(cntsmslot) ) 
             {
                 const auto & cursminf = *(samples->sampleInfo(cntsmslot));
@@ -969,7 +1023,7 @@ namespace pmd2 { namespace audio
         Poco::Path outsoundfont(destdir);
         outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
         cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
-        mergedInstData merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
+        mergedProgData merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
         //Then the MIDIs
         for( size_t i = 0; i < m_pairs.size(); ++i )
@@ -998,10 +1052,10 @@ namespace pmd2 { namespace audio
 //  Functions
 //===========================================================================================
     
-    std::pair< PresetBank, std::vector<std::pair<MusicSequence,PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
+    std::pair<DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
     {
-        PresetBank                                  mbank  = DSE::ParseSWDL( bank );
-        vector<std::pair<MusicSequence,PresetBank>> seqpairs;
+        DSE::PresetBank                                       mbank  = DSE::ParseSWDL( bank );
+        vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
 
         //We can't know for sure if they're always in the same directory!
         //vector<string> smdfnames;
@@ -1042,21 +1096,41 @@ namespace pmd2 { namespace audio
         return make_pair( std::move(mbank), std::move(seqpairs) );
     }
 
-    std::pair<MusicSequence,PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
+    std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {
-        PresetBank    bank = DSE::ParseSWDL( swd );
-        MusicSequence seq  = DSE::ParseSMDL( smd );
+        DSE::PresetBank    bank = DSE::ParseSWDL( swd );
+        DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
         return std::make_pair( std::move(seq), std::move(bank) );
     }
 
-    PresetBank LoadSwdBank( const std::string & file )
+    DSE::PresetBank LoadSwdBank( const std::string & file )
     {
         return DSE::ParseSWDL( file );
     }
         
-    MusicSequence LoadSequence( const std::string & file )
+    DSE::MusicSequence LoadSequence( const std::string & file )
     {
         return DSE::ParseSMDL( file );
+    }
+
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk )
+    {
+        auto smplptr = bnk.smplbank().lock();
+        auto instptr = bnk.instbank().lock();
+
+        if( smplptr != nullptr )
+        {
+        }
+        else
+        {
+        }
+
+        if( instptr != nullptr )
+        {
+        }
+        else
+        {
+        }
     }
 
 

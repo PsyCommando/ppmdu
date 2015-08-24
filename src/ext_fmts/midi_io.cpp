@@ -9,6 +9,7 @@
 #include <jdksmidi/filewritemultitrack.h>
 
 using namespace std;
+using namespace DSE;
 
 namespace pmd2 { namespace audio 
 {

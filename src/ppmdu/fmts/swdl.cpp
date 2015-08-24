@@ -1,6 +1,6 @@
 #include "swdl.hpp"
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/library_wide.hpp>
 #include <iostream>
 #include <iomanip>
 using namespace std;
@@ -22,7 +22,7 @@ namespace DSE
         {
         }
 
-        operator pmd2::audio::PresetBank()
+        operator PresetBank()
         {
             using namespace pmd2::audio;
             ParseHeader();
@@ -67,7 +67,7 @@ namespace DSE
             m_meta.nbwavislots        = m_hdr.nbwavislots;
         }
 
-        std::unique_ptr<pmd2::audio::InstrumentBank> ParseInstruments()
+        std::unique_ptr<InstrumentBank> ParseInstruments()
         {
             using namespace pmd2::audio;
 
@@ -117,7 +117,7 @@ namespace DSE
             return move( unique_ptr<InstrumentBank>( new InstrumentBank( move(instinf), move(kgrps) ) ) );
         }
 
-        vector<pmd2::audio::KeyGroup> ParseKeygroups()
+        vector<KeyGroup> ParseKeygroups()
         {
             using namespace pmd2::audio;
 
@@ -131,14 +131,14 @@ namespace DSE
             {
                 if( utils::LibWide().isLogOn() )
                     clog <<"\t\tNo Keygroups found!\n";
-                return vector<pmd2::audio::KeyGroup>(); //Return empty vector when no keygrp chunk found
+                return vector<KeyGroup>(); //Return empty vector when no keygrp chunk found
             }
 
             //Get the kgrp chunk's header
             ChunkHeader kgrphdr;
             itkgrp = kgrphdr.ReadFromContainer( itkgrp ); //Move iter after header
             
-            vector<pmd2::audio::KeyGroup> keygroups(kgrphdr.datlen / KeyGroup::size());
+            vector<KeyGroup> keygroups(kgrphdr.datlen / KeyGroup::size());
             
             //Read all keygroups
             for( auto & grp : keygroups )
@@ -156,9 +156,8 @@ namespace DSE
             return move(keygroups);
         }
 
-        std::unique_ptr<pmd2::audio::SampleBank> ParseSamples()
+        std::unique_ptr<SampleBank> ParseSamples()
         {
-            using pmd2::audio::SampleBank;
 
             //Grab the info on every samples
             vector<SampleBank::smpldata_t> smpldat(std::move( ParseWaviChunk() ));
@@ -180,35 +179,49 @@ namespace DSE
             //smpldat.reserve(winf.size());
 
             //Build sample bounds table
-            map<size_t,vector<uint8_t>::const_iterator> boundmap; //Each key is the sample that own this sample start location
+            //map<size_t,vector<uint8_t>::const_iterator> boundmap; //Each key is the sample that own this sample start location
             //smplbounds.reserve(winf.size() + 1);
 
-            for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
-            {
-                if( smpldat[cntsmpl].pinfo_ != nullptr )
-                    boundmap.emplace( cntsmpl, (itpcmd + (smpldat[cntsmpl].pinfo_->smplpos) ) );
-            }
+            //for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
+            //{
+            //    if( smpldat[cntsmpl].pinfo_ != nullptr )
+            //        boundmap.emplace( cntsmpl, (itpcmd + (smpldat[cntsmpl].pinfo_->smplpos) ) );
+            //}
 
             //Append the end of the pcmd chunk to grab the last sample
             //smplbounds.push_back( ( itpcmd + pcmdhdr.datlen) );
 
             //Read the raw sample data, using the sample bounds
-            auto itbounds = boundmap.begin();
-            for( size_t i = 0; i < boundmap.size(); ++i, ++itbounds )//( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
-            {
-                auto nextit = itbounds;
-                ++nextit;
+            //auto itbounds = boundmap.begin();
+            //for( size_t i = 0; i < boundmap.size(); ++i, ++itbounds )//( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
+            //{
+            //    auto nextit = itbounds;
+            //    ++nextit;
 
-                if( nextit != boundmap.end() )
-                    smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, nextit->second ) ); 
-                else //For the last element before the end, use the end of the chunk as terminator
-                    smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, (itpcmd + pcmdhdr.datlen) ) );
+            //    if( nextit != boundmap.end() )
+            //        smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, nextit->second ) ); 
+            //    else //For the last element before the end, use the end of the chunk as terminator
+            //        smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, (itpcmd + pcmdhdr.datlen) ) );
+            //}
+
+
+            //#TODO: Rewrite this so it uses the samples' length instead of the next sample's offset.
+            for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
+            {
+                const auto & psinfo = smpldat[cntsmpl].pinfo_;
+                if( psinfo != nullptr )
+                {
+                    auto   itsmplbeg = itpcmd + psinfo->smplpos;
+                    size_t smpllen   = DSESampleLoopOffsetToBytes( psinfo->loopbeg + psinfo->looplen );
+                    smpldat[cntsmpl].pdata_.reset( new vector<uint8_t>( itsmplbeg, 
+                                                                        itsmplbeg + smpllen ) );
+                }
             }
 
             return std::unique_ptr<SampleBank>( new SampleBank( move(smpldat) ) );
         }
 
-        vector<pmd2::audio::SampleBank::smpldata_t> ParseWaviChunk()
+        vector<SampleBank::smpldata_t> ParseWaviChunk()
         {
             auto itwavi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::wavi );
 
@@ -219,7 +232,7 @@ namespace DSE
             itwavi = wavihdr.ReadFromContainer( itwavi ); //Move iterator past the header
 
             //Create the vector with the nb of slots mentioned in the header
-            vector<pmd2::audio::SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
+            vector<SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
             
             auto itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
 
@@ -240,7 +253,7 @@ namespace DSE
         }
 
     private:
-        DSE_MetaBank                 m_meta;
+        DSE_MetaDataSWDL                 m_meta;
         SWDL_Header                  m_hdr;
         const std::vector<uint8_t> & m_src;
     };
@@ -248,7 +261,7 @@ namespace DSE
 //========================================================================================================
 //  Functions
 //========================================================================================================
-    pmd2::audio::PresetBank ParseSWDL( const std::string & filename )
+    PresetBank ParseSWDL( const std::string & filename )
     {
         if( utils::LibWide().isLogOn() )
         {
@@ -256,7 +269,7 @@ namespace DSE
                  <<"Parsing SWDL \"" <<filename <<"\"\n"
                  <<"--------------------------------------------------------------------------\n";
         }
-        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator pmd2::audio::PresetBank() );
+        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator PresetBank() );
     }
 };
 

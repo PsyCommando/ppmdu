@@ -1,10 +1,10 @@
 #include "sprite_io.hpp"
 #include <ppmdu/containers/sprite_data.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/ext_fmts/png_io.hpp>
-#include <ppmdu/ext_fmts/riff_palette.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <ext_fmts/png_io.hpp>
+#include <ext_fmts/riff_palette.hpp>
+#include <utils/poco_wrapper.hpp>
+#include <utils/library_wide.hpp>
 #include <vector>
 #include <string>
 #include <iomanip>

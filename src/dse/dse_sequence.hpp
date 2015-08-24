@@ -6,7 +6,8 @@ dse_sequence.hpp
 psycommando@gmail.com
 Description: Contains utilities to deal with DSE event tracks. Or anything within a "trk\20" chunk.
 */
-#include <ppmdu/fmts/dse_common.hpp>
+#include <dse/dse_common.hpp>
+//#include <dse/dse_containers.hpp>
 #include <map>
 #include <array>
 #include <cstdint>
@@ -18,7 +19,7 @@ namespace DSE
 //====================================================================================================
 
     //Default tick rate of the Digital Sound Element Sound Driver for sequence playback.
-    static const uint16_t     DefaultTickRte   = 48; 
+    static const uint16_t     DefaultTickRte   = 48; //Possibly in ticks per quartner notes
     static const unsigned int NbTrkDelayValues = 16; //The nb of track delay prefixes in the DSE format
 
 
@@ -184,6 +185,7 @@ namespace DSE
         AddToLastPause  = 0x91, //Pause the track for the duration of the last pause + the duration specified
         Pause           = 0x92, //Pause the track for specified duration (uses a uint8)
         LongPause       = 0x93, //Pause the track for specified duration (uses a uint16)
+        VLongPause      = 0x94, //Pause the track for specified duration (uses a uint24)
 
         EndOfTrack      = 0x98, //Marks the end of the track. Also serve as padding.
         LoopPointSet    = 0x99, //Marks the location where the track should loop from.
@@ -427,94 +429,7 @@ namespace DSE
 // Chunk Headers
 //====================================================================================================
 
-    /************************************************************************
-        SongChunk
-            The raw song chunk.
-            For some reasons, most of the data in this chunk rarely ever 
-            changes in-between games or files.. Only the nb of channels and
-            tracks does..
-    ************************************************************************/
-    struct SongChunk
-    {
-        static const uint32_t SizeNoPadd    = 48; //bytes
-        static const uint32_t LenMaxPadding = 16; //bytes
 
-        unsigned int size()const { return SizeNoPadd + unkpad.size(); }
-
-        uint32_t label   = 0;
-        uint32_t unk1    = 0;
-        uint32_t unk2    = 0;
-        uint32_t unk3    = 0;
-        uint16_t unk4    = 0;
-        uint16_t tpqn    = 0;
-        uint16_t unk5    = 0;
-        uint8_t  nbtrks  = 0;
-        uint8_t  nbchans = 0;
-        uint32_t unk6    = 0;
-        uint32_t unk7    = 0;
-        uint32_t unk8    = 0;
-        uint32_t unk9    = 0;
-        uint16_t unk10   = 0;
-        uint16_t unk11   = 0;
-        uint32_t unk12   = 0;
-        std::vector<uint8_t> unkpad;
-
-        //
-        template<class _outit>
-            _outit WriteToContainer( _outit itwriteto )const
-        {
-            itwriteto = utils::WriteIntToByteVector( static_cast<uint32_t>(eDSEChunks::song), itwriteto, false ); //Force this, to avoid bad surprises
-            itwriteto = utils::WriteIntToByteVector( unk1,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk2,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk3,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk4,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( tpqn,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk5,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nbtrks,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nbchans, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk6,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk7,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk8,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk9,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk10,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk11,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk12,   itwriteto );
-            itwriteto = std::copy( unkpad.begin(), unkpad.end(), itwriteto );
-            return itwriteto;
-        }
-
-        //
-        template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
-        {
-            label   = utils::ReadIntFromByteVector<decltype(label)>  (itReadfrom, false ); //iterator is incremented
-            unk1    = utils::ReadIntFromByteVector<decltype(unk1)>   (itReadfrom); 
-            unk2    = utils::ReadIntFromByteVector<decltype(unk2)>   (itReadfrom);
-            unk3    = utils::ReadIntFromByteVector<decltype(unk3)>   (itReadfrom);
-            unk4    = utils::ReadIntFromByteVector<decltype(unk4)>   (itReadfrom);
-            tpqn    = utils::ReadIntFromByteVector<decltype(tpqn)>   (itReadfrom);
-            unk5    = utils::ReadIntFromByteVector<decltype(unk5)>   (itReadfrom);
-            nbtrks  = utils::ReadIntFromByteVector<decltype(nbtrks)> (itReadfrom);
-            nbchans = utils::ReadIntFromByteVector<decltype(nbchans)>(itReadfrom);
-            unk6    = utils::ReadIntFromByteVector<decltype(unk6)>   (itReadfrom);
-            unk7    = utils::ReadIntFromByteVector<decltype(unk7)>   (itReadfrom);
-            unk8    = utils::ReadIntFromByteVector<decltype(unk8)>   (itReadfrom);
-            unk9    = utils::ReadIntFromByteVector<decltype(unk9)>   (itReadfrom);
-            unk10   = utils::ReadIntFromByteVector<decltype(unk10)>  (itReadfrom);
-            unk11   = utils::ReadIntFromByteVector<decltype(unk11)>  (itReadfrom);
-            unk12   = utils::ReadIntFromByteVector<decltype(unk12)>  (itReadfrom);
-
-            for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
-            {
-                if( *itReadfrom == 0xFF )
-                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator when we already know its value..
-                else
-                    break;
-            }
-
-            return itReadfrom;
-        }
-    };
 
 //====================================================================================================
 // Class

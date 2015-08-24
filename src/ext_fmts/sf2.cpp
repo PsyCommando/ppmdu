@@ -1,6 +1,7 @@
 #include "sf2.hpp"
-#include <ppmdu/ext_fmts/riff.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <ext_fmts/riff.hpp>
+#include <utils/library_wide.hpp>
+
 
 #include <iostream>
 #include <iomanip>
@@ -50,20 +51,6 @@ namespace sf2
         }
     };
 
-    /*
-        value_limit
-            Struct meant to store the limits for a given value.
-            Useful for validating ranges while parsing for instance.
-    */
-    template<class _ValTy>
-        struct value_limits
-    {
-        typedef _ValTy myty;
-        myty min_; //Minimum Value
-        myty def_; //Default Value
-        myty max_; //Maximum Vale
-        myty mid_; //Middle Value
-    };
 
 
 //=========================================================================================
@@ -131,58 +118,58 @@ namespace sf2
         shdr = 0x73686472, //"shdr"
     };
 
-    //Values ranges for the Generators!
-    static const value_limits<int16_t>  SF_GenLimitsModLfoToPitch      { -12000,      0, 12000 };
-    static const value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      { -12000,      0, 12000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   { -12000,      0, 12000 };
-    static const value_limits<uint16_t> SF_GenLimitsInitFilterFc       {   1500,  13500, 13500 };
-    static const value_limits<uint16_t> SF_GenLimitsInitFilterQ        {      0,      0,   960 };
-    static const value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   { -12000,      0, 12000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{ -12000,      0, 12000 };
-    static const value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {   -960,      0,   960 };
-    static const value_limits<uint16_t> SF_GenLimitsChorusSend         {      0,      0,  1000 };
-    static const value_limits<uint16_t> SF_GenLimitsReverbSend         {      0,      0,  1000 };
-    static const value_limits<int16_t>  SF_GenLimitsPan                {   -500,      0,   500 };
+    ////Values ranges for the Generators!
+    //static const value_limits<int16_t>  SF_GenLimitsModLfoToPitch      { -12000,      0, 12000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      { -12000,      0, 12000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   { -12000,      0, 12000 };
+    //static const value_limits<uint16_t> SF_GenLimitsInitFilterFc       {   1500,  13500, 13500 };
+    //static const value_limits<uint16_t> SF_GenLimitsInitFilterQ        {      0,      0,   960 };
+    //static const value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   { -12000,      0, 12000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{ -12000,      0, 12000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {   -960,      0,   960 };
+    //static const value_limits<uint16_t> SF_GenLimitsChorusSend         {      0,      0,  1000 };
+    //static const value_limits<uint16_t> SF_GenLimitsReverbSend         {      0,      0,  1000 };
+    //static const value_limits<int16_t>  SF_GenLimitsPan                {   -500,      0,   500 };
 
-    static const value_limits<int16_t>  SF_GenLimitsModLfoDelay        { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsModLfoFreq         { -16000,      0,  4500 };
-    static const value_limits<int16_t>  SF_GenLimitsVibLfoDelay        { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsVibLfoFreq         { -16000,      0,  4500 };
+    //static const value_limits<int16_t>  SF_GenLimitsModLfoDelay        { -12000, -12000,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModLfoFreq         { -16000,      0,  4500 };
+    //static const value_limits<int16_t>  SF_GenLimitsVibLfoDelay        { -12000, -12000,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVibLfoFreq         { -16000,      0,  4500 };
 
-    static const value_limits<int16_t>  SF_GenLimitsModEnvDelay        { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvAttack       { -12000, -12000,  8000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvHold         { -12000, -12000,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvDecay        { -12000, -12000,  8000 };
-    static const value_limits<uint16_t> SF_GenLimitsModEnvSustain      {      0,      0,  1000 };
-    static const value_limits<int16_t>  SF_GenLimitsModEnvRelease      { -12000, -12000,  8000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvDelay        { -12000, -12000,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvAttack       { -12000, -12000,  8000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvHold         { -12000, -12000,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvDecay        { -12000, -12000,  8000 };
+    //static const value_limits<uint16_t> SF_GenLimitsModEnvSustain      {      0,      0,  1000 };
+    //static const value_limits<int16_t>  SF_GenLimitsModEnvRelease      { -12000, -12000,  8000 };
 
-    static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200 };
-    static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200 };
+    //static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200 };
+    //static const value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200 };
 
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000 };
-    static const value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440 };
-    static const value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000 };
+    //static const value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000 };
+    //static const value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440 };
+    //static const value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000 };
 
-    static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200 };
-    static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200 };
+    //static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200 };
+    //static const value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200 };
 
-    static const value_limits<uint16_t> SF_GenLimitsKeyRange           { 0x0000, 0x007F, 0x7F7F};
-    static const value_limits<uint16_t> SF_GenLimitsVelRange           { 0x0000, 0x007F, 0x7F7F};
+    //static const value_limits<uint16_t> SF_GenLimitsKeyRange           { 0x0000, 0x007F, 0x7F7F};
+    //static const value_limits<uint16_t> SF_GenLimitsVelRange           { 0x0000, 0x007F, 0x7F7F};
 
-    static const value_limits<int16_t> SF_GenLimitsKeynum              {      0,     -1,   127 };
-    static const value_limits<int16_t> SF_GenLimitsVelocity            {      0,     -1,   127 };
+    //static const value_limits<int16_t> SF_GenLimitsKeynum              {      0,     -1,   127 };
+    //static const value_limits<int16_t> SF_GenLimitsVelocity            {      0,     -1,   127 };
 
-    static const value_limits<int16_t> SF_GenLimitsInitAttenuation     {      0,      0,  1440 };
+    //static const value_limits<int16_t> SF_GenLimitsInitAttenuation     {      0,      0,  1440 };
 
-    static const value_limits<int16_t> SF_GenLimitsCoarseTune          {   -120,      0,   120 };
-    static const value_limits<int16_t> SF_GenLimitsFineTune            {    -99,      0,    99 };
+    //static const value_limits<int16_t> SF_GenLimitsCoarseTune          {   -120,      0,   120 };
+    //static const value_limits<int16_t> SF_GenLimitsFineTune            {    -99,      0,    99 };
 
-    static const value_limits<uint16_t> SF_GenLimitsScaleTuning        {      0,    100,  1200 };
-    static const value_limits<uint16_t> SF_GenLimitsExcClass           {      0,      0,   127 };
-    static const value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127 };
+    //static const value_limits<uint16_t> SF_GenLimitsScaleTuning        {      0,    100,  1200 };
+    //static const value_limits<uint16_t> SF_GenLimitsExcClass           {      0,      0,   127 };
+    //static const value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127 };
 
 //=========================================================================================
 //  Constants
@@ -1461,7 +1448,8 @@ namespace sf2
         //genparam_t val = (lokey << 8) | hikey;
         //val.twosby.by1 = lokey; //MSB is lowest key
         //val.twosby.by2 = hikey;
-        AddGenerator( eSFGen::keyRange, static_cast<uint16_t>( (lokey & 0x7F) | ( (hikey & 0x7F) << 8) ) );
+        if( lokey != (SF_GenLimitsKeyRange.def_ & 0xFF) || hikey != ((SF_GenLimitsKeyRange.def_ >> 8) & 0xFF )  )
+            AddGenerator( eSFGen::keyRange, static_cast<uint16_t>( (lokey & 0x7F) | ( (hikey & 0x7F) << 8) ) );
     }
     
     MidiKeyRange BaseGeneratorUser::GetKeyRange()const
@@ -1487,7 +1475,8 @@ namespace sf2
         //genparam_t val;
         //val.twosby.by1 = lokvel; //MSB is lowest key
         //val.twosby.by2 = hivel;
-        AddGenerator( eSFGen::velRange, static_cast<uint16_t>( (lokvel & 0x7F) | ( (hivel & 0x7F) << 8) ) );
+        if( lokvel != (SF_GenLimitsVelRange.def_ & 0xFF) || hivel != ((SF_GenLimitsVelRange.def_ >> 8) & 0xFF )  )
+            AddGenerator( eSFGen::velRange, static_cast<uint16_t>( (lokvel & 0x7F) | ( (hivel & 0x7F) << 8) ) );
     }
 
     MidiVeloRange BaseGeneratorUser::GetVelRange()const
@@ -1515,19 +1504,36 @@ namespace sf2
     */
     void BaseGeneratorUser::SetVolEnvelope( const Envelope & env )
     {
-        //genparam_t param;
-        //param = static_cast<uint16_t>(env.delay);
-        AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_ ) ) );
-        //param = static_cast<uint16_t>(env.attack);
-        AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>( utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ ) ) );
-        //param = static_cast<uint16_t>(env.hold);
-        AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ ) ) );
-        //param = static_cast<uint16_t>(env.decay);
-        AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ ) ) );
-        //param = static_cast<uint16_t>(env.sustain);
-        AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ ) ) );
-        //param = static_cast<uint16_t>(env.release);
-        AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ ) ) );
+        if( env.delay != SHRT_MAX && env.delay != SHRT_MIN )
+            AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_  ) ) );
+
+        if( env.attack != SHRT_MAX && env.attack != SHRT_MIN )
+            AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>( utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ ) ) );
+
+        if( env.hold != SHRT_MAX && env.hold != SHRT_MIN )
+            AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ ) ) );
+
+        if( env.decay != SHRT_MAX )
+            AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ ) ) );
+
+        if( env.sustain != SF_GenLimitsVolEnvSustain.min_ )
+            AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ ) ) );
+
+        if( env.release != SHRT_MAX )
+            AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ ) ) );
+        ////genparam_t param;
+        ////param = static_cast<uint16_t>(env.delay);
+        //AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_ ) ) );
+        ////param = static_cast<uint16_t>(env.attack);
+        //AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>( utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ ) ) );
+        ////param = static_cast<uint16_t>(env.hold);
+        //AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ ) ) );
+        ////param = static_cast<uint16_t>(env.decay);
+        //AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ ) ) );
+        ////param = static_cast<uint16_t>(env.sustain);
+        //AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ ) ) );
+        ////param = static_cast<uint16_t>(env.release);
+        //AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ ) ) );
     }
 
     Envelope BaseGeneratorUser::GetVolEnvelope()const
@@ -1619,7 +1625,8 @@ namespace sf2
     void BaseGeneratorUser::SetCoarseTune( int16_t tune )
     {
 #if 1
-        AddGenerator( eSFGen::coarseTune, utils::Clamp( tune, SF_GenLimitsCoarseTune.min_, SF_GenLimitsCoarseTune.max_ ) );
+        if( tune != SF_GenLimitsCoarseTune.def_ )
+            AddGenerator( eSFGen::coarseTune, utils::Clamp( tune, SF_GenLimitsCoarseTune.min_, SF_GenLimitsCoarseTune.max_ ) );
 #else
         AddGenerator( eSFGen::coarseTune, tune );
 #endif
@@ -1645,7 +1652,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetFineTune( int16_t ftune )
     {
-        AddGenerator( eSFGen::fineTune, utils::Clamp( ftune, SF_GenLimitsFineTune.min_, SF_GenLimitsFineTune.max_ ) );
+        if( ftune != SF_GenLimitsFineTune.def_ )
+            AddGenerator( eSFGen::fineTune, utils::Clamp( ftune, SF_GenLimitsFineTune.min_, SF_GenLimitsFineTune.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetFineTune()const
@@ -1664,7 +1672,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetSmplMode( eSmplMode mode )
     {
-        AddGenerator( eSFGen::sampleMode, static_cast<uint16_t>(mode) );
+        if( mode != eSmplMode::noloop )
+            AddGenerator( eSFGen::sampleMode, static_cast<uint16_t>(mode) );
     }
 
     eSmplMode BaseGeneratorUser::GetSmplMode()const
@@ -1686,7 +1695,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetScaleTuning( uint16_t scale )
     {
-        AddGenerator( eSFGen::scaleTuning, utils::Clamp( scale, SF_GenLimitsScaleTuning.min_, SF_GenLimitsScaleTuning.max_ ) );
+        if( scale != SF_GenLimitsScaleTuning.def_ )
+            AddGenerator( eSFGen::scaleTuning, utils::Clamp( scale, SF_GenLimitsScaleTuning.min_, SF_GenLimitsScaleTuning.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetScaleTuning()const
@@ -1708,7 +1718,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetInitAtt( uint16_t att )
     {
-        AddGenerator( eSFGen::initialAttenuation, utils::Clamp( att, SF_GenLimitsInitAttenuation.min_, SF_GenLimitsInitAttenuation.max_ ) );
+        if( att != SF_GenLimitsInitAttenuation.def_ )
+            AddGenerator( eSFGen::initialAttenuation, utils::Clamp( att, SF_GenLimitsInitAttenuation.min_, SF_GenLimitsInitAttenuation.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetInitAtt()const
@@ -1728,7 +1739,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetPan( int16_t pan )
     {
-        AddGenerator( eSFGen::pan, utils::Clamp( pan, SF_GenLimitsPan.min_, SF_GenLimitsPan.max_ ) );
+        if( pan != SF_GenLimitsPan.def_ )
+            AddGenerator( eSFGen::pan, utils::Clamp( pan, SF_GenLimitsPan.min_, SF_GenLimitsPan.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetPan()const
@@ -1750,7 +1762,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetExclusiveClass( uint16_t id )
     {
-        AddGenerator( eSFGen::exclusiveClass, utils::Clamp( id, SF_GenLimitsExcClass.min_, SF_GenLimitsExcClass.max_ ) );
+        if( id != SF_GenLimitsExcClass.def_ )
+            AddGenerator( eSFGen::exclusiveClass, utils::Clamp( id, SF_GenLimitsExcClass.min_, SF_GenLimitsExcClass.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetExclusiveClass()const
@@ -1772,7 +1785,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetReverbSend( uint16_t send )
     {
-        AddGenerator( eSFGen::reverbEffectsSend, utils::Clamp( send, SF_GenLimitsReverbSend.min_, SF_GenLimitsReverbSend.max_ ) );
+        if( send != SF_GenLimitsReverbSend.def_ )
+            AddGenerator( eSFGen::reverbEffectsSend, utils::Clamp( send, SF_GenLimitsReverbSend.min_, SF_GenLimitsReverbSend.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetReverbSend()const
@@ -1794,7 +1808,8 @@ namespace sf2
     */
     void BaseGeneratorUser::SetChorusSend( uint16_t send )
     {
-        AddGenerator( eSFGen::chorusEffectsSend, utils::Clamp( send, SF_GenLimitsChorusSend.min_, SF_GenLimitsChorusSend.max_ ) );
+        if( send != SF_GenLimitsChorusSend.def_ )
+            AddGenerator( eSFGen::chorusEffectsSend, utils::Clamp( send, SF_GenLimitsChorusSend.min_, SF_GenLimitsChorusSend.max_ ) );
     }
 
     uint16_t BaseGeneratorUser::GetChorusSend()const
@@ -1809,7 +1824,8 @@ namespace sf2
 
     void BaseGeneratorUser::SetRootKey( int16_t key )
     {
-        AddGenerator( eSFGen::overridingRootKey, utils::Clamp( key, SF_GenLimitsOverrideRootKey.min_, SF_GenLimitsOverrideRootKey.max_ ) );
+        if( key != SF_GenLimitsOverrideRootKey.def_ )
+            AddGenerator( eSFGen::overridingRootKey, utils::Clamp( key, SF_GenLimitsOverrideRootKey.min_, SF_GenLimitsOverrideRootKey.max_ ) );
     }
 
     int16_t BaseGeneratorUser::GetRootKey()const

@@ -6,7 +6,7 @@ riff.hpp
 psycommando@gmail.com
 Description: Utilities for working with RIFF files.
 */
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <string>
 #include <vector>
 #include <cstdint>

@@ -1,5 +1,5 @@
 #include "adpcm.hpp"
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <vector>
 #include <array>
 #include <cstdint>

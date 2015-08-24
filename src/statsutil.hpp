@@ -1,6 +1,6 @@
 #ifndef STATS_UTIL_HPP
 #define STATS_UTIL_HPP
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/cmdline_util.hpp>
 #include <ppmdu/basetypes.hpp>
 
 namespace statsutil

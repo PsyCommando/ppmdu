@@ -11,14 +11,14 @@
 #include <ppmdu/fmts/at4px.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 //#include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
 #include <Poco/Path.h>
 #include <Poco/Exception.h>
 
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/cmdline_util.hpp>
 using namespace utils::cmdl;
 using namespace utils::io;
 using namespace std;

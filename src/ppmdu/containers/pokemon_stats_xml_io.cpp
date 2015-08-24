@@ -1,6 +1,6 @@
 #include "pokemon_stats.hpp"
-#include <ppmdu/utils/parse_utils.hpp>
-#include <ppmdu/utils/pugixml_utils.hpp>
+#include <utils/parse_utils.hpp>
+#include <utils/pugixml_utils.hpp>
 #include <pugixml.hpp>
 #include <sstream>
 #include <iostream>

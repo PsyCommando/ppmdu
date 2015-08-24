@@ -135,7 +135,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\data formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
+    <ClCompile Include="..\src\utils\cmdline_util.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -143,7 +143,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
+    <ClCompile Include="..\src\utils\gbyteutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -151,7 +151,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
+    <ClCompile Include="..\src\utils\gfileio.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -159,7 +159,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
+    <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -167,7 +167,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
+    <ClCompile Include="..\src\utils\gstringutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -175,7 +175,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
+    <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -183,7 +183,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
+    <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -191,7 +191,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
+    <ClCompile Include="..\src\utils\poco_wrapper.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -199,7 +199,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
+    <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -358,7 +358,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\data formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
+    <ClInclude Include="..\src\utils\cmdline_util.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -366,7 +366,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
+    <ClInclude Include="..\src\utils\gbyteutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -374,7 +374,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
+    <ClInclude Include="..\src\utils\gfileio.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -382,7 +382,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
+    <ClInclude Include="..\src\utils\gfileutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -390,7 +390,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
+    <ClInclude Include="..\src\utils\gstringutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -398,7 +398,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
+    <ClInclude Include="..\src\utils\handymath.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -406,7 +406,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
+    <ClInclude Include="..\src\utils\library_wide.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -414,7 +414,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
+    <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -422,7 +422,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
+    <ClInclude Include="..\src\utils\poco_wrapper.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -430,7 +430,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
+    <ClInclude Include="..\src\utils\readme_writer.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -438,7 +438,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
+    <ClInclude Include="..\src\utils\utility.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>

@@ -13,7 +13,7 @@ Description:
 #include <cstdint>
 #include <string>
 #include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 
 namespace utils{ namespace io
 {

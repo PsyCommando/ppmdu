@@ -10,8 +10,8 @@ License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicd
 All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
-#include <ppmdu/fmts/dse_common.hpp>
-#include <ppmdu/fmts/dse_sequence.hpp>
+#include <dse/dse_common.hpp>
+#include <dse/dse_sequence.hpp>
 #include <vector>
 #include <map>
 #include <cstdint>
@@ -58,7 +58,7 @@ namespace DSE
         -presetbanks : The list for each presets of the bank to use
     */
     void SequenceToMidi( const std::string                 & outmidi, 
-                         const pmd2::audio::MusicSequence  & seq, 
+                         const MusicSequence               & seq, 
                          const std::map<uint16_t,uint16_t> & presetbanks,
                          eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
                          eMIDIMode                           midmode     = eMIDIMode::GS );
@@ -73,10 +73,10 @@ namespace DSE
                       Each entries at those indices indicates what preset to use instead when exporting the
                       MIDI file.
     */
-    void SequenceToGM_MIDI( const std::string                 & outmidi, 
-                            const pmd2::audio::MusicSequence  & seq, 
-                            const std::vector<uint8_t>        & presetconv,
-                            eMIDIMode                           midmode     = eMIDIMode::GS );
+    void SequenceToGM_MIDI( const std::string          & outmidi, 
+                            const MusicSequence        & seq, 
+                            const std::vector<uint8_t> & presetconv,
+                            eMIDIMode                    midmode     = eMIDIMode::GS );
 
     /****************************************************************************************
         IRenderEngine

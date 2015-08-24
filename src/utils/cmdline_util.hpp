@@ -8,7 +8,7 @@ Description: A baseclass for automating common tasks performed by simple command
              Meant to make creating command lines utilities easier to maintain and maintain consistence
              between them all.
 */
-//#include <ppmdu/utils/utility.hpp>
+//#include <utils/utility.hpp>
 #include <vector>
 #include <string>
 #include <functional>

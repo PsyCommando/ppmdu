@@ -2,9 +2,9 @@
 #include <ppmdu/fmts/content_type_analyser.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/containers/index_iterator.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/library_wide.hpp>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>

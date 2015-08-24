@@ -13,7 +13,7 @@ All wrongs reversed, no crappyrights :P
 #include <string>
 #include <vector>
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/handymath.hpp>
 
 namespace pmd2 { namespace filetypes 
 {

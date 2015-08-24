@@ -57,6 +57,22 @@ namespace utils
         friend std::ostream & operator<<(std::ostream &os, Resolution &res);
     };
 
+    /************************************************************************
+        value_limit
+            Struct meant to store the limits for a given value.
+            Useful for validating ranges while parsing for instance.
+    ************************************************************************/
+    template<class _ValTy>
+        struct value_limits
+    {
+        typedef _ValTy myty;
+        myty min_; //Minimum Value
+        myty def_; //Default Value
+        myty max_; //Maximum Vale
+        myty mid_; //Middle Value
+    };
+
+
     /*
         This is used to get the symbol for each standard time unit.
     */

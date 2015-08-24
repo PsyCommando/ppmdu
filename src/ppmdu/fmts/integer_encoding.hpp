@@ -14,7 +14,7 @@ Description:
 #include <sstream>
 #include <string>
 #include <cstdint>
-#include <ppmdu/utils/gbyteutils.hpp>
+#include <utils/gbyteutils.hpp>
 
 namespace utils
 {

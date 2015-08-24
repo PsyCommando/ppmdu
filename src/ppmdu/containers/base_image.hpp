@@ -9,7 +9,7 @@ Description: Base class for tiled_image and linear_image.
 */
 #include "img_pixel.hpp"
 #include "index_iterator.hpp"
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <vector>
 #include <array>
 #include <algorithm>
