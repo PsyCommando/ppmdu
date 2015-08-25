@@ -1,5 +1,5 @@
 #include "pmd2_fontdata.hpp"
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/containers/linear_image.hpp>
 #include <sstream>
 #include <vector>

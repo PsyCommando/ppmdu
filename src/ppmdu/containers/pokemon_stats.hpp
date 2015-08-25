@@ -8,7 +8,7 @@ Description:
     Generic storage classes for containing the pokemon data, and abstracting the lower-level storage format used by the game!
 */
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <array>
 #include <vector>
 #include <map>

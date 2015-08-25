@@ -6,6 +6,9 @@ game_stats.hpp
 psycommando@gmail.com
 Description: 
     This file contains generic resources for handling the PMD2 game data.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/containers/pokemon_stats.hpp>

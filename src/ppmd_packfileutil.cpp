@@ -9,9 +9,9 @@ Description:
 #include "ppmd_packfileutil.hpp"
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/pack_file.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/cmdline_util.hpp>
 #include <cassert>
 #include <sstream>
 #include <fstream>

@@ -1,5 +1,5 @@
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 using namespace std;
 using namespace pmd2::filetypes;

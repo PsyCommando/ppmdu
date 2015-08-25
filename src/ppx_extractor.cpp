@@ -3,9 +3,9 @@
 #include <ppmdu/fmts/at4px.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/cmdline_util.hpp>
+#include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/cmdline_util.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <fstream>
 #include <string>

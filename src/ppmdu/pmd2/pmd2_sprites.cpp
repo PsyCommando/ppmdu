@@ -1,5 +1,5 @@
 #include "pmd2_sprites.hpp"
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <iostream>

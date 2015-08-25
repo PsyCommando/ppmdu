@@ -3,7 +3,7 @@
 #include <ppmdu/fmts/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <cassert>
 using namespace std;
 

@@ -11,7 +11,7 @@ Description: Utilites for handling the RLE compression used on sprites in PMD2.
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 
 namespace pmd2 { namespace compression
 {

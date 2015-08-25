@@ -2,8 +2,8 @@
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/fmts/integer_encoding.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/poco_wrapper.hpp>
+#include <utils/library_wide.hpp>
 #include <cstdint>
 #include <vector>
 #include <array>

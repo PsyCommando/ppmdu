@@ -8,7 +8,7 @@ Description: A linear image where pixels are loaded linearily and then accessed 
              coordinates! Like the tiled_image, but without tiles!
 */
 #include <ppmdu/containers/base_image.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 
 namespace gimg
 {

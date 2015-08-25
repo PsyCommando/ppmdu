@@ -12,9 +12,9 @@
 #include <iomanip>
 #include <Poco/DirectoryIterator.h>
 #include <cassert>
-#include <ppmdu/utils/gbyteutils.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/gbyteutils.hpp>
+#include <utils/utility.hpp>
+#include <utils/utility.hpp>
 using namespace std;
 using namespace utils::io;
 using namespace utils;

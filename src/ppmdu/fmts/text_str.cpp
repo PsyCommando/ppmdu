@@ -1,8 +1,8 @@
 #include "text_str.hpp"
-#include <ppmdu/utils/gfileio.hpp>
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/utils/library_wide.hpp>
-#include <ppmdu/utils/poco_wrapper.hpp>
+#include <utils/gfileio.hpp>
+#include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
+#include <utils/poco_wrapper.hpp>
 #include <fstream>
 #include <iomanip>
 #include <iostream>

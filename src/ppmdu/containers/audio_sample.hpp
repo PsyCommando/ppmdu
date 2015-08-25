@@ -9,11 +9,19 @@ Description: Various tools for representing raw audio data.
 #include <cstdint>
 #include <vector>
 
-namespace audio
-{
+    /*
+        A few typedefs to pave the way for making specialized types and containers, with minimal code re-writing.
+    */
+
     //Sample formats
     typedef int16_t pcm16s_t;
     typedef int8_t  pcm8s_t;
+    typedef uint8_t adpcm4_t; 
+
+    //Sample containers
+    typedef std::vector<pcm16s_t> pcm16ssmpls_t;
+    typedef std::vector<pcm8s_t>  pcm8ssmpls_t;
+    typedef std::vector<adpcm4_t> adpcm4smpls_t;
 
     /*
         Container for containing interlaced data.
@@ -43,6 +51,6 @@ namespace audio
     //private:
     //    std::vector<block_t> m_blocks;
     //};
-};
+
 
 #endif

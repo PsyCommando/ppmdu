@@ -15,9 +15,9 @@ https://github.com/Zhorken
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
-#include <ppmdu/ext_fmts/supported_io.hpp>
+#include <ext_fmts/supported_io.hpp>
 #include <vector>
 #include <string>
 #include <utility>

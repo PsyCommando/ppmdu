@@ -13,8 +13,8 @@ Description: Various utilities for dealing with the sprite format in PMD2.
 No crappyrights. All wrong reversed!
 */
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/utils/handymath.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/handymath.hpp>
+#include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/basetypes.hpp>

@@ -13,7 +13,7 @@ No crappyrights. All wrongs reversed !
 */
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <map>
 
 namespace pmd2 { namespace filetypes

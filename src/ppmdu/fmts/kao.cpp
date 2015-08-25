@@ -1,9 +1,9 @@
 #include "kao.hpp"
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/ext_fmts/png_io.hpp>
-#include <ppmdu/ext_fmts/bmp_io.hpp>
-#include <ppmdu/ext_fmts/rawimg_io.hpp>
-#include <ppmdu/ext_fmts/riff_palette.hpp>
+#include <utils/utility.hpp>
+#include <ext_fmts/png_io.hpp>
+#include <ext_fmts/bmp_io.hpp>
+#include <ext_fmts/rawimg_io.hpp>
+#include <ext_fmts/riff_palette.hpp>
 #include <iostream>
 #include <cassert>
 #include <map>
@@ -14,7 +14,7 @@
 #include <Poco/DirectoryIterator.h>
 #include <Poco/File.h>
 #include <Poco/Path.h>
-#include <ppmdu/utils/gbyteutils.hpp>
+#include <utils/gbyteutils.hpp>
 using namespace std;
 using namespace gimg;
 

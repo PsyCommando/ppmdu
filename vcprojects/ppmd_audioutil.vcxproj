@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_NoIteratorDebug|Win32">
+      <Configuration>Debug_NoIteratorDebug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -22,6 +26,12 @@
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -36,6 +46,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="shared_build_settings.props" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
@@ -43,9 +57,18 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\lib\jdksmidi\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)\lib\jdksmidi\src;$(SourcePath)</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\lib\jdksmidi\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)\lib\jdksmidi\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <SourcePath>$(SolutionDir)\lib\jdksmidi\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)\lib\jdksmidi\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -58,6 +81,21 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>jdksmidi.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>jdksmidi_dnoit.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -75,54 +113,70 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>jdksmidi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\audio_sample.hpp" />
-    <ClInclude Include="..\src\ppmdu\ext_fmts\adpcm.hpp" />
-    <ClInclude Include="..\src\ppmdu\ext_fmts\riff.hpp" />
-    <ClInclude Include="..\src\ppmdu\ext_fmts\sf2.hpp" />
+    <ClInclude Include="..\src\ext_fmts\adpcm.hpp" />
+    <ClInclude Include="..\src\ext_fmts\midi_io.hpp" />
+    <ClInclude Include="..\src\ext_fmts\riff.hpp" />
+    <ClInclude Include="..\src\ext_fmts\sf2.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\dse_common.hpp" />
+    <ClInclude Include="..\src\dse\dse_common.hpp" />
+    <ClInclude Include="..\src\dse\dse_containers.hpp" />
+    <ClInclude Include="..\src\dse\dse_interpreter.hpp" />
+    <ClInclude Include="..\src\dse\dse_sequence.hpp" />
+    <ClInclude Include="..\src\dse\dse_to_xml.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pkdpx.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\px_compression.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\sedl.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\sir0.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\smdl.hpp" />
@@ -130,171 +184,221 @@
     <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\cmdline_util.hpp">
+    <ClInclude Include="..\src\utils\cmdline_util.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\config_io.hpp">
+    <ClInclude Include="..\src\utils\config_io.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gbyteutils.hpp">
+    <ClInclude Include="..\src\utils\gbyteutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileio.hpp">
+    <ClInclude Include="..\src\utils\gfileio.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gfileutils.hpp">
+    <ClInclude Include="..\src\utils\gfileutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\gstringutils.hpp">
+    <ClInclude Include="..\src\utils\gstringutils.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\handymath.hpp">
+    <ClInclude Include="..\src\utils\handymath.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\library_wide.hpp">
+    <ClInclude Include="..\src\utils\library_wide.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\multiple_task_handler.hpp">
+    <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\parse_utils.hpp" />
-    <ClInclude Include="..\src\ppmdu\utils\poco_wrapper.hpp">
+    <ClInclude Include="..\src\utils\parse_utils.hpp" />
+    <ClInclude Include="..\src\utils\poco_wrapper.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\pugixml_utils.hpp" />
-    <ClInclude Include="..\src\ppmdu\utils\readme_writer.hpp">
+    <ClInclude Include="..\src\utils\pugixml_utils.hpp" />
+    <ClInclude Include="..\src\utils\readme_writer.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\utils\utility.hpp">
+    <ClInclude Include="..\src\utils\utility.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp" />
-    <ClCompile Include="..\src\ppmdu\ext_fmts\adpcm.cpp" />
+    <ClCompile Include="..\src\dse\dse_containers.cpp" />
+    <ClCompile Include="..\src\ext_fmts\adpcm.cpp" />
+    <ClCompile Include="..\src\ext_fmts\midi_io.cpp" />
+    <ClCompile Include="..\src\ext_fmts\sf2.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\dse_common.cpp" />
+    <ClCompile Include="..\src\dse\dse_common.cpp" />
+    <ClCompile Include="..\src\dse\dse_interpreter.cpp" />
+    <ClCompile Include="..\src\dse\dse_sequence.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pkdpx.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\px_compression.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\sedl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\smdl.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\swdl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_audio_data.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\cmdline_util.cpp">
+    <ClCompile Include="..\src\utils\cmdline_util.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\config_io.cpp">
+    <ClCompile Include="..\src\utils\config_io.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gbyteutils.cpp">
+    <ClCompile Include="..\src\utils\gbyteutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileio.cpp">
+    <ClCompile Include="..\src\utils\gfileio.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gfileutil.cpp">
+    <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\gstringutils.cpp">
+    <ClCompile Include="..\src\utils\gstringutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\library_wide.cpp">
+    <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\multiple_task_handler.cpp">
+    <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\poco_wrapper.cpp">
+    <ClCompile Include="..\src\utils\poco_wrapper.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\utils\utility.cpp">
+    <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
   </ItemGroup>

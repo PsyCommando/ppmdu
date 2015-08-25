@@ -10,7 +10,7 @@ Description: flexible pixel type used in tiled_image and linear_image!
 #include <cassert>
 #include <type_traits>
 #include <sstream>
-//#include <ppmdu/utils/gbyteutils.hpp>
+//#include <utils/gbyteutils.hpp>
 #include "color.hpp"
 //#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 

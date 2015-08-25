@@ -7,13 +7,13 @@ psycommando@gmail.com
 
 Description:
 
-
-No crappyrights. All wrong reversed !
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <string>
 #include <vector>
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/handymath.hpp>
+#include <utils/handymath.hpp>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -31,9 +31,9 @@ namespace pmd2 { namespace filetypes
     enum struct eGameVersion
     {
         Invalid,
-        EoS,    //Explorers of Sky
-        EoTEoD, //Explorers of Time/Darkness
-        NBGameVers,
+        EoS,        //Explorers of Sky
+        EoTEoD,     //Explorers of Time/Darkness
+        NBGameVers, //Must be last
     };
 
     namespace magicnumbers
@@ -62,6 +62,11 @@ namespace pmd2 { namespace filetypes
     static const std::string SIR0_AT4PX_FILEX        = "sir0at4px";    //For a sir0 wrapped at4px
     static const std::string RGBX32_RAW_PAL_FILEX    = "rgbx32";       //For a file containing only a raw RGBX32 palette
     static const std::string MD_FILEX                = "md";           //For the monster.md file
+
+    //DSE Types
+    static const std::string SMDL_FILEX              = "smd";
+    static const std::string SWDL_FILEX              = "swd";
+    static const std::string SEDL_FILEX              = "sed";
 
     //Padding bytes
     static const uint8_t COMMON_PADDING_BYTE        = 0xAA; //The most common padding byte in all PMD2 files !
@@ -112,6 +117,11 @@ namespace pmd2 { namespace filetypes
         RAW_RGBX32_PAL_FILE,
         MONSTER_MD_FILE,
 
+        //DSE Types
+        SMDL_FILE,
+        SWDL_FILE,
+        SEDL_FILE,
+
         //#If you add any more, be sure to modify GetContentTypeName
         UNKNOWN_CONTENT,
     };
@@ -135,6 +145,7 @@ namespace pmd2 { namespace filetypes
     std::string GetContentTypeName( e_ContentType type );
 
     /*
+    #TODO: Move this somewhere more appropriate ?
         AppendPaddingBytes
             This function takes a back insert iterator and the length of the container to append padding
             to, along with the divisor to determine how much padding is needed.

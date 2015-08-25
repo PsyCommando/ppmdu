@@ -8,7 +8,7 @@ Description: Utilities for handling the WTU file format from the PMD2 games.
              WTU files are closely linked to a matching WTE file!
 */
 #include <ppmdu/basetypes.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 
 namespace pmd2 { namespace filetypes 
 {

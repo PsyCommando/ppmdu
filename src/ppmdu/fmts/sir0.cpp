@@ -9,7 +9,7 @@ No crappyrights. All wrongs reversed !
 */
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 #include <string>
 #include <sstream>
 #include <iomanip>

@@ -6,6 +6,9 @@ m_level.hpp
 psycommando@gmail.com
 Description:
     Resources for handling the data in the "/BALANCE/m_level.bin" file of PMD2!
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <vector>

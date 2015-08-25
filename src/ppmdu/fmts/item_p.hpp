@@ -6,6 +6,9 @@ item_p.hpp
 psycommando@gmail.com
 Description:
     Utilities for dealing with the "item_p.bin" and "item_s_p.bin" files of pokemon mystery dungeon 2.
+
+License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
+All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/containers/item_data.hpp>
 #include <cstdint>

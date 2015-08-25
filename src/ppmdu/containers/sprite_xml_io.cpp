@@ -2,7 +2,7 @@
     Implementation of the XML Parser/Writer for reading/writing the sprites to disk.
 */
 #include "sprite_io.hpp"
-#include <ppmdu/utils/poco_wrapper.hpp>
+#include <utils/poco_wrapper.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <vector>
 #include <fstream>

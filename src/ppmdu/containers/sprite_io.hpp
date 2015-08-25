@@ -8,8 +8,8 @@ Description:
     Sprite data xml parser/writer implementation.
 */
 #include "sprite_data.hpp"
-#include <ppmdu/utils/utility.hpp>
-#include <ppmdu/ext_fmts/supported_io.hpp>
+#include <utils/utility.hpp>
+#include <ext_fmts/supported_io.hpp>
 #include <vector>
 #include <string>
 #include <cstdint>

@@ -35,6 +35,11 @@ namespace pmd2 { namespace filetypes
         { e_ContentType::BGP_FILE,             BGP_FILEX            },
         { e_ContentType::RAW_RGBX32_PAL_FILE,  RGBX32_RAW_PAL_FILEX },
         { e_ContentType::MONSTER_MD_FILE,      MD_FILEX             },
+
+        //DSE
+        { e_ContentType::SMDL_FILE,            SMDL_FILEX           },
+        { e_ContentType::SWDL_FILE,            SWDL_FILEX           },
+        { e_ContentType::SEDL_FILE,            SEDL_FILEX           },
     }};
 
 
@@ -86,6 +91,7 @@ namespace pmd2 { namespace filetypes
         return string();
     }
 
+    //#FIXME: Is this even used anymore ?
     //Returns a short string identifying what is the type of content is in this kind of file !
     std::string GetContentTypeName( e_ContentType type )
     {

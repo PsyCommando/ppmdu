@@ -1,10 +1,10 @@
 #include "gfxcrunch.hpp"
 #include <ppmdu/fmts/content_type_analyser.hpp>
-#include <ppmdu/utils/utility.hpp>
+#include <utils/utility.hpp>
 //#include <ppmdu/pmd2/pmd2_sprites.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
-#include <ppmdu/utils/multiple_task_handler.hpp>
-#include <ppmdu/utils/library_wide.hpp>
+#include <utils/multiple_task_handler.hpp>
+#include <utils/library_wide.hpp>
 #include <ppmdu/fmts/wan.hpp>
 #include <ppmdu/fmts/pack_file.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
