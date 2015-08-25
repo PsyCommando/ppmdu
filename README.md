@@ -6,7 +6,7 @@ However I try as much as possible to avoid dangerous practices, macros and etc. 
 So you'll see very little dynamic memory allocation in here, and mainly RAII managed pointers / templates when possible.
 
 With that said, there is a lot of room for improvement, and I'll eventually try to fix most of those issues.(I wouldn't mind some help from time to time) 
-And keep in mind that, math isn't natural to me, so I often overlook easy ways to calculate things.(I wouldn't mind help with that either..) And also, I'm constantly looking to improve my coding, considering I've been thaught C++03 first, and I'm on my own learning C++11.. 
+And keep in mind that, math isn't natural to me, so I often overlook easy ways to calculate things.(I wouldn't mind help with that either..) And also, I'm constantly looking to improve my coding, considering I've been taught C++03 first, and I'm on my own learning C++11.. 
 
 Oh, and the revision number system I'm using is complete BS. I was going to go with the one suggested by github, but I couldn't find a way to figure if a release was a breaking change considering the codebase is pretty "immature" and disorganized as I haven't yet completely figured out the game's inner working, and things changes as I discover new details..
 
