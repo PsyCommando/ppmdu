@@ -93,7 +93,7 @@ namespace DSE
         { eTrkEventCodes::Unk_0xD0,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD0" },
 
         //Unk_0xD1
-        { eTrkEventCodes::Unk_0xD1,      eTrkEventCodes::Invalid, 2, false, false, false,  "Unk_0xD1" },
+        { eTrkEventCodes::Unk_0xD1,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD1" },
 
         //Unk_0xD2
         { eTrkEventCodes::Unk_0xD2,      eTrkEventCodes::Invalid, 1, false, false, false,  "Unk_0xD2" },
