@@ -28,6 +28,12 @@
     <Filter Include="Source Files\ppmdu\utility">
       <UniqueIdentifier>{34c82b1f-5581-438e-84f6-3be367e5852e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{b69aa4ec-b40b-44f3-aa5e-9d77af624eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{491cc7c3-9d00-4e01-a47c-03bedc4bb26b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppx_extractor.hpp">
@@ -39,7 +45,7 @@
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pkdpx.hpp">
@@ -87,6 +93,9 @@
     <ClInclude Include="..\src\utils\utility.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppx_extractor.cpp">
@@ -95,7 +104,7 @@
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pkdpx.cpp">
@@ -136,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\utility.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

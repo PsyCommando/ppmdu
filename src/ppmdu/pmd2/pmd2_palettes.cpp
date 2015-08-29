@@ -6,6 +6,10 @@
 
 using namespace std;
 
+namespace filetypes
+{
+    const ContentTy CntTy_RawRGBX32 {"rgbx32"}; //Content ID handle
+};
 
 namespace pmd2 { namespace graphics 
 {
@@ -16,6 +20,8 @@ namespace pmd2 { namespace graphics
     //                      MASK_MIDDLE     = 0x3E0,  // 0000 0011 1110 0000  
     //                      MASK_LOWER      = 0x1F;   // 0000 0000 0001 1111 
     static const uint8_t  MASK_BYTE_5BITS = 0x1F;   // 0001 1111 
+
+
 
 //==================================================================
 // rgbx32_parser

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cassert>
 
-
+using namespace filetypes;
 using namespace std;
 
 namespace pmd2 {namespace filetypes 

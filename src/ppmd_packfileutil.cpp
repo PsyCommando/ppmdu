@@ -22,6 +22,7 @@ using namespace ::pmd2;
 using namespace ::utils::io;
 using namespace ::utils::cmdl;
 using namespace ::utils;
+using namespace ::filetypes;
 
 namespace ppmd_packfileutil
 {
@@ -43,7 +44,7 @@ namespace ppmd_packfileutil
 //=================================================================================================
     void DoUnpack( string inpath, string outpath )
     {
-        filetypes::CPack pack;
+        CPack pack;
         types::bytevec_t filedata;
         ReadFileToByteVector( inpath, filedata );
 
@@ -58,7 +59,7 @@ namespace ppmd_packfileutil
 
     void DoPack( string inpath, string outpath, unsigned int forcedoffset )
     {
-        filetypes::CPack pack;
+        CPack pack;
         types::bytevec_t outfiledata;
 
 	    cout << "\nPacking Directory : \n" 
@@ -113,7 +114,7 @@ namespace ppmd_packfileutil
              << "-> If a folder to pack is passed as input, and if it ends with the \"" <<OUTPUT_FOLDER_SUFFIX <<"\"\n"
              << "   suffix, the suffix will be omitted in the outputed file's name!\n"
              << "-> Omitting the destination path will result in the program creating a\n" 
-             << "   new file, or folder with the same name plus either a \"." <<filetypes::PACK_FILEX <<"\"\n"
+             << "   new file, or folder with the same name plus either a \"." <<pmd2::filetypes::PACK_FILEX <<"\"\n"
              << "   suffix for a file, or a \"" << OUTPUT_FOLDER_SUFFIX << "\" suffix for a directory.\n"
              << "-> In both cases, the output file/directory will be created in the input\n" 
              << "   path's parent directory.\n"
@@ -199,7 +200,7 @@ namespace ppmd_packfileutil
         //    inputdirectory = inputdirectory.erase( (inputdirectory.size()-1) ); //erase the slash if there is one
 
         Poco::Path outputfile(inputdirectory);
-        outputfile = outputfile.makeAbsolute().makeFile().setExtension(filetypes::PACK_FILEX);
+        outputfile = outputfile.makeAbsolute().makeFile().setExtension(pmd2::filetypes::PACK_FILEX);
         return outputfile.toString(); //implicit move constructor call
     }
 

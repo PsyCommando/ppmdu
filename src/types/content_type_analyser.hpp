@@ -10,46 +10,76 @@ Description: Handler to analyse data content and return the type of content it i
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/basetypes.hpp>
-#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <vector>
+#include <types/contentid_generator.hpp>
+//#include <ppmdu/basetypes.hpp>
+//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <memory>
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
 
 //==================================================================
 // Typedefs
 //==================================================================
-    typedef unsigned int cntRID_t;
+    typedef unsigned int cntRID_t;  //Registered content index
+    //typedef unsigned int cnt_t;     //Content Type ID. 0 is reserved!
 
 //==================================================================
 // Structs
 //==================================================================
 
-    /*
-        Parameter struct passed to the content analysis method.
-    */
     struct analysis_parameter
     {
+        typedef std::vector<uint8_t>::const_iterator iterator_t;
+
         //Init with only two iterators
-        analysis_parameter( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, const std::string & filext = "" )
+        analysis_parameter( iterator_t itbegdata, iterator_t itenddata, const std::string & filext = "" )
             :_itdatabeg(itbegdata), _itdataend(itenddata), _itparentbeg(itbegdata), _itparentend(itenddata), _filextension(filext)
         {}
 
         //Init with 4 parameters
-        analysis_parameter( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, 
-                            types::constitbyte_t itparentbeg, types::constitbyte_t itparentend )
+        analysis_parameter( iterator_t itbegdata,   iterator_t itenddata, 
+                            iterator_t itparentbeg, iterator_t itparentend )
             :_itdatabeg(itbegdata), _itdataend(itenddata), _itparentbeg(itparentbeg), _itparentend(itparentend)
         {}
 
 
-        types::constitbyte_t _itparentbeg, //Beginning and End of the parent container, if there is a parent container 
-                             _itparentend;
-        types::constitbyte_t _itdatabeg, //Beginning and End of the container to analyse
-                             _itdataend;
+        iterator_t  _itparentbeg, //Beginning and End of the parent container, if there is a parent container 
+                    _itparentend;
+        iterator_t  _itdatabeg, //Beginning and End of the container to analyse
+                    _itdataend;
 
-        std::string          _filextension; //The filextension of the containing file, if available
+        std::string _filextension; //The filextension of the containing file, if available
     };
+
+    /*
+        Parameter struct passed to the content analysis method.
+    */
+    //template< class _init > 
+    //    struct AnalzParam : public analysis_parameter
+    //{
+    //    typedef _init iterator_t;
+
+    //    //Init with only two iterators
+    //    AnalzParam( _init itbegdata, _init itenddata, const std::string & filext = "" )
+    //        :_itdatabeg(itbegdata), _itdataend(itenddata), _itparentbeg(itbegdata), _itparentend(itenddata), _filextension(filext)
+    //    {}
+
+    //    //Init with 4 parameters
+    //    AnalzParam( _init itbegdata,   _init itenddata, 
+    //                _init itparentbeg, _init itparentend )
+    //        :_itdatabeg(itbegdata), _itdataend(itenddata), _itparentbeg(itparentbeg), _itparentend(itparentend)
+    //    {}
+
+
+    //    iterator_t  _itparentbeg, //Beginning and End of the parent container, if there is a parent container 
+    //                _itparentend;
+    //    iterator_t  _itdatabeg, //Beginning and End of the container to analyse
+    //                _itdataend;
+
+    //    std::string _filextension; //The filextension of the containing file, if available
+    //};
 
 
     /*************************************************************************************
@@ -60,9 +90,9 @@ namespace pmd2{ namespace filetypes
     *************************************************************************************/
     struct ContentBlock
     {
-        ContentBlock( e_ContentType         type      = e_ContentType::UNKNOWN_CONTENT, 
-                      types::bytevec_szty_t begoffset = 0,
-                      types::bytevec_szty_t endoffset = 0 )
+        ContentBlock( cnt_t  type      = 0,
+                      size_t begoffset = 0,
+                      size_t endoffset = 0 )
         :_type(type), _startoffset(begoffset), _endoffset(endoffset), _rule_id_that_matched(0)
         {
         }
@@ -70,12 +100,12 @@ namespace pmd2{ namespace filetypes
         //Take all the info in the struct and put it in a string to be read by humans(debug output / console screen)
         std::string printToHumanReadable();
 
-        e_ContentType             _type;        //The type of the ContentBlock
+        cnt_t                     _type;        //The type of the ContentBlock
         std::vector<ContentBlock> _hierarchy; //#TODO: DEPRECATE THIS!   //Sub-containers / Sub-content. If not containing sub-elements, main contain data from the
                                                 // other same level elements if its the first analysed!
-        types::bytevec_szty_t     _startoffset, //The position the content begins at, including the header
-                                  _endoffset;   //The end of the content block, or the end of the whole container if not applicable
-        cntRID_t         _rule_id_that_matched;
+        size_t                    _startoffset; //The position the content begins at, including the header
+        size_t                    _endoffset;   //The end of the content block, or the end of the whole container if not applicable
+        cntRID_t                  _rule_id_that_matched;
     };
 
 //==================================================================
@@ -92,7 +122,7 @@ namespace pmd2{ namespace filetypes
         virtual ~IContentHandlingRule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const = 0;
+        virtual cnt_t getContentType()const = 0;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -106,33 +136,11 @@ namespace pmd2{ namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
-                               const std::string    & filext ) = 0;
+        virtual bool isMatch(  std::vector<uint8_t>::const_iterator   itdatabeg, 
+                               std::vector<uint8_t>::const_iterator   itdataend,
+                               const std::string                     & filext ) = 0;
     };
 
-
-    /*************************************************************************************
-        RuleRegistrator
-            A small singleton that has for only task to register the rule.
-            Just call the constructor in your cpp files, with the type of
-            the rule as parameter!
-
-            Example:
-                RuleRegistrator<ruletypename> RuleRegistrator<ruletypename>::s_instance;
-    *************************************************************************************/
-    template<class RULE_T> class RuleRegistrator
-    {
-    public:
-        RuleRegistrator()
-        {
-            pmd2::filetypes::CContentHandler::GetInstance().RegisterRule( new RULE_T );
-        }
-
-    private:
-        static RuleRegistrator<RULE_T> s_instance;
-    };
-    
 
     /*************************************************************************************
         CContentHandler
@@ -152,8 +160,8 @@ namespace pmd2{ namespace filetypes
 
         //Rule registration handling
         cntRID_t RegisterRule  ( IContentHandlingRule * rule );
-        bool              UnregisterRule( cntRID_t ruleid );
-        bool              isValidRule   ( cntRID_t theid )const;
+        bool     UnregisterRule( cntRID_t ruleid );
+        bool     isValidRule   ( cntRID_t theid )const;
 
         /*
             Use this to increment the internal ruleid counter in order to
@@ -164,7 +172,7 @@ namespace pmd2{ namespace filetypes
        // cntRID_t ReserveRuleIDs( unsigned int nbToReserve );
 
         //Content analysis
-        //ContentBlock AnalyseContent( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend );
+        //ContentBlock AnalyseContent( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend );
         ContentBlock AnalyseContent( const analysis_parameter & parameters );
 
     private:
@@ -178,6 +186,27 @@ namespace pmd2{ namespace filetypes
         cntRID_t m_current_ruleid;
     };
 
+    /*************************************************************************************
+        RuleRegistrator
+            A small singleton that has for only task to register the rule.
+            Just call the constructor in your cpp files, with the type of
+            the rule as parameter!
+
+            Example:
+                RuleRegistrator<ruletypename> RuleRegistrator<ruletypename>::s_instance;
+    *************************************************************************************/
+    template<class RULE_T> class RuleRegistrator
+    {
+    public:
+        RuleRegistrator()
+        {
+            CContentHandler::GetInstance().RegisterRule( new RULE_T );
+        }
+
+    private:
+        static RuleRegistrator<RULE_T> s_instance;
+    };
+
 //==================================================================
 // Functions
 //==================================================================
@@ -186,11 +215,13 @@ namespace pmd2{ namespace filetypes
         Use this function to avoid having to type this everytimes:
             CContentHandler::GetInstance().AnalyseContent(analysis_parameter(...))
     */
-    inline ContentBlock DetermineCntTy( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, const std::string & filext = "" )
+    inline ContentBlock DetermineCntTy( std::vector<uint8_t>::const_iterator  itbegdata, 
+                                        std::vector<uint8_t>::const_iterator  itenddata, 
+                                        const std::string                    &filext = "" )
     {
         return CContentHandler::GetInstance().AnalyseContent( analysis_parameter(itbegdata,itenddata,filext) );
     }
 
-};};
+};
 
 #endif

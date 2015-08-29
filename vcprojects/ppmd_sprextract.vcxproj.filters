@@ -46,6 +46,12 @@
     <Filter Include="pugixml">
       <UniqueIdentifier>{b9e5d948-9f99-41b5-91f0-ace9e3f18324}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{7b57d2db-034d-4c5b-9257-a5ae53b73c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{2af5ebf4-05a3-4150-96f4-45c2fe2cfac0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -94,9 +100,6 @@
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\kao.hpp">
@@ -180,6 +183,15 @@
     <ClInclude Include="..\src\ppmdu\fmts\pmd2_fontdata.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bgp.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
@@ -198,9 +210,6 @@
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\kao.cpp">
@@ -289,6 +298,15 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pmd2_fontdata.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bgp.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

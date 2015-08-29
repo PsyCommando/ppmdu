@@ -8,7 +8,7 @@
 using namespace std;
 using namespace pmd2::stats;
 
-namespace pmd2 {namespace filetypes 
+namespace filetypes 
 {
 //======================================================================================
 //  Constants
@@ -45,7 +45,7 @@ namespace pmd2 {namespace filetypes
                 copy_n( pokesubf.begin() + hdr.subheaderptr, 5, magicn.begin() );
 
                 //Check what the magic number is
-                if( equal( magicn.begin(), magicn.end(), magicnumbers::AT4PX_MAGIC_NUMBER.begin() ) )
+                if( equal( magicn.begin(), magicn.end(), MagicNumber_AT4PX.begin() ) )
                 {
                     DecompressAT4PX( (pokesubf.begin() + hdr.subheaderptr), 
                                      (pokesubf.begin() + hdr.ptrPtrOffsetLst), 
@@ -167,24 +167,24 @@ namespace pmd2 {namespace filetypes
 //======================================================================================
     /*
     */
-    std::vector<stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string            & inpath, 
-                                                         std::vector<stats::PokeStatsGrowth> & out_pkmdat )
+    std::vector<PokeStatsGrowth> & ParseLevelGrowthData( const std::string            & inpath, 
+                                                         std::vector<PokeStatsGrowth> & out_pkmdat )
     {
         out_pkmdat = MLevelParser( utils::io::ReadFileToByteVector(inpath) ).Parse();
         return out_pkmdat;
     }
 
-    std::vector<stats::PokeStatsGrowth> ParseLevelGrowthData( const std::string & inpath )
+    std::vector<PokeStatsGrowth> ParseLevelGrowthData( const std::string & inpath )
     {
         return MLevelParser( utils::io::ReadFileToByteVector(inpath) ).Parse();
     }
 
     /*
     */
-    void WriteLevelGrowthData( const std::vector<stats::PokeStatsGrowth> & pkmdat, 
+    void WriteLevelGrowthData( const std::vector<PokeStatsGrowth> & pkmdat, 
                                const std::string                  & outpath )
     {
         utils::io::WriteByteVectorToFile( outpath, MLevelWriter(pkmdat).Write() );
     }
 
-};};
+};

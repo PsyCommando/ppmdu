@@ -1,11 +1,12 @@
 #include "wtu.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
-
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <types/content_type_analyser.hpp>
+using namespace filetypes;
 using namespace std;
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
-
+    const ContentTy CnTy_WTU{"wtu"}; //Content ID handle
 //
 
 //========================================================================================================
@@ -22,7 +23,7 @@ namespace pmd2 { namespace filetypes
         ~wtu_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const { return e_ContentType::WTU_FILE; }
+        virtual cnt_t getContentType()const { return CnTy_WTU; }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -46,8 +47,8 @@ namespace pmd2 { namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext )
         {
             WTU_header myhead;
@@ -67,5 +68,5 @@ namespace pmd2 { namespace filetypes
             A small singleton that has for only task to register the wtu_rule!
     */
     RuleRegistrator<wtu_rule> RuleRegistrator<wtu_rule>::s_instance;
+};
 
-};};

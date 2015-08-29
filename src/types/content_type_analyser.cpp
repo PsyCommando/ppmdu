@@ -1,21 +1,17 @@
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <limits>
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
 //==================================================================
 // CContentHandler
 //==================================================================
     CContentHandler::CContentHandler()
         :m_current_ruleid(1) //begin at 1, because 0 is reserved
-    {
-
-    }
+    {}
 
     CContentHandler::~CContentHandler()
-    {
-
-    }
+    {}
 
     CContentHandler & CContentHandler::GetInstance()
     {
@@ -60,21 +56,7 @@ namespace pmd2 { namespace filetypes
         return false;
     }
 
-    /*
-        Use this to increment the internal ruleid counter in order to
-        hand out unique rule ids to sub-formats.
-
-        Returns the value of the internal ruleid counter before being incremented!
-    */
-    //cntRID_t CContentHandler::ReserveRuleIDs( unsigned int nbToReserve )
-    //{
-    //    cntRID_t idbefore = m_current_ruleid;
-    //    m_current_ruleid += nbToReserve;
-    //    return idbefore;
-    //}
-
     //File analysis
-    //ContentBlock CContentHandler::AnalyseContent( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend )
     ContentBlock CContentHandler::AnalyseContent( const analysis_parameter & parameters )
     {
         ContentBlock contentdetails;
@@ -97,4 +79,4 @@ namespace pmd2 { namespace filetypes
         return (theid != INVALID_RULE_ID && theid < m_current_ruleid); 
     }
 
-};};
+};

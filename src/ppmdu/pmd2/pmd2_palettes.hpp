@@ -13,6 +13,13 @@ Description: A bunch of utilities for dealing with palettes, and color data for 
 #include <array>
 #include <cstdint>
 #include <ppmdu/containers/color.hpp>
+#include <types/content_type_analyser.hpp>
+
+//Define the file type for the RGBX32 raw palette
+namespace filetypes
+{
+    extern const ContentTy CntTy_RawRGBX32; //Content ID handle
+};
 
 namespace pmd2 { namespace graphics
 {
@@ -23,6 +30,8 @@ namespace pmd2 { namespace graphics
 //==================================================================
     static const uint8_t               RGBX_UNUSED_BYTE_VALUE          = 0x80u; //The value of the unused byte in the 32 bits palette used in PMD2
    // static const types::bytevec_szty_t PALETTE_15_BPC_1BPCHAN_AT4PX_SZ = 48; //The length of the 15bits per color, 1 byte per channel, 16 colors palette that come with AT4PX containers in some instances
+
+    
 
 //==================================================================
 // Typedefs

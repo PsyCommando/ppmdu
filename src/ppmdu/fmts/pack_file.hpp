@@ -17,11 +17,15 @@ All wrongs reversed, no crappyrights :P
 #include <string>
 #include <vector>
 #include <memory>
-#include <ppmdu/basetypes.hpp>
+#include <array>
+//#include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
+#include <types/content_type_analyser.hpp>
 
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
+    extern const ContentTy CnTy_PackFile; //Contain the content's ID number, and the file extension. Also act as a handle in the Content type db.
+
 //===============================================================================
 // Struct
 //===============================================================================
@@ -124,14 +128,14 @@ namespace pmd2 { namespace filetypes
         //------- I/O --------
 
         //If path is a pack file, its loaded into memory.
-        void LoadPack( types::constitbyte_t beg, types::constitbyte_t end );
+        void LoadPack( std::vector<uint8_t>::const_iterator beg, std::vector<uint8_t>::const_iterator end );
 
         //If the input path is a folder, a pack file is made with the files from the folder. 
         void LoadFolder( const std::string & pathdir );
 
         //Write the pack file to the output file path.
         // The method calls BuildFOT() before outputting the file, so its not neccessary to call it before.
-        types::bytevec_t OutputPack(); //Move constructor should make this very efficient
+        std::vector<uint8_t> OutputPack(); //Move constructor should make this very efficient
 
         //This allow to output the sub files of this pack file into a specified directory.
         void OutputToFolder( const std::string & pathdir );
@@ -139,9 +143,9 @@ namespace pmd2 { namespace filetypes
 
         //------- Pack Manipulation --------
         //#TODO: Provide better controlled ways to access those things:
-        inline std::vector<types::bytevec_t> & SubFiles()                                { return m_SubFiles;        }
-        inline types::bytevec_t              & getSubFile( types::bytevec_szty_t index ) { return m_SubFiles[index]; }
-        inline unsigned int                    getNbSubFiles()const                      { return m_SubFiles.size(); }
+        inline std::vector<std::vector<uint8_t>> & SubFiles()                 { return m_SubFiles;        }
+        inline std::vector<uint8_t>              & getSubFile( size_t index ) { return m_SubFiles[index]; }
+        inline unsigned int                        getNbSubFiles()const       { return m_SubFiles.size(); }
 
     private:
         //-------------------------------
@@ -155,7 +159,7 @@ namespace pmd2 { namespace filetypes
         void ClearState();
 
         //Returns a vector filled with the rigth ammount of padding bytes for the header based on the current object's state
-        void MakeHeaderPaddingBytes( types::bytevec_t & paddingbytes )const;
+        void MakeHeaderPaddingBytes( std::vector<uint8_t> & paddingbytes )const;
         uint32_t CalcAmountHeaderPaddingBytes()const;
 
         //Used to calculate the size of a packfile header based only on the parameters of the method
@@ -167,19 +171,19 @@ namespace pmd2 { namespace filetypes
         
         
         //------- Raw Reading Pack File Operations --------
-        types::constitbyte_t ReadHeader( types::constitbyte_t itbegin, pfheader & out_mahead )const;
+        std::vector<uint8_t>::const_iterator ReadHeader( std::vector<uint8_t>::const_iterator itbegin, pfheader & out_mahead )const;
 
         //Reads the File Offset Table from the raw pack file data into the object's FOT
-        void     ReadFOTFromPackFile( types::constitbyte_t itbegin, unsigned int nbsubfiles );
+        void     ReadFOTFromPackFile( std::vector<uint8_t>::const_iterator itbegin, unsigned int nbsubfiles );
 
         //Reads subfiles from the raw file data based on what is currently in the object's File Offset Table
         // The iterator must be at the beginning of the entire file's raw data !
         //  NOTE: This method expects you to have called ReadFOTFromPackFile first to populate the FOT! 
         //        Or at least to have a FOT longer than 0 !  
-        void     ReadSubFilesFromPackFileUsingFOT( types::constitbyte_t itbegin );
+        void     ReadSubFilesFromPackFileUsingFOT( std::vector<uint8_t>::const_iterator itbegin );
 
         //Returns the forced offset from the file's raw data is using one, or 0 if its not!
-        uint32_t CPack::IsPackFileUsingForcedFFOffset( types::constitbyte_t itbeg, unsigned int nbsubfiles )const;
+        uint32_t CPack::IsPackFileUsingForcedFFOffset( std::vector<uint8_t>::const_iterator itbeg, unsigned int nbsubfiles )const;
 
         //Opens for copying to the subfile vector a single file. 
         void     ReadLooseFileToFileDataVector( const std::string & inpath, unsigned long long filesize, uint32_t insertatindex );
@@ -187,22 +191,22 @@ namespace pmd2 { namespace filetypes
         //------- Raw Writing Pack File Operations --------
 
         //Write the full header at the position pointed by the iterator
-        types::itbyte_t WriteFullHeader( types::itbyte_t writeat )const;
+        std::vector<uint8_t>::iterator WriteFullHeader( std::vector<uint8_t>::iterator writeat )const;
 
         //Write all the file's data in the subfiles vector to the uint8_t vector passed as parameter, at the position pointed by the iterator  
-        types::itbyte_t WriteFileData( types::itbyte_t writeat ); //#todo: it should be const, but a stupid mistake with the CPack file makes it fail..
+        std::vector<uint8_t>::iterator WriteFileData( std::vector<uint8_t>::iterator writeat ); //#todo: it should be const, but a stupid mistake with the CPack file makes it fail..
 
         //Write a subfile from the subfile vector to the specified file. 
-        void WriteSubFileToFile( types::bytevec_t & file, const std::string & path, unsigned int fileindex );
+        void WriteSubFileToFile( std::vector<uint8_t> & file, const std::string & path, unsigned int fileindex );
 
         //-------------------------------
         //Variables
         //-------------------------------
-        uint32_t                      m_ForcedFirstFileOffset;
-        std::vector<fileIndex>        m_OffsetTable;
-        std::vector<types::bytevec_t> m_SubFiles;
+        uint32_t                          m_ForcedFirstFileOffset;
+        std::vector<fileIndex>            m_OffsetTable;
+        std::vector<std::vector<uint8_t>> m_SubFiles;
     };
 
-};};
+};
 
 #endif

@@ -19,7 +19,7 @@ Description:
 #include <cstdint>
 
 //Forward declare for the friendly io modules !
-namespace pmd2{ namespace filetypes{ class WAN_Parser; class WAN_Writer; }; };
+namespace filetypes{ class WAN_Parser; class WAN_Writer; };
 
 namespace pmd2{ namespace graphics
 {
@@ -438,8 +438,8 @@ namespace pmd2{ namespace graphics
     template<class TIMG_Type>
         class SpriteData : public BaseSprite
     {
-        friend class pmd2::filetypes::WAN_Parser; 
-        friend class pmd2::filetypes::WAN_Writer;
+        friend class ::filetypes::WAN_Parser; 
+        friend class ::filetypes::WAN_Writer;
         static const uint32_t MY_NB_BITS_PER_PIXEL = TIMG_Type::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
 
         //A couple of constants and typedef to make the conditional statement below(MY_SPRITE_TYPE) more readable!

@@ -46,6 +46,12 @@
     <Filter Include="EasyBMP">
       <UniqueIdentifier>{fbc3867f-aeee-4382-a1dd-f2aa5a8b0d78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{e1647fd4-3d51-49a7-b6ef-a3c20ee02c44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{d4bf8cee-85aa-47ab-8f37-0173dd5ef84a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -141,8 +147,11 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -206,8 +215,11 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils</Filter>
@@ -43,7 +44,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -182,6 +183,7 @@
     <ClInclude Include="..\src\ppx_compressor.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>
@@ -190,7 +192,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>

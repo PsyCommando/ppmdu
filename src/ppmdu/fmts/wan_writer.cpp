@@ -2,6 +2,7 @@
     Another cpp file to make the wan.cpp file a little less cluttered!
 */
 #include "wan.hpp"
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <vector>
 #include <algorithm>
@@ -12,8 +13,10 @@
 #include <Poco/Path.h>
 using namespace std;
 using namespace pmd2::graphics;
+using namespace pmd2::filetypes;
 
-namespace pmd2 { namespace filetypes
+
+namespace filetypes
 {
 //==================================================================================================
 //  WAN_Writer
@@ -314,7 +317,7 @@ namespace pmd2 { namespace filetypes
             uint32_t lenpadding = ( CalcClosestHighestDenominator( bufflen, alignon ) -  bufflen );
 
             for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad )
-                utils::WriteIntToByteVector( filetypes::COMMON_PADDING_BYTE, m_itbackins );
+                utils::WriteIntToByteVector( COMMON_PADDING_BYTE, m_itbackins );
         }
     }
 
@@ -462,7 +465,7 @@ namespace pmd2 { namespace filetypes
         m_wanPalInfo.ptrpal = m_outBuffer.size();
 
         //Write colors
-        graphics::WriteRawPalette_RGB24_As_RGBX32( m_itbackins, m_pSprite->getPalette().begin(), m_pSprite->getPalette().end() );
+        WriteRawPalette_RGB24_As_RGBX32( m_itbackins, m_pSprite->getPalette().begin(), m_pSprite->getPalette().end() );
 
         //# Note the position the palette info block is written at !
         m_wanHeadr_img.ptrPal = m_outBuffer.size();
@@ -496,7 +499,7 @@ namespace pmd2 { namespace filetypes
         //Don't write anything if the offset list is null for type 0 sprites!
         if( m_pSprite->getPartOffsets().empty() )
         {
-            if( m_pSprite->getSprInfo().spriteType == graphics::eSprTy::Generic )
+            if( m_pSprite->getSprInfo().spriteType == eSprTy::Generic )
             {
                 m_wanHeadr_anim.ptr_pOffsetsTable = 0; //null ptr
                 return;
@@ -640,4 +643,4 @@ namespace pmd2 { namespace filetypes
     }
 
 
-};};
+};

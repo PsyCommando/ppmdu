@@ -1,19 +1,24 @@
 #include "pkdpx.hpp"
 #include <ppmdu/fmts/px_compression.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
 #include <cassert>
 using namespace std;
+using namespace filetypes;
 
-namespace pmd2{ namespace filetypes
+//using namespace pmd2::filetypes;
+using compression::px_info_header;
+using namespace utils;
+
+namespace filetypes
 {
-    using compression::px_info_header;
-    using types::bytevec_t;
-    using types::constitbyte_t;
-    using types::itbyte_t;
-    using namespace utils;
+    //Content ID db handles.
+    const ContentTy CnTy_PKDPX      {"pkdpx"};
+    const ContentTy CnTy_SIR0_PKDPX {"sir0pkdpx"};
+    //const std::array<uint8_t,5> MagicNumber_PKDPX {{ 0x50, 0x4B, 0x44, 0x50, 0x58 }};
 
 //==================================================================
 // Utility:
@@ -31,7 +36,7 @@ namespace pmd2{ namespace filetypes
     {
         pkdpx_header head;
 
-        head.magicn       = filetypes::magicnumbers::PKDPX_MAGIC_NUMBER;
+        head.magicn       = MagicNumber_PKDPX;
         head.compressedsz = pxinf.compressedsz + pkdpx_header::HEADER_SZ;
         head.flaglist     = pxinf.controlflags;
         head.decompsz     = pxinf.decompressedsz;
@@ -356,7 +361,7 @@ namespace pmd2{ namespace filetypes
         ~pkdpx_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const;
+        virtual cnt_t getContentType()const;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -366,14 +371,14 @@ namespace pmd2{ namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-        //                              types::constitbyte_t   itdataend );
+        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+        //                              vector<uint8_t>::const_iterator   itdataend );
         virtual ContentBlock Analyse( const analysis_parameter & parameters );
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext );
 
     private:
@@ -382,9 +387,9 @@ namespace pmd2{ namespace filetypes
 
 
     //Returns the value from the content type enum to represent what this container contains!
-    e_ContentType pkdpx_rule::getContentType()const
+    cnt_t pkdpx_rule::getContentType()const
     {
-        return e_ContentType::PKDPX_CONTAINER;
+        return CnTy_PKDPX;
     }
 
     //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -401,7 +406,7 @@ namespace pmd2{ namespace filetypes
 
     //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
     //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-    //ContentBlock pkdpx_rule::Analyse( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend )
+    //ContentBlock pkdpx_rule::Analyse( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend )
     ContentBlock pkdpx_rule::Analyse( const analysis_parameter & parameters )
     {
         pkdpx_header headr;
@@ -420,17 +425,16 @@ namespace pmd2{ namespace filetypes
         //Handle sub-containers!
         //Since we don't want to decompress everything just to tell what it is
         // we'll tag it as "CompressedData"
-        cb._hierarchy.push_back( ContentBlock( e_ContentType::COMPRESSED_DATA, headr.HEADER_SZ, cb._endoffset ) );
+        //cb._hierarchy.push_back( ContentBlock( static_cast<unsigned int>(e_ContentType::COMPRESSED_DATA), headr.HEADER_SZ, cb._endoffset ) );
 
         return cb;
     }
 
     //This method is a quick boolean test to determine quickly if this content handling
     // rule matches, without in-depth analysis.
-    bool pkdpx_rule::isMatch(  types::constitbyte_t itdatabeg, types::constitbyte_t itdataend,const std::string & filext )
+    bool pkdpx_rule::isMatch(  vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend,const std::string & filext )
     {
-        using namespace magicnumbers;
-        return std::equal( PKDPX_MAGIC_NUMBER.begin(), PKDPX_MAGIC_NUMBER.end(), itdatabeg );
+        return std::equal( MagicNumber_PKDPX.begin(), MagicNumber_PKDPX.end(), itdatabeg );
     }
 
 
@@ -445,9 +449,9 @@ namespace pmd2{ namespace filetypes
         ~sir0pkdpx_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const
+        virtual cnt_t getContentType()const
         {
-            return e_ContentType::SIR0_PKDPX_CONTAINER;
+            return CnTy_SIR0_PKDPX;
         }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -491,21 +495,20 @@ namespace pmd2{ namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext )
         {
-            using namespace magicnumbers;
 
             sir0_header  mysir0hdr;
             pkdpx_header mypkdpxhdr;
             try
             {
                 mysir0hdr.ReadFromContainer( itdatabeg );
-                if( mysir0hdr.magic == SIR0_MAGIC_NUMBER_INT )
+                if( mysir0hdr.magic == MagicNumber_SIR0 )
                 {
                     mypkdpxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
-                    return std::equal( PKDPX_MAGIC_NUMBER.begin(), PKDPX_MAGIC_NUMBER.end(), mypkdpxhdr.magicn.begin() );
+                    return std::equal( MagicNumber_PKDPX.begin(), MagicNumber_PKDPX.end(), mypkdpxhdr.magicn.begin() );
                 }
             }
             catch(...)
@@ -529,4 +532,4 @@ namespace pmd2{ namespace filetypes
     RuleRegistrator<pkdpx_rule>         RuleRegistrator<pkdpx_rule>        ::s_instance;
     SIR0RuleRegistrator<sir0pkdpx_rule> SIR0RuleRegistrator<sir0pkdpx_rule>::s_instance;
 
-};};
+};

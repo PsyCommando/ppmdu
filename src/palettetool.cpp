@@ -9,7 +9,7 @@
 #include <ext_fmts/supported_io_info.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>

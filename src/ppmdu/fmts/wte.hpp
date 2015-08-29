@@ -7,15 +7,17 @@ psycommando@gmail.com
 Description: Utilities for handling the WTE file format from the PMD2 games.
              The WTE format is SIR0-wrapped !
 */
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
 //===============================================================================
 // Constants
 //===============================================================================
-    static const uint32_t WTE_MAGIC_NUMBER_INT = 0x57544500; //"WTE\0"
+    static const uint32_t  WTE_MAGIC_NUMBER_INT = 0x57544500; //"WTE\0"
+    extern const ContentTy CnTy_WTE;    //Content ID db handle, and contains file extension too.
 
 //===============================================================================
 // Struct
@@ -69,6 +71,6 @@ namespace pmd2 { namespace filetypes
             return itReadfrom;
         }
     };
-};};
+};
 
 #endif 

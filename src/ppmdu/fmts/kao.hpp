@@ -14,6 +14,7 @@ https://github.com/Zhorken
 */
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
@@ -24,20 +25,22 @@ https://github.com/Zhorken
 
 using namespace utils::io;
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
 //==================================================================
 // Constants
 //==================================================================
-    static const types::bytevec_szty_t DEF_KAO_TOC_ENTRY_SZ     = 160u;        //160 (0xA0) bytes
-    static const types::bytevec_szty_t DEF_KAO_TOC_ENTRY_NB_PTR = DEF_KAO_TOC_ENTRY_SZ / 4u; //the amount of pointer/entry pairs within a single entry 
-    static const types::bytevec_szty_t DEF_KAO_TOC_NB_ENTRIES   = 1155u;       //1155 (0x483) entries
+    static const size_t         DEF_KAO_TOC_ENTRY_SZ     = 160u;        //160 (0xA0) bytes
+    static const size_t         DEF_KAO_TOC_ENTRY_NB_PTR = DEF_KAO_TOC_ENTRY_SZ / 4u; //the amount of pointer/entry pairs within a single entry 
+    static const size_t         DEF_KAO_TOC_NB_ENTRIES   = 1155u;       //1155 (0x483) entries
 
-    static const uint32_t              KAO_PORTRAIT_PAL_BPC     = 3; //Bytes per color
-    static const uint32_t              KAO_PORTRAIT_PAL_NB_COL  = 16;
-    static const uint32_t              KAO_PORTRAIT_PAL_LEN     = KAO_PORTRAIT_PAL_BPC * KAO_PORTRAIT_PAL_NB_COL;
-    static const unsigned int          KAO_PORTRAIT_IMG_RAW_SIZE= 800u;
-    static const bool                  KAO_PORTRAIT_PIXEL_ORDER_REVERSED = true; //This tells the I/O methods to invert pixel endianess
+    static const uint32_t       KAO_PORTRAIT_PAL_BPC     = 3; //Bytes per color
+    static const uint32_t       KAO_PORTRAIT_PAL_NB_COL  = 16;
+    static const uint32_t       KAO_PORTRAIT_PAL_LEN     = KAO_PORTRAIT_PAL_BPC * KAO_PORTRAIT_PAL_NB_COL;
+    static const unsigned int   KAO_PORTRAIT_IMG_RAW_SIZE= 800u;
+    static const bool           KAO_PORTRAIT_PIXEL_ORDER_REVERSED = true; //This tells the I/O methods to invert pixel endianess
+
+    extern const ContentTy CnTy_Kaomado; //Contetn ID db handle
 
 //==================================================================
 // Structs
@@ -100,8 +103,10 @@ namespace pmd2{ namespace filetypes
     private:
 
         void                 ParseKaomado();
-        types::constitbyte_t ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, types::constitbyte_t itrawtocentry );
-        uint32_t             GetLenRawPortraitData( types::constitbyte_t itdatabeg, tocsubentry_t entryoffset );
+        std::vector<uint8_t>::const_iterator ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, 
+                                                            std::vector<uint8_t>::const_iterator     itrawtocentry );
+        uint32_t             GetLenRawPortraitData( std::vector<uint8_t>::const_iterator itdatabeg, 
+                                                    tocsubentry_t                        entryoffset );
 
         void ImportFromFolders();
         void ImportDirectory( kao_file_wrapper & foldertohandle );
@@ -241,6 +246,6 @@ namespace pmd2{ namespace filetypes
     };
 
 
-};};
+};
 
 #endif

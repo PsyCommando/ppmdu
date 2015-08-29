@@ -73,7 +73,7 @@ namespace pmd2 { namespace compression
                        its the beginning of the RLE table.
            - Returns the index of the beginning of the frame data. FRM_BEG for the current frame!
         */
-        uint32_t operator()( types::constitbyte_t itbeg, types::constitbyte_t itfrmin );
+        uint32_t operator()( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itfrmin );
 
     private:
         std::vector<uint8_t>                        * m_pOutput; //What we currently output to.

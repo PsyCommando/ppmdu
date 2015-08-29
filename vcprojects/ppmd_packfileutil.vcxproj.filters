@@ -34,6 +34,12 @@
     <Filter Include="Header Files\ppmdu\data formats">
       <UniqueIdentifier>{df0388c1-ed93-4273-aec3-f9fef85f9e7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{44c4147d-186e-4400-a3b2-e78d94c6e5f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{1086e298-2ea6-4734-9ffa-c781ef14dbf3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmd_packfileutil.hpp">
@@ -41,9 +47,6 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter>Header Files\ppmdu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
@@ -138,13 +141,16 @@
     <ClInclude Include="..\src\ppmdu\fmts\wte.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmd_packfileutil.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
@@ -220,6 +226,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\raw_rgbx32_palette_rule.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

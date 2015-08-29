@@ -35,6 +35,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">EasyBMP</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\pkao_util.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
@@ -198,7 +199,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -288,6 +289,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\pkao_util.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
@@ -387,7 +389,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>

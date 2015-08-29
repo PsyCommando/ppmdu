@@ -7,10 +7,13 @@
 #include <sstream>
 using namespace std;
 using namespace pmd2::stats;
+using namespace pmd2;
 
-namespace pmd2 {namespace filetypes 
+namespace filetypes 
 {
     static const unsigned int MonsterMd_PkmEntryLen = 0x44; //68 bytes
+
+    const ContentTy CnTy_MonsterMD {"md"}; //Content ID db Handle.
 
 //==========================================================================================
 //  MonsterMdParser
@@ -23,7 +26,7 @@ namespace pmd2 {namespace filetypes
             :m_pPkmns(nullptr), m_rawdata(rawdata)
         {}
 
-        void Parse( std::vector<stats::PokeMonsterData> & out_pkmns )
+        void Parse( std::vector<PokeMonsterData> & out_pkmns )
         {
             m_itReadPos = m_rawdata.begin();
             m_pPkmns    = &out_pkmns;
@@ -251,4 +254,4 @@ namespace pmd2 {namespace filetypes
     }
 
 
-};};
+};

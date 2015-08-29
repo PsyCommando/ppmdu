@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Utilities for reading ".wan" sprite files, and its derivatives.
 */
 #include <ppmdu/fmts/sir0.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <utils/handymath.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
@@ -23,7 +24,7 @@ Description: Utilities for reading ".wan" sprite files, and its derivatives.
 #include <iomanip>
 #include <functional>
 
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
 
     typedef std::vector<std::vector<std::string>> animnamelst_t;
@@ -32,6 +33,8 @@ namespace pmd2 { namespace filetypes
     static const unsigned int WAN_LENGTH_META_FRM    = 10; //bytes
     static const unsigned int WAN_LENGTH_ANIM_FRM    = 12; //bytes
     static const unsigned int WAN_LENGTH_ANIM_GRP    = 8;  //bytes
+
+    extern const ContentTy CnTy_WAN; //Contains the ID for the content type in the content type DB. Also contains the file extension
 
 //=============================================================================================
 //  WAN Structures
@@ -134,7 +137,7 @@ namespace pmd2 { namespace filetypes
             return itReadfrom;
         }
 
-        void FillFromSprite( graphics::BaseSprite * sprite )
+        void FillFromSprite( pmd2::graphics::BaseSprite * sprite )
         {
             unk12      = sprite->getSprInfo().Unk12;
             spriteType = static_cast<uint16_t>(sprite->getSprInfo().spriteType);
@@ -209,7 +212,7 @@ namespace pmd2 { namespace filetypes
             return itReadfrom;
         }
 
-        void FillFromSprite( graphics::BaseSprite * sprite )
+        void FillFromSprite( pmd2::graphics::BaseSprite * sprite )
         {
             unk13                  = sprite->getSprInfo().Unk13;
             is256Colors            = sprite->getSprInfo().is256Sprite;
@@ -305,7 +308,7 @@ namespace pmd2 { namespace filetypes
             return itReadfrom;
         }
 
-        void FillFromSprite( graphics::BaseSprite * sprite )
+        void FillFromSprite( pmd2::graphics::BaseSprite * sprite )
         {
             nb_anim_groups = sprite->getAnimGroups().size();
             unk6           = sprite->getSprInfo().Unk6;
@@ -356,7 +359,7 @@ namespace pmd2 { namespace filetypes
             return itReadfrom;
         }
 
-        void FillFromSprite( graphics::BaseSprite * sprite )
+        void FillFromSprite( pmd2::graphics::BaseSprite * sprite )
         {
             unk3           = sprite->getSprInfo().Unk3;
             nbcolorsperrow = sprite->getSprInfo().nbColorsPerRow;
@@ -487,10 +490,10 @@ namespace pmd2 { namespace filetypes
         WAN_Parser( const std::vector<uint8_t> &  rawdata, const animnamelst_t * animnames = nullptr );
 
         //Use this to determine which parsing method to use!
-        graphics::eSpriteImgType getSpriteType()const;
+        pmd2::graphics::eSpriteImgType getSpriteType()const;
 
         template<class TIMG_t>
-            graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr )
+            pmd2::graphics::SpriteData<TIMG_t> Parse( std::atomic<uint32_t> * pProgress = nullptr )
         {
             SpriteData<TIMG_t> sprite;
 
@@ -529,13 +532,13 @@ namespace pmd2 { namespace filetypes
         }
 
         //This parse all images of the sprite as 4bpp!
-        graphics::SpriteData<gimg::tiled_image_i4bpp> ParseAs4bpp( std::atomic<uint32_t> * pProgress = nullptr)
+        pmd2::graphics::SpriteData<gimg::tiled_image_i4bpp> ParseAs4bpp( std::atomic<uint32_t> * pProgress = nullptr)
         {
             return std::move(Parse<gimg::tiled_image_i4bpp>(pProgress));
         }
 
         //This parse all images of the sprite as 8bpp!
-        graphics::SpriteData<gimg::tiled_image_i8bpp> ParseAs8bpp(std::atomic<uint32_t> * pProgress = nullptr)
+        pmd2::graphics::SpriteData<gimg::tiled_image_i8bpp> ParseAs8bpp(std::atomic<uint32_t> * pProgress = nullptr)
         {
             return std::move(Parse<gimg::tiled_image_i8bpp>(pProgress));
         }
@@ -544,20 +547,20 @@ namespace pmd2 { namespace filetypes
         //Methods
 
         //A generic parsing method to parse common non-image format specific stuff!
-        void DoParse( std::vector<gimg::colorRGB24>               & out_pal, 
-                      graphics::SprInfo                           & out_sprinf,
-                      std::vector<graphics::MetaFrame>            & out_mfrms,
-                      std::vector<graphics::MetaFrameGroup>       & out_mtfgrps,
-                      std::vector<graphics::SpriteAnimationGroup> & out_anims,
-                      std::vector<graphics::AnimationSequence>    & out_animseqs,
-                      std::vector<graphics::sprOffParticle>       & out_offsets );
+        void DoParse( std::vector<gimg::colorRGB24>                     & out_pal, 
+                      pmd2::graphics::SprInfo                           & out_sprinf,
+                      std::vector<pmd2::graphics::MetaFrame>            & out_mfrms,
+                      std::vector<pmd2::graphics::MetaFrameGroup>       & out_mtfgrps,
+                      std::vector<pmd2::graphics::SpriteAnimationGroup> & out_anims,
+                      std::vector<pmd2::graphics::AnimationSequence>    & out_animseqs,
+                      std::vector<pmd2::graphics::sprOffParticle>       & out_offsets );
 
         template<class TIMG_t>
-            void ReadImages( std::vector<TIMG_t>                     & out_imgs, 
-                             const std::vector<graphics::MetaFrame>  & metafrms,
-                             const std::multimap<uint32_t,uint32_t>  & metarefs,
-                             const std::vector<gimg::colorRGB24>     & pal,
-                             std::vector<graphics::ImageInfo>        & out_imginfo )
+            void ReadImages( std::vector<TIMG_t>                           & out_imgs, 
+                             const std::vector<pmd2::graphics::MetaFrame>  & metafrms,
+                             const std::multimap<uint32_t,uint32_t>        & metarefs,
+                             const std::vector<gimg::colorRGB24>           & pal,
+                             std::vector<pmd2::graphics::ImageInfo>        & out_imginfo )
         {
             using namespace std;
             vector<uint8_t>::const_iterator itfrmptr       = (m_rawdata.begin() + m_wanImgDataInfo.ptrImgsTbl); //Make iterator to frame pointer table
@@ -586,12 +589,12 @@ namespace pmd2 { namespace filetypes
 
         template<class TIMG_t>
             void ReadImage( std::vector<uint8_t>::iterator             itwhere, 
-                               const std::vector<graphics::MetaFrame>  & metafrms,
+                               const std::vector<pmd2::graphics::MetaFrame>  & metafrms,
                                const std::multimap<uint32_t,uint32_t>  & metarefs,
                                const std::vector<gimg::colorRGB24>     & pal,
                                TIMG_t                                  & cur_img,
                                uint32_t                                  curfrmindex,
-                               std::vector<graphics::ImageInfo>        & out_imginfo )
+                               std::vector<pmd2::graphics::ImageInfo>        & out_imginfo )
         {
             auto              itfound    = metarefs.find( curfrmindex ); //Find if we have a meta-frame pointing to that frame
             utils::Resolution myres      = RES_64x64_SPRITE;
@@ -617,7 +620,7 @@ namespace pmd2 { namespace filetypes
                 totalbyamt += entry.pixamt;
 
             //Keep track of the z index
-            graphics::ImageInfo imginf;
+            ImageInfo imginf;
             imginf.zindex = asmtable.front().zIndex;
             out_imginfo.push_back(imginf);
 
@@ -733,25 +736,25 @@ namespace pmd2 { namespace filetypes
         std::vector<gimg::colorRGB24>               ReadPalette();
 
         //Read all the meta-frames + meta-frame groups
-        std::vector<graphics::MetaFrame>            ReadMetaFrameGroups( std::vector<graphics::MetaFrameGroup> & out_metafrmgrps );
+        std::vector<pmd2::graphics::MetaFrame>            ReadMetaFrameGroups( std::vector<pmd2::graphics::MetaFrameGroup> & out_metafrmgrps );
 
         //This reads metaframes from a single meta-frame list pointed to by the meta-frame ref table
-        void                                        ReadAMetaFrameGroup( std::vector<graphics::MetaFrameGroup> & out_metafrmgrps,
-                                                                         std::vector<graphics::MetaFrame>      & out_metafrms,
+        void                                        ReadAMetaFrameGroup( std::vector<pmd2::graphics::MetaFrameGroup> & out_metafrmgrps,
+                                                                         std::vector<pmd2::graphics::MetaFrame>      & out_metafrms,
                                                                          uint32_t                                grpbeg/*,
                                                                          uint32_t                                grpend*/ );
         
         //Read a single meta-frame
-        graphics::MetaFrame                          ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm );
+        pmd2::graphics::MetaFrame                          ReadAMetaFrame( std::vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm );
 
-        std::vector<graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
-        graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
+        std::vector<pmd2::graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
+        pmd2::graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
         std::vector<uint32_t>                        ReadAnimGroupSeqRefs( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences/*, unsigned int parentgroupindex*/ );
         
         //This get all anim sequences refered to by those groups, and it changes the pointer offsets to indexes in the anim sequence table!
-        std::vector<graphics::AnimationSequence>    ReadAnimSequences( std::vector<graphics::SpriteAnimationGroup> & groupsWPtr );
+        std::vector<pmd2::graphics::AnimationSequence>    ReadAnimSequences( std::vector<pmd2::graphics::SpriteAnimationGroup> & groupsWPtr );
         
-        std::vector<graphics::sprOffParticle>       ReadParticleOffsets( const std::vector<graphics::SpriteAnimationGroup> & groupsWPtr ); 
+        std::vector<pmd2::graphics::sprOffParticle>       ReadParticleOffsets( const std::vector<pmd2::graphics::SpriteAnimationGroup> & groupsWPtr ); 
         uint32_t                                    CalcFileOffsetBegSeqTable( /*const std::vector<graphics::SpriteAnimationGroup> & groupsPtr*/ );
         /*
             #TODO: is this still in use anymore ?
@@ -792,7 +795,7 @@ namespace pmd2 { namespace filetypes
         static const uint32_t MAX_NB_PIXELS_SPRITE_IMG = 4096;//(graphics::RES_64x64_SPRITE.width * graphics::RES_64x64_SPRITE.height);
     public:
         //typedef _Sprite_T sprite_t;
-        WAN_Writer( graphics::BaseSprite * pSprite );
+        WAN_Writer( pmd2::graphics::BaseSprite * pSprite );
 
         std::vector<uint8_t> write( std::atomic<uint32_t> * pProgress = nullptr );
         void                 write( const std::string     & outputpath, std::atomic<uint32_t> * pProgress = nullptr );
@@ -829,12 +832,12 @@ namespace pmd2 { namespace filetypes
         /*
         */
         void WriteMetaFramesBlock();
-        void WriteAMetaFrame( const graphics::MetaFrame & cur, bool setLastBit = false ); //setLastBit set this to true for the last frame in a group !;
+        void WriteAMetaFrame( const pmd2::graphics::MetaFrame & cur, bool setLastBit = false ); //setLastBit set this to true for the last frame in a group !;
 
         /*
         */
         void WriteAnimationSequencesBlock();
-        void WriteAnAnimFrame( const graphics::AnimFrame & curfrm );
+        void WriteAnAnimFrame( const pmd2::graphics::AnimFrame & curfrm );
 
 
         /*
@@ -916,7 +919,7 @@ namespace pmd2 { namespace filetypes
 
     private:
 
-        graphics::BaseSprite  *m_pSprite;
+        pmd2::graphics::BaseSprite  *m_pSprite;
         std::atomic<uint32_t> *m_pProgress;
         std::string            m_outPath;            //The path to where the file will be written to disk!
 
@@ -943,6 +946,6 @@ namespace pmd2 { namespace filetypes
     };
 
 
-};};
+};
 
 #endif

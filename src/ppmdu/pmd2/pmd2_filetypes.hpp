@@ -14,6 +14,7 @@ All wrongs reversed, no crappyrights :P
 #include <vector>
 #include <ppmdu/basetypes.hpp>
 #include <utils/handymath.hpp>
+#include <types/content_type_analyser.hpp>
 
 namespace pmd2 { namespace filetypes 
 {
@@ -36,15 +37,15 @@ namespace pmd2 { namespace filetypes
         NBGameVers, //Must be last
     };
 
-    namespace magicnumbers
-    {
-        //#TODO: Not sure if we should put those in here :/
-	    //Common Magic Numbers 
-        static const std::array<uint8_t,4> SIR0_MAGIC_NUMBER     = { 0x53, 0x49, 0x52, 0x30 };       //"SIR0"
-        static const uint32_t              SIR0_MAGIC_NUMBER_INT = 0x53495230;                       //"SIR0", stored as unsigned int for convenience
-        static const std::array<uint8_t,5> PKDPX_MAGIC_NUMBER    = { 0x50, 0x4B, 0x44, 0x50, 0x58 }; //"PKDPX"
-        static const std::array<uint8_t,5> AT4PX_MAGIC_NUMBER    = { 0x41, 0x54, 0x34, 0x50, 0x58 }; //"AT4PX"
-    };
+    //namespace magicnumbers
+    //{
+    //    //#TODO: Not sure if we should put those in here :/
+	   // //Common Magic Numbers 
+    //    static const std::array<uint8_t,4> SIR0_MAGIC_NUMBER     = { 0x53, 0x49, 0x52, 0x30 };       //"SIR0"
+    //    static const uint32_t              SIR0_MAGIC_NUMBER_INT = 0x53495230;                       //"SIR0", stored as unsigned int for convenience
+    //    static const std::array<uint8_t,5> PKDPX_MAGIC_NUMBER    = { 0x50, 0x4B, 0x44, 0x50, 0x58 }; //"PKDPX"
+    //    static const std::array<uint8_t,5> AT4PX_MAGIC_NUMBER    = { 0x41, 0x54, 0x34, 0x50, 0x58 }; //"AT4PX"
+    //};
 
     //File extensions used in the library
     static const std::string AT4PX_FILEX             = "at4px";
@@ -70,7 +71,7 @@ namespace pmd2 { namespace filetypes
 
     //Padding bytes
     static const uint8_t COMMON_PADDING_BYTE        = 0xAA; //The most common padding byte in all PMD2 files !
-    static const uint8_t PF_PADDING_BYTE            = 0xFF; // Padding character used by the Pack file for padding files and the header
+
 
     /*
         A little struct for the special pokemon sprite pack file list below.
@@ -134,7 +135,7 @@ namespace pmd2 { namespace filetypes
         Pass the file extension of a file and get the possible matches list.
         Several kinds of files share the same type of extension.
     */
-    std::vector<e_ContentType> GetFileTypeFromExtension( const std::string & ext );
+    std::vector<::filetypes::cnt_t> GetFileTypeFromExtension( const std::string & ext );
 
     //For the given data, returns a file extension
     std::string GetAppropriateFileExtension( std::vector<uint8_t>::const_iterator & itdatabeg,
@@ -142,25 +143,9 @@ namespace pmd2 { namespace filetypes
 
     //#TODO: Deprecate this !
     //Returns a short string identifying what is the type of content is in this kind of file !
-    std::string GetContentTypeName( e_ContentType type );
+    //std::string GetContentTypeName( e_ContentType type );
 
-    /*
-    #TODO: Move this somewhere more appropriate ?
-        AppendPaddingBytes
-            This function takes a back insert iterator and the length of the container to append padding
-            to, along with the divisor to determine how much padding is needed.
-    */
-    template<uint8_t _PadByte, class _backinit>
-        void AppendPaddingBytes( _backinit itinsertat, unsigned int lengthContainer, unsigned int alignon )
-    {
-    //# Insert padding at the current write position, to align the next entry on "alignon" bytes
-        if( (lengthContainer % alignon) != 0 )
-        {
-            uint32_t lenpadding = ( CalcClosestHighestDenominator( lengthContainer, alignon ) -  lengthContainer );
-            for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
-                itinsertat = _PadByte;
-        }
-    }
+
 
 };};
 

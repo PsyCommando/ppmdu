@@ -81,7 +81,7 @@ namespace utils
 
 	*********************************************************************************************/
 	unsigned int ByteBuffToUnsignedInt( const byte buff[] );
-    void UnsignedIntToByteBuff( unsigned int value, byte buff[] );
+    void         UnsignedIntToByteBuff( unsigned int value, byte buff[] );
 
 
     /*********************************************************************************************
@@ -95,7 +95,7 @@ namespace utils
         Assembles the bytes in the buffer into an int16, applying masks to clean it up..
     *********************************************************************************************/
     unsigned short ByteBuffToInt16( const byte buff[] );
-    void Int16ToByteBuff( unsigned short value, byte outbuff[] );
+    void           Int16ToByteBuff( unsigned short value, byte outbuff[] );
 
 
     /*********************************************************************************************
@@ -307,6 +307,23 @@ namespace utils
         //}
         //else
             return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
+    }
+
+    /*********************************************************************************************
+        AppendPaddingBytes
+            This function takes a back insert iterator and the length of the container to append padding
+            to, along with the divisor to determine how much padding is needed.
+    *********************************************************************************************/
+    template<class _backinit>
+        void AppendPaddingBytes( _backinit itinsertat, unsigned int lentoalign, unsigned int alignon, const uint8_t PadByte = 0 )
+    {
+    //# Insert padding at the current write position, to align the next entry on "alignon" bytes
+        if( (lentoalign % alignon) != 0 )
+        {
+            uint32_t lenpadding = ( CalcClosestHighestDenominator( lentoalign, alignon ) -  lentoalign );
+            for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
+                itinsertat = PadByte;
+        }
     }
 
 //===============================================================================

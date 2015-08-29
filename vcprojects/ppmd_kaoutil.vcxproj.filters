@@ -64,9 +64,6 @@
     <ClInclude Include="..\src\ppmdu\fmts\px_compression.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\cmdline_util.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
@@ -127,6 +124,12 @@
     <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -173,6 +176,12 @@
     <Filter Include="EasyBMP">
       <UniqueIdentifier>{b267f49a-1985-4630-94b0-bb2247ae531e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{80b8d334-dff9-4637-b790-a78ff132f958}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{ab633ca5-21ee-4e0b-b12d-423d5f12d308}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\pkao_util.cpp">
@@ -194,9 +203,6 @@
       <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\kao.cpp">
@@ -267,6 +273,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

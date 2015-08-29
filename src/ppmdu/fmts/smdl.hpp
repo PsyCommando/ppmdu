@@ -11,9 +11,15 @@ All wrongs reversed, no crappyrights :P
 */
 #include <dse/dse_common.hpp>
 #include <dse/dse_containers.hpp>
+#include <types/content_type_analyser.hpp>
 
 //Forward declare #TODO: do something less ugly dependency-wise !
-namespace pmd2 { namespace audio { class MusicSequence; }; };
+//namespace pmd2 { namespace audio { class MusicSequence; }; };
+
+namespace filetypes
+{
+    extern const ContentTy CnTy_SMDL; //Content ID db handle
+};
 
 namespace DSE
 {

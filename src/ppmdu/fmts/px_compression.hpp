@@ -13,7 +13,7 @@ Description: Utilities for dealing with what we've dubbed "PX" compression. A cu
 #include <ppmdu/basetypes.hpp>
 
 
-namespace pmd2 { namespace compression
+namespace compression
 {
 
 //=========================================
@@ -190,7 +190,7 @@ namespace pmd2 { namespace compression
     */
     void CleanExistingCompressionLogs();
 
-};};
+};
 
 //Include the definition so that templates can properly instantiate 
 //#include "px_compression.cpp"

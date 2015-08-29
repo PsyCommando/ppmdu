@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="pugixml">
+      <UniqueIdentifier>{d9cfa28c-f061-42cf-9607-57167195e1b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{48582490-ed8a-49eb-9042-813b2488103e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{71ab1673-f28d-4e37-b28b-956e5e0df2cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu">
+      <UniqueIdentifier>{b02d03d1-31bc-4aa5-9819-ce2438a81194}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu">
+      <UniqueIdentifier>{86bb3841-b75a-4d20-b137-c0f1bdcf94e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats">
+      <UniqueIdentifier>{15787c46-d0da-43f1-b0e9-fe2ecac85f15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats">
+      <UniqueIdentifier>{3b495d94-0fe9-48c9-b461-df0405d1fa2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{cf8ad5a3-7919-42a6-872c-874a21c7c9c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{5055491f-7118-47f2-bf56-dacbcb58bdea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\pmd3">
+      <UniqueIdentifier>{3e519b73-d1ca-465a-b15d-650a45d69b31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\pmd3">
+      <UniqueIdentifier>{5f272a2a-be54-4629-bc9c-e2402954569a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\dll">
+      <UniqueIdentifier>{61bcd0c2-a954-46f0-b634-bdd0339b0c0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dll">
+      <UniqueIdentifier>{d863c883-e812-4954-baaa-19a038a71361}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\pugixml-1.5\src\pugixml.cpp">
+      <Filter>pugixml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\cmdline_util.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\config_io.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gbyteutils.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gfileio.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gfileutil.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gstringutils.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\library_wide.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\multiple_task_handler.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\poco_wrapper.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\utility.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ppmdu\fmts\sir0.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ppmd3_txtutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\shared\ppmdu3.cpp">
+      <Filter>Source Files\dll</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\utils\cmdline_util.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\config_io.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gbyteutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gfileio.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gfileutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gstringutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\handymath.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\library_wide.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\multiple_task_handler.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\parse_utils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\poco_wrapper.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\pugixml_utils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\readme_writer.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\utility.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmdu\fmts\sir0.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmdu\pmd3\pmd3_filetypes.hpp">
+      <Filter>Header Files\ppmdu\pmd3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmd3_txtutil.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmdu\pmd3\game_strings.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\shared\ppmdu3.hpp">
+      <Filter>Header Files\dll</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\readmes\ppmd3_txtutil.txt" />
+  </ItemGroup>
+</Project>

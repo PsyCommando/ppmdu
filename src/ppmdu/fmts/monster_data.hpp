@@ -10,12 +10,13 @@ Description:
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <string>
 #include <cstdint>
 #include <vector>
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
 //======================================================================================
 //  Constants
@@ -26,6 +27,8 @@ namespace pmd2 { namespace filetypes
     static const uint32_t    MonsterMD_EntrySizeEoS  = 68; //bytes
     static const uint32_t    MonsterMD_EntrySizeEoTD = 76; //bytes
     static const std::string MonsterMD_FName         = "monster.md";
+
+    extern const ContentTy CnTy_MonsterMD; //Content ID db Handle.
 
 //==========================================================================================
 //  monster.md header
@@ -67,16 +70,16 @@ namespace pmd2 { namespace filetypes
     /*
         Returns a reference to the output vector passed as parameter!
     */
-    std::vector<stats::PokeMonsterData> & ParsePokemonBaseData( const std::string                   & inpath, 
-                                                                std::vector<stats::PokeMonsterData> & out_pkmdat );
+    std::vector<pmd2::stats::PokeMonsterData> & ParsePokemonBaseData( const std::string                         & inpath, 
+                                                                      std::vector<pmd2::stats::PokeMonsterData> & out_pkmdat );
 
-    std::vector<stats::PokeMonsterData>   ParsePokemonBaseData( const std::string                   & inpath );
+    std::vector<pmd2::stats::PokeMonsterData>   ParsePokemonBaseData( const std::string                         & inpath );
 
     /*
     */
-    void WritePokemonBaseData( const std::vector<stats::PokeMonsterData> & pkmdat, 
-                               const std::string                         & outpath );
+    void WritePokemonBaseData( const std::vector<pmd2::stats::PokeMonsterData> & pkmdat, 
+                               const std::string                               & outpath );
 
-};};
+};
 
 #endif

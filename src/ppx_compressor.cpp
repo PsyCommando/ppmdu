@@ -1,5 +1,6 @@
 #include "ppx_compressor.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <fstream>
 #include <string>
@@ -23,8 +24,10 @@ using namespace utils::cmdl;
 using namespace utils::io;
 using namespace std;
 using namespace pmd2;
-using namespace pmd2::compression;
+using namespace pmd2::filetypes;
+using namespace compression;
 using namespace utils;
+using namespace ::filetypes;
 
 namespace ppx_compress
 {
@@ -104,29 +107,29 @@ namespace ppx_compress
                         outputfile(params.outputpath);
 
         //Write the approriate header first !
-        if( params.outputpath.getExtension() == filetypes::AT4PX_FILEX )
+        if( params.outputpath.getExtension() == AT4PX_FILEX )
         {
-            outputfile.setExtension(filetypes::AT4PX_FILEX );
-            filetypes::CompressToAT4PX( itdatabeg, itdataend, compressed, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            outputfile.setExtension(AT4PX_FILEX );
+            CompressToAT4PX( itdatabeg, itdataend, compressed, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
         }
-        else if( params.outputpath.getExtension() == filetypes::SIR0_AT4PX_FILEX )
+        else if( params.outputpath.getExtension() == SIR0_AT4PX_FILEX )
         {
             vector<uint8_t> wrapbuf;
-            outputfile.setExtension(filetypes::SIR0_AT4PX_FILEX );
-            filetypes::CompressToAT4PX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
-            compressed = filetypes::MakeSIR0Wrap( wrapbuf );
+            outputfile.setExtension(SIR0_AT4PX_FILEX );
+            CompressToAT4PX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            compressed = MakeSIR0Wrap( wrapbuf );
         }
-        else if( params.outputpath.getExtension() == filetypes::SIR0_PKDPX_FILEX )
+        else if( params.outputpath.getExtension() == SIR0_PKDPX_FILEX )
         {
             vector<uint8_t> wrapbuf;
-            outputfile.setExtension(filetypes::SIR0_PKDPX_FILEX );
-            filetypes::CompressToPKDPX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
-            compressed = filetypes::MakeSIR0Wrap( wrapbuf );
+            outputfile.setExtension(SIR0_PKDPX_FILEX );
+            CompressToPKDPX( itdatabeg, itdataend, wrapbuf, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            compressed = MakeSIR0Wrap( wrapbuf );
         }
         else //default to PKDPX in any case its not a AT4PX !
         {
-            outputfile.setExtension(filetypes::PKDPX_FILEX );
-            filetypes::CompressToPKDPX( itdatabeg, itdataend, compressed, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
+            outputfile.setExtension(PKDPX_FILEX );
+            CompressToPKDPX( itdatabeg, itdataend, compressed, params.compressionlvl, params.isZealous, !(params.isQuiet), false );
         }
 
         if( !params.isQuiet )

@@ -49,6 +49,12 @@
     <Filter Include="Source Files\ppmdu\file formats\audio">
       <UniqueIdentifier>{1541d000-9c0d-41ce-9c74-4ba21ae499fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{3a664a94-589d-48f8-af73-0b15d03d3377}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{fd916fae-5f01-4e3b-a3e8-5eb086b5c0db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp">
@@ -58,9 +64,6 @@
       <Filter>Header Files\ppmdu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
@@ -183,15 +186,18 @@
     <ClInclude Include="..\src\dse\dse_containers.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
@@ -292,6 +298,12 @@
     </ClCompile>
     <ClCompile Include="..\src\dse\dse_containers.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

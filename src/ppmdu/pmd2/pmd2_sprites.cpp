@@ -1,6 +1,6 @@
 #include "pmd2_sprites.hpp"
 #include <utils/utility.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/pmd2/sprite_rle.hpp>
 #include <iostream>
 #include <iomanip>
@@ -10,12 +10,13 @@
 using namespace ::std;
 using namespace ::pmd2;
 using namespace ::utils;
-using filetypes::e_ContentType;
-using filetypes::cntRID_t;
-using filetypes::ContentBlock;
-using filetypes::RuleRegistrator;
-using filetypes::CContentHandler;
-using filetypes::analysis_parameter;
+using namespace ::filetypes;
+//using filetypes::e_ContentType;
+//using filetypes::cntRID_t;
+//using filetypes::ContentBlock;
+//using filetypes::RuleRegistrator;
+//using filetypes::CContentHandler;
+//using filetypes::analysis_parameter;
 
 
 namespace pmd2
@@ -1402,7 +1403,7 @@ namespace pmd2
         {
         }
 
-        void sprite_parser::operator()( types::constitbyte_t itbegdata, types::constitbyte_t itenddata )
+        void sprite_parser::operator()( vector<uint8_t>::const_iterator itbegdata, vector<uint8_t>::const_iterator itenddata )
         {
             if( m_pCurSpriteOut == nullptr )
             {
@@ -1473,13 +1474,13 @@ namespace pmd2
             }
         }
 
-        void sprite_parser::operator()( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, std::string & report )
+        void sprite_parser::operator()( vector<uint8_t>::const_iterator itbegdata, vector<uint8_t>::const_iterator itenddata, std::string & report )
         {
             m_pReport = &report;
             (*this)( itbegdata, itenddata );
         }
 
-        void sprite_parser::operator()( const std::pair<types::constitbyte_t, types::constitbyte_t> & apair )
+        void sprite_parser::operator()( const std::pair<vector<uint8_t>::const_iterator, vector<uint8_t>::const_iterator> & apair )
         {
             (*this)( apair.first, apair.second );
         }
@@ -1589,7 +1590,7 @@ namespace pmd2
         }
 
         //INCREMENTS THE ITERATOR PASSED BY REFERENCE !!!!
-        vector<datablock_i_entry> ReadASingleDatablockITable( types::constitbyte_t& itfrom )
+        vector<datablock_i_entry> ReadASingleDatablockITable( vector<uint8_t>::const_iterator& itfrom )
         {
             vector<datablock_i_entry> table(64u); //We don't know the size in advance
             datablock_i_entry         dataentry;
@@ -1606,7 +1607,7 @@ namespace pmd2
         }
 
         //INCREMENTS THE ITERATOR PASSED BY REFERENCE !!!!
-        vector<uint32_t> ReadASingleDatablockHTable( types::constitbyte_t& itfrom, uint32_t expectednbentries, const vector<uint32_t> & offset2indexconvtable )
+        vector<uint32_t> ReadASingleDatablockHTable( vector<uint8_t>::const_iterator& itfrom, uint32_t expectednbentries, const vector<uint32_t> & offset2indexconvtable )
         {
             vector<uint32_t> DBHTable     (expectednbentries);
             auto             itLastOff    = offset2indexconvtable.begin();
@@ -1925,7 +1926,7 @@ namespace pmd2
     //        ~sir0_sprite_rule(){}
 
     //        //Returns the value from the content type enum to represent what this container contains!
-    //        virtual e_ContentType getContentType()const;
+    //        virtual cnt_t getContentType()const;
 
     //        //Returns an ID number identifying the rule. Its not the index in the storage array,
     //        // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -1935,14 +1936,14 @@ namespace pmd2
 
     //        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
     //        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-    //        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-    //                                      //types::constitbyte_t   itdataend );
+    //        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+    //                                      //vector<uint8_t>::const_iterator   itdataend );
     //        virtual ContentBlock Analyse( const analysis_parameter& parameters );
 
     //        //This method is a quick boolean test to determine quickly if this content handling
     //        // rule matches, without in-depth analysis.
-    //        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-    //                               types::constitbyte_t   itdataend,
+    //        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+    //                               vector<uint8_t>::const_iterator   itdataend,
     //                               const std::string & filext);
 
     //    private:
@@ -1985,7 +1986,7 @@ namespace pmd2
 
     //    //This method is a quick boolean test to determine quickly if this content handling
     //    // rule matches, without in-depth analysis.
-    //    bool sir0_sprite_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend , const std::string & filext )
+    //    bool sir0_sprite_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend , const std::string & filext )
     //    {
     //        //Literally the best check we can do ^^;
     //        unsigned int lengthsofar = 0;
@@ -2004,7 +2005,7 @@ namespace pmd2
     //        }
     //        else if( lengthsofar > sprite_data_header::DATA_LEN )
     //        {
-    //            types::constitbyte_t itsearch = itdatabeg;
+    //            vector<uint8_t>::const_iterator itsearch = itdatabeg;
     //            std::advance( itsearch, sprite_data_header::DATA_LEN );
     //            return std::all_of( itsearch, itdataend, []( uint8_t val ){ return val == pmd2::filetypes::COMMON_PADDING_BYTE; } );
     //        }

@@ -21,7 +21,7 @@ namespace pmd2 { namespace graphics
 // Typedefs 
 //==================================================================
     //typedef array< array<uint8_t,8>, 8>                                   imgmatrix_t;
-    typedef std::pair<types::constitbyte_t, types::constitbyte_t>         similarTableEntry_t;  //Dat long-ass type -_-
+    typedef std::pair<vector<uint8_t>::const_iterator, vector<uint8_t>::const_iterator>         similarTableEntry_t;  //Dat long-ass type -_-
     typedef std::pair<std::vector<uint8_t>, std::vector<RLE_TableEntry> > rleCompressedFrame_t;
 
 //==================================================================

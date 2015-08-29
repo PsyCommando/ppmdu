@@ -1,56 +1,63 @@
 #include "pmd2_filetypes.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <string>
 #include <vector>
 #include <algorithm>
 using std::vector;
 using std::string;
+using namespace filetypes;
 
 
 
 namespace pmd2 { namespace filetypes
 { 
-    using namespace magicnumbers;
 
     struct filext_and_ty
     {
-        e_ContentType type;
-        string        filext;
+        cnt_t   type;
+        string  filext;
     };
 
     //#TODO: actually put this directly in the file format analyser rules !!! To keep everything together!
     static const vector<filext_and_ty> EXT_TO_TYPES =
     {{
-        { e_ContentType::PKDPX_CONTAINER,      PKDPX_FILEX          },
-        { e_ContentType::AT4PX_CONTAINER,      AT4PX_FILEX          },
-        { e_ContentType::AT4PN_CONTAINER,      AT4PN_FILEX          },
-        { e_ContentType::SIR0_CONTAINER,       SIR0_FILEX           },
-        { e_ContentType::SIR0_AT4PX_CONTAINER, SIR0_AT4PX_FILEX     },
-        { e_ContentType::SIR0_PKDPX_CONTAINER, SIR0_PKDPX_FILEX     },
-        { e_ContentType::PACK_CONTAINER,       PACK_FILEX           },
-        { e_ContentType::KAOMADO_CONTAINER,    KAOMADO_FILEX        },
-        { e_ContentType::WAN_SPRITE_CONTAINER, WAN_FILEX            },
-        { e_ContentType::WTE_FILE,             WTE_FILEX            },
-        { e_ContentType::WTU_FILE,             WTU_FILEX            },
-        { e_ContentType::BGP_FILE,             BGP_FILEX            },
-        { e_ContentType::RAW_RGBX32_PAL_FILE,  RGBX32_RAW_PAL_FILEX },
-        { e_ContentType::MONSTER_MD_FILE,      MD_FILEX             },
+        { static_cast<unsigned int>(e_ContentType::PKDPX_CONTAINER),      PKDPX_FILEX          },
+        { static_cast<unsigned int>(e_ContentType::AT4PX_CONTAINER),      AT4PX_FILEX          },
+        { static_cast<unsigned int>(e_ContentType::AT4PN_CONTAINER),      AT4PN_FILEX          },
+        { static_cast<unsigned int>(e_ContentType::SIR0_CONTAINER),       SIR0_FILEX           },
+        { static_cast<unsigned int>(e_ContentType::SIR0_AT4PX_CONTAINER), SIR0_AT4PX_FILEX     },
+        { static_cast<unsigned int>(e_ContentType::SIR0_PKDPX_CONTAINER), SIR0_PKDPX_FILEX     },
+        { static_cast<unsigned int>(e_ContentType::PACK_CONTAINER),       PACK_FILEX           },
+        { static_cast<unsigned int>(e_ContentType::KAOMADO_CONTAINER),    KAOMADO_FILEX        },
+        { static_cast<unsigned int>(e_ContentType::WAN_SPRITE_CONTAINER), WAN_FILEX            },
+        { static_cast<unsigned int>(e_ContentType::WTE_FILE),             WTE_FILEX            },
+        { static_cast<unsigned int>(e_ContentType::WTU_FILE),             WTU_FILEX            },
+        { static_cast<unsigned int>(e_ContentType::BGP_FILE),             BGP_FILEX            },
+        { static_cast<unsigned int>(e_ContentType::RAW_RGBX32_PAL_FILE),  RGBX32_RAW_PAL_FILEX },
+        { static_cast<unsigned int>(e_ContentType::MONSTER_MD_FILE),      MD_FILEX             },
 
         //DSE
-        { e_ContentType::SMDL_FILE,            SMDL_FILEX           },
-        { e_ContentType::SWDL_FILE,            SWDL_FILEX           },
-        { e_ContentType::SEDL_FILE,            SEDL_FILEX           },
+        { static_cast<unsigned int>(e_ContentType::SMDL_FILE),            SMDL_FILEX           },
+        { static_cast<unsigned int>(e_ContentType::SWDL_FILE),            SWDL_FILEX           },
+        { static_cast<unsigned int>(e_ContentType::SEDL_FILE),            SEDL_FILEX           },
     }};
 
 
-    std::vector<e_ContentType> GetFileTypeFromExtension( const std::string & ext )
+    std::vector<cnt_t> GetFileTypeFromExtension( const std::string & ext )
     {
-        vector<e_ContentType> matches;
+        vector<cnt_t> matches;
 
-        for( const auto & entry : EXT_TO_TYPES )
+        //for( const auto & entry : EXT_TO_TYPES )
+        //{
+        //    if( ( ext.compare( entry.filext ) == 0 ) )
+        //        matches.push_back( entry.type );
+        //}
+
+        auto ptrf = ContentIDManager::GetInstance().FindMatchingCnt( ext );
+
+        if( ptrf != nullptr )
         {
-            if( ( ext.compare( entry.filext ) == 0 ) )
-                matches.push_back( entry.type );
+            matches.push_back( ptrf->id() );
         }
 
         return std::move( matches );
@@ -59,13 +66,19 @@ namespace pmd2 { namespace filetypes
     std::string GetAppropriateFileExtension( std::vector<uint8_t>::const_iterator & itdatabeg,
                                              std::vector<uint8_t>::const_iterator & itdataend )
     {
-        auto result = pmd2::filetypes::CContentHandler::GetInstance().AnalyseContent( analysis_parameter(itdatabeg, itdataend) );
+        auto result = CContentHandler::GetInstance().AnalyseContent( analysis_parameter(itdatabeg, itdataend) );
 
-        for( const auto & extentionty : EXT_TO_TYPES )
-        {
-            if( result._type == extentionty.type )
-                return extentionty.filext;
-        }
+        auto ptrf = ContentIDManager::GetInstance().FindMatchingCnt( result._type );
+        if( ptrf != nullptr )
+            return ptrf->name();
+
+        //for( const auto & extentionty : EXT_TO_TYPES )
+        //{
+        //    if( result._type == extentionty.type )
+        //        return extentionty.filext;
+        //}
+
+
         //switch(result._type)
         //{
         //case e_ContentType::PKDPX_CONTAINER:

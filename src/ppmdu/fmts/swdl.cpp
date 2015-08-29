@@ -1,9 +1,11 @@
 #include "swdl.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/library_wide.hpp>
 #include <iostream>
 #include <iomanip>
 using namespace std;
+using namespace filetypes;
 
 namespace DSE
 {
@@ -280,29 +282,29 @@ namespace DSE
         swdl_rule
             Rule for identifying a SMDL file. With the ContentTypeHandler!
     */
-    class swdl_rule : public pmd2::filetypes::IContentHandlingRule
+    class swdl_rule : public filetypes::IContentHandlingRule
     {
     public:
         swdl_rule(){}
         ~swdl_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual pmd2::filetypes::e_ContentType getContentType()const
+        virtual cnt_t getContentType()const
         {
-            return pmd2::filetypes::e_ContentType::SWDL_FILE;
+            return static_cast<unsigned int>(pmd2::filetypes::e_ContentType::SWDL_FILE);
         }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
         //IDs are assigned on registration of the rule by the handler.
-        virtual pmd2::filetypes::cntRID_t getRuleID()const                          { return m_myID; }
-        virtual void                      setRuleID( pmd2::filetypes::cntRID_t id ) { m_myID = id; }
+        virtual cntRID_t getRuleID()const                          { return m_myID; }
+        virtual void                      setRuleID( cntRID_t id ) { m_myID = id; }
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-        //                              types::constitbyte_t   itdataend );
-        virtual pmd2::filetypes::ContentBlock Analyse( const pmd2::filetypes::analysis_parameter & parameters )
+        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+        //                              vector<uint8_t>::const_iterator   itdataend );
+        virtual ContentBlock Analyse( const analysis_parameter & parameters )
         {
             using namespace pmd2::filetypes;
             DSE::SWDL_Header headr;
@@ -322,8 +324,8 @@ namespace DSE
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  pmd2::types::constitbyte_t   itdatabeg, 
-                                pmd2::types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string & filext)
         {
             using namespace pmd2::filetypes;
@@ -331,7 +333,7 @@ namespace DSE
         }
 
     private:
-        pmd2::filetypes::cntRID_t m_myID;
+        cntRID_t m_myID;
     };
 
 //========================================================================================================
@@ -341,4 +343,4 @@ namespace DSE
         swdl_rule_registrator
             A small singleton that has for only task to register the swdl_rule!
     */
-    pmd2::filetypes::RuleRegistrator<swdl_rule> pmd2::filetypes::RuleRegistrator<swdl_rule>::s_instance;
+    RuleRegistrator<swdl_rule> RuleRegistrator<swdl_rule>::s_instance;

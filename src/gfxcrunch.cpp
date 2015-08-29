@@ -1,13 +1,18 @@
 #include "gfxcrunch.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 //#include <ppmdu/pmd2/pmd2_sprites.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <utils/multiple_task_handler.hpp>
 #include <utils/library_wide.hpp>
 #include <ppmdu/fmts/wan.hpp>
 #include <ppmdu/fmts/pack_file.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
+#include <ppmdu/fmts/at4px.hpp>
+#include <ppmdu/fmts/wte.hpp>
+#include <ppmdu/fmts/bgp.hpp>
+#include <ppmdu/fmts/kao.hpp>
 #include <cfenv>
 #include <string>
 #include <algorithm>
@@ -30,8 +35,11 @@
 using namespace ::std;
 using namespace ::pmd2;
 using namespace ::pmd2::graphics;
+using namespace ::pmd2::filetypes;
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
+using namespace ::filetypes;
+
 
 namespace gfx_util
 {
@@ -64,7 +72,7 @@ namespace gfx_util
     */
     bool MatchesPokeSpritePackFileName( const std::string & filename )
     {
-        for( const auto & apack : pmd2::filetypes::PackedPokemonSpritesFiles )
+        for( const auto & apack : PackedPokemonSpritesFiles )
         {
             if( filename.compare( apack.name ) == 0 )
                 return true;
@@ -78,7 +86,7 @@ namespace gfx_util
     */
     bool MatchesCompressedPokeSpritePackFileName( const std::string & filename )
     {
-        for( const auto & apack : pmd2::filetypes::PackedPokemonSpritesFiles )
+        for( const auto & apack : PackedPokemonSpritesFiles )
         {
             if( filename.compare( apack.name ) == 0 && apack.isCompressed )
                 return true;
@@ -98,9 +106,8 @@ namespace gfx_util
 
     /*
     */
-    pmd2::filetypes::CPack UnpackPackFile( const Poco::Path & packfilepath )
+    CPack UnpackPackFile( const Poco::Path & packfilepath )
     {
-        using namespace pmd2::filetypes;
         vector<uint8_t> result = utils::io::ReadFileToByteVector( packfilepath.toString() );
         CPack           mypack;
 
@@ -111,8 +118,8 @@ namespace gfx_util
 
     void ParseASprite( const std::vector<uint8_t> & srcraw, std::unique_ptr<graphics::BaseSprite> & targetptr )
     {
-        filetypes::WAN_Parser parser( srcraw );
-        auto                  sprty = parser.getSpriteType();
+        WAN_Parser parser( srcraw );
+        auto       sprty = parser.getSpriteType();
                 
         if( sprty == graphics::eSpriteImgType::spr4bpp )
         {
@@ -130,17 +137,17 @@ namespace gfx_util
 
     /*
     */
-    void TurnPackContentToSpriteData( pmd2::filetypes::CPack & srcpack, std::vector<std::unique_ptr<graphics::BaseSprite>> & out_table )
+    void TurnPackContentToSpriteData( CPack & srcpack, std::vector<std::unique_ptr<graphics::BaseSprite>> & out_table )
     {
         cout <<"Parsing sprites..\n";
         out_table.resize( srcpack.getNbSubFiles() );
         for( unsigned int i = 0; i < srcpack.getNbSubFiles(); )
         {
             auto & curSubFile = srcpack.getSubFile(i);
-            auto   cnttype    = filetypes::DetermineCntTy( curSubFile.begin(), curSubFile.end() );
+            auto   cnttype    = DetermineCntTy( curSubFile.begin(), curSubFile.end() );
 
             //
-            if( cnttype._type == filetypes::e_ContentType::WAN_SPRITE_CONTAINER )
+            if( cnttype._type == CnTy_WAN )
             {
                 if( utils::LibWide().isLogOn() )
                 {
@@ -151,14 +158,14 @@ namespace gfx_util
                 //Convert directly
                 ParseASprite( curSubFile, out_table[i] );
             }
-            else if( cnttype._type == filetypes::e_ContentType::PKDPX_CONTAINER )
+            else if( cnttype._type == CnTy_PKDPX )
             {
                 //Do decompress before converting!
                 vector<uint8_t> decompbuff;
-                filetypes::DecompressPKDPX( curSubFile.begin(), curSubFile.end(), decompbuff );
+                DecompressPKDPX( curSubFile.begin(), curSubFile.end(), decompbuff );
 
                 //Do a check on the decompressed file
-                if( filetypes::DetermineCntTy( decompbuff.begin(), decompbuff.end() )._type != filetypes::e_ContentType::WAN_SPRITE_CONTAINER )
+                if( DetermineCntTy( decompbuff.begin(), decompbuff.end() )._type != CnTy_WAN )
                     continue; //skip this file if not a wan sprite
 
                 ParseASprite( decompbuff, out_table[i] );
@@ -444,7 +451,7 @@ namespace gfx_util
     int CGfxUtil::UnpackSprite()
     {
         utils::MrChronometer chronounpacker( "Unpacking Sprite" );
-        filetypes::WAN_Parser parser( ReadFileToByteVector( m_inputPath ) );
+        WAN_Parser           parser( ReadFileToByteVector( m_inputPath ) );
         Poco::File           infileinfo(m_inputPath);
         Poco::Path           inputPath(m_inputPath);
         Poco::Path           outpath;
@@ -512,34 +519,34 @@ namespace gfx_util
                                                                                                     false,
                                                                                                     nullptr,
                                                                                                     m_bNoResAutoFix );
-            filetypes::WAN_Writer writer( &sprite );
+            WAN_Writer writer( &sprite );
 
             if( m_compressToPKDPX )
             {
                 vector<uint8_t> result  = writer.write();
                 vector<uint8_t> outdata;
-                filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
-                utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
+                CompressToPKDPX( result.begin(), result.end(), outdata );
+                utils::io::WriteByteVectorToFile( outpath.setExtension(PKDPX_FILEX).toString(), outdata );
             }
             else
-                writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString() );
+                writer.write( outpath.setExtension(WAN_FILEX).toString() );
             
         }
         else if( sprty == graphics::eSpriteImgType::spr8bpp )
         {
             auto sprite = graphics::ImportSpriteFromDirectory<SpriteData<gimg::tiled_image_i8bpp>>( infileinfo.path(), 
                                                                                                     m_ImportByIndex );
-            filetypes::WAN_Writer writer( &sprite );
+            WAN_Writer writer( &sprite );
 
             if( m_compressToPKDPX )
             {
                 vector<uint8_t> result  = writer.write();
                 vector<uint8_t> outdata;
-                filetypes::CompressToPKDPX( result.begin(), result.end(), outdata );
-                utils::io::WriteByteVectorToFile( outpath.setExtension(filetypes::PKDPX_FILEX).toString(), outdata );
+                CompressToPKDPX( result.begin(), result.end(), outdata );
+                utils::io::WriteByteVectorToFile( outpath.setExtension(PKDPX_FILEX).toString(), outdata );
             }
             else
-                writer.write( outpath.setExtension(filetypes::WAN_FILEX).toString() );
+                writer.write( outpath.setExtension(WAN_FILEX).toString() );
         }
 
 
@@ -628,7 +635,7 @@ namespace gfx_util
                     stringstream sstr;
                     sstr << inputPath.getBaseName()
                          <<"_" <<setw(4) <<setfill('0') <<i <<"." 
-                         << filetypes::GetAppropriateFileExtension( cursubf.begin(), cursubf.end() );                   
+                         << GetAppropriateFileExtension( cursubf.begin(), cursubf.end() );                   
 
                     taskmanager.AddTask( 
                         multitask::pktask_t( 
@@ -707,11 +714,11 @@ namespace gfx_util
                                                                                                     false,
                                                                                                     nullptr,
                                                                                                     bNoResAutoFix );
-            filetypes::WAN_Writer writer( &sprite );
+            WAN_Writer writer( &sprite );
             if( bShouldCompress )
             {
                 auto filedata = writer.write();
-                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw, compression::ePXCompLevel::LEVEL_3, true );
+                CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw, ::compression::ePXCompLevel::LEVEL_3, true );
             }
             else
                 out_sprRaw = writer.write();
@@ -724,11 +731,11 @@ namespace gfx_util
                                                                                                     false,
                                                                                                     nullptr,
                                                                                                     bNoResAutoFix );
-            filetypes::WAN_Writer writer( &sprite );
+            WAN_Writer writer( &sprite );
             if( bShouldCompress )
             {
                 auto filedata = writer.write();
-                filetypes::CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw );
+                CompressToPKDPX( filedata.begin(), filedata.end(), out_sprRaw );
             }
             else
                 out_sprRaw = writer.write();
@@ -743,7 +750,7 @@ namespace gfx_util
         Poco::Path                   outpath;
         Poco::DirectoryIterator      itDirCount( infileinfo );
         Poco::DirectoryIterator      itDirEnd;
-        filetypes::CPack             mypack;
+        CPack                        mypack;
         vector<Poco::File>           validDirs;
         future<void>                 updtProgress;
         atomic<bool>                 shouldUpdtProgress = true;
@@ -851,7 +858,7 @@ namespace gfx_util
 
         //If we don't have an output path, use the input path's parent, and create a file with the same name as the folder!
         if( m_outputPath.empty() )
-            m_outputPath = Poco::Path(inpath).makeFile().setExtension(filetypes::PACK_FILEX).toString();
+            m_outputPath = Poco::Path(inpath).makeFile().setExtension(PACK_FILEX).toString();
 
         outpath = m_outputPath;
 
@@ -888,12 +895,12 @@ namespace gfx_util
 
         //Decompress
         vector<uint8_t> decompBuf; 
-        filetypes::DecompressPKDPX( rawCompFile.begin(), rawCompFile.end(), decompBuf );
+        DecompressPKDPX( rawCompFile.begin(), rawCompFile.end(), decompBuf );
 
         //Analyse content
-        auto result = filetypes::DetermineCntTy( decompBuf.begin(), decompBuf.end() );
+        auto result = DetermineCntTy( decompBuf.begin(), decompBuf.end() );
 
-        if( result._type != filetypes::e_ContentType::WAN_SPRITE_CONTAINER )
+        if( result._type != CnTy_WAN )
             throw runtime_error("ERROR: the compressed file doesn't contain a WAN sprite!");
 
         //Then handle the sprite!
@@ -1005,7 +1012,6 @@ namespace gfx_util
 
     bool CGfxUtil::DetermineOperationMode()
     {
-        using namespace pmd2::filetypes;
         Poco::File theinput( m_inputPath );
         Poco::Path inputPath(m_inputPath);
 
@@ -1019,28 +1025,28 @@ namespace gfx_util
             vector<uint8_t> tmp    = utils::io::ReadFileToByteVector(theinput.path());
             auto            result = DetermineCntTy(tmp.begin(), tmp.end(), inputPath.getExtension());
 
-            if( result._type == e_ContentType::WAN_SPRITE_CONTAINER )
+            if( result._type == CnTy_WAN )
             {
                 m_execMode = eExecMode::UNPACK_WAN_Mode;
             }
-            else if( result._type == e_ContentType::PACK_CONTAINER )
+            else if( result._type == CnTy_PackFile )
             {
                 m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
             }
-            else if( result._type == e_ContentType::AT4PX_CONTAINER )
+            else if( result._type == CnTy_AT4PX )
             {
                 throw exception("AT4PX compressed files not supported at this time!");
                 //m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
             }
-            else if( result._type == e_ContentType::PKDPX_CONTAINER )
+            else if( result._type == CnTy_PKDPX )
             {
                 m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
             }
-            else if( result._type == e_ContentType::BGP_FILE )
+            else if( result._type == CnTy_BGP )
             {
                 m_execMode = eExecMode::EXPORT_BGP_Mode;
             }
-            else if( result._type == e_ContentType::WTE_FILE )
+            else if( result._type == CnTy_WTE )
             {
                 m_execMode = eExecMode::EXPORT_WTE_Mode;
             }
@@ -1155,61 +1161,50 @@ namespace gfx_util
 
     bool CGfxUtil::ParseOptionForceInputFormat( const std::vector<std::string> & optdata )
     {
-        using filetypes::e_ContentType;
 
         if( optdata.size() == 2 )
         {
-            auto          result = filetypes::GetFileTypeFromExtension( optdata.back() );
-            e_ContentType type   = result.front();
+            auto result = GetFileTypeFromExtension( optdata.back() );
+            auto type   = result.front();
 
             cout << "<*>-Forcing input as ";
 
-            switch( type )
+            if( type == CnTy_WAN )
             {
-                case e_ContentType::WAN_SPRITE_CONTAINER:
-                {
-                    m_execMode = eExecMode::UNPACK_WAN_Mode;
-                    cout <<"WAN sprite";
-                    break;
-                }
-                case e_ContentType::KAOMADO_CONTAINER:
-                {
-                    m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
-                    cout <<"kaomado.kao file";
-                    break;
-                }
-                case e_ContentType::PACK_CONTAINER:
-                {
-                    m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
-                    cout <<"pokemon sprites containing pack file";
-                    break;
-                }
-                case e_ContentType::WTE_FILE:
-                {
-                    m_execMode = eExecMode::EXPORT_WTE_Mode;
-                    cout <<"WTE file";
-                    break;
-                }
-                case e_ContentType::BGP_FILE:
-                {
-                    m_execMode = eExecMode::EXPORT_BGP_Mode;
-                    cout <<"BGP file";
-                    break;
-                }
-                case e_ContentType::AT4PX_CONTAINER:
-                case e_ContentType::PKDPX_CONTAINER:
-                {
-                    //Ambiguous !!!!
-                    m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
-                    cout <<"AT4PX/PKDPX file";
-                    break;
-                }
-                default:
-                {
-                    cout <<"INVALID!\n";
-                    return false;
-                }
-            };
+                m_execMode = eExecMode::UNPACK_WAN_Mode;
+                cout <<"WAN sprite";
+            }
+            else if( type == CnTy_Kaomado )
+            {
+                m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
+                cout <<"kaomado.kao file";
+            }
+            else if( type == CnTy_PackFile )
+            {
+                m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
+                cout <<"pokemon sprites containing pack file";
+            }
+            else if( type == CnTy_WTE )
+            {
+                m_execMode = eExecMode::EXPORT_WTE_Mode;
+                cout <<"WTE file";
+            }
+            else if( type == CnTy_BGP )
+            {
+                m_execMode = eExecMode::EXPORT_BGP_Mode;
+                cout <<"BGP file";
+            }
+            else if( type == CnTy_AT4PX || type == CnTy_PKDPX )
+            {
+                //Ambiguous !!!!
+                m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
+                cout <<"AT4PX/PKDPX file";
+            }
+            else
+            {
+                cout <<"INVALID!\n";
+                return false;
+            }
             cout <<"!\n";
             return true;
         }
@@ -1308,6 +1303,7 @@ namespace gfx_util
             if( ! m_bQuiet )
                 cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
+            //#FIXME: Isn't this handled automatically already ?
             if( m_bRedirectClog )
                 m_redirectClog.Redirect( inpath.getBaseName() + ".log" );
 

@@ -17,10 +17,12 @@
 #include <utils/gbyteutils.hpp>
 using namespace std;
 using namespace gimg;
+using namespace pmd2;
+using namespace pmd2::filetypes;
 
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
-
+    const ContentTy CnTy_Kaomado {"kao"};
 //========================================================================================================
 //  Typedefs
 //========================================================================================================
@@ -139,7 +141,7 @@ namespace pmd2 { namespace filetypes
 
     }
 
-    types::constitbyte_t KaoParser::ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, types::constitbyte_t itrawtocentry )
+    vector<uint8_t>::const_iterator KaoParser::ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, vector<uint8_t>::const_iterator itrawtocentry )
     {
         //Make aliases
         typedef CKaomado::data_t data_t;
@@ -169,7 +171,7 @@ namespace pmd2 { namespace filetypes
                 graphics::ReadRawPalette_RGB24_As_RGB24( itentryread, itpalend, tmpPortrait.getPalette() );
 
                 //B. Read the image
-                filetypes::DecompressAT4PX( itpalend, itentryend, m_imgBuffer );
+                DecompressAT4PX( itpalend, itentryend, m_imgBuffer );
 
                 //C. Parse the image. 
                 // Image pixels seems to be in little endian, and need to be converted to big endian
@@ -188,7 +190,7 @@ namespace pmd2 { namespace filetypes
         return itrawtocentry;
     }
 
-    uint32_t KaoParser::GetLenRawPortraitData( types::constitbyte_t itdatabeg, tocsubentry_t entryoffset )
+    uint32_t KaoParser::GetLenRawPortraitData( vector<uint8_t>::const_iterator itdatabeg, tocsubentry_t entryoffset )
     {
         //Skip palette, and read at4px header
         at4px_header head;
@@ -652,4 +654,4 @@ namespace pmd2 { namespace filetypes
         return m_imgdata.size() - 1;
     }
 
-};};
+};

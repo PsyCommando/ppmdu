@@ -29,7 +29,9 @@ using namespace std;
 using namespace pmd2;
 using namespace utils;
 
-using filetypes::CKaomado;
+using namespace ::filetypes;
+using namespace pmd2::filetypes;
+//using pmd2::filetypes::CKaomado;
 
 namespace pkao_util
 {
@@ -75,7 +77,7 @@ namespace pkao_util
         { 
             OPTION_SET_TOTAL_NB_ENTRIES_KAO_TOC,
             1,
-            "Force the ToC to this size.(Def = " + to_string( filetypes::DEF_KAO_TOC_NB_ENTRIES ) + ")",
+            "Force the ToC to this size.(Def = " + to_string( DEF_KAO_TOC_NB_ENTRIES ) + ")",
         }, 
         //Will output the images as a raw 4bpp tiled image, preceeded by a RGB24 palette!
         { 
@@ -383,7 +385,7 @@ namespace pkao_util
             if( isPacking )
             {
                 //Output path is file!
-                return Poco::Path(parameters.inputpath).makeFile().setExtension(filetypes::KAOMADO_FILEX);  //Turn into a filename, set the extension
+                return Poco::Path(parameters.inputpath).makeFile().setExtension(KAOMADO_FILEX);  //Turn into a filename, set the extension
             }
             else
             {
@@ -424,7 +426,7 @@ namespace pkao_util
                     << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            filetypes::KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
             //kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
 
             //Then depending on what the user gave us, we convert and output the kaomado data
@@ -439,7 +441,7 @@ namespace pkao_util
             else
                 outputTy = eSUPPORT_IMG_IO::PNG;
 
-            filetypes::KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet );
+            KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet );
             mywriter( kao, outpath.toString(), outputTy );
 
             if( !parameters.bisQuiet )
@@ -479,7 +481,7 @@ namespace pkao_util
                      << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            filetypes::KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
 
             //kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
             //types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
@@ -487,7 +489,7 @@ namespace pkao_util
             if( !parameters.bisQuiet )
                 cout<<"Writing to file..\n";
 
-            filetypes::KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet );
+            KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet );
             mywriter( kao, outpath.toString() );
 
             //WriteByteVectorToFile( outpath.toString(), filedata );
@@ -526,7 +528,7 @@ int main( int argc, const char * argv[] )
         string(),                           //outputpath; 
         vector<string>(),                   //pokenames;
         vector<string>(),                   //facenames;
-        filetypes::DEF_KAO_TOC_NB_ENTRIES,  //totalnbkaoentries;
+        DEF_KAO_TOC_NB_ENTRIES,  //totalnbkaoentries;
         false,                              //bshouldWriteRawImg;
         false,                              //bisQuiet
         true,                               //bIsZealous

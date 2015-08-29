@@ -25,12 +25,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_statsutil", "vcproject
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_audioutil", "vcprojects\ppmd_audioutil.vcxproj", "{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd3_utillib", "vcprojects\ppmd3_utillib\ppmd3_utillib.vcxproj", "{75222531-F81B-4EF7-B60C-CABFF268D8FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Debug|x64 = Debug|x64
 		Release WinXP|Win32 = Release WinXP|Win32
 		Release WinXP|x64 = Release WinXP|x64
+		Release_DLL|Win32 = Release_DLL|Win32
+		Release_DLL|x64 = Release_DLL|x64
 		Release|Win32 = Release|Win32
 		Release|x64 = Release|x64
 	EndGlobalSection
@@ -43,6 +47,9 @@ Global
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release WinXP|x64.ActiveCfg = Release WinXP|x64
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release WinXP|x64.Build.0 = Release WinXP|x64
+		{C7642210-DD89-423B-B267-6022A96A2C42}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{C7642210-DD89-423B-B267-6022A96A2C42}.Release_DLL|x64.ActiveCfg = Release|x64
+		{C7642210-DD89-423B-B267-6022A96A2C42}.Release_DLL|x64.Build.0 = Release|x64
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release|Win32.ActiveCfg = Release|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release|Win32.Build.0 = Release|Win32
 		{C7642210-DD89-423B-B267-6022A96A2C42}.Release|x64.ActiveCfg = Release|x64
@@ -55,6 +62,9 @@ Global
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release WinXP|x64.ActiveCfg = Release WinXP|x64
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release WinXP|x64.Build.0 = Release WinXP|x64
+		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release_DLL|x64.ActiveCfg = Release|x64
+		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release_DLL|x64.Build.0 = Release|x64
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release|Win32.ActiveCfg = Release|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release|Win32.Build.0 = Release|Win32
 		{67F6DAA9-9544-4279-A417-09AEF1604226}.Release|x64.ActiveCfg = Release|x64
@@ -67,6 +77,9 @@ Global
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release WinXP|x64.ActiveCfg = Release WinXP|x64
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release WinXP|x64.Build.0 = Release WinXP|x64
+		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release_DLL|x64.ActiveCfg = Release|x64
+		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release_DLL|x64.Build.0 = Release|x64
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release|Win32.ActiveCfg = Release|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release|Win32.Build.0 = Release|Win32
 		{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}.Release|x64.ActiveCfg = Release|x64
@@ -79,6 +92,9 @@ Global
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release WinXP|x64.ActiveCfg = Release WinXP|x64
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release WinXP|x64.Build.0 = Release WinXP|x64
+		{1088591B-EDBA-4713-926C-C8210D859C47}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{1088591B-EDBA-4713-926C-C8210D859C47}.Release_DLL|x64.ActiveCfg = Release|x64
+		{1088591B-EDBA-4713-926C-C8210D859C47}.Release_DLL|x64.Build.0 = Release|x64
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release|Win32.ActiveCfg = Release|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release|Win32.Build.0 = Release|Win32
 		{1088591B-EDBA-4713-926C-C8210D859C47}.Release|x64.ActiveCfg = Release|x64
@@ -91,6 +107,9 @@ Global
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release WinXP|x64.ActiveCfg = Release WinXP|x64
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release WinXP|x64.Build.0 = Release WinXP|x64
+		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release_DLL|x64.ActiveCfg = Release|x64
+		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release_DLL|x64.Build.0 = Release|x64
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release|Win32.ActiveCfg = Release|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release|Win32.Build.0 = Release|Win32
 		{2AD9B0C6-B476-4690-92DE-40C3B7883B35}.Release|x64.ActiveCfg = Release|x64
@@ -101,6 +120,8 @@ Global
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release WinXP|Win32.ActiveCfg = Release WinXP|Win32
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release WinXP|Win32.Build.0 = Release WinXP|Win32
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release WinXP|x64.ActiveCfg = Release|Win32
+		{92404EF0-4D5B-4935-B214-25675E244782}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{92404EF0-4D5B-4935-B214-25675E244782}.Release_DLL|x64.ActiveCfg = Release|Win32
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release|Win32.ActiveCfg = Release|Win32
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release|Win32.Build.0 = Release|Win32
 		{92404EF0-4D5B-4935-B214-25675E244782}.Release|x64.ActiveCfg = Release|Win32
@@ -110,6 +131,8 @@ Global
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release WinXP|Win32.ActiveCfg = Release|Win32
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release WinXP|Win32.Build.0 = Release|Win32
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release WinXP|x64.ActiveCfg = Release|Win32
+		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release_DLL|x64.ActiveCfg = Release|Win32
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release|Win32.ActiveCfg = Release|Win32
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release|Win32.Build.0 = Release|Win32
 		{97D570C3-CCC6-44D3-B16C-66B4A13E6547}.Release|x64.ActiveCfg = Release|Win32
@@ -119,9 +142,23 @@ Global
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release WinXP|Win32.ActiveCfg = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release WinXP|Win32.Build.0 = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release WinXP|x64.ActiveCfg = Release|Win32
+		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release_DLL|Win32.ActiveCfg = Release|Win32
+		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release_DLL|x64.ActiveCfg = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.ActiveCfg = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.Build.0 = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|x64.ActiveCfg = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|Win32.Build.0 = Debug|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|x64.ActiveCfg = Debug|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.ActiveCfg = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.Build.0 = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|x64.ActiveCfg = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|Win32.ActiveCfg = Release_DLL|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|Win32.Build.0 = Release_DLL|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|x64.ActiveCfg = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|Win32.ActiveCfg = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|Win32.Build.0 = Release|Win32
+		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

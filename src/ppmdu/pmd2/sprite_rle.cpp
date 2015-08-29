@@ -88,7 +88,7 @@ namespace pmd2 { namespace compression
     {
     }
 
-    uint32_t rle_decoder::operator()( types::constitbyte_t itbeg, types::constitbyte_t itfrmin )
+    uint32_t rle_decoder::operator()( vector<uint8_t>::const_iterator itbeg, vector<uint8_t>::const_iterator itfrmin )
     {
         if( m_pOutput == nullptr )
         {

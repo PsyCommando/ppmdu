@@ -1,10 +1,9 @@
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 using namespace std;
-using namespace pmd2::filetypes;
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
 
 //========================================================================================================
@@ -21,7 +20,7 @@ namespace pmd2 { namespace filetypes
         ~rgbx32_raw_pal_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const { return e_ContentType::RAW_RGBX32_PAL_FILE; }
+        virtual cnt_t getContentType()const { return CntTy_RawRGBX32; }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -45,8 +44,8 @@ namespace pmd2 { namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext )
         {
             try
@@ -54,7 +53,7 @@ namespace pmd2 { namespace filetypes
                 while( itdatabeg != itdataend )
                 {
                     uint32_t acolor = utils::ReadIntFromByteVector<uint32_t>( itdatabeg, false );
-                    if( (acolor & graphics::RGBX_UNUSED_BYTE_VALUE) == 0 )
+                    if( (acolor & pmd2::graphics::RGBX_UNUSED_BYTE_VALUE) == 0 )
                         return false;
                 }
             }
@@ -79,4 +78,4 @@ namespace pmd2 { namespace filetypes
     */
     RuleRegistrator<rgbx32_raw_pal_rule> RuleRegistrator<rgbx32_raw_pal_rule>::s_instance;
 
-};};
+};

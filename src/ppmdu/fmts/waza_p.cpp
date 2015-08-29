@@ -11,6 +11,8 @@
 #include <iomanip>
 using namespace std;
 using namespace pmd2::stats;
+using utils::AppendPaddingBytes;
+using namespace filetypes;
 
 namespace pmd2 { namespace filetypes 
 {
@@ -336,14 +338,14 @@ namespace pmd2 { namespace filetypes
             m_itWrite = back_inserter(m_outBuff);
 
             WritePkmnMoveLists();
-            AppendPaddingBytes<COMMON_PADDING_BYTE>( m_itWrite, m_outBuff.size(), 16 );
+            AppendPaddingBytes( m_itWrite, m_outBuff.size(), 16, COMMON_PADDING_BYTE );
             WriteMoveList();
-            AppendPaddingBytes<COMMON_PADDING_BYTE>( m_itWrite, m_outBuff.size(), 16 );
+            AppendPaddingBytes( m_itWrite, m_outBuff.size(), 16, COMMON_PADDING_BYTE );
             WritePtrTable();
-            AppendPaddingBytes<COMMON_PADDING_BYTE>( m_itWrite, m_outBuff.size(), 16 );
+            AppendPaddingBytes( m_itWrite, m_outBuff.size(), 16, COMMON_PADDING_BYTE );
             uint32_t offsetWazaPtrs = m_outBuff.size();
             WriteWazaPtrs();
-            AppendPaddingBytes<COMMON_PADDING_BYTE>( m_itWrite, m_outBuff.size(), 16 );
+            AppendPaddingBytes( m_itWrite, m_outBuff.size(), 16, COMMON_PADDING_BYTE );
 
             //Append SIR0 ptr offset list
             auto sir0dat = MakeSIR0ForData( m_ptrofflist, (offsetWazaPtrs - sir0_header::HEADER_LEN), (m_outBuff.size() - sir0_header::HEADER_LEN) );
@@ -351,7 +353,7 @@ namespace pmd2 { namespace filetypes
                 WriteValue(offset);
 
             //Add EoF padding
-            AppendPaddingBytes<COMMON_PADDING_BYTE>( m_itWrite, m_outBuff.size(), 16 );
+            AppendPaddingBytes( m_itWrite, m_outBuff.size(), 16, COMMON_PADDING_BYTE );
             
             //Write SIR0 header in the reserved slot
             sir0dat.hdr.WriteToContainer( m_outBuff.begin() );

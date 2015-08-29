@@ -118,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
+    <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils</Filter>
@@ -133,7 +134,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -271,6 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp" />
+    <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\dse\dse_containers.cpp" />
     <ClCompile Include="..\src\ext_fmts\adpcm.cpp" />
     <ClCompile Include="..\src\ext_fmts\midi_io.cpp" />
@@ -280,7 +282,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>

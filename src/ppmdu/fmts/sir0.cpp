@@ -8,17 +8,22 @@ Description:
 No crappyrights. All wrongs reversed ! 
 */
 #include <ppmdu/fmts/sir0.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
+#include <utils/gbyteutils.hpp>
+#include <utils/handymath.hpp>
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <array>
 using namespace std;
+using namespace utils;
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
     static const uint8_t SIR0_EncodedOffsetsHeader = 0x04u;
+    const ContentTy      CnTy_SIR0 {"sir0"}; 
 //========================================================================================================
 // sir0_header
 //========================================================================================================
@@ -59,7 +64,7 @@ namespace pmd2 { namespace filetypes
                                         uint32_t                     offsetsubheader,
                                         uint32_t                     offsetendofdata )
     {
-        sir0_header hdr( magicnumbers::SIR0_MAGIC_NUMBER_INT, 
+        sir0_header hdr( MagicNumber_SIR0, 
                          offsetsubheader + sir0_header::HEADER_LEN,
                          offsetendofdata + sir0_header::HEADER_LEN );
 
@@ -97,7 +102,7 @@ namespace pmd2 { namespace filetypes
             SIR0_EncodedOffsetsHeader,
             0, //We have to put the zero here manually, since we're entirely skipping encoding!
         };
-        sir0_header hdr( magicnumbers::SIR0_MAGIC_NUMBER_INT, 
+        sir0_header hdr( MagicNumber_SIR0, 
                          offsetsubheader + sir0_header::HEADER_LEN,
                          offsetendofdata + sir0_header::HEADER_LEN );
         return sir0_head_and_list{ hdr, MinimalEncPtrOffsets };
@@ -182,7 +187,9 @@ namespace pmd2 { namespace filetypes
         return std::move(decodedptroffsets);
     }
 
-    vector<uint8_t> MakeSIR0Wrap( const vector<uint8_t> & data, const sir0_head_and_list & sir0data )
+    vector<uint8_t> MakeSIR0Wrap( const vector<uint8_t>    & data, 
+                                  const sir0_head_and_list & sir0data, 
+                                  uint8_t                    padchar  )
     {
         vector<uint8_t> wrap;
         auto            itbackins = back_inserter(wrap);
@@ -194,18 +201,18 @@ namespace pmd2 { namespace filetypes
         wrap.insert( wrap.end(), data.begin(), data.end() );
 
         //Add padding before the ptr offset list
-        AppendPaddingBytes<COMMON_PADDING_BYTE>( itbackins, wrap.size(), 16 );
+        AppendPaddingBytes( itbackins, wrap.size(), 16, padchar );
 
         //Write ptr offset list
         wrap.insert( wrap.end(), sir0data.ptroffsetslst.begin(), sir0data.ptroffsetslst.end() );
 
         //Add end of file padding
-        AppendPaddingBytes<COMMON_PADDING_BYTE>( itbackins, wrap.size(), 16 );
+        AppendPaddingBytes( itbackins, wrap.size(), 16, padchar );
 
         return std::move(wrap);
     }
 
-    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data )
+    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar )
     {
         //Calculate padding first, to ensure the end offset is valid
         uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
@@ -214,22 +221,22 @@ namespace pmd2 { namespace filetypes
         sir0_head_and_list sir0data = MakeSIR0ForData( 0, data.size() + lenpadding );
 
         //Call the function handling everything else
-        return MakeSIR0Wrap( data, sir0data );
+        return MakeSIR0Wrap( data, sir0data, padchar );
     }
 
-    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data, 
-                                  uint32_t                      offsetsubheader, 
-                                  const std::vector<uint32_t> & ptroffsetlst )
-    {
-        //Calculate padding first, to ensure the end offset is valid
-        uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
+    //vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data, 
+    //                              uint32_t                      offsetsubheader, 
+    //                              const std::vector<uint32_t> & ptroffsetlst )
+    //{
+    //    //Calculate padding first, to ensure the end offset is valid
+    //    uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
 
-        //Make the SIR0 data
-        sir0_head_and_list sir0data = MakeSIR0ForData( ptroffsetlst, offsetsubheader, data.size() + lenpadding );
+    //    //Make the SIR0 data
+    //    sir0_head_and_list sir0data = MakeSIR0ForData( ptroffsetlst, offsetsubheader, data.size() + lenpadding );
 
-        //Call the function handling everything else
-        return MakeSIR0Wrap( data, sir0data );
-    }
+    //    //Call the function handling everything else
+    //    return MakeSIR0Wrap( data, sir0data );
+    //}
 
 
 
@@ -326,7 +333,7 @@ namespace pmd2 { namespace filetypes
         ~sir0_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const;
+        virtual cnt_t getContentType()const;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -336,14 +343,14 @@ namespace pmd2 { namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-        //                              types::constitbyte_t   itdataend );
+        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+        //                              vector<uint8_t>::const_iterator   itdataend );
         virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters );
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext);
 
     private:
@@ -352,9 +359,9 @@ namespace pmd2 { namespace filetypes
 
 
     //Returns the value from the content type enum to represent what this container contains!
-    e_ContentType sir0_rule::getContentType()const
+    cnt_t sir0_rule::getContentType()const
     {
-        return e_ContentType::SIR0_CONTAINER;
+        return CnTy_SIR0;
     }
 
     //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -375,8 +382,6 @@ namespace pmd2 { namespace filetypes
     {
         sir0_header headr;
         ContentBlock cb;
-
-        //#FIXME: we should do something about other formats that have an SIR0 header ! So they don't get SIR0-ed !
 
         //Read the header
         headr.ReadFromContainer( parameters._itdatabeg );
@@ -399,7 +404,7 @@ namespace pmd2 { namespace filetypes
         //cb._hierarchy.push_back( subcontent );
 
         
-        if( subcontent._type == e_ContentType::UNKNOWN_CONTENT )
+        if( subcontent._type == CnTy_Invalid )
         {
             return cb; //If we didn't find a valid derivative, just return the standard SIR0 type!
         }
@@ -409,10 +414,9 @@ namespace pmd2 { namespace filetypes
 
     //This method is a quick boolean test to determine quickly if this content handling
     // rule matches, without in-depth analysis.
-    bool sir0_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend, const std::string & filext )
+    bool sir0_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        using namespace magicnumbers;
-        return std::equal( SIR0_MAGIC_NUMBER.begin(), SIR0_MAGIC_NUMBER.end(), itdatabeg );
+        return ReadIntFromByteVector<uint32_t>(itdatabeg,false) == MagicNumber_SIR0;
     }
 
 //========================================================================================================
@@ -420,4 +424,4 @@ namespace pmd2 { namespace filetypes
 //========================================================================================================
     RuleRegistrator<sir0_rule> RuleRegistrator<sir0_rule>::s_instance;
 
-};};
+};

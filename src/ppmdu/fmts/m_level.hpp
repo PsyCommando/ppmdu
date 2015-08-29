@@ -15,7 +15,7 @@ All wrongs reversed, no crappyrights :P
 #include <string>
 #include <cstdint>
 
-namespace pmd2{ namespace filetypes 
+namespace filetypes 
 {
 
 //=====================================================================================
@@ -31,15 +31,15 @@ namespace pmd2{ namespace filetypes
 //=====================================================================================
     /*
     */
-    std::vector<stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string                   & inpath, 
-                                                                std::vector<stats::PokeStatsGrowth> & out_pkmdat );
-    std::vector<stats::PokeStatsGrowth>   ParseLevelGrowthData( const std::string                   & inpath );
+    std::vector<pmd2::stats::PokeStatsGrowth> & ParseLevelGrowthData( const std::string                   & inpath, 
+                                                                std::vector<pmd2::stats::PokeStatsGrowth> & out_pkmdat );
+    std::vector<pmd2::stats::PokeStatsGrowth>   ParseLevelGrowthData( const std::string                   & inpath );
 
     /*
     */
-    void WriteLevelGrowthData( const std::vector<stats::PokeStatsGrowth> & pkmdat, 
+    void WriteLevelGrowthData( const std::vector<pmd2::stats::PokeStatsGrowth> & pkmdat, 
                                const std::string                         & outpath );
 
-};};
+};
 
 #endif

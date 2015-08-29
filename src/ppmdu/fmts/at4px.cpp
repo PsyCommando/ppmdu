@@ -3,19 +3,22 @@
 #include <ppmdu/fmts/px_compression.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <exception>
 #include <algorithm>
 #include <cassert>
 #include <array>
 using namespace std;
-using pmd2::compression::px_info_header;
+using namespace filetypes;
+using compression::px_info_header;
 using pmd2::graphics::rgb15_parser;
-using pmd2::compression::ePXCompLevel;
+using compression::ePXCompLevel;
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
-
+    const ContentTy CnTy_AT4PX      {"at4px"};
+    const ContentTy CnTy_SIR0_AT4PX {"sir0at4px"};
 
 //==================================================================
 // Utility:
@@ -35,7 +38,7 @@ namespace pmd2{ namespace filetypes
     {
         at4px_header myhead;
 
-        myhead.magicn       = filetypes::magicnumbers::AT4PX_MAGIC_NUMBER;
+        myhead.magicn       = MagicNumber_AT4PX;
         myhead.compressedsz = pxinf.compressedsz + at4px_header::HEADER_SZ; //Add the header's length
         myhead.flaglist     = pxinf.controlflags;
         myhead.decompsz     = pxinf.decompressedsz;
@@ -93,15 +96,15 @@ namespace pmd2{ namespace filetypes
 //  at4px_decompress
 //========================================================================================================
 
-    at4px_decompress::at4px_decompress( types::bytevec_t & out_decompimg )
+    at4px_decompress::at4px_decompress( vector<uint8_t> & out_decompimg )
         :m_outvec(&out_decompimg)
     {}
 
-    at4px_decompress::at4px_decompress(  vector<types::bytevec_t>::iterator & out_itdecompimg )
+    at4px_decompress::at4px_decompress(  vector<vector<uint8_t>>::iterator & out_itdecompimg )
         :m_outvec(nullptr),m_itOutContainers(out_itdecompimg)
     {}
 
-    void at4px_decompress::operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend, bool blogenabled )
+    void at4px_decompress::operator()( vector<uint8_t>::const_iterator itindatabeg, vector<uint8_t>::const_iterator itindataend, bool blogenabled )
     {
         m_itInCur = itindatabeg; 
         m_itInEnd = itindataend;
@@ -168,7 +171,7 @@ namespace pmd2{ namespace filetypes
     //{}
 
 
-    //void at4px_compress::operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend)
+    //void at4px_compress::operator()( vector<uint8_t>::const_iterator itindatabeg, vector<uint8_t>::const_iterator itindataend)
     //{
     //    assert(false);
     //    if(m_outvec == nullptr)
@@ -317,7 +320,7 @@ namespace pmd2{ namespace filetypes
         std::vector<uint8_t> buff(hdr.decompsz);
 
         //2 - decompress
-        compression::DecompressPX( pxinf, itinputbeg, itinputend, buff, blogenable );
+        DecompressPX( pxinf, itinputbeg, itinputend, buff, blogenable );
 
         //3 - copy buffer
         std::copy( buff.begin(), buff.end(), itoutwhere );
@@ -402,7 +405,7 @@ namespace pmd2{ namespace filetypes
     //{}
 
     ////Read the palette, and decompress the at4px right after.
-    //void palette_and_at4px_decompress::operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend, bool benablelog )
+    //void palette_and_at4px_decompress::operator()( vector<uint8_t>::const_iterator itindatabeg, vector<uint8_t>::const_iterator itindataend, bool benablelog )
     //{
     //    m_itInCur = itindatabeg; 
     //    m_itInEnd = itindataend;
@@ -431,7 +434,7 @@ namespace pmd2{ namespace filetypes
     //}
 
     ////Read the palette, and decompress the at4px right after.
-    //void palette_and_at4px_decompress_struct::operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend )
+    //void palette_and_at4px_decompress_struct::operator()( vector<uint8_t>::const_iterator itindatabeg, vector<uint8_t>::const_iterator itindataend )
     //{
     //    m_itInCur = itindatabeg; 
     //    m_itInEnd = itindataend;
@@ -470,7 +473,7 @@ namespace pmd2{ namespace filetypes
         ~at4px_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const;
+        virtual cnt_t getContentType()const;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -480,14 +483,14 @@ namespace pmd2{ namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
-        //                              types::constitbyte_t   itdataend );
-        virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters );
+        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+        //                              vector<uint8_t>::const_iterator   itdataend );
+        virtual ContentBlock Analyse( const analysis_parameter & parameters );
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string & filext);
 
     private:
@@ -496,9 +499,9 @@ namespace pmd2{ namespace filetypes
 
 
     //Returns the value from the content type enum to represent what this container contains!
-    e_ContentType at4px_rule::getContentType()const
+    cnt_t at4px_rule::getContentType()const
     {
-        return e_ContentType::AT4PX_CONTAINER;
+        return CnTy_AT4PX;
     }
 
     //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -515,8 +518,8 @@ namespace pmd2{ namespace filetypes
 
     //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
     //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-    //ContentBlock at4px_rule::Analyse( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend )
-    ContentBlock at4px_rule::Analyse( const filetypes::analysis_parameter & parameters )
+    //ContentBlock at4px_rule::Analyse( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend )
+    ContentBlock at4px_rule::Analyse( const analysis_parameter & parameters )
     {
         at4px_header headr;
         ContentBlock cb;
@@ -538,10 +541,9 @@ namespace pmd2{ namespace filetypes
 
     //This method is a quick boolean test to determine quickly if this content handling
     // rule matches, without in-depth analysis.
-    bool at4px_rule::isMatch(  types::constitbyte_t itdatabeg, types::constitbyte_t itdataend, const std::string & filext )
+    bool at4px_rule::isMatch(  vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        using namespace magicnumbers;
-        return std::equal( AT4PX_MAGIC_NUMBER.begin(), AT4PX_MAGIC_NUMBER.end(), itdatabeg );
+        return std::equal( MagicNumber_AT4PX.begin(), MagicNumber_AT4PX.end(), itdatabeg );
     }
 
 //========================================================================================================
@@ -559,9 +561,9 @@ namespace pmd2{ namespace filetypes
         ~sir0at4px_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const
+        virtual cnt_t getContentType()const
         {
-            return e_ContentType::SIR0_AT4PX_CONTAINER;
+            return CnTy_SIR0_AT4PX;
         }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -572,7 +574,7 @@ namespace pmd2{ namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters )
+        virtual ContentBlock Analyse( const analysis_parameter & parameters )
         {
             //#TODO: Seriously get rid of this method, its completely useless...
             sir0_header  sir0hdr; 
@@ -595,11 +597,10 @@ namespace pmd2{ namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch( types::constitbyte_t   itdatabeg, 
-                              types::constitbyte_t   itdataend,
+        virtual bool isMatch( vector<uint8_t>::const_iterator   itdatabeg, 
+                              vector<uint8_t>::const_iterator   itdataend,
                               const std::string    & filext )
         {
-            using namespace magicnumbers;
 
             try
             {
@@ -607,10 +608,10 @@ namespace pmd2{ namespace filetypes
                 at4px_header myat4pxhdr;
 
                 mysir0hdr.ReadFromContainer( itdatabeg );
-                if( mysir0hdr.magic == SIR0_MAGIC_NUMBER_INT )
+                if( mysir0hdr.magic == MagicNumber_SIR0 )
                 {
                     myat4pxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
-                    return std::equal( AT4PX_MAGIC_NUMBER.begin(), AT4PX_MAGIC_NUMBER.end(), myat4pxhdr.magicn.begin() );
+                    return std::equal( MagicNumber_AT4PX.begin(), MagicNumber_AT4PX.end(), myat4pxhdr.magicn.begin() );
                 }
             }
             catch(...)
@@ -627,10 +628,11 @@ namespace pmd2{ namespace filetypes
 //========================================================================================================
 //  at4px_rule_registrator
 //========================================================================================================
-    /*
-        at4px_rule_registrator
-            A small singleton that has for only task to register the at4px_rule!
-    */
-    RuleRegistrator<at4px_rule>         RuleRegistrator<at4px_rule>        ::s_instance;
-    SIR0RuleRegistrator<sir0at4px_rule> SIR0RuleRegistrator<sir0at4px_rule>::s_instance;
-};};
+/*
+    at4px_rule_registrator
+        A small singleton that has for only task to register the at4px_rule!
+*/
+RuleRegistrator    <at4px_rule>     RuleRegistrator    <at4px_rule>    ::s_instance;
+SIR0RuleRegistrator<sir0at4px_rule> SIR0RuleRegistrator<sir0at4px_rule>::s_instance;
+};
+

@@ -2,7 +2,7 @@
 */
 #include "pack_file.hpp"
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -18,10 +18,15 @@
 using namespace std;
 using namespace utils::io;
 using namespace utils;
+using namespace ::filetypes;
+using namespace pmd2;
 
-
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
+    static const uint8_t PF_PADDING_BYTE = 0xFF; // Padding character used by the Pack file for padding files and the header
+
+    const ContentTy CnTy_PackFile{"bin"};
+
 //===============================================================================
 //                                  Functions
 //===============================================================================
@@ -375,7 +380,7 @@ namespace pmd2 { namespace filetypes
 
     string SubfileGetFExtension( types::constitbyte_t beg, types::constitbyte_t end )
     {
-        string result = GetAppropriateFileExtension(beg,end);
+        string result = pmd2::filetypes::GetAppropriateFileExtension(beg,end);
         if( result.empty() )
             return std::move( result );
         else
@@ -418,7 +423,7 @@ namespace pmd2 { namespace filetypes
         ~packfile_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const;
+        virtual cnt_t getContentType()const;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -430,7 +435,7 @@ namespace pmd2 { namespace filetypes
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
         //virtual ContentBlock Analyse( types::constitbyte_t   itdatabeg, 
         //                              types::constitbyte_t   itdataend );
-        virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters );
+        virtual ContentBlock Analyse( const analysis_parameter & parameters );
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
@@ -444,9 +449,9 @@ namespace pmd2 { namespace filetypes
 
 
     //Returns the value from the content type enum to represent what this container contains!
-    e_ContentType packfile_rule::getContentType()const
+    cnt_t packfile_rule::getContentType()const
     {
-        return e_ContentType::PACK_CONTAINER;
+        return CnTy_PackFile;
     }
 
     //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -463,7 +468,7 @@ namespace pmd2 { namespace filetypes
 
     //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
     //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-    ContentBlock packfile_rule::Analyse( const filetypes::analysis_parameter & parameters )
+    ContentBlock packfile_rule::Analyse( const analysis_parameter & parameters )
     {
         pfheader     headr;
         ContentBlock cb;
@@ -495,7 +500,7 @@ namespace pmd2 { namespace filetypes
         itdatabeg = headr.ReadFromContainer( itdatabeg );
         uint32_t nextint = utils::ReadIntFromByteVector<uint32_t>(itdatabeg); //We know that the next value is the first entry in the ToC, if its really a pack file!
         
-        bool     filextokornotthere = filext.compare( filetypes::PACK_FILEX ) == 0;
+        bool     filextokornotthere = filext.compare( pmd2::filetypes::PACK_FILEX ) == 0;
 
         return (headr._zeros == 0) && (headr._nbfiles > 0) && (nextint != 0);  //TODO: improve this, it fails and recognize files that aren't pack files !!
     }
@@ -509,4 +514,4 @@ namespace pmd2 { namespace filetypes
     */
     RuleRegistrator<packfile_rule> RuleRegistrator<packfile_rule>::s_instance;
 
-};};
+};

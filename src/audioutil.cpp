@@ -2,7 +2,8 @@
 #include <utils/utility.hpp>
 #include <utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <utils/library_wide.hpp>
 
 
@@ -348,6 +349,7 @@ namespace audioutil
     void CAudioUtil::DetermineOperation()
     {
         using namespace pmd2::filetypes;
+        using namespace filetypes;
         Poco::Path inpath( m_inputPath );
         Poco::File infile( inpath );
 
@@ -365,15 +367,15 @@ namespace audioutil
                 vector<uint8_t> tmp    = utils::io::ReadFileToByteVector(infile.path());
                 auto            cntty  = DetermineCntTy(tmp.begin(), tmp.end(), inpath.getExtension());
 
-                if( cntty._type == pmd2::filetypes::e_ContentType::SMDL_FILE )
+                if( cntty._type == static_cast<unsigned int>(e_ContentType::SMDL_FILE) )
                 {
                     m_operationMode = eOpMode::ExportSMDL;
                 }
-                else if( cntty._type == pmd2::filetypes::e_ContentType::SWDL_FILE )
+                else if( cntty._type == static_cast<unsigned int>(e_ContentType::SWDL_FILE) )
                 {
                     m_operationMode = eOpMode::ExportSWDL;
                 }
-                else if( cntty._type == pmd2::filetypes::e_ContentType::SEDL_FILE )
+                else if( cntty._type == static_cast<unsigned int>(e_ContentType::SEDL_FILE) )
                 {
                     m_operationMode = eOpMode::ExportSEDL;
                 }

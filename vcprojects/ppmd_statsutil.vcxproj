@@ -97,6 +97,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp" />
+    <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
@@ -131,7 +132,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\content_type_analyser.cpp">
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
@@ -208,6 +209,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\statsutil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils</Filter>
@@ -245,7 +247,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\content_type_analyser.hpp">
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>

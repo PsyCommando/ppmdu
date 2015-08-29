@@ -11,18 +11,20 @@ with SIR0 containers !
 
 No crappyrights. All wrongs reversed !
 */
-#include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <map>
 
-namespace pmd2 { namespace filetypes
+namespace filetypes
 {
 //====================================================================================================
-//  Typedefs
+//  Constants
 //====================================================================================================
     //The list of pointer offsets in the file to be wrapped by the SIR0 container.
     //typedef std::vector<uint32_t> sir0_ptr_list_t;
+    static const uint32_t  MagicNumber_SIR0 = 0x53495230; //SIR0
+    extern const ContentTy CnTy_SIR0; 
 
 //====================================================================================================
 // Structs
@@ -33,7 +35,7 @@ namespace pmd2 { namespace filetypes
     struct sir0_header //: public utils::data_array_struct
     {
         static const unsigned int HEADER_LEN       = 16u; //bytes
-        static const uint32_t     MAGIC_NUMBER     = magicnumbers::SIR0_MAGIC_NUMBER_INT;                       
+        static const uint32_t     MAGIC_NUMBER     = MagicNumber_SIR0;                       
         static const unsigned int MAGIC_NUMBER_LEN = 4u;
 
         uint32_t magic;
@@ -140,10 +142,12 @@ namespace pmd2 { namespace filetypes
             Both versions add the neccessary padding between the data and the 
             SIR0's list of encoded pointers, and at the end of the whole thing.
     **************************************************************************/
-    std::vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data );
+    std::vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data,
+                                       uint8_t                       padchar = 0 );
     std::vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data,
                                        uint32_t                      offsetsubheader, 
-                                       const std::vector<uint32_t> & ptroffsetlst );
+                                       const std::vector<uint32_t> & ptroffsetlst,
+                                       uint8_t                       padchar = 0 );
 
 
     /**************************************************************************
@@ -246,5 +250,5 @@ namespace pmd2 { namespace filetypes
         static SIR0RuleRegistrator<RULE_T> s_instance;
     };
 
-};};
+};
 #endif

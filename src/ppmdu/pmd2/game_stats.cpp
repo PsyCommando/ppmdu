@@ -17,6 +17,7 @@
 #include <map>
 using namespace std;
 using namespace pmd2::filetypes;
+using namespace filetypes;
 
 namespace pmd2{ namespace stats
 {
@@ -515,9 +516,9 @@ namespace pmd2{ namespace stats
 
     void CGameStats::_LoadPokemonAndMvData()
     {
-        using namespace filetypes;
+        using namespace ::filetypes;
         stringstream sstrMd;
-        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
+        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << MonsterMD_FName;
         stringstream sstrMovedat;
         sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
         stringstream sstrGrowth;
@@ -531,9 +532,9 @@ namespace pmd2{ namespace stats
 
         //Build all pokemon entries
         cout << " <*>-Building Pokemon database..\n";
-        m_pokemonStats = PokemonDB::BuildDB( filetypes::ParsePokemonBaseData(sstrMd.str()),
+        m_pokemonStats = PokemonDB::BuildDB( ParsePokemonBaseData(sstrMd.str()),
                                              std::move(allmovedat.second),
-                                             filetypes::ParseLevelGrowthData(sstrGrowth.str()) );
+                                             ParseLevelGrowthData(sstrGrowth.str()) );
 
         //Set move data
         m_moveData1 = std::move(allmovedat.first.first);
@@ -635,10 +636,10 @@ namespace pmd2{ namespace stats
 
     void CGameStats::_WritePokemonAndMvData()
     {
-        using namespace filetypes;
+        using namespace ::filetypes;
 
         stringstream sstrMd;
-        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << filetypes::MonsterMD_FName;
+        sstrMd << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory << "/" << MonsterMD_FName;
         stringstream sstrMovedat;
         sstrMovedat << utils::TryAppendSlash(m_dataFolder) << BalanceDirectory;
         stringstream sstrGrowth;
@@ -662,7 +663,7 @@ namespace pmd2{ namespace stats
 
         //Write stats growth
         cout << " <*>-Writing Pokemon stats growth file \"" <<fStatsGrowth <<"\"..\n";
-        filetypes::WriteLevelGrowthData( sgrowth, fStatsGrowth );
+        WriteLevelGrowthData( sgrowth, fStatsGrowth );
 
         //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
         // movesets!
@@ -681,7 +682,7 @@ namespace pmd2{ namespace stats
 
         //Write monster data
         cout << " <*>-Writing Pokemon data file \"" <<fPokeData <<"\"..\n";
-        filetypes::WritePokemonBaseData( md, fPokeData );
+        WritePokemonBaseData( md, fPokeData );
 
         cout << "Done exporting Pokemon data!\n";
     }

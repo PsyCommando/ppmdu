@@ -7,15 +7,18 @@ psycommando@gmail.com
 Description: Utilities for handling the WTU file format from the PMD2 games.
              WTU files are closely linked to a matching WTE file!
 */
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
 
-namespace pmd2 { namespace filetypes 
+namespace filetypes 
 {
 //===============================================================================
 // Constants
 //===============================================================================
     static const uint32_t WTU_MAGIC_NUMBER_INT = 0x57545500; //"WTU\0"
+
+    extern const ContentTy CnTy_WTU; //Content ID handle
 
 //===============================================================================
 // Struct
@@ -58,5 +61,5 @@ namespace pmd2 { namespace filetypes
         }
     };
 
-};};
+};
 #endif

@@ -16,6 +16,9 @@ namespace pmd2 { namespace filetypes
 {
     typedef std::pair<stats::MoveDB,stats::MoveDB> combinedmovedat_t;
 
+    //static const ContentTy CnTy_WAZA_P  {"WAZA_P"};
+    //static const ContentTy CnTy_WAZA_P2 {"WAZA_P2"};
+
 //
 //  Constants
 //

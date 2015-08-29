@@ -1,5 +1,6 @@
 #include "ppx_extractor.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/at4px.hpp>
 #include <ppmdu/fmts/pkdpx.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
@@ -7,6 +8,8 @@
 #include <utils/library_wide.hpp>
 #include <utils/cmdline_util.hpp>
 #include <ppmdu/fmts/sir0.hpp>
+#include <ppmdu/fmts/at4px.hpp>
+#include <ppmdu/fmts/pkdpx.hpp>
 #include <fstream>
 #include <string>
 #include <vector>
@@ -22,7 +25,9 @@ using namespace ::utils::io;
 using namespace utils::cmdl;
 using namespace std;
 using namespace pmd2;
+using namespace pmd2::filetypes;
 using namespace utils;
+using namespace ::filetypes;
 
 
 namespace ppx_extract
@@ -80,7 +85,7 @@ namespace ppx_extract
         return( 
                 thefile.isFile() && 
                 !thefile.isHidden() && 
-                ( fileext.compare( filetypes::AT4PX_FILEX ) == 0 || fileext.compare( filetypes::PKDPX_FILEX ) == 0 ) 
+                ( fileext.compare( AT4PX_FILEX ) == 0 || fileext.compare( PKDPX_FILEX ) == 0 ) 
               );
     }
 
@@ -90,7 +95,7 @@ namespace ppx_extract
         return( 
                 thefile.isFile() && 
                 !thefile.isHidden() && 
-                ( fileext.compare( filetypes::SIR0_AT4PX_FILEX ) == 0 || fileext.compare( filetypes::SIR0_PKDPX_FILEX ) == 0 ) 
+                ( fileext.compare( SIR0_AT4PX_FILEX ) == 0 || fileext.compare( SIR0_PKDPX_FILEX ) == 0 ) 
               );
     }
 
@@ -106,12 +111,12 @@ namespace ppx_extract
 
         //Decompress
         //filetypes::pkdpx_handler( itdatabeg, itdataend, decompressed ).Decompress(blogenabled);
-        filetypes::DecompressPKDPX( itdatabeg, itdataend, decompressed, !isQuiet, blogenabled );
+        DecompressPKDPX( itdatabeg, itdataend, decompressed, !isQuiet, blogenabled );
 
         if( outfilepath.getExtension().empty() )
         {
             //Set the file extension only
-            outputpath.setExtension( filetypes::GetAppropriateFileExtension( decompressed.begin(), decompressed.end() ) );
+            outputpath.setExtension( GetAppropriateFileExtension( decompressed.begin(), decompressed.end() ) );
         }
 
         //Write file out
@@ -137,7 +142,7 @@ namespace ppx_extract
         //pmd2::filetypes::at4px_decompress decomp( decompressed ); //#TODO: the decompressors for at4px and pkdpx should really all have the same syntax... >_<
         //decomp( itdatabeg, itdataend, blogenabled );
 
-        pmd2::filetypes::DecompressAT4PX( itdatabeg, itdataend, decompressed, !isQuiet, blogenabled );
+        DecompressAT4PX( itdatabeg, itdataend, decompressed, !isQuiet, blogenabled );
 
         WriteByteVectorToFile( outputpath.toString(), decompressed ); 
     }
@@ -145,7 +150,7 @@ namespace ppx_extract
     void DoDecompressSIR0AT4PX( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, 
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
-        filetypes::sir0_header hdr;
+        sir0_header hdr;
         hdr.ReadFromContainer( itdatabeg );
         DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
@@ -153,7 +158,7 @@ namespace ppx_extract
     void DoDecompressSIR0PKDPX( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, 
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
-        filetypes::sir0_header hdr;
+        sir0_header hdr;
         hdr.ReadFromContainer( itdatabeg );
         DoDecompressPKDPX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
@@ -169,8 +174,8 @@ namespace ppx_extract
              << "                     the value of that parameter.\n"
 		     << "-> inputpath       : file/folder to decompress. If is a folder,\n" 
              << "                     only files with a\n"
-             << "                     \"." <<filetypes::AT4PX_FILEX <<"\" or \n"
-             << "                     \"." <<filetypes::PKDPX_FILEX <<"\" will be processed!\n"
+             << "                     \"." <<AT4PX_FILEX <<"\" or \n"
+             << "                     \"." <<PKDPX_FILEX <<"\" will be processed!\n"
 		     << "-> outputpath      : optionally, either a file or folder to output the\n"
              << "                     decompressed file(s) to.\n"
              << "-> addinputpath    : optionally, one can add more than a single input\n"
@@ -428,7 +433,6 @@ namespace ppx_extract
 
     void DetermineAndRunHandler( const Poco::Path & inputpath, Poco::Path & outputpath, bool blogenabled, bool isQuiet )
     {
-        using pmd2::filetypes::e_ContentType;
 
         vector<uint8_t> filedata;
 
@@ -436,47 +440,30 @@ namespace ppx_extract
         ReadFileToByteVector( inputpath.toString(), filedata );
 
         //#2 - Run analysis on the file content
-        auto contentInfo = filetypes::CContentHandler::GetInstance().AnalyseContent( 
-                                                                                       filetypes::analysis_parameter( filedata.begin(), 
-                                                                                                                      filedata.end() ) 
-                                                                                   );
+        auto contentInfo = CContentHandler::GetInstance().AnalyseContent( analysis_parameter( filedata.begin(), 
+                                                                                              filedata.end() ) );
 
         //#3 - Determine what handler to run!
-        switch( contentInfo._type )
+        if( contentInfo._type == CnTy_AT4PX )
+            DoDecompressAT4PX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+        else if( contentInfo._type == CnTy_PKDPX )
+            DoDecompressPKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+        else if( contentInfo._type == CnTy_SIR0_AT4PX )
+            DoDecompressSIR0AT4PX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+        else if( contentInfo._type == CnTy_SIR0_PKDPX )
+            DoDecompressSIR0PKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
+        else
         {
-        case e_ContentType::AT4PX_CONTAINER:
-            {
-                DoDecompressAT4PX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
-                break;
-            }
-        case e_ContentType::PKDPX_CONTAINER:
-            {
-                DoDecompressPKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
-                break;
-            }
-        case e_ContentType::SIR0_AT4PX_CONTAINER:
-            {
-                DoDecompressSIR0AT4PX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
-                break;
-            }
-        case e_ContentType::SIR0_PKDPX_CONTAINER:
-            {
-                DoDecompressSIR0PKDPX( filedata.begin(), filedata.end(), outputpath, blogenabled, isQuiet );
-                break;
-            }
-        default:
-            {
-                cerr << "<!>-Error: The content of \"" <<inputpath.toString() <<"\" was not recognized as a valid PX compressed file! Skipping!\n";
-                return;
-            }
-        };
+            cerr << "<!>-Error: The content of \"" <<inputpath.toString() <<"\" was not recognized as a valid PX compressed file! Skipping!\n";
+            return;
+        }
     }
 
     //Decompress all our input files !
     void DecompressAll( pxextract_params & params )//const vector<Poco::Path> & inputpaths, vector<Poco::Path> & outputpaths, bool blogenabled )
     {
         if( params.isLogEnabled )
-            pmd2::compression::CleanExistingCompressionLogs(); //Do a little clean up
+            compression::CleanExistingCompressionLogs(); //Do a little clean up
 
         if( !params.isQuiet )
         {

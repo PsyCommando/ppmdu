@@ -414,9 +414,9 @@ namespace pmd2{ namespace graphics
             -> itenddata MUST be at either the same position as the eof pointer in the
                SIR0 header points to, or anywhere afterwrds.
         */
-        void operator()( types::constitbyte_t itbegdata, types::constitbyte_t itenddata );
-        void operator()( types::constitbyte_t itbegdata, types::constitbyte_t itenddata, std::string & report );
-        void operator()( const std::pair<types::constitbyte_t, types::constitbyte_t> & apair );
+        void operator()( std::vector<uint8_t>::const_iterator itbegdata, std::vector<uint8_t>::const_iterator itenddata );
+        void operator()( std::vector<uint8_t>::const_iterator itbegdata, std::vector<uint8_t>::const_iterator itenddata, std::string & report );
+        void operator()( const std::pair<std::vector<uint8_t>::const_iterator, std::vector<uint8_t>::const_iterator> & apair );
 
     private:
 
@@ -438,12 +438,12 @@ namespace pmd2{ namespace graphics
         bool                                    m_isUsingIterator; //Whether we've received an iterator at construction
 
         //Input
-        types::constitbyte_t                    m_itbegdata,
+        std::vector<uint8_t>::const_iterator                    m_itbegdata,
                                                 m_itcurdata,
                                                 m_itenddata;
 
         //Headers / Sub-Headers
-        filetypes::sir0_header                  m_sir0header;
+        ::filetypes::sir0_header                m_sir0header;
         sprite_data_header                      m_subheader;
         sprite_info_data                        m_sprinf;
         sprite_frame_data                       m_sprfrmdat;

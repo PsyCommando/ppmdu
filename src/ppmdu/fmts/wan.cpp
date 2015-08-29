@@ -1,5 +1,6 @@
 #include "wan.hpp"
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
+#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <utils/utility.hpp>
@@ -12,9 +13,12 @@
 
 using namespace std;
 using namespace pmd2::graphics;
+using namespace filetypes;
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
+
+//
 
     template<class T>
         uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
@@ -27,6 +31,8 @@ namespace pmd2{ namespace filetypes
 //=============================================================================================
 //  WAN File Specifics
 //=============================================================================================
+
+    const ContentTy CnTy_WAN {"wan"};
 
 //============================================
 //            WAN_AnimGrpEntry
@@ -139,7 +145,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    graphics::eSpriteImgType WAN_Parser::getSpriteType()const
+    eSpriteImgType WAN_Parser::getSpriteType()const
     {
         auto        itRead   = m_rawdata.begin();
         sir0_header sir0head;
@@ -175,7 +181,7 @@ namespace pmd2{ namespace filetypes
         //Named Properties
         out_sprinf.nbColorsPerRow  = m_paletteInfo.nbcolorsperrow;
         out_sprinf.is256Sprite     = m_wanImgDataInfo.is256Colors;
-        out_sprinf.spriteType      = static_cast<graphics::eSprTy>(m_wanHeader.spriteType);
+        out_sprinf.spriteType      = static_cast<eSprTy>(m_wanHeader.spriteType);
         out_sprinf.Unk13           = m_wanImgDataInfo.unk13;
 
         //Unknowns
@@ -245,7 +251,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    graphics::MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
+    MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
     {
         MetaFrame mf;
         itread = mf.ReadFromWANContainer( itread, out_isLastFrm );
@@ -361,7 +367,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    graphics::AnimationSequence WAN_Parser::ReadASequence( vector<uint8_t>::const_iterator itwhere )
+    AnimationSequence WAN_Parser::ReadASequence( vector<uint8_t>::const_iterator itwhere )
     {
         AnimationSequence asequence;
         AnimFrame         animframe;
@@ -405,7 +411,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    std::vector<graphics::AnimationSequence> WAN_Parser::ReadAnimSequences( std::vector<graphics::SpriteAnimationGroup> & groupsWPtr )
+    std::vector<AnimationSequence> WAN_Parser::ReadAnimSequences( std::vector<SpriteAnimationGroup> & groupsWPtr )
     {
         vector<AnimationSequence>    myanimseqs;
         std::map<uint32_t, uint32_t> sequencesLocations; //This is used to check if we already parsed a sequence at a specific address, and if so, at what index in the sequence table is it!
@@ -437,10 +443,10 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    vector<graphics::SpriteAnimationGroup> WAN_Parser::ReadAnimGroups()
+    vector<SpriteAnimationGroup> WAN_Parser::ReadAnimGroups()
     {
         vector<uint8_t>::const_iterator        itCurGrp = m_rawdata.begin() + m_wanAnimInfo.ptr_animGrpTable;
-        vector<graphics::SpriteAnimationGroup> anims( m_wanAnimInfo.nb_anim_groups );
+        vector<SpriteAnimationGroup> anims( m_wanAnimInfo.nb_anim_groups );
         
         //Each group is made of a pointer, and the nb of sequences over there! Some can be null!
         WAN_AnimGrpEntry entry;
@@ -500,7 +506,7 @@ namespace pmd2{ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    vector<sprOffParticle> WAN_Parser::ReadParticleOffsets( const std::vector<graphics::SpriteAnimationGroup> & groupsPtr )
+    vector<sprOffParticle> WAN_Parser::ReadParticleOffsets( const std::vector<SpriteAnimationGroup> & groupsPtr )
     {
         //First, check if we do have a particle offset block ! It can be omitted!
         if( m_wanAnimInfo.ptr_pOffsetsTable == 0 && 
@@ -544,7 +550,7 @@ namespace pmd2{ namespace filetypes
         ~wan_rule(){}
 
         //Returns the value from the content type enum to represent what this container contains!
-        virtual e_ContentType getContentType()const;
+        virtual cnt_t getContentType()const;
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
         // because rules can me added and removed during exec. Thus the need for unique IDs.
@@ -554,12 +560,12 @@ namespace pmd2{ namespace filetypes
 
         //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
         //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        virtual ContentBlock Analyse( const filetypes::analysis_parameter & parameters );
+        virtual ContentBlock Analyse( const analysis_parameter & parameters );
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
                                const std::string    & filext);
 
     private:
@@ -568,9 +574,9 @@ namespace pmd2{ namespace filetypes
 
 
     //Returns the value from the content type enum to represent what this container contains!
-    e_ContentType wan_rule::getContentType()const
+    cnt_t wan_rule::getContentType()const
     {
-        return e_ContentType::WAN_SPRITE_CONTAINER;
+        return CnTy_WAN;
     }
 
     //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -586,7 +592,7 @@ namespace pmd2{ namespace filetypes
     }
 
     //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
-    ContentBlock wan_rule::Analyse( const filetypes::analysis_parameter & parameters )
+    ContentBlock wan_rule::Analyse( const analysis_parameter & parameters )
     {
         sir0_header headr;
         ContentBlock cb;
@@ -605,9 +611,8 @@ namespace pmd2{ namespace filetypes
 
     //This method is a quick boolean test to determine quickly if this content handling
     // rule matches, without in-depth analysis.
-    bool wan_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend, const std::string & filext )
+    bool wan_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        using namespace magicnumbers;
         static const unsigned int MaxSubHeaderLen = 27u; //The maximum length of the sub-header + Padding
         sir0_header    headr;
         wan_sub_header wanheadr;
@@ -616,7 +621,7 @@ namespace pmd2{ namespace filetypes
         headr.ReadFromContainer( itdatabeg );
 
         //Check magic number and make sure ptrs aren't null, or invalid.
-        if( headr.magic != SIR0_MAGIC_NUMBER_INT || headr.ptrPtrOffsetLst <= 0x10 || headr.subheaderptr <= 0x10 )
+        if( headr.magic != MagicNumber_SIR0 || headr.ptrPtrOffsetLst <= 0x10 || headr.subheaderptr <= 0x10 )
             return false;
 
         //READ WAN SUB-HEADer and check if pointers fit within file!!
@@ -644,4 +649,4 @@ namespace pmd2{ namespace filetypes
 //  WAN Identification Rules Registration
 //=============================================================================================
     SIR0RuleRegistrator<wan_rule> SIR0RuleRegistrator<wan_rule>::s_instance;
-};};
+};

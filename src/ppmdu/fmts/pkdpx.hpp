@@ -9,13 +9,22 @@ Description: Tools for handling PKDPX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/basetypes.hpp>
+//#include <ppmdu/basetypes.hpp>
+#include <vector>
+#include <cstdint>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
+    static const unsigned int                              MagicNumber_PKDPX_Len = 5;
+    static const std::array<uint8_t,MagicNumber_PKDPX_Len> MagicNumber_PKDPX{{ 0x50, 0x4B, 0x44, 0x50, 0x58 }}; //"PKDPX"
+
+    //Content ID db handles.
+    extern const ContentTy                                 CnTy_PKDPX;
+    extern const ContentTy                                 CnTy_SIR0_PKDPX;
 
 //==================================================================
 // Structs
@@ -28,9 +37,9 @@ namespace pmd2{ namespace filetypes
     {
         static const unsigned int HEADER_SZ        = 20u;
         static const unsigned int NB_FLAGS         = 9u;
-        static const unsigned int MAGIC_NUMBER_LEN = 5u;
+        //static const unsigned int MAGIC_NUMBER_LEN = MagicNumber_PKDPX_Len;
 
-        std::array<uint8_t,MAGIC_NUMBER_LEN>  magicn;       //"PKDPX"
+        std::array<uint8_t,MagicNumber_PKDPX_Len>  magicn;       //"PKDPX"
         uint16_t                              compressedsz; //The total size of the file compressed
         std::array<uint8_t,NB_FLAGS>          flaglist;     //list of flags used in the file
         uint32_t                              decompsz;     //The file size decompressed
@@ -115,7 +124,7 @@ namespace pmd2{ namespace filetypes
 
     //    //Constructor
     //    // Take the source data, and destination!
-    //    pkdpx_handler( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend, types::bytevec_t & out_data ) throw();
+    //    pkdpx_handler( vector<uint8_t>::const_iterator itindatabeg, vector<uint8_t>::const_iterator itindataend, types::bytevec_t & out_data ) throw();
 
     //    //Read and decompress PKDPX header and data
     //    void Decompress( bool blogenabled = false );
@@ -130,7 +139,7 @@ namespace pmd2{ namespace filetypes
     //    //Vars
     //    pkdpx_header           m_lastheader;
 
-    //    types::constitbyte_t   m_itInCur,
+    //    vector<uint8_t>::const_iterator   m_itInCur,
     //                           m_itInEnd;
 
     //    types::bytevec_t &     m_outvec;
@@ -244,6 +253,6 @@ namespace pmd2{ namespace filetypes
     pkdpx_header PXinfoToPKDPXHeader( const compression::px_info_header & pxinf );
 
 
-};};
+};
 
 #endif

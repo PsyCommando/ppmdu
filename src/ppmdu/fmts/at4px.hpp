@@ -9,15 +9,22 @@ Description: stuff for handling and building AT4PX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/basetypes.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+//#include <ppmdu/basetypes.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <array>
+#include <vector>
+#include <cstdint>
 
 
-namespace pmd2{ namespace filetypes
+namespace filetypes
 {
+    static const unsigned int                              MagicNumber_AT4PX_Len = 5; 
+    static const std::array<uint8_t,MagicNumber_AT4PX_Len> MagicNumber_AT4PX{{ 0x41, 0x54, 0x34, 0x50, 0x58 }};//"AT4PX"
+
+    extern const ContentTy CnTy_AT4PX;      //Contains the ID for the content type in the content type DB. Also contains the file extension
+    extern const ContentTy CnTy_SIR0_AT4PX; //Contains the ID for the content type in the content type DB. Also contains the file extension
 
 //==================================================================
 // Structs
@@ -31,9 +38,9 @@ namespace pmd2{ namespace filetypes
     {
         static const unsigned int HEADER_SZ        = 18u; //Bytes
         static const unsigned int NB_FLAGS         = 9u;  //Nb of PX compression flags
-        static const unsigned int MAGIC_NUMBER_LEN = 5u;  //Bytes
+        //static const unsigned int MAGIC_NUMBER_LEN = 5u;  //Bytes
 
-        std::array<uint8_t,MAGIC_NUMBER_LEN>  magicn;       //"AT4PX"
+        std::array<uint8_t,MagicNumber_AT4PX_Len>  magicn;       //"AT4PX"
         uint16_t                              compressedsz; //The total size of the file compressed
         std::array<uint8_t,NB_FLAGS>          flaglist;     //list of flags used in the file
         uint16_t                              decompsz;    //The image size when decompressed as 4 bpp
@@ -135,14 +142,14 @@ namespace pmd2{ namespace filetypes
         // decompressed output! The byte vector will
         // have its size adjusted accordingly to the decompressend output
         // size !
-        at4px_decompress( types::bytevec_t & out_decompimg );
+        at4px_decompress( std::vector<uint8_t> & out_decompimg );
 
         //With this constructor, the functor will output the result of each calls
         // to its () operator to a new entry in the vector. 
         // The topmost vector must have the correct size! The byte vectors will
         // have their sizes adjusted accordingly to the decompressend output
         // size !
-        at4px_decompress( std::vector<types::bytevec_t>::iterator & out_itdecompimg );
+        at4px_decompress( std::vector<std::vector<uint8_t>>::iterator & out_itdecompimg );
 
         //Read and decompress AT4PX header and data
         // **If a vector of bytevec was passed as parameter, we expect the
@@ -150,7 +157,7 @@ namespace pmd2{ namespace filetypes
         // as how many times they'll call this method!**
         // If a single bytevec was passed, this method will simply overwrite 
         // the content the bytevec!
-        void operator()( types::constitbyte_t itindatabeg, types::constitbyte_t itindataend, bool blogenabled );
+        void operator()( std::vector<uint8_t>::const_iterator itindatabeg, std::vector<uint8_t>::const_iterator itindataend, bool blogenabled );
 
     protected:
         //Read and decompress AT4PX header and data
@@ -163,11 +170,11 @@ namespace pmd2{ namespace filetypes
 
         //Vars
         at4px_header                            m_lastheader;
-        types::constitbyte_t                    m_itInCur,
+        std::vector<uint8_t>::const_iterator    m_itInCur,
                                                 m_itInEnd;
 
-        types::bytevec_t                      * m_outvec;
-        std::vector<types::bytevec_t>::iterator m_itOutContainers;
+        std::vector<uint8_t>                      * m_outvec;
+        std::vector<std::vector<uint8_t>>::iterator m_itOutContainers;
     };
 
     /*******************************************************
@@ -247,6 +254,6 @@ namespace pmd2{ namespace filetypes
                               std::vector<uint8_t> &                           out_decompressed,
                               bool                                             bdisplayProgress = false,
                               bool                                             blogenable       = false );
-};};
+};
 
 #endif

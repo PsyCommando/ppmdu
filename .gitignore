@@ -189,3 +189,5 @@ Release WinXP
 *.bsc
 *.lib
 *.idb
+*.dll
+*.exp

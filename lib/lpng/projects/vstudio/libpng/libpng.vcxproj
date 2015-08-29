@@ -49,7 +49,7 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Library|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -99,7 +99,7 @@
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
     <TargetName>$(ProjectName)16</TargetName>
-    <OutDir>$(SolutionDir)lib_release\</OutDir>
+    <OutDir>$(SolutionDir)lib_release_shared\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release Library|Win32'">
     <LinkIncremental>false</LinkIncremental>

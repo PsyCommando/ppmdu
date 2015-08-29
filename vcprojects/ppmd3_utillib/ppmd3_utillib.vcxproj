@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_DLL|Win32">
+      <Configuration>Release_DLL</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{75222531-F81B-4EF7-B60C-CABFF268D8FD}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ppmd3_utillib</RootNamespace>
+    <ProjectName>ppmd3_txtutil</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\shared_build_settings.props" />
+    <Import Project="..\xml_includes.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\shared_build_settings.props" />
+    <Import Project="..\xml_includes.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\shared_build_settings.props" />
+    <Import Project="..\xml_includes.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <ExecutablePath>$(VC_ExecutablePath_x86);$(WindowsSDK_ExecutablePath);$(VS_ExecutablePath);$(MSBuild_ExecutablePath);$(SystemRoot)\SysWow64;$(FxCopDir);$(PATH);</ExecutablePath>
+    <ExcludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(MSBuild_ExecutablePath);$(VC_LibraryPath_x86);</ExcludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(SolutionDir)lib_release_shared;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;POCO_STATIC;_CONSOLE;_LIB;</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;PPMDU3_LIB_SHARED;</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies />
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\lib\pugixml-1.5\src\pugixml.cpp" />
+    <ClCompile Include="..\..\src\ppmd3_txtutil.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\shared\ppmdu3.cpp" />
+    <ClCompile Include="..\..\src\types\contentid_generator.cpp" />
+    <ClCompile Include="..\..\src\types\content_type_analyser.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ppmdu\fmts\sir0.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\cmdline_util.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\config_io.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gbyteutils.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gfileio.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gfileutil.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\gstringutils.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\library_wide.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\multiple_task_handler.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\poco_wrapper.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\utility.cpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\readmes\ppmd3_txtutil.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\ppmd3_txtutil.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmdu\pmd3\game_strings.hpp" />
+    <ClInclude Include="..\..\src\shared\ppmdu3.hpp" />
+    <ClInclude Include="..\..\src\types\contentid_generator.hpp" />
+    <ClInclude Include="..\..\src\ppmdu\pmd3\pmd3_filetypes.hpp" />
+    <ClInclude Include="..\..\src\types\content_type_analyser.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ppmdu\fmts\sir0.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\cmdline_util.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\config_io.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gbyteutils.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gfileio.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gfileutils.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\gstringutils.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\handymath.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\library_wide.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\multiple_task_handler.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\parse_utils.hpp" />
+    <ClInclude Include="..\..\src\utils\poco_wrapper.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\pugixml_utils.hpp" />
+    <ClInclude Include="..\..\src\utils\readme_writer.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\utility.hpp">
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
+      <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

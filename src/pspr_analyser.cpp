@@ -3,7 +3,7 @@
 #include <ppmdu/pmd2/pmd2_sprites.hpp>
 #include <ppmdu/utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/fmts/content_type_analyser.hpp>
+#include <types/content_type_analyser.hpp>
 #include <ppmdu/utils/multiple_task_handler.hpp>
 #include <ppmdu/utils/library_wide.hpp>
 #include <ppmdu/utils/cmdline_util.hpp>

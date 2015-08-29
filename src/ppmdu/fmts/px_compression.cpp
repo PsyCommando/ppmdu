@@ -26,7 +26,7 @@ using namespace std;
 using namespace utils;
 
 
-namespace pmd2 { namespace compression
+namespace compression
 {
     using utils::MrChronometer;
 
@@ -1539,5 +1539,5 @@ namespace pmd2 { namespace compression
         cout<<"Cleaned log files!\n";
     }
 
-};};
+};
 #endif
