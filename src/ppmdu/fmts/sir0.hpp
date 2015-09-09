@@ -44,7 +44,7 @@ namespace filetypes
         uint32_t endzero;
 
         std::string toString()const;
-        unsigned int   size()const { return HEADER_LEN; }
+        static unsigned int   size() { return HEADER_LEN; }
 
         sir0_header( uint32_t magicnumber = 0u, uint32_t subhdroffset = 0u, uint32_t offptrlst = 0u )
             :magic(magicnumber), subheaderptr(subhdroffset), ptrPtrOffsetLst(offptrlst), endzero(0u)
@@ -133,10 +133,10 @@ namespace filetypes
             It comes in two version, one for data not containing any pointers,
             and the other for data that contains pointers.
 
-            The version for data that doesn't contain ptrs will simply have 
+            The first version for data that doesn't contain ptrs will simply have 
             the SIR0 header point to the beginning of the data.
 
-            The version for data that contains ptr takes the pointer to the
+            The second version for data that contains ptr takes the pointer to the
             sub-header, and a pointer offset list! 
 
             Both versions add the neccessary padding between the data and the 

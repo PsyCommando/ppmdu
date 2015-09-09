@@ -37,7 +37,7 @@ namespace pmd2{ namespace graphics
     /*
         The part of the header containing the pointers to unidentified kind of info for the sprite
     */
-    struct sprite_info_data : public utils::data_array_struct
+    struct sprite_info_data /*: public utils::data_array_struct*/
     {
         static const unsigned int DATA_LEN = 24u;
 
@@ -56,15 +56,44 @@ namespace pmd2{ namespace graphics
         unsigned int size()const{return DATA_LEN;}
         std::string toString()const;
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( ptr_ptrstable_e,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( ptr_offset_f,          itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( ptr_offset_g,          itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( nb_blocks_in_offset_g, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( nb_entries_offset_e,   itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown1,              itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown2,              itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown3,              itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown4,              itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( ptr_ptrstable_e,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( ptr_offset_f,          itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( ptr_offset_g,          itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( nb_blocks_in_offset_g, itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( nb_entries_offset_e,   itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown1,              itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown2,              itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown3,              itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown4,              itReadfrom);
+            return itReadfrom;
+        }
+
     };
 
     /*
         The part of the header containing the pointers to the actual frames of the sprite,
         and the palette.
     */
-    struct sprite_frame_data : public utils::data_array_struct
+    struct sprite_frame_data /*: public utils::data_array_struct*/
     {
         static const unsigned int DATA_LEN = 16u;
 
@@ -80,8 +109,32 @@ namespace pmd2{ namespace graphics
         unsigned int size()const{return DATA_LEN;}
         std::string toString()const;
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( ptr_frm_ptrs_table, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( ptrPal,             itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unkn_1,             itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unkn_2,             itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unkn_3,             itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( nbImgsTblPtr,       itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( ptr_frm_ptrs_table, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( ptrPal,             itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unkn_1,             itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unkn_2,             itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unkn_3,             itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( nbImgsTblPtr,       itReadfrom );
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
 
@@ -89,7 +142,7 @@ namespace pmd2{ namespace graphics
         The 12 bytes sub-header that is linked to by an SIR0 header.
         Contains pointers to important sprite information.
     */
-    struct sprite_data_header : public utils::data_array_struct
+    struct sprite_data_header /*: public utils::data_array_struct*/
     {
         static const unsigned int DATA_LEN = 12u;
 
@@ -101,15 +154,35 @@ namespace pmd2{ namespace graphics
         unsigned int size()const{return DATA_LEN;}
         std::string toString()const;
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( spr_ptr_info,   itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( spr_ptr_frames, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown0,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown1,       itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( spr_ptr_info,   itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( spr_ptr_frames, itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown0,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( unknown1,       itReadfrom);
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
 //=====================================================================================
 // Structs For Research Purpose Mainly
 //=====================================================================================
 
-    struct datablock_i_entry : public utils::data_array_struct
+    struct datablock_i_entry /*: public utils::data_array_struct*/
     {
         static const unsigned int MY_SIZE = 12u;
         uint16_t Unk0,
@@ -128,8 +201,32 @@ namespace pmd2{ namespace graphics
         //const uint8_t & operator[](unsigned int index)const;
         std::string toString(unsigned int indent=0)const;
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( Unk0,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( Index, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( Val0,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( Val1,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( Val2,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( Val3,  itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer (Unk0,  itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer (Index, itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer (Val0,  itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer (Val1,  itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer (Val2,  itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer (Val3,  itReadfrom);
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
         //Assign the members of "other" to their counterpart in the current instance. Return this.
         datablock_i_entry & operator+=( const datablock_i_entry & other );
@@ -159,7 +256,7 @@ namespace pmd2{ namespace graphics
     /*
         Contains a ptr to an array in datablockH and a size for the said array. 
     */
-    struct datablock_g_entry : public utils::data_array_struct
+    struct datablock_g_entry/* : public utils::data_array_struct*/
     {
         static const unsigned int MY_SIZE = 8u;
 
@@ -177,14 +274,31 @@ namespace pmd2{ namespace graphics
         unsigned int size()const{return MY_SIZE;}
         bool isNullEntry()const { return !ptrtoarray && !szofarray; }
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( ptrtoarray, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( szofarray,  itwriteto );
+
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( ptrtoarray, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( szofarray,  itReadfrom );
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
     /*
         
     */
-    struct datablock_s_entry : utils::data_array_struct
+    struct datablock_s_entry/* : utils::data_array_struct*/
     {
         static const unsigned int MY_SIZE = 10u;
         uint32_t id;
@@ -200,8 +314,32 @@ namespace pmd2{ namespace graphics
         //uint8_t & operator[](unsigned int index);
         //const uint8_t & operator[](unsigned int index)const;
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( id,         itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( val0,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( val1,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( val2,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( val3,       itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( endofentry, itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( id,         itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( val0,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( val1,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( val2,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( val3,       itReadfrom);
+            itReadfrom = utils::ReadIntFromByteContainer( endofentry, itReadfrom);
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
         //Assign the members of "other" to their counterpart in the current instance. Return this.
         datablock_s_entry & operator+=( const datablock_s_entry & other );
@@ -221,7 +359,7 @@ namespace pmd2{ namespace graphics
 
     /*
     */
-    struct datablock_f_entry : utils::data_array_struct
+    struct datablock_f_entry/* : utils::data_array_struct*/
     {
         static const unsigned int MY_SIZE = 4u;
         int16_t val0,
@@ -236,15 +374,31 @@ namespace pmd2{ namespace graphics
         std::string toString( unsigned int indent = 0 )const;
         void reset();
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( val0,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( val1,  itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( val0, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( val1, itReadfrom );
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
     /*
         Struct for the extra data located right after the palette!
         16 bytes long.
     */
-    struct palette_fmtinf : utils::data_array_struct
+    struct palette_fmtinf /*: utils::data_array_struct*/
     {
         static const unsigned int MY_SIZE = 16u;
 
@@ -263,8 +417,32 @@ namespace pmd2{ namespace graphics
         std::string     toString( unsigned int indent = 0 )const;
         void            reset(); //Set all values to 0
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( ptrpalbeg, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown0,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown1,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown2,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown3,  itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( endofdata, itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( ptrpalbeg, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unknown0,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unknown1,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unknown2,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unknown3,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( endofdata, itReadfrom );
+            return itReadfrom;
+        }
+
+        //std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
     };
 
 

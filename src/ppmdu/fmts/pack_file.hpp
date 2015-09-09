@@ -34,7 +34,7 @@ namespace filetypes
 	//								fileIndex
 	//--------------------------------------------------------------------------
 	//Element containing a file offset and a file length, for use in a vector container
-	struct fileIndex : utils::data_array_struct
+	struct fileIndex/* : utils::data_array_struct*/
 	{
         static const uint32_t ENTRY_LEN = 8u;
 		fileIndex()
@@ -59,7 +59,7 @@ namespace filetypes
 	//--------------------------------------------------------------------------
 	//								pfheader
 	//--------------------------------------------------------------------------
-    struct pfheader : utils::data_array_struct
+    struct pfheader /*: utils::data_array_struct*/
     {
         static const uint32_t HEADER_LEN = 8u;
 

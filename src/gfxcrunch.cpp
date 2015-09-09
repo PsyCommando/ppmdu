@@ -1303,7 +1303,6 @@ namespace gfx_util
             if( ! m_bQuiet )
                 cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
-            //#FIXME: Isn't this handled automatically already ?
             if( m_bRedirectClog )
                 m_redirectClog.Redirect( inpath.getBaseName() + ".log" );
 
@@ -1406,6 +1405,7 @@ namespace gfx_util
             //SetArguments returns false, when there are no args to parse !
             SetArguments(argc,argv);
 
+            //Log all arguments
             if( utils::LibWide().isLogOn() )
             {
                 clog <<"Got " <<argc <<" argument(s):\n";
@@ -1460,7 +1460,7 @@ namespace gfx_util
         returnval = Execute();
 
 #ifdef _DEBUG
-        system("pause");
+        utils::PortablePause();
 #endif
         return returnval;
     }

@@ -20,7 +20,7 @@ namespace pmd2 { namespace compression
 // Struct
 //====================================================================================================
     //This is a single entry from an RLE table
-    struct rle_table_entry : public utils::data_array_struct
+    struct rle_table_entry /*: public utils::data_array_struct*/
     {
         static const unsigned int LENGTH = 12u;
         uint32_t pixelsrc,  //The source of the pixels to use to rebuild the image. Either an address, or 0
@@ -30,8 +30,23 @@ namespace pmd2 { namespace compression
         unsigned int    size()const   { return LENGTH; }
         bool            isNull()const { return (!pixelsrc && !pixamt && !unknown); } //Whether its a null entry or not 
 
-        std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToByteContainer( pixelsrc, itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( pixamt,   itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( unknown,  itwriteto );
+            return itwriteto;
+        }
+
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromByteContainer( pixelsrc, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( pixamt,   itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unknown,  itReadfrom );
+            return itReadfrom;
+        }
     };
 
 //====================================================================================================

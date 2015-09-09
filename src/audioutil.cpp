@@ -1407,7 +1407,7 @@ namespace audioutil
         returnval = Execute();
 
 #ifdef _DEBUG
-        system("pause");
+        utils::PortablePause();
 #endif
 
         return returnval;

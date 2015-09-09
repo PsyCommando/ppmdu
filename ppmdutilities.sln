@@ -25,7 +25,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_statsutil", "vcproject
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_audioutil", "vcprojects\ppmd_audioutil.vcxproj", "{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd3_utillib", "vcprojects\ppmd3_utillib\ppmd3_utillib.vcxproj", "{75222531-F81B-4EF7-B60C-CABFF268D8FD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd3_txtutil", "vcprojects\ppmd3_utillib\ppmd3_utillib.vcxproj", "{75222531-F81B-4EF7-B60C-CABFF268D8FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -148,7 +148,6 @@ Global
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.Build.0 = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|x64.ActiveCfg = Release|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|Win32.ActiveCfg = Debug|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|Win32.Build.0 = Debug|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|x64.ActiveCfg = Debug|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.ActiveCfg = Release|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.Build.0 = Release|Win32
@@ -157,7 +156,6 @@ Global
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|Win32.Build.0 = Release_DLL|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|x64.ActiveCfg = Release|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|Win32.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|Win32.Build.0 = Release|Win32
 		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution

@@ -49,9 +49,9 @@ namespace pmd2{ namespace stats
                  << "\tTotal                 : " <<dec <<totalnb    <<"\n";
         }
         if( nbRegulars != filetypes::MonsterMD_DefNBRegulars )
-            clog << "WARNING: The amount of regular Pokemon  differs from the default value. Continuing happily.\n";
+            clog << "WARNING: The amount of regular Pokemon  differs from PMD2:EoS's default value. Continuing happily.\n";
         if( nbSpecials != filetypes::MonsterMD_DefNBSpecials )
-            clog << "WARNING: The amount of special Pokemon differs from the default value. Continuing happily.\n";
+            clog << "WARNING: The amount of special Pokemon differs from PMD2:EoS's default value. Continuing happily.\n";
 
         out_md.resize( totalnb );
         out_mvsets.first.reserve( nbRegulars + nbSpecials );
@@ -81,7 +81,7 @@ namespace pmd2{ namespace stats
         }
 
         if( offsetDups == md.size() )
-            throw runtime_error("ERROR: Secondary gender entries not found in parsed Pokemon monster.md data! Possibly an error in the code!");
+            throw runtime_error("ERROR: Secondary gender entries not found in parsed Pokemon monster.md data!");
 
 
         const uint32_t nbRegularPk = md.size() - offsetDups;       //The amount of regular pokes is the length of the secondary gender block
@@ -94,9 +94,9 @@ namespace pmd2{ namespace stats
                  << "\tNb of special entries : " <<dec <<nbSpecialPk <<"\n";
         }
         if( nbRegularPk != filetypes::MonsterMD_DefNBRegulars )
-            clog << "WARNING: The amount of regular Pokemon parsed differs from the default value. Continuing happily.\n";
+            clog << "WARNING: The amount of regular Pokemon parsed differs from PMD2:EoS's default value. Continuing happily.\n";
         if( nbSpecialPk != filetypes::MonsterMD_DefNBSpecials )
-            clog << "WARNING: The amount of special Pokemon parsed differs from the default value. Continuing happily.\n";
+            clog << "WARNING: The amount of special Pokemon parsed differs from PMD2:EoS's default value. Continuing happily.\n";
 
         //#2 - Allocate pokemon slots in the db
         mydb.m_pkmn.resize(offsetDups);

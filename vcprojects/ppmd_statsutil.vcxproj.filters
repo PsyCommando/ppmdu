@@ -43,14 +43,14 @@
     <Filter Include="Header Files\ppmdu\utility">
       <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\pugixml">
-      <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\typesupport">
       <UniqueIdentifier>{4e7b50a6-37f0-4534-b84d-674fe581be9e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\typesupport">
       <UniqueIdentifier>{5c06f237-fe26-4e05-ab23-ec403204a907}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pugixml">
+      <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -130,7 +130,7 @@
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>Source Files\pugixml</Filter>
+      <Filter>pugixml</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
@@ -161,6 +161,9 @@
     </ClCompile>
     <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -34,114 +34,92 @@ namespace pmd2 { namespace stats
     struct itemdata_EoS;
 
     /*
-        Base item
+        NOTE: So after trying inheritance, I think it would be much better to try using composition instead to
+              represent the various item formats. This is mainly because of the way we can't predict the item format
+              at construction, or even at instanciation. And keeping track of the types was also not very easy..
     */
-    struct itemdata
+
+    /*
+        itemdata
+            Contains item data for all possible PMD2 games.
+    */
+    class itemdata
     {
-        itemdata()
-        {
-            buyPrice    = 0;
-            sellPrice   = 0;
-            category    = 0;
-            spriteID    = 0;
-            itemID      = 0;
-            itemParam1  = 0;
-            itemParam2  = 0;
-            itemParam3  = 0;
-            unk1        = 0;
-            unk2        = 0;
-            unk3        = 0;
-            unk4        = 0;
-        }
-        virtual ~itemdata(){}
-        virtual exclusiveitemdata * GetExclusiveItemData() { return nullptr; }
-        virtual itemdata_EoS      * Get_EoS_ItemData()     { return nullptr; }
-        virtual itemdata_EoTD     * Get_EoTD_ItemData()    { return nullptr; }
+    public:
+        itemdata();
+        itemdata( const itemdata & other );
+        itemdata( itemdata      && other );
+        itemdata & operator=( const itemdata & other );
+        itemdata & operator=( itemdata      && other );
+
+        void CopyCtor( const itemdata & other );
+        void MoveCtor( itemdata      && other );
+
+        inline exclusiveitemdata       * GetExclusiveItemData()      { return m_pexdata.get(); }
+        inline itemdata_EoS            * Get_EoS_ItemData    ()      { return m_peosdata.get(); }
+        inline itemdata_EoTD           * Get_EoTD_ItemData   ()      { return m_peotddata.get(); }
+
+        inline const exclusiveitemdata * GetExclusiveItemData()const { return m_pexdata.get(); }
+        inline const itemdata_EoS      * Get_EoS_ItemData    ()const { return m_peosdata.get(); }
+        inline const itemdata_EoTD     * Get_EoTD_ItemData   ()const { return m_peotddata.get(); }
+
+        //Use these to set the data for each specific item types. Returns the resulting pointer, as the Getters above would return!
+        exclusiveitemdata               * SetExclusiveData    ( const exclusiveitemdata & data );
+        itemdata_EoS                    * SetEoSData          ( const itemdata_EoS      & data );
+        itemdata_EoTD                   * SetEoTDData         ( const itemdata_EoTD     & data );
+
+        //Allocate a new, default constructed struct of the specified type and return the pointer to it!
+        exclusiveitemdata               * MakeExclusiveData    ();
+        itemdata_EoS                    * MakeEoSData          ();
+        itemdata_EoTD                   * MakeEoTDData         ();
 
         uint16_t buyPrice;
         uint16_t sellPrice;
         uint8_t  category;
         uint8_t  spriteID;
         uint16_t itemID;
-        uint16_t itemParam1;
-        uint8_t  itemParam2;
-        uint8_t  itemParam3;
+        uint16_t param1;
+        uint8_t  param2;
+        uint8_t  param3;
         uint8_t  unk1;
         uint8_t  unk2;
         uint8_t  unk3;
         uint8_t  unk4;
+
+    private:
+        std::unique_ptr<itemdata_EoTD>     m_peotddata;
+        std::unique_ptr<itemdata_EoS>      m_peosdata;
+        std::unique_ptr<exclusiveitemdata> m_pexdata;
     };
 
     /*
-        Item data format for Explorers of Time/Darkness
+        Item data format specific to Explorers of Time/Darkness
     */
-    struct itemdata_EoTD : public itemdata
+    struct itemdata_EoTD
     {
-        itemdata_EoTD()
-            :itemdata()
-        {
-        }
-
-        virtual itemdata_EoTD * Get_EoTD_ItemData() { return this; }
+        itemdata_EoTD(){}
     };
 
     
     /*
-        Item data format for Explorers of Sky
+        Item data format specific to Explorers of Sky
     */
-    struct itemdata_EoS : public itemdata
+    struct itemdata_EoS
     {
-        itemdata_EoS()
-            :itemdata()
-        {
-            //buyPrice    = 0;
-            //sellPrice   = 0;
-            //category    = 0;
-            //spriteID    = 0;
-            //itemID      = 0;
-            //itemParam1  = 0;
-            //itemParam2  = 0;
-            //itemParam3  = 0;
-            //unk1        = 0;
-            //unk2        = 0;
-            //unk3        = 0;
-            //unk4        = 0;
-        }
-        virtual ~itemdata_EoS(){}
-        virtual exclusiveitemdata * GetExclusiveItemData() { return nullptr; }
-        virtual itemdata_EoS      * Get_EoS_ItemData()     { return this; }
-
-        //uint16_t buyPrice;
-        //uint16_t sellPrice;
-        //uint8_t  category;
-        //uint8_t  spriteID;
-        //uint16_t itemID;
-        //uint16_t itemParam1;
-        //uint8_t  itemParam2;
-        //uint8_t  itemParam3;
-        //uint8_t  unk1;
-        //uint8_t  unk2;
-        //uint8_t  unk3;
-        //uint8_t  unk4;
+        itemdata_EoS(){}
     };
 
     /*
         Additional data for exclusive items
     */
-    struct exclusiveitemdata : public itemdata_EoS
+    struct exclusiveitemdata
     {
-        exclusiveitemdata( uint16_t extype = 0, uint16_t exparam = 0 )
-            :itemdata_EoS()
-        {
-            exlusiveType   = extype;
-            exclusiveParam = exparam;
-        }
-        virtual ~exclusiveitemdata(){}
+        exclusiveitemdata( uint16_t ty = 0, uint16_t prm = 0 )
+            :type(ty), param(prm)
+        {}
 
-        virtual exclusiveitemdata * GetExclusiveItemData() { return this; }
-
-        uint16_t exlusiveType;
-        uint16_t exclusiveParam;
+        uint16_t type;
+        uint16_t param;
     };
 
 //=====================================================================================
@@ -153,49 +131,64 @@ namespace pmd2 { namespace stats
     */
     class ItemsDB
     {
-        typedef std::vector<std::unique_ptr<itemdata>> itemptr_t;
         friend class ItemsXMLWriter;
         friend class ItemsXMLParser;
     public:
+        typedef std::vector<itemdata>::iterator       iterator;
+        typedef std::vector<itemdata>::const_iterator const_iterator;
+
         ItemsDB(){}
         ItemsDB( std::size_t reservesize );
         ~ItemsDB(){}
-
-        ItemsDB( const ItemsDB & other )
-        {
-            CopyCtor(other);
-        }
-
-        ItemsDB& operator=( const ItemsDB & other )
-        {
-            CopyCtor(other);
-            return *this;
-        }
-
-        /*
-            Handle copying polymorphic item type.
-        */
-        void CopyCtor( const ItemsDB & other );
 
         inline std::size_t size()const          { return m_itemData.size(); }
         inline bool        empty()const         { return m_itemData.empty(); }
         inline void        resize(size_t newsz) { return m_itemData.resize(newsz);}
 
         //The items are guaranteed to stay allocated as long as the object exists!
-        inline const itemdata & Item( uint16_t itemindex )const { return *(m_itemData[itemindex]); }
-        inline       itemdata & Item( uint16_t itemindex )      { return *(m_itemData[itemindex]); }
+        inline const itemdata & Item( uint16_t itemindex )const { return m_itemData[itemindex]; }
+        inline       itemdata & Item( uint16_t itemindex )      { return m_itemData[itemindex]; }
 
-        inline const itemdata & operator[]( uint16_t itemindex )const { return *(m_itemData[itemindex]); }
-        inline       itemdata & operator[]( uint16_t itemindex )      { return *(m_itemData[itemindex]); }
+        inline const itemdata & operator[]( uint16_t itemindex )const { return m_itemData[itemindex]; }
+        inline       itemdata & operator[]( uint16_t itemindex )      { return m_itemData[itemindex]; }
 
-        void push_back( itemdata          && item );
-        void push_back( itemdata_EoTD     && item );
-        void push_back( itemdata_EoS      && item );
-        void push_back( exclusiveitemdata && item );
+        void push_back( itemdata       && item );
+        void push_back( const itemdata  & item );
+
+        iterator       begin()      { return m_itemData.begin(); }
+        iterator       end()        { return m_itemData.end(); }
+        const_iterator begin()const { return m_itemData.begin(); }
+        const_iterator end()const   { return m_itemData.end(); }
 
     private:
-        itemptr_t m_itemData;
+        std::vector<itemdata> m_itemData;
     };
+
+//
+//
+//
+
+    /*
+        Export item data to XML files.
+    */
+    void      ExportItemsToXML     ( const ItemsDB                           & srcitems,
+                                     std::vector<std::string>::const_iterator  itbegitemnames,
+                                     std::vector<std::string>::const_iterator  itenditemnames,
+                                     std::vector<std::string>::const_iterator  itbegitemdesc,
+                                     std::vector<std::string>::const_iterator  itenditemdesc,
+                                     std::vector<std::string>::const_iterator  itbegitemlongdesc,
+                                     std::vector<std::string>::const_iterator  itenditemlongdesc,
+                                     const std::string                       & destdir );
+    /*
+        Import item data from xml files.
+    */
+    ItemsDB   ImportItemsFromXML   ( const std::string                  & srcdir, 
+                                     std::vector<std::string>::iterator  itbegitemnames,
+                                     std::vector<std::string>::iterator  itenditemnames,
+                                     std::vector<std::string>::iterator  itbegitemdesc,
+                                     std::vector<std::string>::iterator  itenditemdesc,
+                                     std::vector<std::string>::iterator  itbegitemlongdesc,
+                                     std::vector<std::string>::iterator  itenditemlongdesc );
 
 };};
 

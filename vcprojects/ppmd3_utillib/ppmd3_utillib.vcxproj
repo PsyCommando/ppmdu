@@ -77,6 +77,7 @@
     <IncludePath>$(SolutionDir)src;$(SolutionDir)lib\EasyBMP;$(SolutionDir)lib\lpng;$(SolutionDir)lib\png++;$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
     <SourcePath>$(SolutionDir)src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
     <LibraryPath>$(SolutionDir)lib_release_shared;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,7 +85,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PPMDU3_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -99,7 +101,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;POCO_STATIC;_CONSOLE;_LIB;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;POCO_STATIC;_CONSOLE;_LIB;PPMDU3_STANDALONE</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,6 +120,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;PPMDU3_LIB_SHARED;</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -131,7 +135,11 @@
     <ClCompile Include="..\..\src\ppmd3_txtutil.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\shared\ppmdu3.cpp" />
+    <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings.cpp" />
+    <ClCompile Include="..\..\src\shared\ppmdu3.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\..\src\types\content_type_analyser.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -202,7 +210,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\src\ppmdu\pmd3\game_strings.hpp" />
-    <ClInclude Include="..\..\src\shared\ppmdu3.hpp" />
+    <ClInclude Include="..\..\src\shared\ppmdu3.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\..\src\ppmdu\pmd3\pmd3_filetypes.hpp" />
     <ClInclude Include="..\..\src\types\content_type_analyser.hpp">

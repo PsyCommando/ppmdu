@@ -595,7 +595,7 @@ namespace DSE
         if( hdr.label != static_cast<uint32_t>(eDSEChunks::trk) )
             throw runtime_error("ParseTrkChunk(): Unexpected chunk label !");
 
-        if( std::distance(beg,end) < hdr.datlen )
+        if( static_cast<uint32_t>(abs(std::distance(beg,end))) < hdr.datlen )
             throw runtime_error("ParseTrkChunk(): Track chunk continues beyond the expected end !");
 
         //Set the actual end of the events track

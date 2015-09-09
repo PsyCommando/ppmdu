@@ -11,7 +11,8 @@ Description:
     #TODO: Use a map with named parameters instead ! It'll make it much more versatile.
 */
 #include <ppmdu/basetypes.hpp>
-#include<locale>
+#include <locale>
+#include <string>
 
 namespace utils
 {
@@ -68,6 +69,22 @@ namespace utils
             Convenience function for getting the lib wide options.
     */
     lwData & LibWide();
+
+
+
+    /*
+        Conditional Log functions
+            Used to log things to file, only if logging is enabled!
+    */
+
+    //Prefix <!>- to text and log into clog, only if log enabled.
+    void LogError   ( const std::string & text );
+
+    //Prefix <*>- to text and log into clog, only if log enabled.
+    void LogMessage ( const std::string & text );
+
+    //Log into clog as-is, only if log enabled.
+    void LogTextAsIs( const std::string & text );
 };
 
 #endif

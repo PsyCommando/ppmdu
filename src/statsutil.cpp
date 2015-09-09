@@ -278,7 +278,6 @@ namespace statsutil
             }
             catch(exception & )
             {
-                cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 return false;
             }
@@ -687,13 +686,20 @@ namespace statsutil
     {
         Poco::Path inpath(m_inputPath);
         Poco::Path outpath;
-        
+
         if( m_outputPath.empty() )
         {
             outpath = inpath.parent().append(DefExportStrName).makeFile();
         }
         else
-            outpath = Poco::Path(m_outputPath);
+        {
+            Poco::File outfilecheck(m_outputPath);  //Check if output is a directory
+
+            if( outfilecheck.exists() && outfilecheck.isDirectory() )
+                outpath = Poco::Path(m_outputPath).append(DefExportStrName).makeFile();
+            else
+                outpath = Poco::Path(m_outputPath);
+        }
 
         if( !m_forcedLocale )
         {
@@ -705,7 +711,7 @@ namespace statsutil
         }
         else
         {
-            cout << "A locale string was specified! Skipping game language detection.\n";
+            cout << "A forced locale string was specified! Skipping game language detection.\n";
             vector<string> gamestrings;
             pmd2::filetypes::ParseTextStrFile( inpath.toString(), std::locale(m_flocalestr) );
             WriteTextFileLineByLine( gamestrings, outpath.toString() );
@@ -795,7 +801,7 @@ namespace statsutil
         returnval = Execute();
 
 #ifdef _DEBUG
-        system("pause");
+        utils::PortablePause();
 #endif
 
         return returnval;

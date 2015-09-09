@@ -33,7 +33,7 @@ namespace filetypes
         pkdpx_header
             Structure of the header for an PKDPX file
     */
-    struct pkdpx_header : public utils::data_array_struct
+    struct pkdpx_header /*: public utils::data_array_struct*/
     {
         static const unsigned int HEADER_SZ        = 20u;
         static const unsigned int NB_FLAGS         = 9u;
@@ -47,12 +47,12 @@ namespace filetypes
         unsigned int size()const {return HEADER_SZ;}
 
 
-        std::vector<uint8_t>::iterator       WriteToContainer (  std::vector<uint8_t>::iterator       itwriteto  )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer(  std::vector<uint8_t>::const_iterator itReadfrom );
+        //std::vector<uint8_t>::iterator       WriteToContainer (  std::vector<uint8_t>::iterator       itwriteto  )const;
+        //std::vector<uint8_t>::const_iterator ReadFromContainer(  std::vector<uint8_t>::const_iterator itReadfrom );
 
         //Implementations specific to pkdpx_header
         template<class _outit>
-            _outit WriteToContainerT( _outit itwriteto )const
+            _outit WriteToContainer( _outit itwriteto )const
         {
             for( const uint8_t & abyte : magicn )
             {
@@ -74,7 +74,7 @@ namespace filetypes
         }
 
         template<class _init>
-            _init ReadFromContainerT(  _init itReadfrom )
+            _init ReadFromContainer(  _init itReadfrom )
         {
             for( uint8_t & abyte : magicn )
             {

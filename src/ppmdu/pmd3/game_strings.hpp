@@ -14,11 +14,22 @@ Description: Utilities for reading/writing the game strings fomat from SIR0 file
 namespace pmd3
 {
 //============================================================================================
-//  Constants
+//  Typedefs
 //============================================================================================
     typedef uint32_t     gstrhash_t; //Represents a unique string hash
     typedef std::string  catstr_t;
     typedef std::wstring gstr_t;
+
+
+//
+//
+//
+    struct GameStrData
+    {
+        gstr_t   str;
+        uint16_t unk1;
+        uint16_t unk2;
+    };
 
 //============================================================================================
 //  GameStringCatagory
@@ -40,23 +51,23 @@ namespace pmd3
 
         //--- Category ---
         const catstr_t      Name     ()const;
-        const std::locale & Loacale  ()const;
+        const std::locale & Locale  ()const;
               size_t        NbStrings()const;
 
         //--- Strings ---
         //Access a string. Return nullptr if doesn't exist!
-        const gstr_t * GetString( gstrhash_t str )const;
-              gstr_t * GetString( gstrhash_t str );
+        const GameStrData * GetString( gstrhash_t str )const;
+              GameStrData * GetString( gstrhash_t str );
 
          //Provide a way to access strings via index directly
-         const gstr_t & GetStringByIndex( size_t index )const;
-               gstr_t & GetStringByIndex( size_t index );
+         const std::pair<const gstrhash_t, GameStrData> & GetStringByIndex( size_t index )const;
+               std::pair<const gstrhash_t, GameStrData> & GetStringByIndex( size_t index );
 
         //Replace existing string with content
-        void                SetString( gstrhash_t str, const gstr_t & newstr );
+        void                SetString( gstrhash_t str, const GameStrData & newstr );
 
         //Add a brand new string. Should be done through the Game string pool to keep hashes unique.
-        void                AddString( gstrhash_t str, const gstr_t & newstr );
+        void                AddString( gstrhash_t str, const GameStrData & newstr );
 
     private:
         class GameStringsCategoryImpl;
@@ -78,6 +89,11 @@ namespace pmd3
         GameStringsPool( std::locale loc );
 
         //Constructors
+        GameStringsPool( const GameStringsPool & cp );
+        GameStringsPool( GameStringsPool      && mv );
+
+        GameStringsPool & operator=( const GameStringsPool & cp );
+        GameStringsPool & operator=( GameStringsPool      && mv );
 
         //Writing
         void WriteStringPool( const std::string & messdir );
@@ -86,14 +102,14 @@ namespace pmd3
         void LoadStringPool( const std::string & messdir );
 
         //Access
-        const gstr_t * GetString( gstrhash_t str )const;
-              gstr_t * GetString( gstrhash_t str );
+        const GameStrData * GetString( gstrhash_t str )const;
+              GameStrData * GetString( gstrhash_t str );
 
         const GameStringsCategory & GetCategory( size_t catind )const;
               GameStringsCategory & GetCategory( size_t catind );
 
-        const GameStringsCategory * GetCategory( const catstr_t & name )const;
-              GameStringsCategory * GetCategory( const catstr_t & name );
+        const std::pair<bool, const GameStringsCategory&> GetCategory( const catstr_t & name )const;
+              std::pair<bool, GameStringsCategory&>       GetCategory( const catstr_t & name );
 
         const std::pair<bool,size_t> GetCategoryIndex( const catstr_t & name )const;
               std::pair<bool,size_t> GetCategoryIndex( const catstr_t & name );
@@ -105,7 +121,7 @@ namespace pmd3
         size_t GetNbCategories  ()const;
 
         //Modify Strings
-        gstrhash_t            AddString  ( const gstr_t & str, const catstr_t & cat );
+        gstrhash_t            AddString  ( const GameStrData & str, const catstr_t & cat );
         bool                  RemString  ( gstrhash_t str );
 
         //Modify Categories
@@ -115,11 +131,9 @@ namespace pmd3
 
         //Export
         void ExportXML ( const std::string & filepath );
-        void ExportJSON( const std::string & filepath );
 
         //Import
         void ImportXML ( const std::string & filepath );
-        void ImportJSON( const std::string & filepath );
 
     private:
         class GameStringsPoolImpl;

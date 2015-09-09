@@ -1,6 +1,7 @@
 #include "contentid_generator.hpp"
 #include <iostream>
 #include <utils/library_wide.hpp>
+#include <cassert>
 using namespace std;
 
 namespace filetypes
@@ -73,7 +74,14 @@ namespace filetypes
             m_lastgenid++;
         }
         else
-            throw std::overflow_error("ContentIDManager::AcquireID(): Out of possible values!");
+        {
+            utils::LogError("ContentIDManager::AcquireID(): Ran out of IDs to assign to ContentTy!\n");
+#ifdef _DEBUG
+            assert(false);  //Too many content IDs were assigned!
+#else
+            throw std::overflow_error("ContentIDManager::AcquireID(): Out of IDs to assign!");
+#endif
+        }
 
         m_active.emplace( curid, std::addressof(owner) ); 
 
@@ -102,8 +110,26 @@ namespace filetypes
 
     void ContentIDManager::ReleaseID( const ContentTy & owner, cnt_t id )
     {
-        if( id > m_lastgenid )
+        if( id == std::numeric_limits<cnt_t>::max() )
+        {
+            if( utils::LibWide().isLogOn() )
+                clog<<"<!>- ContentIDManager::ReleaseID(): Tried to release an invalid ID!\n";
+#ifdef _DEBUG
+            assert(false); //Tried to release an invalid ID ! This usually happens when moving an ID, and re-using the source ID.. As the src ID is left with this invalid ID value.
+#else
+            throw std::runtime_error("ContentIDManager::ReleaseID(): Tried to release an invalid ID!");
+#endif
+        }
+        else if( id > m_lastgenid )
+        {
+            if( utils::LibWide().isLogOn() )
+                clog<<"<!>- ContentIDManager::ReleaseID(): Tried to release an ID we didn't assign yet!";
+#ifdef _DEBUG
+            assert(false);  //We didn't generate this ID yet !
+#else
             throw std::runtime_error("ContentIDManager::ReleaseID(): Tried to release an ID we didn't assign yet!");
+#endif
+        }
 
         m_released.emplace(id);
         m_active.erase(id);

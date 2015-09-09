@@ -151,6 +151,7 @@ namespace pmd2 { namespace audio
             Exports a MIDI along with a minimal soundfont for the specified smd+swd pair.
         */
         //
+        void ExportSoundfontAndMIDIs_new( const std::string & destdir )const;
 
         /*
             Attempts to export as a sounfont, following the General MIDI standard instrument patch list.

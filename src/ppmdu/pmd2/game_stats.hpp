@@ -157,10 +157,10 @@ namespace pmd2{ namespace stats
         inline       std::vector<std::string> Strings()             { return m_gameStrings; }
 
         //Accessors 
-        //const ItemsDB       & Items()const                      { return m_itemsData;    }
-        //ItemsDB             & Items()                           { return m_itemsData;    }
-        //void                  Items( ItemsDB       && newdata ) { m_itemsData = newdata; }
-        //void                  Items( const ItemsDB &  newdata ) { m_itemsData = newdata; }
+        const ItemsDB       & Items()const                      { return m_itemsData;    }
+        ItemsDB             & Items()                           { return m_itemsData;    }
+        void                  Items( ItemsDB       && newdata ) { m_itemsData = newdata; }
+        void                  Items( const ItemsDB &  newdata ) { m_itemsData = newdata; }
 
         //Accessors
         inline void                setCurDataDir( const std::string & path ) { m_dataFolder = path; }
@@ -172,17 +172,27 @@ namespace pmd2{ namespace stats
         /*
             If no path is specified, will use the last path used in either the constructor or in the function below
         */
-        void Load       ( const std::string & rootdatafolder = "" );
-        void LoadStrings( const std::string & rootdatafolder = "" );
-        void LoadPkmn   ( const std::string & rootdatafolder = "" );
-        void LoadMoves  ( const std::string & rootdatafolder = "" );
-        void LoadItems  ( const std::string & rootdatafolder = "" );
-
-        void Write       ( const std::string & rootdatafolder = "" );
-        void WritePkmn   ( const std::string & rootdatafolder = "" );
-        void WriteMoves  ( const std::string & rootdatafolder = "" );
-        void WriteStrings( const std::string & rootdatafolder = "" );
-        void WriteItems  ( const std::string & rootdatafolder = "" );
+        void Load       ();
+        void LoadStrings();
+        void LoadPkmn   ();
+        void LoadMoves  ();
+        void LoadItems  ();
+        void Load       ( const std::string & rootdatafolder );
+        void LoadStrings( const std::string & rootdatafolder );
+        void LoadPkmn   ( const std::string & rootdatafolder );
+        void LoadMoves  ( const std::string & rootdatafolder );
+        void LoadItems  ( const std::string & rootdatafolder );
+        
+        void Write       ();
+        void WritePkmn   ();
+        void WriteMoves  ();
+        void WriteStrings();
+        void WriteItems  ();
+        void Write       ( const std::string & rootdatafolder );
+        void WritePkmn   ( const std::string & rootdatafolder );
+        void WriteMoves  ( const std::string & rootdatafolder );
+        void WriteStrings( const std::string & rootdatafolder );
+        void WriteItems  ( const std::string & rootdatafolder );
 
         //Export
         /*
@@ -214,6 +224,7 @@ namespace pmd2{ namespace stats
                 Use those to get the correct string depending on the current game version.
         */
 
+        //pokemon
         std::vector<std::string>::const_iterator GetPokemonNameBeg()const;
         std::vector<std::string>::const_iterator GetPokemonNameEnd()const;
         std::vector<std::string>::iterator       GetPokemonNameBeg();
@@ -224,6 +235,7 @@ namespace pmd2{ namespace stats
         std::vector<std::string>::iterator       GetPokemonCatBeg();
         std::vector<std::string>::iterator       GetPokemonCatEnd();
 
+        //moves
         std::vector<std::string>::const_iterator GetMoveNamesBeg()const;
         std::vector<std::string>::const_iterator GetMoveNamesEnd()const;
         std::vector<std::string>::iterator       GetMoveNamesBeg();
@@ -233,6 +245,22 @@ namespace pmd2{ namespace stats
         std::vector<std::string>::const_iterator GetMoveDescEnd()const;
         std::vector<std::string>::iterator       GetMoveDescBeg();
         std::vector<std::string>::iterator       GetMoveDescEnd();
+
+        //item
+        std::vector<std::string>::const_iterator GetItemNamesBeg()const;
+        std::vector<std::string>::const_iterator GetItemNamesEnd()const;
+        std::vector<std::string>::iterator       GetItemNamesBeg();
+        std::vector<std::string>::iterator       GetItemNamesEnd();
+
+        std::vector<std::string>::const_iterator GetItemShortDescBeg()const;
+        std::vector<std::string>::const_iterator GetItemShortDescEnd()const;
+        std::vector<std::string>::iterator       GetItemShortDescBeg();
+        std::vector<std::string>::iterator       GetItemShortDescEnd();
+
+        std::vector<std::string>::const_iterator GetItemLongDescBeg()const;
+        std::vector<std::string>::const_iterator GetItemLongDescEnd()const;
+        std::vector<std::string>::iterator       GetItemLongDescBeg();
+        std::vector<std::string>::iterator       GetItemLongDescEnd();
 
         std::string              & GetPokemonNameStr( uint16_t pkmnindex );
         inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPokemonNameStr(pkmnindex); }
@@ -295,7 +323,7 @@ namespace pmd2{ namespace stats
 
         void IdentifyGameVersion     ();
         void IdentifyGameLocaleStr   ();
-        void BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings to avoid searching for them in the getstring methods below
+        void BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings blocks, using the data from the gamelang file, to avoid searching for everytimes the the getstring methods below is called
 
         void _LoadGameStrings();
         void _LoadPokemonAndMvData(); //Must be written together!
@@ -314,6 +342,9 @@ namespace pmd2{ namespace stats
             return m_strOffsets[static_cast<uint32_t>(what)];
         }
 
+        //Call this to do a check whether game strings are loaded, and load them as needed!
+        void _EnsureStringsLoaded();
+
     private:
 
         std::string             m_dataFolder;
@@ -331,8 +362,10 @@ namespace pmd2{ namespace stats
         //Game Text
         std::vector<std::string> m_gameStrings;
 
-        //Gameplay Data
+        //Pokemon Stats
         PokemonDB           m_pokemonStats;
+
+        //Items
         ItemsDB             m_itemsData;
 
         //#TODO: Combine those two. The move DB should abstract game specific details!!

@@ -526,14 +526,9 @@ int main( int argc, const char * argv[] )
         return -1;
     }
 
-//#ifdef _DEBUG
-//#ifdef WIN32
-//	system("pause");
-//#elif  _linux_
-//    char a;
-//    std::cin >> a;
-//#endif
-//#endif
+#ifdef _DEBUG
+    utils::PortablePause();
+#endif
 
     return 0;
 }

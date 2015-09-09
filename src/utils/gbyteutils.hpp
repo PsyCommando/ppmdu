@@ -129,6 +129,17 @@ namespace utils
         return itout;
     }
 
+    /*********************************************************************************************
+        WriteIntToByteContainer
+            Alias for WriteIntToByteVector, while we transition.
+        
+        #TODO: finish renaming everything !
+    *********************************************************************************************/
+    template<class T, class _outit>
+        inline _outit WriteIntToByteContainer( T val, _outit itout, bool basLittleEndian = true )
+    {
+        return WriteIntToByteVector( val, itout, basLittleEndian );
+    }
 
     /*********************************************************************************************
         ReadIntFromByteVector

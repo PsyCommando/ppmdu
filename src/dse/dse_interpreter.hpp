@@ -18,13 +18,67 @@ All wrongs reversed, no crappyrights :P
 
 namespace DSE
 {
-
     //#TODO: Put this into a MIDI utility header, or something like that..
     inline uint32_t ConvertTempoToMicrosecPerQuarterNote( uint32_t bpm )
     {
         static const uint32_t NbMicrosecPerMinute = 60000000;
         return NbMicrosecPerMinute / bpm;
     }
+
+
+    /*
+        This is used to convert dse tracks into midi.
+        It contains details on how to remap notes, what midi preset and bank to use for certain DSE Presets.
+
+        #TODO: Setup the interpreter to use this as one of its parameter. Move implementation to cpp.
+    */
+    struct SMDLPresetConversionInfo
+    {
+        typedef uint16_t dsepresetid_t;
+        typedef uint8_t  bankid_t;
+        typedef uint8_t  presetid_t;
+        typedef int8_t   midinote_t;
+
+        struct PresetConvData
+        {
+            presetid_t                       _midipres;   //The midi preset to use for this preset
+            bankid_t                         _midibank;   //The midi bank to use for this preset
+            std::map<midinote_t, midinote_t> _remapnotes; //Data on how to remap notes for instruments with complex splits, like drum presets
+        };
+
+        //
+        std::pair<presetid_t,bankid_t> GetPresetAndBank( dsepresetid_t dsep )
+        {
+            if( !_convtbl.empty() )
+            {
+                auto itfound = _convtbl.find(dsep);
+                if( itfound != _convtbl.end() )
+                    return std::move( std::make_pair(itfound->second._midipres, itfound->second._midibank) );
+            }
+            return std::move( std::make_pair( static_cast<presetid_t>(dsep), static_cast<bankid_t>(0) ) );
+        }
+
+        //
+        midinote_t RemapNote( dsepresetid_t dsep, midinote_t note )
+        {
+            if( !_convtbl.empty() )
+            {
+                auto itfound = _convtbl.find(dsep);
+
+                if( itfound != _convtbl.end() )
+                {
+                    auto foundnote = itfound->second._remapnotes.find(note);
+                    if( foundnote != itfound->second._remapnotes.end() )
+                        return foundnote->second;
+                }
+            }
+
+            return note;
+        }
+
+        //Instruments conversion table
+        std::map<dsepresetid_t, PresetConvData> _convtbl;
+    };
 
 
     /*

@@ -102,6 +102,9 @@
     <ClCompile Include="..\..\src\shared\ppmdu3.cpp">
       <Filter>Source Files\dll</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\utils\cmdline_util.hpp">

@@ -215,7 +215,7 @@ namespace filetypes
     vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar )
     {
         //Calculate padding first, to ensure the end offset is valid
-        uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
+        uint32_t lenpadding = data.size() % 16;
 
         //Make the SIR0 data
         sir0_head_and_list sir0data = MakeSIR0ForData( 0, data.size() + lenpadding );

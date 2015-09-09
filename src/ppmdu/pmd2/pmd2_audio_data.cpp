@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <unordered_map>
 
 #include <Poco/Path.h>
 #include <Poco/File.h>
@@ -184,7 +185,7 @@ namespace pmd2 { namespace audio
         else if( dsepan == DSE_LimitsPan.min_ )
             return sf2::SF_GenLimitsPan.min_;
         else
-            return round( ( dsepan - DSE_LimitsPan.mid_ ) * BytePanToSoundfontPanMulti );
+            return static_cast<int16_t>(lround( ( dsepan - DSE_LimitsPan.mid_ ) * BytePanToSoundfontPanMulti ));
     }
 
     //#FIXME: MOST LIKELY INNACURATE !
@@ -951,8 +952,7 @@ namespace pmd2 { namespace audio
                 }
 
 #ifdef _DEBUG
-                if( loopbeg > smpllen || loopend > smpllen )
-                    assert(false);
+                assert( (loopbeg > smpllen || loopend > smpllen) );
 #endif
 
                 Sample sm( std::move( loadfun ), smpllen );
@@ -1041,6 +1041,35 @@ namespace pmd2 { namespace audio
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
         }
     }
+
+    //struct 
+    //{
+    //};
+
+    //void BatchAudioLoader::ExportSoundfontAndMIDIs_new( const std::string & destdir )const
+    //{
+    //    Poco::Path outsoundfont(destdir);
+    //    outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
+    //    cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
+    //    vector<DSE::PresetBank&> swdls;
+
+
+    //    //We want to export smdl and swdl at the same time
+    //    for( size_t i = 0; i < m_pairs.size(); ++i )
+    //    {
+    //        uint32_t tpqn  =  m_pairs[i].first.metadata().tpqn;
+    //        m_pairs[i].second;
+    //       
+
+    //        //We must get the tempo value from the SMDL in order to compute envelope durations and etc..
+
+    //        //Assign the banks and preset numbers, and save them in a table for later use
+    //    }
+
+    //    //Using the table, build the midis.
+
+    //}
+
 
     void BatchAudioLoader::ExportSoundfontAsGM( const std::string                               & destf, 
                                                 const std::map< std::string, std::vector<int> > & dsetogm )const

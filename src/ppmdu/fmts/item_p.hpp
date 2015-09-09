@@ -24,21 +24,45 @@ namespace pmd2 {namespace filetypes
     //EoS only
     static const std::string ExclusiveItemData_FName = "item_s_p.bin";
 
+    //Offset Exclusive items begin
+    extern const uint32_t ExclusiveItemBaseDataIndex; //Index at which exclusive items have their base data in the item_p file(EoS only)
+
 //=========================================================================================
 //  Functions
 //=========================================================================================
     /*
-        * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
+        ParseItemsDataEoS
+            * pathItemsdat: The path to the directory containing either a single item_p.bin or both item_p.bin and item_s_p.bin !
     */
-    stats::ItemsDB ParseItemsData( const std::string & pathBalanceDir );
+    stats::ItemsDB ParseItemsDataEoS( const std::string & pathBalanceDir );
 
     /*
-        * pathItemsdat: The directory where the itemdata will be outputed to, in the form of at least a item_p.bin 
-                        and, if there are any PMD:EoS items, possibly also an item_s_p.bin.
-        * itemdata    : The item data to write the output files from.
+        WriteItemsDataEoS
+            * pathItemsdat: The directory where the itemdata will be outputed to, in the form of at least a item_p.bin 
+                            and, if there are any PMD:EoS items, possibly also an item_s_p.bin.
+            * itemdata    : The item data to write the output files from.
     */
-    void WriteItemsData( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata );
+    void WriteItemsDataEoS( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata );
 
+//=========================================================================================
+//  Functions
+//=========================================================================================
+    /*
+        ParseItemsDataEoTD
+            Parse the item data files from Explorers of Time/Darkness.
+
+            * pathItemsdat: The path to the directory containing the item data files.
+    */
+    stats::ItemsDB ParseItemsDataEoTD( const std::string & pathBalanceDir );
+
+    /*
+        WriteItemsDataEoTD
+            Write the item data files for Explorers of Time/Darkness.
+
+            * pathItemsdat: The directory where the itemdata will be outputed to.
+            * itemdata    : The item data to write the output files from.
+    */
+    void WriteItemsDataEoTD( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata );
 };};
 
 #endif

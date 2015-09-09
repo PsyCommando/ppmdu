@@ -66,47 +66,47 @@ namespace filetypes
     //    return (*const_cast<pkdpx_header*>(this))[index];
     //}
 
-    std::vector<uint8_t>::iterator pkdpx_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
-    {
-        for( const uint8_t & abyte : magicn )
-        {
-            *itwriteto = abyte; 
-            ++itwriteto;
-        }
+    //std::vector<uint8_t>::iterator pkdpx_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    for( const uint8_t & abyte : magicn )
+    //    {
+    //        *itwriteto = abyte; 
+    //        ++itwriteto;
+    //    }
 
-        itwriteto = utils::WriteIntToByteVector( compressedsz, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( compressedsz, itwriteto );
 
-        for( const uint8_t & aflag : flaglist )
-        {
-            *itwriteto = aflag; 
-            ++itwriteto;
-        }
+    //    for( const uint8_t & aflag : flaglist )
+    //    {
+    //        *itwriteto = aflag; 
+    //        ++itwriteto;
+    //    }
 
-        itwriteto = utils::WriteIntToByteVector( decompsz, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( decompsz, itwriteto );
 
-        return itwriteto;
-    }
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator pkdpx_header::ReadFromContainer(  std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        for( uint8_t & abyte : magicn )
-        {
-            abyte = *itReadfrom; 
-            ++itReadfrom;
-        }
+    //std::vector<uint8_t>::const_iterator pkdpx_header::ReadFromContainer(  std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    for( uint8_t & abyte : magicn )
+    //    {
+    //        abyte = *itReadfrom; 
+    //        ++itReadfrom;
+    //    }
 
-        compressedsz = utils::ReadIntFromByteVector<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+    //    compressedsz = utils::ReadIntFromByteVector<decltype(compressedsz)>(itReadfrom); //iterator is incremented
 
-        for( uint8_t & aflag : flaglist )
-        {
-            aflag = *itReadfrom; 
-            ++itReadfrom;
-        }
+    //    for( uint8_t & aflag : flaglist )
+    //    {
+    //        aflag = *itReadfrom; 
+    //        ++itReadfrom;
+    //    }
 
-        decompsz = utils::ReadIntFromByteVector<decltype(decompsz)>(itReadfrom); //iterator is incremented
+    //    decompsz = utils::ReadIntFromByteVector<decltype(decompsz)>(itReadfrom); //iterator is incremented
 
-        return itReadfrom;
-    }
+    //    return itReadfrom;
+    //}
    
 //==================================================================
 // PKDPX Handler
@@ -187,7 +187,7 @@ namespace filetypes
 
         //Write header, before the compressed data
         pkdpx_header headr = PXinfoToPKDPXHeader( pxinf );
-        headr.WriteToContainerT( itoutputbeg );
+        headr.WriteToContainer( itoutputbeg );
 
         //Copy compression buffer
         std::copy( buffer.begin(), buffer.end(), itoutputbeg );

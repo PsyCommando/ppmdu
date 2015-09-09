@@ -1,3 +1,7 @@
+/*
+    Handles exporting/importing the pokemon stats to/from XML.
+*/
+
 #include "pokemon_stats.hpp"
 #include <utils/parse_utils.hpp>
 #include <utils/pugixml_utils.hpp>
@@ -103,8 +107,10 @@ namespace pmd2 {namespace stats
 //  Classes
 //===============================================================================================
 
-    /*
-    */
+    /***************************************************************************************
+        PokemonDB_XMLWriter
+            Writes a pokemon DB objects to XML. This is a single-use object/state.
+    ***************************************************************************************/
     class PokemonDB_XMLWriter
     {
     public:
@@ -363,23 +369,36 @@ namespace pmd2 {namespace stats
 
 
     private:
+        //Length of the conversion buffer
         static const int                          CBuffSZ = (sizeof(int)*8+1);
 
         const PokemonDB                         & m_src;
         std::vector<std::string>::const_iterator m_itbegnames;
         std::vector<std::string>::const_iterator m_itbegcat;
 
+        //Conversion buffers. Used for faster value conversion. (Don't need all the extra locale stuff from stringstream, as all values are raw data)
         array<char,CBuffSZ>                      m_convBuff;
         array<char,CBuffSZ>                      m_secConvbuffer;
     };
 
-    /*
-    */
+    /***************************************************************************************
+        PokemonDB_XMLParser
+            Read a pokemon DB objects from XML. This is a single-use object/state.
+    ***************************************************************************************/
     class PokemonDB_XMLParser
     {
         //Lets hide that ginormous type plz
         typedef std::pair<std::vector<std::string>::iterator,std::vector<std::string>::iterator> strbounds_t;
     public:
+
+        /*
+        PokemonDB_XMLParser
+            - out_pkdb   : The destination PokemonDB object
+            - itbegnames : The beginning iterator of the game's pokemon name strings.
+            - itendnames : The end iterator of the game's pokemon name strings.
+            - itbegcat   : The beginning iterator of the game's pokemon category strings.
+            - itendcat   : The end iterator of the game's pokemon category strings.
+        */
         PokemonDB_XMLParser( PokemonDB                          & out_pkdb,
                              std::vector<std::string>::iterator   itbegnames,
                              std::vector<std::string>::iterator   itendnames,

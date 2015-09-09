@@ -859,13 +859,13 @@ namespace DSE
             else 
             {
                 //Make several pauses in a row!
-                int nbpauses = ( delta / std::numeric_limits<uint16_t>::max() );
+                unsigned long long nbpauses = delta / std::numeric_limits<uint16_t>::max();
                 if( ( delta % std::numeric_limits<uint16_t>::max() ) != 0 )
                     ++nbpauses;
 
                 unsigned long long pauseleft = delta; //The nb of ticks to pause for remaining
 
-                for( int i = 0; i < nbpauses; ++nbpauses )
+                for( unsigned long long i = 0; i < nbpauses; ++nbpauses )
                 {
                     if( pauseleft < numeric_limits<uint8_t>::max() )
                     {

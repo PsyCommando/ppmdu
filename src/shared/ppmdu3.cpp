@@ -5,6 +5,7 @@
 #include <map>
 #include <set>
 #include <memory>
+#include <cassert>
 using namespace std;
 
 namespace ppmdu3
@@ -211,10 +212,10 @@ namespace ppmdu3
 
                 if( strmaxlen < MaxStrLen )
                 {
-                    const pmd3::gstr_t * fstr = ptr->GetString( strh );
-                    if( fstr != nullptr && fstr->length() < strmaxlen )
+                    const pmd3::GameStrData * pstrdat = ptr->GetString( strh );
+                    if( pstrdat != nullptr && pstrdat->str.length() < strmaxlen )
                     {
-                        wcscpy( out_str, fstr->c_str() );
+                        wcscpy( out_str, pstrdat->str.c_str() );
                     }
                     else
                         return -1;
@@ -249,10 +250,11 @@ namespace ppmdu3
 
                 if( strmaxlen < MaxStrLen )
                 {
-                    const pmd3::gstr_t & fstr = ptr->GetCategory(catindex).GetStringByIndex(strindex);
-                    if( fstr.length() < strmaxlen )
+                    const auto & strdat = ptr->GetCategory(catindex).GetStringByIndex(strindex);
+
+                    if( strdat.second.str.length() < strmaxlen )
                     {
-                        wcscpy( out_str, fstr.c_str() );
+                        wcscpy( out_str, strdat.second.str.c_str() );
                     }
                     else
                         return -1;
@@ -332,43 +334,98 @@ namespace ppmdu3
 
         /*
         */
-        PPMDU_API size_t GetNbCategoriesLoaded( ppmdu3_gstrplhndl hndl );
+        PPMDU_API size_t GetNbCategoriesLoaded( ppmdu3_gstrplhndl hndl )
+        {
+            try
+            {
+                pmd3::GameStringsPool * ptr = nullptr;
+                if( !AcquireStringPool( hndl, ptr ) )
+                    return 0;
+                else
+                    return ptr->GetNbCategories();
+            }
+            catch(std::exception & e)
+            {
+                cerr <<"Exception caught (GetNbCategoriesLoaded): " << e.what() <<"\n";
+                return 0;
+            }
+        }
 
         /*
         */
-        PPMDU_API size_t GetNbStringsLoaded( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex );
+        PPMDU_API size_t GetNbStringsLoaded( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex )
+        {
+            try
+            {
+                pmd3::GameStringsPool * ptr = nullptr;
+
+                if( AcquireStringPool( hndl, ptr ) && catindex < ptr->GetNbCategories() )
+                    return ptr->GetCategory(catindex).NbStrings();
+                else
+                    return 0;
+            }
+            catch(std::exception & e)
+            {
+                cerr <<"Exception caught (GetNbStringsLoaded): " << e.what() <<"\n";
+                return 0;
+            }
+        }
 
 
         //------------------ Modification ------------------
 
 
-        PPMDU_API int ppmdu3_SetStringByHash( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh, const wchar_t * in_str, size_t strl );
+        PPMDU_API int ppmdu3_SetStringByHash( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh, const wchar_t * in_str, size_t strl )
+        {
+            assert(false);
+            return -1;
+        }
 
-        PPMDU_API int ppmdu3_SetStringByIndex( ppmdu3_gstrplhndl hndl,  ppmdu3_index catindex,  ppmdu3_index strindex, const wchar_t * in_str, size_t strl );
+        PPMDU_API int ppmdu3_SetStringByIndex( ppmdu3_gstrplhndl hndl,  ppmdu3_index catindex,  ppmdu3_index strindex, const wchar_t * in_str, size_t strl )
+        {
+            assert(false);
+            return -1;
+        }
 
         /*
             ppmdu3_AddString
                 Returns hash of the new string, or 0 if it fails.
         */
-        PPMDU_API ppmdu3_strhash ppmdu3_AddString( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex,  const wchar_t * in_str, size_t strl );
+        PPMDU_API ppmdu3_strhash ppmdu3_AddString( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex,  const wchar_t * in_str, size_t strl )
+        {
+            assert(false);
+            return 0;
+        }
 
         /*
             ppmdu3_RemString
                 Returns 0 if it fails.
         */
-        PPMDU_API int ppmdu3_RemString( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh );
+        PPMDU_API int ppmdu3_RemString( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh )
+        {
+            assert(false);
+            return -1;
+        }
 
         /*
             ppmdu3_AddString
                 Returns index of the new category + 1, or 0 if it fails.
         */
-        PPMDU_API size_t ppmdu3_AddCategory( ppmdu3_gstrplhndl hndl,  const wchar_t * in_str, size_t strl );
+        PPMDU_API size_t ppmdu3_AddCategory( ppmdu3_gstrplhndl hndl,  const wchar_t * in_str, size_t strl )
+        {
+            assert(false);
+            return 0;
+        }
 
         /*
             ppmdu3_RemString
                 Returns hash of the new string, or 0 if it fails.
         */
-        PPMDU_API int ppmdu3_RemCategory( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex );
+        PPMDU_API int ppmdu3_RemCategory( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex )
+        {
+            assert(false);
+            return -1;
+        }
     };
 
 

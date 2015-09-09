@@ -20,10 +20,10 @@ extern "C" {
     //Windows systems
     #if defined(PPMDU3_LIB_SHARED)
         #define PPMDU_API __declspec(dllexport) //Exporting DLL
-    #elif !defined(PPMDU3_LIB_STATIC)
+    #elif !defined(PPMDU3_LIB_STATIC) && !defined(PPMDU3_STANDALONE)
         #define PPMDU_API __declspec(dllimport) //Importing DLL
     #else
-        #define PPMDU_API                       //Static library
+        #define PPMDU_API                       //Static library/exe
     #endif
 
 #else

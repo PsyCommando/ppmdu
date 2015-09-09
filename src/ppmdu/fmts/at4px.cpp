@@ -50,47 +50,47 @@ namespace filetypes
 //  at4px_header
 //========================================================================================================
     
-    std::vector<uint8_t>::iterator at4px_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
-    {
-        for( const uint8_t & abyte : magicn )
-        {
-            *itwriteto = abyte; 
-            ++itwriteto;
-        }
+    //std::vector<uint8_t>::iterator at4px_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
+    //{
+    //    for( const uint8_t & abyte : magicn )
+    //    {
+    //        *itwriteto = abyte; 
+    //        ++itwriteto;
+    //    }
 
-        itwriteto = utils::WriteIntToByteVector( compressedsz, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( compressedsz, itwriteto );
 
-        for( const uint8_t & aflag : flaglist )
-        {
-            *itwriteto = aflag; 
-            ++itwriteto;
-        }
+    //    for( const uint8_t & aflag : flaglist )
+    //    {
+    //        *itwriteto = aflag; 
+    //        ++itwriteto;
+    //    }
 
-        itwriteto = utils::WriteIntToByteVector( decompsz, itwriteto );
+    //    itwriteto = utils::WriteIntToByteVector( decompsz, itwriteto );
 
-        return itwriteto;
-    }
+    //    return itwriteto;
+    //}
 
-    std::vector<uint8_t>::const_iterator at4px_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    {
-        for( uint8_t & abyte : magicn )
-        {
-            abyte = *itReadfrom; 
-            ++itReadfrom;
-        }
+    //std::vector<uint8_t>::const_iterator at4px_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    //{
+    //    for( uint8_t & abyte : magicn )
+    //    {
+    //        abyte = *itReadfrom; 
+    //        ++itReadfrom;
+    //    }
 
-        compressedsz = utils::ReadIntFromByteVector<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+    //    compressedsz = utils::ReadIntFromByteVector<decltype(compressedsz)>(itReadfrom); //iterator is incremented
 
-        for( uint8_t & aflag : flaglist )
-        {
-            aflag = *itReadfrom; 
-            ++itReadfrom;
-        }
+    //    for( uint8_t & aflag : flaglist )
+    //    {
+    //        aflag = *itReadfrom; 
+    //        ++itReadfrom;
+    //    }
 
-        decompsz = utils::ReadIntFromByteVector<decltype(decompsz)>(itReadfrom); //iterator is incremented
+    //    decompsz = utils::ReadIntFromByteVector<decltype(decompsz)>(itReadfrom); //iterator is incremented
 
-        return itReadfrom;
-    }
+    //    return itReadfrom;
+    //}
 
 //========================================================================================================
 //  at4px_decompress
@@ -251,7 +251,7 @@ namespace filetypes
 
         //Write header, before the compressed data
         at4px_header headr = PXinfoToAT4PXHeader( pxinf );
-        headr.WriteToContainerT( itoutputbeg );
+        headr.WriteToContainer( itoutputbeg );
 
         //Copy compression buffer
         std::copy( buffer.begin(), buffer.end(), itoutputbeg );

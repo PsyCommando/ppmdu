@@ -24,21 +24,23 @@ namespace utils
 //===============================================================================================
 
     /************************************************************************
-        data_array_struct
+        (Deprecated)data_array_struct
             A base structure for structures to be read from files, such as 
             headers, and any constant size blocks of data !
+
+        #TODO: Phase this out !
     ************************************************************************/
-    struct data_array_struct
-    {
-        virtual ~data_array_struct(){}
-        virtual unsigned int size()const=0;
+    //struct data_array_struct
+    //{
+    //    virtual ~data_array_struct(){}
+    //    virtual unsigned int size()const=0;
 
-        //The method expects that the interators can be incremented at least as many times as "size()" returns !
-        virtual std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const = 0;
+    //    //The method expects that the interators can be incremented at least as many times as "size()" returns !
+    //    virtual std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const = 0;
 
-        //The method expects that the interators can be incremented at least as many times as "size()" returns !
-        virtual std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )     = 0;
-    };
+    //    //The method expects that the interators can be incremented at least as many times as "size()" returns !
+    //    virtual std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )     = 0;
+    //};
 
     /************************************************************************
         Resolution
@@ -200,6 +202,13 @@ namespace utils
         else
             return val;
     }
+
+
+    /************************************************************************************
+        PortablePause
+            Use this to make a pause for user input that will work on any OS.
+    ************************************************************************************/
+    void PortablePause();
 
 };
 

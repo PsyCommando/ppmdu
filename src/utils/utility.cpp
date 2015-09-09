@@ -64,4 +64,18 @@ namespace utils
     {
         return os << res.width <<"x" <<res.height;
     }
+
+//
+//
+//
+    void PortablePause()
+    {
+    #ifdef WIN32
+            system("pause");
+    #else
+            char c = 0;
+            cout <<"Press any key and enter to continue..";
+            cin >> c;
+    #endif
+    }
 };

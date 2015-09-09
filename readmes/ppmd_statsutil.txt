@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
-Version	   : 0.11
+Version	   : 0.2
 Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -17,6 +17,9 @@ Changelog:
     * Fixed specifying a directory for import, with no options, not running Import All properly!
     * Removed slow progress indicator for text_*.str file parsing and writing! Exec time cut from 
       ~6s to >1s !
+-0.2(2015/09/09):
+    * Fixed item import/export for Explorers of Sky!
+    * Removed support for Explorers of Time/Darkness for now. The format differs too much!
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -48,6 +51,7 @@ This tool can export various data from the Pokemon Mystery Dungeon : Explorers o
 games(Only tested with Sky for now).
 
 Right now it supports:
+- Game text (Dialog, menus, item names, move names, pokemon names, etc..)
 - Move data (Base power, type, name, descritpion, etc.. )
 - Pokemon data (Name, category, type, stats growth, level-up moves, hm/tm moves, egg moves, etc..)
 
@@ -67,18 +71,23 @@ How to use:
     Keep the gamelang.xml file in the same directory as the executable! Or specify the path to it 
     using the -gl option at the command line followed with the path!
 
-Easy:
----------
  * For exporting everything, just drag and drop the ROM data directory onto the application.
  * For importing everything, open a command prompt, and put the path of the directory resulting from the 
    "export everything" operation, followed with the path of the ROM's data directory.
    
  You can force either operation using the "-e" or "-i" option, respectively!
  
- NOTE: Export ALL and Import ALL do not export or import all game strings! Because the data 
+ NOTE: Export ALL and Import ALL do not export or import game strings! Because the data 
        exported or imported during those operations already contain a small part of the game
        strings, and thus many issues would arise when those would get overwritten by the 
        full game strings file on import!
+       
+       If you want to edit the game strings, export them separately, using the 
+       -e -str options.
+       If you want to import game strings, make sure you import them before 
+       importing any other stats files changes(move data, pokemon data, etc..). 
+       So that the changes made in the other stats files are applied afterwards. 
+       To import only the game strings, use the -i -str options.
 
 Exporting:
 ----------
@@ -184,7 +193,7 @@ Options:
 
 
 Examples:
-ppmd_statsutil.exe -i -e -pk -mv -items -str -locale "C" -gl "PathToGameLangFile/gamelang.xml" "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
+ppmd_statsutil.exe -i -e -pk -mv -items -str -locale "C" -gl "PathToGameLangFile/gamelang.xml" "c:/pmd_romdata/data" "c:/output/path" 
 
 Description:
 To export game data to XML, you have to append "-e" to the

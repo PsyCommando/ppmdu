@@ -1,5 +1,7 @@
 #include "library_wide.hpp"
 #include <thread>
+#include <iostream>
+#include <iomanip>
 using namespace std;
 
 namespace utils
@@ -54,5 +56,27 @@ namespace utils
     lwData & LibraryWide::Data()
     {
         return m_data;
+    }
+
+
+//
+//
+//
+    void LogError  ( const std::string & text )
+    {
+        if( LibWide().isLogOn() )
+            clog << "<!>- " <<text;
+    }
+
+    void LogMessage( const std::string & text )
+    {
+        if( LibWide().isLogOn() )
+            clog << "<*>- " <<text;
+    }
+
+    void LogTextAsIs( const std::string & text )
+    {
+        if( LibWide().isLogOn() )
+            clog << text;
     }
 };
