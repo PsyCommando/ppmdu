@@ -165,6 +165,15 @@ namespace statsutil
             "-gl \"PathToGameLangFile/gamelang.xml\"",
             std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
         },
+
+        //Specify path to gamelang.xml
+        {
+            "log",
+            0,
+            "Turn on logging to file.",
+            "-log",
+            std::bind( &CStatsUtil::ParseOptionLog, &GetInstance(), placeholders::_1 ),
+        },
     }};
 
 
@@ -192,6 +201,7 @@ namespace statsutil
         m_hndlPkmn        = false;
         m_langconf        = DefLangConfFile;
         m_flocalestr      = "";
+        m_shouldlog       = false;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -304,6 +314,13 @@ namespace statsutil
             else
                 throw runtime_error("New path to gamelang file does not exists, or is inaccessible!");
         }
+        return true;
+    }
+
+    bool CStatsUtil::ParseOptionLog( const std::vector<std::string> & optdata )
+    {
+        m_shouldlog = true;
+        m_redirectClog.Redirect( "log.txt" );
         return true;
     }
 
@@ -662,23 +679,30 @@ namespace statsutil
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
-            outpath = inpath.parent().append(pmd2::filetypes::TextStr_EngFName).makeFile();
+            throw runtime_error("Output path unspecified!");
 
-        if( !utils::isFolder( m_outputPath ) )
-            throw runtime_error("Output path doesn't exist, or isn't a directory!");
-
-        outpath = Poco::Path(m_outputPath);
-
-        if( ! m_flocalestr.empty() )
+        if( utils::isFolder( m_outputPath ) )
         {
-            auto myloc = std::locale( m_flocalestr );
-            pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine( m_inputPath, myloc ), myloc );
+            outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
+            CGameStats gstats( outpath.toString(), m_langconf );
+            gstats.AnalyzeGameDir();
+            gstats.ImportStrings( m_inputPath );
+            gstats.WriteStrings();
         }
         else
         {
-            pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine(m_inputPath) );
-        }
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
 
+            if( ! m_flocalestr.empty() )
+            {
+                auto myloc = std::locale( m_flocalestr );
+                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine( m_inputPath, myloc ), myloc );
+            }
+            else
+            {
+                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine(m_inputPath) );
+            }
+        }
         return 0;
     }
 

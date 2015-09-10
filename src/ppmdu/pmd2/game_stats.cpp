@@ -932,8 +932,8 @@ namespace pmd2{ namespace stats
     void CGameStats::ImportStrings( const std::string & file )
     {
         //cout<<"-- Importing all game strings from text file --\n";
-        if( m_gameStrings.empty() )
-            throw runtime_error( "No string data to export !" );
+        //if( m_gameStrings.empty() )
+        //    throw runtime_error( "No string data to export !" );
 
         cout<<" <*>- Importing game text from \"" <<file <<"\" ..";
         m_gameStrings = utils::io::ReadTextFileLineByLine( file, locale(m_gameLangLocale) );

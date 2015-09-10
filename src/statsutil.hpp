@@ -43,6 +43,7 @@ namespace statsutil
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
         bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
+        bool ParseOptionLog        ( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -127,7 +128,10 @@ namespace statsutil
         bool        m_hndlMoves;      //If we handle only moves
         bool        m_hndlPkmn;       //If we handle only Pokemon
         eOpForce    m_force;          //Whether 
+        bool        m_shouldlog;      
 
+
+        utils::cmdl::RAIIClogRedirect m_redirectClog;
         //eOutFormat  m_outputFormat;   //
         //bool        m_bExpSingleFile; //Whether the result will be Exported to a single file, when possible
     };

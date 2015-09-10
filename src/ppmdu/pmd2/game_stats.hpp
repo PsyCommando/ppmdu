@@ -217,6 +217,19 @@ namespace pmd2{ namespace stats
         void ImportMoves  ( const std::string & directory );
         void ImportStrings( const std::string & file );
         void ImportItems  ( const std::string & directory );
+
+        /*
+            Analyze the current data folder to find out what game, and language it is, 
+            and where are the correct strings located at.
+        */
+        inline void AnalyzeGameDir()
+        {
+            IdentifyGameVersion();
+            IdentifyGameLocaleStr();
+            BuildListOfStringOffsets();
+            if( m_gameVersion == filetypes::eGameVersion::Invalid )
+                throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
+        }
         
     public:
         /*
@@ -308,18 +321,7 @@ namespace pmd2{ namespace stats
         };
     
     private:
-        /*
-            Analyze the current data folder to find out what game, and language it is, 
-            and where are the correct strings located at.
-        */
-        inline void AnalyzeGameDir()
-        {
-            IdentifyGameVersion();
-            IdentifyGameLocaleStr();
-            BuildListOfStringOffsets();
-            if( m_gameVersion == filetypes::eGameVersion::Invalid )
-                throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
-        }
+
 
         void IdentifyGameVersion     ();
         void IdentifyGameLocaleStr   ();
