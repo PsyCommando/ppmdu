@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
-Version	   : 0.2
+Version	   : 0.21
 Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -20,6 +20,8 @@ Changelog:
 -0.2(2015/09/09):
     * Fixed item import/export for Explorers of Sky!
     * Removed support for Explorers of Time/Darkness for now. The format differs too much!
+-0.21(2015/09/10):
+    * Fixed game string import.
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -104,6 +106,12 @@ Exporting:
         Replace the paths with the appropriate paths! You can omit the output path, 
         and the xml data will be exported to a default directory.
 
+* Exporting item data to XML:
+    Type this at the command line (without the first set of quotes): 
+        "ppmd_statsutil.exe -e -items "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        Replace the paths with the appropriate paths! You can omit the output path, 
+        and the xml data will be exported to a default directory.
+
 * Exporting game text to text file:
     Type this at the command line (without the first set of quotes): 
         "ppmd_statsutil.exe -e -str "path/To/PMD2/ROM/DataDir" "Path/To/Output/File/text.txt""
@@ -121,6 +129,11 @@ Importing:
 * Importing moves data from XML back into the game:
     Enter this at the commandline (without the first set of quotes):
         "ppmd_statsutil.exe -i -mv "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
+        Replace the paths with the appropriate paths! The output path is mandatory!
+
+* Importing items data from XML back into the game:
+    Enter this at the commandline (without the first set of quotes):
+        "ppmd_statsutil.exe -i -items "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
         Replace the paths with the appropriate paths! The output path is mandatory!
 
 * Importing game text from a text file back into the game:
@@ -151,6 +164,10 @@ More Details:
     EoS game has a copy of all move data, and its unclear if its even used, but better 
     output it with the rest I guess.
 
+* Item Data:
+    The item data is exported just like the last two types of data. Some items may have exlusive data.
+    But only past a certain item index are items considered exclusive items.
+
 * Text Data:
     The text data is exported in the simplest method possible, as a raw text file!
     Each line is a single string in the game. All special characters are escaped with a backslash!
@@ -171,6 +188,7 @@ To edit those, a reference sheet might come in handy, and you can pick one over 
 http://apointlessplace.net/wms (look for a item_p.xlsx excel sheet, and go to the keyvalue tab)
 Those numbers next to all those things are the same values that end up in the XML data!
 You can also go on the Project Pokemon Wiki and look at the monster.md and the waza_p.bin page!.
+http://projectpokemon.org/wiki/Pokemon_Mystery_Dungeon_Explorers_of_Sky
 
 ----------------------------------------------------------------------------------------------------
 Readme:

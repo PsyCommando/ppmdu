@@ -233,6 +233,9 @@ namespace pmd2 { namespace stats
                         filelst.push_back( (itDir.path().absolute().toString()) );
                 }
 
+                if(filelst.empty())
+                    throw runtime_error( "MoveDB_XMLParser::Parse(): Found no move files to parse!" );
+
                 ReadAllMoves(filelst);
             }
             catch( exception & e )
