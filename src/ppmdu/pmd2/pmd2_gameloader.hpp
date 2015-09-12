@@ -62,11 +62,9 @@ namespace pmd2
 
         //Handles Loading the Game Data
         void Load();
-        void Load (  );
 
         //Handles Writing the Game Data
         void Write()const;
-        void Write( const std::wstring & gamedir )const;
 
         /*
             Access to the sub-sections of the game's data

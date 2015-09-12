@@ -214,6 +214,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />

@@ -323,6 +323,9 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\resources\pkmn_types.txt">
