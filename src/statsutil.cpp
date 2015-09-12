@@ -548,7 +548,7 @@ namespace statsutil
         if( !utils::isFolder( m_outputPath ) )
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
-        CGameStats gstats( m_outputPath, m_langconf );
+        GameStats gstats( m_outputPath, m_langconf );
         gstats.ImportPkmn( m_inputPath );
         gstats.WritePkmn( m_outputPath );
         return 0;
@@ -561,14 +561,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefPkmnDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefPkmnDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadPkmn();
 
         //Test output path
@@ -590,7 +590,7 @@ namespace statsutil
         if( !utils::isFolder( m_outputPath ) )
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
-        CGameStats gstats( m_outputPath, m_langconf );
+        GameStats gstats( m_outputPath, m_langconf );
         gstats.ImportItems( m_inputPath );
         gstats.WriteItems( m_outputPath );
         return 0;
@@ -603,14 +603,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefItemsDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefItemsDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadItems();
 
         //Test output path
@@ -637,7 +637,7 @@ namespace statsutil
 
         outpath = Poco::Path(m_outputPath);
 
-        CGameStats gstats ( m_outputPath, m_langconf );
+        GameStats gstats ( m_outputPath, m_langconf );
         gstats.ImportMoves( m_inputPath );
         gstats.WriteMoves ( m_outputPath );
 
@@ -651,14 +651,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefMvDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefMvDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadMoves();
 
         //Test output path
@@ -684,7 +684,7 @@ namespace statsutil
         if( utils::isFolder( m_outputPath ) )
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
-            CGameStats gstats( outpath.toString(), m_langconf );
+            GameStats gstats( outpath.toString(), m_langconf );
             gstats.AnalyzeGameDir();
             gstats.ImportStrings( m_inputPath );
             gstats.WriteStrings();
@@ -728,7 +728,7 @@ namespace statsutil
         if( !m_forcedLocale )
         {
             cout << "Detecting game language...\n";
-            CGameStats mystats( m_inputPath, m_langconf );
+            GameStats mystats( m_inputPath, m_langconf );
             mystats.LoadStrings();
             cout << "Writing...\n";
             mystats.ExportStrings( outpath.toString() );
@@ -774,7 +774,7 @@ namespace statsutil
 
         outpath = Poco::Path(m_outputPath);
 
-        CGameStats gstats ( m_outputPath, m_langconf );
+        GameStats gstats ( m_outputPath, m_langconf );
         gstats.ImportAll( m_inputPath );
         gstats.Write();
         return 0;
@@ -794,7 +794,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.Load();
 
         //Test output path

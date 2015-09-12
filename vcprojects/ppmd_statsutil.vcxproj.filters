@@ -52,6 +52,15 @@
     <Filter Include="pugixml">
       <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\Scripts">
+      <UniqueIdentifier>{98263793-d45e-4d45-9956-1dc327e73cae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\GameDataAccess">
+      <UniqueIdentifier>{20b70962-0627-4577-b3f8-37bac9f42335}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\GameDataAccess">
+      <UniqueIdentifier>{09b159ec-4a58-4dff-8be5-5ad619230d7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ext_fmts\bmp_io.cpp">
@@ -165,6 +174,12 @@
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
+      <Filter>Source Files\ppmdu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -242,9 +257,6 @@
     <ClInclude Include="..\src\statsutil.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
@@ -286,6 +298,30 @@
     </ClInclude>
     <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp">
+      <Filter>Header Files\ppmdu\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

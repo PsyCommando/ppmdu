@@ -14,6 +14,7 @@ All wrongs reversed, no crappyrights :P
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <ppmdu/containers/item_data.hpp>
 #include <ppmdu/containers/move_data.hpp>
+#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -22,36 +23,16 @@ namespace pmd2{ namespace stats
 { 
     //Game data filenames list
     // -- Pokemon --
-    static const std::string PkmnStatsGrowthFile; //Pokemon stats growth per level, and experience requirement
-    static const std::string PkmnStatsFile;       //Pokemon stats + data
-    static const std::string PkmnMovesFile;       //Pokemon level-up move list + Moves stats 
+    extern const std::string PkmnStatsGrowthFile; //Pokemon stats growth per level, and experience requirement
+    extern const std::string PkmnStatsFile;       //Pokemon stats + data
+    extern const std::string PkmnMovesFile;       //Pokemon level-up move list + Moves stats 
 
     // -- Items --
-    static const std::string ItemsStatsFile;      //
-    static const std::string ExcItmsStatsFile;    //
+    extern const std::string ItemsStatsFile;      //
+    extern const std::string ExcItmsStatsFile;    //
 
     //Game data location list, from rom root!
-    static const std::string GameStatsFolderPath; // "/BALANCE"
-
-    //Game data type list
-    //enum struct eGameDataTy 
-    //{
-    //    Invalid,
-    //    PkmnStatsGrowth,
-    //    PkmnStats,
-    //    MovesStats,
-    //    ItemsStats,
-    //};
-
-    ///*
-    //*/
-    //enum struct eGameVersion
-    //{
-    //    Invalid,
-    //    EoS,    //Explorers of Sky
-    //    EoTEoD, //Explorers of Time/Darkness
-    //    NBGameVers,
-    //};
+    extern const std::string GameStatsFolderPath; // "/BALANCE"
 
 //==================================================================================
 //  Functions
@@ -67,65 +48,13 @@ namespace pmd2{ namespace stats
 //  Classes
 //==================================================================================
 
-    /*
-        Loads the list of game language and the locale strings that go with it.
-    */
-    class GameLanguageLoader
-    {
-        friend class GameLangXMLParser;
-    public:
-        //static const GameLanguageLoader & GetInstance( const std::string & langFilePath );
-        GameLanguageLoader();
-        GameLanguageLoader( const std::string & textFileName, filetypes::eGameVersion version );
-
-        /*
-            Using the name of the text_*.str file, this will return the corresponding
-            locale string parsed!
-        */
-        std::string              FindLocaleString  ( const std::string & textFileName )const;
-
-        /*
-            Return the language associated with a given text_*.str file.
-        */
-        std::string              FindLanguage      ( const std::string & textFileName )const;
-
-        /*
-            Return the name of the text_*.str file associated with the specified language.
-        */
-        std::string              FindTextStrFName  ( const std::string & language     )const;
-
-        /*
-            For a given string block name inside the text_*.str file, returns whether the 
-            block was found, and the bounds of that block. The result is put into a pair.
-            First is whether it was found or not, second are the bounds, beginning and end.
-        */
-        std::pair<bool,std::pair<uint32_t,uint32_t>> FindStrBlockOffset( const std::string & blockName, const std::string & textFileName )const;
-
-    private:
-        void LoadFile( const std::string & textFileName );
-
-        typedef std::map<std::string,std::pair<uint32_t,uint32_t>>::value_type blockoffs_t;
-
-        struct glang_t
-        {
-            std::string                    language;
-            std::string                    textStrFName;
-            std::string                    localeStr;
-            std::map<std::string,std::pair<uint32_t,uint32_t>> strBlockOffsets;   //Name + offsets of all the sections containing specific strings
-        };
-
-        //typedef std::pair< std::string, std::string> glang_t;
-        std::vector<glang_t>    m_langData;
-        filetypes::eGameVersion m_gameVersion;
-    };
-
 
     /************************************************************************
-        CGameStats
+        GameStats
             This loads all stats from the PMD2 games into itself.
             It allows to import and export the data it has loaded.
     ************************************************************************/
-    class CGameStats
+    class GameStats
     {
         struct strbounds_t
         {
@@ -144,8 +73,8 @@ namespace pmd2{ namespace stats
         /*
             Pass the game language loader that contains all the known locale strings depending on the game's text_*.str file name.
         */
-        //CGameStats( const std::string & pmd2rootdir, GameLanguageLoader && langList );
-        CGameStats( const std::string & pmd2rootdir, const std::string & gamelangfile );
+        //GameStats( const std::string & pmd2rootdir, GameLanguageLoader && langList );
+        GameStats( const std::string & pmd2rootdir, const std::string & gamelangfile );
 
         //Accessors Pokemon Data
         inline const PokemonDB & Pkmn()const                        { return m_pokemonStats; }
@@ -227,7 +156,7 @@ namespace pmd2{ namespace stats
             IdentifyGameVersion();
             IdentifyGameLocaleStr();
             BuildListOfStringOffsets();
-            if( m_gameVersion == filetypes::eGameVersion::Invalid )
+            if( m_gameVersion == eGameVersion::Invalid )
                 throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
         }
         
@@ -276,49 +205,29 @@ namespace pmd2{ namespace stats
         std::vector<std::string>::iterator       GetItemLongDescEnd();
 
         std::string              & GetPokemonNameStr( uint16_t pkmnindex );
-        inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPokemonNameStr(pkmnindex); }
+        inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<GameStats*>(this)->GetPokemonNameStr(pkmnindex); }
         std::string              & GetPkmnCatNameStr( uint16_t pkmnindex );
-        inline const std::string & GetPkmnCatNameStr( uint16_t pkmnindex )const  { return const_cast<CGameStats*>(this)->GetPkmnCatNameStr(pkmnindex); }
+        inline const std::string & GetPkmnCatNameStr( uint16_t pkmnindex )const  { return const_cast<GameStats*>(this)->GetPkmnCatNameStr(pkmnindex); }
 
         std::string              & GetMoveNameStr   ( uint16_t moveindex );
-        inline const std::string & GetMoveNameStr   ( uint16_t moveindex )const  { return const_cast<CGameStats*>(this)->GetMoveNameStr(moveindex); }
+        inline const std::string & GetMoveNameStr   ( uint16_t moveindex )const  { return const_cast<GameStats*>(this)->GetMoveNameStr(moveindex); }
         std::string              & GetMoveDexcStr   ( uint16_t moveindex );
-        inline const std::string & GetMoveDexcStr   ( uint16_t moveindex )const  { return const_cast<CGameStats*>(this)->GetMoveDexcStr(moveindex); }
+        inline const std::string & GetMoveDexcStr   ( uint16_t moveindex )const  { return const_cast<GameStats*>(this)->GetMoveDexcStr(moveindex); }
 
         std::string              & GetAbilityNameStr( uint8_t abilityindex );
-        inline const std::string & GetAbilityNameStr( uint8_t abilityindex )const{ return const_cast<CGameStats*>(this)->GetAbilityNameStr(abilityindex); }
+        inline const std::string & GetAbilityNameStr( uint8_t abilityindex )const{ return const_cast<GameStats*>(this)->GetAbilityNameStr(abilityindex); }
         std::string              & GetAbilityDescStr( uint8_t abilityindex );
-        inline const std::string & GetAbilityDescStr( uint8_t abilityindex )const{ return const_cast<CGameStats*>(this)->GetAbilityDescStr(abilityindex); }
+        inline const std::string & GetAbilityDescStr( uint8_t abilityindex )const{ return const_cast<GameStats*>(this)->GetAbilityDescStr(abilityindex); }
 
         std::string              & GetTypeNameStr   ( uint8_t type );
-        inline const std::string & GetTypeNameStr   ( uint8_t type )const        { return const_cast<CGameStats*>(this)->GetTypeNameStr(type); }
+        inline const std::string & GetTypeNameStr   ( uint8_t type )const        { return const_cast<GameStats*>(this)->GetTypeNameStr(type); }
 
         std::string              & GetItemNameStr   ( uint16_t itemindex );
-        inline const std::string & GetItemNameStr   ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemNameStr(itemindex); }
+        inline const std::string & GetItemNameStr   ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemNameStr(itemindex); }
         std::string              & GetItemSDescStr  ( uint16_t itemindex );      //Short Description
-        inline const std::string & GetItemSDescStr  ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemSDescStr(itemindex); } //Short Description
+        inline const std::string & GetItemSDescStr  ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemSDescStr(itemindex); } //Short Description
         std::string              & GetItemLDescStr  ( uint16_t itemindex );      //Long Description
-        inline const std::string & GetItemLDescStr  ( uint16_t itemindex )const  { return const_cast<CGameStats*>(this)->GetItemLDescStr(itemindex); } //Long Description
-
-        /*
-            Enum for associating the values of the StrBlocksNames array below.
-        */
-        enum struct eStrBNames : unsigned int
-        {
-            PkmnNames,
-            PkmnCats,
-            MvNames,
-            MvDesc,
-            ItemNames,
-            ItemDescS,
-            ItemDescL,
-            AbilityNames,
-            AbilityDesc,
-            TypeNames,
-
-            //Add new string types above!
-            NBEntries,
-        };
+        inline const std::string & GetItemLDescStr  ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemLDescStr(itemindex); } //Long Description
     
     private:
 
@@ -349,12 +258,12 @@ namespace pmd2{ namespace stats
 
     private:
 
-        std::string             m_dataFolder;
-        std::string             m_gamelangfile;
-        GameLanguageLoader      m_possibleLang;
-        filetypes::eGameVersion m_gameVersion;
-        std::string             m_gameLangLocale;
-        std::string             m_gameTextFName;
+        std::string        m_dataFolder;
+        std::string        m_gamelangfile;
+        GameLanguageLoader m_possibleLang;
+        eGameVersion       m_gameVersion;
+        std::string        m_gameLangLocale;
+        std::string        m_gameTextFName;
         
 
 
