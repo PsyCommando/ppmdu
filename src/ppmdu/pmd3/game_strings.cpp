@@ -1,19 +1,22 @@
 #include "game_strings.hpp"
 #include <utils/library_wide.hpp>
+#include <utils/uuid_gen_wrapper.hpp>
 #include <string>
 #include <map>
 #include <locale>
 #include <cassert>
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
 namespace pmd3
 {
 
-
 //============================================================================================
-//  GameStringCatagory
+//  GameStringsCategoryImpl
 //============================================================================================
     /*
         GameStringsCategoryImpl
@@ -23,19 +26,21 @@ namespace pmd3
     {
     public:
 
-        GameStringsCategoryImpl( const catstr_t & catname, std::locale & loc )
-            :m_loc(loc), m_name(catname)
+        GameStringsCategoryImpl( const catstr_t & catname/*, std::locale & loc*/ )
+            :/*m_loc(loc),*/ m_name(catname)
         {}
 
-        locale                      m_loc;
+        //locale                      m_loc;
         catstr_t                    m_name;
-        map<gstrhash_t,GameStrData> m_strs;
+        map<gstruuid_t,GameStrData> m_strs;
     };
 
 
-
-    GameStringsCategory::GameStringsCategory( const catstr_t & catname, std::locale & loc )
-        :m_pimpl(new GameStringsCategoryImpl(catname, loc))
+//============================================================================================
+//  GameStringCatagory
+//============================================================================================
+    GameStringsCategory::GameStringsCategory( const catstr_t & catname/*, std::locale & loc*/ )
+        :m_pimpl(new GameStringsCategoryImpl(catname/*, loc*/))
     {}
 
     //Constructors
@@ -48,6 +53,9 @@ namespace pmd3
     {
         m_pimpl.reset( new GameStringsCategoryImpl(*cp.m_pimpl) );
     }
+
+    GameStringsCategory::~GameStringsCategory()
+    {}
 
     GameStringsCategory & GameStringsCategory::operator=( GameStringsCategory && mv )
     {
@@ -67,10 +75,10 @@ namespace pmd3
         return m_pimpl->m_name;
     }
 
-    const std::locale & GameStringsCategory::Locale()const
-    {
-        return m_pimpl->m_loc;
-    }
+    //const std::locale & GameStringsCategory::Locale()const
+    //{
+    //    return m_pimpl->m_loc;
+    //}
 
     size_t GameStringsCategory::NbStrings()const
     {
@@ -79,12 +87,12 @@ namespace pmd3
 
     //--- Strings ---
     //Access a string. Return nullptr if doesn't exist!
-    const GameStrData * GameStringsCategory::GetString( gstrhash_t str )const
+    const GameStrData * GameStringsCategory::GetString( gstruuid_t str )const
     {
         return const_cast<GameStringsCategory*>(this)->GetString(str);
     }
 
-    GameStrData * GameStringsCategory::GetString( gstrhash_t str )
+    GameStrData * GameStringsCategory::GetString( gstruuid_t str )
     {
         auto found = m_pimpl->m_strs.find( str );
 
@@ -94,24 +102,8 @@ namespace pmd3
             return nullptr;
     }
 
-        //Provide a way to access strings via index directly
-    const std::pair<const gstrhash_t, GameStrData> & GameStringsCategory::GetStringByIndex( size_t index )const
-    {
-        return const_cast<GameStringsCategory*>(this)->GetStringByIndex(index);
-    }
-
-    std::pair<const gstrhash_t, GameStrData> & GameStringsCategory::GetStringByIndex( size_t index )
-    {
-        if( index >= m_pimpl->m_strs.size()  )
-            throw out_of_range("GameStringsCategory::GetStringByIndex(" + to_string(index) + "): Index out of range!");
-
-        auto itfetch = (m_pimpl->m_strs.begin());
-        advance( itfetch, index );
-        return (*itfetch);
-    }
-
     //Replace existing string with content
-    void GameStringsCategory::SetString( gstrhash_t str, const GameStrData & newstr )
+    void GameStringsCategory::SetString( gstruuid_t str, const GameStrData & newstr )
     {
         GameStrData * pstr = GetString(str);
 
@@ -121,113 +113,137 @@ namespace pmd3
             AddString( str, newstr );
     }
 
-    //Add a brand new string. Should be done through the Game string pool to keep hashes unique.
-    void GameStringsCategory::AddString( gstrhash_t str, const GameStrData & newstr )
+    //Add a brand new string. Should be done through the Game string pool to keep uuides unique.
+    void GameStringsCategory::AddString( gstruuid_t str, const GameStrData & newstr )
     {
         m_pimpl->m_strs.emplace( str, newstr );
     }
+
+    bool GameStringsCategory::RemString( gstruuid_t uuid )
+    {
+        GameStringsCategoryImpl & impl = *m_pimpl;
+        auto itfound = impl.m_strs.find(uuid);
+
+        if( itfound != impl.m_strs.end() )
+        {
+            impl.m_strs.erase(itfound);
+            return true;
+        }
+        else
+            return false;
+    }
+
+
+
+//============================================================================================
+//  GameStringsPoolImpl
+//============================================================================================
+    /*
+        GameStringsPoolImpl
+            A collection of string categories.
+            Also handles unique uuid generation, and managment.
+    */
+    class GameStringsPool::GameStringsPoolImpl
+    {
+    public:
+        GameStringsPoolImpl( /*std::locale && loc*/ )
+            /*:m_loc(loc)*/
+        {}
+
+        gstruuid_t AddString( const GameStrData & str, const catstr_t & cat )
+        {
+            GameStringsCategory * pcat = GetCategoryByName(cat);
+
+            //Generate uuid
+            gstruuid_t uuid = utils::GenerateUUID();
+
+            if( utils::LibWide().isLogOn() )
+            {
+               wclog << "Added new string \"";
+               for( auto c : str.str )
+                   wclog<<"\\x" <<hex <<uppercase <<static_cast<uint16_t>(c) <<dec <<nouppercase;
+               wclog <<"\" with UUID:" <<hex <<uppercase <<uuid <<dec <<nouppercase << " !";
+            }
+
+            //Assign
+            pcat->AddString( uuid, str );
+        }
+
+
+        void RemString( gstruuid_t struuid )
+        {
+            for( auto & category : m_cats )
+            {
+                GameStrData * pfound = category.second.GetString(struuid);
+                if( pfound != nullptr )
+                    category.second.RemString( struuid );
+            }
+        }
+
+        GameStringsCategory * GetCategoryByName( const catstr_t & name )
+        {
+            auto itfound = m_cats.find( name );
+
+            if( itfound != m_cats.end() )
+                return &(itfound->second);
+            else
+                return nullptr;
+        }
+
+        GameStrData * GetString( gstruuid_t struuid )
+        {
+            for( auto & category : m_cats )
+            {
+                GameStrData * pfound = category.second.GetString(struuid);
+                if( pfound != nullptr )
+                    return pfound;
+            }
+            return nullptr;
+        }
+
+        void AddCategory( GameStringsCategory && newcat )
+        {
+            //Add category
+            catstr_t catname = newcat.Name(); //Make a copy, because its not guaranteed the arguments will be parsed in the desired order
+            m_cats.emplace( std::move(catname), std::move(newcat) );
+        }
+
+        void RemCategory( const catstr_t & name )
+        {
+            m_cats.erase( name );
+        }
+
+        GameStringsCategory * GetCategoryByStrUUID( gstruuid_t struuid )
+        {
+            for( auto & category : m_cats )
+            {
+                GameStrData * pfound = category.second.GetString(struuid);
+                if( pfound != nullptr )
+                    return &(category.second);
+            }
+
+            return nullptr;
+        }
+
+        size_t CalcTotalNbStrings()
+        {
+            size_t total = 0;
+            for( auto & category : m_cats )
+                total += category.second.NbStrings();
+
+            return total;
+        }
+
+        //std::locale                        m_loc;
+        map<catstr_t, GameStringsCategory> m_cats;
+    };
 
 
 //============================================================================================
 //  GameStringsPool
 //============================================================================================
-    /*
-        GameStringsPoolImpl
-            A collection of string categories.
-            Also handles unique hash generation, and managment.
-    */
-    class GameStringsPool::GameStringsPoolImpl
-    {
-    public:
-        GameStringsPoolImpl( std::locale && loc )
-            :m_loc(loc), m_totalstrs(0)
-        {}
-
-        gstrhash_t AddString( const GameStrData & str, const catstr_t & cat )
-        {
-            GameStringsCategory * pcat = GetCategoryByName(cat);
-
-            //Generate hash
-            gstrhash_t hash = 0;
-            assert(false); //implement me!
-
-            //Assign
-            pcat->AddString( hash, str );
-
-            //Increment string count 
-            ++m_totalstrs;
-        }
-
-        GameStringsCategory * GetCategoryByName( const catstr_t & name )
-        {
-            const size_t nbstrings = m_cats.size();
-            auto       & cats      = m_cats;
-
-            for( size_t i = 0; i < nbstrings; ++i )
-                if( cats[i].Name() == name ) return &(cats[i]);
-
-            return nullptr;
-        }
-
-        GameStrData * GetString( gstrhash_t strh )
-        {
-            auto itfound = m_uidtocat.find(strh);
-
-            if( itfound != m_uidtocat.end() )
-            {
-                return m_cats[itfound->second].GetString(strh);
-            }
-            else
-                return nullptr;
-        }
-
-        size_t AddCategory( GameStringsCategory && newcat )
-        {
-            //Add category
-            m_cats.push_back(newcat);
-
-            //Add category's strings
-            const size_t nbstrings = m_cats.back().NbStrings();
-            const size_t indexcat  = m_cats.size()-1;
-            
-            for( size_t i = 0; i < nbstrings; ++i )
-                m_uidtocat.emplace( m_cats.back().GetStringByIndex(i).first, indexcat );
-
-            m_totalstrs += nbstrings;
-
-            return indexcat; //We return the index of the new category
-        }
-
-        void RemCategory( size_t catind )
-        {
-            if( catind >= m_cats.size() )
-            {
-                utils::LogError("GameStringsPool::GameStringsPoolImpl::RemCategory():Category index out of range!");
-            //    throw out_of_range("GameStringsPool::GameStringsPoolImpl::RemCategory():Category index out of range!");
-                assert(false);
-            }
-
-            //Remove category's strings
-            auto & curcat = m_cats[catind];
-            
-            for( size_t i = 0; i < curcat.NbStrings(); ++i )
-                m_uidtocat.erase( curcat.GetStringByIndex(i).first );
-
-            m_totalstrs -= curcat.NbStrings();
-
-            //Remove category
-            m_cats.erase( m_cats.begin() + catind );
-        }
-
-
-        std::locale                  m_loc;
-        map<gstrhash_t, size_t>      m_uidtocat; //List of all known string UID, and the category they belong to!
-        vector<GameStringsCategory>  m_cats;     //This is where categories are stored!
-        size_t                       m_totalstrs;
-    };
-
-    GameStringsPool::GameStringsPool( std::locale loc )
-        :m_pimpl(std::make_unique<GameStringsPoolImpl>(std::move(loc)))
+    GameStringsPool::GameStringsPool(/* std::locale loc*/ )
+        :m_pimpl(std::make_unique<GameStringsPoolImpl>(/*std::move(loc)*/))
     {}
 
     GameStringsPool::GameStringsPool( const GameStringsPool & cp )
@@ -240,6 +256,9 @@ namespace pmd3
         m_pimpl.reset(mv.m_pimpl.release());
         mv.m_pimpl = nullptr;
     }
+
+    GameStringsPool::~GameStringsPool()
+    {}
 
     GameStringsPool & GameStringsPool::operator=( const GameStringsPool & cp )
     {
@@ -255,119 +274,64 @@ namespace pmd3
     }
 
     //Access
-    const GameStrData * GameStringsPool::GetString( gstrhash_t str )const
+    const GameStrData * GameStringsPool::GetString( gstruuid_t str )const
     {
         //Search through our internal reference table
         return const_cast<GameStringsPool*>(this)->GetString(str);
     }
 
-    GameStrData * GameStringsPool::GetString( gstrhash_t str )
+    GameStrData * GameStringsPool::GetString( gstruuid_t str )
     {
         return m_pimpl->GetString(str);
     }
 
-    const GameStringsCategory & GameStringsPool::GetCategory( size_t catind )const
+    const GameStringsCategory * GameStringsPool::GetCategoryByStrUUID( gstruuid_t struuid )const
     {
-        return const_cast<GameStringsPool*>(this)->GetCategory(catind);
+        return const_cast<GameStringsPool*>(this)->GetCategoryByStrUUID(struuid);
     }
 
-    GameStringsCategory & GameStringsPool::GetCategory( size_t catind )
+    GameStringsCategory * GameStringsPool::GetCategoryByStrUUID( gstruuid_t struuid )
     {
-        return m_pimpl->m_cats[catind];
+        return m_pimpl->GetCategoryByStrUUID(struuid);
     }
 
-    //#FIXME: The pointer returned is a bit unsafe. Considering the category is contained in a vector!
-    //const std::pair<bool, const GameStringsCategory&> GameStringsPool::GetCategory( const catstr_t & name )const
-    //{
-    //}
-
-    ////#FIXME: The pointer returned is a bit unsafe. Considering the category is contained in a vector!
-    //std::pair<bool, GameStringsCategory&> GameStringsPool::GetCategory( const catstr_t & name )
-    //{
-    //    for( auto & acat : m_pimpl->m_cats )
-    //    {
-    //        if( acat.Name() == name )
-    //            return make_pair( true, acat );
-    //    }
-    //    return make_pair( false,  );
-    //}
-
-    const std::pair<bool,size_t> GameStringsPool::GetCategoryIndex( const catstr_t & name )const
+    size_t GameStringsPool::CalcTotalNbStrings()const
     {
-        return const_cast<GameStringsPool*>(this)->GetCategoryIndex(name);
+        return m_pimpl->CalcTotalNbStrings();
     }
 
-    std::pair<bool,size_t> GameStringsPool::GetCategoryIndex( const catstr_t & name )
-    {
-        const size_t nbstrings = m_pimpl->m_cats.size();
-        auto       & cats      = m_pimpl->m_cats;
-
-        for( size_t i = 0; i < nbstrings; ++i )
-            if( cats[i].Name() == name ) return std::move( make_pair( true, i ) );
-
-        return std::move( make_pair( false, 0 ) );
-    }
-
-    const GameStringsCategory * GameStringsPool::GetCategoryByStrHash( gstrhash_t strhash )const
-    {
-        return const_cast<GameStringsPool*>(this)->GetCategoryByStrHash(strhash);
-    }
-
-    GameStringsCategory * GameStringsPool::GetCategoryByStrHash( gstrhash_t strhash )
-    {
-        auto itfound = m_pimpl->m_uidtocat.find(strhash);
-
-        if( itfound != m_pimpl->m_uidtocat.end() )
-            return &(m_pimpl->m_cats[itfound->second]);
-        else
-            return nullptr;
-    }
-
-    size_t GameStringsPool::GetTotalNbStrings()const
-    {
-        return m_pimpl->m_totalstrs;
-    }
-
-    size_t GameStringsPool::GetNbCategories  ()const
+    size_t GameStringsPool::GetNbCategories()const
     {
         return m_pimpl->m_cats.size();
     }
 
     //Modify Strings
-    gstrhash_t GameStringsPool::AddString  ( const GameStrData & str, const catstr_t & cat )
+    gstruuid_t GameStringsPool::AddString  ( const GameStrData & str, const catstr_t & cat )
     {
+        return m_pimpl->AddString( str, cat );
     }
 
-    bool GameStringsPool::RemString  ( gstrhash_t str )
+    void GameStringsPool::RemString  ( gstruuid_t str )
     {
+        m_pimpl->RemString(str);
     }
 
     //Modify Categories
-    GameStringsCategory & GameStringsPool::AddCategory( const catstr_t & cat )
+    void GameStringsPool::AddCategory( const catstr_t & cat )
     {
+        //auto & impl = *m_pimpl;
+        //return impl.m_cats[ impl.AddCategory( GameStringsCategory( cat, impl.m_loc ) ) ];
+        m_pimpl->AddCategory( GameStringsCategory( cat/*, m_pimpl->m_loc*/ ) );
     }
 
-    bool GameStringsPool::RemCategory( const catstr_t & cat )
+    void GameStringsPool::RemCategory( const catstr_t & cat )
     {
-    }
-
-    bool GameStringsPool::RemCategory( size_t catindex )
-    {
+        m_pimpl->RemCategory(cat);
     }
 
 //============================================================================================
 //  Input/Output
 //============================================================================================
-
-    //Export
-    void GameStringsPool::ExportXML ( const std::string & filepath )
-    {
-    }
-
-    //Import
-    void GameStringsPool::ImportXML ( const std::string & filepath )
-    {
-    }
 
     //Writing
     void GameStringsPool::WriteStringPool( const std::string & messdir )

@@ -9,12 +9,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_kaoutil", "vcprojects\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_packfileutil", "vcprojects\ppmd_packfileutil.vcxproj", "{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_gfxcrunch", "vcprojects\ppmd_sprextract.vcxproj", "{1088591B-EDBA-4713-926C-C8210D859C47}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_gfxcrunch", "vcprojects\ppmd_gfxcrunch.vcxproj", "{1088591B-EDBA-4713-926C-C8210D859C47}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_unpx", "vcprojects\ppmd_unpx.vcxproj", "{2AD9B0C6-B476-4690-92DE-40C3B7883B35}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0B3A79F-E768-4EC8-81F2-6D783F8CFB50}"
 	ProjectSection(SolutionItems) = preProject
+		vcprojects\graphicslib_include.props = vcprojects\graphicslib_include.props
+		vcprojects\poco_includes.props = vcprojects\poco_includes.props
 		vcprojects\shared_build_settings.props = vcprojects\shared_build_settings.props
 		vcprojects\xml_includes.props = vcprojects\xml_includes.props
 	EndProjectSection
@@ -24,8 +26,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_statsutil", "vcprojects\ppmd_statsutil.vcxproj", "{97D570C3-CCC6-44D3-B16C-66B4A13E6547}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_audioutil", "vcprojects\ppmd_audioutil.vcxproj", "{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd3_txtutil", "vcprojects\ppmd3_utillib\ppmd3_utillib.vcxproj", "{75222531-F81B-4EF7-B60C-CABFF268D8FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,16 +147,6 @@ Global
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.ActiveCfg = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.Build.0 = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|x64.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|Win32.ActiveCfg = Debug|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Debug|x64.ActiveCfg = Debug|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|Win32.Build.0 = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release WinXP|x64.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|Win32.ActiveCfg = Release_DLL|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|Win32.Build.0 = Release_DLL|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release_DLL|x64.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|Win32.ActiveCfg = Release|Win32
-		{75222531-F81B-4EF7-B60C-CABFF268D8FD}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

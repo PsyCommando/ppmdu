@@ -34,6 +34,8 @@ namespace pmd2
     */
     extern const std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames;
 
+    const std::string & GetGameVersionName( eGameVersion gv );
+
 };
 
 #endif

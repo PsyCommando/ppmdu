@@ -11,4 +11,9 @@ namespace pmd2
         "EoTD",
     };
 
+    const std::string & GetGameVersionName( eGameVersion gv )
+    {
+        return GameVersionNames[static_cast<size_t>(gv)];
+    }
+
 };

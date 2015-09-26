@@ -12,6 +12,7 @@
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
+#include <utils/library_wide.hpp>
 using namespace ::std;
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
@@ -288,6 +289,7 @@ namespace statsutil
             }
             catch(exception & )
             {
+                cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 return false;
             }
@@ -321,6 +323,7 @@ namespace statsutil
     {
         m_shouldlog = true;
         m_redirectClog.Redirect( "log.txt" );
+        utils::LibWide().isLogOn(true);
         return true;
     }
 
@@ -340,7 +343,14 @@ namespace statsutil
         }
         catch( Poco::Exception pex )
         {
-            cerr <<"\n<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<"\n" <<endl;
+            stringstream sstr;
+            sstr <<"\n<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<"\n" <<endl;
+            string strer = sstr.str(); 
+            cerr << strer;
+
+            if( utils::LibWide().isLogOn() )
+                clog << strer;
+
             cout <<"=======================================================================\n"
                  <<"Readme\n"
                  <<"=======================================================================\n";
@@ -349,7 +359,14 @@ namespace statsutil
         }
         catch( exception e )
         {
-            cerr <<"\n<!>-Exception: " << e.what() <<"\n" <<endl;
+            stringstream sstr;
+            sstr <<"\n<!>-Exception: " << e.what() <<"\n" <<endl;
+            string strer = sstr.str(); 
+            cerr << strer;
+
+            if( utils::LibWide().isLogOn() )
+                clog << strer;
+
             cout <<"=======================================================================\n"
                  <<"Readme\n"
                  <<"=======================================================================\n";
@@ -517,11 +534,11 @@ namespace statsutil
         }
         catch(Poco::Exception & e )
         {
-            cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
+            clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
         }
         catch( exception &e )
         {
-            cerr <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
+            clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
         }
         return returnval;
     }

@@ -3,9 +3,13 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)lib\pugixml-1.5\src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\pugixml-1.5\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\pugixml-1.6\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\pugixml-1.6\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions>PUGIXML_HEADER_ONLY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

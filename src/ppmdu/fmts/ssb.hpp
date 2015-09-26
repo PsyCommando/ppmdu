@@ -5,7 +5,7 @@ ssb.hpp
 */
 #include <cstdint>
 #include <vector>
-
+#include <utils/utility.hpp>
 
 namespace filetypes
 {
@@ -21,9 +21,9 @@ namespace filetypes
 
         uint16_t nbconst;
         uint16_t nbstrs;
-        uint16_t ptrconsts;
-        uint16_t consttbllen; //In uint32
-        uint16_t strtbllen;   //In uint32
+        uint16_t scriptdatlen;
+        uint16_t consttbllen; //In uint16
+        uint16_t strtbllen;   //In uint16
         uint16_t unk1;
 
         //
@@ -32,7 +32,7 @@ namespace filetypes
         {
             itwriteto = utils::WriteIntToByteContainer( nbconst,     itwriteto );
             itwriteto = utils::WriteIntToByteContainer( nbstrs,      itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( ptrconsts,   itwriteto );
+            itwriteto = utils::WriteIntToByteContainer( scriptdatlen,itwriteto );
             itwriteto = utils::WriteIntToByteContainer( consttbllen, itwriteto );
             itwriteto = utils::WriteIntToByteContainer( strtbllen,   itwriteto );
             itwriteto = utils::WriteIntToByteContainer( unk1,        itwriteto );
@@ -45,7 +45,7 @@ namespace filetypes
         {
             itReadfrom = utils::ReadIntFromByteContainer( nbconst,     itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( nbstrs,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( ptrconsts,   itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( scriptdatlen,itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( consttbllen, itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( strtbllen,   itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( unk1,        itReadfrom );
@@ -53,6 +53,11 @@ namespace filetypes
         }
 
     };
+
+
+//
+//
+//
 
 };
 

@@ -48,16 +48,22 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\shared_build_settings.props" />
     <Import Project="..\xml_includes.props" />
+    <Import Project="..\sharedlib.props" />
+    <Import Project="..\poco_includes.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\shared_build_settings.props" />
     <Import Project="..\xml_includes.props" />
+    <Import Project="..\sharedlib.props" />
+    <Import Project="..\poco_includes.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\shared_build_settings.props" />
     <Import Project="..\xml_includes.props" />
+    <Import Project="..\sharedlib.props" />
+    <Import Project="..\poco_includes.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -85,7 +91,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PPMDU3_STANDALONE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PPMDU3_STANDALONE;%(PreprocessorDefinitions);PUGIXML_WCHAR_MODE</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
@@ -101,7 +107,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;POCO_STATIC;_CONSOLE;_LIB;PPMDU3_STANDALONE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;POCO_STATIC;_CONSOLE;_LIB;PPMDU3_STANDALONE;PUGIXML_WCHAR_MODE</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
@@ -119,7 +125,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;PPMDU3_LIB_SHARED;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN32;WIN32;NDEBUG;_WINDOWS;_USRDLL;PPMD3_UTILLIB_EXPORTS;PPMDU3_LIB_SHARED;;PUGIXML_WCHAR_MODE</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)nope/nope/%(RelativeDir)</ObjectFileName>
     </ClCompile>
     <Link>
@@ -136,6 +142,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings.cpp" />
+    <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings_xml_io.cpp" />
     <ClCompile Include="..\..\src\shared\ppmdu3.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -201,6 +208,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\utils\uuid_gen_wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\..\readmes\ppmd3_txtutil.txt" />
@@ -288,6 +296,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\utils\uuid_gen_wrapper.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

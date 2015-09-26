@@ -5,6 +5,14 @@
     <!--##############################################################################-->
     <!--IMPORTANT: The end index must be one PAST the last string entry!-->
     <!--##############################################################################-->
+    <!--The locale strings are operating system specific, so you may have to look through documentation 
+        to find the correct one if you want to add a language!-->
+  
+    <!-- Here are the locale strings for Windows: 
+         https://msdn.microsoft.com/en-us/library/39cwe7zf.aspx
+         https://msdn.microsoft.com/library/windows/desktop/dd317756.aspx
+         -->
+  
     <!--Begin List for Explorers of Sky-->
     <Game name="EoS">
         <!--Begin English EoS-->

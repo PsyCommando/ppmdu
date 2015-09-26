@@ -10,6 +10,8 @@ Description:
 */
 #include <string>
 #include <pugixml.hpp>
+#include <codecvt>
+#include <locale>
 
 namespace pugixmlutils
 {
@@ -18,13 +20,13 @@ namespace pugixmlutils
         WriteCommentNode
             Helper for writing comments from std::string. Also helps with clarity.
     /***************************************************************************************/
-    inline void WriteCommentNode( pugi::xml_node & node, const std::string & str )
+    inline void WriteCommentNode( pugi::xml_node & node, const pugi::string_t & str )
     {
         using namespace pugi;
         node.append_child( xml_node_type::node_comment ).set_value( str.c_str() );
     }
 
-    inline void WriteCommentNode( pugi::xml_node & node, const char * str )
+    inline void WriteCommentNode( pugi::xml_node & node, const pugi::char_t * str )
     {
         using namespace pugi;
         node.append_child( xml_node_type::node_comment ).set_value(str);
@@ -36,7 +38,7 @@ namespace pugixmlutils
             Also helps with clarity.
     /***************************************************************************************/
     template<class T>
-        inline void WriteNodeWithValue( pugi::xml_node & parentnode, const std::string & name, T value )
+        inline void WriteNodeWithValue( pugi::xml_node & parentnode, const pugi::string_t & name, T value )
     {
         using namespace pugi;
         using namespace std;
@@ -44,28 +46,28 @@ namespace pugixmlutils
     }
 
     template<>
-        inline void WriteNodeWithValue<const char *>( pugi::xml_node & parentnode, const std::string & name, const char * value )
+        inline void WriteNodeWithValue<const pugi::char_t *>( pugi::xml_node & parentnode, const pugi::string_t & name, const pugi::char_t * value )
     {
         using namespace pugi;
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value);
     }
 
     template<>
-        inline void WriteNodeWithValue<const std::string &>( pugi::xml_node & parentnode, const std::string & name, const std::string & value )
+        inline void WriteNodeWithValue<const pugi::string_t &>( pugi::xml_node & parentnode, const pugi::string_t & name, const pugi::string_t & value )
     {
         using namespace pugi;
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
     }
 
     template<>
-        inline void WriteNodeWithValue<std::string&&>( pugi::xml_node & parentnode, const std::string & name, std::string &&value )
+        inline void WriteNodeWithValue<pugi::string_t&&>( pugi::xml_node & parentnode, const pugi::string_t & name, pugi::string_t &&value )
     {
         using namespace pugi;
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
     }
 
     template<>
-        inline void WriteNodeWithValue<std::string>( pugi::xml_node & parentnode, const std::string & name, std::string value )
+        inline void WriteNodeWithValue<pugi::string_t>( pugi::xml_node & parentnode, const pugi::string_t & name, pugi::string_t value )
     {
         using namespace pugi;
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
@@ -75,7 +77,7 @@ namespace pugixmlutils
         AppendChildNode
             Makes appending a child node and setting its name easier, clearer with std::string.
     /***************************************************************************************/
-    inline pugi::xml_node AppendChildNode( pugi::xml_node & parent, const std::string & childname )
+    inline pugi::xml_node AppendChildNode( pugi::xml_node & parent, const pugi::string_t & childname )
     {
         return parent.append_child( childname.c_str() );
     }
@@ -85,32 +87,52 @@ namespace pugixmlutils
             Makes appending an attribute and setting its value easier, clearer with std::string.
     ***************************************************************************************/
     template<class T>
-        inline pugi::xml_attribute AppendAttribute( pugi::xml_node & parent, const std::string & name, T value )  
+        inline pugi::xml_attribute AppendAttribute( pugi::xml_node & parent, const pugi::string_t & name, T value ) 
     {
         using namespace pugi;
         xml_attribute att = parent.append_attribute(name.c_str());
+#ifdef PUGIXML_WCHAR_MODE
+        if( !att.set_value(std::to_wstring(value).c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+#else
         if( !att.set_value(std::to_string(value).c_str()) )
             throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
+#endif
         return std::move(att);
     }
 
     template<>
-        inline pugi::xml_attribute AppendAttribute<const char*>( pugi::xml_node & parent, const std::string & name, const char* value )  
+        inline pugi::xml_attribute AppendAttribute<const pugi::char_t*>( pugi::xml_node & parent, const pugi::string_t & name, const pugi::char_t* value )  
     {
         using namespace pugi;
         xml_attribute att = parent.append_attribute(name.c_str());
+
+#ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(value) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+#else
+        if( !att.set_value(value) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
+#endif
         return std::move(att);
     }
 
     template<>
-        inline pugi::xml_attribute AppendAttribute<std::string>( pugi::xml_node & parent, const std::string & name, std::string value )  
+        inline pugi::xml_attribute AppendAttribute<pugi::string_t>( pugi::xml_node & parent, const pugi::string_t & name, pugi::string_t value )  
     {
         using namespace pugi;
         xml_attribute att = parent.append_attribute(name.c_str());
+
+#ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(value.c_str()) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
+        {
+            //std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + /*myconv.to_bytes(*/as_utf8(name)/*)*/ );
+        }
+#else
+        if( !att.set_value(value.c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
+#endif
         return std::move(att);
     }
 };

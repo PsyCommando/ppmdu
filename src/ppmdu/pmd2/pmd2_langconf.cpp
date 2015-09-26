@@ -15,6 +15,9 @@
 #include <fstream>
 #include <cassert>
 #include <map>
+
+#include <codecvt>
+
 using namespace std;
 using namespace pmd2::filetypes;
 using namespace filetypes;

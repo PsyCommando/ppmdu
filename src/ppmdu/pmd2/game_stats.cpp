@@ -158,7 +158,7 @@ namespace pmd2{ namespace stats
             else
             {
                 sstr <<"ERROR: The beginning or the end of the " <<StrBlocksNames[i] 
-                     <<" string block(s) was not found in the game string location configuration file!\n";
+                     <<" string block(s) was not found in the game string location configuration file!\n\n";
                 bencounteredError = true;
             }
         }
@@ -168,7 +168,7 @@ namespace pmd2{ namespace stats
         {
             string strerr = sstr.str();
             clog << strerr <<"\n";
-            throw runtime_error( strerr );
+            //throw runtime_error( strerr );
         }
     }
 

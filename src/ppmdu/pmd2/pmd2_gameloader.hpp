@@ -73,8 +73,8 @@ namespace pmd2
         const GameText         * GetGameText()const;
 
         //
-        GameScript             * GetScripts();
-        const GameScript       * GetScripts()const;
+        GameScripts            * GetScripts();
+        const GameScripts      * GetScripts()const;
 
         //
         GameGraphics           * GetGraphics();
@@ -85,13 +85,12 @@ namespace pmd2
         const stats::GameStats * GetStats()const;
 
         //
-        GameAudio       * GetAudio();
-        const GameAudio * GetAudio()const;
+        GameAudio               * GetAudio();
+        const GameAudio         * GetAudio()const;
 
     private:
-
         std::unique_ptr<GameText>            m_text;
-        std::unique_ptr<GameScript>          m_scripts;
+        std::unique_ptr<GameScripts>         m_scripts;
         std::unique_ptr<GameGraphics>        m_graphics;
         std::unique_ptr<stats::GameStats>    m_stats;
         std::unique_ptr<GameAudio>           m_audio;
