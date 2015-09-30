@@ -106,6 +106,8 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />

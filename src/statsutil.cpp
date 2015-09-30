@@ -4,6 +4,7 @@
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
+#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -17,6 +18,7 @@ using namespace ::std;
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::pmd2::stats;
+using namespace ::pmd2;
 
 namespace statsutil
 {
@@ -51,6 +53,8 @@ namespace statsutil
     //const std::string CStatsUtil::DefExportItemsDir  = "items_data";
     const std::string CStatsUtil::DefExportAllDir    = "exported_data";
     const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
+
+    const std::string CStatsUtil::DefExportScriptsDir = "exported_scripts";
 
 //------------------------------------------------
 //  Arguments Info
@@ -148,6 +152,15 @@ namespace statsutil
             "-str",
             std::bind( &CStatsUtil::ParseOptionStrings, &GetInstance(), placeholders::_1 ),
         },
+        //Game Scripts only
+        {
+            "scr",
+            0,
+            "Specifying this will import or export only the game scripts!",
+            "-scr",
+            std::bind( &CStatsUtil::ParseOptionScripts, &GetInstance(), placeholders::_1 ),
+        },
+
         //Force a locale string
         {
             "locale",
@@ -167,7 +180,7 @@ namespace statsutil
             std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
         },
 
-        //Specify path to gamelang.xml
+        //Turns on logging
         {
             "log",
             0,
@@ -203,6 +216,7 @@ namespace statsutil
         m_langconf        = DefLangConfFile;
         m_flocalestr      = "";
         m_shouldlog       = false;
+        m_hndlScripts     = false;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -327,6 +341,12 @@ namespace statsutil
         return true;
     }
 
+    bool CStatsUtil::ParseOptionScripts( const std::vector<std::string> & optdata )
+    {
+        m_hndlScripts = true;
+        return true;
+    }
+
 //
 //
 //
@@ -436,6 +456,13 @@ namespace statsutil
                     else
                         m_operationMode = eOpMode::ImportPokemonData;
                 }
+                else if( m_hndlScripts )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportGameScripts;
+                    else
+                        m_operationMode = eOpMode::ImportGameScripts;
+                }
                 else
                 {
                     if( m_force == eOpForce::Import || isImportAllDir(m_inputPath) )
@@ -514,6 +541,19 @@ namespace statsutil
                     returnval = DoExportGameStringsFromFile();
                     break;
                 }
+                case eOpMode::ImportGameScripts:
+                {
+                    cout << "=== Importing game scripts ===\n";
+                    returnval = DoImportGameScripts();
+                    break;
+                }
+                case eOpMode::ExportGameScripts:
+                {
+                    cout << "=== Exporting game scripts ===\n";
+                    returnval = DoExportGameScripts();
+                    break;
+                }
+
                 case eOpMode::ImportAll:
                 {
                     cout << "=== Importing ALL ===\n";
@@ -822,6 +862,58 @@ namespace statsutil
             fTestOut.createDirectory();
         }
         gstats.ExportAll(outpath.toString());
+        return 0;
+    }
+
+    int CStatsUtil::DoExportGameScripts()
+    {
+        //Validate output + input paths
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+            outpath = inpath.absolute().makeParent().append(DefExportScriptsDir);
+        else
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+
+        Poco::File fTestOut = outpath;
+        if( ! fTestOut.exists() )
+        {
+            cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+            fTestOut.createDirectory();
+        }
+        else if( ! fTestOut.isDirectory() )
+            throw runtime_error("CStatsUtil::DoExportGameScripts(): Output path is not a directory!");
+
+        //Setup the script handler
+        GameScripts scripts( inpath.absolute().toString() );
+
+        //Convert to XML
+        scripts.ExportScriptsToXML( outpath.toString() );
+
+        return 0;
+    }
+
+    int CStatsUtil::DoImportGameScripts()
+    {
+        //Validate output + input paths
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+
+        if( m_outputPath.empty() )
+            throw runtime_error("CStatsUtil::DoImportGameScripts() : Output path is empty!");
+            
+        if( !utils::isFolder( m_outputPath ) )
+            throw runtime_error("CStatsUtil::DoImportGameScripts() : Output path doesn't exist, or isn't a directory!");
+
+        outpath = Poco::Path(m_outputPath);
+
+        //Setup the script handler
+        GameScripts scripts( outpath.absolute().toString() );
+
+        //Import from XML
+        scripts.ImportScriptsFromXML( inpath.absolute().toString() );
+
         return 0;
     }
 

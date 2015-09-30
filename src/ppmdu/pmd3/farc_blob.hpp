@@ -11,6 +11,7 @@ Description: Utilities for dealing with FARC archives containing as subfiles a f
 #include <cstdint>
 #include <string>
 #include <utility>
+#include <map>
 
 namespace filetypes
 {
@@ -25,7 +26,9 @@ namespace filetypes
         ReadFileIndexTblAndBlobFromFARC
             Reads to memory a copy of the file index table, and the data blob.
     */
-    std::pair<std::vector<>, > ;
+    //std::pair< std::map<std::string, uint32_t>, 
+    //           std::vector<uint8_t> 
+    //         > ReadFileIndexTblAndBlobFromFARC( const std::string & file );
 
 };
 

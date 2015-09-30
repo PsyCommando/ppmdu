@@ -63,8 +63,22 @@ namespace pmd2
         //Handles Loading the Game Data
         void Load();
 
+        //#TODO: implement those in their respective cpp file. To reduce dependencies.
+        void LoadGameText();
+        void LoadScripts();
+        void LoadGraphics();
+        void LoadStats();
+        void LoadAudio();
+
         //Handles Writing the Game Data
         void Write()const;
+
+        //#TODO: implement those in their respective cpp file. To reduce dependencies.
+        void WriteGameText();
+        void WriteScripts();
+        void WriteGraphics();
+        void WriteStats();
+        void WriteAudio();
 
         /*
             Access to the sub-sections of the game's data
@@ -85,8 +99,8 @@ namespace pmd2
         const stats::GameStats * GetStats()const;
 
         //
-        GameAudio               * GetAudio();
-        const GameAudio         * GetAudio()const;
+        GameAudio              * GetAudio();
+        const GameAudio        * GetAudio()const;
 
     private:
         std::unique_ptr<GameText>            m_text;

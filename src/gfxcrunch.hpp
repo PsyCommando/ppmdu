@@ -59,7 +59,7 @@ namespace gfx_util
         //Parse Options
         bool ParseOptionQuiet           ( const std::vector<std::string> & optdata );
         bool ParseOptionExportFormat    ( const std::vector<std::string> & optdata );
-        bool ParseOptionForceInputFormat( const std::vector<std::string> & optdata );
+        //bool ParseOptionForceInputFormat( const std::vector<std::string> & optdata );
         bool ParseOptionImportByIndex   ( const std::vector<std::string> & optdata );
         bool ParseOptionAnimResPath     ( const std::vector<std::string> & optdata );
         bool ParseOptionFaceNamesPath   ( const std::vector<std::string> & optdata );
@@ -71,6 +71,15 @@ namespace gfx_util
         bool ParseOptionLog             ( const std::vector<std::string> & optdata );
 
         bool ParseOptionNoResFix        ( const std::vector<std::string> & optdata );
+
+        bool ParseOptionForceExport     ( const std::vector<std::string> & optdata );
+        bool ParseOptionForceImport     ( const std::vector<std::string> & optdata );
+        bool ParseOptionBGP             ( const std::vector<std::string> & optdata );
+        bool ParseOptionWAN             ( const std::vector<std::string> & optdata );
+        bool ParseOptionPkPortraits     ( const std::vector<std::string> & optdata );
+        bool ParseOptionPkSprites       ( const std::vector<std::string> & optdata );
+        bool ParseOptionPropSprites     ( const std::vector<std::string> & optdata );
+
 
         //Execution
         int UnpackSprite();
@@ -86,9 +95,13 @@ namespace gfx_util
         bool DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
         int  GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
         int  Execute               ();                                 //Handle excution switch case + exceptions
+        int  ExecOld               ();                                 //Exec the old version code trying to guess the input
+        int  ExecNew               ();                                 //Exec the new command-line options only based method
         void PrintOperationMode    ();
 
         void ChkAndHndlUnsupportedRawOutput();
+
+        bool DetermineOperationModeNew();
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -158,6 +171,25 @@ namespace gfx_util
         //std::future<void>     m_runThUpHpBar;//#REMOVEME
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
+
+
+        //New System Stuff
+        enum struct eFMT
+        {
+            INVALID,
+            BGP,
+            WAN,
+            WTE,
+
+        };
+
+        eFMT m_GameFmt;
+        bool m_Import;
+        bool m_Export;
+
+        bool m_doPkSpr;
+        bool m_doPkKao;
+        bool m_doPropSpr;
     };
 };
 

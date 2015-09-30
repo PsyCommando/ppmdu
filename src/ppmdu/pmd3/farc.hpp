@@ -23,6 +23,10 @@ namespace filetypes
     const uint32_t MagicNumberFARC  = 0x46415243; //"FARC"
     const size_t   MaxSaneFARCTblSz = 1024;       //Value for validating the FARC size in the FARC header to avoid allocating a ton of space for no reasons, with a bad header..
 
+//
+//  Header
+//
+
     /*
         farc_hdr
             Header for the FARC format, minus the file offset table.
@@ -30,7 +34,6 @@ namespace filetypes
     struct farc_hdr
     {
         static const unsigned int MinLength = 36; //bytes
-        //typedef std::pair<uint32_t,uint32_t> fentry;   //File offset and size
 
         uint32_t            magicn;
         uint16_t            unk1;  
@@ -45,7 +48,6 @@ namespace filetypes
         uint16_t            unk8;   
         uint16_t            unk9;  
         uint32_t            ftblsz; 
-        //std::vector<fentry> subfiletbl;
 
         //
         template<class _outit>
@@ -64,13 +66,6 @@ namespace filetypes
             itwriteto = utils::WriteIntToByteContainer( unk8,             itwriteto );  
             itwriteto = utils::WriteIntToByteContainer( unk9,             itwriteto );  
             itwriteto = utils::WriteIntToByteContainer( ftblsz,           itwriteto );
-
-            //for( const auto & entry : subfiletbl )
-            //{
-            //    itwriteto = utils::WriteIntToByteContainer( entry.first,  itwriteto );
-            //    itwriteto = utils::WriteIntToByteContainer( entry.second, itwriteto );
-            //}
-
             return itwriteto;
         }
 
@@ -91,42 +86,34 @@ namespace filetypes
             itReadfrom = utils::ReadIntFromByteContainer( unk8,   itReadfrom );  
             itReadfrom = utils::ReadIntFromByteContainer( unk9,   itReadfrom );  
             itReadfrom = utils::ReadIntFromByteContainer( ftblsz, itReadfrom );
-
-            //subfiletbl.resize(ftblsz);
-
-            //for( const auto & entry : subfiletbl )
-            //{
-            //    itwriteto = utils::WriteIntToByteContainer( entry.first,  itwriteto );
-            //    itwriteto = utils::WriteIntToByteContainer( entry.second, itwriteto );
-            //}
-
             return itReadfrom;
         }
     };
 
 
-    //
-    FARC ReadFARC ( const std::string & file );
-    void WriteFARC( const std::string & file, const FARC & content );
-
-
-
+//
+//  Class
+//
     /*
         FARC
             
     */
     class FARC
     {
-        typedef std::pair<uint32_t,uint32_t> fentry_t;          //Contains an offset and a size
-        typedef std::vector<fentry_t>        ftable_t;
+        typedef std::pair<uint32_t,uint32_t>      fentry_t;     //Contains an offset and a size
+        typedef std::vector<fentry_t>             ftable_t;
 
         typedef std::pair<farccontent_t,uint32_t> fdataentry_t; //Contains a function and a data size
         typedef std::vector<fdataentry_t>         fdattable_t;
+
     public:
+
         //-----------------------------------------------
         //
         //-----------------------------------------------
         void AddFile( farccontent_t datasrc, size_t datalen );
+
+
 
     private:
         farc_hdr    m_hdr;
@@ -134,6 +121,14 @@ namespace filetypes
         fdattable_t m_filedatatbl;
     };
 
+
+//
+//  Functions
+//
+
+    //
+    FARC ReadFARC ( const std::string & file );
+    void WriteFARC( const std::string & file, const FARC & content );
 };
 
 #endif

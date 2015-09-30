@@ -371,14 +371,78 @@ namespace gfx_util
             "-noresfix",
             std::bind( &CGfxUtil::ParseOptionNoResFix,  &GetInstance(), placeholders::_1 ),
         },
-        //Forcing input format
-        //{
-        //    "as",
-        //    1,
-        //    "Force the content of a file to be handled as the type specified. This is ignored when the input is a directory!",
-        //    "-as (wan,wte,bgp,...)",
-        //    std::bind( &CGfxUtil::ParseOptionForceInputFormat, &GetInstance(), placeholders::_1 ),
-        //},
+
+
+    //=====================
+    //  New System
+    //=====================
+        //Force Export
+        {
+            "e",
+            0,
+            "(New system)If specified, the program will assume we're exporting graphics from the game into an external format.",
+            "-e",
+            std::bind( &CGfxUtil::ParseOptionForceExport,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //Force Import
+        {
+            "i",
+            0,
+            "(New system)If specified, the program will assume we're importing graphics into the game.",
+            "-i",
+            std::bind( &CGfxUtil::ParseOptionForceImport,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //BGP
+        {
+            "bgp",
+            0,
+            "Specifying this will force the program to export a BGP file to an image, or import an image file into a BGP.",
+            "-bgp",
+            std::bind( &CGfxUtil::ParseOptionBGP,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //WAN
+        {
+            "wan",
+            0,
+            "Specifying this will force the program to export a wan/wat sprite to a directory, or import it from a directory.",
+            "-wan",
+            std::bind( &CGfxUtil::ParseOptionWAN,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //Other formats here
+
+    //=====================
+    //  Automated tasks:
+    //=====================
+        //Pokemon Portraits
+        {
+            "pkportraits",
+            0,
+            "Specifying this will export or import pokemon portraits from/to the game. When importing the input is the directory containing all the portraits for each pokemons, and the output the ROM's data root directory. When exporting, the input is the ROM's data directory, and the output the directory where the converted portraits will be placed.",
+            "-pkportraits",
+            std::bind( &CGfxUtil::ParseOptionPkPortraits,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //Pokemon Sprites
+        {
+            "pksprites",
+            0,
+            "Specifying this will cause the program to import or export pokemon sprites. When importing, the input is the directory containing the 3 subdirectories matching the 3 sprite files, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the three sprite files will be exported to.",
+            "-pksprites",
+            std::bind( &CGfxUtil::ParseOptionPkSprites,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //Props/misc Sprites
+        {
+            "propsprites",
+            0,
+            "Specifying this will cause the program to import or export props sprites. When importing, the input is the directory containing the sprites sub-directory to import, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the sprites will be exported to.",
+            "-propsprites",
+            std::bind( &CGfxUtil::ParseOptionPropSprites,  &GetInstance(), placeholders::_1 ),
+        },
     }};
 
 //------------------------------------------------
@@ -1121,6 +1185,27 @@ namespace gfx_util
         return true;
     }
 
+
+    bool CGfxUtil::DetermineOperationModeNew()
+    {
+        Poco::File infile(m_inputPath);
+        Poco::Path inpath(m_inputPath);
+
+        if( !infile.exists() )
+        {
+            return false;
+        }
+
+        if( infile.isFile() )
+        {
+        }
+        else if( infile.isDirectory() )
+        {
+        }
+
+        return false;
+    }
+
 //--------------------------------------------
 //  Parsing Options Methods
 //--------------------------------------------
@@ -1159,57 +1244,57 @@ namespace gfx_util
         return false;
     }
 
-    bool CGfxUtil::ParseOptionForceInputFormat( const std::vector<std::string> & optdata )
-    {
+    //bool CGfxUtil::ParseOptionForceInputFormat( const std::vector<std::string> & optdata )
+    //{
 
-        if( optdata.size() == 2 )
-        {
-            auto result = GetFileTypeFromExtension( optdata.back() );
-            auto type   = result.front();
+    //    if( optdata.size() == 2 )
+    //    {
+    //        auto result = GetFileTypeFromExtension( optdata.back() );
+    //        auto type   = result.front();
 
-            cout << "<*>-Forcing input as ";
+    //        cout << "<*>-Forcing input as ";
 
-            if( type == CnTy_WAN )
-            {
-                m_execMode = eExecMode::UNPACK_WAN_Mode;
-                cout <<"WAN sprite";
-            }
-            else if( type == CnTy_Kaomado )
-            {
-                m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
-                cout <<"kaomado.kao file";
-            }
-            else if( type == CnTy_PackFile )
-            {
-                m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
-                cout <<"pokemon sprites containing pack file";
-            }
-            else if( type == CnTy_WTE )
-            {
-                m_execMode = eExecMode::EXPORT_WTE_Mode;
-                cout <<"WTE file";
-            }
-            else if( type == CnTy_BGP )
-            {
-                m_execMode = eExecMode::EXPORT_BGP_Mode;
-                cout <<"BGP file";
-            }
-            else if( type == CnTy_AT4PX || type == CnTy_PKDPX )
-            {
-                //Ambiguous !!!!
-                m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
-                cout <<"AT4PX/PKDPX file";
-            }
-            else
-            {
-                cout <<"INVALID!\n";
-                return false;
-            }
-            cout <<"!\n";
-            return true;
-        }
-        return false;
-    }
+    //        if( type == CnTy_WAN )
+    //        {
+    //            m_execMode = eExecMode::UNPACK_WAN_Mode;
+    //            cout <<"WAN sprite";
+    //        }
+    //        else if( type == CnTy_Kaomado )
+    //        {
+    //            m_execMode = eExecMode::UNPACK_KAOMADO_Mode;
+    //            cout <<"kaomado.kao file";
+    //        }
+    //        else if( type == CnTy_PackFile )
+    //        {
+    //            m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
+    //            cout <<"pokemon sprites containing pack file";
+    //        }
+    //        else if( type == CnTy_WTE )
+    //        {
+    //            m_execMode = eExecMode::EXPORT_WTE_Mode;
+    //            cout <<"WTE file";
+    //        }
+    //        else if( type == CnTy_BGP )
+    //        {
+    //            m_execMode = eExecMode::EXPORT_BGP_Mode;
+    //            cout <<"BGP file";
+    //        }
+    //        else if( type == CnTy_AT4PX || type == CnTy_PKDPX )
+    //        {
+    //            //Ambiguous !!!!
+    //            m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
+    //            cout <<"AT4PX/PKDPX file";
+    //        }
+    //        else
+    //        {
+    //            cout <<"INVALID!\n";
+    //            return false;
+    //        }
+    //        cout <<"!\n";
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
     bool CGfxUtil::ParseOptionImportByIndex( const std::vector<std::string> & optdata )
     {
@@ -1284,9 +1369,59 @@ namespace gfx_util
         return m_bNoResAutoFix = true;
     }
 
+
+    //New System
+    bool CGfxUtil::ParseOptionForceExport( const std::vector<std::string> & optdata )
+    {
+        m_Export = true;
+        m_Import = false;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionForceImport( const std::vector<std::string> & optdata )
+    {
+        m_Export = false;
+        m_Import = true;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionBGP( const std::vector<std::string> & optdata )
+    {
+        m_GameFmt = eFMT::BGP;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionWAN( const std::vector<std::string> & optdata )
+    {
+        m_GameFmt = eFMT::WAN;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionPkPortraits( const std::vector<std::string> & optdata )
+    {
+        m_doPkKao = true;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionPkSprites( const std::vector<std::string> & optdata )
+    {
+        m_doPkSpr = true;
+        return true;
+    }
+
+    bool CGfxUtil::ParseOptionPropSprites( const std::vector<std::string> & optdata )
+    {
+        m_doPropSpr = true;
+        return true;
+    }
+
+
 //--------------------------------------------
 //  Main Exec functions
 //--------------------------------------------
+
+    /*
+    */
     int CGfxUtil::Execute()
     {
         int returnval = RETVAL_GenericFail;
@@ -1295,8 +1430,12 @@ namespace gfx_util
             Poco::Path inpath(m_inputPath);
 
             //Determine Execution mode
-            if( !DetermineOperationMode() )
-                return RETVAL_GenericFail;
+            if( !m_Import && !m_Export )
+            {
+                //Old Method
+                if( !DetermineOperationMode() )
+                    return RETVAL_GenericFail;
+            }
 
             PrintOperationMode();
 
@@ -1311,68 +1450,10 @@ namespace gfx_util
             if(utils::LibWide().isLogOn())
                 chronototal.reset( new utils::ChronoRAII<>("Total Execution Time", &clog ) );
 
-            switch( m_execMode )
-            {
-                case eExecMode::BUILD_WAN_Mode:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Building WAN sprite..\n";
-                    returnval = BuildSprite();
-                    break;
-                }
-                case eExecMode::UNPACK_WAN_Mode:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Unpacking WAN sprite..\n";
-                    returnval = UnpackSprite();
-                    break;
-                }
-                case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Encountered compressed container, decompressing and identifying!..\n";
-                    returnval = DecompressAndHandle();
-                    break;
-                }
-                case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Unpacking sprite pack file..\n";
-                    returnval = UnpackAndExportPackedCharSprites();
-                    break;
-                }
-                case eExecMode::BUILD_POKE_SPRITES_PACK_Mode:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Building sprite pack file..\n";
-                    returnval = PackAndImportCharSprites();
-                    break;
-                }
-
-                case eExecMode::IMPORT_MAINFONT:
-                {
-                    if( utils::LibWide().isLogOn() )
-                        clog <<"Importing main font file..\n";
-                    returnval = ImportMainFontFile();
-                    break;
-                }
-
-                case eExecMode::INVALID_Mode:
-                {
-                    cerr<<"<!>-ERROR  : Nothing can be done here. Exiting..\n";
-                    if( utils::LibWide().isLogOn() )
-                        clog<<"<!>- Got invalid operation mode!\n";
-                    returnval = RETVAL_InvalidOp;
-                    break;
-                }
-                default:
-                {
-                    cerr<<"<!>-ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
-                    if( utils::LibWide().isLogOn() )
-                        clog<<"<!>-Unimplemented operation mode!\n";
-                    returnval = RETVAL_InvalidOp;
-                }
-            };
+            if( m_Import || m_Export )
+                returnval = ExecNew();
+            else
+                returnval = ExecOld();
 
             if( ! m_bQuiet && returnval == 0 )
                 cout << "\n\nPoochyena used Rest! ...zZz..zZz...\n";
@@ -1391,6 +1472,124 @@ namespace gfx_util
         return returnval;
     }
 
+    /*
+    */
+    int CGfxUtil::ExecOld()
+    {
+        int returnval = RETVAL_GenericFail;
+
+        switch( m_execMode )
+        {
+            case eExecMode::BUILD_WAN_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Building WAN sprite..\n";
+                returnval = BuildSprite();
+                break;
+            }
+            case eExecMode::UNPACK_WAN_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Unpacking WAN sprite..\n";
+                returnval = UnpackSprite();
+                break;
+            }
+            case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Encountered compressed container, decompressing and identifying!..\n";
+                returnval = DecompressAndHandle();
+                break;
+            }
+            case eExecMode::UNPACK_POKE_SPRITES_PACK_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Unpacking sprite pack file..\n";
+                returnval = UnpackAndExportPackedCharSprites();
+                break;
+            }
+            case eExecMode::BUILD_POKE_SPRITES_PACK_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Building sprite pack file..\n";
+                returnval = PackAndImportCharSprites();
+                break;
+            }
+
+            case eExecMode::IMPORT_MAINFONT:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Importing main font file..\n";
+                returnval = ImportMainFontFile();
+                break;
+            }
+
+            case eExecMode::INVALID_Mode:
+            {
+                cerr<<"<!>-ERROR  : Nothing can be done here. Exiting..\n";
+                if( utils::LibWide().isLogOn() )
+                    clog<<"<!>- Got invalid operation mode!\n";
+                returnval = RETVAL_InvalidOp;
+                break;
+            }
+            default:
+            {
+                cerr<<"<!>-ERROR  : Unknown operation! Possibly an unimplemented feature! Exiting..\n";
+                if( utils::LibWide().isLogOn() )
+                    clog<<"<!>-Unimplemented operation mode!\n";
+                returnval = RETVAL_InvalidOp;
+            }
+        };
+
+        return returnval;
+    }
+
+    /*
+    */
+    int CGfxUtil::ExecNew()
+    {
+        int returnval = RETVAL_GenericFail;
+
+        if( m_doPkKao )
+        {
+        }
+
+        if( m_doPkSpr )
+        {
+        }
+
+        if( m_doPropSpr )
+        {
+        }
+
+        //Handle specific content
+        switch(m_GameFmt)
+        {
+            case eFMT::BGP:
+            {
+
+                break;
+            }
+            case eFMT::WAN:
+            {
+                break;
+            }
+            case eFMT::WTE:
+            {
+                break;
+            }
+
+            case eFMT::INVALID:
+            default:
+            {
+            }
+        };
+
+        return returnval;
+    }
+
+    /*
+    */
     int CGfxUtil::GatherArgs( int argc, const char * argv[] )
     {
         if( argc == 1 )
@@ -1442,6 +1641,12 @@ namespace gfx_util
         }
         return 0;
     }
+
+//--------------------------------------------
+//  New System
+//--------------------------------------------
+
+
 
 //--------------------------------------------
 //  Main Methods

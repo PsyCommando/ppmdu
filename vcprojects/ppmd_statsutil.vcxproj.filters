@@ -177,14 +177,20 @@
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
-      <Filter>Source Files\ppmdu</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp">
       <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

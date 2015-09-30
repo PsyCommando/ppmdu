@@ -82,10 +82,36 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\dfarctp.cpp" />
     <ClCompile Include="..\..\src\ppmdu\pmd3\farc.cpp" />
+    <ClCompile Include="..\..\src\utils\cmdline_util.cpp" />
+    <ClCompile Include="..\..\src\utils\config_io.cpp" />
+    <ClCompile Include="..\..\src\utils\gbyteutils.cpp" />
+    <ClCompile Include="..\..\src\utils\gfileio.cpp" />
+    <ClCompile Include="..\..\src\utils\gfileutil.cpp" />
+    <ClCompile Include="..\..\src\utils\gstringutils.cpp" />
+    <ClCompile Include="..\..\src\utils\library_wide.cpp" />
+    <ClCompile Include="..\..\src\utils\multiple_task_handler.cpp" />
+    <ClCompile Include="..\..\src\utils\poco_wrapper.cpp" />
+    <ClCompile Include="..\..\src\utils\utility.cpp" />
+    <ClCompile Include="..\..\src\utils\uuid_gen_wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\ppmdu\pmd3\farc.hpp" />
     <ClInclude Include="..\..\src\ppmdu\pmd3\farc_blob.hpp" />
+    <ClInclude Include="..\..\src\utils\cmdline_util.hpp" />
+    <ClInclude Include="..\..\src\utils\config_io.hpp" />
+    <ClInclude Include="..\..\src\utils\gbyteutils.hpp" />
+    <ClInclude Include="..\..\src\utils\gfileio.hpp" />
+    <ClInclude Include="..\..\src\utils\gfileutils.hpp" />
+    <ClInclude Include="..\..\src\utils\gstringutils.hpp" />
+    <ClInclude Include="..\..\src\utils\handymath.hpp" />
+    <ClInclude Include="..\..\src\utils\library_wide.hpp" />
+    <ClInclude Include="..\..\src\utils\multiple_task_handler.hpp" />
+    <ClInclude Include="..\..\src\utils\parse_utils.hpp" />
+    <ClInclude Include="..\..\src\utils\poco_wrapper.hpp" />
+    <ClInclude Include="..\..\src\utils\pugixml_utils.hpp" />
+    <ClInclude Include="..\..\src\utils\readme_writer.hpp" />
+    <ClInclude Include="..\..\src\utils\utility.hpp" />
+    <ClInclude Include="..\..\src\utils\uuid_gen_wrapper.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

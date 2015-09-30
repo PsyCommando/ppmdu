@@ -31,24 +31,28 @@ namespace gimg
         class color_container
     {
     public:
-        typedef _COLOR_DATA_T colordata_t;
+        typedef _COLOR_DATA_T                                           colordata_t;
+        typedef color_container<_COLOR_DATA_T,_NB_COMPONENTS,_RGB_24_T> myty_t;
+
         static const unsigned int NB_COMPONENTS = _NB_COMPONENTS;
 
         color_container() { std::fill( m_colcomponents.begin(), m_colcomponents.end(), 0 ); }
-        color_container( const color_container<_COLOR_DATA_T,_NB_COMPONENTS,_RGB_24_T> & other ){ m_colcomponents = other.m_colcomponents; }
+        color_container( const myty_t & other ){ m_colcomponents = other.m_colcomponents; }
         virtual ~color_container(){}
 
         inline static unsigned int GetNbComponents()                     { return NB_COMPONENTS;          }
         inline colordata_t &       operator[]( unsigned int index )      { return m_colcomponents[index]; }
         inline const colordata_t & operator[]( unsigned int index )const { return m_colcomponents[index]; }
-        inline color_container<_COLOR_DATA_T,_NB_COMPONENTS,_RGB_24_T> & operator=( const color_container<_COLOR_DATA_T,_NB_COMPONENTS,_RGB_24_T> & other ) 
+
+
+        inline myty_t & operator=( const myty_t & other ) 
         { 
             m_colcomponents = other.m_colcomponents;
             return *this;
         }
 
         // -- Virtual stuff --
-        virtual const _RGB_24_T getAsRGB24  ()const                             = 0;
+        virtual _RGB_24_T       getAsRGB24  ()const                             = 0;
         virtual void            setFromRGB24( uint8_t r, uint8_t g, uint8_t b ) = 0;
 
         template<class _outit> inline _outit WriteAsRawByte( _outit itwhere, bool blittleendianorder = true )const //#TODO: is "blittleendianorder" a good name ? what about "binvertendian" ?
@@ -90,7 +94,26 @@ namespace gimg
         
         //Overrides
         ~colorRGB24(){}
-        const colorRGB24 getAsRGB24  ()const;
+        colorRGB24 getAsRGB24  ()const;
+        void       setFromRGB24( uint8_t r, uint8_t g, uint8_t b );
+    };
+
+    //=========================================
+    // RGBX-32bits Format
+    //=========================================
+    class colorRGBX32 : public color_container<uint8_t, 4, colorRGB24>
+    {
+    public:
+        colordata_t & _red, & _green, & _blue, & _x; //Aliases
+
+        colorRGBX32();
+        colorRGBX32( colordata_t r, colordata_t g, colordata_t b, colordata_t x );
+        colorRGBX32( const colorRGBX32 & other );
+        colorRGBX32 & operator=( const colorRGBX32 & other );
+        
+        //Overrides
+        ~colorRGBX32(){}
+        colorRGB24       getAsRGB24  ()const;
         void             setFromRGB24( uint8_t r, uint8_t g, uint8_t b );
     };
 };

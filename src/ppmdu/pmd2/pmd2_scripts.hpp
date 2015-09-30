@@ -49,9 +49,6 @@ namespace pmd2
     private:
     };
 
-
-
-
     /***********************************************************************************************
         ScriptGroup
             A script group is an ensemble of one or more ScriptEntityData, and one or more 
