@@ -34,6 +34,7 @@ namespace pmd2
         AbilityNames,
         AbilityDesc,
         TypeNames,
+        PortraitNames,
 
         //Add new string types above!
         NBEntries,

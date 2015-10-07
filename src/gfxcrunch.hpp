@@ -53,8 +53,9 @@ namespace gfx_util
         CGfxUtil& operator=(const CGfxUtil&&);
 
         //Parse Arguments
-        bool ParseInputPath  ( const std::string              & path );
-        bool ParseOutputPath ( const std::string              & path );
+        bool ParseInputPath  ( const std::string & path );
+        bool ParseOutputPath ( const std::string & path );
+        bool ParseExtraPath  ( const std::string & path );
 
         //Parse Options
         bool ParseOptionQuiet           ( const std::vector<std::string> & optdata );
@@ -91,6 +92,20 @@ namespace gfx_util
         int ImportMainFontFile();
         int ExportMainFontFile();
 
+        void DoImportPortraits();
+        void DoExportPortraits();
+
+        void DoImportPokeSprites();
+        void DoExportPokeSprites();
+
+        void DoImportMiscSprites();
+        void DoExportMiscSprites();
+
+        void HandleBGP();
+        void HandleWAN();
+        void HandleWTE();
+
+
         //Utility
         bool DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
         int  GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
@@ -117,6 +132,8 @@ namespace gfx_util
         static const std::string                                 DefPathPokeSprNames;
         static const std::string                                 DefPathFaceNames;
         static const std::string                                 DefPathPokeNames;
+
+        static const utils::cmdl::argumentparsing_t              ExtraArg; 
 
         //The operations that can be done by the program
         enum struct eExecMode
@@ -190,6 +207,7 @@ namespace gfx_util
         bool m_doPkSpr;
         bool m_doPkKao;
         bool m_doPropSpr;
+        std::vector<std::string> m_extraargs;
     };
 };
 

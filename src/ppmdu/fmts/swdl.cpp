@@ -4,17 +4,46 @@
 #include <utils/library_wide.hpp>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 using namespace std;
 using namespace filetypes;
 
 namespace DSE
 {
 
-    static const uint32_t SWDL_PCMDSpecialSize = 0xAAAA0000; //Value the pcmd lenght in the SWDL header had to indicate it refers to a master bank of samples.
+    static const uint32_t SWDL_PCMDSpecialSize     = 0xAAAA0000; //Value the pcmd lenght in the SWDL header had to indicate it refers to a master bank of samples.
+    static const uint32_t SWDL_PCMDSpecialSizeMask = 0xFFFF0000; //Mask to apply to verify the special size. As the two lower bytes seems to contain some value in some swd files!
 
+
+//===============================================================================
+//  SWDL_Header
+//===============================================================================
+    /*
+        DoesSWDLContainsSamples
+            Returns true if the swdl contains sample data.
+    */
+    bool SWDL_Header::DoesContainsSamples()const
+    {
+        return (pcmdlen > 0) && 
+               ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize);
+    }
+
+    /*
+        IsSWDLSampleBankOnly
+            Returns true if the swdl is only a sample bank, without program info.
+    */
+    bool SWDL_Header::IsSampleBankOnly()const
+    {
+        return (pcmdlen > 0) && 
+               ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize) &&
+               (nbprgislots == 0);
+    }
+
+
+
+//===============================================================================
 //
-//
-//
+//===============================================================================
 
     class SWDLParser
     {
@@ -273,6 +302,17 @@ namespace DSE
         }
         return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator PresetBank() );
     }
+
+
+    SWDL_Header ReadSwdlHeader( const std::string & filename )
+    {
+        ifstream infile( filename, ios::in | ios::binary );
+        istreambuf_iterator<char> init(infile);
+        SWDL_Header hdr;
+        hdr.ReadFromContainer(init);
+        return move(hdr);
+    }
+
 };
 
 //========================================================================================================

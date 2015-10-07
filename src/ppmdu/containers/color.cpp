@@ -40,6 +40,11 @@ namespace gimg
         blue  = b;
     }
 
+    void colorRGB24::setFromRGB24( const colorRGB24 & col )
+    {
+        m_colcomponents = col.m_colcomponents;
+    }
+
     colorRGB24::colorRGB24( const colorRGB24 & other )
         :color_container<uint8_t, 3, colorRGB24>(), red(m_colcomponents[0]), green(m_colcomponents[1]), blue(m_colcomponents[2])
     { m_colcomponents = other.m_colcomponents; }
@@ -98,6 +103,14 @@ namespace gimg
         _red   = r;
         _green = g;
         _blue  = b;
+        _x     = 0;
+    }
+
+    void colorRGBX32::setFromRGB24( const colorRGB24 & col )
+    {
+        _red   = col.red;
+        _green = col.green;
+        _blue  = col.blue;
         _x     = 0;
     }
 

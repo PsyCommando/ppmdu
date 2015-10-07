@@ -54,6 +54,7 @@ namespace gimg
         // -- Virtual stuff --
         virtual _RGB_24_T       getAsRGB24  ()const                             = 0;
         virtual void            setFromRGB24( uint8_t r, uint8_t g, uint8_t b ) = 0;
+        virtual void            setFromRGB24( const colorRGB24 & col )          = 0;
 
         template<class _outit> inline _outit WriteAsRawByte( _outit itwhere, bool blittleendianorder = true )const //#TODO: is "blittleendianorder" a good name ? what about "binvertendian" ?
         {
@@ -96,6 +97,7 @@ namespace gimg
         ~colorRGB24(){}
         colorRGB24 getAsRGB24  ()const;
         void       setFromRGB24( uint8_t r, uint8_t g, uint8_t b );
+        void       setFromRGB24( const colorRGB24 & col );
     };
 
     //=========================================
@@ -115,6 +117,7 @@ namespace gimg
         ~colorRGBX32(){}
         colorRGB24       getAsRGB24  ()const;
         void             setFromRGB24( uint8_t r, uint8_t g, uint8_t b );
+        void             setFromRGB24( const colorRGB24 & col );
     };
 };
 

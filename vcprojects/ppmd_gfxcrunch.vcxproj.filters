@@ -58,6 +58,12 @@
     <Filter Include="Source Files\ppmdu\GameDataAccess">
       <UniqueIdentifier>{684235a1-f0dd-45f8-b005-a50134259d62}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\TempExtraForParsingText">
+      <UniqueIdentifier>{ac91b75d-49f5-4b68-b559-12e224bd7609}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\TempExtraForParsingText">
+      <UniqueIdentifier>{e20a5e4a-09e5-4352-adfc-aa16eedddeda}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -222,6 +228,33 @@
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
@@ -344,14 +377,60 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
-    <Text Include="..\resources\pokesprites_names.txt" />
+    <Text Include="..\resources\pokesprites_names.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\readmes\ppmd_gfxcrunch.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="..\resources\template_chranims.xml" />
-    <Xml Include="..\resources\template_exchranims.xml" />
-    <Xml Include="..\resources\animres.xml" />
+    <Xml Include="..\resources\gamelang.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\template_exchranims.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\template_chranims.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\animres.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

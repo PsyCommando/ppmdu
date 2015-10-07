@@ -106,7 +106,7 @@ namespace DSE
 
     //#FIXME: MOST LIKELY INNACURATE ! The duration for envelope phases is based around the DSE tick counter. So it may or may not be affected by tempo.
     int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier )
-    {
+    { 
         //A rate taken from VGM Trans. It might be close to what we need to convert tick rate into time..
        // static const double MysteryRate = 1.0/ 192.0; 
 
@@ -115,16 +115,16 @@ namespace DSE
         //..then divided by 10,000, to give us a tick quantity
         static const uint32_t UnitDivisor = 10000;
 
-#if 1
+#if 0
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
         else
             return (Duration_Lookup_Table[labs(param)] * multiplier);
 #else
         if( multiplier == 0 )
-            return lround( ( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * MysteryRate );
+            return /*lround(*/ ( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 35  /*)*/; //25 was good
         else
-            return lround( ( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * MysteryRate );
+            return /*lround(*/ ( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 35 /*)*/; //25 was good
 #endif
     }
 
@@ -228,8 +228,8 @@ namespace DSE
                 << "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
                 << "\tunk23        : " << split.unk23     <<"\n"
                 << "\tunk24        : " << split.unk24     <<"\n"
-                << "\tmulatk       : " << static_cast<short>(split.mulatk)     <<"\n"
-                << "\tmul2         : " << static_cast<short>(split.mul2)     <<"\n"
+                << "\tenvon        : " << static_cast<short>(split.envon)     <<"\n"
+                << "\tenvmult      : " << static_cast<short>(split.envmult)     <<"\n"
                 << "\tunk37        : " << static_cast<short>(split.unk37)     <<"\n"
                 << "\tunk38        : " << static_cast<short>(split.unk38)     <<"\n"
                 << "\tunk39        : " << split.unk39     <<"\n"
@@ -245,6 +245,50 @@ namespace DSE
                 ;
             ++cntsplits;
         }
+
+        return strm;
+    }
+
+    //SMDL
+    std::ostream & operator<<( std::ostream &  strm, const TrkEvent & ev )
+    {
+        auto info = GetEventInfo( static_cast<eTrkEventCodes>(ev.evcode) );
+
+        //strm
+        //     <<setfill(' ') <<setw(6) <<right << static_cast<unsigned short>(ev.dt) <<"t : ";
+
+        if( info.first )
+        {
+            strm <<"(0x" <<setfill('0') <<setw(2) <<hex <<uppercase <<right <<static_cast<unsigned short>(ev.evcode) <<") : "
+                 <<nouppercase <<dec <<setfill(' ') <<setw(16) <<left << info.second.evlbl;
+
+            if( !ev.params.empty() )
+            {
+                strm <<hex <<uppercase <<"( ";
+                for( size_t i = 0; i < ev.params.size(); ++i ) 
+                {
+                    strm <<"0x" <<setfill('0') <<setw(2) <<right << static_cast<unsigned short>(ev.params[i]);
+                    if( i != (ev.params.size() - 1) )
+                        strm << ", ";
+                } 
+
+                strm <<dec <<nouppercase <<" )";
+            }
+            else if( ev.evcode >= static_cast<uint8_t>(eTrkEventCodes::Delay_HN) && ev.evcode <= static_cast<uint8_t>(eTrkEventCodes::Delay_64N) )
+            {
+                strm <<dec << static_cast<unsigned short>(TrkDelayCodeVals.at( ev.evcode )) <<" ticks";
+            }
+            else
+            {
+                strm <<"N/A";
+            }
+        }
+        else
+        {
+            strm <<"ERROR EVENT CODE " <<uppercase <<hex <<static_cast<unsigned short>(ev.evcode) <<dec <<nouppercase;
+        }
+
+        strm << "\n" /*<< noshowbase*/;
 
         return strm;
     }

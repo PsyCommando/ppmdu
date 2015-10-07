@@ -12,11 +12,13 @@ Description: Utilities for handling BGP images.
 #include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/containers/img_pixel.hpp>
+#include <ext_fmts/supported_io.hpp>
 
 namespace filetypes
 {
     extern const ContentTy CnTy_BGP; //Content ID handle
-     
+    const std::string       BGP_Ext = "bgp";
+    const utils::Resolution BGP_RES = { 256, 192 };
 
     /*
     */
@@ -50,7 +52,7 @@ namespace filetypes
 
         //
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom )
         {
             itReadfrom = utils::ReadIntFromByteContainer( palbeg,     itReadfrom );
             itReadfrom = utils::ReadIntFromByteContainer( pallen,     itReadfrom );
@@ -91,6 +93,11 @@ namespace filetypes
     */
     BGP  ParseBGP( const std::string & fpath );
     void WriteBGP( const BGP         & img, const std::string & fpath );
+
+    /*
+    */
+    void ExportBGP( const BGP & bgpimg, const std::string & outf, utils::io::eSUPPORT_IMG_IO imgty );
+    BGP  ImportBGP( const std::string & infile );
 };
 
 #endif

@@ -32,6 +32,12 @@
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
 
+/*
+#TODO: Once we got the proper replacement for loading game strings in place, replace this and remove
+       all the other extra unneeded files included in compilation!
+*/
+#include <ppmdu/pmd2/game_stats.hpp>
+
 using namespace ::std;
 using namespace ::pmd2;
 using namespace ::pmd2::graphics;
@@ -56,6 +62,40 @@ namespace gfx_util
     static const int                  RETVAL_BadArg       = -3;
     static const int                  RETVAL_UnkException = -4;
     static const int                  RETVAL_IOException  = -5;
+
+    static const vector<string>       VariationOfAgain    = 
+    {{
+            "",
+            "again",
+            "eagerly",
+            "once more",
+            "with gutso",
+            "another time",
+            "stubbornly",
+            "swiftly",
+            "defiantly",
+            "with devotion",
+            "boldly",
+            "deftly",
+            "elegantly",
+            "with moxie",
+            "gracefully",
+            "tenaciously",
+            "tactfully",
+            "audaciously",
+            "esquisitely",
+            "stumbling in the process",
+            "with some hesitation",
+            "with a bit less enthusiasm",
+            "showing some fatigue",
+            "with visibly less moxie",
+            "lazily",
+            "disinterested",
+            "that's what I'd say if she had used it",
+            "not",
+            "actually she left",
+            "that was a lie.. Ok, we're getting another pooch",
+    }};
 
 //=================================================================================================
 // 
@@ -230,6 +270,26 @@ namespace gfx_util
 //------------------------------------------------
 //  Arguments Info
 //------------------------------------------------
+
+    /*
+        Data for extra argument
+    */
+    const argumentparsing_t CGfxUtil::ExtraArg =
+    {
+            2,      //third arg
+            true,  //optional
+            true,   //guaranteed to appear in order
+            "extra paths", 
+            "Path to an additional item to process.",
+#ifdef WIN32
+            "\"c:/mysprites/sprite.wan\"",
+#elif __linux__
+            "\"/mysprites/sprite.wan\"",
+#endif
+            std::bind( &CGfxUtil::ParseExtraPath, &GetInstance(), placeholders::_1 ),
+    };
+
+
     /*
         Data for the automatic argument parser to work with.
     */
@@ -490,7 +550,7 @@ namespace gfx_util
 
     const vector<argumentparsing_t> & CGfxUtil::getArgumentsList   ()const { return Arguments_List;          }
     const vector<optionparsing_t>   & CGfxUtil::getOptionsList     ()const { return Options_List;            }
-    const argumentparsing_t         * CGfxUtil::getExtraArg        ()const { return &Arguments_List.front(); }
+    const argumentparsing_t         * CGfxUtil::getExtraArg        ()const { return &ExtraArg;               }
     const string                    & CGfxUtil::getTitle           ()const { return Title;                   }
     const string                    & CGfxUtil::getExeName         ()const { return Exe_Name;                }
     const string                    & CGfxUtil::getVersionString   ()const { return Version;                 }
@@ -1028,6 +1088,17 @@ namespace gfx_util
         return false;
     }
 
+    bool CGfxUtil::ParseExtraPath( const string & path )
+    {
+        Poco::Path testpath(path);
+        if( testpath.isDirectory() ||  testpath.isFile() )
+        {
+            m_extraargs.push_back(path);
+            return true;
+        }
+        return false;
+    }
+
     void CGfxUtil::PrintOperationMode()
     {
         if( m_bQuiet )
@@ -1059,6 +1130,16 @@ namespace gfx_util
             case eExecMode::DECOMPRESS_AND_INDENTIFY_Mode:
             {
                 cout <<"Decompressing and Unpacking Sprite\n";
+                break;
+            }
+            case eExecMode::EXPORT_BGP_Mode:
+            {
+                cout <<"Exporting BGP image!\n";
+                break;
+            }
+            case eExecMode::IMPORT_BGP_Mode:
+            {
+                cout <<"Importing BGP image!\n";
                 break;
             }
             case eExecMode::INVALID_Mode:
@@ -1099,16 +1180,15 @@ namespace gfx_util
             }
             else if( result._type == CnTy_AT4PX )
             {
-                throw exception("AT4PX compressed files not supported at this time!");
+                if( inputPath.getExtension() == BGP_Ext )
+                    m_execMode = eExecMode::EXPORT_BGP_Mode;
+                else
+                    throw exception("Raw AT4PX compressed files not supported at this time!");
                 //m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
             }
             else if( result._type == CnTy_PKDPX )
             {
                 m_execMode = eExecMode::DECOMPRESS_AND_INDENTIFY_Mode;
-            }
-            else if( result._type == CnTy_BGP )
-            {
-                m_execMode = eExecMode::EXPORT_BGP_Mode;
             }
             else if( result._type == CnTy_WTE )
             {
@@ -1524,6 +1604,26 @@ namespace gfx_util
                 break;
             }
 
+            case eExecMode::EXPORT_BGP_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Exporting bgp file..\n";
+                m_Export = true; //Gotta force this
+                HandleBGP();
+                returnval = 0;
+                break;
+            }
+
+            case eExecMode::IMPORT_BGP_Mode:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Exporting bgp file..\n";
+                m_Import = true; //Gotta force this
+                HandleBGP();
+                returnval = 0;
+                break;
+            }
+
             case eExecMode::INVALID_Mode:
             {
                 cerr<<"<!>-ERROR  : Nothing can be done here. Exiting..\n";
@@ -1552,14 +1652,44 @@ namespace gfx_util
 
         if( m_doPkKao )
         {
+            if( m_Import )
+            {
+                DoImportPortraits();
+                returnval = 0;
+            }
+            else if( m_Export )
+            {
+                DoExportPortraits();
+                returnval = 0;
+            }
         }
 
         if( m_doPkSpr )
         {
+            if( m_Import )
+            {
+                DoImportPokeSprites();
+                returnval = 0;
+            }
+            else if( m_Export )
+            {
+                DoExportPokeSprites();
+                returnval = 0;
+            }
         }
 
         if( m_doPropSpr )
         {
+            if( m_Import )
+            {
+                DoImportMiscSprites();
+                returnval = 0;
+            }
+            else if( m_Export )
+            {
+                DoExportMiscSprites();
+                returnval = 0;
+            }
         }
 
         //Handle specific content
@@ -1567,21 +1697,27 @@ namespace gfx_util
         {
             case eFMT::BGP:
             {
-
+                HandleBGP();
+                returnval = 0;
                 break;
             }
             case eFMT::WAN:
             {
+                HandleWAN();
+                returnval = 0;
                 break;
             }
             case eFMT::WTE:
             {
+                HandleWTE();
+                returnval = 0;
                 break;
             }
 
             case eFMT::INVALID:
             default:
             {
+                throw runtime_error("CGfxUtil::ExecNew(): Unsupported format got through validation!");
             }
         };
 
@@ -1642,11 +1778,388 @@ namespace gfx_util
         return 0;
     }
 
+
 //--------------------------------------------
 //  New System
 //--------------------------------------------
+    const std::string DefLangConfFile = "gamelang.xml";
+    const std::string DefOutKaoDir    = "portraits";
+    const std::string FONT_Dir        = "FONT";
+    const std::string KaoFName        = "kaomado.kao";
+    const std::string Monster_Dir     = "MONSTER";
 
 
+    void ExportASpritePackFile( const std::string & fpath, const std::string & outdir, utils::io::eSUPPORT_IMG_IO imgty, const std::vector<string> & pokesprnames )
+    {
+        future<void>                 updtProgress;
+        atomic<bool>                 shouldUpdtProgress = true;
+        multitask::CMultiTaskHandler taskmanager;
+        atomic<uint32_t>             completed = 1;
+        Poco::Path inputPath(fpath);
+
+        try
+        {
+            //Unpack files to raw data vector.
+            auto inpack = UnpackPackFile( fpath );
+
+            //Run a check to find files that must be decompressed. And decompress them on the spot, replacing the raw data in the vector.
+            vector<unique_ptr<graphics::BaseSprite>> mysprites(inpack.getNbSubFiles());
+            TurnPackContentToSpriteData( inpack, mysprites );
+
+            auto lambdaExpSpriteWrap = [&]( const graphics::BaseSprite * srcspr, const std::string & outpath )->bool
+            {
+                graphics::ExportSpriteToDirectoryPtr(srcspr, outpath, imgty);
+                ++completed;
+                return true;
+            };
+            auto lambdaWriteFileByVec = [&completed](const std::string & path, const std::vector<uint8_t> & filedata)->bool
+            {
+                utils::io::WriteByteVectorToFile( path, filedata );
+                ++completed;
+                return true;
+            };
+
+
+            //#4 - Run the sprite export code on every sprites, and export to output folder in its own named sub-folder.
+            //     Use the pokemon name list if its one of the 3 special files.
+            cout<<"\nWriting sprites to directories..\n";
+
+            for( unsigned int i = 0; i < mysprites.size(); )
+            {
+                if( mysprites[i] == nullptr )
+                {
+                    //Output the packed file's content as is
+                    auto & cursubf = inpack.getSubFile(i);
+                    stringstream sstr;
+                    sstr << inputPath.getBaseName()
+                         <<"_" <<setw(4) <<setfill('0') <<i <<"." 
+                         << GetAppropriateFileExtension( cursubf.begin(), cursubf.end() );                   
+
+                    taskmanager.AddTask( 
+                        multitask::pktask_t( 
+                            std::bind(lambdaWriteFileByVec, Poco::Path(outdir).append(sstr.str()).toString(), std::ref(inpack.getSubFile(i)) ) ) );
+                }
+                else 
+                {
+                    //Build the sub-folder name
+                    stringstream sstr;
+                    BaseSprite * curspr = mysprites[i].get();
+
+                    if( pokesprnames.size() > i )
+                    {
+                        sstr <<setw(4) <<setfill('0') <<i <<"_" << pokesprnames[i];
+                    }
+                    else
+                    {
+                        sstr << inputPath.getBaseName()
+                             <<"_" <<setw(4) <<setfill('0') <<i;   
+                    }
+
+                    taskmanager.AddTask( 
+                        multitask::pktask_t( 
+                            std::bind(lambdaExpSpriteWrap, (mysprites[i].get()), Poco::Path(outdir).append(sstr.str()).toString() ) ) );
+                }
+                ++i;
+            }
+
+            updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), mysprites.size(), std::ref(shouldUpdtProgress) );
+            
+            taskmanager.Execute();
+            taskmanager.BlockUntilTaskQueueEmpty();
+            taskmanager.StopExecute();
+
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+
+            cout<<"\r100%";
+        }
+        catch( Poco::Exception e )
+        {
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+
+            //rethrow
+            throw e;
+        }
+        catch( exception e )
+        {
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+
+            //rethrow
+            throw e;
+        }
+        cout<<"\n";
+    }
+
+
+    void CGfxUtil::DoExportPortraits()
+    {
+        //We assume the input dir is the rom's root data folder
+        Poco::Path inpath(m_inputPath);
+        inpath.makeAbsolute().append(FONT_Dir).append(KaoFName).makeFile();
+        Poco::Path outpath(m_outputPath);
+        outpath.makeAbsolute().append(DefOutKaoDir).makeDirectory();
+        Poco::File outdir(outpath);
+        if( !outdir.exists() )
+            outdir.createDirectory();
+
+        CKaomado kao;
+        KaoParser()( inpath.toString(), kao );
+
+        //Load pokemon name and face names from the game text!
+        //#TODO: Replace this with the new text loading system!
+        pmd2::stats::GameStats gs( m_inputPath, DefLangConfFile );
+        gs.LoadStrings();
+
+        //Prepare name tables
+        vector<string> pokenames( gs.GetPokemonNameBeg(), gs.GetPokemonNameEnd() );
+        vector<string> facenames( gs.GetPortraitNamesBeg(), gs.GetPortraitNamesEnd() );
+        vector<string> resfacenames;
+        vector<string> respokenames;
+        resfacenames.reserve(DEF_KAO_TOC_ENTRY_NB_PTR);
+        respokenames.reserve(pokenames.size() * 2);
+
+        auto itpokeins = back_inserter(respokenames);
+        //Copy names twice, to match the content of the kaomado file!
+        std::copy( pokenames.begin(), pokenames.end(), itpokeins );
+        std::copy( pokenames.begin(), pokenames.end(), itpokeins );
+
+        //Build facename list!
+        if( facenames.size() < DEF_KAO_TOC_ENTRY_NB_PTR )
+        {
+            //Fill
+            for( size_t i = 0; i < facenames.size(); ++i )
+            {
+                auto & fn = facenames[i];
+                resfacenames.push_back( move(fn) );
+                resfacenames.push_back( "FLIP_" + *(resfacenames.end()) );
+            }
+
+            //Fill missing spot with empty strings
+            const size_t slotsleft = ( DEF_KAO_TOC_ENTRY_NB_PTR - facenames.size() );
+            for( size_t i = 0; i < slotsleft; ++i )
+                resfacenames.push_back( "" );
+        }
+        else
+            resfacenames = move( facenames );
+
+        KaoWriter mywriter( &respokenames, &resfacenames );
+        mywriter( kao, outpath.toString(), m_PrefOutFormat );
+
+    }
+
+    void CGfxUtil::DoImportPortraits()
+    {
+        Poco::Path inkao (m_inputPath);
+        Poco::File indir(inkao);
+        Poco::Path outkao(m_outputPath);
+        inkao.makeAbsolute();
+        outkao.makeAbsolute().append(FONT_Dir).append(KaoFName).makeFile();
+
+        if( !indir.exists() )
+        {
+            stringstream sstr;
+            sstr << "CGfxUtil::DoImportPortraits(): Input path \"" <<inkao.toString() <<"\" does not exists!";
+            throw runtime_error(sstr.str());
+        }
+        else if( !indir.isDirectory() )
+        {
+            stringstream sstr;
+            sstr << "CGfxUtil::DoImportPortraits(): Input path \"" <<inkao.toString() <<"\" is not a directory!";
+            throw runtime_error(sstr.str());
+        }
+
+        CKaomado kao;
+        KaoParser()( inkao.toString(), kao );
+        KaoWriter()( kao, outkao.toString() );
+    }
+
+    void CGfxUtil::DoExportPokeSprites()
+    {
+        Poco::Path inmonster(m_inputPath);
+        Poco::Path outdir   (m_outputPath);
+        inmonster.makeAbsolute().append(Monster_Dir).makeDirectory();
+        outdir.makeAbsolute().makeDirectory();
+        Poco::File mnstrdir(inmonster);
+
+        stats::GameStats gs( m_inputPath, DefLangConfFile );
+        gs.LoadStrings();
+
+        //Currently, we do not support raw image export on sprites !
+        ChkAndHndlUnsupportedRawOutput();
+
+        if( !mnstrdir.exists() )
+        {
+            stringstream sstr;
+            sstr << "CGfxUtil::DoExportPokeSprites(): Input path \"" <<inmonster.toString() <<"\" does not exists!";
+            throw runtime_error(sstr.str());
+        }
+        else if( !mnstrdir.isDirectory() )
+        {
+            stringstream sstr;
+            sstr << "CGfxUtil::DoExportPokeSprites(): Input path \"" <<inmonster.toString() <<"\" is not a directory!";
+            throw runtime_error(sstr.str());
+        }
+
+        //Make the pokemon name vector
+        vector<string> pknames( gs.GetPokemonNameBeg(), gs.GetPokemonNameEnd() );
+
+        //Export the three sprite files
+        for( size_t i = 0; i < PackedPokemonSpritesFiles.size(); ++i )
+        {
+            Poco::Path outdirname( PackedPokemonSpritesFiles[i].name );
+            Poco::Path outsubdir = outdir;
+            outsubdir.append( outdirname.getBaseName() ).makeDirectory();
+            Poco::File outsubdirfile(outsubdir);
+            
+            if( ! outsubdirfile.exists() )
+                outsubdirfile.createDirectory();
+
+            else if( !outsubdirfile.isDirectory() )
+            {
+                stringstream sstr;
+                sstr << "CGfxUtil::DoExportPokeSprites(): Output path \"" <<outsubdirfile.path() <<"\" is not a directory!";
+                throw runtime_error(sstr.str());
+            }
+
+            Poco::Path insprpath(inmonster);
+            insprpath.append(PackedPokemonSpritesFiles[i].name).makeFile();
+            Poco::File inspr(insprpath);
+
+            if( ! inspr.exists() )
+            {
+                clog << "Sprite file \"" <<inspr.path() << "\" doesn't exist! Skipping..\n";
+                continue;
+            }
+            else if( ! inspr.isFile() )
+            {
+                clog << "Sprite file \"" <<inspr.path() << "\" is not a file! Skipping..\n";
+                continue;
+            }
+            else
+            {
+                ExportASpritePackFile( inspr.path(), outsubdirfile.path(), m_PrefOutFormat, pknames );
+            }
+        }
+
+
+    }
+
+    void CGfxUtil::DoImportPokeSprites()
+    {
+                
+        assert(false);
+    }
+
+    void CGfxUtil::DoExportMiscSprites()
+    {
+        assert(false);
+    }
+
+    void CGfxUtil::DoImportMiscSprites()
+    {
+        assert(false);
+    }
+
+
+    void CGfxUtil::HandleBGP()
+    {
+        vector<string> procqueue;
+        auto itinstproc = back_inserter(procqueue);
+        procqueue.push_back(m_inputPath);
+        copy( m_extraargs.begin(), m_extraargs.end(), itinstproc );
+
+        string fext;
+        if(m_Import) 
+            fext = BGP_FILEX;
+        else if(m_Export)
+        {
+            if( m_PrefOutFormat == eSUPPORT_IMG_IO::PNG )
+                fext = utils::io::PNG_FileExtension;
+            else if( m_PrefOutFormat == eSUPPORT_IMG_IO::BMP )
+                fext = utils::io::BMP_FileExtension;
+        }
+
+        int againcnt = 0;
+
+        for( const auto & item : procqueue )
+        {
+            try
+            {
+                Poco::Path inpath(item);
+                Poco::File infile(inpath);
+                Poco::Path outpath;
+
+                if( againcnt != 0 )
+                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\", " <<VariationOfAgain[againcnt % VariationOfAgain.size()] <<"!\n";
+                else
+                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
+
+                if( procqueue.size() > 1 )
+                    outpath = Poco::Path(m_outputPath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeFile().setExtension(fext);
+                else if( m_outputPath.empty() )
+                    outpath = Poco::Path(inpath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeFile().setExtension(fext);
+                else
+                    outpath = Poco::Path(m_outputPath);
+
+                if( infile.exists() && infile.isFile() )
+                {
+                    if( m_Import )
+                    {
+                        BGP bgpimg = ImportBGP(infile.path());
+                        WriteBGP( bgpimg, outpath.makeAbsolute().toString() );
+                    }
+                    else if( m_Export )
+                    {
+                        BGP bgpimg = ParseBGP(infile.path());
+                        ExportBGP( bgpimg, outpath.makeAbsolute().toString(), m_PrefOutFormat );
+                    }
+                    cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
+                }
+                else
+                {
+                    stringstream sstr;
+                    sstr << "CGfxUtil::HandleBGP(): Input path \"" <<infile.path() <<"\" doesn't exist, or is not a file!";
+                    throw runtime_error(sstr.str());
+                }
+            }
+            catch( const exception & e )
+            {
+                clog <<"Exception: " << e.what() <<"\n";
+            }
+            catch( const Poco::Exception & e )
+            {
+                clog <<"Poco::Exception: " << e.what() <<"\n";
+            }
+            ++againcnt;
+        }
+    }
+
+    void CGfxUtil::HandleWAN()
+    {
+        if( m_Import )
+        {
+        }
+        else if( m_Export )
+        {
+        }
+        assert(false);
+    }
+
+    void CGfxUtil::HandleWTE()
+    {
+        if( m_Import )
+        {
+        }
+        else if( m_Export )
+        {
+        }
+        assert(false);
+    }
 
 //--------------------------------------------
 //  Main Methods

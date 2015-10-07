@@ -5,6 +5,7 @@
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <utils/library_wide.hpp>
+#include <ppmdu/fmts/swdl.hpp>
 
 
 #include <iostream>
@@ -304,9 +305,28 @@ namespace audioutil
 
     bool CAudioUtil::ParseOptionLog( const std::vector<std::string> & optdata )
     {
-        m_redirectClog.Redirect(optdata[1]);
-        utils::LibWide().isLogOn(true);
-        return true;
+        Poco::Path outpath(optdata[1]);
+        if( outpath.isFile() )
+        {
+            Poco::File OutputDir( outpath.parent().makeAbsolute() );
+            if( !OutputDir.exists() )
+            {
+                if( !OutputDir.createDirectory() )
+                {
+                    throw runtime_error( "Couldn't create output directory for log file!");
+                }
+            }
+                
+
+            m_redirectClog.Redirect(optdata[1]);
+            utils::LibWide().isLogOn(true);
+            return true;
+        }
+        else
+        {
+            cerr << "<!>- ERROR: Invalid path to log file specified! Path is not a file!\n";
+            return false;
+        }
     }
 
 
@@ -670,294 +690,331 @@ namespace audioutil
 
     int CAudioUtil::ExportSMDL()
     {
-        using namespace pmd2::audio;
-        Poco::Path inputfile(m_inputPath);
-        Poco::Path outputfile;
-        string     outfname;
+        //using namespace pmd2::audio;
+        //Poco::Path inputfile(m_inputPath);
+        //Poco::Path outputfile;
+        //string     outfname;
 
-        if( ! m_outputPath.empty() )
-            outputfile = Poco::Path(m_outputPath);
-        else
-            outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeFile();
+        //if( ! m_outputPath.empty() )
+        //    outputfile = Poco::Path(m_outputPath);
+        //else
+        //    outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeFile();
 
-        outfname = outputfile.getBaseName();
+        //outfname = outputfile.getBaseName();
 
-        //Export
-        MusicSequence smd = LoadSequence( inputfile.toString() );
+        ////Check if we have a matching swd!
+        //Poco::Path matchingswd(inputfile);
+        //matchingswd.setExtension( "swd" );
+        //Poco::File swdfile(matchingswd);
 
-        //Write output
-        ofstream outfile( (outputfile.toString() + ".txt") );
-        outfile << smd.tostr();
-        outfile.close();
+        //if( swdfile.exists() && swdfile.isFile() )
+        //{
+        //    SWDL_Header matchswdhdr = ReadSwdlHeader( swdfile.path() );
 
-        //WriteEventsToMidiFileTest_MF( outputfile.toString(), smd );
-        outputfile.setExtension("mid");
-        //WriteEventsToMidiFileTest( outputfile.toString(), smd );
+        //    if( matchswdhdr.DoesContainsSamples() )
+        //    {
+        //    }
+        //    else
+        //    {
+        //        //Check if we got a master bank
+        //        Poco::DirectoryIterator diritbeg(inputfile.parent());
+        //        Poco::DirectoryIterator diritend;
 
-        //Write meta
-        //Write the info that didn't fit in the midi here as XML.
+        //        for(; diritbeg != diritend; ++diritbeg )
+        //        {
+        //            if( diritbeg->isFile() && Poco::Path(diritbeg->path()).getExtension() == "swd" )
+        //            {
+        //               if( ReadSwdlHeader( diritbeg->path() ).IsSampleBankOnly() )
+        //               {
+        //                   auto pairnbank = LoadBankAndSinglePair( diritbeg->path(), inputfile.toString(), swdfile.path() );
+        //                   Expor
+        //               }
+        //            }
+        //        }
+
+        //        
+        //    }
+        //}
+        //else
+        //{
+        //    //Export
+        //    MusicSequence smd = LoadSequence( inputfile.toString() );
+
+        //    //Write output
+        //    ofstream outfile( (outputfile.toString() + ".txt") );
+        //    outfile << smd.tostr();
+        //    outfile.close();
+
+        //    //WriteEventsToMidiFileTest_MF( outputfile.toString(), smd );
+        //    outputfile.setExtension("mid");
+        //    //WriteEventsToMidiFileTest( outputfile.toString(), smd );
+
+        //    //Write meta
+        //    //Write the info that didn't fit in the midi here as XML.
+        //}
 
         //Finish
+        assert(false);
 
         return 0;
     }
 
-        struct trkremappoint
-        {
-            unsigned int origtrk     = 0; //The index of the track the events to take are
-            unsigned int targettrk   = 0; //The track to move this to
+        //struct trkremappoint
+        //{
+        //    unsigned int origtrk     = 0; //The index of the track the events to take are
+        //    unsigned int targettrk   = 0; //The track to move this to
 
-            unsigned int ticksbefore = 0; //Duration before the first event
-            unsigned int begindex    = 0; //Index of first event to remap
-            unsigned int endindex    = 0; //Index of last event to remap
-            unsigned int ticksspan   = 0; //Duration between the first and last event
+        //    unsigned int ticksbefore = 0; //Duration before the first event
+        //    unsigned int begindex    = 0; //Index of first event to remap
+        //    unsigned int endindex    = 0; //Index of last event to remap
+        //    unsigned int ticksspan   = 0; //Duration between the first and last event
 
-        };
+        //};
 
     /*
         PrepRemapSeq
             Tries to read a track from the position specified to the end. If it finds a program change it stops.
             It returns details on the sequence of event it was able to read before hitting a program change event!
     */
-    trkremappoint PrepRemapSeq( const MusicTrack & curtrk, size_t pos, uint8_t curprogid, uint32_t & lastpause )
-    {
-        //static const uint8_t SETPresetCode = static_cast<uint8_t>(DSE::eTrkEventCodes::SetPreset);
-        //static const uint8_t DrumProgIdBeg = 0x78;
-        //static const uint8_t DrumProgIdEnd = 0x7F;
-        trkremappoint rmapseq;
-        size_t        evno = pos;
-        rmapseq.begindex = pos;
+    //trkremappoint PrepRemapSeq( const MusicTrack & curtrk, size_t pos, uint8_t curprogid, uint32_t & lastpause )
+    //{
+    //    //static const uint8_t SETPresetCode = static_cast<uint8_t>(DSE::eTrkEventCodes::SetPreset);
+    //    //static const uint8_t DrumProgIdBeg = 0x78;
+    //    //static const uint8_t DrumProgIdEnd = 0x7F;
+    //    trkremappoint rmapseq;
+    //    size_t        evno = pos;
+    //    rmapseq.begindex = pos;
 
-        for( ; evno < curtrk.size(); ++evno )
-        {
-            DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>( curtrk[evno].evcode );
+    //    for( ; evno < curtrk.size(); ++evno )
+    //    {
+    //        DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>( curtrk[evno].evcode );
 
-            //We got a program change
-            if( code == DSE::eTrkEventCodes::SetPreset && curtrk[evno].params.front() != curprogid )
-                break;
+    //        //We got a program change
+    //        if( code == DSE::eTrkEventCodes::SetPreset && curtrk[evno].params.front() != curprogid )
+    //            break;
 
-            //Handle delta-time
-            if( curtrk[evno].dt != 0 )
-            {
-                rmapseq.ticksspan += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( curtrk[evno].dt ) );
-            }
+    //        //Handle delta-time
+    //        if( curtrk[evno].dt != 0 )
+    //        {
+    //            rmapseq.ticksspan += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( curtrk[evno].dt ) );
+    //        }
 
-            //Handle pauses
-            if( code == DSE::eTrkEventCodes::LongPause )
-            {
-                lastpause = (static_cast<uint16_t>(curtrk[evno].params.back()) << 8) | curtrk[evno].params.front();
-                rmapseq.ticksspan += lastpause;
-            }
-            else if( code == DSE::eTrkEventCodes::Pause )
-            {
-                lastpause = curtrk[evno].params.front();
-                rmapseq.ticksspan += lastpause;
-            }
-            else if( code == DSE::eTrkEventCodes::AddToLastPause )
-            {
-                uint32_t prelastp = lastpause;
-                lastpause = prelastp + curtrk[evno].params.front();
-                rmapseq.ticksspan += lastpause;
-            }
-            else if( code == DSE::eTrkEventCodes::RepeatLastPause )
-            {
-                rmapseq.ticksspan += lastpause;
-            }
+    //        //Handle pauses
+    //        if( code == DSE::eTrkEventCodes::Pause16Bits )
+    //        {
+    //            lastpause = (static_cast<uint16_t>(curtrk[evno].params.back()) << 8) | curtrk[evno].params.front();
+    //            rmapseq.ticksspan += lastpause;
+    //        }
+    //        else if( code == DSE::eTrkEventCodes::Pause8Bits )
+    //        {
+    //            lastpause = curtrk[evno].params.front();
+    //            rmapseq.ticksspan += lastpause;
+    //        }
+    //        else if( code == DSE::eTrkEventCodes::AddToLastPause )
+    //        {
+    //            uint32_t prelastp = lastpause;
+    //            lastpause = prelastp + curtrk[evno].params.front();
+    //            rmapseq.ticksspan += lastpause;
+    //        }
+    //        else if( code == DSE::eTrkEventCodes::RepeatLastPause )
+    //        {
+    //            rmapseq.ticksspan += lastpause;
+    //        }
 
-        }
+    //    }
 
-        rmapseq.endindex = evno;
+    //    rmapseq.endindex = evno;
 
-        return rmapseq;
-    }
+    //    return rmapseq;
+    //}
 
     /*
         This function reads a music sequence and make a list of sequences of events sharing the same program no per tracks.
         It determines depending on the type of instrument on what MIDI track to put it on!
     */
-    vector<vector<trkremappoint>> AnalyzeForRemaps( const MusicSequence & seq )
-    {
-        vector<MusicTrack>    fixedtracks;
+    //vector<vector<trkremappoint>> AnalyzeForRemaps( const MusicSequence & seq )
+    //{
+    //    vector<MusicTrack>    fixedtracks;
 
-        vector<vector<trkremappoint>> trackremapinfo(seq.getNbTracks());
-        //vector<trkremappoint> trackremapinfo;
-        //vector<int>           nbprgchangesptrack; //The amount of sub-sequence for each tracks. AKA the nb of program changes.
+    //    vector<vector<trkremappoint>> trackremapinfo(seq.getNbTracks());
+    //    //vector<trkremappoint> trackremapinfo;
+    //    //vector<int>           nbprgchangesptrack; //The amount of sub-sequence for each tracks. AKA the nb of program changes.
 
-        //Temporary measure 
-        //#TODO: fetch data on each instruments if available, then fallback to other more basic measures !
-        static const uint8_t DrumProgIdBeg = 0x78;
-        static const uint8_t DrumProgIdEnd = 0x7F;
+    //    //Temporary measure 
+    //    //#TODO: fetch data on each instruments if available, then fallback to other more basic measures !
+    //    static const uint8_t DrumProgIdBeg = 0x78;
+    //    static const uint8_t DrumProgIdEnd = 0x7F;
 
-        for( unsigned int trkno = 0; trkno < seq.getNbTracks(); ++trkno )
-        {
-            const auto &  curtrk    = seq.track(trkno);
-            unsigned int  curprog   = 0; //Current instrument preset
-            unsigned int  ticks     = 0;
-            uint32_t      lastpause = 0;
+    //    for( unsigned int trkno = 0; trkno < seq.getNbTracks(); ++trkno )
+    //    {
+    //        const auto &  curtrk    = seq.track(trkno);
+    //        unsigned int  curprog   = 0; //Current instrument preset
+    //        unsigned int  ticks     = 0;
+    //        uint32_t      lastpause = 0;
 
-            for( size_t evno = 0; evno < curtrk.size(); ++evno )
-            {
-                const auto & curevent = curtrk[evno];
-                const DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>( curtrk[evno].evcode );
+    //        for( size_t evno = 0; evno < curtrk.size(); ++evno )
+    //        {
+    //            const auto & curevent = curtrk[evno];
+    //            const DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>( curtrk[evno].evcode );
 
-                if( code == eTrkEventCodes::SetPreset )
-                {
-                    curprog = curevent.params.front();
-                    trkremappoint rmap = PrepRemapSeq( curtrk, evno, curprog, lastpause ); //Last pause is passed by reference and modified as needed
-                    rmap.origtrk = trkno;
+    //            if( code == eTrkEventCodes::SetPreset )
+    //            {
+    //                curprog = curevent.params.front();
+    //                trkremappoint rmap = PrepRemapSeq( curtrk, evno, curprog, lastpause ); //Last pause is passed by reference and modified as needed
+    //                rmap.origtrk = trkno;
 
-                    //#TODO: replace with function that query the instrument bank!
-                    //Decide what to do depending on the instrument
-                    if( curprog >= DrumProgIdBeg && curprog <= DrumProgIdEnd ) //If its an instrument from the GM drumkit
-                        rmap.targettrk = 9;
-                    else if( trkno != 9 ) //If the instrument isn't a drum, and its not on a drum track
-                        rmap.targettrk = trkno; //Don't move
-                    else //If the instrument is not part of the GM drumkit, but its on MIDI track 10
-                    {
-                        //#TODO: Need to try to find this sequence a home track with a proper algorithm ! 
-                        //For now, merge with track 1
-                        rmap.targettrk = 1;
-                    }
+    //                //#TODO: replace with function that query the instrument bank!
+    //                //Decide what to do depending on the instrument
+    //                if( curprog >= DrumProgIdBeg && curprog <= DrumProgIdEnd ) //If its an instrument from the GM drumkit
+    //                    rmap.targettrk = 9;
+    //                else if( trkno != 9 ) //If the instrument isn't a drum, and its not on a drum track
+    //                    rmap.targettrk = trkno; //Don't move
+    //                else //If the instrument is not part of the GM drumkit, but its on MIDI track 10
+    //                {
+    //                    //#TODO: Need to try to find this sequence a home track with a proper algorithm ! 
+    //                    //For now, merge with track 1
+    //                    rmap.targettrk = 1;
+    //                }
 
-                    rmap.ticksbefore = ticks;
-                    trackremapinfo[trkno].push_back( rmap );
+    //                rmap.ticksbefore = ticks;
+    //                trackremapinfo[trkno].push_back( rmap );
 
-                    ticks += rmap.ticksspan; //increment current ticks accordingly
-                    evno  =  rmap.endindex;  //Move cursor to last entry in the sequence
-                    //lastpause was already modified as needed
-                    continue; //skip the steps below
-                }
+    //                ticks += rmap.ticksspan; //increment current ticks accordingly
+    //                evno  =  rmap.endindex;  //Move cursor to last entry in the sequence
+    //                //lastpause was already modified as needed
+    //                continue; //skip the steps below
+    //            }
 
-                //Count DT
-                if( curevent.dt != 0 )
-                    ticks += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( curevent.dt ) );
+    //            //Count DT
+    //            if( curevent.dt != 0 )
+    //                ticks += static_cast<uint8_t>( DSE::TrkDelayCodeVals.at( curevent.dt ) );
 
-                //Count Pauses
-                if( code == DSE::eTrkEventCodes::LongPause )
-                {
-                    lastpause = (static_cast<uint16_t>(curevent.params.back()) << 8) | curevent.params.front();
-                    ticks += lastpause;
-                }
-                else if( code == DSE::eTrkEventCodes::Pause )
-                {
-                    lastpause = curevent.params.front();
-                    ticks += lastpause;
-                }
-                else if( code == DSE::eTrkEventCodes::AddToLastPause )
-                {
-                    uint32_t prelastp = lastpause;
-                    lastpause = prelastp + curevent.params.front();
-                    ticks += lastpause;
-                }
-                else if( code == DSE::eTrkEventCodes::RepeatLastPause )
-                {
-                    ticks += lastpause;
-                }
-            }
-        }
+    //            //Count Pauses
+    //            if( code == DSE::eTrkEventCodes::Pause16Bits )
+    //            {
+    //                lastpause = (static_cast<uint16_t>(curevent.params.back()) << 8) | curevent.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::Pause8Bits )
+    //            {
+    //                lastpause = curevent.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::AddToLastPause )
+    //            {
+    //                uint32_t prelastp = lastpause;
+    //                lastpause = prelastp + curevent.params.front();
+    //                ticks += lastpause;
+    //            }
+    //            else if( code == DSE::eTrkEventCodes::RepeatLastPause )
+    //            {
+    //                ticks += lastpause;
+    //            }
+    //        }
+    //    }
 
-        return std::move( trackremapinfo );
-    }
+    //    return std::move( trackremapinfo );
+    //}
 
     /*
     */
-    uint8_t RemapInstrumentProg( uint8_t progid )
-    {
-        if( progid == 0x1 ) //new age pad
-            return 88;
-        else if( progid == 0x2 ) //EPiano 2
-            return 5;
-        else if( progid == 0x3 ||  progid == 0x4 ) //Synth voice ? Basssoon
-            return 70;//102;
-        else if( progid == 0x5 ) //xylophone
-            return 13;
-        else if( progid == 0x6 ) //Vibraphone
-            return 11;
-        else if( progid == 0x7 || progid == 0x8 || progid == 0x9 /*|| progid == 0x4*/ ) //carillion ? glockenspiel
-            return 9;
-        else if( progid == 0xA || progid == 0xB ) //Harp
-            return 46;
-        else if( progid == 0xC ) //Tubular bell
-            return 14;
-        else if( progid == 0xD ) //Weird indian percussion
-            return 116;
-        else if( progid == 0xE ) //Harpsichord
-            return 6;
-        else if( progid == 0xF ) //Crystal ? Fifth ?
-            return 76;//86;//98;
-        else if( progid == 0x14 || progid == 0x15 ) //Nylon guitar
-            return 24;
-        else if( progid == 0x16 || progid == 0x17 ) //Dulcimer (15)? Banjo (105)? Koto (107)?
-            return 15;
-        else if( progid == 0x19 ) //Synth bass1
-            return 38;
-        else if( progid == 0x1A ) //SynthBass2
-            return 39;
-        else if( progid == 0x1D ) //Slap bass
-            return 36;
-        else if( progid == 0x1F || progid == 0x20 ) //Synth Strings?
-            return 50;
-        else if( progid == 0x23 ) //Choir AH
-            return 52;
-        else if( progid == 0x27 || progid == 0x28 ) //Slow string
-            return 49;
-        else if( progid == 0x2A ) //eh? Hard to say, maybe a tenor sax (66) ? English horn (69)?
-            return 69;
-        else if( progid == 0x2B || progid == 0x2C ) //Percussive organ
-            return 17;
-        else if( progid == 0x2E ) //String ensemble
-            return 48;
-        else if( progid == 0x30 ) //Bassoon ?? Probably bagpipes ?
-            return 109;
-        else if( progid == 0x31 || progid == 0x32 ) //Recorder
-            return 74;
-        else if( progid == 0x33 || progid == 0x34 ) //Flute
-            return 73;
-        else if( progid == 0x35 ) //Clarinet
-            return 71;
-        else if( progid == 0x36 || progid == 0x37 ) //Bassoon(70) ? Maybe Oboe ? English horn ?
-            return 69;
-        else if( progid == 0x3B || progid == 0x3D ) //Trumpet
-            return 56;
-        else if( progid == 0x3E ) //Trombone ?
-            return 57;
-        else if( progid == 0x3F ) //Tuba
-            return 58; 
-        else if( progid == 0x40 || progid == 0x41 || progid == 0x42 ) //Horn ?
-            return 60;
-        else if( progid == 0x44 ) //Brass Section ?
-            return 61;
-        else if( progid == 0x47 || progid == 0x48 ) //Violin
-            return 40;//110;
-        else if( progid == 0x4A ) //Cello ?
-            return 42;
-        else if( progid == 0x4B ) //Pizzicato
-            return 45;
-        else if( progid == 0x51 || progid == 0x52 ) //PanFlute
-            return 75;
-        else if( progid == 0x53 ) //Steel drums
-            return 114;
-        else if( progid == 0x54 ) //Sitar
-            return 104;
-        else if( progid == 0x5B ) //Polysynth
-            return 90; 
-        else if( progid == 0x5D ) //Synth Brass2
-            return 63;
-        else if( progid == 0x5E || progid == 0x5F ) //Whistle
-            return 78;
-        else if( progid == 0x60 ) //Some synth wave?
-            return 80;//110;
-        else if( progid == 0x61 || progid == 0x62 ) //Sawtooth wave
-            return 62;//81;
-        else if( progid == 0x63 ) //some kind of synth wave. 
-            return 112;
-        else if( progid == 0x79 ) //Timpani
-            return 47;
-        else if( progid == 0x7B ) //Taiko drum ?
-            return 116;
-        else
-            return 1;
-    }
+    //uint8_t RemapInstrumentProg( uint8_t progid )
+    //{
+    //    if( progid == 0x1 ) //new age pad
+    //        return 88;
+    //    else if( progid == 0x2 ) //EPiano 2
+    //        return 5;
+    //    else if( progid == 0x3 ||  progid == 0x4 ) //Synth voice ? Basssoon
+    //        return 70;//102;
+    //    else if( progid == 0x5 ) //xylophone
+    //        return 13;
+    //    else if( progid == 0x6 ) //Vibraphone
+    //        return 11;
+    //    else if( progid == 0x7 || progid == 0x8 || progid == 0x9 /*|| progid == 0x4*/ ) //carillion ? glockenspiel
+    //        return 9;
+    //    else if( progid == 0xA || progid == 0xB ) //Harp
+    //        return 46;
+    //    else if( progid == 0xC ) //Tubular bell
+    //        return 14;
+    //    else if( progid == 0xD ) //Weird indian percussion
+    //        return 116;
+    //    else if( progid == 0xE ) //Harpsichord
+    //        return 6;
+    //    else if( progid == 0xF ) //Crystal ? Fifth ?
+    //        return 76;//86;//98;
+    //    else if( progid == 0x14 || progid == 0x15 ) //Nylon guitar
+    //        return 24;
+    //    else if( progid == 0x16 || progid == 0x17 ) //Dulcimer (15)? Banjo (105)? Koto (107)?
+    //        return 15;
+    //    else if( progid == 0x19 ) //Synth bass1
+    //        return 38;
+    //    else if( progid == 0x1A ) //SynthBass2
+    //        return 39;
+    //    else if( progid == 0x1D ) //Slap bass
+    //        return 36;
+    //    else if( progid == 0x1F || progid == 0x20 ) //Synth Strings?
+    //        return 50;
+    //    else if( progid == 0x23 ) //Choir AH
+    //        return 52;
+    //    else if( progid == 0x27 || progid == 0x28 ) //Slow string
+    //        return 49;
+    //    else if( progid == 0x2A ) //eh? Hard to say, maybe a tenor sax (66) ? English horn (69)?
+    //        return 69;
+    //    else if( progid == 0x2B || progid == 0x2C ) //Percussive organ
+    //        return 17;
+    //    else if( progid == 0x2E ) //String ensemble
+    //        return 48;
+    //    else if( progid == 0x30 ) //Bassoon ?? Probably bagpipes ?
+    //        return 109;
+    //    else if( progid == 0x31 || progid == 0x32 ) //Recorder
+    //        return 74;
+    //    else if( progid == 0x33 || progid == 0x34 ) //Flute
+    //        return 73;
+    //    else if( progid == 0x35 ) //Clarinet
+    //        return 71;
+    //    else if( progid == 0x36 || progid == 0x37 ) //Bassoon(70) ? Maybe Oboe ? English horn ?
+    //        return 69;
+    //    else if( progid == 0x3B || progid == 0x3D ) //Trumpet
+    //        return 56;
+    //    else if( progid == 0x3E ) //Trombone ?
+    //        return 57;
+    //    else if( progid == 0x3F ) //Tuba
+    //        return 58; 
+    //    else if( progid == 0x40 || progid == 0x41 || progid == 0x42 ) //Horn ?
+    //        return 60;
+    //    else if( progid == 0x44 ) //Brass Section ?
+    //        return 61;
+    //    else if( progid == 0x47 || progid == 0x48 ) //Violin
+    //        return 40;//110;
+    //    else if( progid == 0x4A ) //Cello ?
+    //        return 42;
+    //    else if( progid == 0x4B ) //Pizzicato
+    //        return 45;
+    //    else if( progid == 0x51 || progid == 0x52 ) //PanFlute
+    //        return 75;
+    //    else if( progid == 0x53 ) //Steel drums
+    //        return 114;
+    //    else if( progid == 0x54 ) //Sitar
+    //        return 104;
+    //    else if( progid == 0x5B ) //Polysynth
+    //        return 90; 
+    //    else if( progid == 0x5D ) //Synth Brass2
+    //        return 63;
+    //    else if( progid == 0x5E || progid == 0x5F ) //Whistle
+    //        return 78;
+    //    else if( progid == 0x60 ) //Some synth wave?
+    //        return 80;//110;
+    //    else if( progid == 0x61 || progid == 0x62 ) //Sawtooth wave
+    //        return 62;//81;
+    //    else if( progid == 0x63 ) //some kind of synth wave. 
+    //        return 112;
+    //    else if( progid == 0x79 ) //Timpani
+    //        return 47;
+    //    else if( progid == 0x7B ) //Taiko drum ?
+    //        return 116;
+    //    else
+    //        return 1;
+    //}
 
     /*
     */
@@ -1116,7 +1173,7 @@ namespace audioutil
     //                mess.SetTempo( microspquart );
     //                mt.GetTrack(trkno)->PutEvent( mess );
     //            }
-    //            else if( code == DSE::eTrkEventCodes::LongPause )
+    //            else if( code == DSE::eTrkEventCodes::Pause16Bits )
     //            {
     //                lastpause = (static_cast<uint16_t>(ev.params.back()) << 8) | ev.params.front();
     //                ticks += lastpause;
@@ -1358,35 +1415,39 @@ namespace audioutil
     //    }
     //}
 
-    enum struct eMidiMessCodes : uint8_t
-    {
-        NoteOff     = 0x80,
-        NoteOn      = 0x90,
-        Aftertouch  = 0xA0,
-        CtrlChange  = 0xB0,
-        PrgmChange  = 0xC0,
-        ChanPress   = 0xD0,
-        PitchWheel  = 0xE0,
-        SySexcl     = 0xF0,
-    };
+    //enum struct eMidiMessCodes : uint8_t
+    //{
+    //    NoteOff     = 0x80,
+    //    NoteOn      = 0x90,
+    //    Aftertouch  = 0xA0,
+    //    CtrlChange  = 0xB0,
+    //    PrgmChange  = 0xC0,
+    //    ChanPress   = 0xD0,
+    //    PitchWheel  = 0xE0,
+    //    SySexcl     = 0xF0,
+    //};
 
     int CAudioUtil::ExportSEDL()
     {
+        assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSWDL()
     {
+        assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSMDL()
     {
+        assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSEDL()
     {
+        assert(false);
         return 0;
     }
 

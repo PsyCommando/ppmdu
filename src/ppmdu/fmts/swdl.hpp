@@ -146,6 +146,19 @@ namespace DSE
             wavilen     = utils::ReadIntFromByteVector<decltype(wavilen)>    (itReadfrom);
             return itReadfrom;
         }
+
+
+        /*
+            DoesContainsSamples
+                Returns true if the swdl contains sample data.
+        */
+        bool DoesContainsSamples()const;
+
+        /*
+            IsSampleBankOnly
+                Returns true if the swdl is only a sample bank, without program info.
+        */
+        bool IsSampleBankOnly()const;
     };
 
 
@@ -195,6 +208,11 @@ namespace DSE
     PresetBank ParseSWDL( const std::string & filename );
     void       WriteSWDL( const std::string & filename, const PresetBank & audiodata );
 
+    /*
+        ReadSwdlHeader
+            Reads only the SWDL header from a file.
+    */
+    SWDL_Header ReadSwdlHeader( const std::string & filename );
 
 };
 

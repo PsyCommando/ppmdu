@@ -897,6 +897,27 @@ namespace pmd2{ namespace stats
         return const_cast<GameStats*>(this)->GetItemLongDescEnd();
     }
 
+    //Portraits
+    std::vector<std::string>::const_iterator GameStats::GetPortraitNamesBeg()const
+    {
+        return const_cast<GameStats*>(this)->GetPortraitNamesBeg();
+    }
+
+    std::vector<std::string>::const_iterator GameStats::GetPortraitNamesEnd()const
+    {
+        return const_cast<GameStats*>(this)->GetPortraitNamesEnd();
+    }
+
+    std::vector<std::string>::iterator       GameStats::GetPortraitNamesBeg()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).beg );
+    }
+
+    std::vector<std::string>::iterator       GameStats::GetPortraitNamesEnd()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).end );
+    }
+
     std::vector<std::string>::iterator       GameStats::GetItemLongDescBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescL).beg );

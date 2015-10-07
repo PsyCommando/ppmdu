@@ -204,6 +204,11 @@ namespace pmd2{ namespace stats
         std::vector<std::string>::iterator       GetItemLongDescBeg();
         std::vector<std::string>::iterator       GetItemLongDescEnd();
 
+        std::vector<std::string>::const_iterator GetPortraitNamesBeg()const;
+        std::vector<std::string>::const_iterator GetPortraitNamesEnd()const;
+        std::vector<std::string>::iterator       GetPortraitNamesBeg();
+        std::vector<std::string>::iterator       GetPortraitNamesEnd();
+
         std::string              & GetPokemonNameStr( uint16_t pkmnindex );
         inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<GameStats*>(this)->GetPokemonNameStr(pkmnindex); }
         std::string              & GetPkmnCatNameStr( uint16_t pkmnindex );

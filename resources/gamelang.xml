@@ -67,6 +67,11 @@
               <Begin>13770</Begin>
               <End>13989</End>
             </StringBlock>
+            <StringBlock>
+              <Name>Portrait Names</Name>
+              <Begin>16076</Begin>
+              <End>16108</End>
+            </StringBlock>
         </Language>
         <!--Begin Japanese EoS. (.932 is Shift-JIS ANSI codepage on Windows!)-->
         <Language name="Japanese" strfile="text_j.str" locale=".932">

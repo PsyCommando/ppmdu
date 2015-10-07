@@ -63,6 +63,8 @@ namespace pmd2
         "Ability Descriptions",
 
         "Type Names",
+
+        "Portrait Names",
     };
 
     /************************************************************************************

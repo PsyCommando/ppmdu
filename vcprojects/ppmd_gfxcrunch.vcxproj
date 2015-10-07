@@ -40,6 +40,17 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
@@ -275,6 +286,15 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">EasyBMP</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">EasyBMP</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
@@ -549,6 +569,7 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\animres.xml" />
+    <Xml Include="..\resources\gamelang.xml" />
     <Xml Include="..\resources\template_chranims.xml" />
     <Xml Include="..\resources\template_exchranims.xml" />
   </ItemGroup>
