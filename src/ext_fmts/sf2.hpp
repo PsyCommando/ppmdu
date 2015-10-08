@@ -89,8 +89,8 @@ namespace sf2
     ***********************************************************************************/
     inline int32_t MSecsToTimecents( int32_t msecs )
     {
-        double dmsec = (msecs / 1000.0);
-        return lround( log2(dmsec) * 1200.00 );
+        double dmsec = ( static_cast<double>(msecs) / 1000.00 );
+        return lround( 1200.00 * log2(dmsec) );
     }
 
 //===========================================================================================
@@ -417,9 +417,9 @@ namespace sf2
         int16_t delay   = SHRT_MIN;                       //timecents
         int16_t attack  = SHRT_MIN;                       //timecents
         int16_t hold    = SHRT_MIN;                       //timecents
-        int16_t sustain =        0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
-        int16_t decay   = SF_GenLimitsVolEnvDecay.min_;   //timecents
-        int16_t release = SF_GenLimitsVolEnvRelease.min_; //timecents
+        int16_t sustain =      0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = SF_GenLimitsVolEnvDelay.def_;   //timecents
+        int16_t release = SF_GenLimitsVolEnvRelease.def_; //timecents
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()

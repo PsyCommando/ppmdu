@@ -26,6 +26,26 @@ namespace DSE
     }
 
 
+    //Remapping data for a single sequence
+    //struct PresetBankDB
+    //{
+    //    typedef uint16_t dsepresid_t;
+
+    //    struct RemapData
+    //    {
+    //        uint16_t sf2bank;
+    //        uint16_t sf2preset;
+    //    };
+
+    //    inline void AddRemapPreset( dsepresid_t dseid, RemapData && remapdat )
+    //    {
+    //        presetstbl.emplace( std::move( std::make_pair( dseid, std::move(remapdat) ) ) );
+    //    }
+
+    //    std::map<dsepresid_t, RemapData> presetstbl;
+    //};
+
+
     /*
         This is used to convert dse tracks into midi.
         It contains details on how to remap notes, what midi preset and bank to use for certain DSE Presets.
@@ -76,6 +96,11 @@ namespace DSE
             return note;
         }
 
+        inline void AddRemapPreset( dsepresetid_t dseid, PresetConvData && remapdat )
+        {
+            _convtbl.emplace( std::make_pair( dseid, std::move(remapdat) ) );
+        }
+
         //Instruments conversion table
         std::map<dsepresetid_t, PresetConvData> _convtbl;
     };
@@ -111,11 +136,17 @@ namespace DSE
     /*
         -presetbanks : The list for each presets of the bank to use
     */
-    void SequenceToMidi( const std::string                 & outmidi, 
-                         const MusicSequence               & seq, 
-                         const std::map<uint16_t,uint16_t> & presetbanks,
-                         eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
-                         eMIDIMode                           midmode     = eMIDIMode::GS );
+    //void SequenceToMidi( const std::string                 & outmidi, 
+    //                     const MusicSequence               & seq, 
+    //                     const std::map<uint16_t,uint16_t> & presetbanks,
+    //                     eMIDIFormat                         midfmt      = eMIDIFormat::SingleTrack,
+    //                     eMIDIMode                           midmode     = eMIDIMode::GS );
+
+    void SequenceToMidi( const std::string              & outmidi, 
+                         const MusicSequence            & seq, 
+                         const SMDLPresetConversionInfo & remapdata,
+                         eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,
+                         eMIDIMode                        midmode     = eMIDIMode::GS );
 
     /*
         Exports the track, and make sure as much as possible that playback on GM

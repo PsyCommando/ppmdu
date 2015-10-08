@@ -18,6 +18,9 @@ All wrongs reversed, no crappyrights :P
 #include <memory>
 #include <future>
 
+
+namespace DSE{ struct SMDLPresetConversionInfo; };
+
 namespace pmd2 { namespace audio 
 {
 //====================================================================================================
@@ -52,8 +55,6 @@ namespace pmd2 { namespace audio
     /*
     */
 
-
-
 //====================================================================================================
 //  Specialized Loaders/Exporters
 //====================================================================================================
@@ -68,7 +69,6 @@ namespace pmd2 { namespace audio
     {
     public:
         typedef std::pair< DSE::MusicSequence, DSE::PresetBank > smdswdpair_t;
-
 
         /*
             mergedProgData
@@ -140,6 +140,9 @@ namespace pmd2 { namespace audio
         */
         mergedProgData ExportSoundfont( const std::string & destf )const;
 
+        //A test for a simpler implementation
+        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont_New( const std::string & destf )const;
+
         /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
             exports all loaded smd as MIDIs, with the appropriate bank events to use
@@ -186,6 +189,14 @@ namespace pmd2 { namespace audio
             an instrument ID (uint16_t) to a position in the second dimension of the merged instrument info list.
         */
         mergedProgData PrepareMergedInstrumentTable()const;
+
+        /*
+            BuildPresetConversionDB
+                Set to replace the above method.
+                Builds a table for every files, containing data on what DSE preset IDs are converted to in the soundfont.
+
+        */
+        std::vector<DSE::SMDLPresetConversionInfo> BuildPresetConversionDB()const;
 
     private:
         std::string               m_mbankpath;

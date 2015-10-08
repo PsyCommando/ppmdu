@@ -64,12 +64,13 @@ namespace DSE
     public:
         DSESequenceToMidi( const std::string                & outmidiname, 
                            const MusicSequence              & seq, 
-                           const std::map<uint16_t,uint16_t>& presetconvtable,
+                           /*const std::map<uint16_t,uint16_t>& presetconvtable,*/
+                           const SMDLPresetConversionInfo   & remapdata,
                            eMIDIFormat                        midfmt,
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
-            :m_fnameout(outmidiname), m_seq(seq), m_banktable(presetconvtable), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
-             m_bLoopBegSet(false), m_bLoopEndSet(false), m_bshouldloop(false), m_songlsttick(0)
+            :m_fnameout(outmidiname), m_seq(seq), /*m_banktable(presetconvtable),*/ m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
+             m_bLoopBegSet(false), m_bLoopEndSet(false), m_bshouldloop(false), m_songlsttick(0), m_convtable(remapdata)
         {}
 
         /*
@@ -148,14 +149,15 @@ namespace DSE
         {
             using namespace jdksmidi;
             //Select the correct bank
-            auto found = m_banktable.find(ev.params.front()); 
+            //auto found = m_banktable.find(ev.params.front()); 
+            auto found = m_convtable._convtbl.find(ev.params.front());
 
-            if( found != m_banktable.end() ) //Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
+            if( found != m_convtable._convtbl.end() ) //Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
             {                                //So to avoid crashing, verify before looking up a bank.
                 //Only change bank if needed 
                 MIDITimedBigMessage banksel;
                 banksel.SetTime(state.ticks_);
-                state.curbank_ = static_cast<uint8_t>(found->second);
+                state.curbank_ = static_cast<uint8_t>(found->second._midibank);
                 banksel.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, state.curbank_ );
                 outtrack.PutEvent(banksel);
             }
@@ -709,7 +711,8 @@ namespace DSE
     private:
         const std::string                & m_fnameout;
         const MusicSequence              & m_seq;
-        const std::map<uint16_t,uint16_t>& m_banktable;
+        /*const std::map<uint16_t,uint16_t>& m_banktable;*/
+        const SMDLPresetConversionInfo   & m_convtable;
         uint32_t                           m_nbloops;
         eMIDIFormat                        m_midifmt;
         eMIDIMode                          m_midimode;
@@ -1021,11 +1024,27 @@ namespace DSE
 //======================================================================================
 //  Functions
 //======================================================================================
-    void SequenceToMidi( const std::string                 & outmidi, 
-                         const MusicSequence               & seq, 
-                         const std::map<uint16_t,uint16_t> & presetbanks,
-                         eMIDIFormat                         midfmt,
-                         eMIDIMode                           midmode )
+    //void SequenceToMidi( const std::string                 & outmidi, 
+    //                     const MusicSequence               & seq, 
+    //                     const std::map<uint16_t,uint16_t> & presetbanks,
+    //                     eMIDIFormat                         midfmt,
+    //                     eMIDIMode                           midmode )
+    //{
+    //    if( utils::LibWide().isLogOn() )
+    //    {
+    //        clog << "================================================================================\n"
+    //             << "Converting SMDL to MIDI " <<outmidi << "\n"
+    //             << "================================================================================\n";
+    //    }
+    //    DSESequenceToMidi( outmidi, seq, presetbanks, midfmt, midmode )();
+    //}
+
+
+    void SequenceToMidi( const std::string              & outmidi, 
+                         const MusicSequence            & seq, 
+                         const SMDLPresetConversionInfo & remapdata,
+                         eMIDIFormat                      midfmt,
+                         eMIDIMode                        midmode )
     {
         if( utils::LibWide().isLogOn() )
         {
@@ -1033,6 +1052,6 @@ namespace DSE
                  << "Converting SMDL to MIDI " <<outmidi << "\n"
                  << "================================================================================\n";
         }
-        DSESequenceToMidi( outmidi, seq, presetbanks, midfmt, midmode )();
+        DSESequenceToMidi( outmidi, seq, remapdata, midfmt, midmode )();
     }
 };
