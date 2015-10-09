@@ -115,16 +115,17 @@ namespace DSE
         //..then divided by 10,000, to give us a tick quantity
         static const uint32_t UnitDivisor = 10000;
 
-#if 1
+#if 0
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
         else
             return (Duration_Lookup_Table[labs(param)] * multiplier);
 #else
+        //The 20 below looks like a magic number, but that's because it is ^^;
         if( multiplier == 0 )
-            return /*lround(*/ ( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) *25 /*)*/; //25 was good
+            return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20; 
         else
-            return /*lround(*/ ( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) *25 /*)*/; //25 was good
+            return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20; 
 #endif
     }
 

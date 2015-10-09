@@ -25,7 +25,7 @@ using namespace DSE;
 
 namespace pmd2 { namespace audio
 {
-    static const uint16_t DSE_InfiniteAttenuation_cB = 1440; //sf2::SF_GenLimitsInitAttenuation.max_;
+    static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
     static const uint16_t DSE_LowestAttenuation_cB   =  200;//200; //20dB
 
 
@@ -209,9 +209,16 @@ namespace pmd2 { namespace audio
             //static const double attmax = 20.0;
             //double test = (dsevol * 100.0) / 127.0; //Get a percent
             //return round( (attmax * log10( test )) * 10 );
-            return DSE_LowestAttenuation_cB - (dsevol * DSE_LowestAttenuation_cB) / 127;
+            return DSE_InfiniteAttenuation_cB - (dsevol * DSE_InfiniteAttenuation_cB) / 127;
+            return DSE_LowestAttenuation_cB - (dsevol * DSE_LowestAttenuation_cB) / 127; //The NDS's volume curve is linear, but soundfonts use a logarithmic volume curve.. >_<
             //return DSE_LowestAttenuation_cB - lround( dsevol * ByteVolToSounfontAttnMulti );
         }
+    }
+
+    inline int16_t DSE_LFOFrequencyToCents( int16_t freqhz )
+    {
+        static const double ReferenceFreq = 8.176; // 0 cents is 8.176 Hz
+        return lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) );
     }
 
     std::vector<pcm16s_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
@@ -372,18 +379,31 @@ namespace pmd2 { namespace audio
             //volenv.sustain = ( DSE_MaxAttenuation_cB - ( ( sustain * DSE_MaxAttenuation_cB ) / MaxSignedInt8 ) );
         ///}
 
-        if( decay != 0 )
+
+        if( decay != 0 && decay2 != 0 && decay2 != 0x7F )
         {
             if( utils::LibWide().isLogOn() )
-                clog <<"Handling Decay..\n";
+                clog <<"We got combined decays! decay1-2 : " 
+                     <<static_cast<unsigned short>(decay) <<" + " 
+                     <<static_cast<unsigned short>(decay2) << " = " 
+                     <<static_cast<unsigned short>(decay + decay2) <<" !\n";
+
+
+            //If decay is set to infinite, we just ignore it!
+            if( decay == 0x7F )
+                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, envmult) );
+            else
+                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) + DSEEnveloppeDurationToMSec( decay2, envmult) );
+            
+            volenv.sustain = DSE_InfiniteAttenuation_cB;
+        }
+        else if( decay != 0 )
+        {
+            if( utils::LibWide().isLogOn() )
+                clog <<"Handling single decay..\n";
 
             //We use Decay
-            //if( decay!= 0x7F )
-                volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) );
-            //else
-            //    volenv.sustain = 0; //No decay
-            //else
-            //    volenv.decay = SHRT_MAX; //Infinite
+            volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) );
         }
         else 
         {
@@ -700,63 +720,63 @@ namespace pmd2 { namespace audio
     /*
         #FIXME: This thing doesn't work at all. It keeps assigning wrong presets..
     */
-    BatchAudioLoader::mergedProgData BatchAudioLoader::PrepareMergedInstrumentTable()const
-    {
-        //A list of all the shared presets between files merged together. Where non-duplicates are stacked into the second dimension of the table
-        std::vector< std::vector<ProgramInfo*> > merged( GetSizeLargestPrgiChunk() );
-        
-        //List of what slot the instruments were put into for each SMD+SWD pair
-        std::vector< std::map<uint16_t,uint16_t> > smdlPresLocation (m_pairs.size()); 
-
-        for( size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair ) //Iterate through all SWDs
-        {
-            const auto & apair      = m_pairs[cntpair];
-            auto         ptrinstinf = apair.second.prgmbank().lock();
-            
-            if( ptrinstinf != nullptr )
-            {
-                const auto & curinstlist = ptrinstinf->instinfo();
-
-                for( size_t cntinst = 0; cntinst < curinstlist.size();  ++cntinst ) //Test all the individual instruments and add them to their slot
-                {
-                    //Compare against all presets for the same prgi slot, to find out whether this is a duplicate or not.
-                    if( curinstlist[cntinst] != nullptr )
-                    {
-//                        auto founddup = find_if( merged[cntinst].begin(), 
-//                                                 merged[cntinst].end(), 
-//                                                 [&]( const ProgramInfo * inf )->bool
-//                        { 
-//                            if( inf != nullptr )
-//                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != ProgramInfo::eCompareRes::different );
-//                            else
-//                            {
-//#ifdef _DEBUG
-//                                assert(false);
-//#endif
-//                                cerr <<"Null instrument pointer encountered !\n";
-//                                return false;
-//                            }
-//                        });
-
-                        //if( founddup != merged[cntinst].end() )
-                        //{
-                        //    //If its a duplicate, set the existing copy of this instrument as what this SWDL+SMDL pair should use
-                        //    smdlPresLocation[cntpair].insert( make_pair( cntinst, distance( merged[cntinst].begin(), founddup) ) );
-                        //}
-                        //else
-                        {
-                            //Push into merged list for this prgi slot number, if nothing similar found
-                            merged[cntinst].push_back( curinstlist[cntinst].get() );
-                            smdlPresLocation[cntpair].insert( make_pair( cntinst, merged[cntinst].size()-1 ) );
-                        }
-                    }
-                    //Don't mark the position of null entries
-                }
-            }
-        }
-
-        return std::move(mergedProgData{ std::move(merged), std::move(smdlPresLocation) });
-    }
+//    BatchAudioLoader::mergedProgData BatchAudioLoader::PrepareMergedInstrumentTable()const
+//    {
+//        //A list of all the shared presets between files merged together. Where non-duplicates are stacked into the second dimension of the table
+//        std::vector< std::vector<ProgramInfo*> > merged( GetSizeLargestPrgiChunk() );
+//        
+//        //List of what slot the instruments were put into for each SMD+SWD pair
+//        std::vector< std::map<uint16_t,uint16_t> > smdlPresLocation (m_pairs.size()); 
+//
+//        for( size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair ) //Iterate through all SWDs
+//        {
+//            const auto & apair      = m_pairs[cntpair];
+//            auto         ptrinstinf = apair.second.prgmbank().lock();
+//            
+//            if( ptrinstinf != nullptr )
+//            {
+//                const auto & curinstlist = ptrinstinf->instinfo();
+//
+//                for( size_t cntinst = 0; cntinst < curinstlist.size();  ++cntinst ) //Test all the individual instruments and add them to their slot
+//                {
+//                    //Compare against all presets for the same prgi slot, to find out whether this is a duplicate or not.
+//                    if( curinstlist[cntinst] != nullptr )
+//                    {
+////                        auto founddup = find_if( merged[cntinst].begin(), 
+////                                                 merged[cntinst].end(), 
+////                                                 [&]( const ProgramInfo * inf )->bool
+////                        { 
+////                            if( inf != nullptr )
+////                                return (inf->isSimilar( *(curinstlist[cntinst].get()) ) != ProgramInfo::eCompareRes::different );
+////                            else
+////                            {
+////#ifdef _DEBUG
+////                                assert(false);
+////#endif
+////                                cerr <<"Null instrument pointer encountered !\n";
+////                                return false;
+////                            }
+////                        });
+//
+//                        //if( founddup != merged[cntinst].end() )
+//                        //{
+//                        //    //If its a duplicate, set the existing copy of this instrument as what this SWDL+SMDL pair should use
+//                        //    smdlPresLocation[cntpair].insert( make_pair( cntinst, distance( merged[cntinst].begin(), founddup) ) );
+//                        //}
+//                        //else
+//                        {
+//                            //Push into merged list for this prgi slot number, if nothing similar found
+//                            merged[cntinst].push_back( curinstlist[cntinst].get() );
+//                            smdlPresLocation[cntpair].insert( make_pair( cntinst, merged[cntinst].size()-1 ) );
+//                        }
+//                    }
+//                    //Don't mark the position of null entries
+//                }
+//            }
+//        }
+//
+//        return std::move(mergedProgData{ std::move(merged), std::move(smdlPresLocation) });
+//    }
 
     /*
         DSEInstrumentToSf2Instrument
@@ -821,6 +841,7 @@ namespace pmd2 { namespace audio
 
         //Pitch Correction 
         //myzone.SetFineTune( dseinst.ctune );
+        //myzone.SetCoarseTune( dseinst.ctune );
 
         //Volume
         //uint16_t attenuation = ;
@@ -857,7 +878,8 @@ namespace pmd2 { namespace audio
             ZoneBag atkvolzone( myzone );
 
             //Set attenuation to the atkvol value
-            atkvolzone.SetInitAtt( DseVolToSf2Attenuation( dseinst.atkvol ) );
+            atkvolzone.SetInitAtt( DseVolToSf2Attenuation( dseinst.atkvol ) + 
+                                   DseVolToSf2Attenuation(dseinst.smplvol) );
 
             //Set hold to the attack's duration
             Envelope atkvolenv /*= myenv*/;
@@ -865,7 +887,11 @@ namespace pmd2 { namespace audio
             atkvolenv.sustain = SF_GenLimitsVolEnvSustain.max_;
 
             //Leave everything else to default
-            atkvolzone.SetVolEnvelope( atkvolenv );
+            //atkvolzone.SetVolEnvelope( atkvolenv );
+
+
+            myzone.AddGenerator( eSFGen::holdVolEnv,    atkvolenv.hold );
+            myzone.AddGenerator( eSFGen::sustainVolEnv, atkvolenv.sustain );
             
             //Sample ID in last
             atkvolzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
@@ -873,8 +899,60 @@ namespace pmd2 { namespace audio
             inst.AddZone( std::move(atkvolzone) );
         }
 
+        //
+        //if( dseinst.decay != 0 && dseinst.decay2 != 0 )
+        //{
+        //    ZoneBag delayszone( myzone );
+
+        //    //We want to simulate the first decay
+        //}
+        //{
+        //    //Since soundfont doesn't support anything like this. We fake it by adding another copy of the instrument and delaying it.
+        //    ZoneBag delayszone( myzone );
+
+        //    //Set attenuation to the sustain value
+        //    delayszone.SetInitAtt( DseVolToSf2Attenuation( dseinst.sustain ) );
+
+        //    //Set hold to the attack's duration
+        //    Envelope decay2volenv;
+        //    decay2volenv.decay    = MSecsToTimecents( DSEEnveloppeDurationToMSec( dseinst.decay2, dseinst.envmult ) );
+        //    decay2volenv.sustain = SF_GenLimitsVolEnvSustain.max_;
+
+        //    myenv.
+
+        //    //Leave everything else to default
+        //    //atkvolzone.SetVolEnvelope( atkvolenv );
+
+
+        //    myzone.AddGenerator( eSFGen::holdVolEnv,    atkvolenv.hold );
+        //    myzone.AddGenerator( eSFGen::sustainVolEnv, atkvolenv.sustain );
+        //    
+        //    //Sample ID in last
+        //    atkvolzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
+
+        //    inst.AddZone( std::move(atkvolzone) );
+        //}
+
         //Set the envelope
-        myzone.SetVolEnvelope( myenv );
+        //myzone.SetVolEnvelope( myenv );
+
+        if( myenv.delay != SHRT_MIN )
+            myzone.AddGenerator( eSFGen::delayVolEnv, myenv.delay );
+
+        if( myenv.attack != SHRT_MIN )
+            myzone.AddGenerator( eSFGen::attackVolEnv, myenv.attack );
+
+        if( myenv.hold != SHRT_MIN )
+            myzone.AddGenerator( eSFGen::holdVolEnv, myenv.hold );
+
+        if( myenv.decay != SHRT_MIN )
+            myzone.AddGenerator( eSFGen::decayVolEnv, myenv.decay );
+
+        if( myenv.sustain != 0 )
+            myzone.AddGenerator( eSFGen::sustainVolEnv, myenv.sustain );
+
+        if( myenv.release != SHRT_MIN )
+            myzone.AddGenerator( eSFGen::releaseVolEnv, myenv.release );
 
         //Sample ID in last
         myzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
@@ -926,21 +1004,21 @@ namespace pmd2 { namespace audio
                 if( lfo.unk52 != 0 ) //Is the LFO enabled ?
                 {
                     
-                    if( lfo.unk26 == 1 )
+                    if( lfo.unk26 == 1 ) //Pitch
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqVibLFO,    MSecsToTimecents( lfo.unk28 ) ); //Frequency
-                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.unk30 ); //Depth
+                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.unk28/50 ) ); //Frequency
+                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.unk30/10 ); //Depth
                         global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.unk31 ) ); //Delay
                     }
-                    else if( lfo.unk26 == 2 )
+                    else if( lfo.unk26 == 2 ) //Volume
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqModLFO,     MSecsToTimecents( lfo.unk28 ) ); //Frequency
-                        global.AddGenerator( eSFGen::modLfoToVolume, static_cast<int32_t>(lfo.unk30) * -1 ); //Depth
+                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.unk28/50 ) ); //Frequency
+                        global.AddGenerator( eSFGen::modLfoToVolume, (lfo.unk30/10) * -1 ); //Depth
                         global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.unk31 ) ); //Delay
                     }
-                    else if( lfo.unk26 == 3 )
+                    else if( lfo.unk26 == 3 ) //Pan
                     {
                         SFModEntry mymod;
                         mymod.modAmount = lfo.unk30;
@@ -950,10 +1028,18 @@ namespace pmd2 { namespace audio
                                                             false,
                                                             false, 
                                                             false );
+                        //mymod.ModAmtSrcOper = SFModulatorSrc( SFModulatorSrc::eSrc::Linear, 
+                        //                                    SFModulatorSrc::eCtrlPal::,
+                        //                                    false,
+                        //                                    false, 
+                        //                                    false );
                         mymod.ModTransOper = eSFTransform::linear;
                         global.AddModulator( move(mymod) );
+
+                        //#TODO:
+                        //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
                     }
-                    else
+                    else if( lfo.unk26 == 4 )
                     {
                     //SFModEntry mymod;
 
@@ -962,6 +1048,9 @@ namespace pmd2 { namespace audio
                     //    mymod.ModDestOper = eSFGen::
                     //else if( lfo.unk26 == 3 )
                     //else if( lfo.unk26 == 4 )
+                    }
+                    else
+                    {
                     }
                 }
             }
@@ -1051,6 +1140,13 @@ namespace pmd2 { namespace audio
             Sample sm( std::move( loadfun ), smpllen );
             sm.SetName( "smpl#" + to_string(cntsmslot) );
             sm.SetSampleRate ( cursminf.smplrate );
+
+            double pcorrect  = 1.0 / 100.0 / 2.5 / lround( static_cast<double>(cursminf.pitchoffst) );
+            double remainder = abs(pcorrect) - 127;
+            sm.SetPitchCorrection( static_cast<int8_t>(lround(pcorrect)) ); //Pitch correct is 1/250th of a semitone, while the SF2 pitch correction is 1/100th of a semitone
+
+            if( remainder > 0)
+                cout <<"Sample pitch correct remainder !!!! " <<showbase <<showpoint << remainder <<noshowbase <<noshowpoint <<"\n";
 
             //Add the pitch offset to the root key 
             //int16_t rootkey = 72;//67 + DSESamplePitchToSemitone(cursminf.pitchoffst); //When set to 72, "C5", its ~5 semitones off, with all the other pitch correction on.

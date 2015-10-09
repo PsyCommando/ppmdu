@@ -242,56 +242,24 @@ namespace DSE
             using namespace jdksmidi;
             MIDITimedBigMessage       mess;
             const DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
-
-            //Handle fixed duration pauses
-            //HandleFixedPauses( ev, trkno, state, mess );
-
+            
+            //Log events if neccessary
             if( utils::LibWide().isLogOn() )
                 clog <<setfill(' ') <<setw(8) <<right <<state.ticks_ <<"t : " << ev;
             
-            if( code >= eTrkEventCodes::RepeatLastPause &&
-                code <= eTrkEventCodes::PauseUntilRel )
-            {
-                //Handle Pauses
+            //Handle Pauses then play notes, then anything else!
+            if( code >= eTrkEventCodes::RepeatLastPause && code <= eTrkEventCodes::PauseUntilRel )
                 HandlePauses( code, ev, state );
-            }
-            else if( code >= eTrkEventCodes::Delay_HN &&
-                     code <= eTrkEventCodes::Delay_64N )
-            {
-                //Handle Fixed Pauses
+            else if( code >= eTrkEventCodes::Delay_HN   && code <= eTrkEventCodes::Delay_64N )
                 HandleFixedPauses( ev, state );
-            }
-            else if( code >= eTrkEventCodes::NoteOnBeg && 
-                     code <= eTrkEventCodes::NoteOnEnd )
-            {
-                //Handle Notes
+            else if( code >= eTrkEventCodes::NoteOnBeg  && code <= eTrkEventCodes::NoteOnEnd )
                 HandlePlayNote( trkno, trkchan, state, ev, outtrack );
-            }
             else
             {
 
                 //Now that we've handled the pauses
                 switch( code )
                 {
-
-                    //Pauses
-                    //case eTrkEventCodes::Pause24Bits:
-                    //case eTrkEventCodes::Pause16Bits:
-                    //case eTrkEventCodes::Pause8Bits:
-                    //case eTrkEventCodes::AddToLastPause:
-                    //case eTrkEventCodes::RepeatLastPause:
-                    //{
-                    //    HandlePauses( code, ev, state );
-                    //    break;
-                    //}
-
-                    //case eTrkEventCodes::PauseUntilRel:
-                    //{
-                    //    clog << "<!>- Error: Event 0x95 not yet implemented!\n";
-                    //    assert(false);
-                    //    break;
-                    //}
-
                     //
                     case eTrkEventCodes::SetTempo:
                     {
@@ -306,10 +274,6 @@ namespace DSE
                         if( newoctave > DSE_MaxOctave )
                             clog << "New octave value set is too high !" <<static_cast<unsigned short>(newoctave) <<"\n";
                         state.octave_ = newoctave; 
-                        //state.lastoctaveev_ = ev.params.front();    
-                        //if( state.lastoctaveev_ > DSE_MaxOctave )
-                        //    cerr<<"New octave value set is too high !" <<static_cast<unsigned short>(state.lastoctaveev_) <<"\n";
-                        //state.octave_       = state.lastoctaveev_;
                         break;
                     }
                     case eTrkEventCodes::SetExpress:
@@ -391,16 +355,10 @@ namespace DSE
                     //
                     default:
                     {
-                        //Play note are handled here
-/*                        if( code >= DSE::eTrkEventCodes::NoteOnBeg && code <= DSE::eTrkEventCodes::NoteOnEnd )
+                        //Put a cue point to mark unsupported events and their parameters
+                        if( ShouldMarkUnsupported() )
                         {
-                            HandlePlayNote( trkno, trkchan, state, ev, outtrack );
-                        }
-                        else*/ if( ShouldMarkUnsupported() )
-                        {
-                            //Mark any other unsupported events
                             stringstream evmark;
-
                             evmark << TXT_DSE_Event <<"_ID:0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) <<nouppercase;
 
                             //Then Write any parameters
@@ -410,7 +368,6 @@ namespace DSE
                             const string mark = evmark.str();
                             outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, mark.c_str(), mark.size() );
                         }
-
                     }
                 };
             }
@@ -433,14 +390,14 @@ namespace DSE
             MIDITimedBigMessage mess;
 
             //Turn off sustain if neccessary
-            if( state.sustainon )
-            {
-                MIDITimedBigMessage susoff;
-                susoff.SetTime(state.ticks_);
-                susoff.SetControlChange( trkchan, 66, 0 ); //sustainato
-                outtrack.PutEvent( susoff );
-                state.sustainon = false;
-            }
+            //if( state.sustainon )
+            //{
+            //    MIDITimedBigMessage susoff;
+            //    susoff.SetTime(state.ticks_);
+            //    susoff.SetControlChange( trkchan, 66, 0 ); //sustainato
+            //    outtrack.PutEvent( susoff );
+            //    state.sustainon = false;
+            //}
 
             //Interpret the first parameter byte of the play note event
             uint8_t mnoteid   = 0;
@@ -449,10 +406,10 @@ namespace DSE
 
             //Parse the note hold duration bytes
             uint32_t holdtime = 0;
-            for( int cntby = 1; cntby <= param2len; ++cntby )
-                holdtime = (holdtime << 8) | ev.params[cntby];
+            for( int cntby = 0; cntby < param2len; ++cntby )
+                holdtime = (holdtime << 8) | ev.params[cntby+1];
 
-            if(holdtime > 0)
+            if( param2len != 0 )
                 state.lasthold_ = holdtime;
 
             mess.SetTime(state.ticks_);
@@ -460,7 +417,13 @@ namespace DSE
             outtrack.PutEvent( mess );
             
             MIDITimedBigMessage noteoff;
+#if 1
             noteoff.SetTime( state.ticks_ + state.lasthold_ );
+#else
+            if( holdtime == 0 )
+                holdtime = static_cast<uint32_t>(eTrkDelays::_qtr);
+            noteoff.SetTime( state.ticks_ + holdtime );
+#endif
             noteoff.SetNoteOff( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
 
             outtrack.PutEvent( noteoff );
