@@ -194,10 +194,8 @@ namespace pmd2 { namespace audio
         dsevol = abs(dsevol);
 
         //Because of the rounding, we need to make sure our limits match the SF limits
-        //if( dsevol == DSE_LimitsVol.max_ )
-        //    return sf2::SF_GenLimitsInitAttenuation.min_;
-       /*else */if( dsevol ==  DSE_LimitsVol.min_ )
-            return DSE_InfiniteAttenuation_cB;
+        if( dsevol ==  DSE_LimitsVol.min_ )
+            return 0;
         else
         {
             //Convert to NDS Register attenuation
@@ -209,7 +207,7 @@ namespace pmd2 { namespace audio
             //static const double attmax = 20.0;
             //double test = (dsevol * 100.0) / 127.0; //Get a percent
             //return round( (attmax * log10( test )) * 10 );
-            return DSE_InfiniteAttenuation_cB - (dsevol * DSE_InfiniteAttenuation_cB) / 127;
+            //return DSE_InfiniteAttenuation_cB - (dsevol * DSE_InfiniteAttenuation_cB) / 127;
             return DSE_LowestAttenuation_cB - (dsevol * DSE_LowestAttenuation_cB) / 127; //The NDS's volume curve is linear, but soundfonts use a logarithmic volume curve.. >_<
             //return DSE_LowestAttenuation_cB - lround( dsevol * ByteVolToSounfontAttnMulti );
         }
@@ -218,7 +216,7 @@ namespace pmd2 { namespace audio
     inline int16_t DSE_LFOFrequencyToCents( int16_t freqhz )
     {
         static const double ReferenceFreq = 8.176; // 0 cents is 8.176 Hz
-        return lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) );
+        return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) ) );
     }
 
     std::vector<pcm16s_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
@@ -367,7 +365,8 @@ namespace pmd2 { namespace audio
 #else
         //if( sustain != 0x7F )
         //{
-            volenv.sustain = DseVolToSf2Attenuation( sustain ); //DSE_MaxAttenuation_cB - ( sustain * DSE_MaxAttenuation_cB / MaxSignedInt8 );
+        //if( sustain != 0x7F )
+        volenv.sustain = DseVolToSf2Attenuation( sustain ); //DSE_MaxAttenuation_cB - ( sustain * DSE_MaxAttenuation_cB / MaxSignedInt8 );
             //double attn = sustain;
             //if( sustain == 0 )
             //    volenv.sustain = SustainMinVolume;
@@ -403,7 +402,10 @@ namespace pmd2 { namespace audio
                 clog <<"Handling single decay..\n";
 
             //We use Decay
-            volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) );
+            //if( decay != 0x7F )
+                volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) );
+            //else
+            //    volenv.sustain = 0; //No decay at all
         }
         else 
         {
@@ -416,8 +418,8 @@ namespace pmd2 { namespace audio
                 volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, envmult ) );
                 volenv.sustain = DSE_InfiniteAttenuation_cB;
             }
-            else
-                volenv.sustain = 0; //No decay at all
+            //else
+            //    volenv.sustain = 0; //No decay at all
         }
 
 
@@ -882,7 +884,7 @@ namespace pmd2 { namespace audio
                                    DseVolToSf2Attenuation(dseinst.smplvol) );
 
             //Set hold to the attack's duration
-            Envelope atkvolenv /*= myenv*/;
+            Envelope atkvolenv;
             atkvolenv.hold    = myenv.attack;
             atkvolenv.sustain = SF_GenLimitsVolEnvSustain.max_;
 
@@ -948,7 +950,7 @@ namespace pmd2 { namespace audio
         if( myenv.decay != SHRT_MIN )
             myzone.AddGenerator( eSFGen::decayVolEnv, myenv.decay );
 
-        if( myenv.sustain != 0 )
+        //if( myenv.sustain != 0 )
             myzone.AddGenerator( eSFGen::sustainVolEnv, myenv.sustain );
 
         if( myenv.release != SHRT_MIN )
@@ -1020,21 +1022,21 @@ namespace pmd2 { namespace audio
                     }
                     else if( lfo.unk26 == 3 ) //Pan
                     {
-                        SFModEntry mymod;
-                        mymod.modAmount = lfo.unk30;
-                        mymod.ModDestOper = eSFGen::pan;
-                        mymod.ModSrcOper  = SFModulatorSrc( SFModulatorSrc::eSrc::Linear, 
-                                                            SFModulatorSrc::eCtrlPal::NoteOnVel,
-                                                            false,
-                                                            false, 
-                                                            false );
-                        //mymod.ModAmtSrcOper = SFModulatorSrc( SFModulatorSrc::eSrc::Linear, 
-                        //                                    SFModulatorSrc::eCtrlPal::,
+                        //SFModEntry mymod;
+                        //mymod.modAmount = lfo.unk30;
+                        //mymod.ModDestOper = eSFGen::pan;
+                        //mymod.ModSrcOper  = SFModulatorSrc( SFModulatorSrc::eSrc::Linear, 
+                        //                                    SFModulatorSrc::eCtrlPal::NoteOnVel,
                         //                                    false,
                         //                                    false, 
                         //                                    false );
-                        mymod.ModTransOper = eSFTransform::linear;
-                        global.AddModulator( move(mymod) );
+                        ////mymod.ModAmtSrcOper = SFModulatorSrc( SFModulatorSrc::eSrc::Linear, 
+                        ////                                    SFModulatorSrc::eCtrlPal::,
+                        ////                                    false,
+                        ////                                    false, 
+                        ////                                    false );
+                        //mymod.ModTransOper = eSFTransform::linear;
+                        //global.AddModulator( move(mymod) );
 
                         //#TODO:
                         //We still need to figure a way to get the LFO involved, and set the oscilation frequency!

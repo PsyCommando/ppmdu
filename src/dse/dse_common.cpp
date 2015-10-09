@@ -107,6 +107,7 @@ namespace DSE
     //#FIXME: MOST LIKELY INNACURATE ! The duration for envelope phases is based around the DSE tick counter. So it may or may not be affected by tempo.
     int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier )
     { 
+        param = utils::Clamp( abs(param), 0, 127 );
         //A rate taken from VGM Trans. It might be close to what we need to convert tick rate into time..
        // static const double MysteryRate = 1.0/ 192.0; 
 
