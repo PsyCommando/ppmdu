@@ -108,14 +108,10 @@ namespace DSE
     int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier )
     { 
         param = utils::Clamp( abs(param), 0, 127 );
-        //A rate taken from VGM Trans. It might be close to what we need to convert tick rate into time..
-       // static const double MysteryRate = 1.0/ 192.0; 
-
         //The value from the table is multiplied by 1,000
         static const uint32_t UnitSwitch  = 1000;
         //..then divided by 10,000, to give us a tick quantity
         static const uint32_t UnitDivisor = 10000;
-
 #if 0
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
@@ -124,9 +120,9 @@ namespace DSE
 #else
         //The 20 below looks like a magic number, but that's because it is ^^;
         if( multiplier == 0 )
-            return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20; 
+            return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 25; 
         else
-            return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20; 
+            return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 25; 
 #endif
     }
 

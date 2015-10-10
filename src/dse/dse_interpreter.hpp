@@ -26,25 +26,6 @@ namespace DSE
     }
 
 
-    //Remapping data for a single sequence
-    //struct PresetBankDB
-    //{
-    //    typedef uint16_t dsepresid_t;
-
-    //    struct RemapData
-    //    {
-    //        uint16_t sf2bank;
-    //        uint16_t sf2preset;
-    //    };
-
-    //    inline void AddRemapPreset( dsepresid_t dseid, RemapData && remapdat )
-    //    {
-    //        presetstbl.emplace( std::move( std::make_pair( dseid, std::move(remapdat) ) ) );
-    //    }
-
-    //    std::map<dsepresid_t, RemapData> presetstbl;
-    //};
-
 
     /*
         This is used to convert dse tracks into midi.
@@ -55,19 +36,36 @@ namespace DSE
     struct SMDLPresetConversionInfo
     {
         typedef uint16_t dsepresetid_t;
-        typedef uint8_t  bankid_t;
+        typedef int16_t  bankid_t;
         typedef uint8_t  presetid_t;
         typedef int8_t   midinote_t;
+
+        enum struct eEffectTy
+        {
+            Phaser,
+            Vibrato,
+        };
+
+        struct ExtraEffects
+        {
+            eEffectTy effty;
+            int       rate;
+            int       delay;
+            int       depth;
+        };
 
         struct PresetConvData
         {
             presetid_t                       _midipres;   //The midi preset to use for this preset
             bankid_t                         _midibank;   //The midi bank to use for this preset
             std::map<midinote_t, midinote_t> _remapnotes; //Data on how to remap notes for instruments with complex splits, like drum presets
+            std::vector<ExtraEffects>        _extrafx;    //Data on any special effecs to be applied midi-side
+            uint8_t                          _maxpoly;    //The maximum ammount of simultaneous notes allowed for the preset. Previous notes will be turned off.
+        //### ADD NEW THINGS BELOW !!!! ###
         };
 
         //
-        std::pair<presetid_t,bankid_t> GetPresetAndBank( dsepresetid_t dsep )
+        std::pair<presetid_t,bankid_t> GetPresetAndBank( dsepresetid_t dsep )const
         {
             if( !_convtbl.empty() )
             {
@@ -75,8 +73,19 @@ namespace DSE
                 if( itfound != _convtbl.end() )
                     return std::move( std::make_pair(itfound->second._midipres, itfound->second._midibank) );
             }
-            return std::move( std::make_pair( static_cast<presetid_t>(dsep), static_cast<bankid_t>(0) ) );
+            return std::move( std::make_pair( static_cast<presetid_t>(dsep), static_cast<bankid_t>(0x3FFF) ) );
         }
+
+        //const PresetConvData & GetConvdata( dsepresetid_t dsep )const
+        //{
+        //    if( !_convtbl.empty() )
+        //    {
+        //        auto itfound = _convtbl.find(dsep);
+        //        if( itfound != _convtbl.end() )
+        //            return itfound->second;
+        //    }
+        //    return std::move( std::make_pair( static_cast<presetid_t>(dsep), static_cast<bankid_t>(0x3FFF) ) );
+        //}
 
         //
         midinote_t RemapNote( dsepresetid_t dsep, midinote_t note )

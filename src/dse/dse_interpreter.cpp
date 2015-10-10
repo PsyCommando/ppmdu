@@ -1,3 +1,4 @@
+//#define _USE_MATH_DEFINES
 #include "dse_interpreter.hpp"
 #include <utils/poco_wrapper.hpp>
 #include <ppmdu/pmd2/pmd2_audio_data.hpp>
@@ -12,6 +13,10 @@
 
 #include <list>
 #include <iomanip>
+#include <functional>
+
+#include <cmath>
+#include <deque>
 
 using namespace std;
 
@@ -29,6 +34,7 @@ namespace DSE
     //
     //
 
+
 //======================================================================================
 //  DSESequenceToMidi
 //======================================================================================
@@ -38,6 +44,14 @@ namespace DSE
     */
     class DSESequenceToMidi
     {
+        struct NoteOnData
+        {
+            uint8_t  noteid       = 0;
+            uint32_t noteonticks  = 0;
+            uint32_t noteoffticks = 0;
+            size_t   noteonnum    = 0; //Event num of the note on event
+            size_t   noteoffnum   = 0; //Event num of the eventual note off event
+        };
         /*
             TrkState
                 Structure used for tracking the state of a track, to simulate events having only an effect at runtime.
@@ -53,12 +67,17 @@ namespace DSE
             
             uint8_t  prgm_         = 0; //Keep track of the current program to apply pitch correction on specific instruments
             bool     sustainon     = false; //When a note is sustained, it must be let go of at the next play note event
-            uint8_t  curbank_      = 0;
+            uint16_t  curbank_      = 0;
             uint32_t curloop_      = 0; //keep tracks of how many times the track has looped so far
 
             int16_t  pitchoffset_  = 0; //TEST: Pitch offset applied to the track in cents. (changes the note that is played)
 
             size_t   looppoint_    = 0; //The index of the envent after the loop pos
+
+            std::deque<NoteOnData> noteson_; //The notes currently on
+            int8_t                 curmaxpoly_ = -1; //Maximum polyphony for current preset!
+
+            bool                   hasinvalidbank = false; //This is toggled when a bank couldn't be found. It stops all playnote events from playing. 
         };
 
     public:
@@ -70,7 +89,7 @@ namespace DSE
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
             :m_fnameout(outmidiname), m_seq(seq), /*m_banktable(presetconvtable),*/ m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
-             m_bLoopBegSet(false), m_bLoopEndSet(false), m_bshouldloop(false), m_songlsttick(0), m_convtable(remapdata)
+             m_bLoopBegSet(false), m_bshouldloop(false), m_songlsttick(0), m_convtable(remapdata)
         {}
 
         /*
@@ -149,34 +168,63 @@ namespace DSE
         {
             using namespace jdksmidi;
             //Select the correct bank
-            //auto found = m_banktable.find(ev.params.front()); 
-            auto found = m_convtable._convtbl.find(ev.params.front());
+            auto itfound = m_convtable._convtbl.find( ev.params.front() ); 
+            //auto found = m_convtable.GetPresetAndBank(ev.params.front()); //m_convtable._convtbl.find(ev.params.front());
 
-            if( found != m_convtable._convtbl.end() ) //Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
+            MIDITimedBigMessage bankselMSB;
+            //MIDITimedBigMessage bankselLSB;
+
+            bankselMSB.SetTime(state.ticks_);
+            //bankselLSB.SetTime(state.ticks_);
+
+            if( itfound != m_convtable._convtbl.end() ) //Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
             {                                //So to avoid crashing, verify before looking up a bank.
+                state.hasinvalidbank = false;
                 //Only change bank if needed 
-                MIDITimedBigMessage banksel;
-                banksel.SetTime(state.ticks_);
-                state.curbank_ = static_cast<uint8_t>(found->second._midibank);
-                banksel.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, state.curbank_ );
-                outtrack.PutEvent(banksel);
+                state.curbank_ = static_cast<uint8_t>(itfound->second._midibank);
+                //Send the bank select message
+                bankselMSB.SetControlChange( m_seq[trkno].GetMidiChannel(),  C_GM_BANK, static_cast<unsigned char>(state.curbank_) );
+                //bankselLSB.SetControlChange( m_seq[trkno].GetMidiChannel(),         32, static_cast<char>(state.curbank_  >> 8) );
             }
-            else /*if( found == m_banktable.end() )*/
+            else 
             {
-                MIDITimedBigMessage banksel;
-                banksel.SetTime(state.ticks_);
-                state.curbank_ = 127;           //Set to bank 127 to mark the error
-                banksel.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, state.curbank_ );
-                outtrack.PutEvent(banksel);
-                clog <<"Couldn't find a matching bank for preset #" <<static_cast<short>(ev.params.front()) <<" ! Setting to bank 127 !\n";
+                state.hasinvalidbank = true;
+                state.curbank_ = 0x7F;           //Set to bank 127 to mark the error
+                bankselMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, static_cast<unsigned char>(state.curbank_) );
+                //bankselLSB.SetControlChange( m_seq[trkno].GetMidiChannel(),        32, static_cast<char>(state.curbank_  >> 8) );
+                clog <<"Couldn't find a matching bank for preset #" <<static_cast<short>(ev.params.front()) <<" ! Setting to bank " <<state.curbank_ <<" !\n";
             }
 
+            outtrack.PutEvent(bankselMSB);
+            //outtrack.PutEvent(bankselLSB);
 
-            //Then preset
-            //Keep track of the current program to apply pitch correction on instruments that need it..
-            state.prgm_ = ev.params.front();
-            mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
-            outtrack.PutEvent( mess );
+            if( itfound != m_convtable._convtbl.end() )
+            {
+                //Then preset
+                //Keep track of the current program to apply pitch correction on instruments that need it..
+                state.prgm_ = itfound->second._midipres;
+                mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                outtrack.PutEvent( mess );
+
+                //Set max polyphony
+                state.curmaxpoly_ = itfound->second._maxpoly;
+            }
+            else //We didn't find any preset data
+            {
+                state.prgm_ = ev.params.front(); //Set preset as-is
+                mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                outtrack.PutEvent( mess );
+
+                //Set max polyphony
+                state.curmaxpoly_ = -1;
+            }
+
+            //Clear the notes on buffer
+            state.noteson_.clear();
+            //Then disable/enable any effect controller 
+            //#TODO: 
+
+
         }
 
         /*
@@ -224,8 +272,12 @@ namespace DSE
             }
             else if( code == eTrkEventCodes::PauseUntilRel )
             {
+#ifdef _DEBUG
                 clog << "<!>- Error: Event 0x95 not yet implemented!\n";
                 assert(false);
+#else
+                throw runtime_error("DSESequenceToMidi::HandlePauses() : Event 0x95 not yet implemented!\n");
+#endif
             }
         }
 
@@ -389,6 +441,31 @@ namespace DSE
             using namespace jdksmidi;
             MIDITimedBigMessage mess;
 
+            //Check polyphony
+            //if( state.curmaxpoly_ != -1 && state.curmaxpoly_ != 0 && state.noteson_.size() > static_cast<uint8_t>(state.curmaxpoly_) )
+            //{
+            //    //Kill another note and take its place
+            //    uint8_t  notetokill   = state.noteson_.back().noteid;
+            //    uint32_t noteoffnum   = state.noteson_.back().noteoffnum;
+            //    uint32_t noteoffticks = state.noteson_.back().noteoffticks;
+            //    state.noteson_.pop_back();
+
+            //    //Check for the note off
+            //    int evnum = 0;
+            //    if( outtrack.FindEventNumber( state.noteson_.back().noteoffticks, &evnum ) )
+            //    {
+            //        MIDITimedBigMessage * ptrmess = outtrack.GetEvent( evnum );
+            //        if( ptrmess != nullptr )
+            //        {
+            //            ptrmess->SetTime(state.ticks_); //Make it happen sooner
+            //        }
+            //        else
+            //            assert(false);
+            //    }
+            //    else
+            //        assert(false); 
+            //}
+
             //Turn off sustain if neccessary
             //if( state.sustainon )
             //{
@@ -413,20 +490,30 @@ namespace DSE
                 state.lasthold_ = holdtime;
 
             mess.SetTime(state.ticks_);
-            mess.SetNoteOn( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) );
+
+            if( state.hasinvalidbank )
+                mess.SetNoteOn( trkchan, (mnoteid & 0x7F), 0 ); //leave the note, but play no sound!
+            else
+                mess.SetNoteOn( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) );
             outtrack.PutEvent( mess );
             
+            //Make the noteoff message
             MIDITimedBigMessage noteoff;
-#if 1
             noteoff.SetTime( state.ticks_ + state.lasthold_ );
-#else
-            if( holdtime == 0 )
-                holdtime = static_cast<uint32_t>(eTrkDelays::_qtr);
-            noteoff.SetTime( state.ticks_ + holdtime );
-#endif
             noteoff.SetNoteOff( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
-
             outtrack.PutEvent( noteoff );
+
+            //if( state.curmaxpoly_ != -1 && state.curmaxpoly_ != 0 )
+            //{
+            //    //Add the note to the noteon list !
+            //    NoteOnData mynoteon;
+            //    mynoteon.noteid = (mnoteid & 0x7F);
+            //    mynoteon.noteonnum = outtrack.GetNumEvents()-2;
+            //    mynoteon.noteonticks = state.ticks_;
+            //    mynoteon.noteoffnum = outtrack.GetNumEvents()-1;
+            //    mynoteon.noteoffticks = state.ticks_ + state.lasthold_;
+            //    state.noteson_.push_front( mynoteon );
+            //}
         }
 
 
@@ -658,7 +745,7 @@ namespace DSE
         */
         bool ShouldMarkUnsupported()const
         {
-            return true;
+            return true; //#TODO: Make this configurable
         }
 
         /*
@@ -667,14 +754,13 @@ namespace DSE
         */
         bool ShouldExportEventsPastEoT()const
         {
-            return false;
+            return false; //#TODO: Make this configurable
         }
 
 
     private:
         const std::string                & m_fnameout;
         const MusicSequence              & m_seq;
-        /*const std::map<uint16_t,uint16_t>& m_banktable;*/
         const SMDLPresetConversionInfo   & m_convtable;
         uint32_t                           m_nbloops;
         eMIDIFormat                        m_midifmt;
@@ -688,7 +774,6 @@ namespace DSE
         bool                               m_bshouldloop;
         //Those two only apply to single track mode !
         bool                               m_bLoopBegSet;
-        bool                               m_bLoopEndSet;   //#REMOVEME
 
         jdksmidi::MIDIMultiTrack           m_midiout;
     };

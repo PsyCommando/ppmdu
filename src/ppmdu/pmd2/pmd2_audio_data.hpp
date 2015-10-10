@@ -117,9 +117,10 @@ namespace pmd2 { namespace audio
     // Construction
     //-----------------------------
         /*
-            mbank : Path to Master SWD Bank to load.
+            mbank     : Path to Master SWD Bank to load.
+            singleSF2 : If set to true, the batch loader will do its best to allocate all presets into a single SF2!
         */
-        BatchAudioLoader( const std::string & mbank );
+        BatchAudioLoader( const std::string & mbank, bool singleSF2 = true );
 
     //-----------------------------
     // Loading Methods
@@ -198,8 +199,15 @@ namespace pmd2 { namespace audio
         */
         std::vector<DSE::SMDLPresetConversionInfo> BuildPresetConversionDB()const;
 
+
+        /*
+        */
+        void AllocPresetSingleSF2( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const;
+        void AllocPresetDefault  ( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const;
+
     private:
         std::string               m_mbankpath;
+        bool                      m_bSingleSF2;
 
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;
