@@ -49,6 +49,8 @@ namespace audioutil
         bool ParseOptionForceLoops ( const std::vector<std::string> & optdata ); //Loop a track and omit loop markers
         bool ParseOptionPMD2       ( const std::vector<std::string> & optdata ); //Export the content of the PMD2 "SOUND" directory
 
+        bool ParseOptionPathToCvInfo( const std::vector<std::string> & optdata ); //Set the path to the cvinfo file to use
+
         bool ParseOptionMBAT       ( const std::vector<std::string> & optdata ); //Export Master Bank And Tracks using the specified folder.
         bool ParseOptionLog        ( const std::vector<std::string> & optdata ); //Redirects clog to the file specified
 
@@ -101,6 +103,7 @@ namespace audioutil
         //Variables
         std::string m_inputPath;      //This is the input path that was parsed 
         std::string m_outputPath;     //This is the output path that was parsed
+        std::string m_convinfopath;   //Path to a file containing conversion details for translating preset numbers and etc.
         eOpMode     m_operationMode;  //This holds what the program should do
         bool        m_bGM;            //Whether we export to general midi compatible format or not
         int         m_nbloops;        //The amount of times to loop a track, 0 if should use loop markers instead
@@ -108,6 +111,9 @@ namespace audioutil
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
     };
+
+
+
 };
 
 #endif 

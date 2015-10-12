@@ -17,6 +17,12 @@ All wrongs reversed, no crappyrights :P
 #include <vector>
 #include <array>
 #include <string>
+#include <types/content_type_analyser.hpp>
+
+namespace filetypes
+{
+    extern const ContentTy CnTy_SWDL; //Content ID db handle 
+};
 
 
 namespace DSE

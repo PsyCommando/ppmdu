@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DSEConversionData>
+<!--
+Example entry:
+
+  //This contains the information for a single track to convert
+  <Track>
+  
+    //The name that the SMDL and its accompanying SWDL file share
+    <PairName>bgm0001</PairName>
+      
+    //A list of all the programs from the track
+    <Programs>
+  
+      //A single preset from the original track
+      <Program>
+        <DSEProgramID>0xC</DSEProgramID>             //The original program ID from the SMDL file.
+      
+        <MIDIPreset>15</MIDIPreset>                  //The MIDI program to use instead. ( 1 - 128 )
+      
+        <MIDIBank>0</MIDIBank>                       //(optional)The MIDI bank number to use. ( 0 - 127 )
+      
+        <MaxKeyDownDuration>80</MaxKeyDownDuration>  //(optional)Maximum duration in MIDI ticks that a note for 
+                                                     //          this preset can be held. Used to keep some notes 
+                                                     //          from sounding stuck, because of the way the samples's 
+                                                     //          volume envelopes in the game are set.
+                                                     
+        <Transpose>-1</Transpose>                    //(optional)The Nb of octaves to transpose all notes played using this specific preset/program.
+                                                     // Set to a negative value to decrement, set to a positive one to increment!
+                                                     // If at any time the transposed note is out of MIDI range, the original note will be played instead!
+      
+        //(optional)This section contains key translation. This is useful to make percussion lines not following the GM drum format play the correct instrument in GM drumkit when converted.
+        <KeyRemaps>
+      
+          //A remap is an entry to remap a single key
+          <Remap>
+            <OriginalKey>56</OriginalKey>   //The original MIDI key number from the SMDL file (0 - 127)
+            
+            <RemapedKey>72</RemapedKey>     //The new MIDI Key number to use instead (0 - 127)
+            
+            <MIDIPreset>15</MIDIPreset>     //(optional)The MIDI program to use for this note only. ( 1 - 128 )
+            
+            <MIDIBank>0</MIDIBank>          //(optional)The MIDI bank number to use for the note. ( 0 - 127 )
+          </Remap>
+        
+          //Other keys go below ...
+        
+        </KeyRemaps>
+      
+      </Program>
+      
+      //Other programs for the same track go below...
+      
+    </Programs>
+    
+  </Track>
+  
+  //Other tracks go here...
+-->
+
+  <!--Intro theme-->
+  <Track>
+        <PairName>bgm0001</PairName>
+        <Programs>
+              <!--Tubular Bells-->
+              <Program>
+                <DSEProgramID>12</DSEProgramID>
+                <MIDIPreset>15</MIDIPreset>
+              </Program>
+
+              <!--Synth Strings-->
+              <Program>
+                <DSEProgramID>31</DSEProgramID>
+                <MIDIPreset>51</MIDIPreset>
+              </Program>
+
+              <!--Flute-->
+              <Program>
+                <DSEProgramID>51</DSEProgramID>
+                <MIDIPreset>73</MIDIPreset>
+              </Program>
+
+              <!--Oboe-->
+              <Program>
+                <DSEProgramID>52</DSEProgramID>
+                <MIDIPreset>69</MIDIPreset>
+              </Program>
+
+              <!--Clarinet-->
+              <Program>
+                <DSEProgramID>53</DSEProgramID>
+                <MIDIPreset>72</MIDIPreset>
+              </Program>
+
+              <!--Bassoon-->
+              <Program>
+                <DSEProgramID>54</DSEProgramID>
+                <MIDIPreset>71</MIDIPreset>
+              </Program>
+
+              <!--Trumpet-->
+              <Program>
+                <DSEProgramID>59</DSEProgramID>
+                <MIDIPreset>57</MIDIPreset>
+              </Program>
+
+              <!--Trumpet with longer attack-->
+              <Program>
+                <DSEProgramID>61</DSEProgramID>
+                <MIDIPreset>57</MIDIPreset>
+              </Program>
+
+              <!--Trombone-->
+              <Program>
+                <DSEProgramID>62</DSEProgramID>
+                <MIDIPreset>58</MIDIPreset>
+              </Program>
+
+              <!--Tuba-->
+              <Program>
+                <DSEProgramID>63</DSEProgramID>
+                <MIDIPreset>59</MIDIPreset>
+              </Program>
+
+              <!--Horn-->
+              <Program>
+                <DSEProgramID>65</DSEProgramID>
+                <MIDIPreset>61</MIDIPreset>
+              </Program>
+
+              <!--Timpani-->
+              <Program>
+                <DSEProgramID>121</DSEProgramID>
+                <MIDIPreset>48</MIDIPreset>
+                <Transpose>-1</Transpose>
+              </Program>
+
+              <!--Drumkit-->
+              <Program>
+                <DSEProgramID>127</DSEProgramID>
+                <!-- Set to XG drumkit.. -->
+                <MIDIPreset>1</MIDIPreset>
+                <MIDIBank>127</MIDIBank>
+
+                <KeyRemaps>
+                  <!--Remap reverse cymbal-->
+                  <Remap>
+                    <OriginalKey>90</OriginalKey>
+                    <RemapedKey>90</RemapedKey>
+                    <MIDIPreset>120</MIDIPreset>
+                  </Remap>
+
+                  <!--Remap reverse cymbal 2-->
+                  <Remap>
+                    <OriginalKey>91</OriginalKey>
+                    <RemapedKey>91</RemapedKey>
+                    <MIDIPreset>120</MIDIPreset>
+                    
+                  </Remap>
+
+                  <!--Remap Snare-->
+                  <Remap>
+                    <OriginalKey>40</OriginalKey>
+                    <RemapedKey>40</RemapedKey>
+                  </Remap>
+                  
+                </KeyRemaps>
+              </Program>
+        </Programs>
+  </Track>
+
+  <!--Menu Theme-->
+  <Track>
+    <PairName>bgm0002</PairName>
+    <Programs>
+      <!--Celesta-->
+      <Program>
+        <DSEProgramID>4</DSEProgramID>
+        <MIDIPreset>9</MIDIPreset>
+      </Program>
+
+      <!--Celesta 2-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>9</MIDIPreset>
+      </Program>
+
+      <!--Vibraphone-->
+      <Program>
+        <DSEProgramID>6</DSEProgramID>
+        <MIDIPreset>12</MIDIPreset>
+      </Program>
+
+      <!--Vibraphone2-->
+      <Program>
+        <DSEProgramID>7</DSEProgramID>
+        <MIDIPreset>69</MIDIPreset>
+      </Program>
+
+      <!--Synth Strings-->
+      <Program>
+        <DSEProgramID>31</DSEProgramID>
+        <MIDIPreset>51</MIDIPreset>
+      </Program>
+
+      <!--Bassoon-->
+      <Program>
+        <DSEProgramID>54</DSEProgramID>
+        <MIDIPreset>71</MIDIPreset>
+      </Program>
+
+      <!--Pizzicato Strings-->
+      <Program>
+        <DSEProgramID>75</DSEProgramID>
+        <MIDIPreset>46</MIDIPreset>
+      </Program>
+
+      <!--Pizzicato Strings2-->
+      <Program>
+        <DSEProgramID>76</DSEProgramID>
+        <MIDIPreset>46</MIDIPreset>
+      </Program>
+
+    </Programs>
+  </Track>
+
+  <!--Marrowak's Dojo-->
+  <Track>
+    <PairName>bgm0003</PairName>
+    <Programs>
+
+      <!--0x01 New Age -->
+      <Program>
+        <DSEProgramID>1</DSEProgramID>
+        <MIDIPreset>89</MIDIPreset>
+      </Program>
+
+      <!--0x02 Epiano1-->
+      <Program>
+        <DSEProgramID>2</DSEProgramID>
+        <MIDIPreset>5</MIDIPreset>
+      </Program>
+
+      <!--0x03 Sample (No GM equivalent, so set to Taiko drum)-->
+      <Program>
+        <DSEProgramID>3</DSEProgramID>
+        <MIDIPreset>117</MIDIPreset>
+      </Program>
+
+      <!--0x07 Celesta-->
+      <Program>
+        <DSEProgramID>7</DSEProgramID>
+        <MIDIPreset>9</MIDIPreset>
+      </Program>
+
+      <!--0x08 Celesta2-->
+      <Program>
+        <DSEProgramID>8</DSEProgramID>
+        <MIDIPreset>9</MIDIPreset>
+      </Program>
+
+      <!--0x0E Dulcimer-->
+      <Program>
+        <DSEProgramID>14</DSEProgramID>
+        <MIDIPreset>16</MIDIPreset>
+      </Program>
+
+      <!--0x0F New Age-->
+      <Program>
+        <DSEProgramID>15</DSEProgramID>
+        <MIDIPreset>89</MIDIPreset>
+      </Program>
+
+      <!--0x14 Steel Guitar-->
+      <Program>
+        <DSEProgramID>20</DSEProgramID>
+        <MIDIPreset>26</MIDIPreset>
+      </Program>
+
+      <!--0x15 Steel Guitar-->
+      <Program>
+        <DSEProgramID>21</DSEProgramID>
+        <MIDIPreset>26</MIDIPreset>
+      </Program>
+
+      <!--0x1A Synth Bass-->
+      <Program>
+        <DSEProgramID>26</DSEProgramID>
+        <MIDIPreset>40</MIDIPreset>
+      </Program>
+
+      <!--0x4B Pizzicato Strings-->
+      <Program>
+        <DSEProgramID>75</DSEProgramID>
+        <MIDIPreset>46</MIDIPreset>
+      </Program>
+
+      <!--0x61 Saw Wave-->
+      <Program>
+        <DSEProgramID>97</DSEProgramID>
+        <MIDIPreset>82</MIDIPreset>
+      </Program>
+
+      <!--Drumkit-->
+      <Program>
+        <DSEProgramID>127</DSEProgramID>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+
+        <KeyRemaps>
+          <!--Bass Drum-->
+          <Remap>
+            <OriginalKey>36</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>36</RemapedKey>
+          </Remap>
+
+          <!--Handclaps-->
+          <Remap>
+            <OriginalKey>43</OriginalKey>
+            <RemapedKey>39</RemapedKey>
+          </Remap>
+
+          <!--Crash Cymbals-->
+          <Remap>
+            <OriginalKey>90</OriginalKey>
+            <RemapedKey>49</RemapedKey>
+          </Remap>
+
+          <!--Closed Hi-Hat-->
+          <Remap>
+            <OriginalKey>42</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>42</RemapedKey>
+          </Remap>
+
+          <!--Snare-->
+          <Remap>
+            <OriginalKey>40</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>40</RemapedKey>
+          </Remap>
+
+          <!--Snare ?-->
+          <Remap>
+            <OriginalKey>41</OriginalKey>
+            <RemapedKey>38</RemapedKey>
+          </Remap>
+
+          <!--Cowbell when in doubt..-->
+          <Remap>
+            <OriginalKey>45</OriginalKey>
+            <RemapedKey>56</RemapedKey>
+          </Remap>
+
+          <!--Pedal Hi-Hat?-->
+          <Remap>
+            <OriginalKey>47</OriginalKey>
+            <RemapedKey>44</RemapedKey>
+          </Remap>
+
+        </KeyRemaps>
+      </Program>
+
+    </Programs>
+  </Track>
+  
+</DSEConversionData>

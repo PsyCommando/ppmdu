@@ -192,6 +192,9 @@
     <ClInclude Include="..\src\types\content_type_analyser.hpp">
       <Filter>Header Files\typesupport</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\dse\dse_conversion_info.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
@@ -305,5 +308,13 @@
     <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter>Source Files\typesupport</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dse\dse_conversion_info.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\pmd2_tracks_converstion_info.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

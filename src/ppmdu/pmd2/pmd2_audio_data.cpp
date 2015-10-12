@@ -26,7 +26,7 @@ using namespace DSE;
 namespace pmd2 { namespace audio
 {
     static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
-    static const uint16_t DSE_LowestAttenuation_cB   =  100;//200; //20dB
+    static const uint16_t DSE_LowestAttenuation_cB   =  200;//200; //20dB
 
 
     //A multiplier to use to convert from DSE Pan to Soundfont Pan
@@ -445,7 +445,7 @@ namespace pmd2 { namespace audio
                 int8_t presid = 0;
 
                 if( mystrat.ComputeBankAndInstID( cntpair, cntinst, bankid, presid ) )
-                    target.AddRemapPreset( cntinst, SMDLPresetConversionInfo::PresetConvData{ presid, bankid } ); //set pair nb as bank id
+                    target.AddPresetConvInfo( cntinst, SMDLPresetConversionInfo::PresetConvData( presid, bankid ) ); //set pair nb as bank id
                 else
                     throw runtime_error("MakeAPresetBankDBForAPair() : SF2 file is full!!");
             }
@@ -549,7 +549,7 @@ namespace pmd2 { namespace audio
             else
             {
                 //let the midi converter handle anything else
-                cvdata._maxpoly = keygrps[dseinst.kgrpid].poly;
+                cvdata.maxpoly = keygrps[dseinst.kgrpid].poly;
             }
 
         }
@@ -655,7 +655,7 @@ namespace pmd2 { namespace audio
                                SMDLPresetConversionInfo::PresetConvData  & convinf )
     {
         using namespace sf2;
-        Preset pre(presname, convinf._midipres/*dsePres.m_hdr.id*/, bankno );
+        Preset pre(presname, convinf.midipres, bankno );
 
         if( utils::LibWide().isLogOn() )
             clog <<"======================\nHandling " <<presname <<"\n======================\n";
@@ -703,7 +703,7 @@ namespace pmd2 { namespace audio
                     else if( lfo.unk26 == 3 ) //Pan
                     {
                         //Leave the data for the MIDI exporter, so maybe it can do something about it..
-                        convinf._extrafx.push_back( 
+                        convinf.extrafx.push_back( 
                             SMDLPresetConversionInfo::ExtraEffects{ SMDLPresetConversionInfo::eEffectTy::Phaser, lfo.unk28, lfo.unk30, lfo.unk31 } 
                         );
 
@@ -827,12 +827,12 @@ namespace pmd2 { namespace audio
             sm.SetSampleRate ( cursminf.smplrate );
 
 //#ifdef _DEBUG
-//            double pcorrect  = 1.0 / 100.0 / 2.5 / lround( static_cast<double>(cursminf.pitchoffst) );
-//            double remainder = abs(pcorrect) - 127;
-//            sm.SetPitchCorrection( static_cast<int8_t>(lround(pcorrect)) ); //Pitch correct is 1/250th of a semitone, while the SF2 pitch correction is 1/100th of a semitone
-//
-//            if( remainder > 0)
-//                cout <<"########## Sample pitch correct remainder !!!! ####### " <<showbase <<showpoint << remainder <<noshowbase <<noshowpoint <<"\n";
+            //double pcorrect  = 1.0 / 100.0 / 2.5 / lround( static_cast<double>(cursminf.pitchoffst) );
+            //double remainder = abs(pcorrect) - 127;
+            //sm.SetPitchCorrection( static_cast<int8_t>(lround(pcorrect)) ); //Pitch correct is 1/250th of a semitone, while the SF2 pitch correction is 1/100th of a semitone
+
+            //if( remainder > 0)
+            //    cout <<"########## Sample pitch correct remainder !!!! ####### " <<showbase <<showpoint << remainder <<noshowbase <<noshowpoint <<"\n";
 //#endif
 
             sm.SetSampleType ( Sample::eSmplTy::monoSample ); //#TODO: Mono samples only for now !
@@ -882,14 +882,14 @@ namespace pmd2 { namespace audio
             const auto & curpair     = m_pairs[cntpairs];                               //Get the current swd + smd pair
             const auto & curprginfos = curpair.second.prgmbank().lock()->instinfo();    //Get the current SWD's program list
             const auto & curkgrp     = curpair.second.prgmbank().lock()->keygrps();     //Get the current SWD's keygroup list
-            auto         itcvtbl     = curcvinfo._convtbl.begin();                      //Iterator on the conversion map!
+            auto         itcvtbl     = curcvinfo.begin();                      //Iterator on the conversion map!
 
-            for( size_t prgcnt = 0; prgcnt < curcvinfo._convtbl.size() && itcvtbl != curcvinfo._convtbl.end(); ++prgcnt, ++itcvtbl )
+            for( /*size_t prgcnt = 0*/; /*prgcnt < curcvinfo.size() &&*/ itcvtbl != curcvinfo.end(); /*++prgcnt,*/ ++itcvtbl )
             {
                 if( curprginfos[itcvtbl->first] != nullptr )
                 {
                     DSEPresetToSf2Preset( "Preset#" + to_string(cntsf2presets), 
-                                            itcvtbl->second._midibank,
+                                            itcvtbl->second.midibank,
                                             *(curprginfos[itcvtbl->first]),
                                             swdsmplofftosf,
                                             sf,
@@ -924,7 +924,7 @@ namespace pmd2 { namespace audio
         return move( merged );
     }
 
-    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir )const
+    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops )const
     {
         //Export the soundfont first
 
@@ -947,6 +947,7 @@ namespace pmd2 { namespace audio
                                  m_pairs[i].first, 
                                  //merged.filetopreset[i], 
                                  merged[i],
+                                 nbloops,
                                  DSE::eMIDIFormat::SingleTrack,
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
         }

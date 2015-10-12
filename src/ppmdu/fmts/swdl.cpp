@@ -8,6 +8,11 @@
 using namespace std;
 using namespace filetypes;
 
+namespace filetypes
+{
+    const ContentTy CnTy_SWDL{"swdl"}; //Content ID db handle
+};
+
 namespace DSE
 {
 

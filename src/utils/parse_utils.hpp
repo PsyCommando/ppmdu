@@ -88,6 +88,12 @@ namespace utils
         using namespace std;
         return static_cast<uint8_t>(parseHexaValToValue<uint16_t>(str));
     }
+
+    inline int8_t parseSignedByte( const std::string & str )
+    {
+        using namespace std;
+        return static_cast<int8_t>(parseHexaValToValue<int16_t>(str));
+    }
 };
 
 #endif
