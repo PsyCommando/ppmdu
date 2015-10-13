@@ -313,7 +313,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="..\resources\pmd2_tracks_converstion_info.xml">
+    <Xml Include="..\resources\pmd2eos_cvinfo.xml">
       <Filter>Resource Files</Filter>
     </Xml>
   </ItemGroup>

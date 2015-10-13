@@ -25,10 +25,7 @@ namespace DSE
     */
     struct SMDLPresetConversionInfo
     {
-        typedef uint16_t dsepresetid_t;
-        typedef int16_t  bankid_t;
-        typedef uint8_t  presetid_t;
-        typedef int8_t   midinote_t;
+
 
         /*
             eEffectTy 
@@ -59,9 +56,9 @@ namespace DSE
         */
         struct NoteRemapData
         {
-            midinote_t destnote   =   0;  //The note to use instead
-            presetid_t destpreset = 255;  //The preset to use for playing only this note!
-            bankid_t   destbank   =  -1;  //The bank to use for playing only this note!
+            midinote_t destnote   = 0;                //The note to use instead
+            presetid_t destpreset = InvalidPresetID;  //The preset to use for playing only this note!
+            bankid_t   destbank   = InvalidBankID;    //The bank to use for playing only this note!
         };
 
         /*
@@ -77,13 +74,15 @@ namespace DSE
                             uint8_t    maxpolyphony   = 255,    //255 means default polyphony!
                             uint8_t    prioritygrp    = 0,      //0 means global group!
                             uint32_t   maxkeyduration = 0,      //0 means ignored!
-                            int8_t     transposenote  = 0 )     //0 means don't transpose the notes
+                            int8_t     transposenote  = 0,      //0 means don't transpose the notes
+                            uint8_t    preferedchan   = UCHAR_MAX )     //255 means no prefered channel!
                 :midipres(presid), 
                  midibank(bank), 
                  maxpoly(maxpolyphony), 
                  priority(prioritygrp),
                  maxkeydowndur(maxkeyduration),
-                 transpose(0)
+                 transpose(0),
+                 idealchan(preferedchan)
             {}
 
             //--- Conversion data ---
@@ -97,6 +96,7 @@ namespace DSE
             //--- Extra conversion stuff ---
             uint32_t                            maxkeydowndur; //The longest note duration allowed in MIDI ticks! Used to get rid of issues caused by notes being held for overly long durations in some SMDL.
             int8_t                              transpose;     //The amount of octaves to transpose the notes played by the instrument. Signed!
+            uint8_t                             idealchan;     //The channel to force notes linked to this preset to be played on.
         };
 
         typedef std::map<dsepresetid_t, PresetConvData>::iterator       iterator;

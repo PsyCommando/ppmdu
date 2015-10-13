@@ -56,6 +56,8 @@ namespace DSE
         const string PROP_MIDIBnk    = "MIDIBank";            //The ID of the MIDI bank to use when changing the midi preset.
         const string PROP_MaxKeyDown = "MaxKeyDownDuration";  //Specify a maximum duration a key can be held down. Used for keys held indefinetly in some tracks causing issues with using different samples.
         const string PROP_Transpose  = "Transpose";           //Specify a number of octaves to transpose notes played by the instrument. Value is signed!!!!
+        const string PROP_ForceChan  = "ForceChannel";        //Specify a MIDI channel on which the notes of the Program have to be played on.
+
 
         const string NODE_KeyRemaps  = "KeyRemaps";           //Key conversion table.
         const string NODE_KeyRemap   = "Remap";               //A single key remap entry
@@ -134,27 +136,29 @@ namespace DSE
 
             SMDLPresetConversionInfo::PresetConvData pconv;
             stringstream                             sstrparse;
-            int8_t                                   dseid = -1;
+            dsepresetid_t                            dseid = InvalidDSEPresetID;
 
             for( auto & progprop : curnode.children() )
             {
                 if( progprop.name() == PROP_DSEID )
-                    dseid = utils::parseByte( progprop.child_value() );
+                    utils::parseHexaValToValue(  progprop.child_value(), dseid );
                 else if( progprop.name() == PROP_MIDIPrg )
                     pconv.midipres = utils::parseByte( progprop.child_value() ) - 1; //Bring back onto 0-127
                 else if( progprop.name() == PROP_MIDIBnk )
-                    pconv.midibank = utils::parseByte( progprop.child_value() );
+                    utils::parseHexaValToValue(  progprop.child_value(), pconv.midibank );
                 else if( progprop.name() == PROP_MaxKeyDown )
                     utils::parseHexaValToValue( progprop.child_value(), pconv.maxkeydowndur );
                 else if( progprop.name() == PROP_Transpose )
                     pconv.transpose = utils::parseSignedByte( progprop.child_value() );
+                else if( progprop.name() == PROP_ForceChan )
+                    pconv.idealchan = utils::parseByte( progprop.child_value() );
                 else if( progprop.name() == NODE_KeyRemaps )
                 {
                     ParseKeyRemapData( progprop, pconv );
                 }
             }
 
-            if( dseid != -1 )
+            if( dseid != InvalidDSEPresetID )
                 convinf.AddPresetConvInfo( dseid, move(pconv) );
             else 
                 clog << "<!>- Ignored a " <<NODE_Program <<" node because there was no DSE program ID specified!\n";
@@ -176,10 +180,11 @@ namespace DSE
         {
             using namespace pugi;
             using namespace cvinfoXML;
-            uint8_t inkey  = 0xFF;
-            uint8_t outkey = 0xFF;
-            uint8_t midprg = 0xFF;
-            uint8_t midbnk = 0xFF;
+            midinote_t inkey     = 0xFF;
+            midinote_t outkey    = 0xFF;
+            presetid_t midprg    = InvalidPresetID;
+            bankid_t   midbnk    = InvalidBankID;
+            uint8_t    idealchan = UCHAR_MAX;
 
             for( auto & keyprop : curnode.children() )
             {
@@ -190,7 +195,9 @@ namespace DSE
                 else if( keyprop.name() == PROP_MIDIPrg )
                     midprg = utils::parseByte( keyprop.child_value() ) - 1; //Bring back onto 0-127
                 else if( keyprop.name() == PROP_MIDIBnk )
-                    midbnk = utils::parseByte( keyprop.child_value() );
+                    utils::parseHexaValToValue(  keyprop.child_value(), midbnk );
+                else if( keyprop.name() == PROP_ForceChan )
+                    idealchan = utils::parseByte( keyprop.child_value() );
             }
 
             if( inkey != 0xFF && outkey != 0xFF )
@@ -198,11 +205,14 @@ namespace DSE
                 SMDLPresetConversionInfo::NoteRemapData rmap;
                 rmap.destnote = outkey;
 
-                if( midprg != 0xFF )
+                if( midprg != InvalidPresetID )
                     rmap.destpreset = midprg;
 
-                if( midbnk != 0xFF )
+                if( midbnk != InvalidBankID )
                     rmap.destbank = midbnk;
+
+                if( idealchan != UCHAR_MAX )
+                    pconv.idealchan = idealchan;
 
                 pconv.remapnotes.insert( make_pair( inkey, rmap ) );
             }

@@ -15,12 +15,21 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <string>
 #include <map>
 #include <cassert>
+#include <limits>
 
 namespace DSE
 {
 //====================================================================================================
 //  Typedefs
 //====================================================================================================
+    typedef uint16_t dsepresetid_t;
+    typedef uint16_t bankid_t;
+    typedef uint8_t  presetid_t;
+    typedef uint8_t  midinote_t;
+
+    const bankid_t      InvalidBankID      = USHRT_MAX;
+    const presetid_t    InvalidPresetID    = UCHAR_MAX;
+    const dsepresetid_t InvalidDSEPresetID = USHRT_MAX;
 
 //====================================================================================================
 //  Constants

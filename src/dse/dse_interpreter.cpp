@@ -32,10 +32,32 @@ namespace DSE
     const int           NbMidiKeysInOctave = 12;
     //const int8_t        NBMidiOctaves      = 128 / NbMidiKeysInOctave; //128 keys total, 12 keys per octave
 
+    static const uint8_t MIDI_CC32_BankLSB = 32; 
+
     //
     //
     //
 
+
+
+//
+//  Utility
+//
+
+    void AddBankChangeMessage( jdksmidi::MIDITrack & outtrack, uint8_t channel, uint32_t time, bankid_t bank )
+    {
+        using namespace jdksmidi;
+        MIDITimedBigMessage bankselMSB;
+        MIDITimedBigMessage bankselLSB;
+
+        bankselMSB.SetTime(time);
+        bankselLSB.SetTime(time);
+
+        bankselMSB.SetControlChange( channel, C_GM_BANK,         static_cast<unsigned char>(bank & 0x7F) );
+        bankselLSB.SetControlChange( channel, MIDI_CC32_BankLSB, static_cast<unsigned char>( (bank >> 8) & 0x7F ) );
+        outtrack.PutEvent(bankselMSB);
+        outtrack.PutEvent(bankselLSB);
+    }
 
 //======================================================================================
 //  DSESequenceToMidi
@@ -48,7 +70,7 @@ namespace DSE
     {
         struct NoteOnData
         {
-            uint8_t  noteid       = 0;
+            midinote_t noteid       = 0;
             uint32_t noteonticks  = 0;
             uint32_t noteoffticks = 0;
             size_t   noteonnum    = 0; //Event num of the note on event
@@ -67,9 +89,9 @@ namespace DSE
             uint8_t  octave_       = 0; //The track's current octave
             //uint8_t  lastoctaveev_ = 0;
             
-            uint8_t  prgm_         = 0; //Keep track of the current program to apply pitch correction on specific instruments
+            dsepresetid_t  prgm_         = 0; //Keep track of the current program to apply pitch correction on specific instruments
             bool     sustainon     = false; //When a note is sustained, it must be let go of at the next play note event
-            uint16_t  curbank_      = 0;
+            bankid_t  curbank_      = 0;
             uint32_t curloop_      = 0; //keep tracks of how many times the track has looped so far
 
             int16_t  pitchoffset_  = 0; //TEST: Pitch offset applied to the track in cents. (changes the note that is played)
@@ -80,13 +102,13 @@ namespace DSE
             int8_t                 curmaxpoly_ = -1; //Maximum polyphony for current preset!
 
             bool                   hasinvalidbank = false; //This is toggled when a bank couldn't be found. It stops all playnote events from playing. 
-            uint8_t                dseprgm_       = 0; //The original program ID, not the one that has been remaped
+            dsepresetid_t          dseprgm_       = 0; //The original program ID, not the one that has been remaped
             int8_t                 transpose      = 0; //The nb of octaves to transpose the notes played by this channel!
             
             //Those allows to keep track of when to revert to and from the overriden presets
             bool                   presetoverriden = false;
-            uint16_t               ovrbank_        = 255;
-            uint8_t                ovrprgm_        = 255;
+            bankid_t               ovrbank_        = InvalidBankID;
+            dsepresetid_t          ovrprgm_        = InvalidDSEPresetID;
         
         };
 
@@ -98,7 +120,7 @@ namespace DSE
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
             :m_fnameout(outmidiname), m_seq(seq), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
-             m_bLoopBegSet(false), m_bshouldloop(false), m_songlsttick(0), 
+             m_bLoopBegSet(false), m_bTrackLoopable(false), m_songlsttick(0), 
              m_convtable(&remapdata), 
              m_hasconvtbl(true) //Enable conversion data
         {}
@@ -109,7 +131,7 @@ namespace DSE
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
             :m_fnameout(outmidiname), m_seq(seq), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
-             m_bLoopBegSet(false), m_bshouldloop(false), m_songlsttick(0), 
+             m_bLoopBegSet(false), m_bTrackLoopable(false), m_songlsttick(0), 
              m_convtable(nullptr), 
              m_hasconvtbl(false) //Disable conversion data
         {}
@@ -193,10 +215,10 @@ namespace DSE
             //The program id as read from the event!
             uint8_t originalprgm = ev.params.front();
 
-            MIDITimedBigMessage bankselMSB;
+            //MIDITimedBigMessage bankselMSB;
             //MIDITimedBigMessage bankselLSB;
 
-            bankselMSB.SetTime(state.ticks_);
+            //bankselMSB.SetTime(state.ticks_);
             //bankselLSB.SetTime(state.ticks_);
 
             //Check if we have to translate preset/bank ids
@@ -209,10 +231,10 @@ namespace DSE
                     Some presets in the SMD might actually not even exist! Several tracks in PMD2 have this issue
                     So to avoid crashing, verify before looking up a bank.
                 */
-                if( itfound != m_convtable->end() )
+                if( itfound != m_convtable->end() ) //We found conversion info for the DSE preset
                 {
                     state.hasinvalidbank = false;
-                    state.curbank_       = static_cast<uint8_t>(itfound->second.midibank);
+                    state.curbank_       = itfound->second.midibank;
                 }
                 else 
                 {
@@ -255,10 +277,12 @@ namespace DSE
             //Change only if the preset/bank isn't overriden!
             if( !state.presetoverriden )
             {
+                AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
+
                 //Add the Bank select message
-                bankselMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, static_cast<unsigned char>(state.curbank_) );
-                //bankselLSB.SetControlChange( m_seq[trkno].GetMidiChannel(),         32, static_cast<char>(state.curbank_  >> 8) );
-                outtrack.PutEvent(bankselMSB);
+                //bankselMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
+                //bankselLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_ >> 8) );
+                //outtrack.PutEvent(bankselMSB);
                 //outtrack.PutEvent(bankselLSB);
 
                 //Add the Program change message
@@ -331,8 +355,8 @@ namespace DSE
             HandleEvent
                 Main conditional structure for converting events from the DSE format into MIDI messages.
         */
-        void HandleEvent( uint16_t              trkno, 
-                          uint8_t               trkchan, 
+        void HandleEvent( uint16_t              trkno,
+                          uint8_t               trkchan,
                           TrkState            & state, 
                           const DSE::TrkEvent & ev, 
                           jdksmidi::MIDITrack & outtrack )
@@ -354,7 +378,6 @@ namespace DSE
                 HandlePlayNote( trkno, trkchan, state, ev, outtrack );
             else
             {
-
                 //Now that we've handled the pauses
                 switch( code )
                 {
@@ -403,53 +426,43 @@ namespace DSE
                     }
                     case eTrkEventCodes::PitchBend: //################### FIXME LATER ######################
                     {
-    #if 1   
                         //NOTE: Pitch bend's range is implementation specific in MIDI. Though PMD2's pitch bend range may vary per program split
-                        //      
                         mess.SetPitchBend( trkchan, ( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back() ) ) );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
-    #else
-                        //Invert the sign, because positive values lower the pitch, while negatives raises it
-                        state.pitchoffset_ = -( DSEPitchBendToCents( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back()) ) );
-    #endif
                         break;
                     }
-                    //case eTrkEventCodes::Unk_0xC0:
-                    //{
-                    //    //outtrack.PutTextEvent( state.ticks_, META_GENERIC_TEXT, TXT_HoldNote.c_str(), TXT_HoldNote.size() );
-
-                    //    ////Put a sustenato
-                    //    //state.sustainon = true;
-                    //    //mess.SetControlChange( trkchan, 66, 127 ); //sustainato
-                    //    //outtrack.PutEvent( mess );
-                    //    break;
-                    //}
                     case eTrkEventCodes::LoopPointSet:
                     {
+                        m_bTrackLoopable = true; //If we got a loop pos, then the track is loopable
+
+                        if( m_nbloops == 0 )
+                        {
+                            if( ( m_midifmt == eMIDIFormat::SingleTrack && !m_bLoopBegSet ) || 
+                                ( m_midifmt != eMIDIFormat::SingleTrack ))
+                            {
+                                //Only place an event if we don't loop the track, and haven't placed it already to avoid playbak issues
+                                mess.SetMetaType(META_TRACK_LOOP);
+                                mess.SetTime(state.ticks_);
+                                outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_LoopStart.c_str(), TXT_LoopStart.size() );
+                                outtrack.PutEvent( mess );
+                            }
+                        }
+
                         //For single track mode, we only put a single loop start marker
                         if( m_midifmt == eMIDIFormat::SingleTrack )
                         {
-                            if( m_bLoopBegSet )
-                                break;
-                            else
+                            if( !m_bLoopBegSet )
+                            {
                                 m_bLoopBegSet = true;
+                            }
                         }
-                        m_bshouldloop = true; //If we got a loop pos, then the track is loopable
-
-                        mess.SetMetaType(META_TRACK_LOOP);
-                        mess.SetTime(state.ticks_);
-                        outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_LoopStart.c_str(), TXT_LoopStart.size() );
-                        outtrack.PutEvent( mess );
 
                         //Mark the loop position for each tracks
                         state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid duplicating the loop marker
-                        m_beflooptrkstates[trkno] = m_trkstates[trkno];    //Save the track state
-
+                        m_beflooptrkstates[trkno] = state;    //Save the track state
                         break;
                     }
-
-
                     //
                     default:
                     {
@@ -472,6 +485,126 @@ namespace DSE
 
             //Event handling done, increment event counter
             state.eventno_ += 1;
+        }
+
+        /*
+            HandleBankAndPresetOverrides
+                Handle placing bank+preset change messages around a few specific notes.
+        */
+        void HandleBankAndPresetOverrides(  uint16_t              trkno, 
+                                            uint8_t               trkchan, 
+                                            TrkState            & state, 
+                                            const DSE::TrkEvent & ev, 
+                                            jdksmidi::MIDITrack & outtrack,
+                                            midinote_t            mnoteid
+                                            )
+        {
+            using namespace jdksmidi;
+
+            //Remap the note
+            auto remapdata = m_convtable->RemapNote( state.dseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
+                
+            //--- Remap the note ---
+            mnoteid = remapdata.destnote;
+
+            //Check if we should do an override, or restore the bank + preset
+            if( state.presetoverriden && 
+                remapdata.destpreset == InvalidPresetID && 
+                remapdata.destbank   == InvalidBankID )
+            {
+                //--- Restore override ---
+                state.presetoverriden = false;
+
+                //Put some bank+preset change messages
+                //MIDITimedBigMessage msgbankMSB;
+                //MIDITimedBigMessage msgbankLSB;
+                MIDITimedBigMessage msgpreset;
+
+                msgpreset.SetTime(state.ticks_);
+                //msgbankMSB.SetTime(state.ticks_);
+                //msgbankLSB.SetTime(state.ticks_);
+
+                //Restore original Bank
+                //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
+                //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_  >> 8) );
+                //outtrack.PutEvent(msgbankMSB);
+                //outtrack.PutEvent(msgbankLSB);
+
+                AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
+
+                //Restore original program
+                msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                outtrack.PutEvent( msgpreset );
+            }
+            else if( remapdata.destpreset != InvalidPresetID && 
+                        remapdata.destbank   != InvalidBankID )
+            {
+                //--- Override Preset and Bank ---
+                if( remapdata.destbank != InvalidBankID )
+                {
+                    //Check if its necessary to put new events
+                    if( !state.presetoverriden || state.ovrbank_ != remapdata.destbank )
+                    {
+                        state.ovrbank_ = remapdata.destbank;
+                        AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.ovrbank_ );
+                        //MIDITimedBigMessage msgbankMSB;
+                        //MIDITimedBigMessage msgbankLSB;
+
+                        //msgbankMSB.SetTime(state.ticks_);
+                        //msgbankLSB.SetTime(state.ticks_);
+
+                        //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.ovrbank_) );
+                        //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.ovrbank_  >> 8) );
+                        //outtrack.PutEvent(msgbankMSB);
+                        //outtrack.PutEvent(msgbankLSB);
+                    }
+                    //Do nothing otherwise
+                }
+                else if( state.presetoverriden )
+                {
+                    //Restore bank only
+                    //MIDITimedBigMessage msgbankMSB;
+                    //MIDITimedBigMessage msgbankLSB;
+                    //msgbankMSB.SetTime(state.ticks_);
+                    //msgbankLSB.SetTime(state.ticks_);
+
+                    ////Restore original Bank
+                    //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
+                    //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_  >> 8) );
+                    //outtrack.PutEvent(msgbankMSB);
+                    //outtrack.PutEvent(msgbankLSB);
+                    AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
+                }
+
+                if( remapdata.destpreset != InvalidPresetID )
+                {
+                    //Check if its necessary to put new events
+                    if( !state.presetoverriden || state.ovrprgm_ != remapdata.destpreset )
+                    {
+                        state.ovrprgm_ = remapdata.destpreset;
+                        MIDITimedBigMessage msgpreset;
+
+                        msgpreset.SetTime(state.ticks_);
+
+                        msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.ovrprgm_) );
+                        outtrack.PutEvent( msgpreset );
+                    }
+                    //Do nothing otherwise
+                }
+                else if( state.presetoverriden )
+                {
+                    //Restore preset only
+                    MIDITimedBigMessage msgpreset;
+                    msgpreset.SetTime(state.ticks_);
+
+                    //Restore original program
+                    msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                    outtrack.PutEvent( msgpreset );
+                }
+
+                //Mark the track state as overriden!
+                state.presetoverriden = true;
+            }
         }
 
         /*
@@ -523,8 +656,8 @@ namespace DSE
             //}
 
             //Interpret the first parameter byte of the play note event
-            uint8_t mnoteid   = 0;
-            uint8_t param2len = 0; //length in bytes of param2
+            midinote_t mnoteid   = 0;
+            uint8_t    param2len = 0; //length in bytes of param2
             ParsePlayNoteParam1( ev.params.front(), state.octave_, param2len, mnoteid );
 
             //Parse the note hold duration bytes
@@ -541,97 +674,7 @@ namespace DSE
             // #TODO: This really needs its own method!!!
             if( m_hasconvtbl )
             {
-                //Remap the note
-                auto remapdata = m_convtable->RemapNote( state.dseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
-                
-                //--- Remap the note ---
-                mnoteid = remapdata.destnote;
-
-                //Check if we should do an override, or restore the bank + preset
-                if( state.presetoverriden && remapdata.destpreset == 255 && remapdata.destbank == -1 )
-                {
-                    //--- Restore override ---
-                    state.presetoverriden = false;
-
-                    //Put some bank+preset change messages
-                    MIDITimedBigMessage msgbank;
-                    MIDITimedBigMessage msgpreset;
-
-                    msgpreset.SetTime(state.ticks_);
-                    msgbank.SetTime(state.ticks_);
-
-                    //Restore original Bank
-                    msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, static_cast<unsigned char>(state.curbank_) );
-                    //msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(),         32, static_cast<char>(state.curbank_  >> 8) );
-                    outtrack.PutEvent(msgbank);
-                    //outtrack.PutEvent(bankselLSB);
-
-                    //Restore original program
-                    msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
-                    outtrack.PutEvent( msgpreset );
-                }
-                else if( remapdata.destpreset != 255 && remapdata.destbank != -1 )
-                {
-                    //--- Override Preset and Bank ---
-                    if( remapdata.destbank != -1 )
-                    {
-                        //Check if its necessary to put new events
-                        if( !state.presetoverriden || state.ovrbank_ != remapdata.destbank )
-                        {
-                            state.ovrbank_ = remapdata.destbank;
-                            MIDITimedBigMessage msgbank;
-
-                            msgbank.SetTime(state.ticks_);
-
-                            msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, static_cast<unsigned char>(state.ovrbank_) );
-                            //msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(),         32, static_cast<char>(state.ovrbank_  >> 8) );
-                            outtrack.PutEvent(msgbank);
-                            //outtrack.PutEvent(bankselLSB);
-                        }
-                        //Do nothing otherwise
-                    }
-                    else if( state.presetoverriden )
-                    {
-                        //Restore bank only
-                        MIDITimedBigMessage msgbank;
-                        msgbank.SetTime(state.ticks_);
-
-                        //Restore original Bank
-                        msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK, static_cast<unsigned char>(state.curbank_) );
-                        //msgbank.SetControlChange( m_seq[trkno].GetMidiChannel(),         32, static_cast<char>(state.curbank_  >> 8) );
-                        outtrack.PutEvent(msgbank);
-                        //outtrack.PutEvent(bankselLSB);
-                    }
-
-                    if( remapdata.destpreset != 255 )
-                    {
-                        //Check if its necessary to put new events
-                        if( !state.presetoverriden || state.ovrprgm_ != remapdata.destpreset )
-                        {
-                            state.ovrprgm_ = remapdata.destpreset;
-                            MIDITimedBigMessage msgpreset;
-
-                            msgpreset.SetTime(state.ticks_);
-
-                            msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.ovrprgm_) );
-                            outtrack.PutEvent( msgpreset );
-                        }
-                        //Do nothing otherwise
-                    }
-                    else if( state.presetoverriden )
-                    {
-                        //Restore preset only
-                        MIDITimedBigMessage msgpreset;
-                        msgpreset.SetTime(state.ticks_);
-
-                        //Restore original program
-                        msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
-                        outtrack.PutEvent( msgpreset );
-                    }
-
-                    //Mark the track state as overriden!
-                    state.presetoverriden = true;
-                }
+                HandleBankAndPresetOverrides( trkno, trkchan, state, ev, outtrack, mnoteid );
 
                 //Apply transposition
                 if(state.transpose != 0 )
@@ -805,11 +848,11 @@ namespace DSE
                 ExportATrack( trkno, trkno );
 
                 //Insert loop end event, for all tracks
-                if( m_bshouldloop )
+                if( m_bTrackLoopable )
                     m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
             }
 
-            if( m_bshouldloop )
+            if( m_bTrackLoopable )
             {
                 //Then, if we're set to loop, then loop
                 for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
@@ -853,10 +896,8 @@ namespace DSE
             }
 
             //Insert a single loop end event!
-            if( m_bshouldloop )
+            if( m_bTrackLoopable )
             {
-                m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
-
                 //Then, if we're set to loop, then loop
                 for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
                 {
@@ -871,6 +912,10 @@ namespace DSE
                     }
                 }
             }
+            //else
+            //{
+            //    m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
+            //}
         }
 
 
@@ -954,7 +999,7 @@ namespace DSE
         std::vector<TrkState>              m_beflooptrkstates; //Saved states of each tracks just before the loop point event! So we can restore each tracks to their intended initial states.
         uint32_t                           m_songlsttick;      //The very last tick of the song
 
-        bool                               m_bshouldloop;
+        bool                               m_bTrackLoopable;
         //Those two only apply to single track mode !
         bool                               m_bLoopBegSet;
 
