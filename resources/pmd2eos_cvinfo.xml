@@ -29,6 +29,9 @@ Example entry:
                                                      // Set to a negative value to decrement, set to a positive one to increment!
                                                      // If at any time the transposed note is out of MIDI range, the original note will be played instead!
       
+        <ForceChannel>10</ForceChannel>              //(optional) This forces all notes played with that preset to be moved to the specified MIDI channel! (1-16)
+                                                     //           Don't use it unless really neccessary, as its still kinda buggy..
+      
         //(optional)This section contains key translation. This is useful to make percussion lines not following the GM drum format play the correct instrument in GM drumkit when converted.
         <KeyRemaps>
       
@@ -41,6 +44,8 @@ Example entry:
             <MIDIPreset>15</MIDIPreset>     //(optional)The MIDI program to use for this note only. ( 1 - 128 )
             
             <MIDIBank>0</MIDIBank>          //(optional)The MIDI bank number to use for the note. ( 0 - 127 )
+            
+            <ForceChannel>10</ForceChannel>//(optional) Force the note to be played on that MIDI channel! (1-16)
           </Remap>
         
           //Other keys go below ...
@@ -144,20 +149,20 @@ Example entry:
                 <MIDIPreset>1</MIDIPreset>
                 <MIDIBank>127</MIDIBank>
 
+                <!-- Force on chan 10 for General MIDI Exports -->
+                <ForceChannel>10</ForceChannel>
+
                 <KeyRemaps>
-                  <!--Remap reverse cymbal-->
+                  <!--Remap Crash Cymbal-->
                   <Remap>
                     <OriginalKey>90</OriginalKey>
-                    <RemapedKey>90</RemapedKey>
-                    <MIDIPreset>120</MIDIPreset>
+                    <RemapedKey>49</RemapedKey>
                   </Remap>
 
-                  <!--Remap reverse cymbal 2-->
+                  <!--Remap Crash Cymbal 2-->
                   <Remap>
                     <OriginalKey>91</OriginalKey>
-                    <RemapedKey>91</RemapedKey>
-                    <MIDIPreset>120</MIDIPreset>
-                    
+                    <RemapedKey>57</RemapedKey>
                   </Remap>
 
                   <!--Snare(smpl 0x3E)-->
@@ -236,10 +241,10 @@ Example entry:
     <PairName>bgm0003</PairName>
     <Programs>
 
-      <!--0x01 New Age -->
+      <!--0x01 New Age (smpl 0x56, 0xA3)-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>89</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
       </Program>
 
       <!--0x02 Epiano1-->
@@ -248,7 +253,7 @@ Example entry:
         <MIDIPreset>5</MIDIPreset>
       </Program>
 
-      <!--0x03 Sample (No GM equivalent, so set to Taiko drum)-->
+      <!--0x03 Sample (No GM equivalent, so set to 117)-->
       <Program>
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>117</MIDIPreset>
@@ -315,6 +320,9 @@ Example entry:
         <MIDIPreset>1</MIDIPreset>
         <MIDIBank>127</MIDIBank>
 
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+
         <KeyRemaps>
           <!--Bass Drum-->
           <Remap>
@@ -342,7 +350,7 @@ Example entry:
             <RemapedKey>42</RemapedKey>
           </Remap>
 
-          <!--Snare-->
+          <!--Snare (smpl 0x3E)-->
           <Remap>
             <OriginalKey>40</OriginalKey>
             <!--Leave as-is-->
@@ -458,6 +466,10 @@ Example entry:
         <DSEProgramID>123</DSEProgramID>
         <MIDIPreset>1</MIDIPreset>
         <MIDIBank>127</MIDIBank>
+        
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+        
         <KeyRemaps>
           <!--Open Surdo-->
           <Remap>
@@ -473,6 +485,9 @@ Example entry:
         <!-- Set to XG drumkit.. -->
         <MIDIPreset>1</MIDIPreset>
         <MIDIBank>127</MIDIBank>
+        
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
 
         <KeyRemaps>
           <!--Bongo Mid (smpl 0x03)-->
@@ -607,6 +622,9 @@ Example entry:
         <!-- Set to XG drumkit.. -->
         <MIDIPreset>1</MIDIPreset>
         <MIDIBank>127</MIDIBank>
+
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
         
         <KeyRemaps>
           <!--Bass Drum (smpl 0x00)-->
@@ -787,9 +805,102 @@ Example entry:
   <!--==========================================================================-->
 
   <!--==========================================================================-->
-  <!-- bgm0046 -  -->
+  <!-- bgm0046 - Brine Cave -->
   <!--==========================================================================-->
+  <Track>
+    <PairName>bgm0046</PairName>
+    <Programs>
 
+      <!--0x01 New Age (smpl 0x56, 0xA3)-->
+      <Program>
+        <DSEProgramID>1</DSEProgramID>
+        <MIDIPreset>84</MIDIPreset>
+      </Program>
+
+      <!--0x02 Epiano1 (smpl 0xA5)-->
+      <Program>
+        <DSEProgramID>2</DSEProgramID>
+        <MIDIPreset>5</MIDIPreset>
+      </Program>
+
+      <!--0x05 Marimba ( smpl 0x2D, 0x2E )-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>13</MIDIPreset>
+      </Program>
+
+      <!--0x0A Music Box ( smpl 0x2F, 0x30 )-->
+      <Program>
+        <DSEProgramID>10</DSEProgramID>
+        <MIDIPreset>11</MIDIPreset>
+      </Program>
+
+      <!--0x15 Steel Guitar ( smpl 0xB0, 0xB1 )-->
+      <Program>
+        <DSEProgramID>21</DSEProgramID>
+        <MIDIPreset>26</MIDIPreset>
+      </Program>
+
+      <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
+      <Program>
+        <DSEProgramID>25</DSEProgramID>
+        <MIDIPreset>39</MIDIPreset>
+      </Program>
+
+      <!--0x63 Triangle Wave (smpl 0xB9)-->
+      <Program>
+        <DSEProgramID>99</DSEProgramID>
+        <MIDIPreset>88</MIDIPreset>
+      </Program>
+
+      <!--0x64 Triangle Wave (smpl 0xB9)-->
+      <Program>
+        <DSEProgramID>100</DSEProgramID>
+        <MIDIPreset>88</MIDIPreset>
+      </Program>
+
+      <!--Drumkit-->
+      <Program>
+        <DSEProgramID>127</DSEProgramID>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+
+        <KeyRemaps>
+          <!--Bass Drum (smpl 0x00)-->
+          <Remap>
+            <OriginalKey>36</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>36</RemapedKey>
+          </Remap>
+
+          <!--Crash Cymbals (smpl 0x17)-->
+          <Remap>
+            <OriginalKey>90</OriginalKey>
+            <RemapedKey>49</RemapedKey>
+          </Remap>
+
+          <!--Closed Hi-Hat (smpl 0x29)-->
+          <Remap>
+            <OriginalKey>42</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>42</RemapedKey>
+          </Remap>
+
+          <!--Snare(smpl 0x3E)-->
+          <Remap>
+            <OriginalKey>40</OriginalKey>
+            <RemapedKey>40</RemapedKey>
+          </Remap>
+
+        </KeyRemaps>
+      </Program>
+
+    </Programs>
+  </Track>
+  
   <!--==========================================================================-->
   <!-- bgm0047 -  -->
   <!--==========================================================================-->

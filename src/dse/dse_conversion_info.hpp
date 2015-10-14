@@ -59,6 +59,7 @@ namespace DSE
             midinote_t destnote   = 0;                //The note to use instead
             presetid_t destpreset = InvalidPresetID;  //The preset to use for playing only this note!
             bankid_t   destbank   = InvalidBankID;    //The bank to use for playing only this note!
+            uint8_t    idealchan  = UCHAR_MAX;        //The channel the note should be played on!
         };
 
         /*

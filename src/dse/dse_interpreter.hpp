@@ -36,11 +36,11 @@ namespace DSE
             - SingleTrack : Is format 0, a single track for all events.
             - MultiTrack  : Is format 1, one dedicated tempo track, and all the other tracks for events.
     *************************************************************************************************/
-    enum struct eMIDIFormat
-    {
-        SingleTrack,
-        MultiTrack,
-    };
+    //enum struct eMIDIFormat
+    //{
+    //    SingleTrack,
+    //    MultiTrack,
+    //};
 
 
     /*************************************************************************************************
@@ -71,7 +71,7 @@ namespace DSE
                          const MusicSequence            & seq, 
                          const SMDLPresetConversionInfo & remapdata,
                          int                              nbloop      = 0,
-                         eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,
+                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
     /*************************************************************************************************
@@ -81,7 +81,7 @@ namespace DSE
     void SequenceToMidi( const std::string              & outmidi, 
                          const MusicSequence            & seq, 
                          int                              nbloop      = 0,
-                         eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,
+                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
 

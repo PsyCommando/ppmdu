@@ -948,7 +948,6 @@ namespace pmd2 { namespace audio
                                  //merged.filetopreset[i], 
                                  merged[i],
                                  nbloops,
-                                 DSE::eMIDIFormat::SingleTrack,
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
         }
     }

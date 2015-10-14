@@ -108,7 +108,7 @@ namespace DSE
                 if( propnode.name() == PROP_PairName )
                     pairname = propnode.child_value();
                 else if( propnode.name() == NODE_Programs )
-                    ParsePrograms( propnode, info );
+                    ParsePrograms( propnode, info, pairname );
             }
 
             if( !pairname.empty() )
@@ -117,7 +117,7 @@ namespace DSE
                 clog <<"<!>- Ignored a remap entry while parsing the XML conversion info, because the name of the pair was empty or not specified!\n";
         }
 
-        void ParsePrograms( pugi::xml_node curnode, SMDLPresetConversionInfo & convinf )
+        void ParsePrograms( pugi::xml_node curnode, SMDLPresetConversionInfo & convinf, const string & trkname )
         {
             using namespace pugi;
             using namespace cvinfoXML;
@@ -125,11 +125,11 @@ namespace DSE
             for( auto & prgnode : curnode.children() )
             {
                 if( prgnode.name() == NODE_Program )
-                    ParseAProgram( prgnode, convinf );
+                    ParseAProgram( prgnode, convinf, trkname );
             }
         }
 
-        void ParseAProgram( pugi::xml_node curnode, SMDLPresetConversionInfo & convinf )
+        void ParseAProgram( pugi::xml_node curnode, SMDLPresetConversionInfo & convinf, const string & trkname )
         {
             using namespace pugi;
             using namespace cvinfoXML;
@@ -151,10 +151,25 @@ namespace DSE
                 else if( progprop.name() == PROP_Transpose )
                     pconv.transpose = utils::parseSignedByte( progprop.child_value() );
                 else if( progprop.name() == PROP_ForceChan )
-                    pconv.idealchan = utils::parseByte( progprop.child_value() );
+                    pconv.idealchan = (utils::parseByte( progprop.child_value() ) - 1); //Bring back to 0-15
                 else if( progprop.name() == NODE_KeyRemaps )
                 {
-                    ParseKeyRemapData( progprop, pconv );
+                    ParseKeyRemapData( progprop, pconv, dseid, trkname );
+                }
+            }
+
+            if( dseid != InvalidDSEPresetID )
+            {
+                if( pconv.midipres != InvalidPresetID && pconv.midipres > CHAR_MAX )
+                {
+                    clog << "#CVInfoParser : Forced preset for preset " <<dseid << " for track " <<trkname << " was not one of the valid 127 MIDI presets! Ignoring!\n";
+                    pconv.midipres = InvalidPresetID;
+                }
+
+                if( pconv.idealchan != UCHAR_MAX && pconv.idealchan >= NbMidiChannels )
+                {
+                    clog << "#CVInfoParser : Forced channel for preset " <<dseid <<" for track " <<trkname << " was not one of the valid 16 MIDI channel! Ignoring!\n";
+                    pconv.idealchan = UCHAR_MAX;
                 }
             }
 
@@ -164,7 +179,7 @@ namespace DSE
                 clog << "<!>- Ignored a " <<NODE_Program <<" node because there was no DSE program ID specified!\n";
         }
 
-        void ParseKeyRemapData( pugi::xml_node curnode, SMDLPresetConversionInfo::PresetConvData & pconv )
+        void ParseKeyRemapData( pugi::xml_node curnode, SMDLPresetConversionInfo::PresetConvData & pconv, dsepresetid_t preset, const string & trkname )
         {
             using namespace pugi;
             using namespace cvinfoXML;
@@ -172,11 +187,11 @@ namespace DSE
             for( auto & keyremap : curnode.children() )
             {
                 if( keyremap.name() == NODE_KeyRemap )
-                    ParseAKeyRemap( keyremap, pconv );
+                    ParseAKeyRemap( keyremap, pconv, preset, trkname );
             }
         }
 
-        void ParseAKeyRemap( pugi::xml_node curnode, SMDLPresetConversionInfo::PresetConvData & pconv )
+        void ParseAKeyRemap( pugi::xml_node curnode, SMDLPresetConversionInfo::PresetConvData & pconv, dsepresetid_t preset, const string & trkname )
         {
             using namespace pugi;
             using namespace cvinfoXML;
@@ -197,7 +212,7 @@ namespace DSE
                 else if( keyprop.name() == PROP_MIDIBnk )
                     utils::parseHexaValToValue(  keyprop.child_value(), midbnk );
                 else if( keyprop.name() == PROP_ForceChan )
-                    idealchan = utils::parseByte( keyprop.child_value() );
+                    idealchan = ( utils::parseByte( keyprop.child_value() ) - 1); //Bring back to 0-15
             }
 
             if( inkey != 0xFF && outkey != 0xFF )
@@ -206,13 +221,25 @@ namespace DSE
                 rmap.destnote = outkey;
 
                 if( midprg != InvalidPresetID )
-                    rmap.destpreset = midprg;
+                {
+                    if( midprg >= 0 && midprg <= CHAR_MAX )
+                        rmap.destpreset = midprg;
+                    else
+                        clog << "#CVInfoParser : Forced preset for preset " <<preset <<" for key " <<inkey << " for track " <<trkname << " was not one of the valid 127 MIDI presets! Ignoring!\n";
+                }
 
                 if( midbnk != InvalidBankID )
+                {
                     rmap.destbank = midbnk;
+                }
 
                 if( idealchan != UCHAR_MAX )
-                    pconv.idealchan = idealchan;
+                {
+                    if( idealchan < NbMidiChannels )
+                        rmap.idealchan = idealchan;
+                    else
+                        clog << "#CVInfoParser : Forced channel for preset " <<preset <<" for key " <<inkey <<" for track " <<trkname << " was not one of the valid 16 MIDI channel! Ignoring!\n";
+                }
 
                 pconv.remapnotes.insert( make_pair( inkey, rmap ) );
             }

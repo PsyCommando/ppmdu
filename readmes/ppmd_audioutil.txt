@@ -1,0 +1,95 @@
+=======================================================
+==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
+======================================================
+Version	   : 0.1
+Released   : 2015/10/13
+Written by : psy_commando (psycommando@gmail.com)
+
+The entire sourcecode for all my tools that are part of this suite is available here:
+https://github.com/PsyCommando/ppmdu/
+
+----------------------------------------------------------------------------------------------------
+Changelog:
+----------------------------------------------------------------------------------------------------
+- 0.1 : Initial release!
+
+----------------------------------------------------------------------------------------------------
+License info:
+----------------------------------------------------------------------------------------------------
+My code and tools are CC0. 
+Free to re-use in any ways you may want to!
+No crappyrights, all wrongs reversed! :3
+
+This is not including any libraries I'm using that have their own licenses of course!!
+The license for each of these libraries is indicated in their respective header files,
+and they're all isolated in the "libraries" subfolder !
+
+----------------------------------------------------------------------------------------------------
+Special Thanks:
+----------------------------------------------------------------------------------------------------
+-> Many, many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
+-> A big thanks to Nerketur for his help !
+-> A big thanks to TruePikachu for his help !
+-> A big thanks to Evandixon for his help !
+-> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> Thanks to MNChino for helping with some of my tools !
+-> Thanks to wwylele for helping !
+-> ..and anyone else I may have forgotten about ! ^^;
+
+----------------------------------------------------------------------------------------------------
+About:
+----------------------------------------------------------------------------------------------------
+
+This tool can export various data from the Pokemon Mystery Dungeon : Explorers of Sky/Time/Darkness 
+games(Only tested with Sky for now).
+
+Right now it supports:
+- Game text (Dialog, menus, item names, move names, pokemon names, etc..)
+- Move data (Base power, type, name, descritpion, etc.. )
+- Pokemon data (Name, category, type, stats growth, level-up moves, hm/tm moves, egg moves, etc..)
+
+------------------------------
+--Random Uninteresting Fact--:
+------------------------------
+The weird name is inspired from my EoS playthrough, where I cheated to get a Poochyena as starter. 
+He turned out really good after ingesting so many gummies and pretty much carried the team 
+most of the game! XD
+And, I just love that pokemon, so yeah, that's pretty much it..
+
+----------------------------------------------------------------------------------------------------
+How to use:
+----------------------------------------------------------------------------------------------------
+
+* To export the entire pmd2 BGM folder, just specify the path to the rom's root directory 
+  and the -pmd2 commandline option, like so :
+
+    ppmd_audioutil.exe -pmd2 "pmd2_extractedrom" "out_bgm"
+
+* To export a single SMDL file as-is, just drag and drop onto the executable.
+
+* To export a single SMDL using conversion rules, to make it use standard MIDI instruments
+  specify the path to the conversion info file, using the -cvinfo option at the commandline
+  like this :
+
+    ppmd_audioutil.exe "pmd2_extractedrom\SOUND\BGM\bgm0003.smd" "bgm0003.mid" -cvinfo "pmd2eos_cvinfo.xml" -fl 1
+  
+  The option -fl 1 tells the program to loop the track again once after it played. It will only loop 
+  tracks that have a loop point though.
+  
+  You can make your own, edit, or add to the cvinfo XML file ! The details are in the example
+  file "pmd2eos_cvinfo.xml" ! 
+  
+* To export the content of a SWDL file containing samples, simply drag and drop the file 
+  onto the executable!
+
+
+----------------------------------------------------------------------------------------------------
+Readme:
+----------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------
+Documentation :
+----------------------------------------------------------------------------------------------------
+See my thread here for links to my notes and etc: 
+http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes

@@ -324,6 +324,16 @@ namespace DSE
         //Print statistics on the music sequence
         std::string printinfo()const;
 
+        //Makes it possible to iterate through the tracks using a foreach loop
+        typedef std::vector<MusicTrack>::iterator       iterator;
+        typedef std::vector<MusicTrack>::const_iterator const_iterator;
+
+        inline iterator       begin()      { return move(m_tracks.begin()); }
+        inline const_iterator begin()const { return move(m_tracks.begin()); }
+        inline iterator       end()        { return move(m_tracks.end()); }
+        inline const_iterator end()const   { return move(m_tracks.end()); }
+        inline bool           empty()const { return m_tracks.empty(); }
+
     private:
         DSE::DSE_MetaDataSMDL    m_meta;
         std::vector<MusicTrack>  m_tracks;

@@ -14,6 +14,7 @@
 #include <list>
 #include <iomanip>
 #include <functional>
+#include <numeric>
 
 #include <cmath>
 #include <deque>
@@ -30,6 +31,8 @@ namespace DSE
 
     static const int8_t DSE_MaxOctave      = 9; //The maximum octave value possible to handle
     const int           NbMidiKeysInOctave = 12;
+    const uint8_t       MIDIDrumChannel    = 9;
+
     //const int8_t        NBMidiOctaves      = 128 / NbMidiKeysInOctave; //128 keys total, 12 keys per octave
 
     static const uint8_t MIDI_CC32_BankLSB = 32; 
@@ -82,44 +85,42 @@ namespace DSE
         */
         struct TrkState
         {
-            uint32_t ticks_        = 0;
-            uint32_t eventno_      = 0; //Event counter to identify a single problematic event
-            uint32_t lastpause_    = 0; //Duration of the last pause event, including fixed duration pauses.
-            uint32_t lasthold_     = 0; //last duration a note was held
-            uint8_t  octave_       = 0; //The track's current octave
-            //uint8_t  lastoctaveev_ = 0;
-            
-            dsepresetid_t  prgm_         = 0; //Keep track of the current program to apply pitch correction on specific instruments
-            bool     sustainon     = false; //When a note is sustained, it must be let go of at the next play note event
-            bankid_t  curbank_      = 0;
-            uint32_t curloop_      = 0; //keep tracks of how many times the track has looped so far
+            uint32_t               ticks_          = 0; //The current tick count for the track
+            uint32_t               eventno_        = 0; //Event index counter to identify a single problematic event
+            uint32_t               lastpause_      = 0; //Duration of the last pause event, including fixed duration pauses.
+            uint32_t               lasthold_       = 0; //Last duration a note was held
+            uint8_t                octave_         = 0; //The track's current octave
+            dsepresetid_t          curprgm_        = 0; //Keep track of the current program to apply pitch correction on specific instruments
+            bankid_t               curbank_        = 0;
+            int8_t                 curmaxpoly_     = -1; //Maximum polyphony for current preset!
 
-            int16_t  pitchoffset_  = 0; //TEST: Pitch offset applied to the track in cents. (changes the note that is played)
-
-            size_t   looppoint_    = 0; //The index of the envent after the loop pos
-
+            size_t                 looppoint_      = 0; //The index of the envent after the loop pos
             std::deque<NoteOnData> noteson_; //The notes currently on
-            int8_t                 curmaxpoly_ = -1; //Maximum polyphony for current preset!
-
-            bool                   hasinvalidbank = false; //This is toggled when a bank couldn't be found. It stops all playnote events from playing. 
-            dsepresetid_t          dseprgm_       = 0; //The original program ID, not the one that has been remaped
-            int8_t                 transpose      = 0; //The nb of octaves to transpose the notes played by this channel!
+            
+            bool                   hasinvalidbank  = false; //This is toggled when a bank couldn't be found. It stops all playnote events from playing. 
+            
+            int8_t                 transpose       = 0; //The nb of octaves to transpose the notes played by this channel!
             
             //Those allows to keep track of when to revert to and from the overriden presets
             bool                   presetoverriden = false;
             bankid_t               ovrbank_        = InvalidBankID;
             dsepresetid_t          ovrprgm_        = InvalidDSEPresetID;
+            dsepresetid_t          origdseprgm_        = 0; //The original program ID, not the one that has been remaped
         
+            //This is for presets that overrides the channel they're played on
+            bool                   chanoverriden   = false;     //Whether the current preset overrides the channel
+            uint8_t                ovrchan_        = UCHAR_MAX; //The channel we override to
+            uint8_t                chantoreinit    = UCHAR_MAX; //If we did override a note from this track, and played it on another channel, this indicates the channel we need to refresh the current preset + bank on!
         };
 
     public:
         DSESequenceToMidi( const std::string                & outmidiname, 
                            const MusicSequence              & seq, 
                            const SMDLPresetConversionInfo   & remapdata,
-                           eMIDIFormat                        midfmt,
+                           /*eMIDIFormat                        midfmt,*/
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
-            :m_fnameout(outmidiname), m_seq(seq), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
+            :m_fnameout(outmidiname), m_seq(seq)/*, m_midifmt(midfmt)*/,m_midimode(mode),m_nbloops(nbloops),
              m_bLoopBegSet(false), m_bTrackLoopable(false), m_songlsttick(0), 
              m_convtable(&remapdata), 
              m_hasconvtbl(true) //Enable conversion data
@@ -127,10 +128,10 @@ namespace DSE
 
         DSESequenceToMidi( const std::string                & outmidiname, 
                            const MusicSequence              & seq, 
-                           eMIDIFormat                        midfmt,
+                           /*eMIDIFormat                        midfmt,*/
                            eMIDIMode                          mode,
                            uint32_t                           nbloops = 0 )
-            :m_fnameout(outmidiname), m_seq(seq), m_midifmt(midfmt),m_midimode(mode),m_nbloops(nbloops),
+            :m_fnameout(outmidiname), m_seq(seq)/*, m_midifmt(midfmt)*/,m_midimode(mode),m_nbloops(nbloops),
              m_bLoopBegSet(false), m_bTrackLoopable(false), m_songlsttick(0), 
              m_convtable(nullptr), 
              m_hasconvtbl(false) //Disable conversion data
@@ -144,10 +145,10 @@ namespace DSE
         {
             using namespace jdksmidi;
 
-            if( m_midifmt == eMIDIFormat::SingleTrack )
+            //if( m_midifmt == eMIDIFormat::SingleTrack )
                 ExportAsSingleTrack();
-            else if( m_midifmt == eMIDIFormat::MultiTrack )
-                ExportAsMultiTrack();
+            //else if( m_midifmt == eMIDIFormat::MultiTrack )
+            //    ExportAsMultiTrack();
 
             //Sort the tracks
             m_midiout.SortEventsOrder();
@@ -155,24 +156,21 @@ namespace DSE
             //Then write the output!
             MIDIFileWriteStreamFileName out_stream( m_fnameout.c_str() );
 
-            // then output the stream like my example does, except setting num_tracks to match your data
-
             if( out_stream.IsValid() )
             {
-                // the object which takes the midi tracks and writes the midifile to the output stream
                 MIDIFileWriteMultiTrack writer( &m_midiout, &out_stream );
 
                 // write the output file
-                if( m_midifmt == eMIDIFormat::SingleTrack )
-                {
+                //if( m_midifmt == eMIDIFormat::SingleTrack )
+                //{
                     if ( !writer.Write( 1 ) )
                         throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
-                }
-                else if( m_midifmt == eMIDIFormat::MultiTrack )
-                {
-                    if ( !writer.Write( m_midiout.GetNumTracks() ) )
-                        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
-                }
+                //}
+                //else if( m_midifmt == eMIDIFormat::MultiTrack )
+                //{
+                //    if ( !writer.Write( m_midiout.GetNumTracks() ) )
+                //        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
+                //}
             }
             else
             {
@@ -188,15 +186,11 @@ namespace DSE
             HandleFixedPauses
                 Handle converting the DSE Delta-time and turning into a midi time stamp.
         */
-        inline void HandleFixedPauses( const DSE::TrkEvent           & ev, 
-                                       TrkState                      & state/*, 
-                                       jdksmidi::MIDITimedBigMessage & mess */)
+        inline void HandleFixedPauses( const DSE::TrkEvent & ev, 
+                                       TrkState            & state )
         {
             state.lastpause_ = static_cast<uint8_t>( TrkDelayCodeVals.at(ev.evcode) );
             state.ticks_    += state.lastpause_;
-
-            ////Set the time properly now
-            //mess.SetTime(state.ticks_);
         }
 
         /*
@@ -215,12 +209,6 @@ namespace DSE
             //The program id as read from the event!
             uint8_t originalprgm = ev.params.front();
 
-            //MIDITimedBigMessage bankselMSB;
-            //MIDITimedBigMessage bankselLSB;
-
-            //bankselMSB.SetTime(state.ticks_);
-            //bankselLSB.SetTime(state.ticks_);
-
             //Check if we have to translate preset/bank ids
             if( m_hasconvtbl )
             {
@@ -235,58 +223,55 @@ namespace DSE
                 {
                     state.hasinvalidbank = false;
                     state.curbank_       = itfound->second.midibank;
+                    state.curprgm_       = itfound->second.midipres;
+                    state.origdseprgm_   = originalprgm;
+                    state.curmaxpoly_    = itfound->second.maxpoly;
+                    state.transpose      = itfound->second.transpose;
+
+                    if(itfound->second.idealchan != UCHAR_MAX)
+                    {
+                        state.chanoverriden = true;
+                        state.ovrchan_      = itfound->second.idealchan;
+                    }
                 }
                 else 
                 {
+                    //We didn't find any conversion info
                     state.hasinvalidbank = true;
                     state.curbank_       = 0x7F;           //Set to bank 127 to mark the error
+                    state.curprgm_       = originalprgm; //Set preset as-is
+                    state.origdseprgm_   = originalprgm;
+                    state.curmaxpoly_    = -1;
+                    state.transpose      =  0;
+                    state.chanoverriden  = false;
+                    state.ovrchan_       = UCHAR_MAX;
+
                     clog << "Couldn't find a matching bank for preset #" 
                          << static_cast<short>(ev.params.front()) <<" ! Setting to bank " <<state.curbank_ <<" !\n";
                 }
 
-                // -- Select the correct preset --
-                if( itfound != m_convtable->end() )
-                {
-                    state.prgm_       = itfound->second.midipres;
-                    state.dseprgm_    = originalprgm;
-                    state.curmaxpoly_ = itfound->second.maxpoly;
-                    state.transpose   = itfound->second.transpose;
-                }
-                else //We didn't find any preset data
-                {
-                    state.prgm_       = originalprgm; //Set preset as-is
-                    state.dseprgm_    = originalprgm;
-                    state.curmaxpoly_ = -1;
-                    state.transpose   =  0;
-                }
-                
             }
             else
             {
                 //No need to translate anything
                 state.hasinvalidbank = false;
-                state.curbank_       = 0;
-                state.prgm_          = originalprgm; //Set preset as-is
-                state.dseprgm_       = originalprgm;
+                state.curbank_       =  0;
+                state.curprgm_       = originalprgm; //Set preset as-is
+                state.origdseprgm_   = originalprgm;
                 state.curmaxpoly_    = -1;
                 state.transpose      =  0;
+                state.chanoverriden  = false;
+                state.ovrchan_       = UCHAR_MAX;
             }
-
-
 
             //Change only if the preset/bank isn't overriden!
             if( !state.presetoverriden )
             {
+                //Add the Bank select message
                 AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
 
-                //Add the Bank select message
-                //bankselMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
-                //bankselLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_ >> 8) );
-                //outtrack.PutEvent(bankselMSB);
-                //outtrack.PutEvent(bankselLSB);
-
                 //Add the Program change message
-                mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                mess.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.curprgm_) );
                 outtrack.PutEvent( mess );
             }
 
@@ -438,8 +423,8 @@ namespace DSE
 
                         if( m_nbloops == 0 )
                         {
-                            if( ( m_midifmt == eMIDIFormat::SingleTrack && !m_bLoopBegSet ) || 
-                                ( m_midifmt != eMIDIFormat::SingleTrack ))
+                            if( ( /*m_midifmt == eMIDIFormat::SingleTrack &&*/ !m_bLoopBegSet ) /*|| 
+                                ( m_midifmt != eMIDIFormat::SingleTrack )*/)
                             {
                                 //Only place an event if we don't loop the track, and haven't placed it already to avoid playbak issues
                                 mess.SetMetaType(META_TRACK_LOOP);
@@ -450,13 +435,13 @@ namespace DSE
                         }
 
                         //For single track mode, we only put a single loop start marker
-                        if( m_midifmt == eMIDIFormat::SingleTrack )
-                        {
+                        //if( m_midifmt == eMIDIFormat::SingleTrack )
+                        //{
                             if( !m_bLoopBegSet )
                             {
                                 m_bLoopBegSet = true;
                             }
-                        }
+                        //}
 
                         //Mark the loop position for each tracks
                         state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid duplicating the loop marker
@@ -494,50 +479,71 @@ namespace DSE
         void HandleBankAndPresetOverrides(  uint16_t              trkno, 
                                             uint8_t               trkchan, 
                                             TrkState            & state, 
-                                            const DSE::TrkEvent & ev, 
                                             jdksmidi::MIDITrack & outtrack,
-                                            midinote_t            mnoteid
-                                            )
+                                            midinote_t          & mnoteid,
+                                            const SMDLPresetConversionInfo::NoteRemapData & remapdata )
         {
             using namespace jdksmidi;
 
             //Remap the note
-            auto remapdata = m_convtable->RemapNote( state.dseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
-                
+            //auto remapdata = m_convtable->RemapNote( state.origdseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
+            //    
             //--- Remap the note ---
             mnoteid = remapdata.destnote;
 
+            //First, check if we're playing a note past when the channel's preset + bank was changed by a previously processed track 
+            if( m_midimode == eMIDIMode::GM && 
+               !m_chanreqpresresets[trkchan].empty() && 
+               m_chanreqpresresets[trkchan].front() <= state.ticks_ )
+            {
+                bankid_t      bnktoset = 0;
+                dsepresetid_t prgtoset = 0;
+
+                //Figure out what to reset the state to
+                if( state.presetoverriden )
+                {
+                    bnktoset = state.ovrbank_;
+                    prgtoset = state.ovrprgm_;
+                }
+                else
+                {
+                    bnktoset = state.curbank_;
+                    prgtoset = state.curprgm_;
+                }
+
+                //Make the messages
+                AddBankChangeMessage( outtrack, trkchan, state.ticks_, bnktoset );
+
+                MIDITimedBigMessage msgpreset;
+                msgpreset.SetTime(state.ticks_);
+                msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(prgtoset) );
+                outtrack.PutEvent( msgpreset );
+
+                //Remove from the list!
+                m_chanreqpresresets[trkchan].pop_front();
+            }
+
             //Check if we should do an override, or restore the bank + preset
             if( state.presetoverriden && 
-                remapdata.destpreset == InvalidPresetID && 
-                remapdata.destbank   == InvalidBankID )
+                remapdata.destpreset != state.ovrprgm_ && 
+                remapdata.destbank   != state.ovrbank_ ) //Restore if the preset+bank was overriden, but the current preset doesn't define a bank+preset override!
             {
                 //--- Restore override ---
                 state.presetoverriden = false;
+                state.ovrprgm_        = InvalidPresetID;
+                state.ovrbank_        = InvalidBankID;
 
                 //Put some bank+preset change messages
-                //MIDITimedBigMessage msgbankMSB;
-                //MIDITimedBigMessage msgbankLSB;
-                MIDITimedBigMessage msgpreset;
-
-                msgpreset.SetTime(state.ticks_);
-                //msgbankMSB.SetTime(state.ticks_);
-                //msgbankLSB.SetTime(state.ticks_);
-
-                //Restore original Bank
-                //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
-                //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_  >> 8) );
-                //outtrack.PutEvent(msgbankMSB);
-                //outtrack.PutEvent(msgbankLSB);
-
-                AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
+                AddBankChangeMessage( outtrack, trkchan, state.ticks_, state.curbank_ );
 
                 //Restore original program
-                msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                MIDITimedBigMessage msgpreset;
+                msgpreset.SetTime(state.ticks_);
+                msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.curprgm_) );
                 outtrack.PutEvent( msgpreset );
             }
-            else if( remapdata.destpreset != InvalidPresetID && 
-                        remapdata.destbank   != InvalidBankID )
+            else if( remapdata.destpreset != InvalidPresetID || 
+                     remapdata.destbank   != InvalidBankID )  //If the preset is not being overriden, but the current preset defines valid overrides of the bank+preset!
             {
                 //--- Override Preset and Bank ---
                 if( remapdata.destbank != InvalidBankID )
@@ -546,34 +552,14 @@ namespace DSE
                     if( !state.presetoverriden || state.ovrbank_ != remapdata.destbank )
                     {
                         state.ovrbank_ = remapdata.destbank;
-                        AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.ovrbank_ );
-                        //MIDITimedBigMessage msgbankMSB;
-                        //MIDITimedBigMessage msgbankLSB;
-
-                        //msgbankMSB.SetTime(state.ticks_);
-                        //msgbankLSB.SetTime(state.ticks_);
-
-                        //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.ovrbank_) );
-                        //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.ovrbank_  >> 8) );
-                        //outtrack.PutEvent(msgbankMSB);
-                        //outtrack.PutEvent(msgbankLSB);
+                        AddBankChangeMessage( outtrack, trkchan, state.ticks_, state.ovrbank_ );
                     }
                     //Do nothing otherwise
                 }
                 else if( state.presetoverriden )
                 {
                     //Restore bank only
-                    //MIDITimedBigMessage msgbankMSB;
-                    //MIDITimedBigMessage msgbankLSB;
-                    //msgbankMSB.SetTime(state.ticks_);
-                    //msgbankLSB.SetTime(state.ticks_);
-
-                    ////Restore original Bank
-                    //msgbankMSB.SetControlChange( m_seq[trkno].GetMidiChannel(), C_GM_BANK,         static_cast<unsigned char>(state.curbank_) );
-                    //msgbankLSB.SetControlChange( m_seq[trkno].GetMidiChannel(), MIDI_CC32_BankLSB, static_cast<unsigned char>(state.curbank_  >> 8) );
-                    //outtrack.PutEvent(msgbankMSB);
-                    //outtrack.PutEvent(msgbankLSB);
-                    AddBankChangeMessage( outtrack, m_seq[trkno].GetMidiChannel(), state.ticks_, state.curbank_ );
+                    AddBankChangeMessage( outtrack, trkchan, state.ticks_, state.curbank_ );
                 }
 
                 if( remapdata.destpreset != InvalidPresetID )
@@ -598,13 +584,43 @@ namespace DSE
                     msgpreset.SetTime(state.ticks_);
 
                     //Restore original program
-                    msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.prgm_) );
+                    msgpreset.SetProgramChange( static_cast<uint8_t>(trkchan), static_cast<uint8_t>(state.curprgm_) );
                     outtrack.PutEvent( msgpreset );
                 }
 
                 //Mark the track state as overriden!
                 state.presetoverriden = true;
             }
+        }
+
+        /*
+            HandleChannelOverride
+                Overrides the channel properly as needed, depending on the note remap data, or whether the preset has
+                channel override data.
+        */
+        inline uint8_t HandleChannelOverride( uint8_t                                         trkchan,
+                                              TrkState                                      & state, 
+                                              const SMDLPresetConversionInfo::NoteRemapData & remapdata )
+        {
+            //Only in GM
+            if( m_midimode == eMIDIMode::GM )
+            {
+                //Handle per note remap
+                if( remapdata.idealchan != UCHAR_MAX )
+                {
+                    //Handle per note remap
+                    if( trkchan != MIDIDrumChannel ) //We don't care about the drum channel, since it ignores program changes!
+                        m_chanreqpresresets[remapdata.idealchan].push_back( state.ticks_ ); //Mark the channel for being re-inited
+                    //state.chantoreinit = remapdata.idealchan; 
+                    return remapdata.idealchan;
+                }
+                else if( state.chanoverriden )
+                {
+                    //Handle per preset remap
+                    return state.ovrchan_;
+                }
+            }
+            return trkchan;
         }
 
         /*
@@ -671,10 +687,16 @@ namespace DSE
             mess.SetTime(state.ticks_);
 
             //Check if we should change the note to another.
-            // #TODO: This really needs its own method!!!
             if( m_hasconvtbl )
             {
-                HandleBankAndPresetOverrides( trkno, trkchan, state, ev, outtrack, mnoteid );
+                //Remap the note
+                auto remapdata = m_convtable->RemapNote( state.origdseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
+                
+                //Handle channel overrides for the preset, and for each notes
+                trkchan = HandleChannelOverride( trkchan, state, remapdata );
+
+                //Handle preset overrides for each notes
+                HandleBankAndPresetOverrides( trkno, trkchan, state, outtrack, mnoteid, remapdata );
 
                 //Apply transposition
                 if(state.transpose != 0 )
@@ -703,7 +725,7 @@ namespace DSE
             //Check if we should cut the duration the key is held down.
             if( m_hasconvtbl )
             {
-                auto itfound = m_convtable->FindConversionInfo(state.dseprgm_);
+                auto itfound = m_convtable->FindConversionInfo(state.origdseprgm_);
 
                 if( itfound != m_convtable->end() && itfound->second.maxkeydowndur != 0 )
                     noteofftime = utils::Clamp( state.lasthold_, 0ui32, itfound->second.maxkeydowndur );
@@ -831,44 +853,44 @@ namespace DSE
             ExportAsMultiTrack
                 Method handling export specifically for multi tracks MIDI format 1
         */
-        void ExportAsMultiTrack()
-        {
-            using namespace jdksmidi;
-            //Setup our track states
-            m_trkstates.resize( m_seq.getNbTracks() );
-            m_beflooptrkstates.resize(m_seq.getNbTracks());
-            m_songlsttick = 0;
+        //void ExportAsMultiTrack()
+        //{
+        //    using namespace jdksmidi;
+        //    //Setup our track states
+        //    m_trkstates.resize( m_seq.getNbTracks() );
+        //    m_beflooptrkstates.resize(m_seq.getNbTracks());
+        //    m_songlsttick = 0;
 
-            //Setup the time signature and etc..
-            PrepareMidiFile();
+        //    //Setup the time signature and etc..
+        //    PrepareMidiFile();
 
-            //Play all tracks at least once
-            for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
-            {
-                ExportATrack( trkno, trkno );
+        //    //Play all tracks at least once
+        //    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
+        //    {
+        //        ExportATrack( trkno, trkno );
 
-                //Insert loop end event, for all tracks
-                if( m_bTrackLoopable )
-                    m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
-            }
+        //        //Insert loop end event, for all tracks
+        //        if( m_bTrackLoopable )
+        //            m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
+        //    }
 
-            if( m_bTrackLoopable )
-            {
-                //Then, if we're set to loop, then loop
-                for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
-                {
-                    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
-                    {
-                        //Restore track state
-                        uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
-                        m_trkstates[trkno]        = m_beflooptrkstates[trkno]; //Overwrite state
-                        m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+        //    if( m_bTrackLoopable )
+        //    {
+        //        //Then, if we're set to loop, then loop
+        //        for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
+        //        {
+        //            for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
+        //            {
+        //                //Restore track state
+        //                uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
+        //                m_trkstates[trkno]        = m_beflooptrkstates[trkno]; //Overwrite state
+        //                m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
 
-                        ExportATrack( trkno, trkno, m_trkstates[trkno].looppoint_ );
-                    }
-                }
-            }
-        }
+        //                ExportATrack( trkno, trkno, m_trkstates[trkno].looppoint_ );
+        //            }
+        //        }
+        //    }
+        //}
 
         /*
             ExportAsSingleTrack
@@ -877,22 +899,33 @@ namespace DSE
         void ExportAsSingleTrack()
         {
             using namespace jdksmidi;
+
             //Setup our track states
-            m_trkstates.resize(m_seq.getNbTracks());
+            m_trkstates       .resize(m_seq.getNbTracks());
             m_beflooptrkstates.resize(m_seq.getNbTracks());
             m_songlsttick = 0;
 
             //Setup the time signature and etc..
             PrepareMidiFile();
 
-            //Play all tracks at least once
-            for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
+            //Re-Organize channels if in GM mode, and build priority queue
+            if( m_midimode == eMIDIMode::GM )
+                RearrangeChannels();
+            else
             {
-                ExportATrack( trkno, 0 );
+                m_trackpriorityq.resize(m_seq.getNbTracks());
+                std::iota( m_trackpriorityq.begin(), m_trackpriorityq.end(), 0 );
+            }
+
+            //Play all tracks at least once
+            for( unsigned int trkno = 0; trkno < m_trackpriorityq.size() /*m_seq.getNbTracks()*/; ++trkno )
+            {
+                unsigned int curtrk = m_trackpriorityq[trkno];
+                ExportATrack( curtrk, 0 );
 
                 //Keep track of the very last tick of the song as a whole.
-                if( m_songlsttick < m_trkstates[trkno].ticks_ )
-                    m_songlsttick = m_trkstates[trkno].ticks_;
+                if( m_songlsttick < m_trkstates[curtrk].ticks_ )
+                    m_songlsttick = m_trkstates[curtrk].ticks_;
             }
 
             //Insert a single loop end event!
@@ -901,14 +934,16 @@ namespace DSE
                 //Then, if we're set to loop, then loop
                 for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
                 {
-                    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
+                    for( unsigned int trkno = 0; trkno < m_trackpriorityq.size() /*m_seq.getNbTracks()*/; ++trkno )
                     {
-                        //Restore track state
-                        uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
-                        m_trkstates[trkno]        = m_beflooptrkstates[trkno]; //Overwrite state
-                        m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+                        unsigned int curtrk = m_trackpriorityq[trkno];
 
-                        ExportATrack( trkno, 0, m_trkstates[trkno].looppoint_ );
+                        //Restore track state
+                        uint32_t backticks         = m_trkstates[curtrk].ticks_; //Save ticks
+                        m_trkstates[curtrk]        = m_beflooptrkstates[curtrk]; //Overwrite state
+                        m_trkstates[curtrk].ticks_ = backticks;                 //Restore ticks
+
+                        ExportATrack( curtrk, 0, m_trkstates[curtrk].looppoint_ );
                     }
                 }
             }
@@ -916,6 +951,170 @@ namespace DSE
             //{
             //    m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
             //}
+        }
+
+        /*
+            RearrangeChannels
+                Try to free channel 10 if possible, and if not, set a track that has a 0x7F program change on chan 10.
+        */
+        void RearrangeChannels()
+        {
+            //Init 
+            m_chanreqpresresets.resize( NbMidiChannels );
+            m_trkchanmap.resize(m_seq.getNbTracks(), 0); //Init the channel map!
+
+            //Start by filling up the priority queue
+            //#NOTE: This is really atrocious, 
+            vector<size_t> presetswithchanremaps;       //The presets that have key remaps that play on another channel!
+
+            //Make a list of the presets that remap notes to different channels
+            for( const auto & remapentry : (*m_convtable) )
+            {
+                for( const auto & notermap : remapentry.second.remapnotes )
+                {
+                    //If we have a channel remap for a specific key, and we haven't added this preset to the list yet, add it!
+                    if( notermap.second.idealchan != UCHAR_MAX &&
+                        std::find( presetswithchanremaps.begin(), presetswithchanremaps.end(), remapentry.first ) != presetswithchanremaps.end() )
+                    {
+                        presetswithchanremaps.push_back( remapentry.first );
+                    }
+                }
+            }
+
+            //Find which tracks use those presets, and put them first in the priority queue!
+            for( size_t cnttrk = 1; cnttrk < m_seq.getNbTracks(); ++cnttrk ) //Skip track 1 again
+            {
+                bool prioritize = false;
+                for( size_t cntev = 0; cntev < m_seq[cnttrk].size(); ++cntev )
+                {
+                    if( m_seq[cnttrk][cntev].evcode == static_cast<uint8_t>(eTrkEventCodes::SetPreset) )
+                    {
+                        //When we get a SetPreset event, check if it matches one of the presets we're looking for.
+                        for( const auto & apreset : presetswithchanremaps )
+                        {
+                            if( m_seq[cnttrk][cntev].params.front() == apreset )
+                                prioritize = true;
+                        }
+                    }
+                }
+
+                //If we need to prioritize, push it in the front
+                if( prioritize )
+                    m_trackpriorityq.push_front( cnttrk );
+                else
+                    m_trackpriorityq.push_back( cnttrk );
+            }
+
+
+            //--- Next re-arrange the tracks ! ---
+            
+            array<bool,NbMidiChannels> usedchan;         //Keep tracks of channels in use
+
+            //Check if something is on channel 10, and populate our channel map
+            deque<size_t> chan10trks; //A list of tracks using chan 10
+
+            //Always skip the first DSE track, as it can't have instruments on it
+            for( size_t cnttrk = 1; cnttrk < m_seq.getNbTracks(); ++cnttrk )
+            {
+                if( m_seq[cnttrk].GetMidiChannel() < NbMidiChannels )
+                    usedchan[m_seq[cnttrk].GetMidiChannel()] = true; 
+                else
+                    clog << "<!>- Warning: Encountered a track with an invalid MIDI channel in the current sequence!\n";
+
+                if( m_seq[cnttrk].GetMidiChannel() == 9 )
+                    chan10trks.push_back(cnttrk);
+
+                m_trkchanmap[cnttrk] = m_seq[cnttrk].GetMidiChannel();
+            }
+
+            //If channel 10 not in use, nothing else to do here!
+            if( chan10trks.empty() )
+                return;
+
+            //-------------------------------------
+            //-- Mitigate the drum channel issue --
+            //-------------------------------------
+
+            //--- Step 1! ---
+            size_t nbchaninuse = std::count_if( usedchan.begin(), usedchan.end(), [](bool entry){ return entry; } );
+
+            //First, try to reassign to an empty channel!
+            if( nbchaninuse != NbMidiChannels )
+            {
+                for( size_t cnttrks = 0; cnttrks < chan10trks.size(); ++cnttrks )
+                {
+                    size_t trktorelocate = chan10trks[cnttrks];
+
+                    for( size_t cntchan = 0; cntchan < usedchan.size(); ++cntchan )
+                    {
+                        if( !usedchan[cntchan] && cntchan != 9 )
+                        {
+                            //Re-assign the unused channel
+                            usedchan[m_trkchanmap[trktorelocate]] = false;   //Vaccate the old channel
+                            m_trkchanmap[trktorelocate]           = cntchan;
+                            usedchan[cntchan]                     = true;
+                            chan10trks.pop_back(); //Remove a track from the list to relocate!
+                        }
+                    }
+                }
+
+                //If we re-assigned all tracks, nothing more to do here !
+                if( chan10trks.empty() )
+                    return;
+
+                //If we still haven't reassigned all tracks, we go to step 2
+            }
+
+            //--- Step 2! ---
+            //Then, we'll try to swap our place with a track that makes use of preset 0x7F, which is used for drums usually.
+            deque<std::pair<size_t,size_t>> drumusingchans; //First is track index, second is channel it uses
+
+            for( size_t cnttrk = 1; cnttrk < m_seq.getNbTracks(); ++cnttrk ) //Skip track 1 again
+            {
+                for( size_t cntev = 0; cntev < m_seq[cnttrk].size(); ++cntev )
+                {
+                    if( m_seq[cnttrk][cntev].evcode == static_cast<uint8_t>(eTrkEventCodes::SetPreset) && 
+                        m_seq[cnttrk][cntev].params.front() == 0x7F )
+                    {
+                        drumusingchans.push_back( make_pair( cnttrk, m_seq[cnttrk].GetMidiChannel() ) );
+
+                        //If one of the tracks we have is using channel 10 AND is using preset 0x7F, remove it from the list
+                        // as it doesn't need to be relocated!
+                        auto itfound = std::find( chan10trks.begin(), chan10trks.end(), cnttrk );
+                        if( itfound != chan10trks.end() )
+                            chan10trks.erase(itfound);
+                    }
+                }
+            }
+
+            //Now, do the actual swapping!
+            if( !drumusingchans.empty() )
+            {
+                for( /*size_t cnttrks = 0*/; !chan10trks.empty() && !drumusingchans.empty(); /*++cnttrks*/ )
+                {
+                    auto drumuserchan = drumusingchans.back();
+
+                    uint8_t prevchan                 = m_trkchanmap[chan10trks.back()];
+                    m_trkchanmap[chan10trks.back()]  = m_trkchanmap[drumuserchan.first];
+                    m_trkchanmap[drumuserchan.first] = prevchan;
+
+                    drumusingchans.pop_back();
+                    chan10trks.pop_back();
+                }
+
+                //If we handled all the tracks on channel 10, we're done!
+                if( chan10trks.empty() )
+                    return;
+            }
+
+
+            // --- If we get here, we're screwed! ---
+            clog << "<!>- Warning: Unable to reassign the channels for track(s) ";
+
+            for( const auto & entry : chan10trks )
+                clog << entry << " ";
+
+            clog << " !\n";
         }
 
 
@@ -940,8 +1139,15 @@ namespace DSE
                     !ShouldExportEventsPastEoT() )
                     break; //Break on 0x98 as requested 
 
+                //In GM mode, try to avoid putting any instruments on channel 10 as much as possible.
+                // The user will supply what to play on what channel in the conversion info
+                uint8_t prefchan = m_seq[intrk].GetMidiChannel();
+
+                if( m_midimode == eMIDIMode::GM )   //In GM mode, use our remapped channel table
+                    prefchan = m_trkchanmap[intrk];
+
                 HandleEvent( intrk, 
-                             m_seq[intrk].GetMidiChannel(), 
+                             prefchan, 
                              m_trkstates[intrk], 
                              m_seq[intrk][evno], 
                              *(m_midiout.GetTrack(outtrk)) );
@@ -991,12 +1197,16 @@ namespace DSE
         const SMDLPresetConversionInfo   * m_convtable;
         bool                               m_hasconvtbl;    //Whether we should use the conv table at all
         uint32_t                           m_nbloops;
-        eMIDIFormat                        m_midifmt;
+        /*eMIDIFormat                        m_midifmt;*/
         eMIDIMode                          m_midimode;
 
         //State variables
         std::vector<TrkState>              m_trkstates;
         std::vector<TrkState>              m_beflooptrkstates; //Saved states of each tracks just before the loop point event! So we can restore each tracks to their intended initial states.
+        std::vector<uint8_t>               m_trkchanmap;       //Contains the channel to use for each tracks. This overrides what's in the sequence!
+        std::deque<size_t>                 m_trackpriorityq;   //tracks are ordered in this vector to be parsed in that order. Mainly to ensure tracks that have key remaps in which the channel is forced to something are handled first!
+        std::vector<deque<uint32_t>>       m_chanreqpresresets; //The times for each tracks when we need to re-establish the current program + bank, after having other tracks play events on our MIDI channel!.  
+        
         uint32_t                           m_songlsttick;      //The very last tick of the song
 
         bool                               m_bTrackLoopable;
@@ -1320,7 +1530,7 @@ namespace DSE
                          const MusicSequence            & seq, 
                          const SMDLPresetConversionInfo & remapdata,
                          int                              nbloop,
-                         eMIDIFormat                      midfmt,
+                         /*eMIDIFormat                      midfmt,*/
                          eMIDIMode                        midmode )
     {
         if( utils::LibWide().isLogOn() )
@@ -1329,13 +1539,13 @@ namespace DSE
                  << "Converting SMDL to MIDI " <<outmidi << "\n"
                  << "================================================================================\n";
         }
-        DSESequenceToMidi( outmidi, seq, remapdata, midfmt, midmode, nbloop )();
+        DSESequenceToMidi( outmidi, seq, remapdata, /*midfmt,*/ midmode, nbloop )();
     }
 
     void SequenceToMidi( const std::string              & outmidi, 
                          const MusicSequence            & seq, 
                          int                              nbloop,
-                         eMIDIFormat                      midfmt,
+                         /*eMIDIFormat                      midfmt,*/
                          eMIDIMode                        midmode )
     {
         if( utils::LibWide().isLogOn() )
@@ -1344,6 +1554,6 @@ namespace DSE
                  << "Converting SMDL to MIDI " <<outmidi << "\n"
                  << "================================================================================\n";
         }
-        DSESequenceToMidi( outmidi, seq, midfmt, midmode, nbloop )();
+        DSESequenceToMidi( outmidi, seq, /*midfmt,*/ midmode, nbloop )();
     }
 };

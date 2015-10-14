@@ -51,6 +51,7 @@ namespace DSE
         eoc  = 0x656F6320, //"eoc\0x20"
         eod  = 0x656F6420, //"eod\0x20"
     };
+    const int                 NbMidiChannels  = 16;
     static const unsigned int NB_DSEChunks    = 11;
     static const uint32_t     SpecialChunkLen = 0xFFFFFFB0; //Value some special chunks have as their length
 

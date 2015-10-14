@@ -117,15 +117,15 @@ namespace audioutil
     const vector<optionparsing_t> CAudioUtil::Options_List=
     {{
         //Tweak for General Midi format
-        //{
-        //    "gm",
-        //    0,
-        //    "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
-        //    "Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
-        //    "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
-        //    "-gm",
-        //    std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
-        //},
+        {
+            "gm",
+            0,
+            "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
+            "Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
+            "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
+            "-gm",
+            std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
+        },
 
         //Force Loops
         {
@@ -554,6 +554,8 @@ namespace audioutil
     //#TODO: not sure if this is still relevant..
     int CAudioUtil::ExportSWDLBank()
     {
+        cout<< "Not implemented!\n";
+        assert(false);
         return -1;
     }
 
@@ -564,6 +566,9 @@ namespace audioutil
     {
         using namespace pmd2::audio;
         Poco::Path inputdir(m_inputPath);
+
+        if( m_bGM )
+            clog<<"<!>- Warning: Commandlin parameter GM specified, but GM conversion of PMD2 is currently unsuported! Falling back to Roland GS conversion!\n";
 
         //validate the /SOUND/BGM directory
         Poco::File bgmdir( Poco::Path(inputdir).append( "SOUND" ).append("BGM") );
@@ -691,32 +696,14 @@ namespace audioutil
             throw std::runtime_error( "Couldn't create output directory " + outNewDir.path() );
         }
 
+        cout << "Exporting SWDL:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outNewDir.path() <<"\"\n";   
+
         //Load SWDL
         PresetBank swd = LoadSwdBank( inputfile.toString() );
-
         ExportPresetBank( outNewDir.path(), swd );
-
-        //auto instptr  = swd.instbank().lock();
-        //auto smplsptr = swd.smplbank().lock();
-
-        //Export Samples
-        //if( smplsptr != nullptr )
-        //{
-        //}
-        //else
-        //{
-        //    cout <<"No samples to export!\n";
-        //}
-
-        ////Export instrument data
-        //if( instptr != nullptr )
-        //{
-        //}
-        //else
-        //{
-        //    cout <<"No instrument data to export!\n";
-        //}
-
         return 0;
     }
 
@@ -724,20 +711,31 @@ namespace audioutil
 
 
 
-    void ExportASequenceToMidi( const MusicSequence & seq, const string pairname, Poco::Path outputfile, const std::string & convinfo, int nbloops )
+    void ExportASequenceToMidi( const MusicSequence & seq, 
+                                const string          pairname, 
+                                Poco::Path            outputfile, 
+                                const std::string   & convinfo, 
+                                int                   nbloops, 
+                                bool                  asGM )
     {
+        DSE::eMIDIMode convmode = (asGM)? DSE::eMIDIMode::GM : DSE::eMIDIMode::GS;
+
+        if( asGM )
+            cout << "<*>- Conversion mode set to General MIDI instead of the default Roland GS!\n";
+        else
+            cout << "<*>- Conversion mode set to Roland GS!\n";
+
         //Check if we have conversion info supplied
         if( ! convinfo.empty() )
         {
             cout << "<*>- Conversion info supplied! MIDI will be remapped accordingly!\n";
-            //# Parse conversion file here and fill the conversion table!
 
             DSE::SMDLConvInfoDB cvinf( convinfo );
             auto itfound = cvinf.FindConversionInfo( pairname );
 
             if( itfound != cvinf.end() )
             {
-                DSE::SequenceToMidi( outputfile.toString(), seq, itfound->second, nbloops );
+                DSE::SequenceToMidi( outputfile.toString(), seq, itfound->second, nbloops, convmode );
                 return;
             }
             else
@@ -745,7 +743,7 @@ namespace audioutil
         }
 
         cout << "<*>- Conversion info not supplied! The SMDL will be exported as-is!\n";
-        DSE::SequenceToMidi( outputfile.toString(), seq );
+        DSE::SequenceToMidi( outputfile.toString(), seq, nbloops, convmode );
     }
 
 
@@ -764,6 +762,11 @@ namespace audioutil
 
         outfname = outputfile.getBaseName();
 
+        cout << "Exporting SMDL:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outfname <<"\"\n";
+
         //Check if we have a matching swd!
         Poco::Path matchingswd(inputfile);
         matchingswd.setExtension( "swd" );
@@ -775,9 +778,10 @@ namespace audioutil
 
             if( matchswdhdr.DoesContainsSamples() )
             {
+                cout << "<*>- Found a matching SWDL file containing samples! Exporting a Soundfont along the MIDI!\n";
                 //If the swdl contains samples, we don't need to load a master bank!
 
-                cout<<"#TODO\n";
+                cout<< "Not implemented!\n";
                 assert(false);
                 //#Load SWDL
 
@@ -807,6 +811,7 @@ namespace audioutil
 
                 if( foundsmplbank )
                 {
+                    cout << "<*>- Found a matching SWDL refering to another SWDL bank file containing samples! Exporting a Soundfont along the MIDI!\n";
                     BatchAudioLoader myloader(mainbankpath);
                     //#Proceed with export
                     cout << "<*>- Loading main bank file \"" <<mainbankpath <<"\"...";
@@ -821,15 +826,21 @@ namespace audioutil
 
                     return 0;
                 }
+                else
+                    cout << "<!>- Found a matching SWDL refering to another SWDL bank file containing samples! However, the sample bank was not found! Falling back to only exporting a MIDI file!\n";
                 
             }
         }
+        else
+            cout << "<!>- Couldn't find a matching SWDL ! Falling back to only exporting a MIDI file!\n";
+
+        cout << "<*>- Exporting SMDL to MIDI !\n";
 
         //By default export a sequence only!
         MusicSequence smd = LoadSequence( inputfile.toString() );
         outputfile.setExtension("mid");
 
-        ExportASequenceToMidi( smd, inputfile.getBaseName(), outputfile.toString(), m_convinfopath, m_nbloops );
+        ExportASequenceToMidi( smd, inputfile.getBaseName(), outputfile.toString(), m_convinfopath, m_nbloops, m_bGM );
 
         //Write meta
         //#Write the info that didn't fit in the midi here as XML.
@@ -839,24 +850,28 @@ namespace audioutil
 
     int CAudioUtil::ExportSEDL()
     {
+        cout<< "Not implemented!\n";
         assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSWDL()
     {
+        cout<< "Not implemented!\n";
         assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSMDL()
     {
+        cout<< "Not implemented!\n";
         assert(false);
         return 0;
     }
 
     int CAudioUtil::BuildSEDL()
     {
+        cout<< "Not implemented!\n";
         assert(false);
         return 0;
     }
