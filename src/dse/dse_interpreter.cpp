@@ -437,10 +437,10 @@ namespace DSE
                         //For single track mode, we only put a single loop start marker
                         //if( m_midifmt == eMIDIFormat::SingleTrack )
                         //{
-                            if( !m_bLoopBegSet )
-                            {
+                            //if( !m_bLoopBegSet )
+                            //{
                                 m_bLoopBegSet = true;
-                            }
+                            //}
                         //}
 
                         //Mark the loop position for each tracks
@@ -491,6 +491,7 @@ namespace DSE
             //--- Remap the note ---
             mnoteid = remapdata.destnote;
 
+
             //First, check if we're playing a note past when the channel's preset + bank was changed by a previously processed track 
             if( m_midimode == eMIDIMode::GM && 
                !m_chanreqpresresets[trkchan].empty() && 
@@ -522,6 +523,7 @@ namespace DSE
                 //Remove from the list!
                 m_chanreqpresresets[trkchan].pop_front();
             }
+
 
             //Check if we should do an override, or restore the bank + preset
             if( state.presetoverriden && 
@@ -695,6 +697,7 @@ namespace DSE
                 //Handle channel overrides for the preset, and for each notes
                 trkchan = HandleChannelOverride( trkchan, state, remapdata );
 
+
                 //Handle preset overrides for each notes
                 HandleBankAndPresetOverrides( trkno, trkchan, state, outtrack, mnoteid, remapdata );
 
@@ -722,6 +725,7 @@ namespace DSE
             MIDITimedBigMessage noteoff;
             uint32_t            noteofftime = state.ticks_ + state.lasthold_;
 
+
             //Check if we should cut the duration the key is held down.
             if( m_hasconvtbl )
             {
@@ -730,6 +734,7 @@ namespace DSE
                 if( itfound != m_convtable->end() && itfound->second.maxkeydowndur != 0 )
                     noteofftime = utils::Clamp( state.lasthold_, 0ui32, itfound->second.maxkeydowndur );
             }
+
 
             noteoff.SetTime( noteofftime );
             noteoff.SetNoteOff( trkchan, (mnoteid & 0x7F), static_cast<uint8_t>(ev.evcode & 0x7F) ); //Set proper channel from original track eventually !!!!
@@ -914,7 +919,7 @@ namespace DSE
             else
             {
                 m_trackpriorityq.resize(m_seq.getNbTracks());
-                std::iota( m_trackpriorityq.begin(), m_trackpriorityq.end(), 0 );
+                std::iota( m_trackpriorityq.begin(), m_trackpriorityq.end(), 0 ); //Fill up the queue sequentially otherwise 0..15
             }
 
             //Play all tracks at least once
@@ -927,6 +932,10 @@ namespace DSE
                 if( m_songlsttick < m_trkstates[curtrk].ticks_ )
                     m_songlsttick = m_trkstates[curtrk].ticks_;
             }
+
+            //Just mark the end of the loop when we're not looping ourselves via code. This prevents there being a delay when looping in external players!
+            if( m_nbloops == 0 )
+                m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
 
             //Insert a single loop end event!
             if( m_bTrackLoopable )
@@ -947,10 +956,6 @@ namespace DSE
                     }
                 }
             }
-            //else
-            //{
-            //    m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
-            //}
         }
 
         /*
