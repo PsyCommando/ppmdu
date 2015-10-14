@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <locale>
+#include <codecvt>
 #include <map>
 using namespace std;
 
@@ -167,98 +168,98 @@ namespace pmd2 { namespace filetypes
             :m_txtstr(textstr), m_locale(txtloc)
         {}
 
-    /*
-        Returns the nb of characters that were treated as part of the escaped char
-    */
-    template<class _itout>
-        unsigned int HandleEscapedChar( _itout & itwrite, const std::string & textafterbs, const std::locale & txtloc )
-    {
-        unsigned int escLen = 1; //in case of error use as a single char
-
-        //If the character is a backslash, and there is at least another value in the string
-        char nextchar = textafterbs.front();
-
-        //Expedite string endings handling
-        if( nextchar == '0' )
+        /*
+            Returns the nb of characters that were treated as part of the escaped char
+        */
+        template<class _itout>
+            unsigned int HandleEscapedChar( _itout & itwrite, const std::string & textafterbs, const std::locale & txtloc )
         {
-            (*itwrite) = static_cast<unsigned char>(0);
-            ++itwrite;
-            return 2;
-        }
+            unsigned int escLen = 1; //in case of error use as a single char
 
-        if( isprint(nextchar,txtloc) ) 
-        {
-            //If the next character is printable
-            if( isalpha( nextchar, txtloc )  || ispunct(nextchar, txtloc) )
+            //If the character is a backslash, and there is at least another value in the string
+            char nextchar = textafterbs.front();
+
+            //Expedite string endings handling
+            if( nextchar == '0' )
             {
-
-                escLen = 2;
-
-                //If its a letter or punctuation char
-                switch(nextchar)
-                {
-                    case'n':
-                    {
-                        (*itwrite) = '\n';
-                        break;
-                    }
-                    case 't':
-                    {
-                        (*itwrite) = '\t';
-                        break;
-                    }
-                    case '\\':
-                    {
-                        (*itwrite) = '\\';
-                        break;
-                    }
-                    case '\b':
-                    {
-                        (*itwrite) = '\b';
-                        break;
-                    }
-                    default:
-                    {
-                        clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
-                        (*itwrite) = '\\'; //Not an escaped character
-                        escLen = 1;
-                    }
-                };
-
+                (*itwrite) = static_cast<unsigned char>(0);
                 ++itwrite;
+                return 2;
             }
-            else if( isdigit(nextchar, txtloc) )
+
+            if( isprint(nextchar,txtloc) ) 
             {
-                //If its a number
-                stringstream parse;
-                unsigned short valread = 0; 
-                parse.imbue( txtloc );
+                //If the next character is printable
+                if( isalpha( nextchar, txtloc )  || ispunct(nextchar, txtloc) )
+                {
+
+                    escLen = 2;
+
+                    //If its a letter or punctuation char
+                    switch(nextchar)
+                    {
+                        case'n':
+                        {
+                            (*itwrite) = '\n';
+                            break;
+                        }
+                        case 't':
+                        {
+                            (*itwrite) = '\t';
+                            break;
+                        }
+                        case '\\':
+                        {
+                            (*itwrite) = '\\';
+                            break;
+                        }
+                        case '\b':
+                        {
+                            (*itwrite) = '\b';
+                            break;
+                        }
+                        default:
+                        {
+                            clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
+                            (*itwrite) = '\\'; //Not an escaped character
+                            escLen = 1;
+                        }
+                    };
+
+                    ++itwrite;
+                }
+                else if( isdigit(nextchar, txtloc) )
+                {
+                    //If its a number
+                    stringstream parse;
+                    unsigned short valread = 0; 
+                    parse.imbue( txtloc );
                 
-                //If is decimal
-                parse << textafterbs << dec;
-                parse >> valread;
+                    //If is decimal
+                    parse << textafterbs << dec;
+                    parse >> valread;
 
-                (*itwrite) = static_cast<unsigned char>(valread);
-                ++itwrite;
+                    (*itwrite) = static_cast<unsigned char>(valread);
+                    ++itwrite;
 
-                escLen = static_cast<unsigned int>(parse.tellg()) + 1; //Account for the lenght of the number + the backslash
+                    escLen = static_cast<unsigned int>(parse.tellg()) + 1; //Account for the lenght of the number + the backslash
+                }
+                else
+                {
+                    //If its neither we have no support for that
+                    clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
+                    (*itwrite) = '\\';
+                    ++itwrite;
+                }
             }
             else
             {
-                //If its neither we have no support for that
-                clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
-                (*itwrite) = '\\';
+                (*itwrite) = '\\'; //Not an escaped character if character is unprintable
                 ++itwrite;
             }
-        }
-        else
-        {
-            (*itwrite) = '\\'; //Not an escaped character if character is unprintable
-            ++itwrite;
-        }
 
-        return escLen;
-    }
+            return escLen;
+        }
 
         void Write( const std::string & filepath )
         {

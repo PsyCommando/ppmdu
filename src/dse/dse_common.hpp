@@ -15,12 +15,21 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <string>
 #include <map>
 #include <cassert>
+#include <limits>
 
 namespace DSE
 {
 //====================================================================================================
 //  Typedefs
 //====================================================================================================
+    typedef uint16_t dsepresetid_t;
+    typedef uint16_t bankid_t;
+    typedef uint8_t  presetid_t;
+    typedef uint8_t  midinote_t;
+
+    const bankid_t      InvalidBankID      = USHRT_MAX;
+    const presetid_t    InvalidPresetID    = UCHAR_MAX;
+    const dsepresetid_t InvalidDSEPresetID = USHRT_MAX;
 
 //====================================================================================================
 //  Constants
@@ -42,6 +51,7 @@ namespace DSE
         eoc  = 0x656F6320, //"eoc\0x20"
         eod  = 0x656F6420, //"eod\0x20"
     };
+    const int                 NbMidiChannels  = 16;
     static const unsigned int NB_DSEChunks    = 11;
     static const uint32_t     SpecialChunkLen = 0xFFFFFFB0; //Value some special chunks have as their length
 
@@ -603,8 +613,8 @@ namespace DSE
             uint16_t unk23    = 0; //0x1C
             uint16_t unk24    = 0; //0x1E
             //The last 16 bytes are a perfect copy of the last 16 bytes of a wavi info block
-            uint8_t  mulatk   = 0; //0x20 //Multiplier for the attack param
-            uint8_t  mul2     = 0; //0x21 //Multiplier for other envelope params
+            uint8_t  envon   = 0; //0x20 
+            uint8_t  envmult     = 0; //0x21 //Multiplier for other envelope params
             uint8_t  unk37    = 0; //0x22
             uint8_t  unk38    = 0; //0x23
             uint16_t unk39    = 0; //0x24
@@ -644,7 +654,7 @@ namespace DSE
                 itwriteto = utils::WriteIntToByteVector( smplid,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( tune,     itwriteto );
-                itwriteto = utils::WriteIntToByteVector( kgrpid,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( cutgrp,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( rootkey,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( ctune,    itwriteto );
@@ -657,24 +667,24 @@ namespace DSE
                 itwriteto = utils::WriteIntToByteVector( unk23,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk24,    itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( mulatk,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( mul2,     itwriteto );
+                itwriteto = utils::WriteIntToByteVector( envon,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( envmult,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk37,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk38,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk39,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( unk40,    itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( atkvol,   itwriteto );
-                itwriteto = utils::WriteIntToByteVector( attack,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( attack,   itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( decay, itwriteto );
-                itwriteto = utils::WriteIntToByteVector( sustain,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( decay,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( sustain,  itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( hold,  itwriteto );
+                itwriteto = utils::WriteIntToByteVector( hold,     itwriteto );
                 itwriteto = utils::WriteIntToByteVector( decay2,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( release,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( rx, itwriteto );
+                itwriteto = utils::WriteIntToByteVector( rx,       itwriteto );
                 return itwriteto;
             }
 
@@ -701,7 +711,7 @@ namespace DSE
                 itReadfrom = utils::ReadIntFromByteContainer( smplid,   itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( tune,     itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( kgrpid,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( cutgrp,   itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( rootkey,  itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( ctune,    itReadfrom );
@@ -714,8 +724,8 @@ namespace DSE
                 itReadfrom = utils::ReadIntFromByteContainer( unk23,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk24,    itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( mulatk,   itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( mul2,     itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( envon,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( envmult,  itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk37,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk38,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( unk39,    itReadfrom );

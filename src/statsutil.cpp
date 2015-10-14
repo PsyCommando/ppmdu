@@ -4,6 +4,7 @@
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
+#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -12,10 +13,12 @@
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
+#include <utils/library_wide.hpp>
 using namespace ::std;
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::pmd2::stats;
+using namespace ::pmd2;
 
 namespace statsutil
 {
@@ -50,6 +53,8 @@ namespace statsutil
     //const std::string CStatsUtil::DefExportItemsDir  = "items_data";
     const std::string CStatsUtil::DefExportAllDir    = "exported_data";
     const std::string CStatsUtil::DefLangConfFile    = "gamelang.xml";
+
+    const std::string CStatsUtil::DefExportScriptsDir = "exported_scripts";
 
 //------------------------------------------------
 //  Arguments Info
@@ -147,6 +152,15 @@ namespace statsutil
             "-str",
             std::bind( &CStatsUtil::ParseOptionStrings, &GetInstance(), placeholders::_1 ),
         },
+        //Game Scripts only
+        {
+            "scr",
+            0,
+            "Specifying this will import or export only the game scripts!",
+            "-scr",
+            std::bind( &CStatsUtil::ParseOptionScripts, &GetInstance(), placeholders::_1 ),
+        },
+
         //Force a locale string
         {
             "locale",
@@ -166,7 +180,7 @@ namespace statsutil
             std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
         },
 
-        //Specify path to gamelang.xml
+        //Turns on logging
         {
             "log",
             0,
@@ -202,6 +216,7 @@ namespace statsutil
         m_langconf        = DefLangConfFile;
         m_flocalestr      = "";
         m_shouldlog       = false;
+        m_hndlScripts     = false;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -288,6 +303,7 @@ namespace statsutil
             }
             catch(exception & )
             {
+                cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 return false;
             }
@@ -321,6 +337,13 @@ namespace statsutil
     {
         m_shouldlog = true;
         m_redirectClog.Redirect( "log.txt" );
+        utils::LibWide().isLogOn(true);
+        return true;
+    }
+
+    bool CStatsUtil::ParseOptionScripts( const std::vector<std::string> & optdata )
+    {
+        m_hndlScripts = true;
         return true;
     }
 
@@ -340,7 +363,14 @@ namespace statsutil
         }
         catch( Poco::Exception pex )
         {
-            cerr <<"\n<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<"\n" <<endl;
+            stringstream sstr;
+            sstr <<"\n<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<"\n" <<endl;
+            string strer = sstr.str(); 
+            cerr << strer;
+
+            if( utils::LibWide().isLogOn() )
+                clog << strer;
+
             cout <<"=======================================================================\n"
                  <<"Readme\n"
                  <<"=======================================================================\n";
@@ -349,7 +379,14 @@ namespace statsutil
         }
         catch( exception e )
         {
-            cerr <<"\n<!>-Exception: " << e.what() <<"\n" <<endl;
+            stringstream sstr;
+            sstr <<"\n<!>-Exception: " << e.what() <<"\n" <<endl;
+            string strer = sstr.str(); 
+            cerr << strer;
+
+            if( utils::LibWide().isLogOn() )
+                clog << strer;
+
             cout <<"=======================================================================\n"
                  <<"Readme\n"
                  <<"=======================================================================\n";
@@ -418,6 +455,13 @@ namespace statsutil
                         m_operationMode = eOpMode::ExportPokemonData;
                     else
                         m_operationMode = eOpMode::ImportPokemonData;
+                }
+                else if( m_hndlScripts )
+                {
+                    if( m_force == eOpForce::Export )
+                        m_operationMode = eOpMode::ExportGameScripts;
+                    else
+                        m_operationMode = eOpMode::ImportGameScripts;
                 }
                 else
                 {
@@ -497,6 +541,19 @@ namespace statsutil
                     returnval = DoExportGameStringsFromFile();
                     break;
                 }
+                case eOpMode::ImportGameScripts:
+                {
+                    cout << "=== Importing game scripts ===\n";
+                    returnval = DoImportGameScripts();
+                    break;
+                }
+                case eOpMode::ExportGameScripts:
+                {
+                    cout << "=== Exporting game scripts ===\n";
+                    returnval = DoExportGameScripts();
+                    break;
+                }
+
                 case eOpMode::ImportAll:
                 {
                     cout << "=== Importing ALL ===\n";
@@ -517,11 +574,11 @@ namespace statsutil
         }
         catch(Poco::Exception & e )
         {
-            cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
+            clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
         }
         catch( exception &e )
         {
-            cerr <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
+            clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
         }
         return returnval;
     }
@@ -548,7 +605,7 @@ namespace statsutil
         if( !utils::isFolder( m_outputPath ) )
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
-        CGameStats gstats( m_outputPath, m_langconf );
+        GameStats gstats( m_outputPath, m_langconf );
         gstats.ImportPkmn( m_inputPath );
         gstats.WritePkmn( m_outputPath );
         return 0;
@@ -561,14 +618,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefPkmnDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefPkmnDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadPkmn();
 
         //Test output path
@@ -590,7 +647,7 @@ namespace statsutil
         if( !utils::isFolder( m_outputPath ) )
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
-        CGameStats gstats( m_outputPath, m_langconf );
+        GameStats gstats( m_outputPath, m_langconf );
         gstats.ImportItems( m_inputPath );
         gstats.WriteItems( m_outputPath );
         return 0;
@@ -603,14 +660,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefItemsDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefItemsDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadItems();
 
         //Test output path
@@ -637,7 +694,7 @@ namespace statsutil
 
         outpath = Poco::Path(m_outputPath);
 
-        CGameStats gstats ( m_outputPath, m_langconf );
+        GameStats gstats ( m_outputPath, m_langconf );
         gstats.ImportMoves( m_inputPath );
         gstats.WriteMoves ( m_outputPath );
 
@@ -651,14 +708,14 @@ namespace statsutil
         
         if( m_outputPath.empty() )
         {
-            outpath = inpath.absolute().makeParent().append(CGameStats::DefMvDir);
+            outpath = inpath.absolute().makeParent().append(GameStats::DefMvDir);
         }
         else
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.LoadMoves();
 
         //Test output path
@@ -684,7 +741,7 @@ namespace statsutil
         if( utils::isFolder( m_outputPath ) )
         {
             outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
-            CGameStats gstats( outpath.toString(), m_langconf );
+            GameStats gstats( outpath.toString(), m_langconf );
             gstats.AnalyzeGameDir();
             gstats.ImportStrings( m_inputPath );
             gstats.WriteStrings();
@@ -728,7 +785,7 @@ namespace statsutil
         if( !m_forcedLocale )
         {
             cout << "Detecting game language...\n";
-            CGameStats mystats( m_inputPath, m_langconf );
+            GameStats mystats( m_inputPath, m_langconf );
             mystats.LoadStrings();
             cout << "Writing...\n";
             mystats.ExportStrings( outpath.toString() );
@@ -774,7 +831,7 @@ namespace statsutil
 
         outpath = Poco::Path(m_outputPath);
 
-        CGameStats gstats ( m_outputPath, m_langconf );
+        GameStats gstats ( m_outputPath, m_langconf );
         gstats.ImportAll( m_inputPath );
         gstats.Write();
         return 0;
@@ -794,7 +851,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        CGameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_inputPath, m_langconf );
         gstats.Load();
 
         //Test output path
@@ -805,6 +862,58 @@ namespace statsutil
             fTestOut.createDirectory();
         }
         gstats.ExportAll(outpath.toString());
+        return 0;
+    }
+
+    int CStatsUtil::DoExportGameScripts()
+    {
+        //Validate output + input paths
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+            outpath = inpath.absolute().makeParent().append(DefExportScriptsDir);
+        else
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+
+        Poco::File fTestOut = outpath;
+        if( ! fTestOut.exists() )
+        {
+            cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+            fTestOut.createDirectory();
+        }
+        else if( ! fTestOut.isDirectory() )
+            throw runtime_error("CStatsUtil::DoExportGameScripts(): Output path is not a directory!");
+
+        //Setup the script handler
+        GameScripts scripts( inpath.absolute().toString() );
+
+        //Convert to XML
+        scripts.ExportScriptsToXML( outpath.toString() );
+
+        return 0;
+    }
+
+    int CStatsUtil::DoImportGameScripts()
+    {
+        //Validate output + input paths
+        Poco::Path inpath(m_inputPath);
+        Poco::Path outpath;
+
+        if( m_outputPath.empty() )
+            throw runtime_error("CStatsUtil::DoImportGameScripts() : Output path is empty!");
+            
+        if( !utils::isFolder( m_outputPath ) )
+            throw runtime_error("CStatsUtil::DoImportGameScripts() : Output path doesn't exist, or isn't a directory!");
+
+        outpath = Poco::Path(m_outputPath);
+
+        //Setup the script handler
+        GameScripts scripts( outpath.absolute().toString() );
+
+        //Import from XML
+        scripts.ImportScriptsFromXML( inpath.absolute().toString() );
+
         return 0;
     }
 

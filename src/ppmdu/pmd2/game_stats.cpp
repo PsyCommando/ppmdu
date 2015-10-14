@@ -5,7 +5,6 @@
 #include <ppmdu/fmts/m_level.hpp>
 #include <ppmdu/fmts/text_str.hpp>
 #include <ppmdu/fmts/item_p.hpp>
-#include <utils/config_io.hpp>
 #include <pugixml.hpp>
 #include <utils/parse_utils.hpp>
 #include <utils/library_wide.hpp>
@@ -27,19 +26,19 @@ namespace pmd2{ namespace stats
     static const string BalanceDirectory  = "BALANCE";
     static const string GameTextDirectory = "MESSAGE";
 
-    std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
-    {
-        "",
-        "EoS",
-        "EoTD",
-    };
+    //std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
+    //{
+    //    "",
+    //    "EoS",
+    //    "EoTD",
+    //};
 
 
-    const string CGameStats::DefPkmnDir    = "pokemon_data";
-    const string CGameStats::DefMvDir      = "move_data";
-    const string CGameStats::DefStrFName   = "game_text.txt";
-    const string CGameStats::DefItemsDir   = "item_data";
-    const string CGameStats::DefDungeonDir = "dungeon_data";
+    const string GameStats::DefPkmnDir    = "pokemon_data";
+    const string GameStats::DefMvDir      = "move_data";
+    const string GameStats::DefStrFName   = "game_text.txt";
+    const string GameStats::DefItemsDir   = "item_data";
+    const string GameStats::DefDungeonDir = "dungeon_data";
 
 //==========================================================================================
 //  Utilities
@@ -51,328 +50,27 @@ namespace pmd2{ namespace stats
     bool isImportAllDir( const std::string & directory )
     {
         //Check for one of the required directories
-        const string pkmndir = Poco::Path(directory).append(CGameStats::DefPkmnDir ).makeDirectory().toString();
-        const string mvdir   = Poco::Path(directory).append(CGameStats::DefItemsDir).makeDirectory().toString();
-        const string itemdir = Poco::Path(directory).append(CGameStats::DefMvDir   ).makeDirectory().toString();
+        const string pkmndir = Poco::Path(directory).append(GameStats::DefPkmnDir ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).append(GameStats::DefItemsDir).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).append(GameStats::DefMvDir   ).makeDirectory().toString();
         return ( utils::isFolder(pkmndir) || utils::isFolder(mvdir) || utils::isFolder(itemdir) );
     }
 
 
-//==========================================================================================
-//  GameLanguageLoader
-//==========================================================================================
-    namespace GameLangXMLStr
-    {
-        static const std::string ROOT_StrIndexes = "StringIndexData";
-
-        static const std::string NODE_GameDef    = "Game";
-        static const std::string NODE_Language   = "Language";
-        static const std::string NODE_StrBlock   = "StringBlock";
-
-        static const std::string PROP_Name       = "Name";
-        static const std::string PROP_BegIndex   = "Begin";
-        static const std::string PROP_EndIndex   = "End";
-        
-        static const std::string ATTR_Name       = "name";
-        static const std::string ATTR_StrFileName= "strfile";
-        static const std::string ATTR_LocaleStr  = "locale";
-    };
-
-    static const string DefMoveData1ExportDir = "move_data1";
-    static const string DefMoveData2ExportDir = "move_data2";
-
-    static const array<string, static_cast<uint32_t>(CGameStats::eStrBNames::NBEntries)> StrBlocksNames = 
-    {
-        "Pokemon Names",
-        "Pokemon Categories",
-
-        "Move Names",
-        "Move Descriptions",
-
-        "Item Names",
-        "Item Short Descriptions",
-        "Item Long Descriptions",
-
-        "Ability Names",
-        "Ability Descriptions",
-
-        "Type Names",
-    };
-
-    /************************************************************************************
-        GameLangXMLParser
-            Parse the gamelang.xml file that contains the proper offsets for all strings
-            for the supported game languages and versions!
-    ************************************************************************************/
-    class GameLangXMLParser
-    {
-        typedef GameLanguageLoader::blockoffs_t strblock_t;
-    public:
-        GameLangXMLParser(GameLanguageLoader& target)
-            :m_target(target)
-        {}
-
-        void Parse(const std::string & confFilePath )
-        {
-            using namespace pugi;
-            using namespace GameLangXMLStr;
-            std::ifstream ingamelang( confFilePath );
-            xml_document  langconf;
-
-            if( ingamelang.bad() || !ingamelang.is_open() )
-            {
-                stringstream sstr;
-                sstr << "Error: The XML file with info on the game's string data \""
-                     <<confFilePath << "\" cannot be opened for some reasons..";
-                string errorstr = sstr.str();
-                clog << errorstr <<"\n";
-                throw std::runtime_error( errorstr );
-            }
-
-            if( ! langconf.load(ingamelang) )
-                throw std::runtime_error("Failed to create xml_document for parsing game language config file!");
-
-            //iterate through all game definitions
-            for( auto & gamedef : langconf.child(ROOT_StrIndexes.c_str()).children( NODE_GameDef.c_str() ) )
-            {
-                try
-                {
-                    if( !gamedef.empty() )
-                        ParseGameDef(gamedef);
-                    else
-                        clog << "An empty \"" <<NODE_GameDef <<"\" node was ignored!\n";
-                }
-                catch( exception & )
-                {
-                    clog << "An invalid \"" <<NODE_GameDef <<"\" node was ignored!\n";
-                }
-            }
-        }
-
-    private:
-        void ParseGameDef(const pugi::xml_node & gamedef)
-        {
-            using namespace pugi;
-            using namespace GameLangXMLStr;
-            std::string gameName;
-
-            //Get the name
-            if( gamedef.attributes_begin() != gamedef.attributes_end() )
-            {
-                xml_attribute gamenameattr = gamedef.attribute(ATTR_Name.c_str());
-                if( !gamenameattr.empty() )
-                {
-                    gameName = gamenameattr.as_string();
-
-                    if( gameName != GameVersionNames[ static_cast<size_t>(m_target.m_gameVersion)] )
-                        return; //Don't parse what we don't need
-                }
-                else
-                {
-                    stringstream sstr;
-                    sstr <<"WARNING: Missing \"name\" attribute for \"Game\" node in the XML data!";
-                    string strerr = sstr.str();
-                    clog << strerr <<"\n";
-                    throw runtime_error(strerr);
-                }
-            }
-            else
-            {
-                stringstream sstr;
-                sstr <<"WARNING: Missing \"name\" attribute for \"Game\" node in the XML data!";
-                string strerr = sstr.str();
-                clog << strerr <<"\n";
-                throw runtime_error(strerr);
-            }
-
-            for( auto & gamelang : gamedef.children() )
-            {
-                try
-                {
-                    if( ! gamelang.empty() )
-                       m_target.m_langData.push_back( ParseLanguage( gamelang, gameName ) ); 
-                    else
-                        clog << "Empty \"" <<NODE_Language <<"\" node was ignored!\n";
-                }
-                catch( exception & )
-                {
-                    clog << "An invalid \"" <<NODE_Language <<"\" node was ignored!\n";
-                }
-            }
-        }
-
-        GameLanguageLoader::glang_t ParseLanguage(const pugi::xml_node & lang, const std::string & gamename )
-        {
-            using namespace pugi;
-            using namespace GameLangXMLStr;
-            GameLanguageLoader::glang_t gamelang;
-
-            //Get the attributes
-            if( lang.attributes_begin() != lang.attributes_end() )
-            {
-                xml_attribute langnameattr  = lang.attribute(ATTR_Name.c_str());
-                xml_attribute strfnameattr  = lang.attribute(ATTR_StrFileName.c_str());
-                xml_attribute localestrattr = lang.attribute(ATTR_LocaleStr.c_str());
-                bool          langok        = !langnameattr.empty();
-                bool          strnameok     = !strfnameattr.empty();
-                bool          localeok      = !localestrattr.empty();
-
-                if( langok && strnameok && localeok )
-                {
-                    gamelang.language     = langnameattr.as_string();
-                    gamelang.textStrFName = strfnameattr.as_string();
-                    gamelang.localeStr    = localestrattr.as_string();
-                }
-                else
-                {
-                    stringstream sstrerr;
-                    sstrerr << "ERROR: A \"Language\" node for game \"" <<gamename <<"\" is missing its \"";
-                    if( !langok )
-                        sstrerr <<"name" << ( !strnameok || !localeok )? ", and " : "";
-                    if(!strnameok)
-                        sstrerr <<"strfile" << ( !localeok )? ", and " : "";
-                    if(!localeok)
-                        sstrerr <<"locale";
-                    sstrerr << "\" attribute(s)! Skipping..";
-                    string strerr = sstrerr.str();
-                    clog << strerr <<"\n";
-                    throw runtime_error(strerr);
-                }
-            }
-            else
-            {
-                stringstream sstrerr;
-                sstrerr << "ERROR: A \"Language\" node for game \"" <<gamename <<"\" is missing all of its attributes! Skipping..";
-                string strerr = sstrerr.str();
-                clog << strerr <<"\n";
-                throw runtime_error(strerr);
-            }
-
-            //Then parse the indexes
-            for( auto & strblock : lang.children() )
-            {
-                if( ! strblock.empty() )
-                    gamelang.strBlockOffsets.insert( ParseStrBlock( strblock ) );
-                else
-                    clog << "Empty \"" <<NODE_StrBlock <<"\" node was ignored!\n";
-            }
-
-            return std::move(gamelang);
-        }
-
-        strblock_t ParseStrBlock( const pugi::xml_node & strblock )
-        {
-            using namespace pugi;
-            using namespace GameLangXMLStr;
-            string   name;
-            uint32_t begindex = 0;
-            uint32_t endindex = 0;
-
-            for( auto & ablock : strblock )
-            {
-                if( ablock.name() == PROP_Name )
-                    name = ablock.child_value();
-                else if( ablock.name() == PROP_BegIndex )
-                    begindex = utils::parseHexaValToValue<uint32_t>( ablock.child_value() );
-                else if( ablock.name() == PROP_EndIndex )
-                    endindex = utils::parseHexaValToValue<uint32_t>( ablock.child_value() );
-            }
-
-            return make_pair(name, make_pair(begindex, endindex) );
-        }
-
-        GameLanguageLoader& m_target;
-    };
-
-    GameLanguageLoader::GameLanguageLoader()
-        :m_gameVersion(eGameVersion::Invalid)
-    {}
-
-    GameLanguageLoader::GameLanguageLoader( const std::string & textFileName, eGameVersion version )
-        :m_gameVersion(version)
-    {
-        LoadFile(textFileName);
-    }
-
-    void GameLanguageLoader::LoadFile( const std::string & textFileName)
-    {
-        GameLangXMLParser(*this).Parse(textFileName);
-    }
-
-    /*
-        Using the name of the text_*.str file, this will return the corresponding
-        locale string parsed!
-    */
-    std::string GameLanguageLoader::FindLocaleString( const std::string & textFileName )const
-    {
-        for( const auto & entry : m_langData )
-        {
-            if( entry.textStrFName == textFileName )
-                return entry.localeStr;
-        }
-        return string(); //return empty if not found
-    }
-
-    /*
-        Return the language associated with a given text_*.str file.
-    */
-    std::string GameLanguageLoader::FindLanguage( const std::string & textFileName )const
-    {
-        for( const auto & entry : m_langData )
-        {
-            if( entry.textStrFName == textFileName )
-                return entry.language;
-        }
-        return string(); //return empty if not found
-    }
-
-    /*
-        Return the name of the text_*.str file associated with the specified language.
-    */
-    std::string GameLanguageLoader::FindTextStrFName( const std::string & language )const
-    {
-        for( const auto & entry : m_langData )
-        {
-            if( entry.language == language )
-                return entry.textStrFName;
-        }
-        return string(); //return empty if not found
-    }
-
-    /*
-        For a given string block name inside the text_*.str file, returns whether the 
-        block was found, and the index of the first string in that block. The result
-        is put into a pair.
-    */
-    std::pair<bool,std::pair<uint32_t,uint32_t>> GameLanguageLoader::FindStrBlockOffset( const std::string & blockName, const std::string & textFileName )const
-    {
-        for( const auto & entry : m_langData )
-        {
-            if( entry.textStrFName == textFileName )
-            {
-                auto found = entry.strBlockOffsets.find( blockName );
-                if( found != entry.strBlockOffsets.end() )
-                {
-                    return make_pair( true, found->second );
-                }
-            }
-        }
-        return make_pair(false,make_pair(uint32_t(0),uint32_t(0)));
-    }
 
 
 //==========================================================================================
-//  CGameStats
+//  GameStats
 //==========================================================================================
 
-    CGameStats::CGameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
+    GameStats::GameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
         :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
     {}
 
 //--------------------------------------------------------------
 //  Game Analysis
 //--------------------------------------------------------------
-    void CGameStats::IdentifyGameVersion()
+    void GameStats::IdentifyGameVersion()
     {
         //To identify whether its Explorers of Sky or Explorers of Time/Darkness
         // check if we have a waza_p2.bin file under the /BALANCE/ directory.
@@ -398,7 +96,7 @@ namespace pmd2{ namespace stats
         }
     }
 
-    void CGameStats::IdentifyGameLocaleStr()
+    void GameStats::IdentifyGameLocaleStr()
     {
         /*
             Load game language file
@@ -442,9 +140,9 @@ namespace pmd2{ namespace stats
             clog << "WARNING: No data found for game text file : \"" <<m_gameTextFName <<"\" ! Falling back to default locale!\n";
     }
 
-    void CGameStats::BuildListOfStringOffsets()
+    void GameStats::BuildListOfStringOffsets()
     {
-        using namespace GameLangXMLStr;
+        //using namespace GameLangXMLStr;
         m_strOffsets.resize(StrBlocksNames.size());
         bool         bencounteredError = false;
         stringstream sstr;
@@ -460,7 +158,7 @@ namespace pmd2{ namespace stats
             else
             {
                 sstr <<"ERROR: The beginning or the end of the " <<StrBlocksNames[i] 
-                     <<" string block(s) was not found in the game string location configuration file!\n";
+                     <<" string block(s) was not found in the game string location configuration file!\n\n";
                 bencounteredError = true;
             }
         }
@@ -470,7 +168,7 @@ namespace pmd2{ namespace stats
         {
             string strerr = sstr.str();
             clog << strerr <<"\n";
-            throw runtime_error( strerr );
+            //throw runtime_error( strerr );
         }
     }
 
@@ -478,7 +176,7 @@ namespace pmd2{ namespace stats
 //  Loading
 //--------------------------------------------------------------
 
-    void CGameStats::Load()
+    void GameStats::Load()
     {
         //First identify what we're dealing with
         AnalyzeGameDir();
@@ -487,7 +185,7 @@ namespace pmd2{ namespace stats
         _LoadItemData();
     }
 
-    void CGameStats::Load( const std::string & rootdatafolder )
+    void GameStats::Load( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -495,13 +193,13 @@ namespace pmd2{ namespace stats
         Load();
     }
 
-    void CGameStats::LoadStrings()
+    void GameStats::LoadStrings()
     {
         AnalyzeGameDir();
         _LoadGameStrings();
     }
 
-    void CGameStats::LoadStrings( const std::string & rootdatafolder )
+    void GameStats::LoadStrings( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -509,14 +207,14 @@ namespace pmd2{ namespace stats
         LoadStrings();
     }
 
-    void CGameStats::_LoadGameStrings()
+    void GameStats::_LoadGameStrings()
     {
         stringstream sstr;
         sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
         m_gameStrings = filetypes::ParseTextStrFile( sstr.str(), std::locale( m_gameLangLocale ) );
     }
 
-    void CGameStats::_EnsureStringsLoaded()
+    void GameStats::_EnsureStringsLoaded()
     {
         if( m_gameStrings.empty() )
         {
@@ -525,14 +223,14 @@ namespace pmd2{ namespace stats
         }
     }
 
-    void CGameStats::LoadPkmn()
+    void GameStats::LoadPkmn()
     {
         AnalyzeGameDir();
         _LoadGameStrings();
         _LoadPokemonAndMvData();
     }
 
-    void CGameStats::LoadPkmn( const std::string & rootdatafolder )
+    void GameStats::LoadPkmn( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -540,7 +238,7 @@ namespace pmd2{ namespace stats
         LoadPkmn();
     }
 
-    void CGameStats::_LoadPokemonAndMvData()
+    void GameStats::_LoadPokemonAndMvData()
     {
         using namespace ::filetypes;
         stringstream sstrMd;
@@ -568,7 +266,7 @@ namespace pmd2{ namespace stats
         cout << "Done!\n";
     }
 
-    void CGameStats::LoadMoves( const std::string & rootdatafolder )
+    void GameStats::LoadMoves( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -576,7 +274,7 @@ namespace pmd2{ namespace stats
         LoadMoves();
     }
 
-    void CGameStats::LoadMoves()
+    void GameStats::LoadMoves()
     {
         using namespace filetypes;
 
@@ -601,7 +299,7 @@ namespace pmd2{ namespace stats
             throw std::runtime_error( "ERROR: Couldn't identify the game's version. Some files might be missing..\n" );
     }
 
-    void CGameStats::LoadItems( const std::string & rootdatafolder )
+    void GameStats::LoadItems( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -609,7 +307,7 @@ namespace pmd2{ namespace stats
         LoadItems();
     }
 
-    void CGameStats::LoadItems()
+    void GameStats::LoadItems()
     {
         using namespace filetypes;
         AnalyzeGameDir();
@@ -624,7 +322,7 @@ namespace pmd2{ namespace stats
             throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
     }
 
-    void CGameStats::_LoadItemData()
+    void GameStats::_LoadItemData()
     {
 
         //stringstream sstr;
@@ -640,10 +338,10 @@ namespace pmd2{ namespace stats
         else if( m_gameVersion == eGameVersion::EoTEoD )
             m_itemsData = std::move( ParseItemsDataEoTD( sstrItemDat.str() ) );
         else
-            throw runtime_error("CGameStats::LoadItems(): Unknown game version!");
+            throw runtime_error("GameStats::LoadItems(): Unknown game version!");
     }
 
-    void CGameStats::_LoadDungeonData()
+    void GameStats::_LoadDungeonData()
     {
         throw exception("Not Implemented!"); //Not implemented yet !
     }
@@ -651,7 +349,7 @@ namespace pmd2{ namespace stats
 //--------------------------------------------------------------
 //  Writing
 //--------------------------------------------------------------
-    void CGameStats::Write()
+    void GameStats::Write()
     {
         //First identify what we're dealing with
         AnalyzeGameDir();
@@ -660,7 +358,7 @@ namespace pmd2{ namespace stats
         _WriteGameStrings();
     }
 
-    void CGameStats::Write( const std::string & rootdatafolder )
+    void GameStats::Write( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -668,7 +366,7 @@ namespace pmd2{ namespace stats
         Write();
     }
 
-    void CGameStats::WritePkmn()
+    void GameStats::WritePkmn()
     {
         using namespace filetypes;
         //First identify what we're dealing with
@@ -677,7 +375,7 @@ namespace pmd2{ namespace stats
         _WriteGameStrings();
     }
 
-    void CGameStats::WritePkmn( const std::string & rootdatafolder )
+    void GameStats::WritePkmn( const std::string & rootdatafolder )
     {
         using namespace filetypes;
         if( !rootdatafolder.empty() )
@@ -686,7 +384,7 @@ namespace pmd2{ namespace stats
         WritePkmn();
     }
 
-    void CGameStats::_WritePokemonAndMvData()
+    void GameStats::_WritePokemonAndMvData()
     {
         using namespace ::filetypes;
 
@@ -739,7 +437,7 @@ namespace pmd2{ namespace stats
         cout << "Done exporting Pokemon data!\n";
     }
 
-    void CGameStats::WriteMoves()
+    void GameStats::WriteMoves()
     {
         using namespace filetypes;
 
@@ -769,7 +467,7 @@ namespace pmd2{ namespace stats
         cout << "Done writing moves data!\n";
     }
 
-    void CGameStats::WriteMoves( const std::string & rootdatafolder )
+    void GameStats::WriteMoves( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -777,7 +475,7 @@ namespace pmd2{ namespace stats
         WriteMoves();
     }
 
-    void CGameStats::WriteStrings()
+    void GameStats::WriteStrings()
     {
         using namespace filetypes;
         auto prevGameVer = m_gameVersion;
@@ -796,7 +494,7 @@ namespace pmd2{ namespace stats
 
     }
 
-    void CGameStats::WriteStrings( const std::string & rootdatafolder )
+    void GameStats::WriteStrings( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -804,7 +502,7 @@ namespace pmd2{ namespace stats
         WriteStrings();
     }
 
-    void CGameStats::_WriteGameStrings()
+    void GameStats::_WriteGameStrings()
     {
         using namespace filetypes;
         stringstream sstr;
@@ -812,7 +510,7 @@ namespace pmd2{ namespace stats
         filetypes::WriteTextStrFile( sstr.str(), m_gameStrings, std::locale( m_gameLangLocale ) );
     }
     
-    void CGameStats::WriteItems()
+    void GameStats::WriteItems()
     {
         using namespace filetypes;
         auto prevGameVer = m_gameVersion;
@@ -833,7 +531,7 @@ namespace pmd2{ namespace stats
         _WriteGameStrings();
     }
 
-    void CGameStats::WriteItems( const std::string & rootdatafolder )
+    void GameStats::WriteItems( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
             m_dataFolder = rootdatafolder;
@@ -841,7 +539,7 @@ namespace pmd2{ namespace stats
         WriteItems();
     }
 
-    void CGameStats::_WriteItemData()
+    void GameStats::_WriteItemData()
     {
         using namespace filetypes;
 
@@ -857,11 +555,11 @@ namespace pmd2{ namespace stats
             WriteItemsDataEoTD( balancedirpath, m_itemsData );
         else
         {
-            throw runtime_error( "CGameStats::_WriteItemData(): Unsuported game version !" );
+            throw runtime_error( "GameStats::_WriteItemData(): Unsuported game version !" );
         }
     }
 
-    void CGameStats::_WriteDungeonData()
+    void GameStats::_WriteDungeonData()
     {
         throw exception("Not Implemented!"); //Not implemented yet !
     }
@@ -870,7 +568,7 @@ namespace pmd2{ namespace stats
 //--------------------------------------------------------------
 //  Export/Import
 //--------------------------------------------------------------
-    void CGameStats::ExportPkmn( const std::string & directory )
+    void GameStats::ExportPkmn( const std::string & directory )
     {
         //cout<<"-- Exporting all Pokemon data to XML data --\n";
         if( m_gameStrings.empty() || m_pokemonStats.empty() )
@@ -881,7 +579,7 @@ namespace pmd2{ namespace stats
         cout<<" Done!\n";
     }
 
-    void CGameStats::ImportPkmn( const std::string & directory )
+    void GameStats::ImportPkmn( const std::string & directory )
     {
         //cout<<"-- Importing all Pokemon from XML data --\n";
         //Need game strings loaded for this !
@@ -892,7 +590,7 @@ namespace pmd2{ namespace stats
         cout<<" Done!\n";
     }
 
-    void CGameStats::ExportMoves( const std::string & directory )
+    void GameStats::ExportMoves( const std::string & directory )
     {
         //cout<<"-- Exporting all moves data to XML data --\n";
         if( m_gameStrings.empty() || m_moveData1.empty() )
@@ -903,7 +601,7 @@ namespace pmd2{ namespace stats
         cout << " Done!\n";
     }
 
-    void CGameStats::ImportMoves( const std::string & directory )
+    void GameStats::ImportMoves( const std::string & directory )
     {
         //cout<<"-- Importing all moves data from XML data --\n";
         //Need game strings loaded for this !
@@ -918,7 +616,7 @@ namespace pmd2{ namespace stats
     }
 
 
-    void CGameStats::ExportStrings( const std::string & file )
+    void GameStats::ExportStrings( const std::string & file )
     {
         //cout<<"-- Exporting all game strings to text file \"" <<file <<"\" --\n";
         if( m_gameStrings.empty() )
@@ -929,7 +627,7 @@ namespace pmd2{ namespace stats
         cout<<" Done!\n";
     }
 
-    void CGameStats::ImportStrings( const std::string & file )
+    void GameStats::ImportStrings( const std::string & file )
     {
         //cout<<"-- Importing all game strings from text file --\n";
         //if( m_gameStrings.empty() )
@@ -940,7 +638,7 @@ namespace pmd2{ namespace stats
         cout<<"Done importing strings!\n";
     }
 
-    void CGameStats::ExportItems( const std::string & directory )
+    void GameStats::ExportItems( const std::string & directory )
     {
         if( m_gameStrings.empty() ||  m_itemsData.empty() )
             throw runtime_error( "No item data to export, or the strings weren't loaded!!" );
@@ -957,7 +655,7 @@ namespace pmd2{ namespace stats
         cout << " Done!\n";
     }
 
-    void CGameStats::ImportItems( const std::string & directory )
+    void GameStats::ImportItems( const std::string & directory )
     {
         //Need game strings loaded for this !
         _EnsureStringsLoaded();
@@ -976,7 +674,7 @@ namespace pmd2{ namespace stats
         cout<<" Done!\n";
     }
 
-    void CGameStats::ExportAll( const std::string & directory )
+    void GameStats::ExportAll( const std::string & directory )
     {
         cout<<"-- Exporting everything to XML --\n";
         const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir ).makeDirectory().toString();
@@ -1021,7 +719,7 @@ namespace pmd2{ namespace stats
         cout<<"-- Export complete! --\n";
     }
 
-    void CGameStats::ImportAll( const std::string & directory )
+    void GameStats::ImportAll( const std::string & directory )
     {
         using namespace utils;
         cout<<"-- Importing everything from XML --\n";
@@ -1071,190 +769,211 @@ namespace pmd2{ namespace stats
 //  Text Strings Access
 //--------------------------------------------------------------
 
-    std::vector<std::string>::const_iterator CGameStats::GetPokemonNameBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetPokemonNameBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetPokemonNameBeg();
+        return const_cast<GameStats*>(this)->GetPokemonNameBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetPokemonNameEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetPokemonNameEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetPokemonNameEnd();
+        return const_cast<GameStats*>(this)->GetPokemonNameEnd();
     }
 
-    std::vector<std::string>::iterator CGameStats::GetPokemonNameBeg()
+    std::vector<std::string>::iterator GameStats::GetPokemonNameBeg()
     {
         return (m_gameStrings.begin() + strBounds(eStrBNames::PkmnNames).beg );
     }
 
-    std::vector<std::string>::iterator CGameStats::GetPokemonNameEnd()
+    std::vector<std::string>::iterator GameStats::GetPokemonNameEnd()
     {
         return (m_gameStrings.begin() + strBounds(eStrBNames::PkmnNames).end );
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetPokemonCatBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetPokemonCatBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetPokemonCatBeg();
+        return const_cast<GameStats*>(this)->GetPokemonCatBeg();
     }
-    std::vector<std::string>::const_iterator CGameStats::GetPokemonCatEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetPokemonCatEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetPokemonCatEnd();
+        return const_cast<GameStats*>(this)->GetPokemonCatEnd();
     }
-    std::vector<std::string>::iterator CGameStats::GetPokemonCatBeg()
+    std::vector<std::string>::iterator GameStats::GetPokemonCatBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::PkmnCats).beg );
     }
-    std::vector<std::string>::iterator CGameStats::GetPokemonCatEnd()
+    std::vector<std::string>::iterator GameStats::GetPokemonCatEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::PkmnCats).end );
     }
 
 
-    std::vector<std::string>::const_iterator CGameStats::GetMoveNamesBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetMoveNamesBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetMoveNamesBeg();
+        return const_cast<GameStats*>(this)->GetMoveNamesBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetMoveNamesEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetMoveNamesEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetMoveNamesEnd();
+        return const_cast<GameStats*>(this)->GetMoveNamesEnd();
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetMoveNamesBeg()
+    std::vector<std::string>::iterator       GameStats::GetMoveNamesBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).beg );
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetMoveNamesEnd()
+    std::vector<std::string>::iterator       GameStats::GetMoveNamesEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).end );
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetMoveDescBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetMoveDescBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetMoveDescBeg();
+        return const_cast<GameStats*>(this)->GetMoveDescBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetMoveDescEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetMoveDescEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetMoveDescEnd();
+        return const_cast<GameStats*>(this)->GetMoveDescEnd();
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetMoveDescBeg()
+    std::vector<std::string>::iterator       GameStats::GetMoveDescBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).beg );
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetMoveDescEnd()
+    std::vector<std::string>::iterator       GameStats::GetMoveDescEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).end );
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemNamesBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetItemNamesBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetItemNamesBeg();
+        return const_cast<GameStats*>(this)->GetItemNamesBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemNamesEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetItemNamesEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetItemNamesEnd();
+        return const_cast<GameStats*>(this)->GetItemNamesEnd();
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemNamesBeg()
+    std::vector<std::string>::iterator       GameStats::GetItemNamesBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemNames).beg );
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemNamesEnd()
+    std::vector<std::string>::iterator       GameStats::GetItemNamesEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemNames).end );
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemShortDescBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetItemShortDescBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetItemShortDescBeg();
+        return const_cast<GameStats*>(this)->GetItemShortDescBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemShortDescEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetItemShortDescEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetItemShortDescEnd();
+        return const_cast<GameStats*>(this)->GetItemShortDescEnd();
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemShortDescBeg()
+    std::vector<std::string>::iterator       GameStats::GetItemShortDescBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescS).beg );
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemShortDescEnd()
+    std::vector<std::string>::iterator       GameStats::GetItemShortDescEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescS).end );
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemLongDescBeg()const
+    std::vector<std::string>::const_iterator GameStats::GetItemLongDescBeg()const
     {
-        return const_cast<CGameStats*>(this)->GetItemLongDescBeg();
+        return const_cast<GameStats*>(this)->GetItemLongDescBeg();
     }
 
-    std::vector<std::string>::const_iterator CGameStats::GetItemLongDescEnd()const
+    std::vector<std::string>::const_iterator GameStats::GetItemLongDescEnd()const
     {
-        return const_cast<CGameStats*>(this)->GetItemLongDescEnd();
+        return const_cast<GameStats*>(this)->GetItemLongDescEnd();
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemLongDescBeg()
+    //Portraits
+    std::vector<std::string>::const_iterator GameStats::GetPortraitNamesBeg()const
+    {
+        return const_cast<GameStats*>(this)->GetPortraitNamesBeg();
+    }
+
+    std::vector<std::string>::const_iterator GameStats::GetPortraitNamesEnd()const
+    {
+        return const_cast<GameStats*>(this)->GetPortraitNamesEnd();
+    }
+
+    std::vector<std::string>::iterator       GameStats::GetPortraitNamesBeg()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).beg );
+    }
+
+    std::vector<std::string>::iterator       GameStats::GetPortraitNamesEnd()
+    {
+        return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).end );
+    }
+
+    std::vector<std::string>::iterator       GameStats::GetItemLongDescBeg()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescL).beg );
     }
 
-    std::vector<std::string>::iterator       CGameStats::GetItemLongDescEnd()
+    std::vector<std::string>::iterator       GameStats::GetItemLongDescEnd()
     {
         return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescL).end );
     }
 
-    std::string & CGameStats::GetPokemonNameStr( uint16_t pkmnindex )
+    std::string & GameStats::GetPokemonNameStr( uint16_t pkmnindex )
     {
         return m_gameStrings[strBounds(eStrBNames::PkmnNames).beg + pkmnindex];
     }
 
-    std::string & CGameStats::GetPkmnCatNameStr( uint16_t pkmnindex )
+    std::string & GameStats::GetPkmnCatNameStr( uint16_t pkmnindex )
     {
         return m_gameStrings[strBounds(eStrBNames::PkmnCats).beg + pkmnindex];
     }
 
-    std::string & CGameStats::GetMoveNameStr( uint16_t moveindex )
+    std::string & GameStats::GetMoveNameStr( uint16_t moveindex )
     {
         return m_gameStrings[strBounds(eStrBNames::MvNames).beg + moveindex];
     }
 
-    std::string & CGameStats::GetMoveDexcStr( uint16_t moveindex )
+    std::string & GameStats::GetMoveDexcStr( uint16_t moveindex )
     {
         return m_gameStrings[strBounds(eStrBNames::MvDesc).beg + moveindex];
     }
 
-    std::string & CGameStats::GetAbilityNameStr( uint8_t abilityindex )
+    std::string & GameStats::GetAbilityNameStr( uint8_t abilityindex )
     {
         return m_gameStrings[strBounds(eStrBNames::AbilityNames).beg + abilityindex];
     }
 
-    std::string & CGameStats::GetAbilityDescStr( uint8_t abilityindex )
+    std::string & GameStats::GetAbilityDescStr( uint8_t abilityindex )
     {
         return m_gameStrings[strBounds(eStrBNames::AbilityDesc).beg + abilityindex];
     }
 
-    std::string & CGameStats::GetTypeNameStr( uint8_t type )
+    std::string & GameStats::GetTypeNameStr( uint8_t type )
     {
         return m_gameStrings[strBounds(eStrBNames::TypeNames).beg + type];
     }
 
-    std::string & CGameStats::GetItemNameStr( uint16_t itemindex )
+    std::string & GameStats::GetItemNameStr( uint16_t itemindex )
     {
         return m_gameStrings[strBounds(eStrBNames::ItemNames).beg + itemindex];
     }
 
-    std::string & CGameStats::GetItemSDescStr( uint16_t itemindex )
+    std::string & GameStats::GetItemSDescStr( uint16_t itemindex )
     {
         return m_gameStrings[strBounds(eStrBNames::ItemDescS).beg + itemindex];
     }
 
-    std::string & CGameStats::GetItemLDescStr( uint16_t itemindex )
+    std::string & GameStats::GetItemLDescStr( uint16_t itemindex )
     {
         return m_gameStrings[strBounds(eStrBNames::ItemDescL).beg + itemindex];
     }

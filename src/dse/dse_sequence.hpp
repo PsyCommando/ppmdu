@@ -7,10 +7,12 @@ psycommando@gmail.com
 Description: Contains utilities to deal with DSE event tracks. Or anything within a "trk\20" chunk.
 */
 #include <dse/dse_common.hpp>
+#include <utils/library_wide.hpp>
 //#include <dse/dse_containers.hpp>
 #include <map>
 #include <array>
 #include <cstdint>
+#include <functional>
 
 namespace DSE
 {
@@ -107,30 +109,7 @@ namespace DSE
 
         static_cast<uint8_t>(eTrkDelays::_64th),
     }};
-    //static const std::map<uint8_t, uint8_t> TickDelayToTrkDelayCodes
-    //{{
-    //    { static_cast<uint8_t>(eTrkDelays::_half),            0x80 },
-    //    { static_cast<uint8_t>(eTrkDelays::_dotqtr),          0x81 },
-    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsofahalf),  0x82 },
 
-    //    { static_cast<uint8_t>(eTrkDelays::_qtr),             0x83 },
-    //    { static_cast<uint8_t>(eTrkDelays::_dot8th),          0x84 },
-    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsofqtr),    0x85 },
-
-    //    { static_cast<uint8_t>(eTrkDelays::_8th),             0x86 },
-    //    { static_cast<uint8_t>(eTrkDelays::_dot16th),         0x87 },
-    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof8th),    0x88 },
-
-    //    { static_cast<uint8_t>(eTrkDelays::_16th),            0x89 },
-    //    { static_cast<uint8_t>(eTrkDelays::_dot32nd),         0x8A },
-    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof16th),   0x8B },
-
-    //    { static_cast<uint8_t>(eTrkDelays::_32nd),            0x8C },
-    //    { static_cast<uint8_t>(eTrkDelays::_dot64th),         0x8D },
-    //    { static_cast<uint8_t>(eTrkDelays::_two3rdsof32th),   0x8E },
-
-    //    { static_cast<uint8_t>(eTrkDelays::_64th),            0x8F },
-    //}};
 
     static uint8_t FindClosestTrkDelayCode( uint8_t delayticks )
     {
@@ -176,66 +155,93 @@ namespace DSE
         NoteOnBeg       = 0x01, //The first event code reserved for play note events.
         NoteOnEnd       = 0x7F, //The last event code that is reserved for playing a note.
 
-        //Reserved range for discriminating against delays prefixes
-        DelayBeg        = 0x80, //The first value reserved for Delay prefixes
-        DelayEnd        = 0x8F, //The last value reserved for Delay prefixes
+        //Delays
+        Delay_HN        = 0x80, // 1/2 note
+        Delay_DQN       = 0x81, // dotted 1/4 note
+        Delay_HN3       = 0x82, // (1/2 note)/3 * 2
+        Delay_QN        = 0x83, // 1/4 note
+        Delay_D8N       = 0x84, // dotted 1/8 note
+        Delay_QN3       = 0x85, // (1/4 note)/3 * 2
+        Delay_8N        = 0x86, // 1/8 note
+        Delay_D16N      = 0x87, // dotted 1/16 note
+        Delay_8N3       = 0x88, // (1/8 note)/3 * 2
+        Delay_16N       = 0x89, // 1/16 note
+        Delay_D32N      = 0x8A, // dotted 1/32
+        Delay_16N3      = 0x8B, // (1/16 note)/3 * 2
+        Delay_32N       = 0x8C, // 1/32 note
+        Delay_D64N      = 0x8D, // dotted 1/64 note
+        Delay_32N3      = 0x8E, // (1/32 note)/3 * 2
+        Delay_64N       = 0x8F, // 1/64 note
+
+        ////Reserved range for discriminating against delays prefixes
+        //DelayBeg        = Delay_HN,  //The first value reserved for Delay prefixes
+        //DelayEnd        = Delay_64N, //The last value reserved for Delay prefixes
+
 
         //Non-play note events
         RepeatLastPause = 0x90, //Repeat the last silence
         AddToLastPause  = 0x91, //Pause the track for the duration of the last pause + the duration specified
-        Pause           = 0x92, //Pause the track for specified duration (uses a uint8)
-        LongPause       = 0x93, //Pause the track for specified duration (uses a uint16)
-        VLongPause      = 0x94, //Pause the track for specified duration (uses a uint24)
+        Pause8Bits      = 0x92, //Pause the track for specified duration (uses a uint8)
+        Pause16Bits     = 0x93, //Pause the track for specified duration (uses a uint16)
+        Pause24Bits     = 0x94, //Pause the track for specified duration (uses a uint24)
+
+        PauseUntilRel   = 0x95, //#TODO
 
         EndOfTrack      = 0x98, //Marks the end of the track. Also serve as padding.
         LoopPointSet    = 0x99, //Marks the location where the track should loop from.
 
-        Unk_0x9C        = 0x9C, //Unknown
+        Unk_0x9C        = 0x9C, //Unknown //#TODO
+        Unk_0x9D        = 0x9D, //Unknown //#TODO
+        Unk_0x9E        = 0x9E, //Unknown //#TODO
 
         SetOctave       = 0xA0, //Sets the octave notes are currently played at.
 
+        Unk_0xA1        = 0xA1, //Unknown //#TODO
+
         SetTempo        = 0xA4, //Sets the tempo of the track in BPM.
-        Unk_0xA8        = 0xA8, //Unknown purpose
+        Unk_0xA5        = 0xA5, //Unknown //#TODO
+
+        Unk_0xA8        = 0xA8, //Unknown //#TODO
         SetUnk1         = 0xA9, //Set that first unknown value from the track's header
         SetUnk2         = 0xAA, //Set that second unknown value from the track's header
-
+        Unk_0xAB        = 0xAB, //Unknown //#TODO
         SetPreset       = 0xAC, //Sets the instrument preset to use
 
-        Unk_0xB2        = 0xB2, //Unknown
+        Unk_0xB2        = 0xB2, //Unknown //#TODO
 
-        Unk_0xB4        = 0xB4, //Unknown
-        Unk_0xB5        = 0xB5, //Unknown
+        Unk_0xB4        = 0xB4, //Unknown //#TODO
+        Unk_0xB5        = 0xB5, //Unknown //#TODO
 
         Unk_0xBE        = 0xBE, //Possibly set modulation ?
-        Unk_0xBF        = 0xBF, //Unknown
+        Unk_0xBF        = 0xBF, //Unknown //#TODO
 
-        HoldNote        = 0xC0, //Holds the last note indefinitely until another note is played
+        Unk_0xC0        = 0xC0, //Holds the last note indefinitely until another note is played
 
         Unk_0xCB        = 0xCB, //Holds the last note indefinitely until another note is played
 
-        Unk_0xD0        = 0xD0, //Unknown
-        Unk_0xD1        = 0xD1, //Unknown
-        Unk_0xD2        = 0xD2, //Unknown
+        Unk_0xD0        = 0xD0, //Unknown //#TODO
+        Unk_0xD1        = 0xD1, //Unknown //#TODO
+        Unk_0xD2        = 0xD2, //Unknown //#TODO
 
-        Unk_0xD4        = 0xD4, //Unknown
+        Unk_0xD4        = 0xD4, //Unknown //#TODO
 
-        Unk_0xD6        = 0xD6, //Unkown
+        Unk_0xD6        = 0xD6, //Unknown //#TODO
         PitchBend       = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
         Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
-        Unk_0xDC        = 0xDC, //Unknown
+        Unk_0xDC        = 0xDC, //Unknown //#TODO
 
         SetTrkVol       = 0xE0, //Sets primary track volume.
 
-        Unk_0xE2        = 0xE2, //Unknown
+        Unk_0xE2        = 0xE2, //Unknown //#TODO
         SetExpress      = 0xE3, //Sets secondary volume control. AKA expression or GM CC#11.
 
         SetTrkPan       = 0xE8, //Sets the panning of the track.
 
-        Unk_0xEA        = 0xEA, //Unknonw
+        Unk_0xEA        = 0xEA, //Unknown //#TODO
 
-        Unk_0xEC        = 0xEC, //Unknown
+        Unk_0xEC        = 0xEC, //Unknown //#TODO
 
-        Unk_0xF6        = 0xF6, //Unknown
+        Unk_0xF6        = 0xF6, //Unknown //#TODO
     };
 
     /****************************************************************************
@@ -311,11 +317,12 @@ namespace DSE
             Contains details specifics on how to parse all event codes.
     ************************************************************************/
     struct TrkEventInfo;
-    extern const std::vector<TrkEventInfo/*, NB_Track_Events*/> TrkEventsTable;
+    extern const std::vector<TrkEventInfo> TrkEventsTable;
 
 //====================================================================================================
 // Structs
 //====================================================================================================
+    class DSESequenceToMidi;
 
     /************************************************************************
         TrkEventInfo
@@ -332,9 +339,10 @@ namespace DSE
         //nb params
         uint32_t       nbreqparams; //if has any required parameters
         bool           hasoptparam; //if has optional param 
-        bool           isEoT;       //if is end of track marker
-        bool           isLoopPoint; //if is loop point
+        //bool           isEoT;       //if is end of track marker     #REMOVEME That's not neccessary at all!
+        //bool           isLoopPoint; //if is loop point              #REMOVEME That's not neccessary at all!
         std::string    evlbl;       //text label for the event
+        std::function<void(const DSESequenceToMidi*, size_t, size_t)> handler;
     };
 
     /************************************************************************
@@ -380,12 +388,11 @@ namespace DSE
     ************************************************************************/
     struct TrkEvent
     {
-        uint8_t dt     = 0;
-        uint8_t evcode = 0;
-
+        //uint8_t              dt     = 0;
+        uint8_t              evcode = 0;
         std::vector<uint8_t> params;
 
-        std::string tostr()const;
+        friend std::ostream & operator<<( std::ostream &  strm, const TrkEvent & ev );
     };
 
     /************************************************************************
@@ -509,17 +516,17 @@ namespace DSE
         {
             if( !m_hasBegun ) //If we haven't begun parsing an event
             {
-                if( isDelayCode(by) )   //If we read a delay code, just put it in our upcoming event
-                    m_curEvent.dt = by;
-                else
-                    beginNewEvent(by);
+                //if( isDelayCode(by) )   //If we read a delay code, just put it in our upcoming event
+                //    m_curEvent.dt = by;
+                //else
+                beginNewEvent(by);
             }
             else
                 fillEvent(by);
         }
 
     private:
-        static inline bool isDelayCode( uint8_t by ) { return ( (by & EventDelayMask) == EventDelayCode ); }
+        //static inline bool isDelayCode( uint8_t by ) { return ( (by & EventDelayMask) == EventDelayCode ); }
 
         void beginNewEvent( uint8_t by )
         {
@@ -561,6 +568,9 @@ namespace DSE
 
         void endEvent()
         {
+            //if( utils::LibWide().isLogOn() )
+            //    LogEventToClog(m_curEvent);
+
             (*m_itDest) = std::move( m_curEvent );
             ++m_itDest;
             m_curEvent = TrkEvent(); //Re-init object state after move
@@ -612,7 +622,7 @@ namespace DSE
                   EventParser<back_insert_iterator<vector<TrkEvent>>>(back_inserter(events)) );
         events.shrink_to_fit();       //Dealloc unused space
 
-        return make_pair( std::move(events), std::move(preamb) );
+        return move( make_pair( std::move(events), std::move(preamb) ) );
     }
 
     /*****************************************************************
@@ -624,6 +634,10 @@ namespace DSE
                                uint8_t & inout_curoctave, 
                                uint8_t & out_param2len, 
                                uint8_t & out_midinote );
+
+    /*
+    */
+    void LogEventToClog( const TrkEvent & ev );
 
 };
 

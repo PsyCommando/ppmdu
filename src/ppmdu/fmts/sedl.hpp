@@ -10,6 +10,12 @@ License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicd
 All wrongs reversed, no crappyrights :P
 */
 #include <dse/dse_common.hpp>
+#include <types/content_type_analyser.hpp>
+
+namespace filetypes
+{
+    extern const ContentTy CnTy_SEDL; //Content ID db handle
+};
 
 namespace DSE
 {

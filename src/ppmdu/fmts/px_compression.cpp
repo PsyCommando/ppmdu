@@ -1326,7 +1326,13 @@ namespace compression
     {
         //Resize the vector properly
         //out_decompresseddata.resize( info.decompressedsz );
-        assert(info.decompressedsz == out_decompresseddata.size()); //Those must be the same size !
+        if(info.decompressedsz != out_decompresseddata.size()) //Those must be the same size !
+        {
+            stringstream sstr;
+            sstr << "DecompressPX() : The output buffer is not of the expected size! Current buffer size : "
+                 << out_decompresseddata.size() << " bytes, expected " <<info.decompressedsz <<" bytes!";
+            throw std::runtime_error( sstr.str() );
+        }
 
         //Create our state
         px_decompressor<std::vector<uint8_t>::const_iterator, std::vector<uint8_t>::iterator>
@@ -1346,7 +1352,14 @@ namespace compression
                        bool                                   blogenabled)
     {
         //Resize the vector properly
-        assert(info.decompressedsz == distance( itoutbeg, itoutend )); //Those must be the same size !
+        auto diff = distance( itoutbeg, itoutend );
+        if(info.decompressedsz != diff ) //Those must be the same size !
+        {
+            stringstream sstr;
+            sstr << "DecompressPX() : The output buffer is not of the expected size! Current buffer size : "
+                 << diff << " bytes, expected " <<info.decompressedsz <<" bytes!";
+            throw std::runtime_error( sstr.str() );
+        }
 
         //Create our state
         px_decompressor<std::vector<uint8_t>::const_iterator, std::vector<uint8_t>::iterator>

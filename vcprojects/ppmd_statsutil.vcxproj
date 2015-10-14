@@ -36,11 +36,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
     <Import Project="xml_includes.props" />
+    <Import Project="poco_includes.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
     <Import Project="xml_includes.props" />
+    <Import Project="poco_includes.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -96,8 +98,16 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp" />
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
@@ -210,6 +220,16 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\statsutil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
@@ -337,16 +357,12 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
-    <Text Include="..\resources\pkmn_abilities.txt" />
-    <Text Include="..\resources\pkmn_iq.txt" />
-    <Text Include="..\resources\pkmn_moves.txt" />
-    <Text Include="..\resources\pkmn_names.txt" />
-    <Text Include="..\resources\pkmn_types.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resources\gamelang.conf" />
     <None Include="..\resources\gamelang.xml">
       <SubType>Designer</SubType>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent>true</DeploymentContent>
     </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

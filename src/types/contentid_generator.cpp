@@ -17,8 +17,10 @@ namespace filetypes
         //Acquire id
         m_id = ContentIDManager::GetInstance().AcquireID(*this);
 
+#ifdef _DEBUG
         if( utils::LibWide().isLogOn() )
             clog <<"Acquired Content ID " <<m_id <<" for " <<m_ext <<"\n";
+#endif
     }
 
     ContentTy::ContentTy( ContentTy && other )
@@ -37,8 +39,10 @@ namespace filetypes
         //release id
         ContentIDManager::GetInstance().ReleaseID(*this, m_id);
 
-        if( utils::LibWide().isLogOn() )
+#ifdef _DEBUG
+        if( utils::LibWide().isLogOn()  )
             clog <<"Released Content ID " <<m_id <<" for " <<m_ext <<"\n";
+#endif
     }
 
     ContentTy & ContentTy::operator=( ContentTy && other )
@@ -112,8 +116,7 @@ namespace filetypes
     {
         if( id == std::numeric_limits<cnt_t>::max() )
         {
-            if( utils::LibWide().isLogOn() )
-                clog<<"<!>- ContentIDManager::ReleaseID(): Tried to release an invalid ID!\n";
+            utils::LogError("<!>- ContentIDManager::ReleaseID(): Tried to release an invalid ID!\n");
 #ifdef _DEBUG
             assert(false); //Tried to release an invalid ID ! This usually happens when moving an ID, and re-using the source ID.. As the src ID is left with this invalid ID value.
 #else
@@ -122,8 +125,7 @@ namespace filetypes
         }
         else if( id > m_lastgenid )
         {
-            if( utils::LibWide().isLogOn() )
-                clog<<"<!>- ContentIDManager::ReleaseID(): Tried to release an ID we didn't assign yet!";
+            utils::LogError("<!>- ContentIDManager::ReleaseID(): Tried to release an ID we didn't assign yet!");
 #ifdef _DEBUG
             assert(false);  //We didn't generate this ID yet !
 #else

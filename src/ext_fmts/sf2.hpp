@@ -89,8 +89,8 @@ namespace sf2
     ***********************************************************************************/
     inline int32_t MSecsToTimecents( int32_t msecs )
     {
-        double dmsec = (msecs / 1000.0);
-        return lround( 1200 * log2(dmsec) );
+        double dmsec = ( static_cast<double>(msecs) / 1000.00 );
+        return lround( 1200.00 * log2(dmsec) );
     }
 
 //===========================================================================================
@@ -186,57 +186,58 @@ namespace sf2
 //  SF2 Values Limits
 //===========================================================================================
     //Values ranges for the Generators!
-    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToPitch      { -12000,      0, 12000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      { -12000,      0, 12000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   { -12000,      0, 12000,    0 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterFc       {   1500,  13500, 13500, 1500 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterQ        {      0,      0,   960,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   { -12000,      0, 12000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{ -12000,      0, 12000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {   -960,      0,   960,    0 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsChorusSend         {      0,      0,  1000,  500 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsReverbSend         {      0,      0,  1000,  500 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsPan                {   -500,      0,   500,    0 };
+                                                                              //     Min,      Def,   Max,  Mid
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToPitch      {   -12000,        0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoToPitch      {   -12000,        0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToPitch   {   -12000,        0, 12000,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterFc       {     1500,    13500, 13500, 1500 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsInitFilterQ        {        0,        0,   960,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToFilterFc   {   -12000,        0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvLfoToFilterFc{   -12000,        0, 12000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoToVolume     {     -960,        0,   960,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsChorusSend         {        0,        0,  1000,  500 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsReverbSend         {        0,        0,  1000,  500 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsPan                {     -500,        0,   500,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoDelay        { -12000, -12000,  5000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoFreq         { -16000,      0,  4500,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoDelay        { -12000, -12000,  5000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoFreq         { -16000,      0,  4500,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoDelay        {   -12000,   -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModLfoFreq         {   -16000,        0,  4500,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoDelay        {   -12000,   -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVibLfoFreq         {   -16000,        0,  4500,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDelay        { -12000, -12000,  5000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvAttack       { -12000, -12000,  8000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvHold         { -12000, -12000,  5000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDecay        { -12000, -12000,  8000,    0 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsModEnvSustain      {      0,      0,  1000,  500 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvRelease      { -12000, -12000,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDelay        {   -12000,   -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvAttack       {   -12000,   -12000,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvHold         {   -12000,   -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvDecay        {   -12000,   -12000,  8000,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsModEnvSustain      {        0,        0,  1000,  500 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsModEnvRelease      {   -12000,   -12000,  8000,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {  -1200,      0,  1200,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{  -1200,      0,  1200,        0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {    -1200,        0,  1200,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{    -1200,        0,  1200,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000,    0 }; //Shortest valid value is -12000. SHRT_MIN means its disabled. Other values between SHRT_MIN and -12000 have undefined effects!
     static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000,    0 };
     static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000,    0 };
     static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000,    0 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {      0,      0,  1440,      720 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {        0,        0,  1440,  720 };
     static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {  -1200,      0,  1200,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{  -1200,      0,  1200,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {    -1200,        0,  1200,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{    -1200,        0,  1200,    0 };
 
-    static const utils::value_limits<uint16_t> SF_GenLimitsKeyRange           { 0x0000, 0x007F, 0x7F7F, 0x0};
-    static const utils::value_limits<uint16_t> SF_GenLimitsVelRange           { 0x0000, 0x007F, 0x7F7F, 0x0};
+    static const utils::value_limits<uint16_t> SF_GenLimitsKeyRange           {        0,   0x007F, 0x7F7F,   0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsVelRange           {        0,   0x007F, 0x7F7F,   0 };
 
-    static const utils::value_limits<int16_t> SF_GenLimitsKeynum              {      0,     -1,   127,    0 };
-    static const utils::value_limits<int16_t> SF_GenLimitsVelocity            {      0,     -1,   127,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsKeynum              {        0,       -1,   127,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsVelocity            {        0,       -1,   127,    0 };
 
-    static const utils::value_limits<int16_t> SF_GenLimitsInitAttenuation     {      0,      0,  1440,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsInitAttenuation     {        0,        0,  1440,    0 };
 
-    static const utils::value_limits<int16_t> SF_GenLimitsCoarseTune          {   -120,      0,   120,    0 };
-    static const utils::value_limits<int16_t> SF_GenLimitsFineTune            {    -99,      0,    99,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsCoarseTune          {     -120,        0,   120,    0 };
+    static const utils::value_limits<int16_t> SF_GenLimitsFineTune            {      -99,        0,    99,    0 };
 
-    static const utils::value_limits<uint16_t> SF_GenLimitsScaleTuning        {      0,    100,  1200,  600 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsExcClass           {      0,      0,   127,    0 };
-    static const utils::value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsScaleTuning        {        0,      100,  1200,  600 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsExcClass           {        0,        0,   127,    0 };
+    static const utils::value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {        0,       -1,   127,    0 };
 
 //===========================================================================================
 //  Structures and Enums
@@ -416,9 +417,9 @@ namespace sf2
         int16_t delay   = SHRT_MIN;                       //timecents
         int16_t attack  = SHRT_MIN;                       //timecents
         int16_t hold    = SHRT_MIN;                       //timecents
-        int16_t sustain =        0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
-        int16_t decay   = SF_GenLimitsVolEnvDecay.min_;   //timecents
-        int16_t release = SF_GenLimitsVolEnvRelease.min_; //timecents
+        int16_t sustain =      0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = SF_GenLimitsVolEnvDelay.def_;   //timecents
+        int16_t release = SF_GenLimitsVolEnvRelease.def_; //timecents
     };
 
     //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()
@@ -979,23 +980,6 @@ namespace sf2
             RomLeftSample   = 32772, 
             RomLinkedSample = 32776,
         };
-
-        /*
-            Load from a file. begoff and endoff are in bytes.
-        */
-        //Sample( const std::string & fpath,                    size_t begoff, size_t endoff );
-
-        ///*
-        //    Load from a vector. begoff and endoff are in bytes.
-        //*/
-        //Sample( std::vector<uint8_t> * prawvec, size_t begoff, size_t endoff );
-        //Sample( uint8_t              * praw,    size_t begoff, size_t endoff );
-
-        ///*
-        //    Load from a vector. begoff and endoff are in int16 !
-        //*/
-        //Sample( std::weak_ptr<std::vector<pcm16s_t>> ppcmvec, size_t begoff, size_t endoff );
-        //Sample( std::weak_ptr<pcm16s_t>              ppcm,    size_t begoff, size_t endoff );
 
         /*
             Load from a function. "samplelen" is the length in pcm16 data points of the sound sample that 

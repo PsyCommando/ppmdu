@@ -44,6 +44,7 @@ namespace statsutil
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
         bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
+        bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -64,6 +65,8 @@ namespace statsutil
         int DoImportGameStrings();
         int DoExportGameStrings();
         int DoExportGameStringsFromFile(); //For exporting the game strings from the text_*.str file directly
+        int DoExportGameScripts();
+        int DoImportGameScripts();
 
         int DoImportAll();
         int DoExportAll();
@@ -84,8 +87,10 @@ namespace statsutil
         //static const std::string                                 DefExportMvDir;
         //static const std::string                                 DefExportItemsDir;
         static const std::string                                 DefExportAllDir;
+        static const std::string                                 DefExportScriptsDir;
 
         static const std::string                                 DefLangConfFile;
+        
 
         enum struct eOpForce
         {
@@ -111,6 +116,9 @@ namespace statsutil
             ExportGameStrings,
             ExportGameStringsFromFile,
 
+            ImportGameScripts,
+            ExportGameScripts,
+
             ImportAll,
             ExportAll,
         };
@@ -127,6 +135,7 @@ namespace statsutil
         bool        m_hndlItems;      //If we handle only items
         bool        m_hndlMoves;      //If we handle only moves
         bool        m_hndlPkmn;       //If we handle only Pokemon
+        bool        m_hndlScripts;    //If we handle only Scripts
         eOpForce    m_force;          //Whether 
         bool        m_shouldlog;      
 

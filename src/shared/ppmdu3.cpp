@@ -11,6 +11,26 @@ using namespace std;
 namespace ppmdu3
 {
     static const size_t MaxStrLen = 512;
+
+    int c16strcpy( char16_t * dest, const char16_t * src, size_t maxlen )
+    {
+        //Count source string length
+        size_t cnt = 0;
+        for( ;cnt < maxlen; ++cnt )
+        {
+            char16_t c = *(src+cnt);
+            *(dest+cnt) = c;
+
+            if( c == 0 ) 
+                break;
+        }
+
+        if(cnt >= maxlen)
+            return -1;
+        else
+            return cnt;
+    }
+
 //
 //  GameStrings
 //
@@ -196,13 +216,13 @@ namespace ppmdu3
 
         //------------------ Access ------------------
         /*
-            ppmdu3_GetStringByHash
+            ppmdu3_GetStringByUUID
                 Returns a loaded string from the specified GameStringsPool object.
 
                 - hndl : The GamesStringsPool object to load from.
-                - strh : The unique Hash of the string.
+                - strh : The unique uuid of the string.
         */
-        PPMDU_API int ppmdu3_GetStringByHash( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh, wchar_t * out_str, size_t strmaxlen )
+        PPMDU_API int ppmdu3_GetStringByUUID( ppmdu3_gstrplhndl hndl, ppmdu3_struuid strh, char16_t * out_str, size_t strmaxlen )
         {
             try
             {
@@ -213,19 +233,33 @@ namespace ppmdu3
                 if( strmaxlen < MaxStrLen )
                 {
                     const pmd3::GameStrData * pstrdat = ptr->GetString( strh );
-                    if( pstrdat != nullptr && pstrdat->str.length() < strmaxlen )
+                    if( pstrdat != nullptr && (pstrdat->str.length() + 1) < strmaxlen )
                     {
-                        wcscpy( out_str, pstrdat->str.c_str() );
+                        if( !c16strcpy( out_str, pstrdat->str.c_str(), strmaxlen ) )
+                            return -1;
+
+                        //for( auto achar : pstrdat->str )
+                        //{
+                        //    (*out_str) = achar;
+                        //    ++out_str;
+                        //}
+
+                        ////Append terminating 0
+                        //(*out_str) = '\0';
+                        //++out_str;
                     }
                     else
+                    {
+                        //The strmaxlen is probably too small
                         return -1;
+                    }
                 }
                 else
                     return -1;
             }
             catch(std::exception & e)
             {
-                cerr <<"Exception caught (ppmdu3_GetStringByHash): " << e.what() <<"\n";
+                cerr <<"Exception caught (ppmdu3_GetStringByuuid): " << e.what() <<"\n";
                 return -1;
             }
             return 0;
@@ -240,7 +274,7 @@ namespace ppmdu3
                 - catindex : The index of the category to look into.
                 - strindex : The index of the string within the category.
         */
-        PPMDU_API int ppmdu3_GetStringByCategoryAndIndex( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex, ppmdu3_index strindex, wchar_t * out_str, size_t strmaxlen )
+        PPMDU_API int ppmdu3_GetStringByCategoryAndIndex( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex, ppmdu3_index strindex, char16_t * out_str, size_t strmaxlen )
         {
             try
             {
@@ -254,7 +288,9 @@ namespace ppmdu3
 
                     if( strdat.second.str.length() < strmaxlen )
                     {
-                        wcscpy( out_str, strdat.second.str.c_str() );
+                        if( !c16strcpy( out_str, strdat.second.str.c_str(), strmaxlen ) )
+                            return -1;
+                        //wcscpy( out_str, strdat.second.str.c_str() );
                     }
                     else
                         return -1;
@@ -375,13 +411,13 @@ namespace ppmdu3
         //------------------ Modification ------------------
 
 
-        PPMDU_API int ppmdu3_SetStringByHash( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh, const wchar_t * in_str, size_t strl )
+        PPMDU_API int ppmdu3_SetStringByUUID( ppmdu3_gstrplhndl hndl, ppmdu3_struuid strh, const char16_t * in_str, size_t strl )
         {
             assert(false);
             return -1;
         }
 
-        PPMDU_API int ppmdu3_SetStringByIndex( ppmdu3_gstrplhndl hndl,  ppmdu3_index catindex,  ppmdu3_index strindex, const wchar_t * in_str, size_t strl )
+        PPMDU_API int ppmdu3_SetStringByIndex( ppmdu3_gstrplhndl hndl,  ppmdu3_index catindex,  ppmdu3_index strindex, const char16_t * in_str, size_t strl )
         {
             assert(false);
             return -1;
@@ -389,9 +425,9 @@ namespace ppmdu3
 
         /*
             ppmdu3_AddString
-                Returns hash of the new string, or 0 if it fails.
+                Returns uuid of the new string, or 0 if it fails.
         */
-        PPMDU_API ppmdu3_strhash ppmdu3_AddString( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex,  const wchar_t * in_str, size_t strl )
+        PPMDU_API ppmdu3_struuid ppmdu3_AddString( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex,  const char16_t * in_str, size_t strl )
         {
             assert(false);
             return 0;
@@ -401,7 +437,7 @@ namespace ppmdu3
             ppmdu3_RemString
                 Returns 0 if it fails.
         */
-        PPMDU_API int ppmdu3_RemString( ppmdu3_gstrplhndl hndl, ppmdu3_strhash strh )
+        PPMDU_API int ppmdu3_RemString( ppmdu3_gstrplhndl hndl, ppmdu3_struuid strh )
         {
             assert(false);
             return -1;
@@ -411,7 +447,7 @@ namespace ppmdu3
             ppmdu3_AddString
                 Returns index of the new category + 1, or 0 if it fails.
         */
-        PPMDU_API size_t ppmdu3_AddCategory( ppmdu3_gstrplhndl hndl,  const wchar_t * in_str, size_t strl )
+        PPMDU_API size_t ppmdu3_AddCategory( ppmdu3_gstrplhndl hndl,  const char * in_str, size_t strl )
         {
             assert(false);
             return 0;
@@ -419,7 +455,7 @@ namespace ppmdu3
 
         /*
             ppmdu3_RemString
-                Returns hash of the new string, or 0 if it fails.
+                Returns uuid of the new string, or 0 if it fails.
         */
         PPMDU_API int ppmdu3_RemCategory( ppmdu3_gstrplhndl hndl, ppmdu3_index catindex )
         {

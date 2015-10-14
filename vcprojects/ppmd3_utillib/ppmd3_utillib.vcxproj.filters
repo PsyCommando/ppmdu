@@ -105,6 +105,12 @@
     <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\utils\uuid_gen_wrapper.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ppmdu\pmd3\game_strings_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\utils\cmdline_util.hpp">
@@ -169,6 +175,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\shared\ppmdu3.hpp">
       <Filter>Header Files\dll</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utils\uuid_gen_wrapper.hpp">
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

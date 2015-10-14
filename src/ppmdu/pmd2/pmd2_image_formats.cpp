@@ -8,7 +8,7 @@
 #include <cassert>
 #include <iostream>
 #include <iomanip>
-#include "png++/png.hpp"
+//#include "png++/png.hpp"
 #include <sstream>
 #include <ppmdu/containers/tiled_image.hpp>
 using namespace std;

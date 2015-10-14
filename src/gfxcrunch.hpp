@@ -53,13 +53,14 @@ namespace gfx_util
         CGfxUtil& operator=(const CGfxUtil&&);
 
         //Parse Arguments
-        bool ParseInputPath  ( const std::string              & path );
-        bool ParseOutputPath ( const std::string              & path );
+        bool ParseInputPath  ( const std::string & path );
+        bool ParseOutputPath ( const std::string & path );
+        bool ParseExtraPath  ( const std::string & path );
 
         //Parse Options
         bool ParseOptionQuiet           ( const std::vector<std::string> & optdata );
         bool ParseOptionExportFormat    ( const std::vector<std::string> & optdata );
-        bool ParseOptionForceInputFormat( const std::vector<std::string> & optdata );
+        //bool ParseOptionForceInputFormat( const std::vector<std::string> & optdata );
         bool ParseOptionImportByIndex   ( const std::vector<std::string> & optdata );
         bool ParseOptionAnimResPath     ( const std::vector<std::string> & optdata );
         bool ParseOptionFaceNamesPath   ( const std::vector<std::string> & optdata );
@@ -72,6 +73,15 @@ namespace gfx_util
 
         bool ParseOptionNoResFix        ( const std::vector<std::string> & optdata );
 
+        bool ParseOptionForceExport     ( const std::vector<std::string> & optdata );
+        bool ParseOptionForceImport     ( const std::vector<std::string> & optdata );
+        bool ParseOptionBGP             ( const std::vector<std::string> & optdata );
+        bool ParseOptionWAN             ( const std::vector<std::string> & optdata );
+        bool ParseOptionPkPortraits     ( const std::vector<std::string> & optdata );
+        bool ParseOptionPkSprites       ( const std::vector<std::string> & optdata );
+        bool ParseOptionPropSprites     ( const std::vector<std::string> & optdata );
+
+
         //Execution
         int UnpackSprite();
         int BuildSprite();
@@ -82,13 +92,31 @@ namespace gfx_util
         int ImportMainFontFile();
         int ExportMainFontFile();
 
+        void DoImportPortraits();
+        void DoExportPortraits();
+
+        void DoImportPokeSprites();
+        void DoExportPokeSprites();
+
+        void DoImportMiscSprites();
+        void DoExportMiscSprites();
+
+        void HandleBGP();
+        void HandleWAN();
+        void HandleWTE();
+
+
         //Utility
         bool DetermineOperationMode();                                 //Figure out what to do based on our input and outputs args + options !
         int  GatherArgs            ( int argc, const char * argv[] );  //Handle argument parsing + exceptions
         int  Execute               ();                                 //Handle excution switch case + exceptions
+        int  ExecOld               ();                                 //Exec the old version code trying to guess the input
+        int  ExecNew               ();                                 //Exec the new command-line options only based method
         void PrintOperationMode    ();
 
         void ChkAndHndlUnsupportedRawOutput();
+
+        bool DetermineOperationModeNew();
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -104,6 +132,8 @@ namespace gfx_util
         static const std::string                                 DefPathPokeSprNames;
         static const std::string                                 DefPathFaceNames;
         static const std::string                                 DefPathPokeNames;
+
+        static const utils::cmdl::argumentparsing_t              ExtraArg; 
 
         //The operations that can be done by the program
         enum struct eExecMode
@@ -158,6 +188,26 @@ namespace gfx_util
         //std::future<void>     m_runThUpHpBar;//#REMOVEME
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
+
+
+        //New System Stuff
+        enum struct eFMT
+        {
+            INVALID,
+            BGP,
+            WAN,
+            WTE,
+
+        };
+
+        eFMT m_GameFmt;
+        bool m_Import;
+        bool m_Export;
+
+        bool m_doPkSpr;
+        bool m_doPkKao;
+        bool m_doPropSpr;
+        std::vector<std::string> m_extraargs;
     };
 };
 

@@ -6,6 +6,12 @@
 using namespace filetypes;
 using namespace std;
 
+namespace filetypes
+{
+    const ContentTy CnTy_SEDL {"sedl"}; //Content ID db handle
+};
+
+
 namespace DSE
 {
 };

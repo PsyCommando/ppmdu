@@ -368,6 +368,12 @@ namespace DSE
 
     MusicSequence ParseSMDL( const std::string & file )
     {
+        if( utils::LibWide().isLogOn() )
+        {
+            clog << "================================================================================\n"
+                 << "Parsing SMDL " <<file << "\n"
+                 << "================================================================================\n";
+        }
         return std::move( SMDL_Parser( utils::io::ReadFileToByteVector(file) )); //Apparently it being an implicit move isn't enough for MSVC..
     }
 

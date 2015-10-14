@@ -18,6 +18,9 @@ All wrongs reversed, no crappyrights :P
 #include <memory>
 #include <future>
 
+
+namespace DSE{ struct SMDLPresetConversionInfo; };
+
 namespace pmd2 { namespace audio 
 {
 //====================================================================================================
@@ -52,8 +55,6 @@ namespace pmd2 { namespace audio
     /*
     */
 
-
-
 //====================================================================================================
 //  Specialized Loaders/Exporters
 //====================================================================================================
@@ -69,57 +70,57 @@ namespace pmd2 { namespace audio
     public:
         typedef std::pair< DSE::MusicSequence, DSE::PresetBank > smdswdpair_t;
 
-
         /*
             mergedProgData
                 Structure containing references to presets, ordered by banks. While also maintaining a list of references to 
                 the files those were originally from.
                 This allows handling conflicting Preset ID from multiple files.
         */
-        struct mergedProgData
-        {
-            typedef uint16_t                             presetid_t;           //The ID of a DSE Preset
-            typedef uint16_t                             conpresindex_t;       //The index of a conflicting preset within a conflictingpresets_t list!
-            typedef std::vector<DSE::ProgramInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
+        //struct mergedProgData
+        //{
+        //    typedef uint16_t                             presetid_t;           //The ID of a DSE Preset
+        //    typedef uint16_t                             conpresindex_t;       //The index of a conflicting preset within a conflictingpresets_t list!
+        //    typedef std::vector<DSE::ProgramInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
 
-            /*
-                GetPresetByFile
-                    For a given file index, within the list of loaded swd files, returns the correct preset at "presid".
-            */
-            inline DSE::ProgramInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
-            {
-                return mergedpresets[ presid ][ filetopreset[fileindex].at(presid) ];
-            }
+        //    /*
+        //        GetPresetByFile
+        //            For a given file index, within the list of loaded swd files, returns the correct preset at "presid".
+        //    */
+        //    inline DSE::ProgramInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
+        //    {
+        //        return mergedpresets[ presid ][ filetopreset[fileindex].at(presid) ];
+        //    }
 
-            /*
-                GetPresetByBank
-                    For a given bank, returns the preset at preset ID !
-            */
-            inline DSE::ProgramInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
-            {
-                return mergedpresets[presid][bank];
-            }
+        //    /*
+        //        GetPresetByBank
+        //            For a given bank, returns the preset at preset ID !
+        //    */
+        //    inline DSE::ProgramInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
+        //    {
+        //        return mergedpresets[presid][bank];
+        //    }
 
-            std::vector<conflictingpresets_t>                   mergedpresets; //Each slots in the vector correspond to a DSE Preset ID.
-                                                                               //Each slot contains a vector of pointers to "ProgramInfo"
-                                                                               // objects. Each of those pointers is a Preset that shares the 
-                                                                               // same preset ID as the others in this "row".
-                                                                               // So if mergedpresets[Y][X], Y is the DSE PresetID,
-                                                                               // and X is a "bank" for this ID, with a different instrument that shares the same DSE Preset ID.
+        //    std::vector<conflictingpresets_t>                   mergedpresets; //Each slots in the vector correspond to a DSE Preset ID.
+        //                                                                       //Each slot contains a vector of pointers to "ProgramInfo"
+        //                                                                       // objects. Each of those pointers is a Preset that shares the 
+        //                                                                       // same preset ID as the others in this "row".
+        //                                                                       // So if mergedpresets[Y][X], Y is the DSE PresetID,
+        //                                                                       // and X is a "bank" for this ID, with a different instrument that shares the same DSE Preset ID.
 
-            std::vector< std::map<presetid_t, conpresindex_t> > filetopreset;  //Each slot in the vector is a file from the m_pair vector.
-                                                                               //Each key values in the map, is a preset ID.
-                                                                               //Each value for each key value is the "bank" or the index within the 
-                                                                               // conflictingpresets_t list of presets sharing the same preset ID
-        };
+        //    std::vector< std::map<presetid_t, conpresindex_t> > filetopreset;  //Each slot in the vector is a file from the m_pair vector.
+        //                                                                       //Each key values in the map, is a preset ID.
+        //                                                                       //Each value for each key value is the "bank" or the index within the 
+        //                                                                       // conflictingpresets_t list of presets sharing the same preset ID
+        //};
 
     //-----------------------------
     // Construction
     //-----------------------------
         /*
-            mbank : Path to Master SWD Bank to load.
+            mbank     : Path to Master SWD Bank to load.
+            singleSF2 : If set to true, the batch loader will do its best to allocate all presets into a single SF2!
         */
-        BatchAudioLoader( const std::string & mbank );
+        BatchAudioLoader( const std::string & mbank, bool singleSF2 = true );
 
     //-----------------------------
     // Loading Methods
@@ -138,20 +139,23 @@ namespace pmd2 { namespace audio
             Any duplicate presets are ignored if they're identical, or they're placed into
             other banks for the same preset ID.
         */
-        mergedProgData ExportSoundfont( const std::string & destf )const;
+        //mergedProgData ExportSoundfont( const std::string & destf )const;
+
+        //A test for a simpler implementation
+        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont_New( const std::string & destf )const;
 
         /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
             exports all loaded smd as MIDIs, with the appropriate bank events to use
             the correct instrument presets.
         */
-        void ExportSoundfontAndMIDIs( const std::string & destdir )const;
+        void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0 )const;
 
         /*
             Exports a MIDI along with a minimal soundfont for the specified smd+swd pair.
         */
         //
-        void ExportSoundfontAndMIDIs_new( const std::string & destdir )const;
+        //void ExportSoundfontAndMIDIs_new( const std::string & destdir )const;
 
         /*
             Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
@@ -185,10 +189,25 @@ namespace pmd2 { namespace audio
             The list containing the position of each presets from each smd+swd pairs uses a map to associate 
             an instrument ID (uint16_t) to a position in the second dimension of the merged instrument info list.
         */
-        mergedProgData PrepareMergedInstrumentTable()const;
+        //mergedProgData PrepareMergedInstrumentTable()const;
+
+        /*
+            BuildPresetConversionDB
+                Set to replace the above method.
+                Builds a table for every files, containing data on what DSE preset IDs are converted to in the soundfont.
+
+        */
+        std::vector<DSE::SMDLPresetConversionInfo> BuildPresetConversionDB()const;
+
+
+        /*
+        */
+        void AllocPresetSingleSF2( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const;
+        void AllocPresetDefault  ( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const;
 
     private:
         std::string               m_mbankpath;
+        bool                      m_bSingleSF2;
 
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;
@@ -206,7 +225,8 @@ namespace pmd2 { namespace audio
     //-------------------
 
     // ======================= 1. Main Bank + Sequences + RefBanks ( smdl or sedl ) ( mainbank.swd + 001.smd + 001.swd ) =======================
-    std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot );
+    std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs     ( const std::string & bank, const std::string & smdroot, const std::string & swdroot );
+    std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndSinglePair( const std::string & bank, const std::string & smd,     const std::string & swd );
 
     // ======================= 2. 1 Sequence + 1 Bank ( 001.smd + 001.swd ) =======================
     std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd );

@@ -12,7 +12,8 @@ All wrongs reversed, no crappyrights :P
 */
 #include <string>
 #include <vector>
-#include <ppmdu/basetypes.hpp>
+#include <ppmdu/pmd2/pmd2.hpp>
+//#include <ppmdu/basetypes.hpp>
 #include <utils/handymath.hpp>
 #include <types/content_type_analyser.hpp>
 
@@ -27,15 +28,7 @@ namespace pmd2 { namespace filetypes
 // Constants
 //==================================================================
     
-    /*
-    */
-    enum struct eGameVersion
-    {
-        Invalid,
-        EoS,        //Explorers of Sky
-        EoTEoD,     //Explorers of Time/Darkness
-        NBGameVers, //Must be last
-    };
+
 
     //namespace magicnumbers
     //{

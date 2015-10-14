@@ -106,6 +106,17 @@ namespace gimg
             return *this;
         }
 
+        inline void flipH()
+        {
+            for( auto & row : content )
+                std::reverse( row.begin(), row.end() );
+        }
+
+        inline void flipV()
+        {
+            std::reverse( content.begin(), content.end() );
+        }
+
         /*
             operator[]
         */
@@ -497,6 +508,7 @@ namespace gimg
 //=============================================================================
     typedef tiled_indexed_image<pixel_indexed_4bpp, colorRGB24> tiled_image_i4bpp; //Indexed 4bpp image with rgb24 palette.
     typedef tiled_indexed_image<pixel_indexed_8bpp, colorRGB24> tiled_image_i8bpp; //Indexed 8bpp image with rgb24 palette.
+    typedef tiled_image<pixel_rgb24>                            tiled_image_24bpp; //Indexed 8bpp image with rgb24 palette.
 
 //=============================================================================
 // Function Parse Image

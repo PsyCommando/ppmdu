@@ -225,11 +225,11 @@ namespace DSE
         void                      smplbank( std::unique_ptr<SampleBank>  && samplesbank)     { m_pSamples = std::move(samplesbank); }
 
         //Returns a weak_ptr to the instrument bank
-        wptrinst_t                instbank()                                                { return m_pInstbnk; }
-        const wptrinst_t          instbank()const                                           { return m_pInstbnk; }
-        void                      instbank( ptrinst_t    && instbank)                       { m_pInstbnk = std::move(instbank); }
-        //void                      instbank( InstrumentBank * instbank)                       { m_pInstbnk.reset(instbank); }
-        void                      instbank( std::unique_ptr<InstrumentBank>     && instbank) { m_pInstbnk = std::move(instbank); }
+        wptrinst_t                prgmbank()                                                { return m_pInstbnk; }
+        const wptrinst_t          prgmbank()const                                           { return m_pInstbnk; }
+        void                      prgmbank( ptrinst_t    && bank)                       { m_pInstbnk = std::move(bank); }
+        //void                      prgmbank( InstrumentBank * bank)                       { m_pInstbnk.reset(bank); }
+        void                      prgmbank( std::unique_ptr<InstrumentBank>     && bank) { m_pInstbnk = std::move(bank); }
 
     private:
         //Can't copy
@@ -323,6 +323,16 @@ namespace DSE
 
         //Print statistics on the music sequence
         std::string printinfo()const;
+
+        //Makes it possible to iterate through the tracks using a foreach loop
+        typedef std::vector<MusicTrack>::iterator       iterator;
+        typedef std::vector<MusicTrack>::const_iterator const_iterator;
+
+        inline iterator       begin()      { return move(m_tracks.begin()); }
+        inline const_iterator begin()const { return move(m_tracks.begin()); }
+        inline iterator       end()        { return move(m_tracks.end()); }
+        inline const_iterator end()const   { return move(m_tracks.end()); }
+        inline bool           empty()const { return m_tracks.empty(); }
 
     private:
         DSE::DSE_MetaDataSMDL    m_meta;

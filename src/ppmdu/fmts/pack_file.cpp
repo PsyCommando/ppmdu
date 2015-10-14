@@ -129,10 +129,9 @@ namespace filetypes
         return ( m_ForcedFirstFileOffset > PredictHeaderSizeWithPadding( m_SubFiles.size() ) );
     }
 
-    void CPack::LoadPack( types::constitbyte_t beg, types::constitbyte_t end )
-    {
-        //utils::MrChronometer chronopacker( "PackFile Loader" );
 
+    void CPack::LoadPack(std::vector<uint8_t>::const_iterator beg, std::vector<uint8_t>::const_iterator end)
+    {
         //Clear all current data
         ClearState();
 
@@ -140,13 +139,9 @@ namespace filetypes
         pfheader mahead;
         mahead.ReadFromContainer(beg);
 
-		//----------- Analyze file ----------
+	    //----------- Analyze file ----------
         //Is it using a forced first file offset ?
         m_ForcedFirstFileOffset = IsPackFileUsingForcedFFOffset( beg, mahead._nbfiles );
-
-        //if( m_ForcedFirstFileOffset > 0 )
-        //    cout << " !-Extra padding detected ! First file offset is forced to offset 0x" 
-        //         << std::hex << m_ForcedFirstFileOffset <<std::dec <<" !\n";
 
         //Fill the File Offset Table
         ReadFOTFromPackFile( beg, mahead._nbfiles );
@@ -154,7 +149,6 @@ namespace filetypes
         //Get the file data
         ReadSubFilesFromPackFileUsingFOT( beg );
     }
-
 
     void CPack::LoadFolder( const std::string & pathdir )
     {
@@ -207,7 +201,7 @@ namespace filetypes
 
 
     //void CPack::OutputToFile( const std::string & pathfile )
-    types::bytevec_t CPack::OutputPack()
+    vector<uint8_t> CPack::OutputPack()
     {
         //utils::MrChronometer chronotwat("Writing Pack File");
         //Build the FOT
@@ -216,8 +210,8 @@ namespace filetypes
         if( m_OffsetTable.empty() )
             throw std::runtime_error( "Couldn't fill the FoT!" );
 
-        types::bytevec_t result( PredictTotalFileSize() );
-        types::itbyte_t  ittwritepos = WriteFullHeader( result.begin() );
+        vector<uint8_t> result( PredictTotalFileSize() );
+        auto            ittwritepos = WriteFullHeader( result.begin() );
 
         ittwritepos = WriteFileData( ittwritepos );
 
@@ -266,16 +260,16 @@ namespace filetypes
         return headerlengthwithpadding - PredictHeaderSize( m_OffsetTable.size() );
     }
 
-    types::constitbyte_t CPack::ReadHeader( types::constitbyte_t itbegin, pfheader & out_mahead )const
+    vector<uint8_t>::const_iterator CPack::ReadHeader( vector<uint8_t>::const_iterator itbegin, pfheader & out_mahead )const
     {
         return out_mahead.ReadFromContainer(itbegin);
     }
 
     // !!- OK -!!
-    void CPack::ReadFOTFromPackFile( types::constitbyte_t itbegin, unsigned int nbsubfiles )
+    void CPack::ReadFOTFromPackFile( vector<uint8_t>::const_iterator itbegin, unsigned int nbsubfiles )
     {
         const uint32_t       TOTAL_BYTES_FOT = nbsubfiles * SZ_OFFSET_TBL_ENTRY;
-        types::constitbyte_t itt             = itbegin;
+        vector<uint8_t>::const_iterator itt             = itbegin;
         m_OffsetTable.resize( nbsubfiles );
 
         std::advance(    itt,  OFFSET_TBL_FIRST_ENTRY );                    //Move to beginning of FOT
@@ -289,7 +283,7 @@ namespace filetypes
     }
 
 
-    void CPack::ReadSubFilesFromPackFileUsingFOT( types::constitbyte_t itbegin )
+    void CPack::ReadSubFilesFromPackFileUsingFOT( vector<uint8_t>::const_iterator itbegin )
     {
         if( m_OffsetTable.empty() )
             throw std::runtime_error( "The FoT contains no entries!" );
@@ -311,11 +305,11 @@ namespace filetypes
     }
 
     // !!- OK -!!
-    uint32_t CPack::IsPackFileUsingForcedFFOffset( types::constitbyte_t itbeg, unsigned int nbsubfiles )const
+    uint32_t CPack::IsPackFileUsingForcedFFOffset( vector<uint8_t>::const_iterator itbeg, unsigned int nbsubfiles )const
     {
         uint32_t             expectedlength;
         uint32_t             actuallength;
-        types::constitbyte_t ittread        = itbeg;
+        vector<uint8_t>::const_iterator ittread        = itbeg;
         
         expectedlength = PredictHeaderSizeWithPadding( nbsubfiles ); //compute expected header length
 
@@ -362,7 +356,7 @@ namespace filetypes
         return writeat;
     }
 
-    types::itbyte_t CPack::WriteFileData( types::itbyte_t writeat )
+    vector<uint8_t>::iterator CPack::WriteFileData( vector<uint8_t>::iterator writeat )
     {
         //Add file data, and add padding after those that need it !
         for( auto & afile : m_SubFiles )
@@ -378,7 +372,7 @@ namespace filetypes
         return writeat;
     }
 
-    string SubfileGetFExtension( types::constitbyte_t beg, types::constitbyte_t end )
+    string SubfileGetFExtension( vector<uint8_t>::const_iterator beg, vector<uint8_t>::const_iterator end )
     {
         string result = pmd2::filetypes::GetAppropriateFileExtension(beg,end);
         if( result.empty() )
@@ -387,7 +381,7 @@ namespace filetypes
             return "." + result;
     }
 
-    void CPack::WriteSubFileToFile( types::bytevec_t  & file,
+    void CPack::WriteSubFileToFile( vector<uint8_t>  & file,
                                     const std::string & path, 
                                     unsigned int        fileindex )
     {
@@ -439,9 +433,9 @@ namespace filetypes
 
         //This method is a quick boolean test to determine quickly if this content handling
         // rule matches, without in-depth analysis.
-        virtual bool isMatch(  types::constitbyte_t   itdatabeg, 
-                               types::constitbyte_t   itdataend,
-                               const std::string    & filext);
+        virtual bool isMatch(  std::vector<uint8_t>::const_iterator itdatabeg, 
+                               std::vector<uint8_t>::const_iterator itdataend,
+                               const std::string                  & filext);
 
     private:
         cntRID_t m_myID;
@@ -494,7 +488,7 @@ namespace filetypes
 
     //This method is a quick boolean test to determine quickly if this content handling
     // rule matches, without in-depth analysis.
-    bool packfile_rule::isMatch( types::constitbyte_t itdatabeg, types::constitbyte_t itdataend , const std::string & filext )
+    bool packfile_rule::isMatch( std::vector<uint8_t>::const_iterator itdatabeg, std::vector<uint8_t>::const_iterator itdataend , const std::string & filext )
     {
         pfheader headr;
         itdatabeg = headr.ReadFromContainer( itdatabeg );
