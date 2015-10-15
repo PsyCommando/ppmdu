@@ -24,21 +24,6 @@ namespace multitask
     typedef std::packaged_task<pktaskret_t()> pktask_t;
 
     /*
-        A container to contain the state of tasks assigned to threads.
-    */
-    //struct runTaskContainer
-    //{
-    //    uint32_t                threadWaitSchedule; //This sets the waiting time a thread waits before checking for a new task
-    //    std::mutex              taskmutex;          //Just in case the compiler plays us a prank...
-    //    std::atomic<bool>       taskAvailable;      //This is set to false when the task is moved, and to true when a new task is moved over it!
-
-    //    std::mutex              newTaskmutex;       //Mutex for the condition var below
-    //    std::condition_variable newTask;            //This is triggered when a new task is set
-
-    //    pktask_t                task;
-    //};
-
-    /*
         CMultiTaskHandler
             Class meant to manage a task queue and a small threadpool. It process tasks in parallel, and provide means to 
             wait for the end of the execution, or stop it/pause it.

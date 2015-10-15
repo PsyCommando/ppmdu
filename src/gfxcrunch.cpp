@@ -2127,13 +2127,13 @@ namespace gfx_util
                     throw runtime_error(sstr.str());
                 }
             }
-            catch( const exception & e )
-            {
-                clog <<"Exception: " << e.what() <<"\n";
-            }
             catch( const Poco::Exception & e )
             {
                 clog <<"Poco::Exception: " << e.what() <<"\n";
+            }
+            catch( const exception & e )
+            {
+                clog <<"Exception: " << e.what() <<"\n";
             }
             ++againcnt;
         }

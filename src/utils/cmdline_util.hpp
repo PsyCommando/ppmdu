@@ -66,9 +66,8 @@ namespace utils{ namespace cmdl
         std::string  example;           //An example of this argument on the command line
 
         //Functions pointers
-        std::function<bool(const std::string&)> myParseFun; 
-        //argparsefun_t myParseFun;       //Pointer to a function that will parse this argument for the program. 
-                                        //Must return false if it fails to parse !
+        std::function<bool(const std::string&)> myParseFun;  //Pointer to a function that will parse this argument for the program. 
+                                                             //Must return false if it fails to parse !
 
         std::string *dependson;         //What other argument needs to be parsed before! Use their "name" field's value. Must refer to a static table, because the pointer is never deleted!
         int          totaldependson;    //The size of the "dependson" string array.
@@ -179,11 +178,6 @@ namespace utils{ namespace cmdl
         CommandLineUtility()
         {}
 
-        //CommandLineUtility( int argc, const char * argv[] )
-        //{
-        //    SetArguments(argc, argv);
-        //}
-
         //Destructor
         virtual ~CommandLineUtility()
         {}
@@ -235,12 +229,6 @@ namespace utils{ namespace cmdl
         //If AbortOnError is true, the method will throw an exception if the parameter can't be parsed. 
         // Otherwise, it will only print a warning to cerr !
         bool parseExtraArgs( CArgsParser & argsparse, bool bAbortOnError = false ); 
-
-        //Variables
-        //CArgsParser m_ArgsParse;
-        //std::vector<std::string>              m_params;
-        //std::vector<std::string>              m_extraparams;
-        //std::vector<std::vector<std::string>> m_options;
 
         //Disable copy and move
         CommandLineUtility( const CommandLineUtility & );

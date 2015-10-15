@@ -63,7 +63,7 @@ namespace audio
             if(index < 0)
                 return 0;
 
-            if(index >= IMA_ADPCM::StepSizes.size())
+            if( static_cast<uint32_t>(index) >= IMA_ADPCM::StepSizes.size() )
                 return (IMA_ADPCM::StepSizes.size() - 1);
 
             return index;
@@ -102,7 +102,7 @@ namespace audio
             if(index < 0)
                 return 0;
 
-            if(index >= IMA_ADPCM::StepSizes.size())
+            if( static_cast<uint32_t>(index) >= IMA_ADPCM::StepSizes.size())
                 return (IMA_ADPCM::StepSizes.size() - 1);
 
             return index;

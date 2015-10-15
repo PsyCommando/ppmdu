@@ -106,8 +106,14 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
@@ -213,6 +219,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp" />
     <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -225,11 +232,17 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>

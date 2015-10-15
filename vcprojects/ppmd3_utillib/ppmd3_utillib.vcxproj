@@ -137,7 +137,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\pugixml-1.5\src\pugixml.cpp" />
     <ClCompile Include="..\..\src\ppmd3_txtutil.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DLL|Win32'">true</ExcludedFromBuild>
     </ClCompile>

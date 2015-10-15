@@ -7,6 +7,46 @@ namespace pmd2
 {
 
 //==============================================================================
+//  ScriptSet
+//==============================================================================
+    ScriptSet::ScriptSet( const std::string & name )
+    {
+        //#TODO
+        assert(false);
+    }
+    ScriptSet::ScriptSet( const std::string & name, std::vector<ScriptGroup> && comp )
+    {
+        //#TODO
+        assert(false);
+    }
+
+    ScriptSet::ScriptSet( const ScriptSet & other )
+    {
+        //#TODO
+        assert(false);
+    }
+
+    ScriptSet & ScriptSet::operator=( const ScriptSet & other )
+    {
+        //#TODO
+        assert(false);
+        return ScriptSet("");
+    }
+
+    ScriptSet::ScriptSet( ScriptSet && other )
+    {
+        //#TODO
+        assert(false);
+    }
+
+    ScriptSet & ScriptSet::operator=( ScriptSet && other )
+    {
+        //#TODO
+        assert(false);
+        return ScriptSet("");
+    }
+
+//==============================================================================
 //  GameScripts
 //==============================================================================
     GameScripts::GameScripts( const std::string & scrdir )

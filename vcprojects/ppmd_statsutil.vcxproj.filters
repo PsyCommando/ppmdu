@@ -192,6 +192,9 @@
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">

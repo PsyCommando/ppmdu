@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="pugixml">
-      <UniqueIdentifier>{d9cfa28c-f061-42cf-9607-57167195e1b6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\utility">
       <UniqueIdentifier>{48582490-ed8a-49eb-9042-813b2488103e}</UniqueIdentifier>
     </Filter>
@@ -54,9 +51,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\utils\cmdline_util.cpp">
       <Filter>Source Files\utility</Filter>
     </ClCompile>

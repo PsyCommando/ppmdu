@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.1
+Version	   : 0.11
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -12,6 +12,8 @@ https://github.com/PsyCommando/ppmdu/
 Changelog:
 ----------------------------------------------------------------------------------------------------
 - 0.1 : Initial release!
+- 0.11: (2015/10/14) : 
+        - Fixed tracks looping with a noticeable delay..
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -63,7 +65,7 @@ How to use:
 * To export the entire pmd2 BGM folder, just specify the path to the rom's root directory 
   and the -pmd2 commandline option, like so :
 
-    ppmd_audioutil.exe -pmd2 "pmd2_extractedrom" "out_bgm"
+    ppmd_audioutil.exe -pmd2 "pmd2_extractedrom/data" "out_bgm"
 
 * To export a single SMDL file as-is, just drag and drop onto the executable.
 

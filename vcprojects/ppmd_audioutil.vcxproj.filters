@@ -311,10 +311,18 @@
     <ClCompile Include="..\src\dse\dse_conversion_info.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\pmd2eos_cvinfo.xml">
       <Filter>Resource Files</Filter>
     </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_audioutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

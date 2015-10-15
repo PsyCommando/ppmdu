@@ -68,13 +68,7 @@
     <ClInclude Include="..\..\src\ppmdu\pmd3\farc_blob.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\utils\readme_writer.hpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\utils\cmdline_util.hpp">
-      <Filter>Header Files\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\utils\config_io.hpp">
       <Filter>Header Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\utils\gbyteutils.hpp">

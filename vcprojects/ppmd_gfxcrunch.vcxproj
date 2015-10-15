@@ -243,6 +243,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp" />
     <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
@@ -537,6 +538,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\parse_utils.hpp" />
     <ClInclude Include="..\src\utils\poco_wrapper.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
@@ -545,14 +547,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\readme_writer.hpp">
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Header Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Header Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Header Files\ppmdutils\utility</Filter>
-    </ClInclude>
+    <ClInclude Include="..\src\utils\pugixml_utils.hpp" />
     <ClInclude Include="..\src\utils\utility.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\utility</Filter>

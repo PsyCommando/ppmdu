@@ -693,8 +693,8 @@ namespace filetypes
                      <<"\tExpected resolution of " <<myres <<"(" <<(myres.width * myres.height) <<" pixels), but got a total of " <<nbPixInBytes <<" pixels!\n";
                 
                 //This is bad, fallback to guessing the size of the image via pixel total
-                float squareroot = ceilf( sqrtf( nbPixInBytes ) );
-                long  squareRes  = std::lroundf(squareroot);
+                double squareroot = ceil( sqrt( nbPixInBytes ) );
+                long  squareRes  = std::lround(squareroot);
                 long  resdivbyTile  = ( (squareRes % TIMG_t::getTileWidth()) == 0 )?
                                         squareRes :
                                         CalcClosestHighestDenominator( squareRes, TIMG_t::getTileWidth() );

@@ -89,6 +89,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>jdksmidi.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">
     <ClCompile>
@@ -103,6 +109,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>jdksmidi_dnoit.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -121,6 +133,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>jdksmidi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>
+        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
@@ -406,6 +424,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp" />
     <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -416,6 +435,9 @@
     <Xml Include="..\resources\pmd2eos_cvinfo.xml">
       <SubType>Designer</SubType>
     </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_audioutil.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
