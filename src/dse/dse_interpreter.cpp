@@ -62,6 +62,25 @@ namespace DSE
         outtrack.PutEvent(bankselLSB);
     }
 
+
+//======================================================================================
+//  DSESequenceToMidi_Improv
+//======================================================================================
+
+    /*
+        Improved version of the DSE MIDI Sequence converter.
+
+        This version will work based on MIDI channels
+        It will process all DSE tracks together at the same time. So it will be much easier
+        to process the effect of an event, and pick an output MIDI channel for it.
+
+        We should also keep preset/program states, so we can keep track of polyphony. 
+        And then, we need to see what presets are playing at the same time on other channels, 
+        and "prioritize" some based on their keygroup priority. I suspect it involves making
+        one channel louder than the other by a certain amount of decibel!
+    */
+
+
 //======================================================================================
 //  DSESequenceToMidi
 //======================================================================================
@@ -145,10 +164,7 @@ namespace DSE
         {
             using namespace jdksmidi;
 
-            //if( m_midifmt == eMIDIFormat::SingleTrack )
-                ExportAsSingleTrack();
-            //else if( m_midifmt == eMIDIFormat::MultiTrack )
-            //    ExportAsMultiTrack();
+            ExportAsSingleTrack();
 
             //Sort the tracks
             m_midiout.SortEventsOrder();
@@ -161,16 +177,8 @@ namespace DSE
                 MIDIFileWriteMultiTrack writer( &m_midiout, &out_stream );
 
                 // write the output file
-                //if( m_midifmt == eMIDIFormat::SingleTrack )
-                //{
-                    if ( !writer.Write( 1 ) )
-                        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
-                //}
-                //else if( m_midifmt == eMIDIFormat::MultiTrack )
-                //{
-                //    if ( !writer.Write( m_midiout.GetNumTracks() ) )
-                //        throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
-                //}
+                if ( !writer.Write( 1 ) )
+                    throw std::runtime_error("DSESequenceToMidi::operator(): JDKSMidi failed while writing the MIDI file!");
             }
             else
             {
@@ -419,14 +427,11 @@ namespace DSE
                     }
                     case eTrkEventCodes::LoopPointSet:
                     {
-                        m_bTrackLoopable = true; //If we got a loop pos, then the track is loopable
-
                         if( m_nbloops == 0 )
                         {
-                            if( ( /*m_midifmt == eMIDIFormat::SingleTrack &&*/ !m_bLoopBegSet ) /*|| 
-                                ( m_midifmt != eMIDIFormat::SingleTrack )*/)
+                            if( !m_bLoopBegSet )
                             {
-                                //Only place an event if we don't loop the track, and haven't placed it already to avoid playbak issues
+                                //Only place an event if we don't loop the track via code, and haven't placed it already to avoid playbak issues
                                 mess.SetMetaType(META_TRACK_LOOP);
                                 mess.SetTime(state.ticks_);
                                 outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, TXT_LoopStart.c_str(), TXT_LoopStart.size() );
@@ -434,18 +439,12 @@ namespace DSE
                             }
                         }
 
-                        //For single track mode, we only put a single loop start marker
-                        //if( m_midifmt == eMIDIFormat::SingleTrack )
-                        //{
-                            //if( !m_bLoopBegSet )
-                            //{
-                                m_bLoopBegSet = true;
-                            //}
-                        //}
+                        m_bTrackLoopable = true; //If we got a loop pos, then the track is loopable
+                        m_bLoopBegSet    = true;
 
-                        //Mark the loop position for each tracks
-                        state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid duplicating the loop marker
-                        m_beflooptrkstates[trkno] = state;    //Save the track state
+                        //Mark the loop position
+                        state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid re-processing the loop marker
+                        m_beflooptrkstates[trkno] = state;                 //Save the track state
                         break;
                     }
                     //
@@ -934,7 +933,7 @@ namespace DSE
             }
 
             //Just mark the end of the loop when we're not looping ourselves via code. This prevents there being a delay when looping in external players!
-            if( m_nbloops == 0 )
+            if( m_bTrackLoopable && m_nbloops == 0 )
                 m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
 
             //Insert a single loop end event!
@@ -1206,6 +1205,7 @@ namespace DSE
         eMIDIMode                          m_midimode;
 
         //State variables
+        //#TODO: This is horrible! I need to build something better!
         std::vector<TrkState>              m_trkstates;
         std::vector<TrkState>              m_beflooptrkstates; //Saved states of each tracks just before the loop point event! So we can restore each tracks to their intended initial states.
         std::vector<uint8_t>               m_trkchanmap;       //Contains the channel to use for each tracks. This overrides what's in the sequence!
