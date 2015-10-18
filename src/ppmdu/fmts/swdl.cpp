@@ -58,15 +58,15 @@ namespace DSE
         {
         }
 
-        operator PresetBank()
+        PresetBank Parse()
         {
             using namespace pmd2::audio;
             ParseHeader();
             ParseMeta();
 
 
-            //Parse instruments + keygroups
-            auto pinst = ParseInstruments();
+            //Parse programs + keygroups
+            auto pinst = ParsePrograms();
 
             //Parse pcmd + wavi
             if( m_hdr.pcmdlen != 0 && (m_hdr.pcmdlen & 0xFFFF0000) != SWDL_PCMDSpecialSize )
@@ -103,7 +103,7 @@ namespace DSE
             m_meta.nbwavislots        = m_hdr.nbwavislots;
         }
 
-        std::unique_ptr<InstrumentBank> ParseInstruments()
+        std::unique_ptr<ProgramBank> ParsePrograms()
         {
             using namespace pmd2::audio;
 
@@ -116,7 +116,7 @@ namespace DSE
             //Find the prgi chunk
             auto itprgi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::prgi );
 
-            //Its possible there are no instruments
+            //Its possible there are no programs
             if( itprgi == m_src.end() )
             {
                 if( utils::LibWide().isLogOn() )
@@ -129,19 +129,19 @@ namespace DSE
             itprgi = prgihdr.ReadFromContainer( itprgi ); //Move iter after header
 
             //Read instrument info slots
-            vector<InstrumentBank::ptrinst_t> instinf( m_hdr.nbprgislots );
+            vector<ProgramBank::ptrprg_t> prginf( m_hdr.nbprgislots );
 
-            auto itreadinst = itprgi;
+            auto itreadprg = itprgi;
 
-            for( auto & infslot : instinf )
+            for( auto & infslot : prginf )
             {
                 //Read a ptr
-                uint16_t instinfblk = utils::ReadIntFromByteVector<uint16_t>(itreadinst); //Iterator is incremented
+                uint16_t prginfblk = utils::ReadIntFromByteVector<uint16_t>(itreadprg); //Iterator is incremented
 
-                if( instinfblk != 0 )
+                if( prginfblk != 0 )
                 {
                     ProgramInfo curblock;
-                    curblock.ReadFromContainer( instinfblk + itprgi );
+                    curblock.ReadFromContainer( prginfblk + itprgi );
                     infslot.reset( new ProgramInfo(curblock) );
 
                     if( utils::LibWide().isLogOn() )
@@ -150,7 +150,7 @@ namespace DSE
             }
             if( utils::LibWide().isLogOn() )
                 clog << endl;
-            return move( unique_ptr<InstrumentBank>( new InstrumentBank( move(instinf), move(kgrps) ) ) );
+            return move( unique_ptr<ProgramBank>( new ProgramBank( move(prginf), move(kgrps) ) ) );
         }
 
         vector<KeyGroup> ParseKeygroups()
@@ -208,40 +208,7 @@ namespace DSE
             ChunkHeader pcmdhdr;
             itpcmd = pcmdhdr.ReadFromContainer( itpcmd ); //Move iter after header
 
-            //Grab each samples from the pcmd chunk
-            //map<size_t,SampleBank::smpldata_t> smpldat;
-
-
-            //smpldat.reserve(winf.size());
-
-            //Build sample bounds table
-            //map<size_t,vector<uint8_t>::const_iterator> boundmap; //Each key is the sample that own this sample start location
-            //smplbounds.reserve(winf.size() + 1);
-
-            //for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
-            //{
-            //    if( smpldat[cntsmpl].pinfo_ != nullptr )
-            //        boundmap.emplace( cntsmpl, (itpcmd + (smpldat[cntsmpl].pinfo_->smplpos) ) );
-            //}
-
-            //Append the end of the pcmd chunk to grab the last sample
-            //smplbounds.push_back( ( itpcmd + pcmdhdr.datlen) );
-
-            //Read the raw sample data, using the sample bounds
-            //auto itbounds = boundmap.begin();
-            //for( size_t i = 0; i < boundmap.size(); ++i, ++itbounds )//( auto it = boundmap.begin(); it != boundmap.end(); ++it ) 
-            //{
-            //    auto nextit = itbounds;
-            //    ++nextit;
-
-            //    if( nextit != boundmap.end() )
-            //        smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, nextit->second ) ); 
-            //    else //For the last element before the end, use the end of the chunk as terminator
-            //        smpldat[itbounds->first].pdata_.reset( new vector<uint8_t>( itbounds->second, (itpcmd + pcmdhdr.datlen) ) );
-            //}
-
-
-            //#TODO: Rewrite this so it uses the samples' length instead of the next sample's offset.
+            //Grab the samples
             for( size_t cntsmpl = 0; cntsmpl < smpldat.size(); ++cntsmpl )
             {
                 const auto & psinfo = smpldat[cntsmpl].pinfo_;
@@ -289,7 +256,7 @@ namespace DSE
         }
 
     private:
-        DSE_MetaDataSWDL                 m_meta;
+        DSE_MetaDataSWDL             m_meta;
         SWDL_Header                  m_hdr;
         const std::vector<uint8_t> & m_src;
     };
@@ -305,7 +272,7 @@ namespace DSE
                  <<"Parsing SWDL \"" <<filename <<"\"\n"
                  <<"--------------------------------------------------------------------------\n";
         }
-        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).operator PresetBank() );
+        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).Parse() );
     }
 
 

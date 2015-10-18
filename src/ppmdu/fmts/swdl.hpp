@@ -202,7 +202,7 @@ namespace DSE
 
     //private:
     //    pmd2::audio::SampleBank     m_audiodata;
-    //    pmd2::audio::InstrumentBank m_instdata;
+    //    pmd2::audio::ProgramBank m_instdata;
 
 
     //};

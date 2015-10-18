@@ -173,35 +173,35 @@ namespace audioutil
         //#TODO : New Implementation for loading DSE stuff. Work in progress!
         //#################################################
 
-        ////Set Main Bank
-        //{
-        //    "mbank",
-        //    1,
-        //    "Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!"
-        //    "Is also used to specify where to put the assembled ",
-        //    "-mbank \"SOUND/BGM/bgm.swd\"",
-        //    std::bind( &CAudioUtil::ParseOptionMBank, &GetInstance(), placeholders::_1 ),
-        //},
+        //Set Main Bank
+        {
+            "mbank",
+            1,
+            "Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!"
+            "Is also used to specify where to put the assembled ",
+            "-mbank \"SOUND/BGM/bgm.swd\"",
+            std::bind( &CAudioUtil::ParseOptionMBank, &GetInstance(), placeholders::_1 ),
+        },
 
-        ////Set SWDLPath
-        //{
-        //    "swdlpath",
-        //    1,
-        //    "Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored."
-        //    "Is also used to specify where to put assembled DSE Preset during import.",
-        //    "-swdlpath \"SOUND/BGM\"",
-        //    std::bind( &CAudioUtil::ParseOptionSWDLPath, &GetInstance(), placeholders::_1 ),
-        //},
+        //Set SWDLPath
+        {
+            "swdlpath",
+            1,
+            "Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored."
+            "Is also used to specify where to put assembled DSE Preset during import.",
+            "-swdlpath \"SOUND/BGM\"",
+            std::bind( &CAudioUtil::ParseOptionSWDLPath, &GetInstance(), placeholders::_1 ),
+        },
 
-        ////Set SMDLPath
-        //{
-        //    "smdlpath",
-        //    1,
-        //    "Use this to specify the path to the folder where the SMDLs to export are stored."
-        //    "Is also used to specify where to put MIDI files converted to SMDL format.",
-        //    "-smdlpath \"SOUND/BGM\"",
-        //    std::bind( &CAudioUtil::ParseOptionSMDLPath, &GetInstance(), placeholders::_1 ),
-        //},
+        //Set SMDLPath
+        {
+            "smdlpath",
+            1,
+            "Use this to specify the path to the folder where the SMDLs to export are stored."
+            "Is also used to specify where to put MIDI files converted to SMDL format.",
+            "-smdlpath \"SOUND/BGM\"",
+            std::bind( &CAudioUtil::ParseOptionSMDLPath, &GetInstance(), placeholders::_1 ),
+        },
 
 
         //#################################################
@@ -257,10 +257,10 @@ namespace audioutil
 //--------------------------------------------
     bool CAudioUtil::ParseInputPath( const string & path )
     {
-        Poco::File inputfile(path);
+        Poco::Path inputfile(path);
 
         //check if path exists
-        if( inputfile.exists() && ( inputfile.isFile() || inputfile.isDirectory() ) )
+        if( /*inputfile.exists() &&*/ ( inputfile.isFile() || inputfile.isDirectory() ) )
         {
             m_inputPath = path;
             return true;
@@ -359,6 +359,48 @@ namespace audioutil
         return true;
     }
 
+    bool CAudioUtil::ParseOptionMBank( const std::vector<std::string> & optdata )
+    {
+        Poco::File bank( Poco::Path( optdata[1] ).makeAbsolute() );
+        
+        if( bank.exists() && bank.isFile() )
+            m_mbankpath = optdata[1];
+        else
+        {
+            cerr << "<!>- ERROR: Invalid path to main swdl bank specified !\n";
+            return false;
+        }
+        return true;
+    }
+    
+    bool CAudioUtil::ParseOptionSWDLPath( const std::vector<std::string> & optdata )
+    {
+        Poco::File swdldir( Poco::Path( optdata[1] ).makeAbsolute() );
+        
+        if( swdldir.exists() && swdldir.isDirectory() )
+            m_swdlpath = optdata[1];
+        else
+        {
+            cerr << "<!>- ERROR: Invalid path to swdl directory specified !\n";
+            return false;
+        }
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionSMDLPath( const std::vector<std::string> & optdata )
+    {
+        Poco::File smdldir( Poco::Path( optdata[1] ).makeAbsolute() );
+        
+        if( smdldir.exists() && smdldir.isDirectory() )
+            m_smdlpath = optdata[1];
+        else
+        {
+            cerr << "<!>- ERROR: Invalid path to smdl directory specified !\n";
+            return false;
+        }
+        return true;
+    }
+
 //
 //  Program Setup and Execution
 //
@@ -406,6 +448,19 @@ namespace audioutil
 
         if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
             throw runtime_error("Specified output path does not exists!");
+
+        if( !m_mbankpath.empty() && !m_smdlpath.empty() && !m_swdlpath.empty() )
+        {
+            m_operationMode = eOpMode::ExportBatchPairsAndBank;
+            m_outputPath = m_inputPath;                         //The only parameter will be the output
+            return;
+        }
+        else if( !m_smdlpath.empty() && !m_swdlpath.empty() )
+        {
+            m_operationMode = eOpMode::ExportBatchPairs; 
+            m_outputPath = m_inputPath;                  //The only parameter will be the output
+            return;
+        }
 
         if( infile.exists() )
         {
@@ -529,6 +584,18 @@ namespace audioutil
                     returnval = BuildSEDL();
                     break;
                 }
+                case eOpMode::ExportBatchPairsAndBank:
+                {
+                    cout <<"=== Exporting Batch SMDL + SWDL + Main Bank ! ===\n";
+                    returnval = ExportBatchPairsAndBank();
+                    break;
+                }
+                case eOpMode::ExportBatchPairs:
+                {
+                    cout <<"=== Exporting Batch SMDL + SWDL ! ===\n";
+                    returnval = ExportBatchPairs();
+                    break;
+                }
                 default:
                 {
                     throw runtime_error( "Invalid operation mode. Something is wrong with the arguments!" );
@@ -577,11 +644,11 @@ namespace audioutil
         {
             //Export the /BGM tracks
             Poco::Path mbankpath(Poco::Path(inputdir).append( "SOUND" ).append("BGM").append("bgm.swd").makeFile().toString());
-            BatchAudioLoader bal( mbankpath.toString() );
+            BatchAudioLoader bal;
             
             //  1. Grab the main sample bank.
             cout <<"\n<*>- Loading master bank " << mbankpath.toString() <<"..\n";
-            bal.LoadMasterBank();
+            bal.LoadMasterBank( mbankpath.toString() );
             cout <<"..done\n";
             //  2. Grab all the swd and smd pairs in the folder
 
@@ -612,6 +679,15 @@ namespace audioutil
                 ++dirit;
             }
             cout <<"\n..done\n\n";
+
+            Poco::File outdir(m_outputPath);
+            if( !outdir.exists() )
+            {
+                if( outdir.createDirectory() )
+                    cout << "<*>- Created output directory \"" << outdir.path() <<"\" !\n";
+                else
+                    cout << "<!>- Couldn't create output directory \"" << outdir.path() <<"\" !\n";
+            }
 
             //  3. Assign each instruments to a preset. 
             //     Put duplicates preset IDs into different bank for the same preset ID.
@@ -774,19 +850,21 @@ namespace audioutil
 
         if( swdfile.exists() && swdfile.isFile() )
         {
-            SWDL_Header matchswdhdr = ReadSwdlHeader( swdfile.path() );
+            SWDL_Header      matchswdhdr = ReadSwdlHeader( swdfile.path() );
+            BatchAudioLoader myloader;
 
             if( matchswdhdr.DoesContainsSamples() )
             {
                 cout << "<*>- Found a matching SWDL file containing samples! Exporting a Soundfont along the MIDI!\n";
                 //If the swdl contains samples, we don't need to load a master bank!
-
-                cout<< "Not implemented!\n";
-                assert(false);
                 //#Load SWDL
+                cout << "<*>- Loading pair..\n";
+                myloader.LoadSmdSwdPair( inputfile.toString(), swdfile.path() );
 
                 //#Export
-
+                cout << "<*>- Exporting to MIDI + sounfont..\n";
+                myloader.ExportSoundfontAndMIDIs( outputfile.parent().toString(), m_nbloops );
+                cout << "\nSuccess!\n";
                 return 0;
             }
             else
@@ -812,10 +890,10 @@ namespace audioutil
                 if( foundsmplbank )
                 {
                     cout << "<*>- Found a matching SWDL refering to another SWDL bank file containing samples! Exporting a Soundfont along the MIDI!\n";
-                    BatchAudioLoader myloader(mainbankpath);
+                    
                     //#Proceed with export
                     cout << "<*>- Loading main bank file \"" <<mainbankpath <<"\"...";
-                    myloader.LoadMasterBank();
+                    myloader.LoadMasterBank( mainbankpath );
                     cout << "done!\n"
                          << "<*>- Loading SMD and SWD file..";
                     myloader.LoadSmdSwdPair( inputfile.toString(), swdfile.path() );
@@ -873,6 +951,126 @@ namespace audioutil
     {
         cout<< "Not implemented!\n";
         assert(false);
+        return 0;
+    }
+
+    int CAudioUtil::ExportBatchPairsAndBank()
+    {
+        using namespace pmd2::audio;
+        BatchAudioLoader bal;
+
+        if( m_bGM )
+            clog<<"<!>- Warning: Commandline parameter GM specified, but GM conversion of is currently unsuported in this mode! Falling back to Roland GS conversion!\n";
+
+            
+        //  1. Grab the main sample bank.
+        cout <<"\n<*>- Loading master bank " << m_mbankpath <<"..\n";
+        bal.LoadMasterBank( m_mbankpath );
+        cout <<"..done\n";
+
+        //  2. Grab all the swd and smd pairs in the folder
+        Poco::DirectoryIterator dirit(m_smdlpath);
+        Poco::DirectoryIterator diritend;
+        cout << "<*>- Loading matched smd in the " << m_smdlpath <<" directory..\n";
+
+        unsigned int cntparsed = 0;
+        while( dirit != diritend )
+        {
+            string fext = dirit.path().getExtension();
+            std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+            //Check all smd/swd file pairs
+            if( fext == SMDL_FileExtension )
+            {
+                Poco::File matchingswd( Poco::Path(m_swdlpath).append(dirit.path().getBaseName()).makeFile().setExtension(SWDL_FileExtension) );
+                    
+                if( matchingswd.exists() && matchingswd.isFile() )
+                {
+                    cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<" pairs loaded] - Currently loading : " <<dirit.path().getFileName() <<"..";
+                    bal.LoadSmdSwdPair( dirit.path().toString(), matchingswd.path() );
+                    ++cntparsed;
+                }
+                else
+                    cout<<"<!>- File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
+            }
+            ++dirit;
+        }
+        cout <<"\n..done\n\n";
+
+        Poco::File outdir(m_outputPath);
+        if( !outdir.exists() )
+        {
+            if( outdir.createDirectory() )
+                cout << "<*>- Created output directory \"" << outdir.path() <<"\" !\n";
+            else
+                cout << "<!>- Couldn't create output directory \"" << outdir.path() <<"\" !\n";
+        }
+
+        //  3. Assign each instruments to a preset. 
+        //     Put duplicates preset IDs into different bank for the same preset ID.
+        //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+        cout << "-------------------------------------------------------------\n" 
+                << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
+        bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        cout <<"..done\n";
+
+        return 0;
+    }
+
+    int CAudioUtil::ExportBatchPairs()
+    {
+        using namespace pmd2::audio;
+        BatchAudioLoader bal;
+
+        if( m_bGM )
+            clog<<"<!>- Warning: Commandline parameter GM specified, but GM conversion of is currently unsuported in this mode! Falling back to Roland GS conversion!\n";
+
+        //  2. Grab all the swd and smd pairs in the folder
+        Poco::DirectoryIterator dirit(m_smdlpath);
+        Poco::DirectoryIterator diritend;
+        cout << "<*>- Loading matched smd in the " << m_smdlpath <<" directory..\n";
+
+        unsigned int cntparsed = 0;
+        while( dirit != diritend )
+        {
+            string fext = dirit.path().getExtension();
+            std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+            //Check all smd/swd file pairs
+            if( fext == SMDL_FileExtension )
+            {
+                Poco::File matchingswd( Poco::Path(m_swdlpath).append(dirit.path().getBaseName()).makeFile().setExtension(SWDL_FileExtension) );
+                    
+                if( matchingswd.exists() && matchingswd.isFile() )
+                {
+                    cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<" pairs loaded] - Currently loading : " <<dirit.path().getFileName() <<"..";
+                    bal.LoadSmdSwdPair( dirit.path().toString(), matchingswd.path() );
+                    ++cntparsed;
+                }
+                else
+                    cout<<"<!>- File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
+            }
+            ++dirit;
+        }
+        cout <<"\n..done\n\n";
+
+        Poco::File outdir(m_outputPath);
+        if( !outdir.exists() )
+        {
+            if( outdir.createDirectory() )
+                cout << "<*>- Created output directory \"" << outdir.path() <<"\" !\n";
+            else
+                cout << "<!>- Couldn't create output directory \"" << outdir.path() <<"\" !\n";
+        }
+
+        //  3. Assign each instruments to a preset. 
+        //     Put duplicates preset IDs into different bank for the same preset ID.
+        //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+        cout << "-------------------------------------------------------------\n" 
+                << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
+        bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        cout <<"..done\n";
+
         return 0;
     }
 

@@ -701,13 +701,18 @@ namespace sf2
                 auto           loadedsmpl = std::move( smpl.Data() );   //Never trust MSVC with move constructors and static type abstraction
                 auto           loopbounds = smpl.GetLoopBounds();
 
-#ifdef _DEBUG
+
                 if( loopbounds.second > loadedsmpl.size() )
                 {
-                    cout<<"OMFG.. Loop end out of bound, WTF!?\n";
+                    //#FIXME: This is evil! And really stupid. But I can't be bothered to do something less half-assed tonight!
+                    cerr << "SoundFontRIFFWriter::WriteSmplChunk(): Sample end out of bound ! Attempting fix..\n";
+                    const_cast<Sample&>(smpl).SetLoopBounds( loopbounds.first, loadedsmpl.size() );
+                    loopbounds.second = loadedsmpl.size();
+#ifdef _DEBUG
                     assert(false);
-                }
 #endif
+                }
+
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
                     MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
 

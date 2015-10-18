@@ -116,67 +116,67 @@ namespace DSE
         }
 
     private:
-        std::vector<smpldata_t>         m_SampleData;
+        std::vector<smpldata_t> m_SampleData;
     };
 
 
     /*****************************************************************************************
-        InstrumentBank
+        ProgramBank
             Contains the entries for each instruments
             Data on what samples an instrument uses, how to play those, the key mapping, etc..
     *****************************************************************************************/
-    class InstrumentBank
+    class ProgramBank
     {
     public:
-        typedef std::unique_ptr<DSE::ProgramInfo> ptrinst_t;
+        typedef std::unique_ptr<DSE::ProgramInfo> ptrprg_t;
 
-        InstrumentBank( std::vector<ptrinst_t> && instinf, std::vector<DSE::KeyGroup> && kgrp )
+        ProgramBank( std::vector<ptrprg_t> && instinf, std::vector<DSE::KeyGroup> && kgrp )
             :m_instinfoslots(std::move(instinf)),  //MSVC is too derp to use the right constructor..
              m_Groups(kgrp)
         {}
 
-        InstrumentBank( InstrumentBank && mv )
+        ProgramBank( ProgramBank && mv )
         {
             m_instinfoslots = std::move(mv.m_instinfoslots);
             m_Groups        = std::move(mv.m_Groups);
         }
 
-        InstrumentBank & operator=( InstrumentBank&& mv )
+        ProgramBank & operator=( ProgramBank&& mv )
         {
             m_instinfoslots = std::move(mv.m_instinfoslots);
             m_Groups        = std::move(mv.m_Groups);
             return *this;
         }
 
-        ptrinst_t       & operator[]( size_t index )      { return m_instinfoslots[index]; }
-        const ptrinst_t & operator[]( size_t index )const { return m_instinfoslots[index]; }
+        ptrprg_t                          & operator[]( size_t index )         { return m_instinfoslots[index]; }
+        const ptrprg_t                    & operator[]( size_t index )const    { return m_instinfoslots[index]; }
 
-        std::vector<ptrinst_t>       & instinfo()      { return m_instinfoslots; }
-        const std::vector<ptrinst_t> & instinfo()const { return m_instinfoslots; }
+        std::vector<ptrprg_t>             & instinfo()      { return m_instinfoslots; }
+        const std::vector<ptrprg_t>       & instinfo()const { return m_instinfoslots; }
 
         std::vector<DSE::KeyGroup>        & keygrps()       { return m_Groups;        }
         const std::vector<DSE::KeyGroup>  & keygrps()const  { return m_Groups;        }
 
     private:
-        std::vector<ptrinst_t>      m_instinfoslots;
+        std::vector<ptrprg_t>       m_instinfoslots;
         std::vector<DSE::KeyGroup>  m_Groups;
 
         //Can't copy
-        InstrumentBank( const InstrumentBank& );
-        InstrumentBank & operator=( const InstrumentBank& );
+        ProgramBank( const ProgramBank& );
+        ProgramBank & operator=( const ProgramBank& );
     };
 
     /*****************************************************************************************
         PresetBank
-            Is the combination of a SampleBank, and an InstrumentBank.
+            Is the combination of a SampleBank, and an ProgramBank.
             Or just an instrument bank if samples are not available
     *****************************************************************************************/
     class PresetBank
     {
     public:
 
-        typedef std::shared_ptr<InstrumentBank>   ptrinst_t;
-        typedef std::weak_ptr<InstrumentBank>     wptrinst_t;
+        typedef std::shared_ptr<ProgramBank>   ptrprg_t;
+        typedef std::weak_ptr<ProgramBank>     wptrprg_t;
 
         typedef std::shared_ptr<SampleBank>       ptrsmpl_t;
         typedef std::weak_ptr<SampleBank>         wptrsmpl_t;
@@ -184,28 +184,28 @@ namespace DSE
         PresetBank()
         {}
 
-        PresetBank( DSE::DSE_MetaDataSWDL && meta, std::unique_ptr<InstrumentBank> && pInstrument, std::unique_ptr<SampleBank>  && pSmpl )
-            :m_pInstbnk(std::move(pInstrument)), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
+        PresetBank( DSE::DSE_MetaDataSWDL && meta, std::unique_ptr<ProgramBank> && pInstrument, std::unique_ptr<SampleBank>  && pSmpl )
+            :m_pPrgbnk(std::move(pInstrument)), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
         {}
 
-        PresetBank( DSE::DSE_MetaDataSWDL && meta, std::unique_ptr<InstrumentBank> && pInstrument )
-            :m_pInstbnk(std::move(pInstrument)), m_pSamples(nullptr), m_meta(std::move(meta))
+        PresetBank( DSE::DSE_MetaDataSWDL && meta, std::unique_ptr<ProgramBank> && pInstrument )
+            :m_pPrgbnk(std::move(pInstrument)), m_pSamples(nullptr), m_meta(std::move(meta))
         {}
 
         PresetBank( DSE::DSE_MetaDataSWDL && meta, std::unique_ptr<SampleBank> && pSmpl )
-            :m_pInstbnk(nullptr), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
+            :m_pPrgbnk(nullptr), m_pSamples(std::move(pSmpl)), m_meta(std::move(meta))
         {}
 
         PresetBank( PresetBank && mv )
         {
-            m_pInstbnk = std::move( mv.m_pInstbnk );
+            m_pPrgbnk = std::move( mv.m_pPrgbnk );
             m_pSamples = std::move( mv.m_pSamples );
             m_meta     = std::move( mv.m_meta     );
         }
 
         PresetBank & operator=( PresetBank && mv )
         {
-            m_pInstbnk = std::move( mv.m_pInstbnk );
+            m_pPrgbnk = std::move( mv.m_pPrgbnk );
             m_pSamples = std::move( mv.m_pSamples );
             m_meta     = std::move( mv.m_meta     );
             return *this;
@@ -224,12 +224,12 @@ namespace DSE
         //void                      smplbank( SampleBank  * samplesbank)                       { m_pSamples = samplesbank; }
         void                      smplbank( std::unique_ptr<SampleBank>  && samplesbank)     { m_pSamples = std::move(samplesbank); }
 
-        //Returns a weak_ptr to the instrument bank
-        wptrinst_t                prgmbank()                                                { return m_pInstbnk; }
-        const wptrinst_t          prgmbank()const                                           { return m_pInstbnk; }
-        void                      prgmbank( ptrinst_t    && bank)                       { m_pInstbnk = std::move(bank); }
-        //void                      prgmbank( InstrumentBank * bank)                       { m_pInstbnk.reset(bank); }
-        void                      prgmbank( std::unique_ptr<InstrumentBank>     && bank) { m_pInstbnk = std::move(bank); }
+        //Returns a weak_ptr to the program bank
+        wptrprg_t                prgmbank()                                                { return m_pPrgbnk; }
+        const wptrprg_t          prgmbank()const                                           { return m_pPrgbnk; }
+        void                      prgmbank( ptrprg_t    && bank)                           { m_pPrgbnk = std::move(bank); }
+        //void                      prgmbank( ProgramBank * bank)                           { m_pPrgbnk.reset(bank); }
+        void                      prgmbank( std::unique_ptr<ProgramBank>     && bank)       { m_pPrgbnk = std::move(bank); }
 
     private:
         //Can't copy
@@ -237,8 +237,8 @@ namespace DSE
         PresetBank& operator=( const PresetBank& );
 
         DSE::DSE_MetaDataSWDL m_meta;
-        ptrinst_t         m_pInstbnk; //An instrument bank may not be shared by many
-        ptrsmpl_t         m_pSamples; //A sample bank may be shared by many
+        ptrprg_t             m_pPrgbnk;  //A program bank may not be shared by many
+        ptrsmpl_t             m_pSamples; //A sample bank may be shared by many
     };
 
     /*****************************************************************************************

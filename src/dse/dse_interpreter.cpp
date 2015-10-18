@@ -559,6 +559,12 @@ namespace DSE
 
                             const string mark = evmark.str();
                             outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, mark.c_str(), mark.size() );
+
+                            //Report unknown events, except the two recurring ones we know about!
+                            if( ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk1) && ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk2) )
+                            {
+                                cout << "\tEvent ID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) << ", is unsupported ! Ignoring..\n" <<nouppercase <<dec;
+                            }
                         }
                     }
                 };

@@ -89,17 +89,38 @@ namespace DSE
         //SetUnk2
         { eTrkEventCodes::SetUnk2,          eTrkEventCodes::Invalid, 1, false, "SetUnk" },
 
+        //SkipNextByte
+        { eTrkEventCodes::SkipNextByte,     eTrkEventCodes::Invalid, 0, false, "SkipNextByte" },
+
         //SetPreset
         { eTrkEventCodes::SetPreset,        eTrkEventCodes::Invalid, 1, false, "SetPreset" },
 
+        //Unk_0xAF 
+        { eTrkEventCodes::Unk_0xAF,         eTrkEventCodes::Invalid, 3, false, "## Unk_0xAF ##" },
+
+        //Unk_0xB0
+        { eTrkEventCodes::Unk_0xB0,         eTrkEventCodes::Invalid, 0, false, "## Unk_0xB0 ##" },
+
+        //Unk_0xB1
+        { eTrkEventCodes::Unk_0xB1,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xB1 ##" },
+
         //Unk_0xB2
         { eTrkEventCodes::Unk_0xB2,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xB2 ##" },
+
+        //Unk_0xB3
+        { eTrkEventCodes::Unk_0xB3,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xB3 ##" },
 
         //Unk_0xB4
         { eTrkEventCodes::Unk_0xB4,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xB4 ##" },
 
         //Unk_0xB5
         { eTrkEventCodes::Unk_0xB5,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xB5 ##" },
+
+        //Unk_0xB6
+        { eTrkEventCodes::Unk_0xB6,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xB6 ##" },
+
+        //Unk_0xBC
+        { eTrkEventCodes::Unk_0xBC,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xBC ##" },
 
         //Unk_0xBE
         { eTrkEventCodes::Unk_0xBE,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xBE ##" },
@@ -109,6 +130,9 @@ namespace DSE
 
         //Unk_0xC0
         { eTrkEventCodes::Unk_0xC0,         eTrkEventCodes::Invalid, 0, false, "## Unk_0xC0 ##" },
+
+        //Unk_0xC3
+        { eTrkEventCodes::Unk_0xC3,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xC3 ##" },
 
         //Unk_0xCB
         { eTrkEventCodes::Unk_0xCB,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xCB ##" },
@@ -122,8 +146,14 @@ namespace DSE
         //Unk_0xD2
         { eTrkEventCodes::Unk_0xD2,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xD2 ##" },
 
+        //Unk_0xD3
+        { eTrkEventCodes::Unk_0xD3,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xD3 ##" },
+
         //Unk_0xD4
         { eTrkEventCodes::Unk_0xD4,         eTrkEventCodes::Invalid, 3, false, "## Unk_0xD4 ##" },
+
+        //Unk_0xD5
+        { eTrkEventCodes::Unk_0xD5,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xD5 ##" },
 
         //Unk_0xD6
         { eTrkEventCodes::Unk_0xD6,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xD6 ##" },
@@ -131,14 +161,26 @@ namespace DSE
         //PitchBend
         { eTrkEventCodes::PitchBend,        eTrkEventCodes::Invalid, 2, false, "PitchBend" },
 
+        //Unk_0xD8
+        { eTrkEventCodes::Unk_0xD8,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xD8 ##" },
+
         //Unk_0xDB
         { eTrkEventCodes::Unk_0xDB,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xDB ##" },
 
         //Unk_0xDC
         { eTrkEventCodes::Unk_0xDC,         eTrkEventCodes::Invalid, 5, false, "## Unk_0xDC ##" },
 
+        //Unk_0xDD
+        { eTrkEventCodes::Unk_0xDD,         eTrkEventCodes::Invalid, 4, false, "## Unk_0xDD ##" },
+
+        //Unk_0xDF
+        { eTrkEventCodes::Unk_0xDF,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xDF ##" },
+
         //SetTrkVol
         { eTrkEventCodes::SetTrkVol,        eTrkEventCodes::Invalid, 1, false, "SetVolume" },
+
+        //Unk_0xE1
+        { eTrkEventCodes::Unk_0xE1,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xE1 ##" },
 
         //Unk_0xE2
         { eTrkEventCodes::Unk_0xE2,         eTrkEventCodes::Invalid, 3, false, "## Unk_0xE2 ##" },
@@ -146,8 +188,20 @@ namespace DSE
         //SetExpress
         { eTrkEventCodes::SetExpress,       eTrkEventCodes::Invalid, 1, false, "SetExpression" },
 
+        //Unk_0xE4
+        { eTrkEventCodes::Unk_0xE4,         eTrkEventCodes::Invalid, 5, false, "## Unk_0xE4 ##" },
+
+        //Unk_0xE5
+        { eTrkEventCodes::Unk_0xE5,         eTrkEventCodes::Invalid, 4, false, "## Unk_0xE5 ##" },
+
+        //Unk_0xE7
+        { eTrkEventCodes::Unk_0xE7,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xE7 ##" },
+
         //SetTrkPan
         { eTrkEventCodes::SetTrkPan,        eTrkEventCodes::Invalid, 1, false, "SetPan" },
+
+        //Unk_0xE9
+        { eTrkEventCodes::Unk_0xE9,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xE9 ##" },
 
         //Unk_0xEA
         { eTrkEventCodes::Unk_0xEA,         eTrkEventCodes::Invalid, 3, false, "## Unk_0xEA ##" },
@@ -155,8 +209,30 @@ namespace DSE
         //Unk_0xEC
         { eTrkEventCodes::Unk_0xEC,         eTrkEventCodes::Invalid, 5, false, "## Unk_0xEC ##" },
 
+        //Unk_0xED
+        { eTrkEventCodes::Unk_0xED,         eTrkEventCodes::Invalid, 4, false, "## Unk_0xED ##" },
+
+        //Unk_0xEF
+        { eTrkEventCodes::Unk_0xEF,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xEF ##" },
+
+        //Unk_0xF0
+        { eTrkEventCodes::Unk_0xF0,         eTrkEventCodes::Invalid, 5, false, "## Unk_0xF0 ##" },
+
+        //Unk_0xF1
+        { eTrkEventCodes::Unk_0xF1,         eTrkEventCodes::Invalid, 4, false, "## Unk_0xF1 ##" },
+
+        //Unk_0xF2
+        { eTrkEventCodes::Unk_0xF2,         eTrkEventCodes::Invalid, 2, false, "## Unk_0xF2 ##" },
+
+        //Unk_0xF3
+        { eTrkEventCodes::Unk_0xF3,         eTrkEventCodes::Invalid, 3, false, "## Unk_0xF3 ##" },
+
         //Unk_0xF6
         { eTrkEventCodes::Unk_0xF6,         eTrkEventCodes::Invalid, 1, false, "## Unk_0xF6 ##" },
+
+        //SkipNext2Bytes
+        { eTrkEventCodes::SkipNext2Bytes,   eTrkEventCodes::Invalid, 0, false, "SkipNext2Bytes" },
+
     }};
 
 //====================================================================================================

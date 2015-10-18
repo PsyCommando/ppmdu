@@ -221,19 +221,6 @@ namespace pmd2 { namespace audio
                                        int8_t envmult )
     {
         sf2::Envelope volenv;
-
-        // 0-127
-        //-12,000 to 5,000
-        //static const int16_t MinEnvTimeCent  = -12000; //Minimum generator value for all that use timecent as unit
-        //static const int16_t Max20sec        =   5000; //Maximum generator value for env param that go up to 20 seconds
-        //static const int16_t Max100sec       =   8000; //Maximum generator value for env param that go up to 100 seconds
-        //static const int16_t Timecent5Sec    =   2786; //The value of the envelope parameter to represent 5 seconds. The formula is 1200 * log2(DurationInSec)
-        //static const int16_t SustainMinVolume=   1440; //The higher the value, the more attenuated the sound is. 0 is max volume
-        //static const int16_t MaxSignedInt8   =    127;
-
-        //static const int16_t BaseDuration = 0;//MinEnvTimeCent;
-
-
         if( utils::LibWide().isLogOn() )
         {
             clog<<"\tRemaping DSE (atkvol, atk, dec, sus, hold, dec2, rel, rx)( " 
@@ -391,19 +378,19 @@ namespace pmd2 { namespace audio
 //  BatchAudioLoader
 //========================================================================================
 
-    BatchAudioLoader::BatchAudioLoader( const std::string & mbank, bool singleSF2 )
-        :m_mbankpath(mbank), m_bSingleSF2(singleSF2)
+    BatchAudioLoader::BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2 )
+        :/*m_mbankpath(mbank),*/ m_bSingleSF2(singleSF2)
     {}
     
-    void BatchAudioLoader::LoadMasterBank()
-    {
-        m_master = move( LoadSwdBank( m_mbankpath ) );
-    }
+    //void BatchAudioLoader::LoadMasterBank()
+    //{
+    //    m_master = move( LoadSwdBank( m_mbankpath ) );
+    //}
 
     void BatchAudioLoader::LoadMasterBank( const std::string & mbank )
     {
         m_mbankpath = mbank;
-        LoadMasterBank();
+        m_master = move( LoadSwdBank( m_mbankpath ) );
     }
 
     void BatchAudioLoader::LoadSmdSwdPair( const std::string & smd, const std::string & swd )
@@ -430,11 +417,11 @@ namespace pmd2 { namespace audio
 
     template<class _Strategy>
         void MakeAPresetBankDBForAPair( size_t                           cntpair, 
-                                        shared_ptr<InstrumentBank>       ptrinstinf, 
+                                        shared_ptr<ProgramBank>          ptrprginf, 
                                         SMDLPresetConversionInfo       & target,
                                         PresetAllocStrategy<_Strategy> & mystrat )
     {
-        const auto & curinstlist = ptrinstinf->instinfo();
+        const auto & curinstlist = ptrprginf->instinfo();
 
         if( utils::LibWide().isLogOn() )
             clog << "=== SWDL #" << cntpair <<" ===\n";
@@ -452,6 +439,11 @@ namespace pmd2 { namespace audio
                     throw runtime_error("MakeAPresetBankDBForAPair() : SF2 file is full!!");
             }
         }
+    }
+
+    bool BatchAudioLoader::IsMasterBankLoaded()const
+    {
+        return (m_master.smplbank().lock() != nullptr );
     }
 
     /*
@@ -550,8 +542,10 @@ namespace pmd2 { namespace audio
             //}
             //else
             //{
-                //let the midi converter handle anything else
-                cvdata.maxpoly = keygrps[dseinst.kgrpid].poly;
+                if( dseinst.kgrpid >= keygrps.size() )
+                    cvdata.maxpoly = -1;
+                else
+                    cvdata.maxpoly = keygrps[dseinst.kgrpid].poly; //let the midi converter handle anything else
             //}
 
         }
@@ -861,7 +855,7 @@ namespace pmd2 { namespace audio
     }
 
 
-    vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont_New( const std::string & destf )const
+    vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont_New( const std::string & destf )
     {
         using namespace sf2;
 
@@ -871,6 +865,10 @@ namespace pmd2 { namespace audio
             //We need to build several smaller sf2 files, each in their own sub-dir with the midis they're tied to!
             assert(false); //#TODO
         }
+
+        //If the main bank is not loaded, try to make one out of the loaded pairs!
+        if( !IsMasterBankLoaded() )
+            BuildMasterFromPairs();
 
 
 
@@ -943,7 +941,7 @@ namespace pmd2 { namespace audio
         return move( merged );
     }
 
-    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops )const
+    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops )
     {
         //Export the soundfont first
 
@@ -969,6 +967,53 @@ namespace pmd2 { namespace audio
                                  nbloops,
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
         }
+    }
+
+
+    /*
+        BuildMasterFromPairs
+            If no main bank is loaded, and the loaded pairs contain their own samples, 
+            build a main bank from those!
+    */
+    void BatchAudioLoader::BuildMasterFromPairs()
+    {
+        vector<SampleBank::smpldata_t> smpldata;
+
+        //Iterate through all the pairs and fill up our sample data list !
+        for( size_t cntpairs = 0; cntpairs < m_pairs.size(); cntpairs++ )
+        {
+            auto & presetbank = m_pairs[cntpairs].second;
+            auto   ptrsmplbnk = presetbank.smplbank().lock();
+
+            if( ptrsmplbnk != nullptr )
+            {
+                //Enlarge our vector when needed!
+                if( ptrsmplbnk->NbSlots() > smpldata.size() )
+                    smpldata.resize( ptrsmplbnk->NbSlots() );
+
+                //Copy the samples over into their matching slot!
+                for( size_t cntsmplslot = 0; cntsmplslot < ptrsmplbnk->NbSlots(); ++cntsmplslot )
+                {
+                    if( ptrsmplbnk->IsDataPresent(cntsmplslot) && 
+                        ptrsmplbnk->IsInfoPresent(cntsmplslot) &&
+                        !smpldata[cntsmplslot].pdata_ &&
+                        !smpldata[cntsmplslot].pinfo_ )
+                    {
+                        smpldata[cntsmplslot].pinfo_.reset( new DSE::WavInfo(*ptrsmplbnk->sampleInfo(cntsmplslot) ) );
+                        smpldata[cntsmplslot].pdata_.reset( new std::vector<uint8_t>(*ptrsmplbnk->sample(cntsmplslot)) );
+                    }
+                }
+            }
+        }
+
+        DSE_MetaDataSWDL meta;
+        meta.fname = "Main.SWD";
+        meta.nbprgislots = 0;
+        meta.nbwavislots = smpldata.size();
+
+        m_master = move( PresetBank( move(meta), 
+                                     move( unique_ptr<SampleBank>(new SampleBank(move( smpldata ))) ) 
+                                   ) );
     }
 
 
@@ -1020,17 +1065,17 @@ namespace pmd2 { namespace audio
         return make_pair( std::move(mbank), std::move(seqpairs) );
     }
 
-    std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndSinglePair( const std::string & bank, const std::string & smd, const std::string & swd )
-    {
-        DSE::PresetBank                                       mbank  = DSE::ParseSWDL( bank );
-        vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
-        Poco::File                                            pathsmd(smd);
-        Poco::File                                            pathswd(swd);
+    //std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndSinglePair( const std::string & bank, const std::string & smd, const std::string & swd )
+    //{
+    //    DSE::PresetBank                                       mbank  = DSE::ParseSWDL( bank );
+    //    vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
+    //    Poco::File                                            pathsmd(smd);
+    //    Poco::File                                            pathswd(swd);
 
-        seqpairs.push_back( make_pair( DSE::ParseSMDL( pathsmd.path() ), DSE::ParseSWDL( pathswd.path() ) ) );
+    //    seqpairs.push_back( make_pair( DSE::ParseSMDL( pathsmd.path() ), DSE::ParseSWDL( pathswd.path() ) ) );
 
-        return make_pair( std::move(mbank), std::move(seqpairs) );
-    }
+    //    return make_pair( std::move(mbank), std::move(seqpairs) );
+    //}
 
     std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {

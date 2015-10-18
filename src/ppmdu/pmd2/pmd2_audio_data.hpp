@@ -73,12 +73,12 @@ namespace pmd2 { namespace audio
             mbank     : Path to Master SWD Bank to load.
             singleSF2 : If set to true, the batch loader will do its best to allocate all presets into a single SF2!
         */
-        BatchAudioLoader( const std::string & mbank, bool singleSF2 = true );
+        BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2 = true );
 
     //-----------------------------
     // Loading Methods
     //-----------------------------
-        void LoadMasterBank();
+        //void LoadMasterBank();
         void LoadMasterBank( const std::string & mbank );
 
         void LoadSmdSwdPair( const std::string & smd, const std::string & swd );
@@ -95,14 +95,14 @@ namespace pmd2 { namespace audio
         //mergedProgData ExportSoundfont( const std::string & destf )const;
 
         //A test for a simpler implementation
-        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont_New( const std::string & destf )const;
+        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont_New( const std::string & destf );
 
         /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
             exports all loaded smd as MIDIs, with the appropriate bank events to use
             the correct instrument presets.
         */
-        void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0 )const;
+        void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0 );
 
         /*
             Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
@@ -134,6 +134,12 @@ namespace pmd2 { namespace audio
         */
         std::vector<DSE::SMDLPresetConversionInfo> BuildPresetConversionDB()const;
 
+        /*
+            BuildMasterFromPairs
+                If no main bank is loaded, and the loaded pairs contain their own samples, 
+                build a main bank from those!
+        */
+        void BuildMasterFromPairs();
 
         /*
         */

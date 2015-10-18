@@ -54,6 +54,11 @@ namespace audioutil
         bool ParseOptionMBAT       ( const std::vector<std::string> & optdata ); //Export Master Bank And Tracks using the specified folder.
         bool ParseOptionLog        ( const std::vector<std::string> & optdata ); //Redirects clog to the file specified
 
+        bool ParseOptionMBank      ( const std::vector<std::string> & optdata );
+        bool ParseOptionSWDLPath   ( const std::vector<std::string> & optdata );
+        bool ParseOptionSMDLPath   ( const std::vector<std::string> & optdata );
+
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -64,6 +69,9 @@ namespace audioutil
         int ExportSWDL();
         int ExportSMDL();
         int ExportSEDL();
+
+        int ExportBatchPairsAndBank();
+        int ExportBatchPairs();
 
         int ExportPMD2Audio(); //Export completely the content of a PMD2 ROM's "SOUND" directory
 
@@ -91,6 +99,9 @@ namespace audioutil
             ExportSMDL,     //Export a SMDL file as a midi
             ExportSEDL,     //Export the SEDL as a midi and some XML
 
+            ExportBatchPairsAndBank,//Export a batch of SMDL files, along with their SWDL, and a main bank !
+            ExportBatchPairs,//Export a batch of SMDL files, along with their SWDL !
+
             ExportPMD2,     //Export the entire content of the PMD2's "SOUND" folder
 
             BuildSWDL,      //Build a SWDL from a folder. Must contain XML info file. If no preset data present builds a simple wav bank.(samples are imported in the slot corresponding to their file name)
@@ -108,6 +119,10 @@ namespace audioutil
         bool        m_bGM;            //Whether we export to general midi compatible format or not
         int         m_nbloops;        //The amount of times to loop a track, 0 if should use loop markers instead
         bool        m_isPMD2;         //Whether we should treat the input path as the PMD2 ROM's root data folder
+
+        std::string m_mbankpath;
+        std::string m_swdlpath;
+        std::string m_smdlpath;
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
     };

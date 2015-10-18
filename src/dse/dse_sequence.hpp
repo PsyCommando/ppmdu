@@ -184,7 +184,6 @@ namespace DSE
         Pause8Bits      = 0x92, //Pause the track for specified duration (uses a uint8)
         Pause16Bits     = 0x93, //Pause the track for specified duration (uses a uint16)
         Pause24Bits     = 0x94, //Pause the track for specified duration (uses a uint24)
-
         PauseUntilRel   = 0x95, //#TODO
 
         EndOfTrack      = 0x98, //Marks the end of the track. Also serve as padding.
@@ -204,44 +203,66 @@ namespace DSE
         Unk_0xA8        = 0xA8, //Unknown //#TODO
         SetUnk1         = 0xA9, //Set that first unknown value from the track's header
         SetUnk2         = 0xAA, //Set that second unknown value from the track's header
-        Unk_0xAB        = 0xAB, //Unknown //#TODO
+        SkipNextByte    = 0xAB, //Skip processing the next byte!
         SetPreset       = 0xAC, //Sets the instrument preset to use
 
+        Unk_0xAF        = 0xAF, //Unknown //#TODO
+        Unk_0xB0        = 0xB0, //Unknown //#TODO
+        Unk_0xB1        = 0xB1, //Unknown //#TODO
         Unk_0xB2        = 0xB2, //Unknown //#TODO
-
+        Unk_0xB3        = 0xB3, //Unknown //#TODO
         Unk_0xB4        = 0xB4, //Unknown //#TODO
         Unk_0xB5        = 0xB5, //Unknown //#TODO
+        Unk_0xB6        = 0xB6, //Unknown //#TODO
 
+        Unk_0xBC        = 0xBC, //Unknown //#TODO
         Unk_0xBE        = 0xBE, //Possibly set modulation ?
         Unk_0xBF        = 0xBF, //Unknown //#TODO
 
-        Unk_0xC0        = 0xC0, //Holds the last note indefinitely until another note is played
+        Unk_0xC0        = 0xC0, //Unknown //#TODO
+        Unk_0xC3        = 0xC3, //Unknown //#TODO
 
         Unk_0xCB        = 0xCB, //Holds the last note indefinitely until another note is played
 
         Unk_0xD0        = 0xD0, //Unknown //#TODO
         Unk_0xD1        = 0xD1, //Unknown //#TODO
         Unk_0xD2        = 0xD2, //Unknown //#TODO
-
+        Unk_0xD3        = 0xD3, //Unknown //#TODO
         Unk_0xD4        = 0xD4, //Unknown //#TODO
-
+        Unk_0xD5        = 0xD5, //Unknown //#TODO
         Unk_0xD6        = 0xD6, //Unknown //#TODO
         PitchBend       = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
+        Unk_0xD8        = 0xD8, //Unknown //#TODO
         Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
         Unk_0xDC        = 0xDC, //Unknown //#TODO
+        Unk_0xDD        = 0xDD, //Unknown //#TODO
+        Unk_0xDF        = 0xDF,
 
         SetTrkVol       = 0xE0, //Sets primary track volume.
-
+        Unk_0xE1        = 0xE1, //Unknown //#TODO
         Unk_0xE2        = 0xE2, //Unknown //#TODO
         SetExpress      = 0xE3, //Sets secondary volume control. AKA expression or GM CC#11.
-
+        Unk_0xE4        = 0xE4, //Unknown //#TODO
+        Unk_0xE5        = 0xE5, //Unknown //#TODO
+        Unk_0xE7        = 0xE7, //Unknown //#TODO
         SetTrkPan       = 0xE8, //Sets the panning of the track.
-
+        Unk_0xE9        = 0xE9, //Unknown //#TODO
         Unk_0xEA        = 0xEA, //Unknown //#TODO
 
         Unk_0xEC        = 0xEC, //Unknown //#TODO
+        Unk_0xED        = 0xED, //Unknown //#TODO
+
+        Unk_0xEF        = 0xEF, //Unknown //#TODO
+
+        Unk_0xF0        = 0xF0, //Unknown //#TODO
+        Unk_0xF1        = 0xF1, //Unknown //#TODO
+        Unk_0xF2        = 0xF2, //Unknown //#TODO
+        Unk_0xF3        = 0xF3, //Unknown //#TODO
 
         Unk_0xF6        = 0xF6, //Unknown //#TODO
+
+        SkipNext2Bytes  = 0xF8, //Skip processing the next 2 bytes
+
     };
 
     /****************************************************************************
