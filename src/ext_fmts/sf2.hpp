@@ -214,12 +214,12 @@ namespace sf2
     static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvHold {    -1200,        0,  1200,    0 };
     static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToModEnvDecay{    -1200,        0,  1200,    0 };
 
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN, SHRT_MIN,  5000,    0 }; //Shortest valid value is -12000. SHRT_MIN means its disabled. Other values between SHRT_MIN and -12000 have undefined effects!
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN, SHRT_MIN,  8000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN, SHRT_MIN,  5000,    0 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN, SHRT_MIN,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDelay        { SHRT_MIN,   -12000,  5000,    0 }; //Shortest valid value is -12000. SHRT_MIN means its disabled. Other values between SHRT_MIN and -12000 have undefined effects!
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvAttack       { SHRT_MIN,   -12000,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvHold         { SHRT_MIN,   -12000,  5000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvDecay        { SHRT_MIN,   -12000,  8000,    0 };
     static const utils::value_limits<uint16_t> SF_GenLimitsVolEnvSustain      {        0,        0,  1440,  720 };
-    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN, SHRT_MIN,  8000,    0 };
+    static const utils::value_limits<int16_t>  SF_GenLimitsVolEnvRelease      { SHRT_MIN,   -12000,  8000,    0 };
 
     static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvHold {    -1200,        0,  1200,    0 };
     static const utils::value_limits<int16_t>  SF_GenLimitsKeynumToVolEnvDecay{    -1200,        0,  1200,    0 };
@@ -350,16 +350,9 @@ namespace sf2
 
     /***********************************************************************************
         genparam_t
-           *Got rid of the union, because I'd have had to deal with union issues..*
+           Type for containing the parameter of a Generator.
     ***********************************************************************************/
     typedef uint16_t genparam_t;
-    //union genparam_t
-    //{
-    //    uint16_t                            uword = 0;
-    //    int16_t                             word;
-    //    union{ uint8_t by1; uint8_t by2; }  twouby;
-    //    union{ int8_t  by1;  int8_t  by2; } twosby;
-    //};
 
     /***********************************************************************************
         SFGenEntry
@@ -414,32 +407,13 @@ namespace sf2
     ***********************************************************************************/
     struct Envelope
     {
-        int16_t delay   = SHRT_MIN;                       //timecents
-        int16_t attack  = SHRT_MIN;                       //timecents
-        int16_t hold    = SHRT_MIN;                       //timecents
-        int16_t sustain =      0;                       //Attenuation in cB (144 dB is 1440 cB for instance)
-        int16_t decay   = SF_GenLimitsVolEnvDelay.def_;   //timecents
-        int16_t release = SF_GenLimitsVolEnvRelease.def_; //timecents
+        int16_t delay   = SF_GenLimitsVolEnvDelay.def_;         //timecents
+        int16_t attack  = SF_GenLimitsVolEnvAttack.def_;        //timecents
+        int16_t hold    = SF_GenLimitsVolEnvHold.def_;          //timecents
+        int16_t sustain = SF_GenLimitsVolEnvSustain.def_;       //Attenuation in cB (144 dB is 1440 cB for instance)
+        int16_t decay   = SF_GenLimitsVolEnvDecay.def_;         //timecents
+        int16_t release = SF_GenLimitsVolEnvRelease.def_;       //timecents
     };
-
-    //static const std::pair<Envelope,Envelope> & GetSF2VolEnvBounds()
-    //{
-    //    static const Envelope Sf2MaxVolEnv
-    //    {
-    //        5000, //20sec
-    //        8000, //100sec
-    //        5000, //20sec
-    //        1440, //144db
-    //        8000, //100sec
-    //        8000, //100sec
-    //    }; //The Maximum value of each parameters in the envelope for a volume envelope
-    //    static const Envelope Sf2MinVolEnv; //The Minimum value of each parameters in the envelope for a volume envelope
-
-
-
-    //    return ;
-    //}
-
 
 
 //==================================================================================

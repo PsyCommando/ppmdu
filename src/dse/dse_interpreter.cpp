@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <deque>
+#include <set>
 
 using namespace std;
 
@@ -544,7 +545,20 @@ namespace DSE
                         m_beflooptrkstates[trkno] = state;                 //Save the track state
                         break;
                     }
-                    //
+
+                    //------------------ Byte Skipping events! ------------------ 
+                    case eTrkEventCodes::SkipNextByte:
+                    {
+                        state.eventno_ += 1;
+                        break;
+                    }
+                    case eTrkEventCodes::SkipNext2Bytes:
+                    {
+                        state.eventno_ += 2;
+                        break;
+                    }
+
+                    //------------------ Unsupported Events ------------------ 
                     default:
                     {
                         //Put a cue point to mark unsupported events and their parameters
@@ -560,11 +574,18 @@ namespace DSE
                             const string mark = evmark.str();
                             outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, mark.c_str(), mark.size() );
 
-                            //Report unknown events, except the two recurring ones we know about!
-                            if( ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk1) && ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk2) )
-                            {
-                                cout << "\tEvent ID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) << ", is unsupported ! Ignoring..\n" <<nouppercase <<dec;
-                            }
+                            //Count unknown events
+                            auto itfound = m_unhandledEvList.find( ev.evcode );
+
+                            if( itfound != m_unhandledEvList.end() )
+                                itfound->second += 1;
+                            else
+                                m_unhandledEvList.insert( std::make_pair( ev.evcode, 1 ) );
+
+                            //if( ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk1) && ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk2) )
+                            //{
+                            //    cout << "\tEvent ID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) << ", is unsupported ! Ignoring..\n" <<nouppercase <<dec;
+                            //}
                         }
                     }
                 };
@@ -1039,7 +1060,9 @@ namespace DSE
             if( m_bTrackLoopable && m_nbloops == 0 )
                 m_midiout.GetTrack(0)->PutTextEvent( m_songlsttick, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
 
-            //Insert a single loop end event!
+            WriteUnhandledEventsReport();
+
+            //Loop the track again if loopable and requested !
             if( m_bTrackLoopable )
             {
                 //Then, if we're set to loop, then loop
@@ -1058,6 +1081,8 @@ namespace DSE
                     }
                 }
             }
+
+            
         }
 
         /*
@@ -1298,6 +1323,22 @@ namespace DSE
             return false;
         }
 
+
+        void WriteUnhandledEventsReport()
+        {
+            if( m_unhandledEvList.empty() )
+                return;
+
+            clog <<"<!>- Ingored the following unsupported events: \n";
+            
+            for( const auto & ev : m_unhandledEvList )
+            {
+                clog << "\tEventID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.first) <<dec <<nouppercase 
+                     <<", ignored " <<ev.second << " times.\n";
+            }
+
+        }
+
     private:
         const std::string                & m_fnameout;
         const MusicSequence              & m_seq;
@@ -1315,6 +1356,8 @@ namespace DSE
         std::deque<size_t>                 m_trackpriorityq;   //tracks are ordered in this vector to be parsed in that order. Mainly to ensure tracks that have key remaps in which the channel is forced to something are handled first!
         std::vector<deque<uint32_t>>       m_chanreqpresresets; //The times for each tracks when we need to re-establish the current program + bank, after having other tracks play events on our MIDI channel!.  
         
+        std::map<uint8_t, int>             m_unhandledEvList;   //A table to store all the unsupported events encountered and the number of times it was encountered!
+
         uint32_t                           m_songlsttick;      //The very last tick of the song
 
         bool                               m_bTrackLoopable;

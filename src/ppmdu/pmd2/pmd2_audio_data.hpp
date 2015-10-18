@@ -18,6 +18,10 @@ All wrongs reversed, no crappyrights :P
 #include <memory>
 #include <future>
 
+//
+//          ###### TODO ######
+//          Move this to properly named file! Most of this is applicable to most DSE games!!!
+//
 
 namespace DSE{ struct SMDLPresetConversionInfo; };
 
@@ -82,6 +86,14 @@ namespace pmd2 { namespace audio
         void LoadMasterBank( const std::string & mbank );
 
         void LoadSmdSwdPair( const std::string & smd, const std::string & swd );
+
+        //For loading all pairs in one or two directories into a batch loader
+        /*
+            LoadMatchedSMDLSWDLPairs
+                This function loads all matched smdl + swdl pairs in one or two different directories
+        */
+        void LoadMatchedSMDLSWDLPairs( const std::string & swdldir, const std::string & smdldir );
+
 
     //-----------------------------
     // Exporting Methods
@@ -177,6 +189,10 @@ namespace pmd2 { namespace audio
 
     // ======================= 4. Sequence only =======================
     DSE::MusicSequence LoadSequence( const std::string & file );
+
+
+
+
 
     //-------------------
     //  Audio Exporters

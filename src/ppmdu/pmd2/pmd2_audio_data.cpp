@@ -1017,6 +1017,42 @@ namespace pmd2 { namespace audio
     }
 
 
+    /*
+        LoadMatchedSMDLSWDLPairs
+            This function loads all matched smdl + swdl pairs in one or two different directories
+    */
+    void BatchAudioLoader::LoadMatchedSMDLSWDLPairs( const std::string & swdldir, const std::string & smdldir )
+    {
+        //Grab all the swd and smd pairs in the folder
+        Poco::DirectoryIterator dirit(smdldir);
+        Poco::DirectoryIterator diritend;
+        cout << "<*>- Loading matched smd in the " << smdldir <<" directory..\n";
+
+        unsigned int cntparsed = 0;
+        while( dirit != diritend )
+        {
+            string fext = dirit.path().getExtension();
+            std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+            //Check all smd/swd file pairs
+            if( fext == SMDL_FileExtension )
+            {
+                Poco::File matchingswd( Poco::Path(swdldir).append(dirit.path().getBaseName()).makeFile().setExtension(SWDL_FileExtension) );
+                    
+                if( matchingswd.exists() && matchingswd.isFile() )
+                {
+                    cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<" pairs loaded] - Currently loading : " <<dirit.path().getFileName() <<"..";
+                    LoadSmdSwdPair( dirit.path().toString(), matchingswd.path() );
+                    ++cntparsed;
+                }
+                else
+                    cout<<"<!>- File " << dirit.path().toString() <<" is missing a matching .swd file! Skipping !\n";
+            }
+            ++dirit;
+        }
+        cout <<"\n..done\n\n";
+    }
+
 //===========================================================================================
 //  Functions
 //===========================================================================================
@@ -1083,6 +1119,9 @@ namespace pmd2 { namespace audio
         DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
         return std::make_pair( std::move(seq), std::move(bank) );
     }
+
+    
+
 
     DSE::PresetBank LoadSwdBank( const std::string & file )
     {

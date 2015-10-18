@@ -2,7 +2,6 @@
 #include <ext_fmts/riff.hpp>
 #include <utils/library_wide.hpp>
 
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -12,6 +11,8 @@
 #include <sstream>
 using namespace std;
 
+//This define is meant to be a temporary mean of toggling on and off the adding of loop bytes to make looping
+//  samples much smoother.
 #define SF2_ADD_EXTRA_LOOP_BYTES 1
 
 namespace sf2
@@ -64,6 +65,7 @@ namespace sf2
     static const size_t      SfMinSampleZeroPad      = 92;  //Minimum amount of bytes of zero padding to append a sample. 46 samples
     static const size_t      SfMaxLongCString        = 256; //Maximum size of a long c-string. For example the ISFT chunk's software name.
 
+    //Byte Lengths for the various chunks
     static const uint32_t    SfEntrySHDR_Len         = 46;
     static const uint32_t    SfEntryPHDR_Len         = 38;
     static const uint32_t    SfEntryPBag_Len         =  4;
@@ -73,6 +75,7 @@ namespace sf2
     static const uint32_t    SfEntryIBag_Len         =  4;
     static const uint32_t    SfEntryIMod_Len         = 10;
     static const uint32_t    SfEntryIGen_Len         =  4;
+
     static const string      SF_DefIsng              = "EMU8000";
     static const string      SF_DefSft               = "ppmd_audioutil";
     static const ifilDat     SF_VersChnkData         ( 2, 1 );  //Soundfont 2.01
@@ -172,70 +175,8 @@ namespace sf2
     //static const value_limits<uint16_t> SF_GenLimitsOverrideRootKey    {      0,     -1,   127 };
 
 //=========================================================================================
-//  Constants
-//=========================================================================================
-    
-
-//=========================================================================================
-//  Logging
-//=========================================================================================
-
-
-//=========================================================================================
 //  Utility
 //=========================================================================================
-
-    /*
-        PrepareSampleData
-            Prepare a sample's data for being inserted into a sdata-list chunk.
-
-            If its looped:
-                - Copy the sample right before the loop begin sample. Insert it 4 times before 
-                  the loop start sample, then 4 times after the loop end sample.
-                - The provided loop points position are also ajusted
-
-            For any samples:
-                - Adds at least 46 zeros samples after the sample. More if the total nb of 
-                  bytes is odd. (Which is hardly even possible with 16 bits pcm)
-
-            Update the loop points passed by reference.
-    */
-    ///*std::vector<std::pair<uint32_t, uint32_t>>*/void PrepareSampleData( uint32_t              & loopbeg, 
-    //                                                                      uint32_t              & loopend,
-    //                                                                      std::vector<uint16_t> & samples )
-    //{
-    //    if( loopend != 0 )
-    //    {
-    //        vector<uint16_t> newvec;
-    //        auto             newvecins = back_inserter( newvec );
-    //        size_t           newvecsz = ((SfMinSampleZeroPad + 8 + samples.size()) % 2 != 0)?  //If we get an odd byte count, add one to make it even
-    //                                        ((SfMinSampleZeroPad + 8 + samples.size()) + 1) :
-    //                                        (SfMinSampleZeroPad + 8 + samples.size());
-    //        newvec.reserve( newvecsz );
-
-    //        //Copy the 4 copied samples at the end and at the beginning + the old vector's data
-    //        std::fill_n( newvecins, 4, samples[loopbeg] );
-    //        std::copy( samples.begin(), samples.end(), newvecins );
-    //        std::fill_n( newvecins, 4, samples[loopbeg] );
-
-    //        //Then add the ending zeros
-    //        newvec.resize( (newvecsz - newvec.size()), 0 );
-
-    //        samples = std::move(newvec);
-
-    //        //Shift the loop points
-    //        loopbeg += 4;
-    //        loopend += 4;
-    //    }
-    //    else
-    //    {
-    //        //Just append the zeros then
-    //        if( samples.size() % 2 == 0 )
-    //            samples.resize( samples.size() + SfMinSampleZeroPad, 0 );
-    //        else
-    //            samples.resize( (samples.size() + SfMinSampleZeroPad + 1), 0 );
-    //    }
-    //}
 
     /**************************************************************************************
         MakeSampleLoopLegal
@@ -350,55 +291,12 @@ namespace sf2
         return sample;
     }
 
-
-    /**************************************************************************************
-        PrepareSampleLoopPoints
-            This method simply copy 8 times the first sample point of the loop. Puts for 
-            of those copies before loopbeg, and 4 after loopend.
-
-            loopbeg and loop end must be in nb of samples, not in bytes !!!
-    **************************************************************************************/
-//    std::vector<pcm16s_t> PrepareSampleLoopPoints( std::vector<pcm16s_t> && sample, uint32_t loopbeg, uint32_t loopend )
-//    {
-//        if( loopbeg == loopend )
-//            return std::move(sample);
-//
-//        vector<pcm16s_t> newvec;
-//        auto             newvecins = back_inserter( newvec );
-//#if SF2_ADD_EXTRA_LOOP_BYTES
-//        size_t           newvecsz  = (SfSampleLoopMinEdgeDist/**2*/) + sample.size();//(2 * SfSampleLoopMinEdgeDist) + sample.size();
-//#else
-//        size_t           newvecsz  = sample.size();//(2 * SfSampleLoopMinEdgeDist) + sample.size();
-//#endif
-//        newvec.reserve(newvecsz);
-//
-//#ifdef _DEBUG
-//        if( loopbeg > sample.size() || loopend > sample.size() )
-//            assert(false);
-//#endif
-//
-//#if SF2_ADD_EXTRA_LOOP_BYTES
-//        //Copy the 8 copied sample points at the end and at the beginning + the old vector's data
-//        std::copy_n( sample.begin(), loopbeg, newvecins );                       //Copy any samples before loop beg
-//        //std::copy_n( (sample.begin() + loopbeg), SfSampleLoopMinEdgeDist, newvecins );       //Put the 8 looping samples
-//        std::copy_n( sample.begin() + loopbeg, (loopend - loopbeg), newvecins ); //Copy the rest of the loop
-//        std::copy_n( (sample.begin() + loopbeg), SfSampleLoopMinEdgeDist, newvecins );       //Put the 8 looping samples
-//        std::copy  ( sample.begin() + loopend, sample.end(), newvecins );        //Copy the rest of the sample
-//#else
-//        std::copy  ( sample.begin(), sample.end(), newvecins );        //Copy the rest of the sample
-//#endif
-//
-//        //Move over the new smaple data 
-//        return std::move(newvec);
-//    }
-
 //=========================================================================================
 //  SounFontRIFFWriter
 //=========================================================================================
     class SounFontRIFFWriter
     {
         typedef std::function<std::ofstream::streampos()> listmethodfun_t;
-        //typedef std::ofstream::streampos(SounFontRIFFWriter::*listmethodfun_t)();
     public:
         SounFontRIFFWriter( const SoundFont & sf )
             :m_sf(sf)
@@ -706,7 +604,7 @@ namespace sf2
                 {
                     //#FIXME: This is evil! And really stupid. But I can't be bothered to do something less half-assed tonight!
                     cerr << "SoundFontRIFFWriter::WriteSmplChunk(): Sample end out of bound ! Attempting fix..\n";
-                    const_cast<Sample&>(smpl).SetLoopBounds( loopbounds.first, loadedsmpl.size() );
+                    //const_cast<Sample&>(smpl).SetLoopBounds( loopbounds.first, loadedsmpl.size() );
                     loopbounds.second = loadedsmpl.size();
 #ifdef _DEBUG
                     assert(false);
@@ -1509,23 +1407,23 @@ namespace sf2
     */
     void BaseGeneratorUser::SetVolEnvelope( const Envelope & env )
     {
-        if( env.delay != SHRT_MAX && env.delay != SHRT_MIN )
-            AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_  ) ) );
+        if( env.delay != SF_GenLimitsVolEnvDelay.def_ )
+            AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( env.delay /*utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_  )*/ ) );
 
-        if( env.attack != SHRT_MAX && env.attack != SHRT_MIN )
-            AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>( utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ ) ) );
+        if( env.attack != SF_GenLimitsVolEnvAttack.def_ )
+            AddGenerator( eSFGen::attackVolEnv, static_cast<uint16_t>(env.attack /*utils::Clamp( env.attack, SF_GenLimitsVolEnvAttack.min_, SF_GenLimitsVolEnvAttack.max_ )*/ ) );
 
-        if( env.hold != SHRT_MAX && env.hold != SHRT_MIN )
-            AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ ) ) );
+        if( env.hold != SF_GenLimitsVolEnvHold.def_ )
+            AddGenerator( eSFGen::holdVolEnv,   static_cast<uint16_t>( env.hold/*utils::Clamp( env.hold, SF_GenLimitsVolEnvHold.min_, SF_GenLimitsVolEnvHold.max_ )*/ ) );
 
-        if( env.decay != SHRT_MAX )
-            AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ ) ) );
+        if( env.decay != SF_GenLimitsVolEnvDecay.def_ )
+            AddGenerator( eSFGen::decayVolEnv,  static_cast<uint16_t>( env.decay/*utils::Clamp( env.decay, SF_GenLimitsVolEnvDecay.min_, SF_GenLimitsVolEnvDecay.max_ )*/ ) );
 
-        if( env.sustain != SF_GenLimitsVolEnvSustain.min_ )
-            AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ ) ) );
+        if( env.sustain != SF_GenLimitsVolEnvSustain.def_ )
+            AddGenerator( eSFGen::sustainVolEnv,static_cast<uint16_t>( env.sustain /*utils::Clamp( env.sustain, SF_GenLimitsVolEnvSustain.min_, SF_GenLimitsVolEnvSustain.max_ )*/ ) );
 
-        if( env.release != SHRT_MAX )
-            AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ ) ) );
+        if( env.release != SF_GenLimitsVolEnvRelease.def_ )
+            AddGenerator( eSFGen::releaseVolEnv,static_cast<uint16_t>( env.release/*utils::Clamp( env.release, SF_GenLimitsVolEnvRelease.min_, SF_GenLimitsVolEnvRelease.max_ )*/ ) );
         ////genparam_t param;
         ////param = static_cast<uint16_t>(env.delay);
         //AddGenerator( eSFGen::delayVolEnv,  static_cast<uint16_t>( utils::Clamp( env.delay, SF_GenLimitsVolEnvDelay.min_, SF_GenLimitsVolEnvDelay.max_ ) ) );
