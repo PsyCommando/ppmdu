@@ -51,10 +51,6 @@ namespace pmd2 { namespace audio
 //====================================================================================================
 
 
-
-    /*
-    */
-
 //====================================================================================================
 //  Specialized Loaders/Exporters
 //====================================================================================================
@@ -69,49 +65,6 @@ namespace pmd2 { namespace audio
     {
     public:
         typedef std::pair< DSE::MusicSequence, DSE::PresetBank > smdswdpair_t;
-
-        /*
-            mergedProgData
-                Structure containing references to presets, ordered by banks. While also maintaining a list of references to 
-                the files those were originally from.
-                This allows handling conflicting Preset ID from multiple files.
-        */
-        //struct mergedProgData
-        //{
-        //    typedef uint16_t                             presetid_t;           //The ID of a DSE Preset
-        //    typedef uint16_t                             conpresindex_t;       //The index of a conflicting preset within a conflictingpresets_t list!
-        //    typedef std::vector<DSE::ProgramInfo*>         conflictingpresets_t; //A list of pointers to presets sharing the same preset ID
-
-        //    /*
-        //        GetPresetByFile
-        //            For a given file index, within the list of loaded swd files, returns the correct preset at "presid".
-        //    */
-        //    inline DSE::ProgramInfo* GetPresetByFile( uint16_t fileindex, presetid_t presid )
-        //    {
-        //        return mergedpresets[ presid ][ filetopreset[fileindex].at(presid) ];
-        //    }
-
-        //    /*
-        //        GetPresetByBank
-        //            For a given bank, returns the preset at preset ID !
-        //    */
-        //    inline DSE::ProgramInfo* GetPresetByBank( uint16_t bank, presetid_t presid )
-        //    {
-        //        return mergedpresets[presid][bank];
-        //    }
-
-        //    std::vector<conflictingpresets_t>                   mergedpresets; //Each slots in the vector correspond to a DSE Preset ID.
-        //                                                                       //Each slot contains a vector of pointers to "ProgramInfo"
-        //                                                                       // objects. Each of those pointers is a Preset that shares the 
-        //                                                                       // same preset ID as the others in this "row".
-        //                                                                       // So if mergedpresets[Y][X], Y is the DSE PresetID,
-        //                                                                       // and X is a "bank" for this ID, with a different instrument that shares the same DSE Preset ID.
-
-        //    std::vector< std::map<presetid_t, conpresindex_t> > filetopreset;  //Each slot in the vector is a file from the m_pair vector.
-        //                                                                       //Each key values in the map, is a preset ID.
-        //                                                                       //Each value for each key value is the "bank" or the index within the 
-        //                                                                       // conflictingpresets_t list of presets sharing the same preset ID
-        //};
 
     //-----------------------------
     // Construction
@@ -152,12 +105,6 @@ namespace pmd2 { namespace audio
         void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0 )const;
 
         /*
-            Exports a MIDI along with a minimal soundfont for the specified smd+swd pair.
-        */
-        //
-        //void ExportSoundfontAndMIDIs_new( const std::string & destdir )const;
-
-        /*
             Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
 
             dsetogm : A map consisting of a list of filenames associated to a vector where each indexes correspond to a
@@ -178,18 +125,6 @@ namespace pmd2 { namespace audio
                 This will avoid crashing when a song has more presets than the master bank !
         */
         uint16_t GetSizeLargestPrgiChunk()const;
-
-        /*
-            Read all loaded smd/swd pairs and compile a list of instruments presets info, and a list of
-            where each instrument preset from each smd+swd pair was put into that compiled instrument info list.
-
-            The list can have several entries for the same instrument slot, and they're all
-            pointers, so any null instrument preset slot will be represented as such.
-
-            The list containing the position of each presets from each smd+swd pairs uses a map to associate 
-            an instrument ID (uint16_t) to a position in the second dimension of the merged instrument info list.
-        */
-        //mergedProgData PrepareMergedInstrumentTable()const;
 
         /*
             BuildPresetConversionDB
@@ -254,7 +189,7 @@ namespace pmd2 { namespace audio
     /*
         Export the PresetBank to a directory as XML and WAV samples.
     */
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk );
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true );
 
     /*
         To use the ExportSequence,

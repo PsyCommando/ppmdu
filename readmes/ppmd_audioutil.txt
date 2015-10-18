@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.11
+Version	   : 0.12
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -14,6 +14,8 @@ Changelog:
 - 0.1 : Initial release!
 - 0.11: (2015/10/14) : 
         - Fixed tracks looping with a noticeable delay..
+- 0.12: (2015/10/15) :
+        - Fixed tracks without a loop point from looping!
 
 ----------------------------------------------------------------------------------------------------
 License info:

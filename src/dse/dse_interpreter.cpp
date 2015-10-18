@@ -79,6 +79,103 @@ namespace DSE
         and "prioritize" some based on their keygroup priority. I suspect it involves making
         one channel louder than the other by a certain amount of decibel!
     */
+    class DSESequenceToMidi_Improv
+    {
+    public:
+        typedef uint32_t ticks_t;
+
+        /*
+            Holds data about a note event. What time it began, what time it ends on. And all the required
+            data to make a midi event.
+
+            Those are used to keep track of the notes played at the same time.
+        */
+        class NoteEvent
+        {
+        public:
+            NoteEvent( midinote_t noteid, int8_t velocity, uint8_t midichan, ticks_t begtime, ticks_t endtime );
+
+            //This creates a MIDI event from the data contained in the note!
+            operator jdksmidi::MIDITimedBigMessage()const;
+
+            //This returns whether the note is finished playing from the time passed in parameters.
+            bool IsNoteFinished( ticks_t time )const;
+
+            //This changes the endtime value to the time in ticks specified!
+            void CutNoteNow( ticks_t ticks );
+
+            //The midi note to play
+            midinote_t NoteID()const;
+
+            //Get or set the target midi channel
+            uint8_t MidiChan()const;
+            void    MidiChan( uint8_t midichan );
+
+        private:
+        };
+
+        /*
+            Holds state data for a single dse program.
+        */
+        class PrgState
+        {
+        public:
+
+        private:
+            deque<NoteEvent> m_notes;
+        };
+
+        /*
+            Holds state data for a single channel.
+        */
+        class ChannelState
+        {
+        public:
+
+        private:
+        };
+
+        /*
+            Holds the state of a DSE sequencer track
+        */
+        class TrackState
+        {
+        public:
+
+            //This makes a DSE tracks determine if it needs to handle an event, and if it does handle it.
+            void Process( ticks_t now );
+
+            ticks_t NextEvent()const;
+
+            size_t EventIndex()const;
+
+        private:
+            ticks_t m_nextev;   //The time in ticks when the next event will be processed
+            size_t  m_evindex;  //The index of the DSE event being processed
+        };
+
+        /*
+            Contains the sequencer-wide state variables.
+        */
+        struct SequencerState
+        {
+            ticks_t            m_globalTicks;  //The ticks the Sequencer is at.
+            vector<TrackState> m_TrkState;     //State of all the DSE tracks
+            deque<PrgState>    m_prgstates;    //State of all the DSE programs
+        };
+
+
+    private:
+        //This calls the Process() method of all tracks
+        void ProcessATick();
+
+
+    private:
+        SequencerState        m_CurState;     //Current state of the sequencer
+        SequencerState        m_LoopBegState; //Saved state of the sequencer at the beginning of the loop
+        const MusicSequence * m_seq;          //The Music sequence we're working on
+        
+    };
 
 
 //======================================================================================
@@ -93,10 +190,10 @@ namespace DSE
         struct NoteOnData
         {
             midinote_t noteid       = 0;
-            uint32_t noteonticks  = 0;
-            uint32_t noteoffticks = 0;
-            size_t   noteonnum    = 0; //Event num of the note on event
-            size_t   noteoffnum   = 0; //Event num of the eventual note off event
+            uint32_t   noteonticks  = 0;
+            uint32_t   noteoffticks = 0;
+            size_t     noteonnum    = 0; //Event num of the note on event
+            size_t     noteoffnum   = 0; //Event num of the eventual note off event
         };
         /*
             TrkState

@@ -62,8 +62,8 @@ namespace DSE
     inline uint32_t   ChunkIDToInt( eDSEChunks id    );
 
 
-    static const int16_t DSERootKey = 60; //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
-
+    static const int16_t DSERootKey           = 60; //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
+    const int8_t         DSEDefaultCoarseTune = -7; //The default coarse tune value for splits and samples.
 
 //====================================================================================================
 // Structs
@@ -264,74 +264,91 @@ namespace DSE
 
         uint16_t unk1       = 0;
         uint16_t id         = 0; //Index/ID of the sample
-        int16_t  pitchoffst = 0; //Possibly the pitch offset from the root key in 1/250th of a semitone
-        int16_t  rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
-        uint16_t unk4       = 0;
-        uint16_t unk5       = 0;
+        int8_t   ftune      = 0; 
+        int8_t   ctune      = 0;
+        uint8_t  rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
+        int8_t   ktps       = 0; //Transpose
+        int8_t   vol        = 0;
+        int8_t   pan        = 0;
+        uint8_t  unk5       = 0;
+        uint8_t  unk58      = 0;
         uint16_t unk6       = 0;
         uint16_t unk7       = 0;
-        uint16_t version    = 0; //
+        uint16_t unk59      = 0; //
         uint16_t smplfmt    = 0; //Format of the sample 0x100 == PCM 16, 0x200 == IMA ADPCM
         uint8_t  unk9       = 0; 
         uint8_t  smplloop   = 0; //loop flag, 1 = loop, 0 = no loop
-        uint16_t unk10      = 0;
-        uint16_t unk11      = 0;
-        uint16_t unk12      = 0;
+        uint8_t  unk10      = 0;
+        uint8_t  unk60      = 0;
+        uint8_t  unk11      = 0;
+        uint8_t  unk61      = 0;
+        uint8_t  unk12      = 0;
+        uint8_t  unk62      = 0;
         uint32_t unk13      = 0;
         uint32_t smplrate   = 0; //Sampling rate of the sample
         uint32_t smplpos    = 0; //Offset within pcmd chunk of the sample
-
         uint32_t loopbeg    = 0; //Loop start in int32 (based on the resulting PCM16)
         uint32_t looplen    = 0; //Length of the sample in int32
-
-        uint8_t  unk17      = 0;
-        uint8_t  unk18      = 0;
+        uint8_t  envon      = 0;
+        uint8_t  envmult    = 0;
         uint8_t  unk19      = 0;
         uint8_t  unk20      = 0;
         uint16_t unk21      = 0;
         uint16_t unk22      = 0;
-        uint16_t unk23      = 0;
-        uint16_t unk24      = 0;
-        uint16_t unk25      = 0;
-        uint16_t unk26      = 0;
+        int8_t   atkvol     = 0;
+        int8_t   attack     = 0;
+        int8_t   decay      = 0;
+        int8_t   sustain    = 0;
+        int8_t   hold       = 0;
+        int8_t   decay2     = 0;
+        int8_t   release    = 0;
+        int8_t   unk57      = 0;
 
         //Write the structure using an iterator to a byte container
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( unk1,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( id, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( pitchoffst, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( rootkey, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk4, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk5, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk6, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk7, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( version, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( smplfmt, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk9, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( smplloop, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk10, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk11, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk12, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk13, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( smplrate, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( smplpos, itwriteto );
-
-            itwriteto = utils::WriteIntToByteVector( loopbeg, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( looplen, itwriteto );
-
-            itwriteto = utils::WriteIntToByteVector( unk17, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk18, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk19, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk20, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk21, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk22, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk23, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk24, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk25, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk26, itwriteto );
-
+            itwriteto = utils::WriteIntToByteVector( unk1,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( id,        itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ftune,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ctune,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( rootkey,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( ktps,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( vol,       itwriteto );
+            itwriteto = utils::WriteIntToByteVector( pan,       itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk5,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk58,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk6,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk7,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk59,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplfmt,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk9,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplloop,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk10,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk60,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk11,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk61,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk12,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk62,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk13,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplrate,  itwriteto );
+            itwriteto = utils::WriteIntToByteVector( smplpos,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( loopbeg,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( looplen,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( envon,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( envmult,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk19,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk20,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk21,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk22,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( atkvol,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( attack,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( decay,     itwriteto );
+            itwriteto = utils::WriteIntToByteVector( sustain,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( hold,      itwriteto );
+            itwriteto = utils::WriteIntToByteVector( decay2,    itwriteto );
+            itwriteto = utils::WriteIntToByteVector( release,   itwriteto );
+            itwriteto = utils::WriteIntToByteVector( unk57,     itwriteto );
             return itwriteto;
         }
 
@@ -339,40 +356,47 @@ namespace DSE
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( unk1,       itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( id,         itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( pitchoffst, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( rootkey,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk4,       itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk5,       itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk6,       itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk7,       itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( version,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( smplfmt,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk9,       itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( smplloop,   itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( unk10,      itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( unk11,      itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( unk12,      itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( unk13,      itReadfrom ); 
-            itReadfrom = utils::ReadIntFromByteContainer( smplrate,   itReadfrom ); 
-
-            itReadfrom = utils::ReadIntFromByteContainer( smplpos,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( loopbeg,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( looplen,    itReadfrom );
-
-            itReadfrom = utils::ReadIntFromByteContainer( unk17,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk18,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk19,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk20,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk21,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk22,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk23,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk24,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk25,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk26,      itReadfrom );
-
-
+            itReadfrom = utils::ReadIntFromByteContainer( unk1,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( id,       itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( ftune,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( ctune,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( rootkey,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( ktps,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( vol,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( pan,      itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk5,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk58,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk6,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk7,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk59,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( smplfmt,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk9,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( smplloop, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk10,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk60,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk11,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk61,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk12,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk62,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk13,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( smplrate, itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( smplpos,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( loopbeg,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( looplen,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( envon,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( envmult,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk19,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk20,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk21,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk22,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( atkvol,   itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( attack,   itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( decay,    itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( sustain,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( hold,     itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( decay2,   itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( release,  itReadfrom );
+            itReadfrom = utils::ReadIntFromByteContainer( unk57,    itReadfrom );
             return itReadfrom;
         }
     };
@@ -599,11 +623,11 @@ namespace DSE
             uint16_t unk17    = 0; //0x10
             uint16_t smplid   = 0; //0x12
 
-            int8_t  tune      = 0; //0x14
-            int8_t  cutgrp    = 0; //0x15
+            int8_t  ftune      = 0; //0x14
+            int8_t  ctune    = 0; //0x15
 
             int8_t  rootkey   = 0; //0x16
-            int8_t  ctune     = 0; //0x17
+            int8_t  ktps     = 0; //0x17
 
             uint8_t smplvol   = 0; //0x18
             uint8_t smplpan   = 0; //0x19
@@ -653,11 +677,11 @@ namespace DSE
                 itwriteto = utils::WriteIntToByteVector( unk17,    itwriteto );
                 itwriteto = utils::WriteIntToByteVector( smplid,   itwriteto );
 
-                itwriteto = utils::WriteIntToByteVector( tune,     itwriteto );
-                itwriteto = utils::WriteIntToByteVector( cutgrp,   itwriteto );
+                itwriteto = utils::WriteIntToByteVector( ftune,     itwriteto );
+                itwriteto = utils::WriteIntToByteVector( ctune,   itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( rootkey,  itwriteto );
-                itwriteto = utils::WriteIntToByteVector( ctune,    itwriteto );
+                itwriteto = utils::WriteIntToByteVector( ktps,    itwriteto );
 
                 itwriteto = utils::WriteIntToByteVector( smplvol,  itwriteto );
                 itwriteto = utils::WriteIntToByteVector( smplpan,  itwriteto );
@@ -710,11 +734,11 @@ namespace DSE
                 itReadfrom = utils::ReadIntFromByteContainer( unk17,    itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( smplid,   itReadfrom );
 
-                itReadfrom = utils::ReadIntFromByteContainer( tune,     itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( cutgrp,   itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( ftune,     itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( ctune,   itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( rootkey,  itReadfrom );
-                itReadfrom = utils::ReadIntFromByteContainer( ctune,    itReadfrom );
+                itReadfrom = utils::ReadIntFromByteContainer( ktps,    itReadfrom );
 
                 itReadfrom = utils::ReadIntFromByteContainer( smplvol,  itReadfrom );
                 itReadfrom = utils::ReadIntFromByteContainer( smplpan,  itReadfrom );
@@ -902,9 +926,11 @@ namespace DSE
     */
     inline int16_t DSESamplePitchToCents( int16_t dsesmplpitch )
     {
-        static const double NbUnitPerSemitone = 250.0;
-        double result = ( static_cast<double>(dsesmplpitch) / NbUnitPerSemitone ) * 100.0;
-        return static_cast<int16_t>( lround(result) );
+        //static const double NbUnitPerSemitone = 250.0;
+        //double result = ( static_cast<double>(dsesmplpitch) / NbUnitPerSemitone ) * 100.0;
+        //return static_cast<int16_t>( lround(result) );
+        return dsesmplpitch;
+        //return static_cast<int16_t>( lround( (static_cast<double>(dsesmplpitch) / 2.5) ) );
     }
 
     /*
@@ -928,6 +954,27 @@ namespace DSE
     //    double result = ( static_cast<double>(dsepitchbend) / NbUnitPerSemitone ) * 100.0;
     //    return static_cast<int16_t>( lround(result) );
     //}
+
+    /*
+    */
+    inline int8_t DseCtuneToSemitones( int8_t ctune )
+    {
+        return ctune;
+
+        //Since -7 is basically no pitch shift, we need to work around that..
+        //if( ctune != DSEDefaultCoarseTune )
+        //{
+        //    if( ctune < 0 )
+        //    {
+        //        abs(abs(ctune) - abs(DSEDefaultCoarseTune));
+        //        return ctune + (DSEDefaultCoarseTune * -1);
+        //    }
+        //    else
+        //        return ctune + (DSEDefaultCoarseTune * -1);
+        //}
+        //else
+        //    return 0;
+    }
 
     /*
         DSEEnveloppeDurationToMSec

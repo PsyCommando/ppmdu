@@ -90,9 +90,9 @@
       <AdditionalDependencies>jdksmidi.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
-        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" /Y
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -110,9 +110,9 @@
       <AdditionalDependencies>jdksmidi_dnoit.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
-        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" /Y
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -134,15 +134,16 @@
       <AdditionalDependencies>jdksmidi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>
-        copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
-        copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+      <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt" /Y
+copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt" /Y
+copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" /Y
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
     <ClInclude Include="..\src\dse\dse_conversion_info.hpp" />
+    <ClInclude Include="..\src\ext_fmts\wav_io.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>

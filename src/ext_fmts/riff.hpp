@@ -12,6 +12,7 @@ Description: Utilities for working with RIFF files.
 #include <cstdint>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace riff
 {
@@ -28,10 +29,17 @@ namespace riff
     enum struct eChunkIDs : uint32_t
     {
         RIFF  = 0x52494646, //"RIFF"
-        RIFFX = 0x52494658, //"RIFX" Big-endian RIFF format
+        RIFX  = 0x52494658, //"RIFX" Big-endian RIFF format
         LIST  = 0x4C495354, //"LIST"
         JUNK  = 0x4A554E4B, //"JUNK" Basically padding chunks to skip completely
     };
+
+    inline bool ChunkContainsSubChunks( uint32_t chunkid )
+    {
+        return (chunkid == static_cast<uint32_t>(eChunkIDs::LIST) || 
+                chunkid == static_cast<uint32_t>(eChunkIDs::RIFF) || 
+                chunkid == static_cast<uint32_t>(eChunkIDs::RIFX) );
+    }
 
 
     /************************************************************************************
@@ -52,7 +60,7 @@ namespace riff
             Return new read position, after the chunk header that was parsed.
         */
         template<class _init>
-            _init Read( _init itbeg, _init itfileend )
+            _init Read( _init itbeg )
         {
             chunk_id = utils::ReadIntFromByteVector<decltype(chunk_id)>(itbeg, false);
             length   = utils::ReadIntFromByteVector<decltype(length)>  (itbeg);
@@ -72,29 +80,32 @@ namespace riff
 
     };
 
+//===========================================================================
+//  RIFF Container
+//===========================================================================
+
     /*
         Chunk
             Represent a regular RIFF chunk and its content.
     */
-    struct Chunk
+    class Chunk
     {
     public:
-        Chunk( uint32_t fourcc )
-            :fourcc_(fourcc)
+
+        Chunk( uint32_t fourcc = 0, uint32_t formatid = 0 )
+            :fourcc_(fourcc), fmtid_(formatid)
         {}
 
         Chunk( uint32_t fourcc, std::vector<uint8_t> && data )
-            :fourcc_(fourcc), data_(std::move(data))
+            :fourcc_(fourcc), data_(std::move(data)), fmtid_(0)
         {}
 
+        Chunk( uint32_t fourcc, std::vector<Chunk> && subchunks, uint32_t formatid = 0 )
+            :fourcc_(fourcc), subchunks_(std::move(subchunks)), fmtid_(formatid)
+        {}
 
-        ///*
-        //*/
-        //template<class _init>
-        //    _init Read( _init itbeg, _init itfileend )
-        //{
-        //    return itbeg;
-        //}
+        virtual ~Chunk()
+        {}
 
         //#TODO: It might be a good thing to put an abstraction layer over the data of a chunk
         //       using iterators maybe ? That way, if the chunk is loaded from file, we don't have to load
@@ -109,22 +120,192 @@ namespace riff
         //
 
         /*
+            ShouldParseSubChunks
+                This determines whether the chunk will be parsed as having sub-chunks.
+        */
+        virtual bool ShouldParseSubChunks()const
+        {
+            return ChunkContainsSubChunks(fourcc_);
+        }
+
+        /*
+            Reads the whole chunk from a source.
+            Return read position.
+            - itbeg     : Beginning of the chunk's header.
+            - itfileend : End of the entire RIFF container. Meant to be used to validate the header.
+        */
+        template<class _init>
+            _init Read( _init itbeg, _init itfileend )
+        {
+            ChunkHeader hdr;
+            itbeg = hdr.Read( itbeg );
+            fourcc_ = hdr.chunk_id; //Fill our fourcc
+
+            //Check if we're a standard sub-chunk containing chunk
+            if( ShouldParseSubChunks() )
+            {
+                auto itchnkend = itbeg;
+                std::advance(itchnkend, hdr.length);
+
+                //Read format tag 
+                fmtid_ = utils::ReadIntFromByteVector<decltype(fmtid_)>(itbeg, false);
+
+                //Read all sub-chunks
+                while( itbeg != itchnkend )
+                    itbeg = Read( itbeg, itchnkend );
+            }
+            else
+            {
+                //Read all the data
+                data_.resize( hdr.length );
+                size_t cntb = 0;
+                for( ; cntb < hdr.length && itbeg != itfileend; ++cntb, ++itbeg )
+                    data_[cntb] = (*itbeg);
+
+                if( itbeg == itfileend && cntb < hdr.length )
+                {
+                    std::stringstream sstr;
+                    sstr << "riff::Chunk::Read(): Error, encountered end of container before the expected end of the chunk! Expected length "
+                         << hdr.length <<" bytes. Actual length " <<cntb <<" bytes!";
+                    throw std::runtime_error( sstr.str() );
+                }
+
+            }
+            return itbeg;
+        }
+
+        /*
             Return new write position.
         */
         template<class _outit>
-            _outit Write( _outit itwhere )
+            _outit Write( _outit itwhere )const
         {
-            //Make Header
-            itwhere = ChunkHeader( fourcc_, data_.size() ).Write( itwhere );
+            itwhere = ChunkHeader( fourcc_, ComputeChnkDataLength() ).Write( itwhere );
 
-            //Write our data
-            return std::copy( data_.begin(), data_.end(), itwhere );
+            //Write our content
+            if( !subchunks_.empty() )
+            {
+                //write format tag
+                itwhere = utils::WriteIntToByteContainer( fmtid_, itwhere, false );
+
+                //write content
+                for( const auto & achunk : subchunks_ )
+                    itwhere = achunk.Write(itwhere);
+            }
+            else if( HasSubChunks() && subchunks_.empty() )
+            {
+                std::clog << "<!>- Warning, writing a standard chunk requiring to contain sub-chunks, while it contains no sub-chunks!\n";
+            }
+            else //Simple data chunk
+                return std::copy( data_.begin(), data_.end(), itwhere );
+
+            return itwhere;
         }
 
-        uint32_t             fourcc_;
-        std::vector<uint8_t> data_;
+        /*
+            Returns whether the chunk contains sub-chunks.
+        */
+        inline bool HasSubChunks()const { return !subchunks_.empty(); }
+
+        /*
+            Returns whether the chunk has a format tag!
+        */
+        inline bool HasFormatTag()const { return fmtid_ != 0; }
+
+        /*
+            ComputeChnkDataLength
+                Calculates the size of the contained data for this chunk!
+        */
+        virtual size_t ComputeChnkDataLength()const
+        {
+            size_t totalsz = 0;
+
+            if( HasSubChunks() )
+            {
+                totalsz += sizeof(fmtid_); //Add the format tag!
+                for( const auto & achnk : subchunks_ )
+                    totalsz += achnk.ComputeChnkDataLength() + ChunkHeader::SIZE; //Count the headers too!! 
+            }
+            else
+                totalsz += data_.size();
+
+            return totalsz;
+        }
+
+        uint32_t             fourcc_;       //The chunk id
+        uint32_t             fmtid_;        //If the chunk contains sub-chunks, it has a format id tag
+        std::vector<uint8_t> data_;         //If its a simple data chunk, its content is stored here
+        std::vector<Chunk>   subchunks_;    //If its a chunk containing sub-chunks, its content is stored here!
     };
 
+
+    /*
+        RIFF_Container
+            Represents the full content of a RIFF file in memory.
+    */
+    class RIFF_Container : public Chunk
+    {
+    public:
+        RIFF_Container( uint32_t formatid = 0 )
+            :Chunk( static_cast<uint32_t>(eChunkIDs::RIFF), formatid )
+        {}
+
+        virtual ~RIFF_Container()
+        {}
+
+        /*
+            Reads the whole chunk from a source.
+            Return read position.
+            - itbeg     : Beginning of the chunk's header.
+            - itfileend : End of the entire RIFF container. Meant to be used to validate the header.
+        */
+        template<class _init>
+            _init ReadAndValidate( _init itbeg, _init itfileend )
+        {
+            ChunkHeader hdr;
+            hdr.Read( itbeg );
+
+            //Validate
+            if( hdr.chunk_id != static_cast<uint32_t>(eChunkIDs::RIFF) )
+            {
+                if( hdr.chunk_id == static_cast<uint32_t>(eChunkIDs::RIFX) )
+                    throw std::runtime_error("RIFF_Container::Read(): RIFX big-endian RIFF format not supported yet!");
+                else
+                    throw std::runtime_error("RIFF_Container::Read(): Invalid RIFF container header!");
+            }
+
+            auto flen = std::distance( itbeg, itfileend );
+            if( flen < (hdr.length + ChunkHeader::SIZE) )
+            {
+                throw std::runtime_error("RIFF_Container::Read(): Unexpected end of data encountered while parsing RIFF header!");
+            }
+
+            //Parse everything
+            //Chunk riffchnk;
+            //itbeg = riffchnk.Read( itbeg, itfileend );
+
+            ////Move the subchunks and format tag!
+            //m_formatID = riffchnk.fmtid_;
+            //m_content  = std::move( riffchnk.subchunks_ );
+
+            return Chunk::Read( itbeg, itfileend );
+        }
+
+        /*
+            Get/Set the content id tag, right before the fmt chunk.
+        */
+        inline uint32_t FormatID()const            { return fmtid_; }
+        inline void     FormatID( uint32_t fmtid ) { fmtid_ = fmtid; }
+
+    private:
+        //uint32_t           m_formatID;
+        //std::vector<Chunk> m_content;
+    };
+
+
+//===========================================================================
+//  RIFF Parsing
+//===========================================================================
 
     /*
         chunkinfo 
@@ -133,13 +314,14 @@ namespace riff
     struct ChunkInfo
     {
         ChunkInfo()
-            :pos(0)
+            :fileoffset(0)
         {}
 
-        ChunkHeader            hdr;
-        size_t                 pos;
-        std::vector<ChunkInfo> subchunks;
+        ChunkHeader            hdr;         //The header of the chunk
+        size_t                 fileoffset;  //The beginning of the chunk's header in the file!
+        std::vector<ChunkInfo> subchunks;   //Any subchunks the chunk might have, if its a LIST or RIFF chunk!
     };
+
 
     /*******************************************************************************************
         RIFFMap
@@ -154,12 +336,9 @@ namespace riff
         typedef size_t   offset_t;
         typedef uint32_t fmtid_t;
 
-
-
         //STDLib equired typedefs
         typedef std::vector<ChunkInfo>::iterator       iterator;
         typedef std::vector<ChunkInfo>::const_iterator const_iterator;
-
 
         RIFFMap() 
             :m_fmt(0)
@@ -215,7 +394,7 @@ namespace riff
             curoffset += ChunkHeader::SIZE;
 
             //Mark our position
-            cinf.pos = curoffset;
+            cinf.fileoffset = curoffset;
 
             //Handle LIST chunks differently to list their content.
             if( cinf.hdr.chunk_id == eChunkIDs::LIST )
@@ -245,6 +424,25 @@ namespace riff
         fmtid_t                m_fmt;
         std::vector<ChunkInfo> m_chunks;
     };
+
+//===========================================================================
+//  RIFF Writing
+//===========================================================================
+    
+    /*
+        RIFF_Writer
+            Write a RIFF_Container to the output!
+    */
+    class RIFF_Writer
+    {
+    public:
+        RIFF_Writer()
+        {
+        }
+
+    private:
+    };
+
 };
 
 #endif

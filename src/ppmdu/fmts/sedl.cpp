@@ -32,7 +32,7 @@ namespace DSE
         //Returns the value from the content type enum to represent what this container contains!
         virtual cnt_t getContentType()const
         {
-            return static_cast<unsigned int>(pmd2::filetypes::e_ContentType::SEDL_FILE);
+            return filetypes::CnTy_SEDL;
         }
 
         //Returns an ID number identifying the rule. Its not the index in the storage array,
