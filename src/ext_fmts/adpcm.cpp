@@ -167,7 +167,7 @@ namespace audio
 
             //Convert from 16 bits pcm to raw data.
             for( const auto & smpl : pcmdat )
-                WriteIntToByteVector( smpl, itinsert );
+                WriteIntToBytes( smpl, itinsert );
 
             return std::move(rawdat);
         }
@@ -193,8 +193,8 @@ namespace audio
         void ParsePreamble( chanstate & ach )
         {
             //Init channels with initial values for the predictor and step index
-            ach.predictor = ReadIntFromByteVector<int16_t>(m_itread); //Increments iterator
-            ach.stepindex = mytrait::ClampStepIndex( ReadIntFromByteVector<int16_t>(m_itread) );
+            ach.predictor = ReadIntFromBytes<int16_t>(m_itread); //Increments iterator
+            ach.stepindex = mytrait::ClampStepIndex( ReadIntFromBytes<int16_t>(m_itread) );
             ach.step      = mytrait::StepSizes[ach.stepindex];
         }
 
@@ -207,7 +207,7 @@ namespace audio
             while( m_itread != m_data.end() )
             {
                 //Read two 4 bits samples
-                uint8_t          curbuff = ReadIntFromByteVector<int8_t>(m_itread); //iterator is incremented 
+                uint8_t          curbuff = ReadIntFromBytes<int8_t>(m_itread); //iterator is incremented 
                 array<int8_t, 2> smpls   = { curbuff & 0x0F, (curbuff >> 4) & 0x0F };
 
                 //Decode them

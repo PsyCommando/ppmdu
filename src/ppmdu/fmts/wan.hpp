@@ -60,20 +60,20 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( pixelsrc, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( pixamt,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk14,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( zIndex,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( pixelsrc, itwriteto );
+            itwriteto = utils::WriteIntToBytes( pixamt,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk14,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( zIndex,  itwriteto );
             return itwriteto;
         }
         
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            pixelsrc = utils::ReadIntFromByteVector<decltype(pixelsrc)>(itReadfrom);
-            pixamt   = utils::ReadIntFromByteVector<decltype(pixamt)>  (itReadfrom);
-            unk14    = utils::ReadIntFromByteVector<decltype(unk14)>   (itReadfrom);
-            zIndex   = utils::ReadIntFromByteVector<decltype(zIndex)>  (itReadfrom);
+            pixelsrc = utils::ReadIntFromBytes<decltype(pixelsrc)>(itReadfrom);
+            pixamt   = utils::ReadIntFromBytes<decltype(pixamt)>  (itReadfrom);
+            unk14    = utils::ReadIntFromBytes<decltype(unk14)>   (itReadfrom);
+            zIndex   = utils::ReadIntFromBytes<decltype(zIndex)>  (itReadfrom);
             return itReadfrom;
         }
     };
@@ -96,10 +96,10 @@ namespace filetypes
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptr_animinfo, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_imginfo,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( spriteType,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk12,        itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_animinfo, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_imginfo,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( spriteType,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk12,        itwriteto );
             return itwriteto;
         }
 
@@ -115,25 +115,25 @@ namespace filetypes
             //auto backins = std::back_inserter( appendto );
             //Register ptr offset
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptr_animinfo, backins );
+            //utils::WriteIntToBytes( ptr_animinfo, backins );
             funRegisterPtr( ptr_animinfo );
 
             //Register ptr offset
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptr_imginfo,  backins );
+            //utils::WriteIntToBytes( ptr_imginfo,  backins );
             funRegisterPtr(ptr_imginfo);
 
-            utils::WriteIntToByteVector( spriteType,   backins );
-            utils::WriteIntToByteVector( unk12,        backins );
+            utils::WriteIntToBytes( spriteType,   backins );
+            utils::WriteIntToBytes( unk12,        backins );
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptr_animinfo = utils::ReadIntFromByteVector<decltype(ptr_animinfo)>(itReadfrom);
-            ptr_imginfo  = utils::ReadIntFromByteVector<decltype(ptr_imginfo)> (itReadfrom);
-            spriteType   = utils::ReadIntFromByteVector<decltype(spriteType)>  (itReadfrom);
-            unk12        = utils::ReadIntFromByteVector<decltype(unk12)>       (itReadfrom);
+            ptr_animinfo = utils::ReadIntFromBytes<decltype(ptr_animinfo)>(itReadfrom);
+            ptr_imginfo  = utils::ReadIntFromBytes<decltype(ptr_imginfo)> (itReadfrom);
+            spriteType   = utils::ReadIntFromBytes<decltype(spriteType)>  (itReadfrom);
+            unk12        = utils::ReadIntFromBytes<decltype(unk12)>       (itReadfrom);
             return itReadfrom;
         }
 
@@ -164,12 +164,12 @@ namespace filetypes
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptrImgsTbl,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptrPal,       itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk13,     itwriteto );
-            itwriteto = utils::WriteIntToByteVector( is256Colors,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk11,        itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nbImgsTblPtr, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrImgsTbl,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrPal,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk13,     itwriteto );
+            itwriteto = utils::WriteIntToBytes( is256Colors,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk11,        itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbImgsTblPtr, itwriteto );
             return itwriteto;
         }
 
@@ -186,29 +186,29 @@ namespace filetypes
 
             //Register ptr offset to SIR0 ptr table
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptrImgsTbl,    backins );
+            //utils::WriteIntToBytes( ptrImgsTbl,    backins );
             funRegisterPtr(ptrImgsTbl);
 
             //Register ptr offset to SIR0 ptr table
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptrPal,        backins );
+            //utils::WriteIntToBytes( ptrPal,        backins );
             funRegisterPtr(ptrPal);
 
-            utils::WriteIntToByteVector( unk13,        backins );
-            utils::WriteIntToByteVector( is256Colors,  backins );
-            utils::WriteIntToByteVector( unk11,        backins );
-            utils::WriteIntToByteVector( nbImgsTblPtr, backins );
+            utils::WriteIntToBytes( unk13,        backins );
+            utils::WriteIntToBytes( is256Colors,  backins );
+            utils::WriteIntToBytes( unk11,        backins );
+            utils::WriteIntToBytes( nbImgsTblPtr, backins );
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptrImgsTbl   = utils::ReadIntFromByteVector<decltype(ptrImgsTbl)>  (itReadfrom);
-            ptrPal       = utils::ReadIntFromByteVector<decltype(ptrPal)>      (itReadfrom);
-            unk13        = utils::ReadIntFromByteVector<decltype(unk13)>       (itReadfrom);
-            is256Colors  = utils::ReadIntFromByteVector<decltype(is256Colors)> (itReadfrom);
-            unk11        = utils::ReadIntFromByteVector<decltype(unk11)>       (itReadfrom);
-            nbImgsTblPtr = utils::ReadIntFromByteVector<decltype(nbImgsTblPtr)>(itReadfrom);
+            ptrImgsTbl   = utils::ReadIntFromBytes<decltype(ptrImgsTbl)>  (itReadfrom);
+            ptrPal       = utils::ReadIntFromBytes<decltype(ptrPal)>      (itReadfrom);
+            unk13        = utils::ReadIntFromBytes<decltype(unk13)>       (itReadfrom);
+            is256Colors  = utils::ReadIntFromBytes<decltype(is256Colors)> (itReadfrom);
+            unk11        = utils::ReadIntFromBytes<decltype(unk11)>       (itReadfrom);
+            nbImgsTblPtr = utils::ReadIntFromBytes<decltype(nbImgsTblPtr)>(itReadfrom);
             return itReadfrom;
         }
 
@@ -248,15 +248,15 @@ namespace filetypes
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptr_metaFrmTable,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_pOffsetsTable, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptr_animGrpTable,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nb_anim_groups,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk6,              itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk7,              itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk8,              itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk9,              itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk10,             itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_metaFrmTable,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_pOffsetsTable, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_animGrpTable,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( nb_anim_groups,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk6,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk7,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk8,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk9,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk10,             itwriteto );
             return itwriteto;
         }
 
@@ -273,38 +273,38 @@ namespace filetypes
 
             //Register ptr offset
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptr_metaFrmTable,  backins );
+            //utils::WriteIntToBytes( ptr_metaFrmTable,  backins );
             funRegisterPtr(ptr_metaFrmTable);
 
             //if( ptr_pOffsetsTable != 0 ) //Omit appending it to the ptr offset list if null
             //    ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptr_pOffsetsTable, backins );
+            //utils::WriteIntToBytes( ptr_pOffsetsTable, backins );
             funRegisterPtr(ptr_pOffsetsTable);
 
             //ptroffsettbl.push_back( appendto.size() );
-            //utils::WriteIntToByteVector( ptr_animGrpTable,  backins );
+            //utils::WriteIntToBytes( ptr_animGrpTable,  backins );
             funRegisterPtr(ptr_animGrpTable);
 
-            utils::WriteIntToByteVector( nb_anim_groups,    backins );
-            utils::WriteIntToByteVector( unk6,              backins );
-            utils::WriteIntToByteVector( unk7,              backins );
-            utils::WriteIntToByteVector( unk8,              backins );
-            utils::WriteIntToByteVector( unk9,              backins );
-            utils::WriteIntToByteVector( unk10,             backins );
+            utils::WriteIntToBytes( nb_anim_groups,    backins );
+            utils::WriteIntToBytes( unk6,              backins );
+            utils::WriteIntToBytes( unk7,              backins );
+            utils::WriteIntToBytes( unk8,              backins );
+            utils::WriteIntToBytes( unk9,              backins );
+            utils::WriteIntToBytes( unk10,             backins );
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptr_metaFrmTable  = utils::ReadIntFromByteVector<decltype(ptr_metaFrmTable)> (itReadfrom);
-            ptr_pOffsetsTable = utils::ReadIntFromByteVector<decltype(ptr_pOffsetsTable)>(itReadfrom);
-            ptr_animGrpTable  = utils::ReadIntFromByteVector<decltype(ptr_animGrpTable)> (itReadfrom);
-            nb_anim_groups    = utils::ReadIntFromByteVector<decltype(nb_anim_groups)>   (itReadfrom);
-            unk6              = utils::ReadIntFromByteVector<decltype(unk6)>             (itReadfrom);
-            unk7              = utils::ReadIntFromByteVector<decltype(unk7)>             (itReadfrom);
-            unk8              = utils::ReadIntFromByteVector<decltype(unk8)>             (itReadfrom);
-            unk9              = utils::ReadIntFromByteVector<decltype(unk9)>             (itReadfrom);
-            unk10             = utils::ReadIntFromByteVector<decltype(unk10)>            (itReadfrom);
+            ptr_metaFrmTable  = utils::ReadIntFromBytes<decltype(ptr_metaFrmTable)> (itReadfrom);
+            ptr_pOffsetsTable = utils::ReadIntFromBytes<decltype(ptr_pOffsetsTable)>(itReadfrom);
+            ptr_animGrpTable  = utils::ReadIntFromBytes<decltype(ptr_animGrpTable)> (itReadfrom);
+            nb_anim_groups    = utils::ReadIntFromBytes<decltype(nb_anim_groups)>   (itReadfrom);
+            unk6              = utils::ReadIntFromBytes<decltype(unk6)>             (itReadfrom);
+            unk7              = utils::ReadIntFromBytes<decltype(unk7)>             (itReadfrom);
+            unk8              = utils::ReadIntFromBytes<decltype(unk8)>             (itReadfrom);
+            unk9              = utils::ReadIntFromBytes<decltype(unk9)>             (itReadfrom);
+            unk10             = utils::ReadIntFromBytes<decltype(unk10)>            (itReadfrom);
             return itReadfrom;
         }
 
@@ -338,24 +338,24 @@ namespace filetypes
         template<class _outIt>
             _outIt WriteToContainer( _outIt itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptrpal,         itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk3,           itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nbcolorsperrow, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk4,           itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk5,           itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nullbytes,      itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrpal,         itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk3,           itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbcolorsperrow, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk4,           itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk5,           itwriteto );
+            itwriteto = utils::WriteIntToBytes( nullbytes,      itwriteto );
             return itwriteto;
         }
 
         template<class _inIt>
             _inIt ReadFromContainer( _inIt itReadfrom )
         {
-            ptrpal         = utils::ReadIntFromByteVector<decltype(ptrpal)>        (itReadfrom);
-            unk3           = utils::ReadIntFromByteVector<decltype(unk3)>          (itReadfrom);
-            nbcolorsperrow = utils::ReadIntFromByteVector<decltype(nbcolorsperrow)>(itReadfrom);
-            unk4           = utils::ReadIntFromByteVector<decltype(unk4)>          (itReadfrom);
-            unk5           = utils::ReadIntFromByteVector<decltype(unk5)>          (itReadfrom);
-            nullbytes      = utils::ReadIntFromByteVector<decltype(nullbytes)>     (itReadfrom);
+            ptrpal         = utils::ReadIntFromBytes<decltype(ptrpal)>        (itReadfrom);
+            unk3           = utils::ReadIntFromBytes<decltype(unk3)>          (itReadfrom);
+            nbcolorsperrow = utils::ReadIntFromBytes<decltype(nbcolorsperrow)>(itReadfrom);
+            unk4           = utils::ReadIntFromBytes<decltype(unk4)>          (itReadfrom);
+            unk5           = utils::ReadIntFromBytes<decltype(unk5)>          (itReadfrom);
+            nullbytes      = utils::ReadIntFromBytes<decltype(nullbytes)>     (itReadfrom);
             return itReadfrom;
         }
 
@@ -380,11 +380,11 @@ namespace filetypes
             //auto backins = std::back_inserter( appendto );
 
             funRegisterPtr(ptrpal);
-            utils::WriteIntToByteVector( unk3,           backins );
-            utils::WriteIntToByteVector( nbcolorsperrow, backins );
-            utils::WriteIntToByteVector( unk4,           backins );
-            utils::WriteIntToByteVector( unk5,           backins );
-            utils::WriteIntToByteVector( nullbytes,      backins );
+            utils::WriteIntToBytes( unk3,           backins );
+            utils::WriteIntToBytes( nbcolorsperrow, backins );
+            utils::WriteIntToBytes( unk4,           backins );
+            utils::WriteIntToBytes( unk5,           backins );
+            utils::WriteIntToBytes( nullbytes,      backins );
         }
     };
 
@@ -575,7 +575,7 @@ namespace filetypes
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nbImgsTblPtr; ++i )
             {
-                uint32_t ptrtoimg = utils::ReadIntFromByteVector<uint32_t>( itfrmptr ); //iter is incremented automatically
+                uint32_t ptrtoimg = utils::ReadIntFromBytes<uint32_t>( itfrmptr ); //iter is incremented automatically
 
                 if( utils::LibWide().isLogOn() )
                     std::clog <<"== Frame #" <<i <<" ==\n";
@@ -762,7 +762,7 @@ namespace filetypes
         template<class _retty>
             inline _retty ReadOff( uint32_t fileoffset, bool littleendian = true )const
         {
-            return utils::ReadIntFromByteVector<_retty>( (m_rawdata.begin() + fileoffset), littleendian );
+            return utils::ReadIntFromBytes<_retty>( (m_rawdata.begin() + fileoffset), littleendian );
         }
 
     private:

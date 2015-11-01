@@ -43,15 +43,15 @@ namespace filetypes
 
     std::vector<uint8_t>::iterator fileIndex::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
     {
-        itwriteto = utils::WriteIntToByteVector( _fileOffset, itwriteto );
-        itwriteto = utils::WriteIntToByteVector( _fileLength, itwriteto );
+        itwriteto = utils::WriteIntToBytes( _fileOffset, itwriteto );
+        itwriteto = utils::WriteIntToBytes( _fileLength, itwriteto );
         return itwriteto;
     }
 
     std::vector<uint8_t>::const_iterator fileIndex::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
     {
-        _fileOffset = utils::ReadIntFromByteVector<decltype(_fileOffset)>(itReadfrom);
-        _fileLength = utils::ReadIntFromByteVector<decltype(_fileLength)>(itReadfrom);
+        _fileOffset = utils::ReadIntFromBytes<decltype(_fileOffset)>(itReadfrom);
+        _fileLength = utils::ReadIntFromBytes<decltype(_fileLength)>(itReadfrom);
         return itReadfrom;
     }
 
@@ -61,15 +61,15 @@ namespace filetypes
 
     std::vector<uint8_t>::iterator pfheader::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
     {
-        itwriteto = utils::WriteIntToByteVector( _zeros,   itwriteto );
-        itwriteto = utils::WriteIntToByteVector( _nbfiles, itwriteto );
+        itwriteto = utils::WriteIntToBytes( _zeros,   itwriteto );
+        itwriteto = utils::WriteIntToBytes( _nbfiles, itwriteto );
         return itwriteto;
     }
 
     std::vector<uint8_t>::const_iterator pfheader::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
     {
-        _zeros   = utils::ReadIntFromByteVector<decltype(_zeros)>  (itReadfrom);
-        _nbfiles = utils::ReadIntFromByteVector<decltype(_nbfiles)>(itReadfrom);
+        _zeros   = utils::ReadIntFromBytes<decltype(_zeros)>  (itReadfrom);
+        _nbfiles = utils::ReadIntFromBytes<decltype(_nbfiles)>(itReadfrom);
         return itReadfrom;
     }
 
@@ -316,7 +316,7 @@ namespace filetypes
         //Get the actual first file offset from the file
         std::advance( ittread, OFFSET_TBL_FIRST_ENTRY );
 
-        actuallength = utils::ReadIntFromByteVector<uint32_t>(ittread);
+        actuallength = utils::ReadIntFromBytes<uint32_t>(ittread);
 
         //compare with first subfile's offset in file's offset table
         return ( actuallength > expectedlength ) ? actuallength : 0;
@@ -492,7 +492,7 @@ namespace filetypes
     {
         pfheader headr;
         itdatabeg = headr.ReadFromContainer( itdatabeg );
-        uint32_t nextint = utils::ReadIntFromByteVector<uint32_t>(itdatabeg); //We know that the next value is the first entry in the ToC, if its really a pack file!
+        uint32_t nextint = utils::ReadIntFromBytes<uint32_t>(itdatabeg); //We know that the next value is the first entry in the ToC, if its really a pack file!
         
         bool     filextokornotthere = filext.compare( pmd2::filetypes::PACK_FILEX ) == 0;
 

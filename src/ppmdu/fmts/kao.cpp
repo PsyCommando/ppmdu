@@ -112,7 +112,7 @@ namespace filetypes
         //When we got our first non-null entry, and divide the ptr by the size of an entry, to get the amount of entries
         // And avoid further resizing.
         //Get the first non-null entry and get the nb of entries in the table of content of the file being read
-        tocsubentry_t   firsptr      = utils::ReadIntFromByteVector<tocsubentry_t>(itfoundnonnull);
+        tocsubentry_t   firsptr      = utils::ReadIntFromBytes<tocsubentry_t>(itfoundnonnull);
         uint32_t        nbtocentries = firsptr / (m_pImportTo->m_nbtocsubentries * SUBENTRY_SIZE);
         auto            ittoc        = m_itInBeg;
 
@@ -155,7 +155,7 @@ namespace filetypes
         for( tocsz_t cptsubentry = 0; cptsubentry <  currententry.size(); ++cptsubentry )
         {
             tocsubentry_t tocreadentry; //The entry we just read in the last loop
-            tocreadentry = utils::ReadIntFromByteVector<tocsubentry_t>( itrawtocentry );
+            tocreadentry = utils::ReadIntFromBytes<tocsubentry_t>( itrawtocentry );
             
             //Avoid null and invalid entries
             if( CKaomado::isToCSubEntryValid(tocreadentry) )
@@ -594,7 +594,7 @@ namespace filetypes
         }
 
         //Write the ToC entry in the space we reserved at the beginning of the output buffer!
-        utils::WriteIntToByteVector( portraitpointer, m_outBuff.begin() + m_curOffTocSub );
+        utils::WriteIntToBytes( portraitpointer, m_outBuff.begin() + m_curOffTocSub );
         m_curOffTocSub += sizeof(portraitpointer);
     }
 

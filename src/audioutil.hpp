@@ -58,6 +58,8 @@ namespace audioutil
         bool ParseOptionSWDLPath   ( const std::vector<std::string> & optdata );
         bool ParseOptionSMDLPath   ( const std::vector<std::string> & optdata );
 
+        bool ParseOptionListPresets( const std::vector<std::string> & optdata );
+        bool ParseOptionUseHexNumbers( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -74,6 +76,11 @@ namespace audioutil
         int ExportBatchPairs();
 
         int ExportPMD2Audio(); //Export completely the content of a PMD2 ROM's "SOUND" directory
+
+        int ExportBatchSWDL();
+        int ExportBatchSMDL();
+        int BatchListSWDLPrgm( const std::string & SrcPath );
+        int ListSWDLPrgm();
 
         int BuildSWDL();
         int BuildSMDL();
@@ -101,12 +108,17 @@ namespace audioutil
 
             ExportBatchPairsAndBank,//Export a batch of SMDL files, along with their SWDL, and a main bank !
             ExportBatchPairs,//Export a batch of SMDL files, along with their SWDL !
+            ExportBatchSMDL, //Export a batch of SMDL files only !
+            ExportBatchSWDL, //Export a batch of SWDL files only !
 
             ExportPMD2,     //Export the entire content of the PMD2's "SOUND" folder
 
             BuildSWDL,      //Build a SWDL from a folder. Must contain XML info file. If no preset data present builds a simple wav bank.(samples are imported in the slot corresponding to their file name)
             BuildSMDL,      //Build a SMDL from a midi file and a similarly named XML file. XML file used to remap instruments from GM to the game's format, and to set the 2 unknown variables.
             BuildSEDL,      //Build SEDL from a folder a midi file and XML.
+
+            BatchListSWDLPrgm,   //Outputs a list of the all the programs contained in the specified swdls and samples they uses
+            ListSWDLPrgm,   //Outputs a list of the all the programs contained in the specified swdl and samples they uses
         };
 
         //Default filenames names
@@ -119,6 +131,8 @@ namespace audioutil
         bool        m_bGM;            //Whether we export to general midi compatible format or not
         int         m_nbloops;        //The amount of times to loop a track, 0 if should use loop markers instead
         bool        m_isPMD2;         //Whether we should treat the input path as the PMD2 ROM's root data folder
+        bool        m_isListPresets;  //Whether the list preset mode was activated !
+        bool        m_useHexaNumbers; //Whether applicable exported filenames will contain hexadecimal numbers or decimal
 
         std::string m_mbankpath;
         std::string m_swdlpath;

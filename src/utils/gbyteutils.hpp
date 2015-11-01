@@ -99,15 +99,16 @@ namespace utils
 
 
     /*********************************************************************************************
-        WriteIntToByteVector
+        WriteIntToBytes
             Tool to write integer values into a byte vector!
             Returns the new pos of the iterator after the operation.
     *********************************************************************************************/
     template<class T, class _outit>
-        inline _outit WriteIntToByteVector( T val, _outit itout, bool basLittleEndian = true )
+        inline _outit WriteIntToBytes( T val, _outit itout, bool basLittleEndian = true )
     {
-        static_assert( std::numeric_limits<T>::is_integer, "WriteIntToByteVector() : Used another types than an integer!" );
+        static_assert( std::numeric_limits<T>::is_integer, "WriteIntToBytes() : Used another types than an integer!" );
 
+        //#FIXME: Why is this even necessary?
         auto lambdaShiftAssign = [&val]( unsigned int shiftamt )->uint8_t
         {
             T tempshift = 0;
@@ -130,26 +131,26 @@ namespace utils
     }
 
     /*********************************************************************************************
-        WriteIntToByteContainer
-            Alias for WriteIntToByteVector, while we transition.
+        WriteIntToBytes
+            Alias for WriteIntToBytes, while we transition.
         
         #TODO: finish renaming everything !
     *********************************************************************************************/
-    template<class T, class _outit>
-        inline _outit WriteIntToByteContainer( T val, _outit itout, bool basLittleEndian = true )
-    {
-        return WriteIntToByteVector( val, itout, basLittleEndian );
-    }
+    //template<class T, class _outit>
+    //    inline _outit WriteIntToBytes( T val, _outit itout, bool basLittleEndian = true )
+    //{
+    //    return WriteIntToBytes( val, itout, basLittleEndian );
+    //}
 
     /*********************************************************************************************
-        ReadIntFromByteVector
+        ReadIntFromBytes
             Tool to read integer values from a byte vector!
             ** The iterator's passed as input, has its position changed !!
     *********************************************************************************************/
     template<class T, class _init> 
-        inline T ReadIntFromByteVector( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+        inline T ReadIntFromBytes( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
     {
-        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromByteVector() : Error, used another types than an integer!" );
+        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
         T out_val = 0;
 
         auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
@@ -173,15 +174,15 @@ namespace utils
     }
 
     /*********************************************************************************************
-        ReadIntFromByteContainer
+        ReadIntFromBytes
             Tool to read integer values from a byte container!
             
             #NOTE :The iterator is passed by copy here !! And the incremented iterator is returned!
     *********************************************************************************************/
     template<class T, class _init> 
-        inline _init ReadIntFromByteContainer( T & dest, _init itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+        inline _init ReadIntFromBytes( T & dest, _init itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
     {
-        dest = ReadIntFromByteVector<typename T>( itin, basLittleEndian );
+        dest = ReadIntFromBytes<typename T>( itin, basLittleEndian );
         return itin;
     }
 

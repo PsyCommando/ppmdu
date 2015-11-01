@@ -112,26 +112,64 @@ namespace DSE
         static const uint32_t UnitSwitch  = 1000;
         //..then divided by 10,000, to give us a tick quantity
         static const uint32_t UnitDivisor = 10000;
-#if 0
+#if 1
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
         else
             return (Duration_Lookup_Table[labs(param)] * multiplier);
-#else
+#elif 0
         //The 20 below looks like a magic number, but that's because it is ^^;
         if( multiplier == 0 )
-            return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 25; 
+            return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20;//25; 
         else
-            return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 25; 
+            return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20;//25; 
+
+#else
+        if( multiplier == 0 )
+            return (Duration_Lookup_Table_NullMulti[labs(param)]) * 4;
+        else
+            return (Duration_Lookup_Table[labs(param)] * multiplier) * 4;
 #endif
     }
 
-    int32_t DSEEnveloppeVolumeTocB( int8_t param )
-    {
-        assert(false);
-        return 0;
-    }
+    //int32_t DSEEnveloppeVolumeTocB( int8_t param )
+    //{
+    //    assert(false);
+    //    return 0;
+    //}
 
+
+
+//
+//
+//
+    DSEEnvelope::DSEEnvelope()
+        :envmulti(0), atkvol(0), attack(0), hold(0), decay(0), sustain(0), decay2(0), release(0)
+    {}
+
+    DSEEnvelope::DSEEnvelope( const ProgramInfo::SplitEntry & splitentry )
+        :envmulti(splitentry.envmult), 
+         atkvol(splitentry.atkvol), 
+         attack(splitentry.attack), 
+         hold(splitentry.hold), 
+         decay(splitentry.decay), 
+         sustain(splitentry.sustain), 
+         decay2(splitentry.decay2), 
+         release(splitentry.release)
+    {}
+
+    DSEEnvelope & DSEEnvelope::operator=( const ProgramInfo::SplitEntry & splitentry )
+    {
+        envmulti = splitentry.envmult;
+        atkvol   = splitentry.atkvol; 
+        attack   = splitentry.attack;
+        hold     = splitentry.hold;
+        decay    = splitentry.decay;
+        sustain  = splitentry.sustain; 
+        decay2   = splitentry.decay2;
+        release  = splitentry.release;
+        return *this;
+    }
 
 //==========================================================================================
 //  StreamOperators
@@ -185,12 +223,12 @@ namespace DSE
             strm << "\t-- LFO #" <<cntlfo <<" --\n"
                 << "\tUnk34        : " << static_cast<short>(lfoen.unk34)     <<"\n"
                 << "\tUnk52        : " << static_cast<short>(lfoen.unk52)     <<"\n"
-                << "\tUnk26        : " << static_cast<short>(lfoen.unk26)     <<"\n"
-                << "\tUnk27        : " << static_cast<short>(lfoen.unk27)     <<"\n"
-                << "\tUnk28        : " << lfoen.unk28     <<"\n"
+                << "\tDest         : " << static_cast<short>(lfoen.dest)      <<"\n"
+                << "\tWave Shape   : " << static_cast<short>(lfoen.wshape)    <<"\n"
+                << "\tRate         : " << lfoen.rate      <<"\n"
                 << "\tUnk29        : " << lfoen.unk29     <<"\n"
-                << "\tUnk30        : " << lfoen.unk30     <<"\n"
-                << "\tUnk31        : " << lfoen.unk31     <<"\n"
+                << "\tDepth        : " << lfoen.depth     <<"\n"
+                << "\tDelay        : " << lfoen.delay     <<"\n"
                 << "\tUnk32        : " << lfoen.unk32     <<"\n"
                 << "\tUnk33        : " << lfoen.unk33     <<"\n";
             ++cntlfo;
@@ -207,12 +245,12 @@ namespace DSE
                 << "\tUnk25        : " << static_cast<short>(split.unk25)     <<"\n"
                 << "\tlowkey       : " << static_cast<short>(split.lowkey)    <<"\n"
                 << "\thikey        : " << static_cast<short>(split.hikey)     <<"\n"
+                << "\tlowkey2      : " << static_cast<short>(split.lowkey2) <<"\n"
+                << "\thikey2       : " << static_cast<short>(split.hikey2)     <<"\n"
                 << "\tlovel        : " << static_cast<short>(split.lovel)     <<"\n"
                 << "\thivel        : " << static_cast<short>(split.hivel)     <<"\n"
-                << "\tunk14        : " << static_cast<short>(split.unk14)     <<"\n"
-                << "\tunk47        : " << static_cast<short>(split.unk47)     <<"\n"
-                << "\tunk15        : " << static_cast<short>(split.unk15)     <<"\n"
-                << "\tunk48        : " << static_cast<short>(split.unk48)     <<"\n"
+                << "\tlovel2       : " << static_cast<short>(split.lovel2)     <<"\n"
+                << "\thivel2       : " << static_cast<short>(split.hivel2)     <<"\n"
                 << "\tunk16        : " << split.unk16     <<"\n"
                 << "\tunk17        : " << split.unk17     <<"\n"
                 << "\tsmplid       : " << static_cast<short>(split.smplid)     <<"\n"

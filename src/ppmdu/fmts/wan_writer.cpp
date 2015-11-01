@@ -199,7 +199,7 @@ namespace filetypes
         if( val != 0 )  //We ignore null pointers !
             m_ptrOffsetTblToEncode.push_back( m_outBuffer.size() );
 
-        utils::WriteIntToByteVector( val, m_itbackins );
+        utils::WriteIntToBytes( val, m_itbackins );
     }
 
     /**************************************************************
@@ -227,22 +227,22 @@ namespace filetypes
     **************************************************************/
     //void WAN_Writer::WriteAMetaFrame( const MetaFrame & cur, bool setLastBit ) //setLastBit set this to true for the last frame in a group !
     //{
-    //    utils::WriteIntToByteVector( cur.imageIndex, m_itbackins );
-    //    utils::WriteIntToByteVector( cur.unk0,       m_itbackins );
+    //    utils::WriteIntToBytes( cur.imageIndex, m_itbackins );
+    //    utils::WriteIntToBytes( cur.unk0,       m_itbackins );
 
     //    //Get the value of the resolution as a byte
     //    uint8_t resval    = static_cast<uint8_t>(cur.resolution);
     //    uint8_t EndbitVal = ( (setLastBit)?1:0 ); //set it to one if is last!
 
     //    uint16_t YOffset = ( ( resval << 8 ) & 0xC000 ) | (cur.YOffbit3 << 13) | ((cur.Mosaic)?1:0) << 12 | (cur.YOffbit5 << 11) | (cur.YOffbit5 << 10) | cur.offsetY;
-    //    utils::WriteIntToByteVector( YOffset,       m_itbackins );
+    //    utils::WriteIntToBytes( YOffset,       m_itbackins );
 
     ////# Don't forget to make sure XOffset bit 5 is set to 1 for the last meta-frame in a group !
     //    uint16_t XOffset = ( ( resval << 12 ) & 0xC000 ) | ( ((cur.vFlip)?1:0 ) << 13) | ( ((cur.hFlip)?1:0 ) << 12) | ( EndbitVal << 11) | (cur.XOffbit6 << 10) | (cur.XOffbit7 << 9) | cur.offsetX;
-    //    utils::WriteIntToByteVector( XOffset,       m_itbackins );
+    //    utils::WriteIntToBytes( XOffset,       m_itbackins );
 
-    //    utils::WriteIntToByteVector( cur.unk15, m_itbackins );
-    //    utils::WriteIntToByteVector( cur.unk1,  m_itbackins );
+    //    utils::WriteIntToBytes( cur.unk15, m_itbackins );
+    //    utils::WriteIntToBytes( cur.unk1,  m_itbackins );
     //}
 
     /**************************************************************
@@ -298,12 +298,12 @@ namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteAnAnimFrame( const AnimFrame & curfrm )
     {
-        utils::WriteIntToByteVector( curfrm.frameDuration,   m_itbackins );
-        utils::WriteIntToByteVector( curfrm.metaFrmGrpIndex, m_itbackins );
-        utils::WriteIntToByteVector( curfrm.sprOffsetX,      m_itbackins );
-        utils::WriteIntToByteVector( curfrm.sprOffsetY,      m_itbackins );
-        utils::WriteIntToByteVector( curfrm.shadowOffsetX,   m_itbackins );
-        utils::WriteIntToByteVector( curfrm.shadowOffsetY,   m_itbackins );
+        utils::WriteIntToBytes( curfrm.frameDuration,   m_itbackins );
+        utils::WriteIntToBytes( curfrm.metaFrmGrpIndex, m_itbackins );
+        utils::WriteIntToBytes( curfrm.sprOffsetX,      m_itbackins );
+        utils::WriteIntToBytes( curfrm.sprOffsetY,      m_itbackins );
+        utils::WriteIntToBytes( curfrm.shadowOffsetX,   m_itbackins );
+        utils::WriteIntToBytes( curfrm.shadowOffsetY,   m_itbackins );
     }
 
     /**************************************************************
@@ -317,7 +317,7 @@ namespace filetypes
             uint32_t lenpadding = ( CalcClosestHighestDenominator( bufflen, alignon ) -  bufflen );
 
             for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad )
-                utils::WriteIntToByteVector( COMMON_PADDING_BYTE, m_itbackins );
+                utils::WriteIntToBytes( COMMON_PADDING_BYTE, m_itbackins );
         }
     }
 
@@ -511,8 +511,8 @@ namespace filetypes
 
         for( const auto & anoffset : m_pSprite->getPartOffsets() )
         {
-            utils::WriteIntToByteVector( anoffset.offx, m_itbackins );
-            utils::WriteIntToByteVector( anoffset.offy, m_itbackins );
+            utils::WriteIntToBytes( anoffset.offx, m_itbackins );
+            utils::WriteIntToBytes( anoffset.offy, m_itbackins );
         }
     }
 
@@ -568,12 +568,12 @@ namespace filetypes
             //
             if( agrp.seqsIndexes.empty() )
             {
-                utils::WriteIntToByteVector( static_cast<uint64_t>(0), m_itbackins ); //Write 8 bytes of 0
+                utils::WriteIntToBytes( static_cast<uint64_t>(0), m_itbackins ); //Write 8 bytes of 0
             }
             else
             {
                 WriteAPointer( *itCurPtr );
-                utils::WriteIntToByteVector( agrp.seqsIndexes.size(), m_itbackins );
+                utils::WriteIntToBytes( agrp.seqsIndexes.size(), m_itbackins );
                 ++itCurPtr; //Only increment when we have a non-null entry!
             }
         }
@@ -636,7 +636,7 @@ namespace filetypes
 
         //Write encoded ptr offset list
         for( const auto & encptr : result.ptroffsetslst )
-            utils::WriteIntToByteVector( encptr, m_itbackins );
+            utils::WriteIntToBytes( encptr, m_itbackins );
 
         //Then write SIR0 at the begining !
         result.hdr.WriteToContainer( m_outBuffer.begin() );

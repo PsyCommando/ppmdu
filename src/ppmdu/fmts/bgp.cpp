@@ -103,7 +103,7 @@ namespace filetypes
 
             for( size_t cnttme = 0; cnttme < nbtilemapentries; ++cnttme )
             {
-                m_out.m_mappingdat[cnttme] = move( DecodeTileMappingData( utils::ReadIntFromByteVector<uint16_t>(itreadmap) ) ); //iterator incremented
+                m_out.m_mappingdat[cnttme] = move( DecodeTileMappingData( utils::ReadIntFromBytes<uint16_t>(itreadmap) ) ); //iterator incremented
             }
         }
 

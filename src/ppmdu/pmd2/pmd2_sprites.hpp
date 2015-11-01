@@ -60,30 +60,30 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( ptr_ptrstable_e,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( ptr_offset_f,          itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( ptr_offset_g,          itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( nb_blocks_in_offset_g, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( nb_entries_offset_e,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown1,              itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown2,              itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown3,              itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown4,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_ptrstable_e,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_offset_f,          itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_offset_g,          itwriteto );
+            itwriteto = utils::WriteIntToBytes( nb_blocks_in_offset_g, itwriteto );
+            itwriteto = utils::WriteIntToBytes( nb_entries_offset_e,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown1,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown2,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown3,              itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown4,              itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( ptr_ptrstable_e,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( ptr_offset_f,          itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( ptr_offset_g,          itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( nb_blocks_in_offset_g, itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( nb_entries_offset_e,   itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown1,              itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown2,              itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown3,              itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown4,              itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( ptr_ptrstable_e,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( ptr_offset_f,          itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( ptr_offset_g,          itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( nb_blocks_in_offset_g, itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( nb_entries_offset_e,   itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown1,              itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown2,              itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown3,              itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown4,              itReadfrom);
             return itReadfrom;
         }
 
@@ -112,24 +112,24 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( ptr_frm_ptrs_table, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( ptrPal,             itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unkn_1,             itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unkn_2,             itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unkn_3,             itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( nbImgsTblPtr,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptr_frm_ptrs_table, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrPal,             itwriteto );
+            itwriteto = utils::WriteIntToBytes( unkn_1,             itwriteto );
+            itwriteto = utils::WriteIntToBytes( unkn_2,             itwriteto );
+            itwriteto = utils::WriteIntToBytes( unkn_3,             itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbImgsTblPtr,       itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( ptr_frm_ptrs_table, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( ptrPal,             itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unkn_1,             itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unkn_2,             itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unkn_3,             itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( nbImgsTblPtr,       itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptr_frm_ptrs_table, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptrPal,             itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unkn_1,             itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unkn_2,             itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unkn_3,             itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbImgsTblPtr,       itReadfrom );
             return itReadfrom;
         }
 
@@ -157,20 +157,20 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( spr_ptr_info,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( spr_ptr_frames, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown0,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown1,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( spr_ptr_info,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( spr_ptr_frames, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown0,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown1,       itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( spr_ptr_info,   itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( spr_ptr_frames, itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown0,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( unknown1,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( spr_ptr_info,   itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( spr_ptr_frames, itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown0,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unknown1,       itReadfrom);
             return itReadfrom;
         }
 
@@ -204,24 +204,24 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( Unk0,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( Index, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( Val0,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( Val1,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( Val2,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( Val3,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( Unk0,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( Index, itwriteto );
+            itwriteto = utils::WriteIntToBytes( Val0,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( Val1,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( Val2,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( Val3,  itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer (Unk0,  itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer (Index, itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer (Val0,  itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer (Val1,  itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer (Val2,  itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer (Val3,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Unk0,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Index, itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Val0,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Val1,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Val2,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Val3,  itReadfrom);
             return itReadfrom;
         }
 
@@ -277,8 +277,8 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( ptrtoarray, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( szofarray,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrtoarray, itwriteto );
+            itwriteto = utils::WriteIntToBytes( szofarray,  itwriteto );
 
             return itwriteto;
         }
@@ -286,8 +286,8 @@ namespace pmd2{ namespace graphics
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( ptrtoarray, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( szofarray,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptrtoarray, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( szofarray,  itReadfrom );
             return itReadfrom;
         }
 
@@ -317,24 +317,24 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( id,         itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( val0,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( val1,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( val2,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( val3,       itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( endofentry, itwriteto );
+            itwriteto = utils::WriteIntToBytes( id,         itwriteto );
+            itwriteto = utils::WriteIntToBytes( val0,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( val1,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( val2,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( val3,       itwriteto );
+            itwriteto = utils::WriteIntToBytes( endofentry, itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( id,         itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( val0,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( val1,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( val2,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( val3,       itReadfrom);
-            itReadfrom = utils::ReadIntFromByteContainer( endofentry, itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( id,         itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( val0,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( val1,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( val2,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( val3,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( endofentry, itReadfrom);
             return itReadfrom;
         }
 
@@ -377,16 +377,16 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( val0,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( val1,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( val0,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( val1,  itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( val0, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( val1, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( val0, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( val1, itReadfrom );
             return itReadfrom;
         }
 
@@ -420,24 +420,24 @@ namespace pmd2{ namespace graphics
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( ptrpalbeg, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown0,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown1,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown2,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown3,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( endofdata, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrpalbeg, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown0,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown1,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown2,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown3,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( endofdata, itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( ptrpalbeg, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unknown0,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unknown1,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unknown2,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unknown3,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( endofdata, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptrpalbeg, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unknown0,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unknown1,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unknown2,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unknown3,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( endofdata, itReadfrom );
             return itReadfrom;
         }
 

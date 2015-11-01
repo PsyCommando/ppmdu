@@ -228,7 +228,7 @@ namespace gimg
                 //Check if after inserting we've filled the buffer
                 if( m_itBuff == m_buffer.end() )
                 {
-                    (*(m_pPixEater->m_itOut)) = utils::ReadIntFromByteVector<pixeldata_t>( m_buffer.begin(), (m_pPixEater->m_bLittleEndian) );
+                    (*(m_pPixEater->m_itOut)) = utils::ReadIntFromBytes<pixeldata_t>( m_buffer.begin(), (m_pPixEater->m_bLittleEndian) );
                     ++(m_pPixEater->m_itOut);
                     m_itBuff = m_buffer.begin(); //reset buffer write pos
                 }

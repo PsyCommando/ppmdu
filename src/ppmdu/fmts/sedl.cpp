@@ -70,7 +70,7 @@ namespace DSE
                                const std::string & filext)
         {
             using namespace pmd2::filetypes;
-            return (utils::ReadIntFromByteVector<uint32_t>(itdatabeg,false) == DSE::SEDL_MagicNumber);
+            return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SEDL_MagicNumber);
         }
 
     private:

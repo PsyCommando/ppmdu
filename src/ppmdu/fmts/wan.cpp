@@ -24,7 +24,7 @@ namespace filetypes
         uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
     {
         uint32_t cntNullPtrs = 0;
-        for(; (itbeg != itend) && (utils::ReadIntFromByteVector<T>(itbeg) == 0); ++cntNullPtrs );
+        for(; (itbeg != itend) && (utils::ReadIntFromBytes<T>(itbeg) == 0); ++cntNullPtrs );
         return cntNullPtrs;
     }
 
@@ -47,8 +47,8 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( ptrgrp, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( nbseqs, itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrgrp, itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbseqs, itwriteto );
             return itwriteto;
         }
 
@@ -57,8 +57,8 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            ptrgrp = utils::ReadIntFromByteVector<decltype(ptrgrp)>(itReadfrom);
-            nbseqs = utils::ReadIntFromByteVector<decltype(nbseqs)>(itReadfrom);
+            ptrgrp = utils::ReadIntFromBytes<decltype(ptrgrp)>(itReadfrom);
+            nbseqs = utils::ReadIntFromBytes<decltype(nbseqs)>(itReadfrom);
             return itReadfrom;
         }
     };
@@ -72,12 +72,12 @@ namespace filetypes
     {
         AnimFrame myfrm;
 
-        myfrm.frameDuration   = utils::ReadIntFromByteVector<decltype(myfrm.frameDuration)>  (itread);
-        myfrm.metaFrmGrpIndex = utils::ReadIntFromByteVector<decltype(myfrm.metaFrmGrpIndex)>(itread);
-        myfrm.sprOffsetX     = utils::ReadIntFromByteVector<decltype(myfrm.sprOffsetX)>    (itread);
-        myfrm.sprOffsetY     = utils::ReadIntFromByteVector<decltype(myfrm.sprOffsetY)>    (itread);
-        myfrm.shadowOffsetX  = utils::ReadIntFromByteVector<decltype(myfrm.shadowOffsetX)> (itread);
-        myfrm.shadowOffsetY  = utils::ReadIntFromByteVector<decltype(myfrm.shadowOffsetY)> (itread);
+        myfrm.frameDuration   = utils::ReadIntFromBytes<decltype(myfrm.frameDuration)>  (itread);
+        myfrm.metaFrmGrpIndex = utils::ReadIntFromBytes<decltype(myfrm.metaFrmGrpIndex)>(itread);
+        myfrm.sprOffsetX     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetX)>    (itread);
+        myfrm.sprOffsetY     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetY)>    (itread);
+        myfrm.shadowOffsetX  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetX)> (itread);
+        myfrm.shadowOffsetY  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetY)> (itread);
 
         return std::move(myfrm);
     }
@@ -86,12 +86,12 @@ namespace filetypes
     **************************************************************/
     vector<uint8_t>::iterator WriteAnimFrameToContainer( const AnimFrame & frame, vector<uint8_t>::iterator itwrite )
     {
-        itwrite = utils::WriteIntToByteVector( frame.frameDuration,    itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.metaFrmGrpIndex,  itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.sprOffsetX,      itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.sprOffsetY,      itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.shadowOffsetX,   itwrite );
-        itwrite = utils::WriteIntToByteVector( frame.shadowOffsetY,   itwrite );
+        itwrite = utils::WriteIntToBytes( frame.frameDuration,    itwrite );
+        itwrite = utils::WriteIntToBytes( frame.metaFrmGrpIndex,  itwrite );
+        itwrite = utils::WriteIntToBytes( frame.sprOffsetX,      itwrite );
+        itwrite = utils::WriteIntToBytes( frame.sprOffsetY,      itwrite );
+        itwrite = utils::WriteIntToBytes( frame.shadowOffsetX,   itwrite );
+        itwrite = utils::WriteIntToBytes( frame.shadowOffsetY,   itwrite );
 
         return itwrite;
     }
@@ -302,7 +302,7 @@ namespace filetypes
 
     //    for( auto & entry : out_ptrs )
     //    {
-    //        entry = utils::ReadIntFromByteVector<uint32_t>( itbeg ); //Iterator auto-incremented
+    //        entry = utils::ReadIntFromBytes<uint32_t>( itbeg ); //Iterator auto-incremented
 
     //        if( lastoffsetread != 0 ) //skip the first one
     //            totalnbMF += (entry - lastoffsetread) / WAN_LENGTH_META_FRM;
@@ -343,7 +343,7 @@ namespace filetypes
 
         for( auto & entry : MFptrTbl )
         {
-            uint32_t curPtr = utils::ReadIntFromByteVector<uint32_t>( itreadtbl ); //Iterator auto-incremented
+            uint32_t curPtr = utils::ReadIntFromBytes<uint32_t>( itreadtbl ); //Iterator auto-incremented
             entry = curPtr;
             nbMetaF += ( (curPtr - lastPtrRead) / WAN_LENGTH_ANIM_FRM );
             lastPtrRead = curPtr;
@@ -397,7 +397,7 @@ namespace filetypes
         for( unsigned int cpseqs = 0; cpseqs < nbsequences; ++cpseqs )
         {
             //Get the pointer
-            uint32_t ptrsequence = utils::ReadIntFromByteVector<uint32_t>( itwhere );
+            uint32_t ptrsequence = utils::ReadIntFromBytes<uint32_t>( itwhere );
 
             mysequences[cpseqs] = ptrsequence; //ReadASequence( m_rawdata.begin() + ptrsequence );
             
@@ -529,8 +529,8 @@ namespace filetypes
 
         for( unsigned int i = 0; i < offsets.size() && itCuroffset != itEndOffsets; ++i )
         {
-            offsets[i].offx = utils::ReadIntFromByteVector<uint16_t>(itCuroffset); //Incremented automatically by the function
-            offsets[i].offy = utils::ReadIntFromByteVector<uint16_t>(itCuroffset);
+            offsets[i].offx = utils::ReadIntFromBytes<uint16_t>(itCuroffset); //Incremented automatically by the function
+            offsets[i].offy = utils::ReadIntFromBytes<uint16_t>(itCuroffset);
         }
 
         return std::move(offsets);
@@ -638,7 +638,7 @@ namespace filetypes
         // 1- 0xAA padding bytes
         // 2- The beginning of the SIR0 pointer offset list. Which always begins with 0x0404 ! 
         auto iterafterwan = itdatabeg + (headr.subheaderptr + wan_sub_header::DATA_LEN);
-        uint16_t bytesAfterWan = utils::ReadIntFromByteVector<uint16_t>(iterafterwan);
+        uint16_t bytesAfterWan = utils::ReadIntFromBytes<uint16_t>(iterafterwan);
         if( bytesAfterWan != 0xAAAA && bytesAfterWan != 0x0404 )
             return false;
 

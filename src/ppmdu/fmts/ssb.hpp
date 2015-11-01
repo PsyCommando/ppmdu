@@ -30,12 +30,12 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( nbconst,     itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( nbstrs,      itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( scriptdatlen,itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( consttbllen, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( strtbllen,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unk1,        itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbconst,     itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbstrs,      itwriteto );
+            itwriteto = utils::WriteIntToBytes( scriptdatlen,itwriteto );
+            itwriteto = utils::WriteIntToBytes( consttbllen, itwriteto );
+            itwriteto = utils::WriteIntToBytes( strtbllen,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk1,        itwriteto );
             return itwriteto;
         }
 
@@ -43,12 +43,12 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( nbconst,     itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( nbstrs,      itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( scriptdatlen,itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( consttbllen, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( strtbllen,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk1,        itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbconst,     itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbstrs,      itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( scriptdatlen,itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( consttbllen, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( strtbllen,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk1,        itReadfrom );
             return itReadfrom;
         }
 

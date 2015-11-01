@@ -32,18 +32,18 @@ namespace pmd2 { namespace filetypes
         template<class _init>
             _init ReadFromContainer( _init itreadat )
         {
-            width  = utils::ReadIntFromByteVector<int8_t> (itreadat);
-            height = utils::ReadIntFromByteVector<int8_t> (itreadat);
-            offset = utils::ReadIntFromByteVector<int16_t>(itreadat);
+            width  = utils::ReadIntFromBytes<int8_t> (itreadat);
+            height = utils::ReadIntFromBytes<int8_t> (itreadat);
+            offset = utils::ReadIntFromBytes<int16_t>(itreadat);
             return itreadat;
         }
 
         template<class _outit>
             _outit WriteToContainer( _outit itwriteat )const
         {
-            utils::WriteIntToByteVector( width,  itwriteat );
-            utils::WriteIntToByteVector( height, itwriteat );
-            utils::WriteIntToByteVector( offset, itwriteat );
+            utils::WriteIntToBytes( width,  itwriteat );
+            utils::WriteIntToBytes( height, itwriteat );
+            utils::WriteIntToBytes( offset, itwriteat );
             return itwriteat;
         }
 
@@ -98,7 +98,7 @@ namespace pmd2 { namespace filetypes
             auto            itEnd  = m_fontfiledata.end();
 
             //Get nb of character entries
-            uint32_t nbentries = utils::ReadIntFromByteVector<uint32_t>( itRead );
+            uint32_t nbentries = utils::ReadIntFromBytes<uint32_t>( itRead );
 
             //Validate size
             uint32_t expected  = (m_fontfiledata.size() - 4) / SizeMainFontDataEntry;
@@ -121,8 +121,8 @@ namespace pmd2 { namespace filetypes
             {
                 chardat_t & acharent = m_fontdata[i];
 
-                acharent.charcode = utils::ReadIntFromByteVector<uint16_t>( itRead );
-                acharent.unk1     = utils::ReadIntFromByteVector<uint16_t>( itRead );
+                acharent.charcode = utils::ReadIntFromBytes<uint16_t>( itRead );
+                acharent.unk1     = utils::ReadIntFromBytes<uint16_t>( itRead );
 
                 //Read image data here
                 acharent.imgdat.resize( MainFontRes.width, MainFontRes.height );
@@ -156,12 +156,12 @@ namespace pmd2 { namespace filetypes
             auto            itout    = outdat.begin();
             auto            itoutend = outdat.end();
 
-            itout = WriteIntToByteVector( static_cast<uint32_t>(m_fontdata.size()), itout );
+            itout = WriteIntToBytes( static_cast<uint32_t>(m_fontdata.size()), itout );
 
             auto writeAnEntry = [&itout,&outdat]( const chardat_t & entry )
             {
-                itout = WriteIntToByteVector( entry.charcode, itout );
-                itout = WriteIntToByteVector( entry.unk1,     itout );
+                itout = WriteIntToBytes( entry.charcode, itout );
+                itout = WriteIntToBytes( entry.unk1,     itout );
                 gimg::PxlWriteIter<_PIXEL_T, vector<uint8_t>> itwimg(outdat);
                 copy( entry.imgdat.begin(), entry.imgdat.end(), itwimg );
 

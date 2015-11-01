@@ -24,8 +24,7 @@ namespace pmd2 {namespace filetypes
     public:
         EoSItemDataParser( const std::string & pathBalanceDir )
             :m_pathBalanceDir(pathBalanceDir)
-        {
-        }
+        {}
 
         operator stats::ItemsDB()
         {
@@ -86,18 +85,18 @@ namespace pmd2 {namespace filetypes
 
         void ParseItem_p_entry( vector<uint8_t>::const_iterator & itread, stats::itemdata & item )
         {
-            itread = ReadIntFromByteContainer( item.buyPrice,   itread );
-            itread = ReadIntFromByteContainer( item.sellPrice,  itread );
-            itread = ReadIntFromByteContainer( item.category,   itread );
-            itread = ReadIntFromByteContainer( item.spriteID,   itread );
-            itread = ReadIntFromByteContainer( item.itemID,     itread );
-            itread = ReadIntFromByteContainer( item.param1,     itread );
-            itread = ReadIntFromByteContainer( item.param2,     itread );
-            itread = ReadIntFromByteContainer( item.param3,     itread );
-            itread = ReadIntFromByteContainer( item.unk1,       itread );
-            itread = ReadIntFromByteContainer( item.unk2,       itread );
-            itread = ReadIntFromByteContainer( item.unk3,       itread );
-            itread = ReadIntFromByteContainer( item.unk4,       itread );
+            itread = ReadIntFromBytes( item.buyPrice,   itread );
+            itread = ReadIntFromBytes( item.sellPrice,  itread );
+            itread = ReadIntFromBytes( item.category,   itread );
+            itread = ReadIntFromBytes( item.spriteID,   itread );
+            itread = ReadIntFromBytes( item.itemID,     itread );
+            itread = ReadIntFromBytes( item.param1,     itread );
+            itread = ReadIntFromBytes( item.param2,     itread );
+            itread = ReadIntFromBytes( item.param3,     itread );
+            itread = ReadIntFromBytes( item.unk1,       itread );
+            itread = ReadIntFromBytes( item.unk2,       itread );
+            itread = ReadIntFromBytes( item.unk3,       itread );
+            itread = ReadIntFromBytes( item.unk4,       itread );
         }
 
         void ParseItem_s_p( const string & path, stats::ItemsDB & itemdat )
@@ -132,8 +131,8 @@ namespace pmd2 {namespace filetypes
             if( ptrex == nullptr )
                 ptrex = item.MakeExclusiveData();
 
-            itread = ReadIntFromByteContainer( ptrex->type,  itread );
-            itread = ReadIntFromByteContainer( ptrex->param, itread );
+            itread = ReadIntFromBytes( ptrex->type,  itread );
+            itread = ReadIntFromBytes( ptrex->param, itread );
         }
 
         const std::string & m_pathBalanceDir;
@@ -188,18 +187,18 @@ namespace pmd2 {namespace filetypes
         template<class _outit>
             _outit Write_item_pEntry( const stats::itemdata & item, _outit itout )
         {
-            itout = WriteIntToByteContainer( item.buyPrice,   itout );
-            itout = WriteIntToByteContainer( item.sellPrice,  itout );
-            itout = WriteIntToByteContainer( item.category,   itout );
-            itout = WriteIntToByteContainer( item.spriteID,   itout );
-            itout = WriteIntToByteContainer( item.itemID,     itout );
-            itout = WriteIntToByteContainer( item.param1,     itout );
-            itout = WriteIntToByteContainer( item.param2,     itout );
-            itout = WriteIntToByteContainer( item.param3,     itout );
-            itout = WriteIntToByteContainer( item.unk1,       itout );
-            itout = WriteIntToByteContainer( item.unk2,       itout );
-            itout = WriteIntToByteContainer( item.unk3,       itout );
-            itout = WriteIntToByteContainer( item.unk4,       itout );
+            itout = WriteIntToBytes( item.buyPrice,   itout );
+            itout = WriteIntToBytes( item.sellPrice,  itout );
+            itout = WriteIntToBytes( item.category,   itout );
+            itout = WriteIntToBytes( item.spriteID,   itout );
+            itout = WriteIntToBytes( item.itemID,     itout );
+            itout = WriteIntToBytes( item.param1,     itout );
+            itout = WriteIntToBytes( item.param2,     itout );
+            itout = WriteIntToBytes( item.param3,     itout );
+            itout = WriteIntToBytes( item.unk1,       itout );
+            itout = WriteIntToBytes( item.unk2,       itout );
+            itout = WriteIntToBytes( item.unk3,       itout );
+            itout = WriteIntToBytes( item.unk4,       itout );
             return itout;
         }
 
@@ -223,8 +222,8 @@ namespace pmd2 {namespace filetypes
         template<class _outit>
             _outit Write_item_s_pEntry( const stats::exclusiveitemdata & item, _outit itout )
         {
-            itout = WriteIntToByteContainer( item.type,  itout );
-            itout = WriteIntToByteContainer( item.param, itout );
+            itout = WriteIntToBytes( item.type,  itout );
+            itout = WriteIntToBytes( item.param, itout );
             return itout;
         }
 
@@ -255,6 +254,7 @@ namespace pmd2 {namespace filetypes
     */
     stats::ItemsDB ParseItemsDataEoTD( const std::string & pathBalanceDir )
     {
+        cout<<"Unimplemented\n";
         assert(false);
         return stats::ItemsDB();
     }
@@ -268,6 +268,7 @@ namespace pmd2 {namespace filetypes
     */
     void WriteItemsDataEoTD( const std::string & pathBalanceDir, const stats::ItemsDB & itemdata )
     {
+        cout<<"Unimplemented\n";
         assert(false);
     }
 

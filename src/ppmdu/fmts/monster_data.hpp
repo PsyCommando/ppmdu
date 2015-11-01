@@ -48,8 +48,8 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( MAGIC_NUMBER, itwriteto, false ); //Force this, to avoid bad surprises
-            itwriteto = utils::WriteIntToByteVector( nbentries,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( MAGIC_NUMBER, itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes( nbentries,    itwriteto );
             return itwriteto;
         }
 
@@ -57,8 +57,8 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            magicn    = utils::ReadIntFromByteVector<decltype(magicn)>   (itReadfrom, false ); //iterator is incremented
-            nbentries = utils::ReadIntFromByteVector<decltype(nbentries)>(itReadfrom); //iterator is incremented
+            magicn    = utils::ReadIntFromBytes<decltype(magicn)>   (itReadfrom, false ); //iterator is incremented
+            nbentries = utils::ReadIntFromBytes<decltype(nbentries)>(itReadfrom); //iterator is incremented
             return itReadfrom;
         }
     };

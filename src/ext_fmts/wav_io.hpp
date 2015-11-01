@@ -55,24 +55,24 @@ namespace wave
         template<class _outit>
             _outit Write( _outit itwrite )
         {
-            itwrite = utils::WriteIntToByteContainer( audiofmt_,      itwrite );
-            itwrite = utils::WriteIntToByteContainer( nbchannels_,    itwrite );
-            itwrite = utils::WriteIntToByteContainer( samplerate_,    itwrite );
-            itwrite = utils::WriteIntToByteContainer( byterate_,      itwrite );
-            itwrite = utils::WriteIntToByteContainer( blockalign_,    itwrite );
-            itwrite = utils::WriteIntToByteContainer( bitspersample_, itwrite );
+            itwrite = utils::WriteIntToBytes( audiofmt_,      itwrite );
+            itwrite = utils::WriteIntToBytes( nbchannels_,    itwrite );
+            itwrite = utils::WriteIntToBytes( samplerate_,    itwrite );
+            itwrite = utils::WriteIntToBytes( byterate_,      itwrite );
+            itwrite = utils::WriteIntToBytes( blockalign_,    itwrite );
+            itwrite = utils::WriteIntToBytes( bitspersample_, itwrite );
             return itwrite;
         }
 
         template<class _init>
             _init Read( _init itread )
         {
-            itread = utils::ReadIntFromByteContainer( audiofmt_,      itread );
-            itread = utils::ReadIntFromByteContainer( nbchannels_,    itread );
-            itread = utils::ReadIntFromByteContainer( samplerate_,    itread );
-            itread = utils::ReadIntFromByteContainer( byterate_,      itread );
-            itread = utils::ReadIntFromByteContainer( blockalign_,    itread );
-            itread = utils::ReadIntFromByteContainer( bitspersample_, itread );
+            itread = utils::ReadIntFromBytes( audiofmt_,      itread );
+            itread = utils::ReadIntFromBytes( nbchannels_,    itread );
+            itread = utils::ReadIntFromBytes( samplerate_,    itread );
+            itread = utils::ReadIntFromBytes( byterate_,      itread );
+            itread = utils::ReadIntFromBytes( blockalign_,    itread );
+            itread = utils::ReadIntFromBytes( bitspersample_, itread );
             return itread;
         }
 
@@ -110,15 +110,15 @@ namespace wave
         template<class _outit>
             _outit Write( _outit itwrite )const
         {
-            itwrite = utils::WriteIntToByteContainer( manufacturer_,                        itwrite );
-            itwrite = utils::WriteIntToByteContainer( product_,                             itwrite );
-            itwrite = utils::WriteIntToByteContainer( samplePeriod_,                        itwrite );
-            itwrite = utils::WriteIntToByteContainer( MIDIUnityNote_,                       itwrite );
-            itwrite = utils::WriteIntToByteContainer( MIDIPitchFraction_,                   itwrite );
-            itwrite = utils::WriteIntToByteContainer( SMPTEFormat_,                         itwrite );
-            itwrite = utils::WriteIntToByteContainer( SMPTEOffset_,                         itwrite );
-            itwrite = utils::WriteIntToByteContainer( static_cast<uint32_t>(loops_.size()), itwrite );
-            itwrite = utils::WriteIntToByteContainer( samplerData_,                         itwrite );
+            itwrite = utils::WriteIntToBytes( manufacturer_,                        itwrite );
+            itwrite = utils::WriteIntToBytes( product_,                             itwrite );
+            itwrite = utils::WriteIntToBytes( samplePeriod_,                        itwrite );
+            itwrite = utils::WriteIntToBytes( MIDIUnityNote_,                       itwrite );
+            itwrite = utils::WriteIntToBytes( MIDIPitchFraction_,                   itwrite );
+            itwrite = utils::WriteIntToBytes( SMPTEFormat_,                         itwrite );
+            itwrite = utils::WriteIntToBytes( SMPTEOffset_,                         itwrite );
+            itwrite = utils::WriteIntToBytes( static_cast<uint32_t>(loops_.size()), itwrite );
+            itwrite = utils::WriteIntToBytes( samplerData_,                         itwrite );
 
             for( const auto & aloop : loops_ )
                 itwrite = aloop.Write(itwrite);
@@ -129,15 +129,15 @@ namespace wave
         template<class _init>
             _init Read( _init itread )
         {
-            itread = utils::ReadIntFromByteContainer( manufacturer_,        itread );
-            itread = utils::ReadIntFromByteContainer( product_,             itread );
-            itread = utils::ReadIntFromByteContainer( samplePeriod_,        itread );
-            itread = utils::ReadIntFromByteContainer( MIDIUnityNote_,       itread );
-            itread = utils::ReadIntFromByteContainer( MIDIPitchFraction_,   itread );
-            itread = utils::ReadIntFromByteContainer( SMPTEFormat_,         itread );
-            itread = utils::ReadIntFromByteContainer( SMPTEOffset_,         itread );
-            itread = utils::ReadIntFromByteContainer( sampleLoops_,         itread );
-            itread = utils::ReadIntFromByteContainer( samplerData_,         itread );
+            itread = utils::ReadIntFromBytes( manufacturer_,        itread );
+            itread = utils::ReadIntFromBytes( product_,             itread );
+            itread = utils::ReadIntFromBytes( samplePeriod_,        itread );
+            itread = utils::ReadIntFromBytes( MIDIUnityNote_,       itread );
+            itread = utils::ReadIntFromBytes( MIDIPitchFraction_,   itread );
+            itread = utils::ReadIntFromBytes( SMPTEFormat_,         itread );
+            itread = utils::ReadIntFromBytes( SMPTEOffset_,         itread );
+            itread = utils::ReadIntFromBytes( sampleLoops_,         itread );
+            itread = utils::ReadIntFromBytes( samplerData_,         itread );
             loops_.resize(sampleLoops_);
             for( auto & aloop : loops_ )
                 itread = aloop.Read(itread);
@@ -174,24 +174,24 @@ namespace wave
             template<class _outit>
                 _outit Write( _outit itwrite )const
             {
-                itwrite = utils::WriteIntToByteContainer( identifier_, itwrite );
-                itwrite = utils::WriteIntToByteContainer( type_,       itwrite );
-                itwrite = utils::WriteIntToByteContainer( start_,      itwrite );
-                itwrite = utils::WriteIntToByteContainer( end_,        itwrite );
-                itwrite = utils::WriteIntToByteContainer( fraction_,   itwrite );
-                itwrite = utils::WriteIntToByteContainer( playCount_,  itwrite );
+                itwrite = utils::WriteIntToBytes( identifier_, itwrite );
+                itwrite = utils::WriteIntToBytes( type_,       itwrite );
+                itwrite = utils::WriteIntToBytes( start_,      itwrite );
+                itwrite = utils::WriteIntToBytes( end_,        itwrite );
+                itwrite = utils::WriteIntToBytes( fraction_,   itwrite );
+                itwrite = utils::WriteIntToBytes( playCount_,  itwrite );
                 return itwrite;
             }
 
             template<class _init>
                 _init Read( _init itread )
             {
-                itread = utils::ReadIntFromByteContainer( identifier_, itread );
-                itread = utils::ReadIntFromByteContainer( type_,       itread );
-                itread = utils::ReadIntFromByteContainer( start_,      itread );
-                itread = utils::ReadIntFromByteContainer( end_,        itread );
-                itread = utils::ReadIntFromByteContainer( fraction_,   itread );
-                itread = utils::ReadIntFromByteContainer( playCount_,  itread );
+                itread = utils::ReadIntFromBytes( identifier_, itread );
+                itread = utils::ReadIntFromBytes( type_,       itread );
+                itread = utils::ReadIntFromBytes( start_,      itread );
+                itread = utils::ReadIntFromBytes( end_,        itread );
+                itread = utils::ReadIntFromBytes( fraction_,   itread );
+                itread = utils::ReadIntFromBytes( playCount_,  itread );
                 return itread;
             }
         };
@@ -227,7 +227,7 @@ namespace wave
             throw std::runtime_error("GetWaveFormatInfo(): Error, the container specified is not a valid WAVE file. RIFF header is invalid!");
 
         //Read format tag
-        uin32_t fmttag = utils::ReadIntFromByteVector<uint32_t>( itwavbeg, false ); //Iterator incremented!
+        uin32_t fmttag = utils::ReadIntFromBytes<uint32_t>( itwavbeg, false ); //Iterator incremented!
 
         if( fmttag != WAVE_FormatTag )
             throw std::runtime_error("GetWaveFormatInfo(): Error, the container specified is not a valid WAVE file! Missing WAVE format tag after the header!");
@@ -298,11 +298,6 @@ namespace wave
         WaveFile( uint32_t samplerate = 44100 )
             :m_samplerate(samplerate)
         {}
-
-        //WaveFile( const std::string & filename )
-        //    :m_fname(filename), m_samplerate(0)
-        //{}
-
 
         void WriteWaveFile( const std::string & fname )
         {
@@ -452,14 +447,7 @@ namespace wave
         inline uint32_t SampleRate()const               { return m_samplerate;     }
         inline void     SampleRate( uint32_t smplrate ) { m_samplerate = smplrate; }
 
-        //inline const std::string & Filename()const                       { return m_fname;  }
-        //inline void                Filename( const std::string & fname ) { m_fname = fname; }
-
     private:
-
-
-    private:
-        //std::string                        m_fname;
         uint32_t                           m_samplerate;
         std::vector<std::vector<sample_t>> m_samples;
     };

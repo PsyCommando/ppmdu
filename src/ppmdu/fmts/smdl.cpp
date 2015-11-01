@@ -440,7 +440,7 @@ namespace filetypes
                                 vector<uint8_t>::const_iterator   itdataend,
                                 const std::string & filext)
         {
-            return (utils::ReadIntFromByteVector<uint32_t>(itdatabeg,false) == DSE::SMDL_MagicNumber);
+            return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SMDL_MagicNumber);
         }
 
     private:

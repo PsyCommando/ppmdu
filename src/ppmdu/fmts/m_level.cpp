@@ -92,7 +92,7 @@ namespace filetypes
         template<class T>
             inline void ReadVal( T & val, vector<uint8_t>::const_iterator & itat )
         {
-            val = utils::ReadIntFromByteVector<T>( itat );
+            val = utils::ReadIntFromBytes<T>( itat );
         }
 
         const std::vector<uint8_t>      & m_rawdata;
@@ -156,7 +156,7 @@ namespace filetypes
         template<class T>
             inline void WriteVal( T val, vector<uint8_t>::iterator & itat )
         {
-            itat = utils::WriteIntToByteVector( val, itat );
+            itat = utils::WriteIntToBytes( val, itat );
         }
 
         const vector<PokeStatsGrowth> & m_Pkmns;

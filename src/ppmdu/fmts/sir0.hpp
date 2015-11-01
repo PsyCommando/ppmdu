@@ -58,10 +58,10 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( MAGIC_NUMBER,    itwriteto, false ); //Force this, to avoid bad surprises
-            itwriteto = utils::WriteIntToByteVector( subheaderptr,    itwriteto );
-            itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( uint32_t(0),     itwriteto ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes( MAGIC_NUMBER,    itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes( subheaderptr,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( ptrPtrOffsetLst, itwriteto );
+            itwriteto = utils::WriteIntToBytes( uint32_t(0),     itwriteto ); //Force this, to avoid bad surprises
             return itwriteto;
         }
 
@@ -69,10 +69,10 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            magic           = utils::ReadIntFromByteVector<decltype(magic)>          (itReadfrom, false ); //iterator is incremented
-            subheaderptr    = utils::ReadIntFromByteVector<decltype(subheaderptr)>   (itReadfrom); //iterator is incremented
-            ptrPtrOffsetLst = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>(itReadfrom); //iterator is incremented
-            endzero         = utils::ReadIntFromByteVector<decltype(endzero)>        (itReadfrom); //iterator is incremented
+            magic           = utils::ReadIntFromBytes<decltype(magic)>          (itReadfrom, false ); //iterator is incremented
+            subheaderptr    = utils::ReadIntFromBytes<decltype(subheaderptr)>   (itReadfrom); //iterator is incremented
+            ptrPtrOffsetLst = utils::ReadIntFromBytes<decltype(ptrPtrOffsetLst)>(itReadfrom); //iterator is incremented
+            endzero         = utils::ReadIntFromBytes<decltype(endzero)>        (itReadfrom); //iterator is incremented
             return itReadfrom;
         }
     };

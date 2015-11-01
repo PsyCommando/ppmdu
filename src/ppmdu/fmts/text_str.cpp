@@ -79,14 +79,14 @@ namespace pmd2 { namespace filetypes
             auto itptrs = m_filedata.begin();
 
             //First get the first pointer to get the end of the ptr table!
-            uint32_t endptrtbl = utils::ReadIntFromByteVector<uint32_t>( itptrs );  //iterator is incremented
+            uint32_t endptrtbl = utils::ReadIntFromBytes<uint32_t>( itptrs );  //iterator is incremented
             m_ptrTable.reserve( endptrtbl / sizeof(uint32_t) );                     //reserve memory for all pointers
             m_ptrTable.push_back( endptrtbl );
 
             //Read all pointers
             auto itendptrs = m_filedata.begin() + endptrtbl;
             for( ; itptrs != itendptrs; )
-                m_ptrTable.push_back( utils::ReadIntFromByteVector<uint32_t>( itptrs ) );
+                m_ptrTable.push_back( utils::ReadIntFromBytes<uint32_t>( itptrs ) );
         }
 
         void ReadStrings()
@@ -276,7 +276,7 @@ namespace pmd2 { namespace filetypes
             for( unsigned int cntstr = 0; cntstr < m_txtstr.size();  )
             {
                 const auto & str = m_txtstr[cntstr];
-                utils::WriteIntToByteVector( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
+                utils::WriteIntToBytes( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
                 m_ptrTblWriteAt += PTR_LEN;
 
                 //

@@ -26,8 +26,9 @@ using namespace DSE;
 
 namespace pmd2 { namespace audio
 {
-    static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
-    static const uint16_t DSE_LowestAttenuation_cB   =  200;//200; //20dB
+    static const uint16_t DSE_InfiniteAttenuation_cB = 1000;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
+    static const uint16_t DSE_LowestAttenuation_cB   =  190;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
+    static const uint16_t DSE_SustainFactor_msec     = 3000; //An extra time value to add to the decay when decay1 + decay2 are combined, and the sustain is non-zero
 
 
     //A multiplier to use to convert from DSE Pan to Soundfont Pan
@@ -43,6 +44,7 @@ namespace pmd2 { namespace audio
     static const int SizeADPCMPreambleWords = ::audio::IMA_ADPCM_PreambleLen / sizeof(int32_t);
 
 
+
 //====================================================================================================
 // Class
 //====================================================================================================
@@ -50,14 +52,14 @@ namespace pmd2 { namespace audio
     class PresetAllocStrategyTrait_DefaultSF2{};   //Each file's number is a bank, keeps presets the same value they were in the SWDL. Once the bank value reaches 127, it resets to 0.
     class PresetAllocStrategyTrait_SingleSF2 {};   //Reorganizes each presets in its own slot in a sf2 file, in one of the 127 possible presets slots, over all 127 banks.
 
-    /*
+    /*****************************************************************************************************************
         BankAndProgramIDAssigner
             A class that handles the various preset allocation strategies. When converting from SWD to SF2 and etc..
 
             This is the default strategy for SF2 files. Just assign presets with their original ids. 
             Each pair has its own bank. Past 127 pairs, the bankid resets to 0.
             Used for splitting presets into several SF2s.
-    */
+    ******************************************************************************************************************/
     template<class _Strategy = PresetAllocStrategyTrait_DefaultSF2>
         class PresetAllocStrategy
     {
@@ -83,12 +85,12 @@ namespace pmd2 { namespace audio
         const BatchAudioLoader & m_loader;
     };
 
-    /*        
+    /*****************************************************************************************************************
         BankAndProgramIDAssigner
             A class that handles the various preset allocation strategies. When converting from SWD to SF2 and etc..
 
             This strategy is for using as efficiently as possible a single SF2, filling every single presets and banks.
-    */
+    *****************************************************************************************************************/
     template<>
         class PresetAllocStrategy< PresetAllocStrategyTrait_SingleSF2 >
     {
@@ -136,8 +138,10 @@ namespace pmd2 { namespace audio
 //  Utility Functions
 //===========================================================================================
 
-
-
+    /*
+        DsePanToSf2Pan
+            Convert a pan value from a DSE file(0 to 127) to a SF2 pan( -500 to 500 ).
+    */
     inline int16_t DsePanToSf2Pan( int8_t dsepan )
     {
         dsepan = abs(dsepan);
@@ -180,7 +184,7 @@ namespace pmd2 { namespace audio
         out.reserve(praw->size()/2);
 
         while( itread != itend )
-            out.push_back( utils::ReadIntFromByteVector<pcm16s_t>( itread ) ); //Iterator is incremented
+            out.push_back( utils::ReadIntFromBytes<pcm16s_t>( itread ) ); //Iterator is incremented
 
         return std::move(out);
     }
@@ -198,95 +202,117 @@ namespace pmd2 { namespace audio
         return std::move(out);
     }
 
-    //std::vector<pcm16s_t> DecodeADPCMAndAppendLoopBuff( const std::vector<uint8_t> & adpcm, size_t loopbufpos, size_t loopbuflen )
-    //{
-    //    std::vector<pcm16s_t> decompressed = std::move(::audio::DecodeADPCM_NDS(adpcm));
-    //    decompressed.reserve( decompressed.size() + loopbuflen );
-    //    std::copy_n( decompressed.begin() + loopbufpos, loopbuflen, back_inserter(decompressed) );
-    //    return std::move(decompressed);
-    //}
+
+
+    /*********************************************************************************
+        ScaleEnvelopeDuration
+            Obtain from the duration table the duration of each envelope params, 
+            and scale them.
+            Scale the various parts of the volume envelope by the specified factors.
+    *********************************************************************************/
+    inline DSEEnvelope IntepretAndScaleEnvelopeDuration( const DSEEnvelope   & srcenv, 
+                                                         double                ovrllscale = 1.0, 
+                                                         double                atkf       = 1.0, 
+                                                         double                holdf      = 1.0,
+                                                         double                decayf     = 1.0,
+                                                         double                releasef   = 1.0 )
+    {
+        DSEEnvelope outenv(srcenv);
+        outenv.attack  = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.attack),  outenv.envmulti) *     atkf * ovrllscale ) );
+        outenv.hold    = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.hold),    outenv.envmulti) *    holdf * ovrllscale ) );
+        outenv.decay   = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay),   outenv.envmulti) *   decayf * ovrllscale ) );
+        outenv.release = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.release), outenv.envmulti) * releasef * ovrllscale ) );
+        return outenv;
+    }
 
     /*
         Convert the parameters of a DSE envelope to SF2
     */
-    sf2::Envelope RemapDSEVolEnvToSF2( int8_t atkvol, 
-                                       int8_t attack, 
-                                       int8_t hold, 
-                                       int8_t decay, 
-                                       int8_t sustain, 
-                                       int8_t decay2, 
-                                       int8_t rel, 
-                                       int8_t rx,
-                                       int8_t envon,
-                                       int8_t envmult )
+    sf2::Envelope RemapDSEVolEnvToSF2( DSEEnvelope origenv )
+                                       // int8_t atkvol, 
+                                       //int8_t attack, 
+                                       //int8_t hold, 
+                                       //int8_t decay, 
+                                       //int8_t sustain, 
+                                       //int8_t decay2, 
+                                       //int8_t rel, 
+                                       //int8_t rx,
+                                       //int8_t envon,
+                                       //int8_t envmult )
     {
         sf2::Envelope volenv;
+       
+        //#TODO: implement scaling by users !!!
+        DSEEnvelope interpenv = IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
+
         if( utils::LibWide().isLogOn() )
         {
             clog<<"\tRemaping DSE (atkvol, atk, dec, sus, hold, dec2, rel, rx)( " 
-                << static_cast<short>(atkvol)       <<", "
-                << static_cast<short>(attack)       <<", "
-                << static_cast<short>(decay)         <<", "
-                << static_cast<short>(sustain)        <<", "
-                << static_cast<short>(hold)      <<", "
-                << static_cast<short>(decay2)       <<", "
-                << static_cast<short>(rel)          <<", "
-                << static_cast<short>(rx)           <<" )\n";
+                << static_cast<short>(origenv.atkvol)       <<", "
+                << static_cast<short>(origenv.attack)       <<", "
+                << static_cast<short>(origenv.decay)         <<", "
+                << static_cast<short>(origenv.sustain)        <<", "
+                << static_cast<short>(origenv.hold)      <<", "
+                << static_cast<short>(origenv.decay2)       <<", "
+                << static_cast<short>(origenv.release)          //<<", "
+                /*<< static_cast<short>(rx) */          <<" )\n";
         }
 
         //Handle Attack
-        if( attack != 0 )
+        if( origenv.attack != 0 )
         {
             if( utils::LibWide().isLogOn() )
                 clog<<"Handling Attack..\n";
 
-            volenv.attack = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( attack, envmult ) );
+            volenv.attack = sf2::MSecsToTimecents( interpenv.attack );
         }
         else if( utils::LibWide().isLogOn() )
             clog<<"Skipping Attack..\n";
 
         //Handle Hold
-        if( hold != 0 )
+        if( origenv.hold != 0 )
         {
             if( utils::LibWide().isLogOn() )
                 clog<<"Handling Hold..\n";
 
-            volenv.hold = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( hold, envmult ) );
+            volenv.hold = sf2::MSecsToTimecents( interpenv.hold );
         }
         else if( utils::LibWide().isLogOn() )
             clog<<"Skipping Hold..\n";
 
         //Handle Sustain
-        volenv.sustain = DseVolToSf2Attenuation( sustain ); 
+        volenv.sustain = DseVolToSf2Attenuation( interpenv.sustain ); 
 
         //Handle Decay
-        if( decay != 0 && decay2 != 0 && decay2 != 0x7F ) 
+        if( origenv.decay != 0 && origenv.decay2 != 0 && origenv.decay2 != 0x7F ) 
         {
             if( utils::LibWide().isLogOn() )
                 clog <<"We got combined decays! decay1-2 : " 
-                     <<static_cast<unsigned short>(decay) <<" + " 
-                     <<static_cast<unsigned short>(decay2) << " = " 
-                     <<static_cast<unsigned short>(decay + decay2) <<" !\n";
+                     <<static_cast<unsigned short>(interpenv.decay) <<" + " 
+                     <<static_cast<unsigned short>(interpenv.decay2) << " = " 
+                     <<static_cast<unsigned short>(interpenv.decay + interpenv.decay2) <<" !\n";
 
 
             //If decay is set to infinite, we just ignore it!
-            if( decay == 0x7F )
-                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, envmult) );
-            else if( sustain == 0 ) //The sustain check is to avoid the case where the first decay phase already should have brought the volume to 0 before the decay2 phase would do anything. 
-                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult) );
+            if( origenv.decay == 0x7F )
+                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 );
+            else if( origenv.sustain == 0 ) //The sustain check is to avoid the case where the first decay phase already should have brought the volume to 0 before the decay2 phase would do anything. 
+                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay );
             else
-                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) + DSEEnveloppeDurationToMSec( decay2, envmult) );
-            
+            {
+                //uint16_t sustainfactor = (sustain * DSE_SustainFactor_msec) /127; //Add a bit more time, because soundfont handles volume exponentially, and thus, the volume sinks to 0 really quickly!
+                volenv.decay = sf2::MSecsToTimecents( interpenv.decay + interpenv.decay2 ) /*+ sustainfactor*/; //Add an extra factor based on the sustain value
+            }
             volenv.sustain = DSE_InfiniteAttenuation_cB;
         }
-        else if( decay != 0 )
+        else if( origenv.decay != 0 )
         {
             if( utils::LibWide().isLogOn() )
                 clog <<"Handling single decay..\n";
 
             //We use Decay
             //if( decay != 0x7F )
-                volenv.decay = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay, envmult ) );
+                volenv.decay = sf2::MSecsToTimecents( interpenv.decay );
             //else
             //    volenv.sustain = 0; //No decay at all
         }
@@ -295,10 +321,10 @@ namespace pmd2 { namespace audio
             if( utils::LibWide().isLogOn() )
                 clog<<"Decay was 0, falling back to decay 2..\n";
 
-            if( decay2 != 0x7F )
+            if( origenv.decay2 != 0x7F )
             {
                 //We want to fake the volume going down until complete silence, while the key is still held down 
-                volenv.decay   = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( decay2, envmult ) );
+                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 );
                 volenv.sustain = DSE_InfiniteAttenuation_cB;
             }
             else
@@ -306,13 +332,13 @@ namespace pmd2 { namespace audio
         }
 
         //Handle Release
-        if( rel != 0 )
+        if( origenv.release != 0 )
         {
             if( utils::LibWide().isLogOn() )
                 clog <<"Handling Release..\n";
 
             //if( rel != 0x7F )
-                volenv.release = sf2::MSecsToTimecents( DSEEnveloppeDurationToMSec( rel, envmult ) );
+                volenv.release = sf2::MSecsToTimecents( interpenv.release );
             //else
             //    volenv.release = SHRT_MAX; //Infinite
         }
@@ -330,27 +356,27 @@ namespace pmd2 { namespace audio
                 << static_cast<short>(volenv.release) <<" )" <<endl;
 
             //Diagnostic            
-            if( attack > 0 && attack < 0x7F && 
+            if( origenv.attack > 0 && origenv.attack < 0x7F && 
                (volenv.attack == sf2::SF_GenLimitsVolEnvAttack.max_ || volenv.attack == sf2::SF_GenLimitsVolEnvAttack.min_) )
             {
                 //Something fishy is going on !
-                clog << "\tThe attack value " <<static_cast<short>(attack) <<" shouldn't result in the SF2 value " <<volenv.attack  <<" !\n";
+                clog << "\tThe attack value " <<static_cast<short>(origenv.attack) <<" shouldn't result in the SF2 value " <<volenv.attack  <<" !\n";
                 assert(false);
             }
 
-            if( hold > 0 && hold < 0x7F && 
+            if( origenv.hold > 0 && origenv.hold < 0x7F && 
                (volenv.hold == sf2::SF_GenLimitsVolEnvHold.max_ || volenv.hold == sf2::SF_GenLimitsVolEnvHold.min_) )
             {
                 //Something fishy is going on !
-                clog << "\tThe hold value " <<static_cast<short>(hold) <<" shouldn't result in the SF2 value " <<volenv.hold  <<" !\n";
+                clog << "\tThe hold value " <<static_cast<short>(origenv.hold) <<" shouldn't result in the SF2 value " <<volenv.hold  <<" !\n";
                 assert(false);
             }
 
-            if( decay > 0 && decay < 0x7F && 
+            if( origenv.decay > 0 && origenv.decay < 0x7F && 
                (volenv.decay == sf2::SF_GenLimitsVolEnvDecay.max_ || volenv.decay == sf2::SF_GenLimitsVolEnvDecay.min_) )
             {
                 //Something fishy is going on !
-                clog << "\tThe decay value " <<static_cast<short>(decay) <<" shouldn't result in the SF2 value " <<volenv.decay  <<" !\n";
+                clog << "\tThe decay value " <<static_cast<short>(origenv.decay) <<" shouldn't result in the SF2 value " <<volenv.decay  <<" !\n";
                 assert(false);
             }
 
@@ -362,17 +388,18 @@ namespace pmd2 { namespace audio
             //    assert(false);
             //}
 
-            if( rel > 0 && rel < 0x7F && 
+            if( origenv.release > 0 && origenv.release < 0x7F && 
                (volenv.release == sf2::SF_GenLimitsVolEnvRelease.max_ || volenv.release == sf2::SF_GenLimitsVolEnvRelease.min_) )
             {
                 //Something fishy is going on !
-                clog << "\tThe release value " <<static_cast<short>(rel) <<" shouldn't result in the SF2 value " <<volenv.release  <<" !\n";
+                clog << "\tThe release value " <<static_cast<short>(origenv.release) <<" shouldn't result in the SF2 value " <<volenv.release  <<" !\n";
                 assert(false);
             }
         }
 
         return volenv;
     }
+    
 
 //========================================================================================
 //  BatchAudioLoader
@@ -447,6 +474,8 @@ namespace pmd2 { namespace audio
     }
 
     /*
+        AllocPresetSingleSF2
+            Assign preset+bank slots sequentially (fill the presets 1-127 of bank 0 first, then 1-127 of bank 1, and so on! )
     */
     void BatchAudioLoader::AllocPresetSingleSF2( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const
     {
@@ -463,6 +492,11 @@ namespace pmd2 { namespace audio
         }
     }
 
+    /*
+        AllocPresetDefault
+            Keep the same preset ID as in the SWDL files, but each SWDL file has its own bank. This results in a lot of
+            unused slots in each banks.
+    */
     void BatchAudioLoader::AllocPresetDefault  ( std::vector<DSE::SMDLPresetConversionInfo> & toalloc )const
     {
         PresetAllocStrategy<> allocator(*this);
@@ -518,13 +552,10 @@ namespace pmd2 { namespace audio
 
         //  --- Set the generators ---
 
-        //Key Range
-        myzone.SetKeyRange( dseinst.lowkey, dseinst.hikey ); //Key range in first
-
-        //Velocity Range
-        myzone.SetVelRange( dseinst.unk14, dseinst.unk47 );
-
-        //## Add new generators below ##
+        //## Key range and vel range MUST be first, or else the soundfont parser will ignore them! ##
+        myzone.SetKeyRange( dseinst.lowkey, dseinst.hikey ); //Key range always in first
+        myzone.SetVelRange( dseinst.lovel,  dseinst.hivel );
+        //## Add other generators below ##
 
         //Fetch Loop Flag
         auto ptrinf = smplbnk.sampleInfo(dseinst.smplid);
@@ -578,7 +609,10 @@ namespace pmd2 { namespace audio
         //myzone.SetRootKey( dseinst.rootkey );
 
         //Volume Envelope
-        Envelope myenv = RemapDSEVolEnvToSF2( dseinst.atkvol,
+        DSEEnvelope dseenv(dseinst);
+
+        Envelope myenv = RemapDSEVolEnvToSF2(dseenv);
+            /*( dseinst.atkvol,
                                               dseinst.attack, 
                                               dseinst.hold, 
                                               dseinst.decay,
@@ -587,11 +621,13 @@ namespace pmd2 { namespace audio
                                               dseinst.release, 
                                               dseinst.rx,
                                               dseinst.envon,
-                                              dseinst.envmult );
+                                              dseinst.envmult );*/
 
         /*
             ### In order to handle the atkvol param correctly, we'll make a copy of the Instrument, 
                 with a very short envelope!
+
+            #TODO : Make this part of the envelope parsing functions !!!
         */
         if( dseinst.atkvol != 0 && dseinst.attack != 0 )
         {
@@ -603,14 +639,18 @@ namespace pmd2 { namespace audio
 
             //Set hold to the attack's duration
             Envelope atkvolenv;
-            atkvolenv.hold    = myenv.attack;
+            //if( dseinst.attack >= 10 )
+            //    atkvolenv.hold = MSecsToTimecents( dseinst.attack - 10 );
+            //else
+                atkvolenv.hold = myenv.attack;
+            atkvolenv.decay   = (dseinst.hold > 0)? myenv.hold : (dseinst.decay > 0 || dseinst.decay2 > 0)? myenv.decay : SHRT_MIN; 
             atkvolenv.sustain = SF_GenLimitsVolEnvSustain.max_;
 
             //Leave everything else to default
             //atkvolzone.SetVolEnvelope( atkvolenv );
 
-            myzone.AddGenerator( eSFGen::holdVolEnv,    atkvolenv.hold );
-            myzone.AddGenerator( eSFGen::sustainVolEnv, atkvolenv.sustain );
+            atkvolzone.AddGenerator( eSFGen::holdVolEnv,    atkvolenv.hold );
+            atkvolzone.AddGenerator( eSFGen::sustainVolEnv, atkvolenv.sustain );
             
             //Sample ID in last
             atkvolzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
@@ -619,25 +659,25 @@ namespace pmd2 { namespace audio
         }
 
         //Set the envelope
-        //myzone.SetVolEnvelope( myenv );
+        myzone.SetVolEnvelope( myenv );
 
-        if( myenv.delay != SHRT_MIN )
-            myzone.AddGenerator( eSFGen::delayVolEnv, myenv.delay );
+        //if( myenv.delay != SHRT_MIN )
+        //    myzone.AddGenerator( eSFGen::delayVolEnv, myenv.delay );
 
-        if( myenv.attack != SHRT_MIN )
-            myzone.AddGenerator( eSFGen::attackVolEnv, myenv.attack );
+        //if( myenv.attack != SHRT_MIN )
+        //    myzone.AddGenerator( eSFGen::attackVolEnv, myenv.attack );
 
-        if( myenv.hold != SHRT_MIN )
-            myzone.AddGenerator( eSFGen::holdVolEnv, myenv.hold );
+        //if( myenv.hold != SHRT_MIN )
+        //    myzone.AddGenerator( eSFGen::holdVolEnv, myenv.hold );
 
-        if( myenv.decay != SHRT_MIN )
-            myzone.AddGenerator( eSFGen::decayVolEnv, myenv.decay );
+        //if( myenv.decay != SHRT_MIN )
+        //    myzone.AddGenerator( eSFGen::decayVolEnv, myenv.decay );
 
-        //if( myenv.sustain != 0 )
-            myzone.AddGenerator( eSFGen::sustainVolEnv, myenv.sustain );
+        ////if( myenv.sustain != 0 )
+        //    myzone.AddGenerator( eSFGen::sustainVolEnv, myenv.sustain );
 
-        if( myenv.release != SHRT_MIN )
-            myzone.AddGenerator( eSFGen::releaseVolEnv, myenv.release );
+        //if( myenv.release != SHRT_MIN )
+        //    myzone.AddGenerator( eSFGen::releaseVolEnv, myenv.release );
 
         //Sample ID in last
         myzone.SetSampleId( smplIdConvTbl.at(dseinst.smplid) );
@@ -689,38 +729,41 @@ namespace pmd2 { namespace audio
                     if( utils::LibWide().isLogOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
                     
-                    if( lfo.unk26 == 1 ) //Pitch
+                    if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.unk28/50 ) ); //Frequency
-                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.unk30/10 ); //Depth
-                        global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.unk31 ) ); //Delay
+                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.depth/*lfo.rate*//*/50*/ ) ); //Frequency
+                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.rate ); //Depth /*static_cast<uint16_t>( lround( static_cast<double>(lfo.rate) / 2.5 )*/
+                        global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
+                        
                         if( utils::LibWide().isLogOn() )
                             clog << "(1)pitch";
                     }
-                    else if( lfo.unk26 == 2 ) //Volume
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.unk28/50 ) ); //Frequency
-                        global.AddGenerator( eSFGen::modLfoToVolume, (lfo.unk30/10) * -1 ); //Depth
-                        global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.unk31 ) ); //Delay
+                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate/*lfo.rate*//*/50*/ ) ); //Frequency
+                        global.AddGenerator( eSFGen::modLfoToVolume, -(lfo.depth * (20) / 127) /*//*(lfo.depth/10) * -1*/ ); //Depth
+                        global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
 
                         if( utils::LibWide().isLogOn() )
                             clog << "(2)volume";
                     }
-                    else if( lfo.unk26 == 3 ) //Pan
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pan) ) //Pan
                     {
                         //Leave the data for the MIDI exporter, so maybe it can do something about it..
                         convinf.extrafx.push_back( 
-                            SMDLPresetConversionInfo::ExtraEffects{ SMDLPresetConversionInfo::eEffectTy::Phaser, lfo.unk28, lfo.unk30, lfo.unk31 } 
+                            SMDLPresetConversionInfo::ExtraEffects{ SMDLPresetConversionInfo::eEffectTy::Phaser, lfo.rate, lfo.depth, lfo.delay } 
                         );
+
+                        
 
                         //#TODO:
                         //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
                         if( utils::LibWide().isLogOn() )
                             clog << "(3)pan";
                     }
-                    else if( lfo.unk26 == 4 )
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::UNK_4) )
                     {
                         //Unknown LFO target
                         if( utils::LibWide().isLogOn() )
@@ -729,17 +772,21 @@ namespace pmd2 { namespace audio
                     else
                     {
                         if( utils::LibWide().isLogOn() )
-                            clog << "(" << static_cast<unsigned short>(lfo.unk26) <<")unknown";
+                            clog << "(" << static_cast<unsigned short>(lfo.dest) <<")unknown";
                     }
 
                     if( utils::LibWide().isLogOn() )
-                        clog <<", Frequency: " << static_cast<unsigned short>(lfo.unk28) << " Hz, Depth: " << static_cast<unsigned short>(lfo.unk30) << ", Delay: " <<static_cast<unsigned short>(lfo.unk31) <<" ms\n";
+                    {
+                        clog <<", Frequency: " << static_cast<unsigned short>(lfo.rate) 
+                             << " Hz, Depth: " << static_cast<unsigned short>(lfo.depth) 
+                             << ", Delay: " <<static_cast<unsigned short>(lfo.delay) <<" ms\n";
+                    }
                 }
                 ++cntlfo;
             }
 
             //#3 - Add the global zone to the list!
-            if( global.GetNbGenerators() > 0 && global.GetNbModulators() > 0 )
+            if( global.GetNbGenerators() > 0 || global.GetNbModulators() > 0 )
                 pre.AddZone( std::move(global) );
         }       
 
@@ -855,7 +902,7 @@ namespace pmd2 { namespace audio
     }
 
 
-    vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont_New( const std::string & destf )
+    vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont( const std::string & destf )
     {
         using namespace sf2;
 
@@ -920,7 +967,9 @@ namespace pmd2 { namespace audio
                     ++cntsf2presets;
                 }
                 else
+                {
                     assert(false); //This should never happen..
+                }
             }
         }
 
@@ -949,7 +998,7 @@ namespace pmd2 { namespace audio
         outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
         cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
 
-        vector<SMDLPresetConversionInfo> merged = std::move( ExportSoundfont_New( outsoundfont.toString() ) );
+        vector<SMDLPresetConversionInfo> merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
         //Then the MIDIs
         for( size_t i = 0; i < m_pairs.size(); ++i )
@@ -1007,7 +1056,7 @@ namespace pmd2 { namespace audio
         }
 
         DSE_MetaDataSWDL meta;
-        meta.fname = "Main.SWD";
+        meta.fname       = "Main.SWD";
         meta.nbprgislots = 0;
         meta.nbwavislots = smpldata.size();
 
@@ -1133,7 +1182,7 @@ namespace pmd2 { namespace audio
         return DSE::ParseSMDL( file );
     }
 
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly )
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
     {
         auto smplptr = bnk.smplbank().lock();
         
@@ -1162,7 +1211,10 @@ namespace pmd2 { namespace audio
                     smplchnk.MIDIUnityNote_ = ptrinfo->rootkey;
                     smplchnk.samplePeriod_  = (1 / ptrinfo->smplrate);
 
-                    sstrname << cntsmpl;
+                    if( hexanumbers )
+                        sstrname <<"0x" <<hex <<uppercase << cntsmpl <<nouppercase;
+                    else
+                        sstrname << cntsmpl;
 
                     if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
                     {

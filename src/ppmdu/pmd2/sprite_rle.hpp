@@ -33,18 +33,18 @@ namespace pmd2 { namespace compression
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( pixelsrc, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( pixamt,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unknown,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( pixelsrc, itwriteto );
+            itwriteto = utils::WriteIntToBytes( pixamt,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unknown,  itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( pixelsrc, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( pixamt,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unknown,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( pixelsrc, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( pixamt,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unknown,  itReadfrom );
             return itReadfrom;
         }
     };

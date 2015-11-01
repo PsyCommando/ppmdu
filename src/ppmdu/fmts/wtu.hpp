@@ -41,10 +41,10 @@ namespace filetypes
             _outit WriteToContainer( _outit itwriteto )const
         {
             //Force the magic number instead of the "magic" variable's content
-            itwriteto = utils::WriteIntToByteVector( WTU_MAGIC_NUMBER_INT, itwriteto, false ); //Magic number is big endian
-            itwriteto = utils::WriteIntToByteVector( nbEntries,            itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk0,                 itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk1,                 itwriteto );
+            itwriteto = utils::WriteIntToBytes( WTU_MAGIC_NUMBER_INT, itwriteto, false ); //Magic number is big endian
+            itwriteto = utils::WriteIntToBytes( nbEntries,            itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk0,                 itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk1,                 itwriteto );
             return itwriteto;
         }
 
@@ -53,10 +53,10 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            magic     = utils::ReadIntFromByteVector<decltype(magic)>    (itReadfrom, false); //Magic number is big endian
-            nbEntries = utils::ReadIntFromByteVector<decltype(nbEntries)>(itReadfrom);
-            unk0      = utils::ReadIntFromByteVector<decltype(unk0)>     (itReadfrom);
-            unk1      = utils::ReadIntFromByteVector<decltype(unk1)>     (itReadfrom);
+            magic     = utils::ReadIntFromBytes<decltype(magic)>    (itReadfrom, false); //Magic number is big endian
+            nbEntries = utils::ReadIntFromBytes<decltype(nbEntries)>(itReadfrom);
+            unk0      = utils::ReadIntFromBytes<decltype(unk0)>     (itReadfrom);
+            unk1      = utils::ReadIntFromBytes<decltype(unk1)>     (itReadfrom);
             return itReadfrom;
         }
     };

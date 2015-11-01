@@ -34,15 +34,15 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( nbgrp,     itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( grpslen,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unkdb1ptr, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( entdbptr,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( propdbptr, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( bgdbptr,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unkdb2ptr, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( actdbptr,  itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( unk3ptr,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbgrp,     itwriteto );
+            itwriteto = utils::WriteIntToBytes( grpslen,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unkdb1ptr, itwriteto );
+            itwriteto = utils::WriteIntToBytes( entdbptr,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( propdbptr, itwriteto );
+            itwriteto = utils::WriteIntToBytes( bgdbptr,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unkdb2ptr, itwriteto );
+            itwriteto = utils::WriteIntToBytes( actdbptr,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk3ptr,   itwriteto );
             return itwriteto;
         }
 
@@ -50,15 +50,15 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( nbgrp,     itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( grpslen,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unkdb1ptr, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( entdbptr,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( propdbptr, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( bgdbptr,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unkdb2ptr, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( actdbptr,  itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( unk3ptr,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbgrp,     itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( grpslen,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unkdb1ptr, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( entdbptr,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( propdbptr, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( bgdbptr,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unkdb2ptr, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( actdbptr,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk3ptr,   itReadfrom );
             return itReadfrom;
         }
     };

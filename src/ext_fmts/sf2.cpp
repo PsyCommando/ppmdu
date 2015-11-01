@@ -38,16 +38,16 @@ namespace sf2
 
         template<class _outit> _outit Write( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( major, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( minor, itwriteto );
+            itwriteto = utils::WriteIntToBytes( major, itwriteto );
+            itwriteto = utils::WriteIntToBytes( minor, itwriteto );
             return itwriteto;
         }
 
 
         template<class _init> _init Read( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( major, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( minor, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( major, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( minor, itReadfrom );
             return itReadfrom;
         }
     };
@@ -62,7 +62,7 @@ namespace sf2
     static const uint32_t    SfSampleLoopMinEdgeDist =  8;  //The amount of sample points to copy on either sides of the loop within a sample.
     static const uint32_t    SfSampleLoopMinEndEdgeDist = 16;
     static const uint32_t    SfSampleLoopMinLen      = 32;  //Minimum distance between the start of a loop and the end, for it to be SF2 loopable.
-    static const size_t      SfMinSampleZeroPad      = 92;  //Minimum amount of bytes of zero padding to append a sample. 46 samples
+    static const size_t      SfMinSampleZeroPad      = 92;  //Minimum amount of bytes of zero padding to append a sample. 
     static const size_t      SfMaxLongCString        = 256; //Maximum size of a long c-string. For example the ISFT chunk's software name.
 
     //Byte Lengths for the various chunks
@@ -313,21 +313,21 @@ namespace sf2
                 stringstream sstr;
                 sstr << "The number of instruments in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
                      << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbInstruments() <<"!\n";
-                throw std::overflow_error(sstr.str());
+                throw std::runtime_error(sstr.str());
             }
             if( m_sf.GetNbPresets() > numeric_limits<uint16_t>::max() )
             {
                 stringstream sstr;
                 sstr << "The number of presets in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
                      << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbPresets() <<"!\n";
-                throw std::overflow_error(sstr.str());
+                throw std::runtime_error(sstr.str());
             }
             if( m_sf.GetNbSamples() > numeric_limits<uint16_t>::max() )
             {
                 stringstream sstr;
                 sstr << "The number of samples in the soundfont exceeds the maximum amount supported by the soundfont 2.01 format!"
                      << "Expected less than " <<numeric_limits<uint16_t>::max() <<", but got " <<m_sf.GetNbSamples() <<"!\n";
-                throw std::overflow_error(sstr.str());
+                throw std::runtime_error(sstr.str());
             }
 
             //Save pre-write pos to go back to for writing the header later
@@ -337,7 +337,7 @@ namespace sf2
             std::fill_n( std::ostreambuf_iterator<char>(m_out), riff::ChunkHeader::SIZE, 0 );
 
             //Write fmt tag
-            utils::WriteIntToByteVector( static_cast<uint32_t>(eSF2Tags::sfbk), ostreambuf_iterator<char>(m_out), false );
+            utils::WriteIntToBytes( static_cast<uint32_t>(eSF2Tags::sfbk), ostreambuf_iterator<char>(m_out), false );
 
             //Write the content
             std::ofstream::streampos datasz = 4; //Count the 4 bytes of the fmt tag
@@ -398,7 +398,7 @@ namespace sf2
 #endif
 
             //Write format tag
-            itout = utils::WriteIntToByteVector( static_cast<uint32_t>(fmttag), itout, false );
+            itout = utils::WriteIntToBytes( static_cast<uint32_t>(fmttag), itout, false );
 #ifdef _DEBUG
             m_out.flush();
 #endif
@@ -618,13 +618,13 @@ namespace sf2
 
                 //Write sample data
                 for( const pcm16s_t & point : loadedsmpl )
-                    itout = utils::WriteIntToByteVector( point, itout );
+                    itout = utils::WriteIntToBytes( point, itout );
 
                 //Save the begining and end position within the sdata chunk before zeros
                 m_smplswritepos.push_back( make_pair( (smplstart - prewrite), (GetCurTotalNbByWritten() - prewrite) ) );
 
                 //Write the stupid zeros..
-                const uint32_t finalsmpllen = loadedsmpl.size();
+                //const uint32_t finalsmpllen = loadedsmpl.size();
 
                 //if( finalsmpllen < SfMinSampleZeroPad )
                     itout = std::fill_n( itout, SfMinSampleZeroPad, 0 ); 
@@ -757,23 +757,23 @@ namespace sf2
                 itout = std::copy_n( smpl.GetName().begin(), charstocopy, itout );
                 itout = std::fill_n( itout, charstozero, 0 );
                 //Put sample start
-                itout = utils::WriteIntToByteVector( smplbeg, itout );
+                itout = utils::WriteIntToBytes( smplbeg, itout );
                 //Put sample end
-                itout = utils::WriteIntToByteVector( smplend, itout );
+                itout = utils::WriteIntToBytes( smplend, itout );
                 //Put the sample loop beginning
-                itout = utils::WriteIntToByteVector( loopbeg, itout );
+                itout = utils::WriteIntToBytes( loopbeg, itout );
                 //Put the sample loop end
-                itout = utils::WriteIntToByteVector( loopend, itout );
+                itout = utils::WriteIntToBytes( loopend, itout );
                 //Put Sample Rate
-                itout = utils::WriteIntToByteVector( smpl.GetSampleRate(), itout );
+                itout = utils::WriteIntToBytes( smpl.GetSampleRate(), itout );
                 //Put Original Pitch
-                itout = utils::WriteIntToByteVector( smpl.GetOriginalKey(), itout );
+                itout = utils::WriteIntToBytes( smpl.GetOriginalKey(), itout );
                 //Put Pitch Correction
-                itout = utils::WriteIntToByteVector( smpl.GetPitchCorrection(), itout );
+                itout = utils::WriteIntToBytes( smpl.GetPitchCorrection(), itout );
                 //Put Sample Link
-                itout = utils::WriteIntToByteVector( smpl.GetLinkedSample(), itout );
+                itout = utils::WriteIntToBytes( smpl.GetLinkedSample(), itout );
                 //Put Sample Type
-                itout = utils::WriteIntToByteVector( static_cast<uint16_t>(smpl.GetSampleType()), itout );
+                itout = utils::WriteIntToBytes( static_cast<uint16_t>(smpl.GetSampleType()), itout );
             }
 
             //End the list with a zeroed out entry
@@ -803,22 +803,22 @@ namespace sf2
                 itout = std::copy_n( preset.GetName().begin(), charstocopy, itout );
                 itout = std::fill_n( itout, charstozero, 0 );
                 //Write Preset #
-                itout = utils::WriteIntToByteVector( preset.GetPresetNo(), itout );
+                itout = utils::WriteIntToBytes( preset.GetPresetNo(), itout );
                 //Write Bank #
-                itout = utils::WriteIntToByteVector( preset.GetBankNo(), itout );
+                itout = utils::WriteIntToBytes( preset.GetBankNo(), itout );
 
                 //Write Preset Bag Index
-                itout = utils::WriteIntToByteVector( pbagndx, itout );
+                itout = utils::WriteIntToBytes( pbagndx, itout );
 
                 //Increment pbag!
                 pbagndx += preset.GetNbZone();
 
                 //Write Library 
-                itout = utils::WriteIntToByteVector( preset.GetLibrary(), itout );
+                itout = utils::WriteIntToBytes( preset.GetLibrary(), itout );
                 //Write Genre
-                itout = utils::WriteIntToByteVector( preset.GetGenre(), itout );
+                itout = utils::WriteIntToBytes( preset.GetGenre(), itout );
                 //Write Morphology
-                itout = utils::WriteIntToByteVector( preset.GetMorpho(), itout );
+                itout = utils::WriteIntToBytes( preset.GetMorpho(), itout );
             }
 
             //End the list with a zeroed out entry
@@ -838,7 +838,7 @@ namespace sf2
             itout = std::fill_n( itout, LenFirstPart,  0 );
 
             //** Write the very last bag index to the dummy terminal ibag entry **
-            itout = utils::WriteIntToByteVector( pbagndx, itout );
+            itout = utils::WriteIntToBytes( pbagndx, itout );
             
             //Then write the library genre and morphology
             itout = std::fill_n( itout, LenLastPart, 0 );
@@ -913,7 +913,7 @@ namespace sf2
                 itout = std::fill_n( itout, charstozero, 0 );
 
                 //Write bag index
-                itout = utils::WriteIntToByteVector( instbagndx, itout );
+                itout = utils::WriteIntToBytes( instbagndx, itout );
 
                 //Increment bag index
                 instbagndx += curinst.GetNbZone();
@@ -926,7 +926,7 @@ namespace sf2
             itout = std::fill_n( itout, (ShortNameLen - EOIMarker.size()),  0  ); //Put the zeros after the string
 
             //And write the very last bag index to the dummy terminal ibag entry
-            itout = utils::WriteIntToByteVector( instbagndx, itout );
+            itout = utils::WriteIntToBytes( instbagndx, itout );
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -993,8 +993,8 @@ namespace sf2
 
                 for( const auto & gene : curzone.GetGenerators() )
                 {
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(gene.first), itout );
-                    itout = utils::WriteIntToByteVector( gene.second,                       itout );
+                    itout = utils::WriteIntToBytes( static_cast<uint16_t>(gene.first), itout );
+                    itout = utils::WriteIntToBytes( gene.second,                       itout );
                 }
             }
         }
@@ -1009,11 +1009,11 @@ namespace sf2
 
                 for( const auto & modu : curzone.GetModulators() )
                 {
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModSrcOper),    itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModDestOper),   itout );
-                    itout = utils::WriteIntToByteVector( modu.modAmount,                            itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
-                    itout = utils::WriteIntToByteVector( static_cast<uint16_t>(modu.ModTransOper),  itout );
+                    itout = utils::WriteIntToBytes( static_cast<uint16_t>(modu.ModSrcOper),    itout );
+                    itout = utils::WriteIntToBytes( static_cast<uint16_t>(modu.ModDestOper),   itout );
+                    itout = utils::WriteIntToBytes( modu.modAmount,                            itout );
+                    itout = utils::WriteIntToBytes( static_cast<uint16_t>(modu.ModAmtSrcOper), itout );
+                    itout = utils::WriteIntToBytes( static_cast<uint16_t>(modu.ModTransOper),  itout );
                 }
             }
         }
@@ -1034,8 +1034,8 @@ namespace sf2
 
         inline void WriteABag( ostreambuf_iterator<char> & itwhere, uint16_t genndx, uint16_t modndx )
         {
-            itwhere = utils::WriteIntToByteVector( genndx, itwhere );
-            itwhere = utils::WriteIntToByteVector( modndx, itwhere );
+            itwhere = utils::WriteIntToBytes( genndx, itwhere );
+            itwhere = utils::WriteIntToBytes( modndx, itwhere );
         }
 
         //

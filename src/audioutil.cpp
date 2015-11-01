@@ -12,6 +12,7 @@
 #include <ppmdu/fmts/swdl.hpp>
 #include <ppmdu/fmts/sedl.hpp>
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -46,7 +47,7 @@ namespace audioutil
 //------------------------------------------------
     const string CAudioUtil::Exe_Name            = "ppmd_audioutil.exe";
     const string CAudioUtil::Title               = "Music and sound import/export tool.";
-    const string CAudioUtil::Version             = "0.1";
+    const string CAudioUtil::Version             = "0.13";
     const string CAudioUtil::Short_Description   = "A utility to export and import music and sounds from the PMD2 games.";
     const string CAudioUtil::Long_Description    = 
         "#TODO";
@@ -134,7 +135,7 @@ namespace audioutil
             "pmd2",
             0,
             "Specifying this will tell the program that that input path is the root of the extracted ROM's \"data\" directory."
-            "The utility will export the audio content from the entire game's \"/SOUND\" directory!",
+            "The utility will export the audio content from the entire game's \"/SOUND\" directory, to a bunch of MIDIs and some soundfonts!",
             "-pmd2",
             std::bind( &CAudioUtil::ParseOptionPMD2, &GetInstance(), placeholders::_1 ),
         },
@@ -195,6 +196,27 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionSMDLPath, &GetInstance(), placeholders::_1 ),
         },
 
+        //Export SWDL Preset + Sample List
+        {
+            "listpres",
+            0,
+            "Use this to make the program export a list of all the presets used by the SWDL contained within"
+            "the swdlpath specified, or the input path if doing it for a single SWDL. "
+            "If a swdlpath was specified, the path to the outputed list is the first argument."
+            "If no swdlpath is specified the first argument is the path to the swdl to use, and"
+            "optionally the second argument the path to the outputed list!",
+            "-listpres",
+            std::bind( &CAudioUtil::ParseOptionListPresets, &GetInstance(), placeholders::_1 ),
+        },
+
+        //HexNumbers
+        {
+            "hexnum",
+            0,
+            "If this is present, whenever possible, the program will export filenames with hexadecimal numbers in them!",
+            "-hexnum",
+            std::bind( &CAudioUtil::ParseOptionUseHexNumbers, &GetInstance(), placeholders::_1 ),
+        },
 
         //#################################################
 
@@ -225,6 +247,8 @@ namespace audioutil
         m_operationMode = eOpMode::Invalid;
         m_bGM           = false;
         m_isPMD2        = false;
+        m_isListPresets = false;
+        m_useHexaNumbers= false;
         m_nbloops       = 0;
     }
 
@@ -274,29 +298,42 @@ namespace audioutil
         DSE::eMIDIMode convmode = (asGM)? DSE::eMIDIMode::GM : DSE::eMIDIMode::GS;
 
         if( asGM )
-            cout << "<*>- Conversion mode set to General MIDI instead of the default Roland GS!\n";
+            clog << "<*>- Conversion mode set to General MIDI instead of the default Roland GS!\n";
         else
-            cout << "<*>- Conversion mode set to Roland GS!\n";
+            clog << "<*>- Conversion mode set to Roland GS!\n";
 
         //Check if we have conversion info supplied
         if( ! convinfo.empty() )
         {
-            cout << "<*>- Conversion info supplied! MIDI will be remapped accordingly!\n";
-
             DSE::SMDLConvInfoDB cvinf( convinfo );
             auto itfound = cvinf.FindConversionInfo( pairname );
 
             if( itfound != cvinf.end() )
             {
+                clog << "<*>- Got conversion info for this track! MIDI will be remapped accordingly!\n";
                 DSE::SequenceToMidi( outputfile.toString(), seq, itfound->second, nbloops, convmode );
                 return;
             }
             else
                 clog <<"<!>- Couldn't find an entry for this SMD + SWD pair! Falling back to converting as-is..\n";
         }
+        else
+            clog << "<*>- Received no conversion info for this track! The SMDL will be exported as-is!\n";
 
-        cout << "<*>- Conversion info not supplied! The SMDL will be exported as-is!\n";
         DSE::SequenceToMidi( outputfile.toString(), seq, nbloops, convmode );
+    }
+
+    inline bool SameFileExt( std::string ext1, std::string ext2, std::locale curloc = locale::classic() )
+    {
+        auto lambdacmpchar = [&curloc]( char c1, char c2 )->bool
+        {
+            return (std::tolower(c1, curloc ) == std::tolower(c2, curloc ));
+        };
+
+        //std::transform(ext1.begin(), ext1.end(), ext1.begin(), ::tolower);
+        //std::transform(ext2.begin(), ext2.end(), ext2.begin(), ::tolower);
+        //return ext1 == ext2;
+        return std::equal( ext1.begin(), ext1.end(), ext2.begin(), lambdacmpchar );
     }
 
 //--------------------------------------------
@@ -448,6 +485,18 @@ namespace audioutil
         return true;
     }
 
+    bool CAudioUtil::ParseOptionListPresets( const std::vector<std::string> & optdata )
+    {
+        m_isListPresets = true;
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionUseHexNumbers( const std::vector<std::string> & optdata )
+    {
+        m_useHexaNumbers = true;
+        return true;
+    }
+
 //
 //  Program Setup and Execution
 //
@@ -496,19 +545,38 @@ namespace audioutil
         if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
             throw runtime_error("Specified output path does not exists!");
 
+        //---- Handle cases when the swdl, smdl and/or mainbank paths are specified! ----
         if( !m_mbankpath.empty() && !m_smdlpath.empty() && !m_swdlpath.empty() )
         {
-            m_operationMode = eOpMode::ExportBatchPairsAndBank;
+            m_operationMode = eOpMode::ExportBatchPairsAndBank; //We exports pairs with a main bank
             m_outputPath = m_inputPath;                         //The only parameter will be the output
             return;
         }
         else if( !m_smdlpath.empty() && !m_swdlpath.empty() )
         {
-            m_operationMode = eOpMode::ExportBatchPairs; 
+            m_operationMode = eOpMode::ExportBatchPairs;        //We exports pairs without a main bank
+            m_outputPath = m_inputPath;                         //The only parameter will be the output
+            return;
+        }
+        else if( !m_swdlpath.empty() )
+        {
+            //Batch SWDL Export, or Batch SWDL listing
+            if( m_isListPresets )
+                m_operationMode = eOpMode::BatchListSWDLPrgm;   //List SWDL samples and programs
+            else
+                m_operationMode = eOpMode::ExportBatchSWDL;     //Export a batch of SWDL files only !
+            m_outputPath = m_inputPath;                         //The only parameter will be the output
+            return;
+        }
+        else if( !m_smdlpath.empty() )
+        {
+            //Batch SMDL only export
+            m_operationMode = eOpMode::ExportBatchSMDL;         //Export a batch of SMDL files only !
             m_outputPath = m_inputPath;                         //The only parameter will be the output
             return;
         }
 
+        //---- If the above fails, try to guess what to do by input type! ----
         if( infile.exists() )
         {
             if( infile.isFile() )
@@ -523,7 +591,10 @@ namespace audioutil
                 }
                 else if( cntty._type == static_cast<unsigned int>(filetypes::CnTy_SWDL) )
                 {
-                    m_operationMode = eOpMode::ExportSWDL;
+                    if( m_isListPresets )
+                        m_operationMode = eOpMode::ListSWDLPrgm;
+                    else
+                        m_operationMode = eOpMode::ExportSWDL;
                 }
                 else if( cntty._type == static_cast<unsigned int>(filetypes::CnTy_SEDL) )
                 {
@@ -627,6 +698,30 @@ namespace audioutil
                 {
                     cout <<"=== Exporting Batch SMDL + SWDL ! ===\n";
                     returnval = ExportBatchPairs();
+                    break;
+                }
+                case eOpMode::ExportBatchSWDL:
+                {
+                    cout <<"=== Exporting Batch SWDL ! ===\n";
+                    returnval = ExportBatchSWDL();
+                    break;
+                }
+                case eOpMode::ExportBatchSMDL:
+                {
+                    cout <<"=== Exporting Batch SMDL ! ===\n";
+                    returnval = ExportBatchSMDL();
+                    break;
+                }
+                case eOpMode::BatchListSWDLPrgm:
+                {
+                    cout <<"=== Batch Writing List of Presets + Samples Contained in SWDL ! ===\n";
+                    returnval = BatchListSWDLPrgm( m_swdlpath );
+                    break;
+                }
+                case eOpMode::ListSWDLPrgm:
+                {
+                    cout <<"=== Writing List of Presets + Samples Contained in SWDL ! ===\n";
+                    returnval = BatchListSWDLPrgm( m_inputPath );
                     break;
                 }
                 default:
@@ -779,7 +874,7 @@ namespace audioutil
 
         //Load SWDL
         PresetBank swd = LoadSwdBank( inputfile.toString() );
-        ExportPresetBank( outNewDir, swd );
+        ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers );
         return 0;
     }
 
@@ -957,6 +1052,202 @@ namespace audioutil
 
         return 0;
     }
+
+
+    int CAudioUtil::ExportBatchSWDL()
+    {
+        using namespace pmd2::audio;
+        Poco::Path   inputfile(m_swdlpath);
+        Poco::Path   outputDir;
+
+        if( ! m_outputPath.empty() )
+            outputDir = Poco::Path(m_outputPath);
+        else
+            outputDir = inputfile;
+
+        cout << "Exporting SWDL:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outputDir.toString() <<"\"\n";
+
+        //Create parent output dir
+        CreateOutputDir( outputDir.toString() ); 
+
+        Poco::DirectoryIterator itdir(m_swdlpath);
+        Poco::DirectoryIterator itend;
+
+        for( ; itdir != itend; ++itdir )
+        {
+            Poco::Path curpath(itdir->path());
+            if( !SameFileExt( curpath.getExtension(), SWDL_FileExtension ) )
+                continue;
+
+            string       infilename = curpath.getBaseName();
+            const string outNewDir  = Poco::Path(outputDir).append(infilename).toString();
+
+            cout <<right <<setw(60) <<setfill(' ') << "\rExporting " << infilename << "..";
+
+            //Load SWDL
+            PresetBank swd = LoadSwdBank( curpath.toString() );
+            {
+                auto ptrsmpls = swd.smplbank().lock();
+
+                if( ptrsmpls != nullptr )
+                    CreateOutputDir( outNewDir );  //Create sub directory
+            }
+            ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers );
+        }
+        cout<<"\n\n<*>- Done !\n";
+        return 0;
+    }
+    
+    int CAudioUtil::ExportBatchSMDL()
+    {
+        using namespace pmd2::audio;
+        Poco::Path   inputfile(m_smdlpath);
+        Poco::Path   outputDir;
+
+        if( ! m_outputPath.empty() )
+            outputDir = Poco::Path(m_outputPath);
+        else
+            outputDir = inputfile;
+
+        cout << "Exporting SMDL:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outputDir.toString() <<"\"\n";
+
+        //Create parent output dir
+        CreateOutputDir( outputDir.toString() ); 
+
+        Poco::DirectoryIterator itdir(m_smdlpath);
+        Poco::DirectoryIterator itend;
+
+        for( ; itdir != itend; ++itdir )
+        {
+            Poco::Path curpath(itdir->path());
+            if( !SameFileExt( curpath.getExtension(), SMDL_FileExtension ) )
+                continue;
+
+            string        infilename = curpath.getBaseName();
+            cout /*<<right <<setw(60) <<setfill(' ')  << "\r*/<<"Exporting " << infilename << "..\n";
+
+            MusicSequence smd = LoadSequence( curpath.toString() );
+            ExportASequenceToMidi( smd, infilename, Poco::Path(outputDir).append(infilename).setExtension("mid").makeFile(), m_convinfopath, m_nbloops, m_bGM );
+        }
+        cout<<"\n\n<*>- Done !\n";
+        return 0;
+    }
+
+    void WriteSWDLPresetAndSampleList( const std::string & infilename, const DSE::PresetBank & swd, std::ofstream & lstfile, bool bhexnumbers )
+    {
+        auto prgmptr = swd.prgmbank().lock();
+
+        if( prgmptr != nullptr )
+        {
+            size_t cntprg = 0;
+            lstfile << "\n======================================================================\n"
+                    << "*" <<infilename <<"\n"
+                    << "======================================================================\n"
+                    << "Uses the following presets : \n";
+
+            if( bhexnumbers )
+                lstfile << hex <<showbase;
+            else
+                lstfile <<dec <<noshowbase;
+
+            for( const auto & prgm : prgmptr->instinfo() )
+            {
+                if( prgm != nullptr )
+                {
+                    lstfile <<"\n\t*Preset #"<<static_cast<int>(prgm->m_hdr.id) <<"\n"
+                            <<"\t------------------------------------\n";
+
+                    for( const auto & split : prgm->m_splitstbl )
+                    {
+                        lstfile << "\t\t->Split " <<static_cast<int>(split.id) <<": " 
+                                << "Sample ID( " <<static_cast<int>(split.smplid) << " ), MIDI KeyRange( " <<static_cast<int>(split.lowkey) <<" to " <<static_cast<int>(split.hikey) <<" ),"
+                                <<" \n";
+                    }
+                    ++cntprg;
+                }
+            }
+
+            if( bhexnumbers )
+                lstfile << dec <<noshowbase;
+            lstfile << "\nTotal " <<cntprg << " Presets!\n\n";
+        }
+    }
+
+
+    int CAudioUtil::BatchListSWDLPrgm( const string & SrcPath )
+    {
+        using namespace pmd2::audio;
+        Poco::Path   inputfile(SrcPath);
+        Poco::Path   outputfile;
+
+        if( ! m_outputPath.empty() )
+            outputfile = Poco::Path(m_outputPath);
+        else
+            outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeFile();
+
+        cout << "Listing SWDL Files Presets From Directory:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outputfile.toString() <<"\"\n";
+
+        std::ofstream lstfile( outputfile.toString() );
+        if( !lstfile.is_open() || lstfile.bad() )
+            throw runtime_error( "CAudioUtil::BatchListSWDLPrgm(): Couldn't open output file " + outputfile.toString() + " for writing!" );
+
+        //Work differently depending on what the input is
+        Poco::File infile (inputfile);
+        if( infile.exists() && infile.isFile() )
+        {
+            if( !SameFileExt( inputfile.getExtension(), SWDL_FileExtension ) )
+            {
+                cerr<< "<!>- ERROR: Input file is not a SWDL file!\n";
+                return -1;
+            }
+
+            string infilename = inputfile.getBaseName();
+            cout <<right <<setw(60) <<setfill(' ') << "\rAnalyzing " << infilename << "..";
+
+            lstfile << "\n======================================================================\n"
+                    << "*" <<infilename <<"\n"
+                    << "======================================================================\n\n";
+
+            PresetBank swd = LoadSwdBank( inputfile.toString() );
+            WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
+        }
+        else
+        {
+            Poco::DirectoryIterator itdir(SrcPath);
+            Poco::DirectoryIterator itend;
+
+            for( ; itdir != itend; ++itdir )
+            {
+                Poco::Path curpath(itdir->path());
+                if( !SameFileExt( curpath.getExtension(), SWDL_FileExtension ) )
+                    continue;
+
+                string infilename = curpath.getBaseName();
+                cout <<right <<setw(60) <<setfill(' ') << "\rAnalyzing " << infilename << "..";
+
+                PresetBank swd = LoadSwdBank( curpath.toString() );
+                WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
+            }
+        }
+        cout<<"\n\n<*>- Done !\n";
+        return 0;
+    }
+
+    int CAudioUtil::ListSWDLPrgm()
+    {
+        assert(false); //#REMOVEME
+        return -1;
+    }
+
 
 //--------------------------------------------
 //  Main Methods

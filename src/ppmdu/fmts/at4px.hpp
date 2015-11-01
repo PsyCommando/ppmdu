@@ -61,7 +61,7 @@ namespace filetypes
                 ++itwriteto;
             }
 
-            itwriteto = utils::WriteIntToByteVector( compressedsz, itwriteto );
+            itwriteto = utils::WriteIntToBytes( compressedsz, itwriteto );
 
             for( const uint8_t & aflag : flaglist )
             {
@@ -69,7 +69,7 @@ namespace filetypes
                 ++itwriteto;
             }
 
-            itwriteto = utils::WriteIntToByteVector( decompsz, itwriteto );
+            itwriteto = utils::WriteIntToBytes( decompsz, itwriteto );
 
             return itwriteto;
         }
@@ -83,7 +83,7 @@ namespace filetypes
                 ++itReadfrom;
             }
 
-            compressedsz = utils::ReadIntFromByteVector<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom); //iterator is incremented
 
             for( uint8_t & aflag : flaglist )
             {
@@ -91,7 +91,7 @@ namespace filetypes
                 ++itReadfrom;
             }
 
-            decompsz = utils::ReadIntFromByteVector<decltype(decompsz)>(itReadfrom); //iterator is incremented
+            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom); //iterator is incremented
 
             return itReadfrom;
         }

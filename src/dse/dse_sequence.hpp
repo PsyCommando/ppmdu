@@ -435,20 +435,20 @@ namespace DSE
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector( trkid,  itwriteto );
-            itwriteto = utils::WriteIntToByteVector( chanid, itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk1,   itwriteto );
-            itwriteto = utils::WriteIntToByteVector( unk2,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( trkid,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( chanid, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk1,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk2,   itwriteto );
             return itwriteto;
         }
 
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            trkid  = utils::ReadIntFromByteVector<decltype(trkid)> (itReadfrom);
-            chanid = utils::ReadIntFromByteVector<decltype(chanid)>(itReadfrom);
-            unk1   = utils::ReadIntFromByteVector<decltype(unk1)>  (itReadfrom);
-            unk2   = utils::ReadIntFromByteVector<decltype(unk2)>  (itReadfrom);
+            trkid  = utils::ReadIntFromBytes<decltype(trkid)> (itReadfrom);
+            chanid = utils::ReadIntFromBytes<decltype(chanid)>(itReadfrom);
+            unk1   = utils::ReadIntFromBytes<decltype(unk1)>  (itReadfrom);
+            unk2   = utils::ReadIntFromBytes<decltype(unk2)>  (itReadfrom);
             return itReadfrom;
         }
     };

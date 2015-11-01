@@ -333,15 +333,15 @@ const Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount )
                                     rletblentry.pixelsource_ + baseOffset  //If we output an offset, add the base offset to it!
                                     : rletblentry.pixelsource_;            //If we output a value, leave it as-is !
 
-            utils::WriteIntToByteVector( pxSrc, itinsert );
+            utils::WriteIntToBytes( pxSrc, itinsert );
             //utils::UnsignedIntToByteBuff( pxSrc, intbuff );         //Convert the int to an array of bytes
             //out_rawBytes.insert( out_rawBytes.end(), intbuff, intbuff+4 ); //Insert the actual entry in the output
 
-            utils::WriteIntToByteVector( rletblentry.pixelamount_, itinsert );
+            utils::WriteIntToBytes( rletblentry.pixelamount_, itinsert );
             //g::byteutils::UnsignedIntToByteBuff( rletblentry.pixelamount_, intbuff );
             //out_rawBytes.insert( out_rawBytes.end(), intbuff, intbuff+4 );
 
-            utils::WriteIntToByteVector( rletblentry.unknown_val_, itinsert );
+            utils::WriteIntToBytes( rletblentry.unknown_val_, itinsert );
             //g::byteutils::UnsignedIntToByteBuff( rletblentry.unknown_val_, intbuff );
             //out_rawBytes.insert( out_rawBytes.end(), intbuff, intbuff+4 );
         }
@@ -375,7 +375,7 @@ const Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount )
                 for( int i = 0; (i < 3) && (itt != ittend); ++i, itt+=4, cptabort+=4 )
                 {
                     //Read 4 bytes
-                    curentry[i] = utils::ReadIntFromByteVector<uint32_t>(itt);
+                    curentry[i] = utils::ReadIntFromBytes<uint32_t>(itt);
 
                     //If we just read the length/pixelamount entry, add it to the total
                     if( i == 1 ) 

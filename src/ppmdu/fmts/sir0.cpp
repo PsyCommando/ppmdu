@@ -40,19 +40,19 @@ namespace filetypes
 
     //std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
     //{
-    //    itwriteto = utils::WriteIntToByteVector( magic,        itwriteto, false );
-    //    itwriteto = utils::WriteIntToByteVector( subheaderptr, itwriteto );
-    //    itwriteto = utils::WriteIntToByteVector( ptrPtrOffsetLst,       itwriteto );
-    //    itwriteto = utils::WriteIntToByteVector( endzero,        itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( magic,        itwriteto, false );
+    //    itwriteto = utils::WriteIntToBytes( subheaderptr, itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( ptrPtrOffsetLst,       itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( endzero,        itwriteto );
     //    return itwriteto;
     //}
 
     //std::vector<uint8_t>::const_iterator sir0_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
     //{
-    //    magic        = utils::ReadIntFromByteVector<decltype(magic)>       (itReadfrom, false );
-    //    subheaderptr = utils::ReadIntFromByteVector<decltype(subheaderptr)>(itReadfrom);
-    //    ptrPtrOffsetLst       = utils::ReadIntFromByteVector<decltype(ptrPtrOffsetLst)>      (itReadfrom);
-    //    endzero        = utils::ReadIntFromByteVector<decltype(endzero)>       (itReadfrom);
+    //    magic        = utils::ReadIntFromBytes<decltype(magic)>       (itReadfrom, false );
+    //    subheaderptr = utils::ReadIntFromBytes<decltype(subheaderptr)>(itReadfrom);
+    //    ptrPtrOffsetLst       = utils::ReadIntFromBytes<decltype(ptrPtrOffsetLst)>      (itReadfrom);
+    //    endzero        = utils::ReadIntFromBytes<decltype(endzero)>       (itReadfrom);
     //    return itReadfrom;
     //}
 
@@ -416,7 +416,7 @@ namespace filetypes
     // rule matches, without in-depth analysis.
     bool sir0_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        return ReadIntFromByteVector<uint32_t>(itdatabeg,false) == MagicNumber_SIR0;
+        return ReadIntFromBytes<uint32_t>(itdatabeg,false) == MagicNumber_SIR0;
     }
 
 //========================================================================================================

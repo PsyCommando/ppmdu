@@ -136,7 +136,7 @@ namespace DSE
             for( auto & infslot : prginf )
             {
                 //Read a ptr
-                uint16_t prginfblk = utils::ReadIntFromByteVector<uint16_t>(itreadprg); //Iterator is incremented
+                uint16_t prginfblk = utils::ReadIntFromBytes<uint16_t>(itreadprg); //Iterator is incremented
 
                 if( prginfblk != 0 )
                 {
@@ -242,7 +242,7 @@ namespace DSE
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
-                uint16_t smplinfoffset = utils::ReadIntFromByteVector<uint16_t>(itreadptr); //Iterator is incremented
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr); //Iterator is incremented
 
                 if( smplinfoffset != 0 )
                 {
@@ -341,7 +341,7 @@ namespace DSE
                                const std::string & filext)
         {
             using namespace pmd2::filetypes;
-            return (utils::ReadIntFromByteVector<uint32_t>(itdatabeg,false) == DSE::SWDL_MagicNumber);
+            return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SWDL_MagicNumber);
         }
 
     private:

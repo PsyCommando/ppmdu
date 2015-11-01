@@ -629,29 +629,29 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator sprite_info_data::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( ptr_ptrstable_e,       itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( ptr_offset_f,          itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( ptr_offset_g,          itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( nb_blocks_in_offset_g, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( nb_entries_offset_e,   itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown1,              itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown2,              itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown3,              itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown4,              itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptr_ptrstable_e,       itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptr_offset_f,          itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptr_offset_g,          itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( nb_blocks_in_offset_g, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( nb_entries_offset_e,   itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown1,              itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown2,              itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown3,              itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown4,              itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator sprite_info_data::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    ptr_ptrstable_e       = utils::ReadIntFromByteVector<decltype(ptr_ptrstable_e)>      (itReadfrom);
-        //    ptr_offset_f          = utils::ReadIntFromByteVector<decltype(ptr_offset_f)>         (itReadfrom);
-        //    ptr_offset_g          = utils::ReadIntFromByteVector<decltype(ptr_offset_g)>         (itReadfrom);
-        //    nb_blocks_in_offset_g = utils::ReadIntFromByteVector<decltype(nb_blocks_in_offset_g)>(itReadfrom);
-        //    nb_entries_offset_e   = utils::ReadIntFromByteVector<decltype(nb_entries_offset_e)>  (itReadfrom);
-        //    unknown1              = utils::ReadIntFromByteVector<decltype(unknown1)>             (itReadfrom);
-        //    unknown2              = utils::ReadIntFromByteVector<decltype(unknown2)>             (itReadfrom);
-        //    unknown3              = utils::ReadIntFromByteVector<decltype(unknown3)>             (itReadfrom);
-        //    unknown4              = utils::ReadIntFromByteVector<decltype(unknown4)>             (itReadfrom);
+        //    ptr_ptrstable_e       = utils::ReadIntFromBytes<decltype(ptr_ptrstable_e)>      (itReadfrom);
+        //    ptr_offset_f          = utils::ReadIntFromBytes<decltype(ptr_offset_f)>         (itReadfrom);
+        //    ptr_offset_g          = utils::ReadIntFromBytes<decltype(ptr_offset_g)>         (itReadfrom);
+        //    nb_blocks_in_offset_g = utils::ReadIntFromBytes<decltype(nb_blocks_in_offset_g)>(itReadfrom);
+        //    nb_entries_offset_e   = utils::ReadIntFromBytes<decltype(nb_entries_offset_e)>  (itReadfrom);
+        //    unknown1              = utils::ReadIntFromBytes<decltype(unknown1)>             (itReadfrom);
+        //    unknown2              = utils::ReadIntFromBytes<decltype(unknown2)>             (itReadfrom);
+        //    unknown3              = utils::ReadIntFromBytes<decltype(unknown3)>             (itReadfrom);
+        //    unknown4              = utils::ReadIntFromBytes<decltype(unknown4)>             (itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -715,23 +715,23 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator sprite_frame_data::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( ptr_frm_ptrs_table,     itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( ptrPal,            itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unkn_1,                 itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unkn_2,                 itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unkn_3,                 itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( nbImgsTblPtr, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptr_frm_ptrs_table,     itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptrPal,            itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unkn_1,                 itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unkn_2,                 itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unkn_3,                 itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( nbImgsTblPtr, itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator sprite_frame_data::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    ptr_frm_ptrs_table     = utils::ReadIntFromByteVector<decltype(ptr_frm_ptrs_table)>    (itReadfrom);
-        //    ptrPal            = utils::ReadIntFromByteVector<decltype(ptrPal)>           (itReadfrom);
-        //    unkn_1                 = utils::ReadIntFromByteVector<decltype(unkn_1)>                (itReadfrom);
-        //    unkn_2                 = utils::ReadIntFromByteVector<decltype(unkn_2)>                (itReadfrom);
-        //    unkn_3                 = utils::ReadIntFromByteVector<decltype(unkn_3)>                (itReadfrom);
-        //    nbImgsTblPtr = utils::ReadIntFromByteVector<decltype(nbImgsTblPtr)>(itReadfrom);
+        //    ptr_frm_ptrs_table     = utils::ReadIntFromBytes<decltype(ptr_frm_ptrs_table)>    (itReadfrom);
+        //    ptrPal            = utils::ReadIntFromBytes<decltype(ptrPal)>           (itReadfrom);
+        //    unkn_1                 = utils::ReadIntFromBytes<decltype(unkn_1)>                (itReadfrom);
+        //    unkn_2                 = utils::ReadIntFromBytes<decltype(unkn_2)>                (itReadfrom);
+        //    unkn_3                 = utils::ReadIntFromBytes<decltype(unkn_3)>                (itReadfrom);
+        //    nbImgsTblPtr = utils::ReadIntFromBytes<decltype(nbImgsTblPtr)>(itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -771,19 +771,19 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator sprite_data_header::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( spr_ptr_info,   itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( spr_ptr_frames, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown0,       itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown1,       itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( spr_ptr_info,   itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( spr_ptr_frames, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown0,       itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown1,       itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator sprite_data_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    spr_ptr_info   = utils::ReadIntFromByteVector<decltype(spr_ptr_info)>  (itReadfrom);
-        //    spr_ptr_frames = utils::ReadIntFromByteVector<decltype(spr_ptr_frames)>(itReadfrom);
-        //    unknown0       = utils::ReadIntFromByteVector<decltype(unknown0)>      (itReadfrom);
-        //    unknown1       = utils::ReadIntFromByteVector<decltype(unknown1)>      (itReadfrom);
+        //    spr_ptr_info   = utils::ReadIntFromBytes<decltype(spr_ptr_info)>  (itReadfrom);
+        //    spr_ptr_frames = utils::ReadIntFromBytes<decltype(spr_ptr_frames)>(itReadfrom);
+        //    unknown0       = utils::ReadIntFromBytes<decltype(unknown0)>      (itReadfrom);
+        //    unknown1       = utils::ReadIntFromBytes<decltype(unknown1)>      (itReadfrom);
 
         //    return itReadfrom;
         //}
@@ -827,23 +827,23 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator datablock_i_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( Unk0,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( Index, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( Val0,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( Val1,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( Val2,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( Val3,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Unk0,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Index, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Val0,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Val1,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Val2,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( Val3,  itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator datablock_i_entry::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    Unk0  = utils::ReadIntFromByteVector<decltype(Unk0)> (itReadfrom);
-        //    Index = utils::ReadIntFromByteVector<decltype(Index)>(itReadfrom);
-        //    Val0  = utils::ReadIntFromByteVector<decltype(Val0)> (itReadfrom);
-        //    Val1  = utils::ReadIntFromByteVector<decltype(Val1)> (itReadfrom);
-        //    Val2  = utils::ReadIntFromByteVector<decltype(Val2)> (itReadfrom);
-        //    Val3  = utils::ReadIntFromByteVector<decltype(Val3)> (itReadfrom);
+        //    Unk0  = utils::ReadIntFromBytes<decltype(Unk0)> (itReadfrom);
+        //    Index = utils::ReadIntFromBytes<decltype(Index)>(itReadfrom);
+        //    Val0  = utils::ReadIntFromBytes<decltype(Val0)> (itReadfrom);
+        //    Val1  = utils::ReadIntFromBytes<decltype(Val1)> (itReadfrom);
+        //    Val2  = utils::ReadIntFromBytes<decltype(Val2)> (itReadfrom);
+        //    Val3  = utils::ReadIntFromBytes<decltype(Val3)> (itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -956,16 +956,16 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator datablock_g_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( ptrtoarray,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( szofarray,   itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptrtoarray,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( szofarray,   itwriteto );
 
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator datablock_g_entry::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    ptrtoarray = utils::ReadIntFromByteVector<decltype(ptrtoarray)>(itReadfrom);
-        //    szofarray  = utils::ReadIntFromByteVector<decltype(szofarray)> (itReadfrom);
+        //    ptrtoarray = utils::ReadIntFromBytes<decltype(ptrtoarray)>(itReadfrom);
+        //    szofarray  = utils::ReadIntFromBytes<decltype(szofarray)> (itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -1005,7 +1005,7 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator datablock_s_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( id,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( id,  itwriteto );
         //    *itwriteto = val0;
         //    ++itwriteto;
         //    *itwriteto = val1;
@@ -1014,13 +1014,13 @@ namespace pmd2
         //    ++itwriteto;
         //    *itwriteto = val3;
         //    ++itwriteto;
-        //    itwriteto = utils::WriteIntToByteVector( endofentry,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( endofentry,  itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator datablock_s_entry::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    id = utils::ReadIntFromByteVector<decltype(id)>(itReadfrom);
+        //    id = utils::ReadIntFromBytes<decltype(id)>(itReadfrom);
         //    val0 = *itReadfrom;
         //    ++itReadfrom;
         //    val1 = *itReadfrom;
@@ -1029,7 +1029,7 @@ namespace pmd2
         //    ++itReadfrom;
         //    val3 = *itReadfrom;
         //    ++itReadfrom;
-        //    endofentry  = utils::ReadIntFromByteVector<decltype(endofentry)> (itReadfrom);
+        //    endofentry  = utils::ReadIntFromBytes<decltype(endofentry)> (itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -1152,15 +1152,15 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator datablock_f_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( val0,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( val1,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( val0,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( val1,  itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator datablock_f_entry::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    val0 = utils::ReadIntFromByteVector<decltype(val0)>(itReadfrom);
-        //    val1 = utils::ReadIntFromByteVector<decltype(val1)>(itReadfrom);
+        //    val0 = utils::ReadIntFromBytes<decltype(val0)>(itReadfrom);
+        //    val1 = utils::ReadIntFromBytes<decltype(val1)>(itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -1209,23 +1209,23 @@ namespace pmd2
 
         //std::vector<uint8_t>::iterator palette_fmtinf::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
         //{
-        //    itwriteto = utils::WriteIntToByteVector( ptrpalbeg, itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown0,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown1,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown2,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( unknown3,  itwriteto );
-        //    itwriteto = utils::WriteIntToByteVector( endofdata, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( ptrpalbeg, itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown0,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown1,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown2,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( unknown3,  itwriteto );
+        //    itwriteto = utils::WriteIntToBytes( endofdata, itwriteto );
         //    return itwriteto;
         //}
 
         //std::vector<uint8_t>::const_iterator palette_fmtinf::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
         //{
-        //    ptrpalbeg = utils::ReadIntFromByteVector<decltype(ptrpalbeg)>(itReadfrom);
-        //    unknown0  = utils::ReadIntFromByteVector<decltype(unknown0)> (itReadfrom);
-        //    unknown1  = utils::ReadIntFromByteVector<decltype(unknown1)> (itReadfrom);
-        //    unknown2  = utils::ReadIntFromByteVector<decltype(unknown2)> (itReadfrom);
-        //    unknown3  = utils::ReadIntFromByteVector<decltype(unknown3)> (itReadfrom);
-        //    endofdata = utils::ReadIntFromByteVector<decltype(endofdata)>(itReadfrom);
+        //    ptrpalbeg = utils::ReadIntFromBytes<decltype(ptrpalbeg)>(itReadfrom);
+        //    unknown0  = utils::ReadIntFromBytes<decltype(unknown0)> (itReadfrom);
+        //    unknown1  = utils::ReadIntFromBytes<decltype(unknown1)> (itReadfrom);
+        //    unknown2  = utils::ReadIntFromBytes<decltype(unknown2)> (itReadfrom);
+        //    unknown3  = utils::ReadIntFromBytes<decltype(unknown3)> (itReadfrom);
+        //    endofdata = utils::ReadIntFromBytes<decltype(endofdata)>(itReadfrom);
         //    return itReadfrom;
         //}
 
@@ -1506,7 +1506,7 @@ namespace pmd2
         void sprite_parser::ReadPalette()
         {
             //#1 - Calculate the size of the palette
-            uint32_t           offsetPalBeg = ReadIntFromByteVector<uint32_t>( (m_itbegdata + m_sprfrmdat.ptrPal) );
+            uint32_t           offsetPalBeg = ReadIntFromBytes<uint32_t>( (m_itbegdata + m_sprfrmdat.ptrPal) );
             uint32_t           nbcolorspal  = ( m_sprfrmdat.ptrPal - offsetPalBeg ) / 4;
             vector<colRGB24>   mypalette( nbcolorspal );
             rgbx32_parser      theparser( mypalette.begin() );
@@ -1552,7 +1552,7 @@ namespace pmd2
             //#2 - Read each pointers and fill up the table
             while( itfrm != itfrmend )
             {
-                uint32_t ptr = utils::ReadIntFromByteVector<uint32_t>(itfrm);
+                uint32_t ptr = utils::ReadIntFromBytes<uint32_t>(itfrm);
                 //for( unsigned int shifter = 0; shifter < 4; ++shifter, ++itfrm )
                 //{
                 //    uint32_t temp = *itfrm; //just to be sure we don't overflow
@@ -1615,7 +1615,7 @@ namespace pmd2
 
             for( auto & anoffset : DBHTable )
             {
-                uint32_t offset  = utils::ReadIntFromByteVector<uint32_t>(itfrom); //Increments iterator
+                uint32_t offset  = utils::ReadIntFromBytes<uint32_t>(itfrom); //Increments iterator
                 auto     itfound = std::find( itLastOff, offset2indexconvtable.end(), offset ); //faster on shorter distances
 
                 if( itfound != offset2indexconvtable.end() )
@@ -1687,7 +1687,7 @@ namespace pmd2
             for( unsigned int i = 0; i < DataBlockH.size(); ++i )
             {
                 for( unsigned int j = 0; j < DataBlockH[i].size(); ++j )
-                    DataBlockH[i][j] = utils::ReadIntFromByteVector<uint32_t>( itReadDBH );
+                    DataBlockH[i][j] = utils::ReadIntFromBytes<uint32_t>( itReadDBH );
 
                 if( DataBlockH[i].empty() )
                     advance( itReadDBH, 4 ); //skip a null entry in this case, since we didn't increment the iterator!
@@ -1770,7 +1770,7 @@ namespace pmd2
             for( auto & bbe_entry : m_pCurSpriteOut->m_datablockE )
             {
                 //Read the pointer
-                uint32_t entryoffset = utils::ReadIntFromByteVector<uint32_t>(itdbbeg);
+                uint32_t entryoffset = utils::ReadIntFromBytes<uint32_t>(itdbbeg);
                 //Read the data pointed
                 bbe_entry.ReadFromContainer( m_itbegdata + entryoffset );
             }

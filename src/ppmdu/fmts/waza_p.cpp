@@ -28,16 +28,16 @@ namespace pmd2 { namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itWhere )
         {
-            itWhere = utils::WriteIntToByteVector( ptrMovesData, itWhere );
-            itWhere = utils::WriteIntToByteVector( ptrPLSTbl,    itWhere );
+            itWhere = utils::WriteIntToBytes( ptrMovesData, itWhere );
+            itWhere = utils::WriteIntToBytes( ptrPLSTbl,    itWhere );
             return itWhere;
         }
 
         template<class _init>
             _init ReadFromContainer( _init itWhere )
         {
-            ptrMovesData = utils::ReadIntFromByteVector<decltype(ptrMovesData)>(itWhere); 
-            ptrPLSTbl    = utils::ReadIntFromByteVector<decltype(ptrPLSTbl)>   (itWhere); 
+            ptrMovesData = utils::ReadIntFromBytes<decltype(ptrMovesData)>(itWhere); 
+            ptrPLSTbl    = utils::ReadIntFromBytes<decltype(ptrPLSTbl)>   (itWhere); 
             return itWhere;
         }
     };
@@ -157,7 +157,7 @@ namespace pmd2 { namespace filetypes
                 //Read a Poke's 3 pointers
                 for( unsigned int cntptr = 0; cntptr < 3; ++cntptr )
                 {
-                    uint32_t curptr = utils::ReadIntFromByteVector<uint32_t>(itRead);
+                    uint32_t curptr = utils::ReadIntFromBytes<uint32_t>(itRead);
 
                     //Break if we hit padding bytes
                     if( curptr == PaddedPointer )
@@ -310,7 +310,7 @@ namespace pmd2 { namespace filetypes
         template<class T>
             inline void ReadValue( T & out_val, vector<uint8_t>::const_iterator & itRead )
         {
-            out_val = utils::ReadIntFromByteVector<T>(itRead);
+            out_val = utils::ReadIntFromBytes<T>(itRead);
         }
 
         inline bool wasHeaderParsed()const { return (m_header.magic != 0); }
@@ -374,7 +374,7 @@ namespace pmd2 { namespace filetypes
                 //else
                 m_ptrofflist.push_back( m_outBuff.size() );
             }
-            m_itWrite = utils::WriteIntToByteVector( ptr, m_itWrite );
+            m_itWrite = utils::WriteIntToBytes( ptr, m_itWrite );
             return ptr;
         }
 
@@ -489,7 +489,7 @@ namespace pmd2 { namespace filetypes
         template<class T>
             inline void WriteValue( T val )
         {
-            utils::WriteIntToByteVector( val, m_itWrite );
+            utils::WriteIntToBytes( val, m_itWrite );
         }
 
         void WritePtrTable()
@@ -499,9 +499,9 @@ namespace pmd2 { namespace filetypes
 
             //#FIXME: Not sure if should hardcode this ?!
             //Write the initial 3 null dummy ptrs
-            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
-            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
-            //utils::WriteIntToByteVector( uint32_t(0), m_itWrite );
+            //utils::WriteIntToBytes( uint32_t(0), m_itWrite );
+            //utils::WriteIntToBytes( uint32_t(0), m_itWrite );
+            //utils::WriteIntToBytes( uint32_t(0), m_itWrite );
 
             //
             ///uint32_t lastptr = 0;

@@ -39,14 +39,14 @@ namespace filetypes
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteContainer( palbeg,     itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( pallen,     itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( tilesptr,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( tileslen,   itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( tmapdatptr, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( tmapdatlen, itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( bgpunk3,    itwriteto );
-            itwriteto = utils::WriteIntToByteContainer( bgpunk4,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( palbeg,     itwriteto );
+            itwriteto = utils::WriteIntToBytes( pallen,     itwriteto );
+            itwriteto = utils::WriteIntToBytes( tilesptr,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( tileslen,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( tmapdatptr, itwriteto );
+            itwriteto = utils::WriteIntToBytes( tmapdatlen, itwriteto );
+            itwriteto = utils::WriteIntToBytes( bgpunk3,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( bgpunk4,    itwriteto );
             return itwriteto;
         }
 
@@ -54,14 +54,14 @@ namespace filetypes
         template<class _init>
             _init ReadFromContainer( _init itReadfrom )
         {
-            itReadfrom = utils::ReadIntFromByteContainer( palbeg,     itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( pallen,     itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( tilesptr,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( tileslen,   itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( tmapdatptr, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( tmapdatlen, itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( bgpunk3,    itReadfrom );
-            itReadfrom = utils::ReadIntFromByteContainer( bgpunk4,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( palbeg,     itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( pallen,     itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( tilesptr,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( tileslen,   itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( tmapdatptr, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( tmapdatlen, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( bgpunk3,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( bgpunk4,    itReadfrom );
             return itReadfrom;
         }
     };

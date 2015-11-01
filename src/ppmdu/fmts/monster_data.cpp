@@ -115,7 +115,7 @@ namespace filetypes
         template<class T>
             inline void ParseVal( T & var )
         {
-            var = utils::ReadIntFromByteVector<T>(m_itReadPos);
+            var = utils::ReadIntFromBytes<T>(m_itReadPos);
         }
 
     private:
@@ -215,7 +215,7 @@ namespace filetypes
         template<class T>
             inline void WriteVal( T var )
         {
-            m_itWritePos = utils::WriteIntToByteVector( var, m_itWritePos );
+            m_itWritePos = utils::WriteIntToBytes( var, m_itWritePos );
         }
 
     private:

@@ -104,10 +104,7 @@ namespace pmd2 { namespace audio
             Any duplicate presets are ignored if they're identical, or they're placed into
             other banks for the same preset ID.
         */
-        //mergedProgData ExportSoundfont( const std::string & destf )const;
-
-        //A test for a simpler implementation
-        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont_New( const std::string & destf );
+        std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont( const std::string & destf );
 
         /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
@@ -211,7 +208,7 @@ namespace pmd2 { namespace audio
     /*
         Export the PresetBank to a directory as XML and WAV samples.
     */
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true );
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true, bool hexanumbers = true );
 
     /*
         To use the ExportSequence,

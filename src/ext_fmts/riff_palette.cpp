@@ -88,7 +88,7 @@ namespace utils{ namespace io
 
             //Write 4 bytes File Length
             //out_riffpalette.insert( out_riffpalette.end(), fileLengthHeaderBytes, (fileLengthHeaderBytes + SZ_INT32) );
-            WriteIntToByteVector( fileLengthHeader, itbackins );
+            WriteIntToBytes( fileLengthHeader, itbackins );
 
             //Write "PAL "
             //out_riffpalette.insert( out_riffpalette.end(), RIFF_PAL_SIG.begin(), RIFF_PAL_SIG.end() );
@@ -100,15 +100,15 @@ namespace utils{ namespace io
 
             //Write 4 bytes data chunk size
             //out_riffpalette.insert( out_riffpalette.end(), dataChunkSizeBytes, (dataChunkSizeBytes + SZ_INT32) );
-            WriteIntToByteVector( dataChunkSize, itbackins );
+            WriteIntToBytes( dataChunkSize, itbackins );
 
             //Write 2 bytes riff pal version number
             //out_riffpalette.insert( out_riffpalette.end(), riffPalVersionBytes, (riffPalVersionBytes + SZ_INT16) );
-            WriteIntToByteVector( RIFF_PAL_VERSION, itbackins );
+            WriteIntToBytes( RIFF_PAL_VERSION, itbackins );
 
             //Write 2 bytes nb of colors
             //out_riffpalette.insert( out_riffpalette.end(), nbColorEntriesBytes, (nbColorEntriesBytes + SZ_INT16) );
-            WriteIntToByteVector( nbColorEntries, itbackins );
+            WriteIntToBytes( nbColorEntries, itbackins );
         }
 
         //#3 - Write the colors into the output vector
@@ -152,7 +152,7 @@ namespace utils{ namespace io
                 {
                     //#2 - move 10 bytes forward and read the nb of colors
                     foundDataChunk += 10;
-                    nbcolors = ReadIntFromByteVector<uint16_t>( foundDataChunk );
+                    nbcolors = ReadIntFromBytes<uint16_t>( foundDataChunk );
                 }
                 else
                     throw exception("Invalid RIFF palette!");

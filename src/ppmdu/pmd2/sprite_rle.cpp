@@ -30,16 +30,16 @@ namespace pmd2 { namespace compression
 
     //std::vector<uint8_t>::iterator rle_table_entry::WriteToContainer(  std::vector<uint8_t>::iterator itwriteto )const
     //{
-    //    itwriteto = utils::WriteIntToByteVector( pixelsrc, itwriteto );
-    //    itwriteto = utils::WriteIntToByteVector( pixamt,   itwriteto );
-    //    itwriteto = utils::WriteIntToByteVector( unknown,  itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( pixelsrc, itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( pixamt,   itwriteto );
+    //    itwriteto = utils::WriteIntToBytes( unknown,  itwriteto );
     //    return itwriteto;
     //}
     //std::vector<uint8_t>::const_iterator rle_table_entry::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
     //{
-    //    pixelsrc = utils::ReadIntFromByteVector<decltype(pixelsrc)>(itReadfrom);
-    //    pixamt   = utils::ReadIntFromByteVector<decltype(pixamt)>  (itReadfrom);
-    //    unknown  = utils::ReadIntFromByteVector<decltype(unknown)> (itReadfrom);
+    //    pixelsrc = utils::ReadIntFromBytes<decltype(pixelsrc)>(itReadfrom);
+    //    pixamt   = utils::ReadIntFromBytes<decltype(pixamt)>  (itReadfrom);
+    //    unknown  = utils::ReadIntFromBytes<decltype(unknown)> (itReadfrom);
     //    return itReadfrom;
     //}
 

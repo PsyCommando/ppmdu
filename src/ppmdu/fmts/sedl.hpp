@@ -60,27 +60,27 @@ namespace DSE
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = utils::WriteIntToByteVector   ( SEDL_MagicNumber, itwriteto, false ); //Write constant magic number, to avoid bad surprises
-            itwriteto = utils::WriteIntToByteVector   ( unk7,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( flen,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( version,          itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk1,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk2,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk3,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk4,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( SEDL_MagicNumber, itwriteto, false ); //Write constant magic number, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes   ( unk7,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( flen,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( version,          itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk1,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk2,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk3,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk4,             itwriteto );
 
-            itwriteto = utils::WriteIntToByteVector   ( year,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( month,            itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( day,              itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( hour,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( minute,           itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( second,           itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( centisec,         itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( year,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( month,            itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( day,              itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( hour,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( minute,           itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( second,           itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( centisec,         itwriteto );
 
             itwriteto = utils::WriteStrToByteContainer( itwriteto,        fname, fname.size() );
 
-            itwriteto = utils::WriteIntToByteVector   ( unk5,             itwriteto );
-            itwriteto = utils::WriteIntToByteVector   ( unk6,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk5,             itwriteto );
+            itwriteto = utils::WriteIntToBytes   ( unk6,             itwriteto );
 
             return itwriteto;
         }
@@ -89,27 +89,27 @@ namespace DSE
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {
-            magicn      = utils::ReadIntFromByteVector<decltype(magicn)>     (itReadfrom, false ); //iterator is incremented
-            unk7        = utils::ReadIntFromByteVector<decltype(unk7)>       (itReadfrom);
-            flen        = utils::ReadIntFromByteVector<decltype(flen)>       (itReadfrom);
-            version     = utils::ReadIntFromByteVector<decltype(version)>    (itReadfrom);
-            unk1        = utils::ReadIntFromByteVector<decltype(unk1)>       (itReadfrom);
-            unk2        = utils::ReadIntFromByteVector<decltype(unk2)>       (itReadfrom);
-            unk3        = utils::ReadIntFromByteVector<decltype(unk3)>       (itReadfrom);
-            unk4        = utils::ReadIntFromByteVector<decltype(unk4)>       (itReadfrom);
+            magicn      = utils::ReadIntFromBytes<decltype(magicn)>     (itReadfrom, false ); //iterator is incremented
+            unk7        = utils::ReadIntFromBytes<decltype(unk7)>       (itReadfrom);
+            flen        = utils::ReadIntFromBytes<decltype(flen)>       (itReadfrom);
+            version     = utils::ReadIntFromBytes<decltype(version)>    (itReadfrom);
+            unk1        = utils::ReadIntFromBytes<decltype(unk1)>       (itReadfrom);
+            unk2        = utils::ReadIntFromBytes<decltype(unk2)>       (itReadfrom);
+            unk3        = utils::ReadIntFromBytes<decltype(unk3)>       (itReadfrom);
+            unk4        = utils::ReadIntFromBytes<decltype(unk4)>       (itReadfrom);
 
-            year        = utils::ReadIntFromByteVector<decltype(year)>       (itReadfrom);
-            month       = utils::ReadIntFromByteVector<decltype(month)>      (itReadfrom);
-            day         = utils::ReadIntFromByteVector<decltype(day)>        (itReadfrom);
-            hour        = utils::ReadIntFromByteVector<decltype(hour)>       (itReadfrom);
-            minute      = utils::ReadIntFromByteVector<decltype(minute)>     (itReadfrom);
-            second      = utils::ReadIntFromByteVector<decltype(second)>     (itReadfrom);
-            centisec    = utils::ReadIntFromByteVector<decltype(centisec)>   (itReadfrom);
+            year        = utils::ReadIntFromBytes<decltype(year)>       (itReadfrom);
+            month       = utils::ReadIntFromBytes<decltype(month)>      (itReadfrom);
+            day         = utils::ReadIntFromBytes<decltype(day)>        (itReadfrom);
+            hour        = utils::ReadIntFromBytes<decltype(hour)>       (itReadfrom);
+            minute      = utils::ReadIntFromBytes<decltype(minute)>     (itReadfrom);
+            second      = utils::ReadIntFromBytes<decltype(second)>     (itReadfrom);
+            centisec    = utils::ReadIntFromBytes<decltype(centisec)>   (itReadfrom);
 
             itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
 
-            unk5        = utils::ReadIntFromByteVector<decltype(unk5)>       (itReadfrom);
-            unk6        = utils::ReadIntFromByteVector<decltype(unk6)>       (itReadfrom);
+            unk5        = utils::ReadIntFromBytes<decltype(unk5)>       (itReadfrom);
+            unk6        = utils::ReadIntFromBytes<decltype(unk6)>       (itReadfrom);
 
             return itReadfrom;
         }

@@ -14,7 +14,7 @@ namespace filetypes
     template<class _init>
         lsddata_t _ParseLSD( _init beg, _init end )
     {
-        const uint16_t nbentries = ReadIntFromByteVector<uint16_t>( beg ); // beg is incremented
+        const uint16_t nbentries = ReadIntFromBytes<uint16_t>( beg ); // beg is incremented
 
         if( distance( beg, end ) % LSDStringLen < (nbentries * LSDStringLen) )
         {
@@ -29,7 +29,7 @@ namespace filetypes
         for( size_t i = 0; i < nbentries; ++i )
         {
             for( auto & achar : out[i] )
-                achar = ReadIntFromByteVector<char>( beg ); // beg is incremented
+                achar = ReadIntFromBytes<char>( beg ); // beg is incremented
         }
 
         return move(out);
@@ -39,12 +39,12 @@ namespace filetypes
     template<class _outit>
         _outit _WriteLSD( _outit itwrite, const lsddata_t & data )
     {
-        itwrite = WriteIntToByteContainer( static_cast<uint16_t>(data.size()), itwrite );
+        itwrite = WriteIntToBytes( static_cast<uint16_t>(data.size()), itwrite );
 
         for( const auto & entry : data )
         {
             for( char achar : entry )
-                itwrite = WriteIntToByteContainer( achar, itwrite ); 
+                itwrite = WriteIntToBytes( achar, itwrite ); 
         }
 
         return itwrite;

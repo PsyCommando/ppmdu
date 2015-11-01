@@ -30,7 +30,8 @@ Example entry:
                                                      // If at any time the transposed note is out of MIDI range, the original note will be played instead!
       
         <ForceChannel>10</ForceChannel>              //(optional) This forces all notes played with that preset to be moved to the specified MIDI channel! (1-16)
-                                                     //           Don't use it unless really neccessary, as its still kinda buggy..
+                                                     //           Don't use it unless really neccessary, as its still kinda buggy.. 
+                                                     //           !!- Only used when converting to GM MIDIs, not GS MIDIs! -!!
       
         //(optional)This section contains key translation. This is useful to make percussion lines not following the GM drum format play the correct instrument in GM drumkit when converted.
         <KeyRemaps>
@@ -207,7 +208,7 @@ Example entry:
         <MIDIPreset>12</MIDIPreset>
       </Program>
 
-      <!--Synth Strings-->
+      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
         <MIDIPreset>51</MIDIPreset>
@@ -324,7 +325,7 @@ Example entry:
         <ForceChannel>10</ForceChannel>
 
         <KeyRemaps>
-          <!--Bass Drum-->
+          <!--Bass Drum (smpl 0x00)-->
           <Remap>
             <OriginalKey>36</OriginalKey>
             <!--Leave as-is-->
@@ -383,7 +384,101 @@ Example entry:
   <!--==========================================================================-->
   <!-- bgm0004 - The Gatekeepers -->
   <!--==========================================================================-->
+  <Track>
+    <PairName>bgm0004</PairName>
+    <Programs>
 
+      <!--0x05 Marimba ( smpl 0x2D, 0x2E )-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>13</MIDIPreset>
+      </Program>
+
+      <!--0x0A Music Box ( smpl 0x2F, 0x30 )-->
+      <Program>
+        <DSEProgramID>10</DSEProgramID>
+        <MIDIPreset>11</MIDIPreset>
+      </Program>
+
+      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <Program>
+        <DSEProgramID>31</DSEProgramID>
+        <MIDIPreset>51</MIDIPreset>
+      </Program>
+
+      <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <Program>
+        <DSEProgramID>32</DSEProgramID>
+        <MIDIPreset>51</MIDIPreset>
+      </Program>
+
+      <!--0x4B Pizzicato Strings-->
+      <Program>
+        <DSEProgramID>75</DSEProgramID>
+        <MIDIPreset>46</MIDIPreset>
+      </Program>
+
+      <!--0x51 Pan Flute (smpl 0x35, 0x36, 0x37)-->
+      <Program>
+        <DSEProgramID>81</DSEProgramID>
+        <MIDIPreset>76</MIDIPreset>
+      </Program>
+
+      <!--0x52 Pan Flute (smpl 0x35, 0x36, 0x37)-->
+      <Program>
+        <DSEProgramID>82</DSEProgramID>
+        <MIDIPreset>76</MIDIPreset>
+      </Program>
+
+      <!--0x7F Drumkit-->
+      <Program>
+        <DSEProgramID>127</DSEProgramID>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+
+        <KeyRemaps>
+
+          <!--Shaker (smpl 0x06)-->
+          <Remap>
+            <OriginalKey>69</OriginalKey>
+            <RemapedKey>82</RemapedKey>
+          </Remap>
+
+          <!--Tambourine (smpl 0x46)-->
+          <Remap>
+            <OriginalKey>68</OriginalKey>
+            <RemapedKey>54</RemapedKey>
+          </Remap>
+
+          <!--Mute Triangle (smpl 0x64)-->
+          <Remap>
+            <OriginalKey>80</OriginalKey>
+            <RemapedKey>80</RemapedKey>
+          </Remap>
+
+          <!--Open Triangle (smpl 0x65)-->
+          <Remap>
+            <OriginalKey>81</OriginalKey>
+            <RemapedKey>81</RemapedKey>
+          </Remap>
+
+          <!--Jingle Bells (smpl 0x97)-->
+          <Remap>
+            <OriginalKey>95</OriginalKey>
+            <RemapedKey>83</RemapedKey>
+          </Remap>
+
+        </KeyRemaps>
+      </Program>
+      
+    </Programs>
+  </Track>
+  
+  
   <!--==========================================================================-->
   <!-- bgm0005 - Job Clear! -->
   <!--==========================================================================-->
@@ -395,6 +490,150 @@ Example entry:
   <!--==========================================================================-->
   <!-- bgm0007 - Wigglytuff's Guild -->
   <!--==========================================================================-->
+  <Track>
+    <PairName>bgm0007</PairName>
+    <Programs>
+
+      <!--0x03 EPiano2 ( smpl 0xA5 )-->
+      <Program>
+        <DSEProgramID>3</DSEProgramID>
+        <MIDIPreset>6</MIDIPreset>
+      </Program>
+
+      <!--0x05 Marimba ( smpl 0x2D, 0x2E )-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>13</MIDIPreset>
+      </Program>
+
+      <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <Program>
+        <DSEProgramID>32</DSEProgramID>
+        <MIDIPreset>51</MIDIPreset>
+      </Program>
+
+      <!--0x2A English Horn ? (smpl 0x10, 0x11, 0x12)-->
+      <Program>
+        <DSEProgramID>42</DSEProgramID>
+        <MIDIPreset>70</MIDIPreset>
+      </Program>
+
+      <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
+      <Program>
+        <DSEProgramID>51</DSEProgramID>
+        <MIDIPreset>73</MIDIPreset>
+      </Program>
+
+      <!--0x34 Oboe (smpl 0x82)-->
+      <Program>
+        <DSEProgramID>52</DSEProgramID>
+        <MIDIPreset>69</MIDIPreset>
+      </Program>
+
+      <!--0x3F Tuba (smpl 0xA9, 0xAB)-->
+      <Program>
+        <DSEProgramID>63</DSEProgramID>
+        <MIDIPreset>59</MIDIPreset>
+      </Program>
+
+      <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
+      <Program>
+        <DSEProgramID>72</DSEProgramID>
+        <MIDIPreset>41</MIDIPreset>
+      </Program>
+
+      <!--0x52 Brass Instrument?(Set to trombone for now) (smpl 0x84)-->
+      <Program>
+        <DSEProgramID>82</DSEProgramID>
+        <MIDIPreset>58</MIDIPreset>
+      </Program>
+
+      <!--0x7F Drumkit-->
+      <Program>
+        <DSEProgramID>127</DSEProgramID>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+
+        <KeyRemaps>
+
+          <!--Mute Surdo? (smpl 0x02)-->
+          <Remap>
+            <OriginalKey>38</OriginalKey>
+            <RemapedKey>86</RemapedKey>
+          </Remap>
+
+          <!--Handclap (smpl 0x0E)-->
+          <Remap>
+            <OriginalKey>43</OriginalKey>
+            <RemapedKey>39</RemapedKey>
+          </Remap>
+
+          <!--Cymbals (smpl 0x18)-->
+          <Remap>
+            <OriginalKey>91</OriginalKey>
+            <RemapedKey>49</RemapedKey>
+          </Remap>
+
+          <!--Open Hi-Hat? (smpl 0x2A)-->
+          <Remap>
+            <OriginalKey>52</OriginalKey>
+            <RemapedKey>46</RemapedKey>
+          </Remap>
+
+          <!--Snare? (smpl 0x44)-->
+          <Remap>
+            <OriginalKey>45</OriginalKey>
+            <RemapedKey>38</RemapedKey>
+          </Remap>
+
+
+          <!--Open Triangle (smpl 0x65)-->
+          <Remap>
+            <OriginalKey>81</OriginalKey>
+            <RemapedKey>81</RemapedKey>
+          </Remap>
+
+          <!--Taiko Drum? (smpl 0x83)-->
+          <Remap>
+            <MIDIPreset>117</MIDIPreset>
+            <MIDIBank>0</MIDIBank>
+            <OriginalKey>35</OriginalKey>
+            <RemapedKey>35</RemapedKey>
+          </Remap>
+
+          <!--Shaker (smpl 0x96)-->
+          <Remap>
+            <OriginalKey>96</OriginalKey>
+            <RemapedKey>82</RemapedKey>
+          </Remap>
+
+          <!--Short Whistle ? (smpl 0xAF)-->
+          <Remap>
+            <OriginalKey>55</OriginalKey>
+            <RemapedKey>71</RemapedKey>
+          </Remap>
+
+          <!--Short Whistle ? (smpl 0xAF)-->
+          <Remap>
+            <OriginalKey>56</OriginalKey>
+            <RemapedKey>71</RemapedKey>
+          </Remap>
+          
+          <!--Crash Cymbals (smpl 0x17)-->
+          <Remap>
+            <OriginalKey>97</OriginalKey>
+            <RemapedKey>49</RemapedKey>
+          </Remap>
+
+        </KeyRemaps>
+      </Program>
+
+    </Programs>
+  </Track>
   
   <!--==========================================================================-->
   <!-- bgm0008 - Wigglytuff's Guild Remix -->
@@ -479,7 +718,7 @@ Example entry:
         </KeyRemaps>
       </Program>
       
-      <!--Drumkit-->
+      <!--0x7F Drumkit-->
       <Program>
         <DSEProgramID>127</DSEProgramID>
         <!-- Set to XG drumkit.. -->
@@ -572,6 +811,7 @@ Example entry:
       <Program>
         <DSEProgramID>26</DSEProgramID>
         <MIDIPreset>40</MIDIPreset>
+        <!--<Transpose>-1</Transpose>-->
       </Program>
 
       <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -725,8 +965,130 @@ Example entry:
   <!--==========================================================================-->
 
   <!--==========================================================================-->
-  <!-- bgm0026 -  -->
+  <!-- bgm0026 - Craggy Coast -->
   <!--==========================================================================-->
+  <Track>
+    <PairName>bgm0026</PairName>
+    <Programs>
+      
+      <!--0x05 Marimba ( smpl 0x2D, 0x2E )-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>13</MIDIPreset>
+      </Program>
+      
+      <!--0x07 Glockenspiel? ( smpl 0x260 )-->
+      <Program>
+        <DSEProgramID>7</DSEProgramID>
+        <MIDIPreset>10</MIDIPreset>
+      </Program>
+      
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
+      <Program>
+        <DSEProgramID>11</DSEProgramID>
+        <MIDIPreset>47</MIDIPreset>
+      </Program>
+      
+      <!--0x15 Steel Guitar ( smpl 0xB0, 0xB1 )-->
+      <Program>
+        <DSEProgramID>21</DSEProgramID>
+        <MIDIPreset>26</MIDIPreset>
+      </Program>
+      
+      <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
+      <Program>
+        <DSEProgramID>25</DSEProgramID>
+        <MIDIPreset>39</MIDIPreset>
+      </Program>
+
+      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <Program>
+        <DSEProgramID>31</DSEProgramID>
+        <MIDIPreset>51</MIDIPreset>
+      </Program>
+      
+      <!--0x2B Perc Organ (smpl 0x33)-->
+      <Program>
+        <DSEProgramID>43</DSEProgramID>
+        <MIDIPreset>18</MIDIPreset>
+      </Program>
+
+      <!--0x41  ? (smpl 0x94)-->
+      <Program>
+        <DSEProgramID>65</DSEProgramID>
+        <MIDIPreset>65</MIDIPreset>
+      </Program>
+      
+      <!--0x42 ? (smpl 0x94)-->
+      <Program>
+        <DSEProgramID>66</DSEProgramID>
+        <MIDIPreset>66</MIDIPreset>
+      </Program>
+      
+      <!--0x51 Pan Flute (smpl 0x36)-->
+      <Program>
+        <DSEProgramID>81</DSEProgramID>
+        <MIDIPreset>76</MIDIPreset>
+      </Program>
+      
+      <!--0x52 Pan Flute (smpl 0x36)-->
+      <Program>
+        <DSEProgramID>82</DSEProgramID>
+        <MIDIPreset>76</MIDIPreset>
+      </Program>
+      
+      <!--0x5B Polysynth (smpl 0x70)-->
+      <Program>
+        <DSEProgramID>91</DSEProgramID>
+        <MIDIPreset>91</MIDIPreset>
+      </Program>
+      
+      <!--Drumkit-->
+      <Program>
+        <DSEProgramID>127</DSEProgramID>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+
+        <!-- Force on chan 10 for General MIDI Exports -->
+        <ForceChannel>10</ForceChannel>
+        
+        <KeyRemaps>
+          <!--Bass Drum (smpl 0x00)-->
+          <Remap>
+            <OriginalKey>36</OriginalKey>
+            <!--Leave as-is-->
+            <RemapedKey>36</RemapedKey>
+          </Remap>
+          
+          <!--Snare ? (smpl 0x40)-->
+          <Remap>
+            <OriginalKey>40</OriginalKey>
+            <RemapedKey>40</RemapedKey>
+          </Remap>
+          
+          <!--Closed Hi-Hat? (smpl 0x29)-->
+          <Remap>
+            <OriginalKey>42</OriginalKey>
+            <RemapedKey>42</RemapedKey>
+          </Remap>
+          
+          <!--Pedal Hi-Hat? Open Hi-Hat? (smpl 0x2A)-->
+          <Remap>
+            <OriginalKey>44</OriginalKey>
+            <RemapedKey>44</RemapedKey>
+          </Remap>
+        
+          <!--Crash Cymbals (smpl 0x17)-->
+          <Remap>
+            <OriginalKey>90</OriginalKey>
+            <RemapedKey>49</RemapedKey>
+          </Remap>
+        </KeyRemaps>
+      </Program>
+  
+    </Programs>
+  </Track>
 
   <!--==========================================================================-->
   <!-- bgm0027 -  -->
@@ -946,6 +1308,115 @@ Example entry:
   <!--==========================================================================-->
 
   <!-- ADD THE REST HERE -->
+
+
+  <!--==========================================================================-->
+  <!-- bgm0085 -  -->
+  <!--==========================================================================-->
+  <Track>
+    <PairName>bgm0085</PairName>
+    <Programs>
+
+      <!--0x02 Epiano1 (smpl 0xA4, 0xA5)-->
+      <Program>
+        <DSEProgramID>2</DSEProgramID>
+        <MIDIPreset>5</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x03 Epiano1 (smpl 0xA4, 0xA5)-->
+      <Program>
+        <DSEProgramID>3</DSEProgramID>
+        <MIDIPreset>5</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x05 Strings Ensemble2 ( smpl 0x268 )-->
+      <Program>
+        <DSEProgramID>5</DSEProgramID>
+        <MIDIPreset>50</MIDIPreset>
+
+      </Program>
+
+      <!--0x06 Strings Ensemble2 ( smpl 0x268 )-->
+      <Program>
+        <DSEProgramID>6</DSEProgramID>
+        <MIDIPreset>50</MIDIPreset>
+
+      </Program>
+
+      <!--0x07 Strings Ensemble1 (High strings) ( smpl 0x26A )-->
+      <Program>
+        <DSEProgramID>7</DSEProgramID>
+        <MIDIPreset>49</MIDIPreset>
+        
+      </Program>
+
+      <!--0x08 Bass ? ( smpl 0x266 )-->
+      <Program>
+        <DSEProgramID>8</DSEProgramID>
+        <MIDIPreset>36</MIDIPreset>
+        <Transpose>-2</Transpose>
+      </Program>
+
+      <!--0x0A Music Box ( smpl 0x2F, 0x30 )-->
+      <Program>
+        <DSEProgramID>10</DSEProgramID>
+        <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+      
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
+      <Program>
+        <DSEProgramID>11</DSEProgramID>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x0D Harp ( smpl 0x21, 0x22 )-->
+      <Program>
+        <DSEProgramID>13</DSEProgramID>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x0E Harp ( smpl 0x21, 0x22 )-->
+      <Program>
+        <DSEProgramID>14</DSEProgramID>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
+      <Program>
+        <DSEProgramID>35</DSEProgramID>
+        <MIDIPreset>54</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x33 Flute (smpl 0x27C)-->
+      <Program>
+        <DSEProgramID>51</DSEProgramID>
+        <MIDIPreset>73</MIDIPreset>
+        
+      </Program>
+
+      <!--0x48 Violin or maybe Viola? Cello ? (smpl 0x27B, 0x27A)-->
+      <Program>
+        <DSEProgramID>72</DSEProgramID>
+        <MIDIPreset>42</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+
+      <!--0x49 Violin or maybe Viola? Cello ? (smpl 0x27B, 0x27A)-->
+      <Program>
+        <DSEProgramID>73</DSEProgramID>
+        <MIDIPreset>42</MIDIPreset>
+        <Transpose>-1</Transpose>
+      </Program>
+      
+    </Programs>
+  </Track>
 
 
 </DSEConversionData>

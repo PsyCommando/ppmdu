@@ -16,15 +16,6 @@ Description: Utilities for working with RIFF files.
 
 namespace riff
 {
-    /*
-        NOTE to myself:
-        The riff format has only 2 different types of chunk, LIST and RIFF are the first, and the second are regular
-        chunks that can't have subchunks.
-    */
-
-
-    //static const uint32_t RIFF_MagicNumber           = 0x52494646; //"RIFF"
-    //static const uint32_t RIFF_BigEndian_MagicNumber = 0x52494658; //"RIFX"
 
     enum struct eChunkIDs : uint32_t
     {
@@ -62,8 +53,8 @@ namespace riff
         template<class _init>
             _init Read( _init itbeg )
         {
-            chunk_id = utils::ReadIntFromByteVector<decltype(chunk_id)>(itbeg, false);
-            length   = utils::ReadIntFromByteVector<decltype(length)>  (itbeg);
+            chunk_id = utils::ReadIntFromBytes<decltype(chunk_id)>(itbeg, false);
+            length   = utils::ReadIntFromBytes<decltype(length)>  (itbeg);
             return itbeg;
         }
 
@@ -73,8 +64,8 @@ namespace riff
         template<class _outit>
             _outit Write( _outit itwhere )
         {
-            itwhere = utils::WriteIntToByteVector(chunk_id, itwhere, false );
-            itwhere = utils::WriteIntToByteVector(length,   itwhere );
+            itwhere = utils::WriteIntToBytes(chunk_id, itwhere, false );
+            itwhere = utils::WriteIntToBytes(length,   itwhere );
             return itwhere;
         }
 
@@ -84,10 +75,10 @@ namespace riff
 //  RIFF Container
 //===========================================================================
 
-    /*
+    /*******************************************************************
         Chunk
             Represent a regular RIFF chunk and its content.
-    */
+    *******************************************************************/
     class Chunk
     {
     public:
@@ -148,7 +139,7 @@ namespace riff
                 std::advance(itchnkend, hdr.length);
 
                 //Read format tag 
-                fmtid_ = utils::ReadIntFromByteVector<decltype(fmtid_)>(itbeg, false);
+                fmtid_ = utils::ReadIntFromBytes<decltype(fmtid_)>(itbeg, false);
 
                 //Read all sub-chunks
                 while( itbeg != itchnkend )
@@ -186,7 +177,7 @@ namespace riff
             if( !subchunks_.empty() )
             {
                 //write format tag
-                itwhere = utils::WriteIntToByteContainer( fmtid_, itwhere, false );
+                itwhere = utils::WriteIntToBytes( fmtid_, itwhere, false );
 
                 //write content
                 for( const auto & achunk : subchunks_ )
@@ -239,10 +230,10 @@ namespace riff
     };
 
 
-    /*
+    /*******************************************************************
         RIFF_Container
             Represents the full content of a RIFF file in memory.
-    */
+    *******************************************************************/
     class RIFF_Container : public Chunk
     {
     public:
@@ -281,13 +272,6 @@ namespace riff
             }
 
             //Parse everything
-            //Chunk riffchnk;
-            //itbeg = riffchnk.Read( itbeg, itfileend );
-
-            ////Move the subchunks and format tag!
-            //m_formatID = riffchnk.fmtid_;
-            //m_content  = std::move( riffchnk.subchunks_ );
-
             return Chunk::Read( itbeg, itfileend );
         }
 
@@ -296,21 +280,17 @@ namespace riff
         */
         inline uint32_t FormatID()const            { return fmtid_; }
         inline void     FormatID( uint32_t fmtid ) { fmtid_ = fmtid; }
-
-    private:
-        //uint32_t           m_formatID;
-        //std::vector<Chunk> m_content;
     };
 
 
 //===========================================================================
-//  RIFF Parsing
+//  RIFF Analysis
 //===========================================================================
 
-    /*
-        chunkinfo 
+    /*******************************************************************
+        ChunkInfo 
             A struct containing details on the position and content of a chunk within the RIFF structure.
-    */
+    *******************************************************************/
     struct ChunkInfo
     {
         ChunkInfo()
@@ -369,7 +349,7 @@ namespace riff
                 throw std::runtime_error( "RIFFMap::analyze(): RIFFX(Big endian RIFF) format not supported." );
 
             //Read the content type tag
-            itread = utils::ReadIntFromByteContainer( m_fmt, itread, false );
+            itread = utils::ReadIntFromBytes( m_fmt, itread, false );
             curoffset += sizeof(m_fmt);
 
             //Make a list of all the contained chunks
@@ -423,24 +403,6 @@ namespace riff
         inputit_t              m_end;
         fmtid_t                m_fmt;
         std::vector<ChunkInfo> m_chunks;
-    };
-
-//===========================================================================
-//  RIFF Writing
-//===========================================================================
-    
-    /*
-        RIFF_Writer
-            Write a RIFF_Container to the output!
-    */
-    class RIFF_Writer
-    {
-    public:
-        RIFF_Writer()
-        {
-        }
-
-    private:
     };
 
 };
