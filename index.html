@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>PPMDU by PsyCommando</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>PPMDU</h1>
+        <p>Combined code for several utilities used to export and import things to and from the &quot;Pokemon Mystery Dungeon : Explorers of&quot; games on the NDS. </p>
+        <p class="view"><a href="https://github.com/PsyCommando/ppmdu">View the Project on GitHub <small>PsyCommando/ppmdu</small></a></p>
+        <ul>
+          <li><a href="https://github.com/PsyCommando/ppmdu/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/PsyCommando/ppmdu/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/PsyCommando/ppmdu">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a id="pokemon-mystery-dungeon-utilities" class="anchor" href="#pokemon-mystery-dungeon-utilities" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pokemon Mystery Dungeon Utilities</h1>
+
+<p>Combined code for several utilities used to export and import things to and from the "Pokemon Mystery Dungeon : Explorers of" games on the NDS. </p>
+
+<p>I used this as a personal test ground for a lot of little things, so the code isn't very well organized yet, and you'll probably spot a lot of weirdness and incoherences.
+However I try as much as possible to avoid dangerous practices, macros and etc. And I've been trying to use as much as possible the subset of C++11 that Visual Studio offers (Which is ridiculously limited and buggy)
+So you'll see very little dynamic memory allocation in here, and mainly RAII managed pointers / templates when possible.</p>
+
+<p>With that said, there is a lot of room for improvement, and I'll eventually try to fix most of those issues.(I wouldn't mind some help from time to time) 
+And keep in mind that, math isn't natural to me, so I often overlook easy ways to calculate things.(I wouldn't mind help with that either..) And also, I'm constantly looking to improve my coding, considering I've been taught C++03 first, and I'm on my own learning C++11.. </p>
+
+<p>Oh, and the revision number system I'm using is complete BS. I was going to go with the one suggested by github, but I couldn't find a way to figure if a release was a breaking change considering the codebase is pretty "immature" and disorganized as I haven't yet completely figured out the game's inner working, and things changes as I discover new details..</p>
+
+<p>Here's my development thread on Project Pokemon:<br>
+<a href="http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes">http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes</a></p>
+
+<p>And here's the wiki for the file formats in PMD2:<br>
+<a href="http://projectpokemon.org/wiki/Pokemon_Mystery_Dungeon_Explorers_of_Sky">http://projectpokemon.org/wiki/Pokemon_Mystery_Dungeon_Explorers_of_Sky</a></p>
+
+<h2>
+<a id="utilities-info" class="anchor" href="#utilities-info" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utilities Info:</h2>
+
+<ul>
+<li>
+<p><strong>AudioUtil:</strong> <em>WIP</em><br>
+A tool for exporting and importing all the various audio formats used by Pokemon Mystery Dungeon.
+It will most likely work with any other games that uses the DSE sound driver, by Procyon Studios.</p>
+
+<p>Most of the conversion process happens in the files with the prefix "dse_", or with the names "smdl", "swdl", and "sedl".</p>
+</li>
+<li><p><strong>DoPX:</strong><br>
+A utility to compress files into "PX" compressed containers such as "at4px" and "pkdpx". (The actual name of the compression format is unknown. But it looks like a variant of LZ.)</p></li>
+<li><p><strong>UnPX:</strong><br>
+A utility to decompress "at4px", "pkdpx", and their SIR0 wrapped form.</p></li>
+<li><p><strong>GFXCrunch:</strong> <em>WIP</em><br>
+A utility meant to support import/export of every single graphic formats used in PMD2. </p></li>
+<li><p><strong>PaletteTool:</strong><br>
+This utility is meant to be used alongside GFXUtil. It allows to extract, inject, or shift the color palette of a PNG/BMP file. Its ideally meant to be used for preparing sprites to be imported into the game with GFXUtil.</p></li>
+<li><p><strong>KaoUtil:</strong><br>
+A tool meant for exporting/importing pokemon portraits. It will eventually be replaced by GFX Crunch.</p></li>
+<li><p><strong>PackFileUtil:</strong><br>
+A tool meant mostly for research. It extracts a "pack file"'s content, or rebuild one. The functionality is automated in other tools, so its mostly unnecessary now!</p></li>
+<li><p><strong>StatsUtil:</strong> <em>WIP</em><br>
+This tool exports/imports game statistics files. Things such as game text, pokemon and item names, pokemon stats, stats growth, item and move data, dungeon stats, etc..
+It exports/imports all that data(besides game strings) to XML files as an intermediate format. XML files are easily editable by anyone, and 3rd party tools supporting XML.
+The game strings are extracted to a single simple .txt file, where each line is a C-String, and special characters are represented as escape sequences. The encoding is properly determined by using a XML configuration file that users can use to add the encoding string for a specific game version/language.</p></li>
+</ul>
+
+<h2>
+<a id="future" class="anchor" href="#future" aria-hidden="true"><span class="octicon octicon-link"></span></a>Future:</h2>
+
+<p>Eventually more tools will come. 
+  Even possibly full-fledged editors with a user interface! Ideally, I'd let 3rd parties make their own editors that uses my tools, as it lets me focus on research, while they can focus on making a good GUI. But we'll see.</p>
+
+<h2>
+<a id="licence" class="anchor" href="#licence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licence:</h2>
+
+<p>Those tools and their source code, excluding the content of the /lib/ directory (present only for convenience), is <a href="https://creativecommons.org/publicdomain/zero/1.0/">Creative Common 0</a>, AKA Public Domain. 
+  Do what you want with it. Use the code in your coding horror museum, copy-paste it in your pmd2 tools, anything.. XD 
+  You don't have to credit me, but its always appreciated if you do ! And I'd love to see what people will do with this code.</p>
+
+<p>However, right now, the libraries within the "lib" folders each have their own licenses, all which allow redistribution. 
+  I eventually intend to link those library dynamically once/before we reach 1.0, once I can figure out a few major issues(Issues that would probably be solved if I'd distribute the thing as a DLL/SO itslelf.. Or if I'd make an editor..), to respect their licenses better (The viral GPL/LGPL clause is problematic, as it requires code that it statically links to, to be GPL/LGPL as well. Even though my CC0 license is immensly more permissive/practical. That's copyrights in a nutshell.. ) even though I give away my sources freely and met most of the LGPL requirements</p>
+
+<p>As required by some of the licenses of the libraries in here, their respective licenses are in their folders, and for those that required it, in the LICENSE file in the root of the repository.</p>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/PsyCommando">PsyCommando</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
