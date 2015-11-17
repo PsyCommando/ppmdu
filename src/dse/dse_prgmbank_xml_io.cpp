@@ -231,7 +231,7 @@ private:
                 throw std::runtime_error("Can't write xml file " + sstrfname.str());
         }
         else
-            throw runtime_error("ProgramBankXMLWriter::WritePrograms(): Error, no program data available!");
+            clog << "ProgramBankXMLWriter::WritePrograms(): no program data available!";
     }
 
     void WriteAProgram( xml_node & parent, const ProgramInfo & curprog )
@@ -315,21 +315,21 @@ private:
 
         stringstream sstrunkcv;
 
-        sstrunkcv <<hex <<showbase <<cursplit.unk37;
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk37);
         parent.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<cursplit.unk38;
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk38);
         parent.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<cursplit.unk39;
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk39);
         parent.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<cursplit.unk40;
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk40);
         parent.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv.str(string());
         
         WriteNodeWithValue( parent, PROP_EnvAtkVol,     cursplit.atkvol );
         WriteNodeWithValue( parent, PROP_EnvAtk,        cursplit.attack );
@@ -360,7 +360,7 @@ private:
                 throw std::runtime_error("Can't write xml file " + sstrfname.str());
         }
         else
-            throw runtime_error("ProgramBankXMLWriter::WriteKeyGroups(): Error, no program/keygroup data available!");
+            clog << "ProgramBankXMLWriter::WriteKeyGroups(): no program/keygroup data available!";
     }
 
     void WriteKeyGroup( xml_node & parent, const KeyGroup & grp )
@@ -400,10 +400,10 @@ private:
                 throw std::runtime_error("Can't write xml file " + sstrfname.str());
         }
         else
-            throw runtime_error("ProgramBankXMLWriter::WriteWavInfo(): Error, no sample data available!");
+            clog << "ProgramBankXMLWriter::WriteWavInfo(): No Sample Data";
     }
 
-    void WriteAWav( xml_node & parent, const WavInfo & winfo )
+    void WriteAWav( xml_node parent, const WavInfo & winfo )
     {
         using namespace PrgmXML;
         xml_document doc;
@@ -432,35 +432,35 @@ private:
         WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg );
         WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen );
 
-        WriteNodeWithValue( parent, PROP_EnvOn,         winfo.envon );
-        WriteNodeWithValue( parent, PROP_EnvMulti,      winfo.envmult );
+        WriteNodeWithValue( infonode, PROP_EnvOn,         winfo.envon );
+        WriteNodeWithValue( infonode, PROP_EnvMulti,      winfo.envmult );
 
         stringstream sstrunkcv;
 
-        sstrunkcv <<hex <<showbase <<winfo.unk19;
-        parent.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk19);
+        infonode.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<winfo.unk20;
-        parent.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk20);
+        infonode.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<winfo.unk21;
-        parent.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk21);
+        infonode.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<winfo.unk22;
-        parent.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str().clear();
+        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk22);
+        infonode.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        sstrunkcv.str(string());
         
-        WriteNodeWithValue( parent, PROP_EnvAtkVol,     winfo.atkvol );
-        WriteNodeWithValue( parent, PROP_EnvAtk,        winfo.attack );
-        WriteNodeWithValue( parent, PROP_EnvDecay,      winfo.decay );
-        WriteNodeWithValue( parent, PROP_EnvSustain,    winfo.sustain );
-        WriteNodeWithValue( parent, PROP_EnvHold,       winfo.hold );
-        WriteNodeWithValue( parent, PROP_EnvDecay2,     winfo.decay2 );
-        WriteNodeWithValue( parent, PROP_EnvRelease,    winfo.release );
-        WriteNodeWithValue( parent, PROP_EnvUnk57,      winfo.unk57 );
+        WriteNodeWithValue( infonode, PROP_EnvAtkVol,     winfo.atkvol );
+        WriteNodeWithValue( infonode, PROP_EnvAtk,        winfo.attack );
+        WriteNodeWithValue( infonode, PROP_EnvDecay,      winfo.decay );
+        WriteNodeWithValue( infonode, PROP_EnvSustain,    winfo.sustain );
+        WriteNodeWithValue( infonode, PROP_EnvHold,       winfo.hold );
+        WriteNodeWithValue( infonode, PROP_EnvDecay2,     winfo.decay2 );
+        WriteNodeWithValue( infonode, PROP_EnvRelease,    winfo.release );
+        WriteNodeWithValue( infonode, PROP_EnvUnk57,      winfo.unk57 );
 
     }
 
@@ -471,4 +471,22 @@ private:
 //====================================================================================================
 //  
 //====================================================================================================
+
+    /*
+        PresetBankToXML
+            Write the 3 XML files for a given set of presets and samples.
+    */
+    void PresetBankToXML( const DSE::PresetBank & srcbnk, const std::string & destdir )
+    {
+        ProgramBankXMLWriter(srcbnk).Write(destdir);
+    }
+
+    /*
+        XMLToPresetBank
+            Read the 3 XML files for a given set of presets and samples.
+    */
+    DSE::PresetBank XMLToPresetBank( const std::string & srcdir )
+    {
+        return ProgramBankXMLParser(srcdir).Parse();
+    }
 };

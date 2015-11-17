@@ -272,6 +272,22 @@ namespace DSE
         To use the ExportSequence,
     */
 
+//=================================================================================================
+//
+//=================================================================================================
+
+/*
+    PresetBankToXML
+        Write the 3 XML files for a given set of presets and samples.
+*/
+void PresetBankToXML( const DSE::PresetBank & srcbnk, const std::string & destdir );
+
+/*
+    XMLToPresetBank
+        Read the 3 XML files for a given set of presets and samples.
+*/
+DSE::PresetBank XMLToPresetBank( const std::string & srcdir );
+
 };
 
 

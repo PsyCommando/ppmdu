@@ -94,8 +94,8 @@ namespace filetypes
         typedef std::vector<kao_toc_entry::subentry_t>::size_type tocsz_t; 
         static const unsigned int SUBENTRY_SIZE = kao_toc_entry::SUBENTRY_SIZE;
     public:
-        KaoParser( bool bequiet = false )
-            :m_pImportTo(nullptr), m_bQuiet(bequiet)
+        KaoParser( bool bequiet = false, bool bverbose = false )
+            :m_pImportTo(nullptr), m_bQuiet(bequiet), m_bVerbose(bverbose)
         {}
 
         void operator()( const std::string & importfrom, CKaomado & importto );
@@ -121,6 +121,7 @@ namespace filetypes
     private:
         CKaomado * m_pImportTo;
         bool       m_bQuiet;
+        bool       m_bVerbose;
 
         //Temporary variables - Parse Kaomado
         std::vector<uint8_t>                 m_kaomadoBuff;     //Buffer containing the kaomado file's raw data.
@@ -147,14 +148,16 @@ namespace filetypes
         KaoWriter( const std::vector<std::string> *  pfoldernames     = nullptr, 
                    const std::vector<std::string> *  psubentrynames   = nullptr,
                    bool                              zealousstrsearch = true, 
-                   bool                              bequiet          = false )
+                   bool                              bequiet          = false,
+                   bool                              bverbose         = false )
             :m_bZealousStrSearch(zealousstrsearch), 
              m_pExportFrom(nullptr), 
              m_bQuiet(bequiet),
              m_pFolderNames(pfoldernames), 
              m_pSubEntryNames(psubentrynames),
              m_itImgBuffPushBack(std::back_inserter(m_imgBuff)),
-             m_itOutBuffPushBack(std::back_inserter(m_outBuff))
+             m_itOutBuffPushBack(std::back_inserter(m_outBuff)),
+             m_bVerbose(bverbose)
         {}
 
         //This will export a CKaomado to a "kaomado.kao" file, but will return the buffer directly
@@ -184,6 +187,7 @@ namespace filetypes
         const std::vector<std::string> *m_pSubEntryNames;       //The string list for the names to give to the exported subentry images
         bool                            m_bZealousStrSearch;    //Whether compression will use zealous string search
         bool                            m_bQuiet;               //Whether we should print at the console
+        bool                            m_bVerbose;             //Whether to print more verbose output
         
         //Temporary variables - kaomado.kao output
         std::vector<uint8_t>                            m_outBuff;             //Kaomado output buffer

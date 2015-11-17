@@ -50,6 +50,7 @@ namespace pkao_util
     static const string OPTION_SET_EXPORT_TO_BMP            = "bmp";
     static const string OPTION_QUIET                        = "q";
     static const string OPTION_NON_ZEALOUS_STR_SEARCH       = "nz";
+    const string OPTION_VERBOSE                             = "v";
 
 
     //Definition of all the possible options for the program!
@@ -100,7 +101,7 @@ namespace pkao_util
 
         //VERBOSE
         {
-            "v",
+            OPTION_VERBOSE,
             0,
             "Will trigger verbose progress output!",
         },
@@ -118,6 +119,7 @@ namespace pkao_util
         bool           bisQuiet;
         bool           bIsZealous;
         bool           bExportAsBmp;
+        bool           bisVerbose;
     };
 
 
@@ -262,6 +264,11 @@ namespace pkao_util
             {
                 parameters.bisQuiet = true;
                 success             = true;
+            }
+            else if( parsedoption.front().compare(OPTION_VERBOSE) == 0  )
+            {
+                parameters.bisVerbose = true;
+                success               = true;
             }
         }
 
@@ -435,7 +442,7 @@ namespace pkao_util
                     << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet, parameters.bisVerbose)( parameters.inputpath.toString(), kao );
             //kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
 
             //Then depending on what the user gave us, we convert and output the kaomado data
@@ -450,7 +457,7 @@ namespace pkao_util
             else
                 outputTy = eSUPPORT_IMG_IO::PNG;
 
-            KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet );
+            KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet, parameters.bisVerbose );
             mywriter( kao, outpath.toString(), outputTy );
 
             if( !parameters.bisQuiet )
@@ -490,7 +497,7 @@ namespace pkao_util
                      << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet, parameters.bisVerbose)( parameters.inputpath.toString(), kao );
 
             //kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
             //types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
@@ -498,7 +505,7 @@ namespace pkao_util
             if( !parameters.bisQuiet )
                 cout<<"Writing to file..\n";
 
-            KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet );
+            KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet, parameters.bisVerbose );
             mywriter( kao, outpath.toString() );
 
             //WriteByteVectorToFile( outpath.toString(), filedata );

@@ -5,6 +5,7 @@
 #include <dse/dse_containers.hpp>
 #include <utils/library_wide.hpp>
 #include <utils/audio_utilities.hpp>
+#include <utils/poco_wrapper.hpp>
 
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
@@ -1067,13 +1068,17 @@ namespace DSE
         if( IsMasterBankLoaded() )
         {
             //Make the main sample bank sub-directory if we have a master bank
-            Poco::File outmbankdir( Poco::Path( destdir ).append(_DefaultMainSampleDirName).makeDirectory() );
-            if(!outmbankdir.createDirectory())
+            //Poco::File outmbankdir( Poco::Path( destdir ).append(_DefaultMainSampleDirName).makeDirectory() );
+            Poco::Path outmbankpath( destdir );
+            outmbankpath.append(_DefaultMainSampleDirName).makeDirectory().toString();
+
+            
+            if(! utils::DoCreateDirectory(outmbankpath.toString())  )
                 throw runtime_error("BatchAudioLoader::ExportXMLPrograms(): Error, couldn't create output main bank samples directory!");
 
             //Export Main Bank samples :
-            cerr<<"<*>- Currently exporting main bank to " <<outmbankdir.path() <<"\n";
-            ExportPresetBank( outmbankdir.path(), m_master, true, false );
+            cerr<<"<*>- Currently exporting main bank to " <<outmbankpath.toString() <<"\n";
+            ExportPresetBank( outmbankpath.toString(), m_master, false, false );
         }
 
         //Then the MIDIs + presets + optionally samples contained in the swd of the pair
@@ -1082,7 +1087,7 @@ namespace DSE
             Poco::Path fpath(destdir);
             fpath.append( to_string(i) + "_" + m_pairs[i].first.metadata().fname);
             
-            if( ! Poco::File(fpath).createDirectory() )
+            if( ! utils::DoCreateDirectory(fpath.toString()) )
             {
                 clog <<"Couldn't create directory for track " <<fpath.toString() << "!\n";
                 continue;
@@ -1280,10 +1285,11 @@ namespace DSE
 
             if( !samplesonly )
             {
-                Poco::File smpldircreate( Poco::Path(directory).append(_DeafaultSamplesSubDir).makeDirectory() );
-                if( ! smpldircreate.createDirectory() )
-                    throw runtime_error( "ExportPresetBank(): Couldn't create sample directory ! " + smpldircreate.path() );
-                smpldir = smpldircreate.path();
+                Poco::Path smpldirpath(directory);
+                smpldirpath.append(_DeafaultSamplesSubDir).makeDirectory();
+                if( ! utils::DoCreateDirectory( smpldirpath.toString() ) )
+                    throw runtime_error( "ExportPresetBank(): Couldn't create sample directory ! " + smpldirpath.toString() );
+                smpldir = smpldirpath.toString();
             }
             else
                 smpldir = directory;
@@ -1357,14 +1363,13 @@ namespace DSE
 
         if( !samplesonly )
         {
-            auto prgptr  = bnk.prgmbank().lock();
-            if( prgptr != nullptr )
-            {
-                cout << "Not implemented!!\n";
-                assert(false);
-            }
-            else
-                cout << "<!>- The SWDL contains no preset data to export!\n";
+            //auto prgptr  = bnk.prgmbank().lock();
+            //if( prgptr != nullptr )
+            //{
+                PresetBankToXML( bnk, directory );
+            //}
+            //else
+            //    cout << "<!>- The SWDL contains no preset data to export!\n";
         }
     }
 
