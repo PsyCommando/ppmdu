@@ -55,6 +55,9 @@
     <Filter Include="Source Files\typesupport">
       <UniqueIdentifier>{fd916fae-5f01-4e3b-a3e8-5eb086b5c0db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pugixml">
+      <UniqueIdentifier>{24e9ed29-f4ab-41b4-9e44-b5cf1c4291a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp">
@@ -159,23 +162,14 @@
     <ClInclude Include="..\src\ppmdu\fmts\sedl.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio_data.hpp">
-      <Filter>Header Files\ppmdu\data formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\dse\dse_common.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ext_fmts\adpcm.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\audio_sample.hpp">
-      <Filter>Header Files\ppmdu\data formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\dse\dse_sequence.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ext_fmts\midi_io.hpp">
-      <Filter>Header Files\ppmdu\external formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\dse\dse_interpreter.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
@@ -197,6 +191,12 @@
     </ClInclude>
     <ClInclude Include="..\src\ext_fmts\wav_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dse\dse_conversion.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\audio_utilities.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -281,14 +281,8 @@
     <ClCompile Include="..\src\ppmdu\fmts\smdl.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_audio_data.cpp">
-      <Filter>Source Files\ppmdu\data formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dse\dse_sequence.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ext_fmts\midi_io.cpp">
-      <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\swdl.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
@@ -316,6 +310,18 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dse\sample_processor.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dse\dse_conversion.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
+      <Filter>pugixml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dse\dse_prgmbank_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

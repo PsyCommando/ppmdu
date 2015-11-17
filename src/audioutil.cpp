@@ -1,7 +1,7 @@
 #include "audioutil.hpp"
 #include <utils/utility.hpp>
 #include <utils/cmdline_util.hpp>
-#include <ppmdu/pmd2/pmd2_audio_data.hpp>
+#include <dse/dse_conversion.hpp>
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <utils/library_wide.hpp>
@@ -218,6 +218,24 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionUseHexNumbers, &GetInstance(), placeholders::_1 ),
         },
 
+        //sf2
+        {
+            "sf2",
+            0,
+            "Specifying this will export a swd soundbank to a soundfont if applicable.",
+            "-sf2",
+            std::bind( &CAudioUtil::ParseOptionOutputSF2, &GetInstance(), placeholders::_1 ),
+        },
+
+        //xml -> This is mainly useful when reimporting music tracks into the game!
+        {
+            "xml",
+            0,
+            "Specifying this will force outputing a swd soundbank to XML data and pcm16 samples(.wav files).",
+            "-xml",
+            std::bind( &CAudioUtil::ParseOptionOutputXML, &GetInstance(), placeholders::_1 ),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -250,6 +268,7 @@ namespace audioutil
         m_isListPresets = false;
         m_useHexaNumbers= false;
         m_nbloops       = 0;
+        m_outtype       = eOutputType::SF2;
     }
 
     const vector<argumentparsing_t> & CAudioUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -494,6 +513,18 @@ namespace audioutil
     bool CAudioUtil::ParseOptionUseHexNumbers( const std::vector<std::string> & optdata )
     {
         m_useHexaNumbers = true;
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionOutputSF2( const std::vector<std::string> & optdata )
+    {
+        m_outtype = eOutputType::SF2;
+        return true;
+    }
+    
+    bool CAudioUtil::ParseOptionOutputXML( const std::vector<std::string> & optdata )
+    {
+        m_outtype = eOutputType::XML;
         return true;
     }
 
@@ -759,7 +790,7 @@ namespace audioutil
     */
     int CAudioUtil::ExportPMD2Audio()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path inputdir(m_inputPath);
 
         if( m_bGM )
@@ -787,12 +818,33 @@ namespace audioutil
 
             CreateOutputDir(m_outputPath);
 
-            //  3. Assign each instruments to a preset. 
-            //     Put duplicates preset IDs into different bank for the same preset ID.
-            //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
-            cout << "-------------------------------------------------------------\n" 
-                 << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+            if( m_outtype == eOutputType::SF2 )
+            {
+                //  3. Assign each instruments to a preset. 
+                //     Put duplicates preset IDs into different bank for the same preset ID.
+                //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
+                cout << "-------------------------------------------------------------\n" 
+                     << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
+                bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+            }
+            else if( m_outtype == eOutputType::DLS )
+            {
+                cout << "-------------------------------------------------------------\n" 
+                     << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
+                assert(false);
+            }
+            else if( m_outtype == eOutputType::XML )
+            {
+                cout << "-------------------------------------------------------------\n" 
+                     << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
+                bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
+            }
+            else
+            {
+                cout<< "Output type is invalid!\n";
+                assert(false);
+            }
+
             cout <<"..done\n";
 
         }
@@ -849,7 +901,7 @@ namespace audioutil
     
     int CAudioUtil::ExportSWDL()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path inputfile(m_inputPath);
         Poco::Path outputfile;
         string     outfname;
@@ -873,14 +925,15 @@ namespace audioutil
              << "\t\"" << outNewDir <<"\"\n";   
 
         //Load SWDL
-        PresetBank swd = LoadSwdBank( inputfile.toString() );
+        PresetBank swd = move( DSE::ParseSWDL( inputfile.toString() ) );
         ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers );
+
         return 0;
     }
 
     int CAudioUtil::ExportSMDL()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path inputfile(m_inputPath);
         Poco::Path outputfile;
         string     outfname;
@@ -969,7 +1022,7 @@ namespace audioutil
         cout << "<*>- Exporting SMDL to MIDI !\n";
 
         //By default export a sequence only!
-        MusicSequence smd = LoadSequence( inputfile.toString() );
+        MusicSequence smd = move( DSE::ParseSMDL( inputfile.toString() ) );
         outputfile.setExtension("mid");
 
         ExportASequenceToMidi( smd, inputfile.getBaseName(), outputfile.toString(), m_convinfopath, m_nbloops, m_bGM );
@@ -1010,7 +1063,7 @@ namespace audioutil
 
     int CAudioUtil::ExportBatchPairsAndBank()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         BatchAudioLoader bal;
 
         if( m_bGM )
@@ -1025,9 +1078,28 @@ namespace audioutil
 
         CreateOutputDir(m_outputPath);
 
-        cout << "-------------------------------------------------------------\n" 
-                << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-        bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        cout << "-------------------------------------------------------------\n" ;
+        if( m_outtype == eOutputType::SF2 )
+        {
+            cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
+            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        }
+        else if( m_outtype == eOutputType::DLS )
+        {
+            cout << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
+            assert(false);
+        }
+        else if( m_outtype == eOutputType::XML )
+        {
+            cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
+            bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
+        }
+        else
+        {
+            cout << "Output type is invalid!\n";
+            assert(false);
+        }
+
         cout <<"..done\n";
 
         return 0;
@@ -1035,7 +1107,7 @@ namespace audioutil
 
     int CAudioUtil::ExportBatchPairs()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         BatchAudioLoader bal;
 
         if( m_bGM )
@@ -1045,9 +1117,26 @@ namespace audioutil
 
         CreateOutputDir(m_outputPath);
 
-        cout << "-------------------------------------------------------------\n" 
-                << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-        bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        if( m_outtype == eOutputType::SF2 )
+        {
+            cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
+            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+        }
+        else if( m_outtype == eOutputType::DLS )
+        {
+            cout << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
+            assert(false);
+        }
+        else if( m_outtype == eOutputType::XML )
+        {
+            cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
+            bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
+        }
+        else
+        {
+            cout << "Output type is invalid!\n";
+            assert(false);
+        }
         cout <<"..done\n";
 
         return 0;
@@ -1056,7 +1145,7 @@ namespace audioutil
 
     int CAudioUtil::ExportBatchSWDL()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path   inputfile(m_swdlpath);
         Poco::Path   outputDir;
 
@@ -1088,7 +1177,7 @@ namespace audioutil
             cout <<right <<setw(60) <<setfill(' ') << "\rExporting " << infilename << "..";
 
             //Load SWDL
-            PresetBank swd = LoadSwdBank( curpath.toString() );
+            PresetBank swd = move( DSE::ParseSWDL( curpath.toString() ) );
             {
                 auto ptrsmpls = swd.smplbank().lock();
 
@@ -1103,7 +1192,7 @@ namespace audioutil
     
     int CAudioUtil::ExportBatchSMDL()
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path   inputfile(m_smdlpath);
         Poco::Path   outputDir;
 
@@ -1132,7 +1221,7 @@ namespace audioutil
             string        infilename = curpath.getBaseName();
             cout /*<<right <<setw(60) <<setfill(' ')  << "\r*/<<"Exporting " << infilename << "..\n";
 
-            MusicSequence smd = LoadSequence( curpath.toString() );
+            MusicSequence smd = move( DSE::ParseSMDL( curpath.toString() ) );
             ExportASequenceToMidi( smd, infilename, Poco::Path(outputDir).append(infilename).setExtension("mid").makeFile(), m_convinfopath, m_nbloops, m_bGM );
         }
         cout<<"\n\n<*>- Done !\n";
@@ -1156,7 +1245,7 @@ namespace audioutil
             else
                 lstfile <<dec <<noshowbase;
 
-            for( const auto & prgm : prgmptr->instinfo() )
+            for( const auto & prgm : prgmptr->PrgmInfo() )
             {
                 if( prgm != nullptr )
                 {
@@ -1182,7 +1271,7 @@ namespace audioutil
 
     int CAudioUtil::BatchListSWDLPrgm( const string & SrcPath )
     {
-        using namespace pmd2::audio;
+        //using namespace pmd2::audio;
         Poco::Path   inputfile(SrcPath);
         Poco::Path   outputfile;
 
@@ -1217,7 +1306,7 @@ namespace audioutil
                     << "*" <<infilename <<"\n"
                     << "======================================================================\n\n";
 
-            PresetBank swd = LoadSwdBank( inputfile.toString() );
+            PresetBank swd = move( DSE::ParseSWDL( inputfile.toString() ) );
             WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
         }
         else
@@ -1234,7 +1323,7 @@ namespace audioutil
                 string infilename = curpath.getBaseName();
                 cout <<right <<setw(60) <<setfill(' ') << "\rAnalyzing " << infilename << "..";
 
-                PresetBank swd = LoadSwdBank( curpath.toString() );
+                PresetBank swd = move( DSE::ParseSWDL( curpath.toString() ) );
                 WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
             }
         }

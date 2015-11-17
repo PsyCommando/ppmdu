@@ -63,6 +63,7 @@ namespace gfx_util
     static const int                  RETVAL_UnkException = -4;
     static const int                  RETVAL_IOException  = -5;
 
+    //Just some silliness when converting stuff in batches!
     static const vector<string>       VariationOfAgain    = 
     {{
             "",
@@ -486,23 +487,23 @@ namespace gfx_util
             std::bind( &CGfxUtil::ParseOptionPkPortraits,  &GetInstance(), placeholders::_1 ),
         },
 
-        //Pokemon Sprites
-        {
-            "pksprites",
-            0,
-            "Specifying this will cause the program to import or export pokemon sprites. When importing, the input is the directory containing the 3 subdirectories matching the 3 sprite files, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the three sprite files will be exported to.",
-            "-pksprites",
-            std::bind( &CGfxUtil::ParseOptionPkSprites,  &GetInstance(), placeholders::_1 ),
-        },
+        ////Pokemon Sprites
+        //{
+        //    "pksprites",
+        //    0,
+        //    "Specifying this will cause the program to import or export pokemon sprites. When importing, the input is the directory containing the 3 subdirectories matching the 3 sprite files, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the three sprite files will be exported to.",
+        //    "-pksprites",
+        //    std::bind( &CGfxUtil::ParseOptionPkSprites,  &GetInstance(), placeholders::_1 ),
+        //},
 
-        //Props/misc Sprites
-        {
-            "propsprites",
-            0,
-            "Specifying this will cause the program to import or export props sprites. When importing, the input is the directory containing the sprites sub-directory to import, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the sprites will be exported to.",
-            "-propsprites",
-            std::bind( &CGfxUtil::ParseOptionPropSprites,  &GetInstance(), placeholders::_1 ),
-        },
+        ////Props/misc Sprites
+        //{
+        //    "propsprites",
+        //    0,
+        //    "Specifying this will cause the program to import or export props sprites. When importing, the input is the directory containing the sprites sub-directory to import, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the sprites will be exported to.",
+        //    "-propsprites",
+        //    std::bind( &CGfxUtil::ParseOptionPropSprites,  &GetInstance(), placeholders::_1 ),
+        //},
     }};
 
 //------------------------------------------------

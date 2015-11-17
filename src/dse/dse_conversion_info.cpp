@@ -195,8 +195,8 @@ namespace DSE
         {
             using namespace pugi;
             using namespace cvinfoXML;
-            midinote_t inkey     = 0xFF;
-            midinote_t outkey    = 0xFF;
+            midinote_t inkey     = InvalidMIDIKey;
+            midinote_t outkey    = InvalidMIDIKey;
             presetid_t midprg    = InvalidPresetID;
             bankid_t   midbnk    = InvalidBankID;
             uint8_t    idealchan = UCHAR_MAX;
@@ -215,7 +215,7 @@ namespace DSE
                     idealchan = ( utils::parseByte( keyprop.child_value() ) - 1); //Bring back to 0-15
             }
 
-            if( inkey != 0xFF && outkey != 0xFF )
+            if( inkey != InvalidMIDIKey && outkey != InvalidMIDIKey )
             {
                 SMDLPresetConversionInfo::NoteRemapData rmap;
                 rmap.destnote = outkey;

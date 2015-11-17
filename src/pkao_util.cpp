@@ -39,7 +39,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.41";
+    static const string PVERSION                            = "0.42";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";
@@ -53,7 +53,7 @@ namespace pkao_util
 
 
     //Definition of all the possible options for the program!
-    static const array<optionparsing_t, 7> MY_OPTIONS  =
+    static const array<optionparsing_t, 8> MY_OPTIONS  =
     {{
         //Disable console output except errors!
         {
@@ -96,6 +96,13 @@ namespace pkao_util
             OPTION_SET_EXPORT_TO_BMP,
             0,
             "Will output the images as \".bmp\" 4bpp images!",
+        },
+
+        //VERBOSE
+        {
+            "v",
+            0,
+            "Will trigger verbose progress output!",
         },
     }};
 
@@ -356,19 +363,21 @@ namespace pkao_util
             {
                 //Ouput path is file!
                 Poco::Path outfile(parameters.outputpath);
-                Poco::File testfile( Poco::Path(outfile).makeParent() );
+                //Poco::File testfile( Poco::Path(outfile).makeAbsolute() );
                 
-                if( testfile.exists() && testfile.isDirectory() && !(outfile.getFileName().empty()) )
-                    outfile.makeAbsolute();
-                else
-                    throw runtime_error("<!>-Fatal Error: Specified output path is invalid ! Aborting !");
-                return std::move(outfile);
+                //if( ( ( testfile.exists() && testfile.isDirectory() ) || (!testfile.exists()) ) && 
+                //    !(outfile.getFileName().empty()) )
+                //    outfile.makeAbsolute();
+                //else
+                //    throw runtime_error("<!>-Fatal Error: Specified output path is invalid ! Aborting !");
+                //return std::move(outfile);
+                return move( Poco::Path(parameters.outputpath).makeAbsolute() );
             }
             else 
             {
                 //Output path is folder!
                 Poco::Path outfolder(parameters.outputpath);
-                Poco::File testparentdir(outfolder.parent());
+                Poco::File testparentdir(outfolder.absolute().makeParent());
 
                 if( testparentdir.exists() && testparentdir.isDirectory() )
                     outfolder.makeAbsolute();

@@ -35,13 +35,20 @@ namespace wave
         PCM                 = 0x0001,   //Microsoft PCM Format
         ADPCM               = 0x0002,   //Microsoft ADPCM Format
         IEEE_FLOAT          = 0x0003,   //IEEE Float
+
         ALAW                = 0x0006,   //Microsoft ALAW
         MULAW               = 0x0007,   //Microsoft MULAW
+
         OKI_ADPCM           = 0x0010,   //OKI ADPCM
+
         SIERRA_ADPCM        = 0x0013,   //Sierra ADPCM
+
         DIALOGIC_OKI_ADPCM  = 0x0017,   //Dialogic OKI ADPCM
+
         YAMAHA_ADPCM        = 0x0020,   //Yamaha ADPCM
+
         MPEG                = 0x0050,   //MPEG
+
         MPEGLAYER3          = 0x0055,   //MPEG Layer 3
 
     };
@@ -339,7 +346,7 @@ namespace wave
             //Make fmt chunk!
             riff::Chunk    fmtchnk( FMT_ChunkTag );
             WAVE_fmt_chunk fmtdat;
-            auto itbackinsfmt = std::back_inserter( fmtchnk.data_ );
+            auto           itbackinsfmt = std::back_inserter( fmtchnk.data_ );
 
             fmtdat.audiofmt_      =  static_cast<uint16_t>(trait_t::AudioFormat);
             fmtdat.bitspersample_ = trait_t::BitDepth;
@@ -349,7 +356,7 @@ namespace wave
             fmtdat.byterate_      = (m_samplerate * fmtdat.nbchannels_ * fmtdat.bitspersample_) / 8;
 
             itbackinsfmt = fmtdat.Write(itbackinsfmt);
-            waveout.subchunks_. push_back(std::move(fmtchnk));
+            waveout.subchunks_.push_back(std::move(fmtchnk));
 
             //Make data chunk!
             riff::Chunk datachnk( DATA_ChunkTag );
@@ -457,8 +464,6 @@ namespace wave
 //  Handy Typedefs
 //=============================================================================
     typedef WaveFile<> PCM16sWaveFile;
-
-
 
 };
 

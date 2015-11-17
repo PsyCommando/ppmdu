@@ -61,6 +61,9 @@ namespace audioutil
         bool ParseOptionListPresets( const std::vector<std::string> & optdata );
         bool ParseOptionUseHexNumbers( const std::vector<std::string> & optdata );
 
+        bool ParseOptionOutputSF2  ( const std::vector<std::string> & optdata );
+        bool ParseOptionOutputXML  ( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -121,6 +124,14 @@ namespace audioutil
             ListSWDLPrgm,   //Outputs a list of the all the programs contained in the specified swdl and samples they uses
         };
 
+        //Types of output
+        enum struct eOutputType
+        {
+            XML,    // For exporting before editing tracks and their samples/instrument data
+            SF2,    // For exporting a Sounfont
+            DLS,    // For possible DLS support in the future
+        };
+
         //Default filenames names
 
         //Variables
@@ -137,6 +148,8 @@ namespace audioutil
         std::string m_mbankpath;
         std::string m_swdlpath;
         std::string m_smdlpath;
+
+        eOutputType m_outtype;
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
     };

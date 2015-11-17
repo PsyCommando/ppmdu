@@ -1,9 +1,10 @@
-#include "pmd2_audio_data.hpp"
+#include "dse_conversion.hpp"
 #include <dse/dse_common.hpp>
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_interpreter.hpp>
 #include <dse/dse_containers.hpp>
 #include <utils/library_wide.hpp>
+#include <utils/audio_utilities.hpp>
 
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
@@ -22,11 +23,10 @@
 #include <ext_fmts/wav_io.hpp>
 
 using namespace std;
-using namespace DSE;
 
-namespace pmd2 { namespace audio
+namespace DSE
 {
-    static const uint16_t DSE_InfiniteAttenuation_cB = 1000;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
+    static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
     static const uint16_t DSE_LowestAttenuation_cB   =  190;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
     static const uint16_t DSE_SustainFactor_msec     = 3000; //An extra time value to add to the decay when decay1 + decay2 are combined, and the sustain is non-zero
 
@@ -176,32 +176,40 @@ namespace pmd2 { namespace audio
         return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) ) );
     }
 
-    std::vector<pcm16s_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    /*
+        RawBytesToPCM16Vec
+            Take a vector of 16 bits signed pcm samples as raw bytes, and put them into a vector of
+            signed 16 bits integers!
+    */
+    std::vector<int16_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
     {
-        std::vector<pcm16s_t> out;
-        auto                  itread = praw->begin();
-        auto                  itend  = praw->end();
-        out.reserve(praw->size()/2);
+        //std::vector<int16_t> out;
+        //auto                 itread = praw->begin();
+        //auto                 itend  = praw->end();
+        //out.reserve(praw->size()/2);
 
-        while( itread != itend )
-            out.push_back( utils::ReadIntFromBytes<pcm16s_t>( itread ) ); //Iterator is incremented
+        //while( itread != itend )
+        //    out.push_back( utils::ReadIntFromBytes<int16_t>( itread ) ); //Iterator is incremented
 
-        return std::move(out);
+        return std::move( utils::RawPCM16Parser<int16_t>( *praw ) );
     }
 
-    std::vector<pcm16s_t> PCM8RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    /*
+        PCM8RawBytesToPCM16Vec
+            Take a vector of raw pcm8 samples, and put them into a pcm16 vector!
+    */
+    std::vector<int16_t> PCM8RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
     {
-        std::vector<pcm16s_t> out;
-        auto                  itread = praw->begin();
-        auto                  itend  = praw->end();
-        out.reserve(praw->size()*2);
+        //std::vector<int16_t> out;
+        //auto                 itread = praw->begin();
+        //auto                 itend  = praw->end();
+        //out.reserve(praw->size()*2);
 
-        for(; itread != itend; ++itread )
-            out.push_back( static_cast<pcm16s_t>(*itread) );
+        //for(; itread != itend; ++itread )
+        //    out.push_back( static_cast<int16_t>(*itread) );
 
-        return std::move(out);
+        return std::move( utils::RawPCM8Parser<int16_t>( *praw ) );
     }
-
 
 
     /*********************************************************************************
@@ -225,37 +233,36 @@ namespace pmd2 { namespace audio
         return outenv;
     }
 
+    inline DSEEnvelope IntepretEnvelopeDuration( const DSEEnvelope & srcenv )
+    {
+        DSEEnvelope outenv(srcenv);
+        outenv.attack  = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.attack),  outenv.envmulti) );
+        outenv.hold    = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.hold),    outenv.envmulti) );
+        outenv.decay   = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay),   outenv.envmulti) );
+        outenv.release = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.release), outenv.envmulti) );
+        return outenv;
+    }
+
     /*
         Convert the parameters of a DSE envelope to SF2
     */
     sf2::Envelope RemapDSEVolEnvToSF2( DSEEnvelope origenv )
-                                       // int8_t atkvol, 
-                                       //int8_t attack, 
-                                       //int8_t hold, 
-                                       //int8_t decay, 
-                                       //int8_t sustain, 
-                                       //int8_t decay2, 
-                                       //int8_t rel, 
-                                       //int8_t rx,
-                                       //int8_t envon,
-                                       //int8_t envmult )
     {
         sf2::Envelope volenv;
        
         //#TODO: implement scaling by users !!!
-        DSEEnvelope interpenv = IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
+        DSEEnvelope interpenv = IntepretEnvelopeDuration(origenv);//IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
 
         if( utils::LibWide().isLogOn() )
         {
-            clog<<"\tRemaping DSE (atkvol, atk, dec, sus, hold, dec2, rel, rx)( " 
-                << static_cast<short>(origenv.atkvol)       <<", "
-                << static_cast<short>(origenv.attack)       <<", "
-                << static_cast<short>(origenv.decay)         <<", "
-                << static_cast<short>(origenv.sustain)        <<", "
-                << static_cast<short>(origenv.hold)      <<", "
-                << static_cast<short>(origenv.decay2)       <<", "
-                << static_cast<short>(origenv.release)          //<<", "
-                /*<< static_cast<short>(rx) */          <<" )\n";
+            clog<<"\tRemaping DSE( " 
+                <<"atkvol : " << static_cast<short>(origenv.atkvol)       <<", "
+                <<"atk    : " << static_cast<short>(origenv.attack)       <<", "
+                <<"dec    : " << static_cast<short>(origenv.decay)        <<", "
+                <<"sus    : " << static_cast<short>(origenv.sustain)      <<", "
+                <<"hold   : " << static_cast<short>(origenv.hold)         <<", "
+                <<"dec2   : " << static_cast<short>(origenv.decay2)       <<", "
+                <<"rel    : " << static_cast<short>(origenv.release)      <<" )\n";
         }
 
         //Handle Attack
@@ -283,6 +290,9 @@ namespace pmd2 { namespace audio
         //Handle Sustain
         volenv.sustain = DseVolToSf2Attenuation( interpenv.sustain ); 
 
+        //uint16_t sustainfactor = (interpenv.sustain * DSE_SustainFactor_msec) /127; //Add a bit more time, because soundfont handles volume exponentially, and thus, the volume sinks to 0 really quickly!
+
+
         //Handle Decay
         if( origenv.decay != 0 && origenv.decay2 != 0 && origenv.decay2 != 0x7F ) 
         {
@@ -292,15 +302,13 @@ namespace pmd2 { namespace audio
                      <<static_cast<unsigned short>(interpenv.decay2) << " = " 
                      <<static_cast<unsigned short>(interpenv.decay + interpenv.decay2) <<" !\n";
 
-
             //If decay is set to infinite, we just ignore it!
             if( origenv.decay == 0x7F )
-                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 );
+                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 ) /*+ sustainfactor*/;
             else if( origenv.sustain == 0 ) //The sustain check is to avoid the case where the first decay phase already should have brought the volume to 0 before the decay2 phase would do anything. 
-                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay );
+                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay ) /*+ sustainfactor*/;
             else
             {
-                //uint16_t sustainfactor = (sustain * DSE_SustainFactor_msec) /127; //Add a bit more time, because soundfont handles volume exponentially, and thus, the volume sinks to 0 really quickly!
                 volenv.decay = sf2::MSecsToTimecents( interpenv.decay + interpenv.decay2 ) /*+ sustainfactor*/; //Add an extra factor based on the sustain value
             }
             volenv.sustain = DSE_InfiniteAttenuation_cB;
@@ -417,12 +425,12 @@ namespace pmd2 { namespace audio
     void BatchAudioLoader::LoadMasterBank( const std::string & mbank )
     {
         m_mbankpath = mbank;
-        m_master = move( LoadSwdBank( m_mbankpath ) );
+        m_master = move( DSE::ParseSWDL( m_mbankpath ) );
     }
 
     void BatchAudioLoader::LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {
-        m_pairs.push_back( move( pmd2::audio::LoadSmdSwdPair( smd, swd ) ) );
+        m_pairs.push_back( move( DSE::LoadSmdSwdPair( smd, swd ) ) );
     }
 
     /*
@@ -448,7 +456,7 @@ namespace pmd2 { namespace audio
                                         SMDLPresetConversionInfo       & target,
                                         PresetAllocStrategy<_Strategy> & mystrat )
     {
-        const auto & curinstlist = ptrprginf->instinfo();
+        const auto & curinstlist = ptrprginf->PrgmInfo();
 
         if( utils::LibWide().isLogOn() )
             clog << "=== SWDL #" << cntpair <<" ===\n";
@@ -605,23 +613,8 @@ namespace pmd2 { namespace audio
         if( dseinst.smplpan != DSE_LimitsPan.def_ )
             myzone.SetPan( DsePanToSf2Pan(dseinst.smplpan) );
 
-        //Override rootkey
-        //myzone.SetRootKey( dseinst.rootkey );
-
         //Volume Envelope
-        DSEEnvelope dseenv(dseinst);
-
-        Envelope myenv = RemapDSEVolEnvToSF2(dseenv);
-            /*( dseinst.atkvol,
-                                              dseinst.attack, 
-                                              dseinst.hold, 
-                                              dseinst.decay,
-                                              dseinst.sustain,
-                                              dseinst.decay2, 
-                                              dseinst.release, 
-                                              dseinst.rx,
-                                              dseinst.envon,
-                                              dseinst.envmult );*/
+        Envelope myenv = RemapDSEVolEnvToSF2(DSEEnvelope(dseinst));
 
         /*
             ### In order to handle the atkvol param correctly, we'll make a copy of the Instrument, 
@@ -941,8 +934,8 @@ namespace pmd2 { namespace audio
         {
             SMDLPresetConversionInfo & curcvinfo   = merged[cntpairs];                                //Get the conversion info for all presets in the current swd
             const auto & curpair     = m_pairs[cntpairs];                               //Get the current swd + smd pair
-            const auto & curprginfos = curpair.second.prgmbank().lock()->instinfo();    //Get the current SWD's program list
-            const auto & curkgrp     = curpair.second.prgmbank().lock()->keygrps();     //Get the current SWD's keygroup list
+            const auto & curprginfos = curpair.second.prgmbank().lock()->PrgmInfo();    //Get the current SWD's program list
+            const auto & curkgrp     = curpair.second.prgmbank().lock()->Keygrps();     //Get the current SWD's keygroup list
             auto         itcvtbl     = curcvinfo.begin();                      //Iterator on the conversion map!
             string       pairname    = "Trk#" + to_string(cntpairs);
 
@@ -990,6 +983,51 @@ namespace pmd2 { namespace audio
         return move( merged );
     }
 
+
+    /*
+        Export all the presets for each loaded swdl pairs! And if the sample data is present,
+        it will also export it!
+    */
+    void BatchAudioLoader::ExportXMLPrograms( const std::string & destf )
+    {
+        //static const string _DefaultMainSampleDirName = "mainbank";
+        //static const string _DefaultSWDLSmplDirName   = "samples";
+
+        ////If the main bank is not loaded, try to make one out of the loaded pairs!
+        //if( IsMasterBankLoaded() )
+        //{
+        //    //Make the main sample bank sub-directory if we have a master bank
+        //    Poco::File outmbankdir( Poco::Path( destf ).append(_DefaultMainSampleDirName).makeDirectory() );
+        //    if(!outmbankdir.createDirectory())
+        //        throw runtime_error("BatchAudioLoader::ExportXMLPrograms(): Error, couldn't create output main bank samples directory!");
+
+        //    //Export Main Bank samples :
+        //    ExportPresetBank( outmbankdir.path(), m_master, true, false );
+        //}
+
+        ////Iterate through all the tracks 
+
+        //for( size_t i = 0; i < m_pairs.size(); ++i )
+        //{
+        //    Poco::Path fpath(destf);
+        //    fpath.append( to_string(i) + "_" + m_pairs[i].first.metadata().fname);
+        //    
+        //    if( ! Poco::File(fpath).createDirectory() )
+        //    {
+        //        clog <<"Couldn't create directory for track " <<fpath.toString() << "!\n";
+        //        continue;
+        //    }
+
+        //    const auto & curpair     = m_pairs[cntpairs];                               //Get the current swd + smd pair
+        //    const auto & curprginfos = curpair.second.prgmbank().lock()->PrgmInfo();    //Get the current SWD's program list
+        //    const auto & curkgrp     = curpair.second.prgmbank().lock()->Keygrps();     //Get the current SWD's keygroup list
+        //    auto         itcvtbl     = curcvinfo.begin();                      //Iterator on the conversion map!
+        //    string       pairname    = "Trk#" + to_string(cntpairs);
+
+        //}
+
+    }
+
     void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops )
     {
         //Export the soundfont first
@@ -1015,6 +1053,53 @@ namespace pmd2 { namespace audio
                                  merged[i],
                                  nbloops,
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
+        }
+    }
+
+    /*
+        Export all music sequences to midis and export all preset data to xml + pcm16 samples!
+    */
+    void BatchAudioLoader::ExportXMLAndMIDIs( const std::string & destdir, int nbloops )
+    {
+        static const string _DefaultMainSampleDirName = "mainbank";
+
+        //If the main bank is not loaded, try to make one out of the loaded pairs!
+        if( IsMasterBankLoaded() )
+        {
+            //Make the main sample bank sub-directory if we have a master bank
+            Poco::File outmbankdir( Poco::Path( destdir ).append(_DefaultMainSampleDirName).makeDirectory() );
+            if(!outmbankdir.createDirectory())
+                throw runtime_error("BatchAudioLoader::ExportXMLPrograms(): Error, couldn't create output main bank samples directory!");
+
+            //Export Main Bank samples :
+            cerr<<"<*>- Currently exporting main bank to " <<outmbankdir.path() <<"\n";
+            ExportPresetBank( outmbankdir.path(), m_master, true, false );
+        }
+
+        //Then the MIDIs + presets + optionally samples contained in the swd of the pair
+        for( size_t i = 0; i < m_pairs.size(); ++i )
+        {
+            Poco::Path fpath(destdir);
+            fpath.append( to_string(i) + "_" + m_pairs[i].first.metadata().fname);
+            
+            if( ! Poco::File(fpath).createDirectory() )
+            {
+                clog <<"Couldn't create directory for track " <<fpath.toString() << "!\n";
+                continue;
+            }
+
+            Poco::Path midpath(fpath);
+            midpath.append( to_string(i) + "_" + m_pairs[i].first.metadata().fname);
+            midpath.makeFile();
+            midpath.setExtension("mid");
+
+            cerr<<"<*>- Currently exporting smd + swd to " <<fpath.toString() <<"\n";
+            DSE::SequenceToMidi( midpath.toString(), 
+                                 m_pairs[i].first, 
+                                 nbloops,
+                                 DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
+
+            ExportPresetBank( fpath.toString(), m_pairs[i].second, false, false );
         }
     }
 
@@ -1108,7 +1193,7 @@ namespace pmd2 { namespace audio
     
     std::pair<DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
     {
-        DSE::PresetBank                                       mbank  = DSE::ParseSWDL( bank );
+        DSE::PresetBank mbank  = DSE::ParseSWDL( bank );
         vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
 
         //We can't know for sure if they're always in the same directory!
@@ -1172,24 +1257,36 @@ namespace pmd2 { namespace audio
     
 
 
-    DSE::PresetBank LoadSwdBank( const std::string & file )
-    {
-        return DSE::ParseSWDL( file );
-    }
+    //DSE::PresetBank LoadSwdBank( const std::string & file )
+    //{
+    //    return move( DSE::ParseSWDL( file ) );
+    //}
         
-    DSE::MusicSequence LoadSequence( const std::string & file )
-    {
-        return DSE::ParseSMDL( file );
-    }
+    //DSE::MusicSequence LoadSequence( const std::string & file )
+    //{
+    //    return move( DSE::ParseSMDL( file ) );
+    //}
 
     void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
     {
+        static const string _DeafaultSamplesSubDir = "samples";
         auto smplptr = bnk.smplbank().lock();
         
         if( smplptr != nullptr )
         {
             size_t       nbsamplesexport = 0;
             const size_t nbslots         = smplptr->NbSlots();
+            string       smpldir;
+
+            if( !samplesonly )
+            {
+                Poco::File smpldircreate( Poco::Path(directory).append(_DeafaultSamplesSubDir).makeDirectory() );
+                if( ! smpldircreate.createDirectory() )
+                    throw runtime_error( "ExportPresetBank(): Couldn't create sample directory ! " + smpldircreate.path() );
+                smpldir = smpldircreate.path();
+            }
+            else
+                smpldir = directory;
 
             for( size_t cntsmpl = 0; cntsmpl < nbslots; ++cntsmpl )
             {
@@ -1246,7 +1343,7 @@ namespace pmd2 { namespace audio
                     smplchnk.loops_.push_back( loopinfo );
 
                     sstrname<<".wav";
-                    outwave.WriteWaveFile( Poco::Path(directory).append(sstrname.str()).makeFile().absolute().toString() );
+                    outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
                     ++nbsamplesexport;
                 }
                 else
@@ -1267,11 +1364,9 @@ namespace pmd2 { namespace audio
                 assert(false);
             }
             else
-            {
                 cout << "<!>- The SWDL contains no preset data to export!\n";
-            }
         }
     }
 
 
-};};
+};

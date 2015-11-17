@@ -6,7 +6,6 @@ adpcm.hpp
 psycommando@gmail.com
 Description: Utilities for handling ADPCM data.
 */
-#include <ppmdu/containers/audio_sample.hpp>
 #include <cstdint>
 #include <vector>
 
@@ -33,10 +32,10 @@ namespace audio
     //
     //  ADPCM Encoding/Decoding
     //
-    std::vector<pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t>  & rawadpcmdata,
+    std::vector<int16_t> DecodeADPCM_IMA( const std::vector<uint8_t>  & rawadpcmdata,
                                            unsigned int                  nbchannels   = 1 );
 
-    std::vector<uint8_t>  EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata, 
+    std::vector<uint8_t>  EncodeADPCM_IMA( const std::vector<int16_t> & pcmdata, 
                                            unsigned int                  nbchannels   = 1 );
 
 
@@ -48,7 +47,7 @@ namespace audio
             The NDS's ADPCM format has a slight difference in the way it clamps the 
             sample's values. 
     */
-    std::vector<pcm16s_t> DecodeADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
+    std::vector<int16_t> DecodeADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
                                            unsigned int                  nbchannels   = 1 );
 
 };

@@ -1,7 +1,7 @@
 #ifndef PMD2_AUDIO_DATA_HPP
 #define PMD2_AUDIO_DATA_HPP
 /*
-pmd2_audio_data.hpp
+dse_conversion.hpp
 2015/05/20
 psycommando@gmail.com
 Description: Containers and utilities for data parsed from PMD2's audio, and sequencer files.
@@ -17,15 +17,11 @@ All wrongs reversed, no crappyrights :P
 #include <string>
 #include <memory>
 #include <future>
-
-//
-//          ###### TODO ######
-//          Move this to properly named file! Most of this is applicable to most DSE games!!!
-//
+#include <map>
 
 namespace DSE{ struct SMDLPresetConversionInfo; };
 
-namespace pmd2 { namespace audio 
+namespace DSE
 {
 //====================================================================================================
 //  Typedefs
@@ -107,6 +103,12 @@ namespace pmd2 { namespace audio
         std::vector<DSE::SMDLPresetConversionInfo> ExportSoundfont( const std::string & destf );
 
         /*
+            Export all the presets for each loaded swdl pairs! And if the sample data is present,
+            it will also export it!
+        */
+        void ExportXMLPrograms( const std::string & destf );
+
+        /*
             Does the same as the "ExportSoundfont" method, but additionnaly also
             exports all loaded smd as MIDIs, with the appropriate bank events to use
             the correct instrument presets.
@@ -121,6 +123,11 @@ namespace pmd2 { namespace audio
                       GM patch number to attribute it during conversion.
         */
         void ExportSoundfontAsGM( const std::string & destf, const std::map< std::string, std::vector<int> > & dsetogm )const;
+
+        /*
+            Export all music sequences to midis and export all preset data to xml + pcm16 samples!
+        */
+        void ExportXMLAndMIDIs( const std::string & destdir, int nbloops = 0 );
 
     //-----------------------------
     // State Methods
@@ -166,6 +173,57 @@ namespace pmd2 { namespace audio
         BatchAudioLoader & operator=(const BatchAudioLoader& ) = delete;
     };
 
+//
+//
+//
+    /*
+        ProcessedPresets
+            A transition container used when doing extra processing on the sample data from the game.
+            Since the envelope, LFO, etc, are "baked" into the sample themselves, we need to change 
+            a lot about them.
+    */
+    class ProcessedPresets
+    {
+    public:
+        struct PresetEntry
+        {
+            PresetEntry()
+            {}
+
+            PresetEntry( PresetEntry && mv )
+                :prginf(std::move(mv.prginf)), splitsmplinf(std::move( mv.splitsmplinf ))
+            {
+            }
+
+            DSE::ProgramInfo                    prginf;       //
+            std::vector< DSE::WavInfo >         splitsmplinf; //Modified sample info for a split's sample.
+            std::vector< std::vector<int16_t> > splitsamples; //Sample for each split of a preset.
+        };
+
+        typedef std::map< int16_t, PresetEntry >::iterator       iterator;
+        typedef std::map< int16_t, PresetEntry >::const_iterator const_iterator;
+
+       inline void AddEntry( PresetEntry && entry )
+        {
+            m_smpldata.emplace( std::make_pair( entry.prginf.m_hdr.id, std::move(entry) ) );
+        }
+
+        inline iterator       begin()      {return m_smpldata.begin();}
+        inline const_iterator begin()const {return m_smpldata.begin();}
+
+        inline iterator       end()        {return m_smpldata.end();}
+        inline const_iterator end()const   {return m_smpldata.end();}
+
+        inline iterator       find( int16_t presid ) { return m_smpldata.find(presid); }
+        inline const_iterator find( int16_t presid )const { return m_smpldata.find(presid); }
+
+        inline size_t         size()const  { return m_smpldata.size(); }
+
+    private:
+        std::map< int16_t, PresetEntry > m_smpldata;
+    };
+
+
 //====================================================================================================
 // Functions
 //====================================================================================================
@@ -182,10 +240,10 @@ namespace pmd2 { namespace audio
     std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd );
 
     // ======================= 3. Individual Bank ( bank.swd ) =======================
-    DSE::PresetBank LoadSwdBank( const std::string & file );
+    //DSE::PresetBank LoadSwdBank( const std::string & file );
 
     // ======================= 4. Sequence only =======================
-    DSE::MusicSequence LoadSequence( const std::string & file );
+    //DSE::MusicSequence LoadSequence( const std::string & file );
 
 
 
@@ -214,7 +272,7 @@ namespace pmd2 { namespace audio
         To use the ExportSequence,
     */
 
-};};
+};
 
 
 //Ostream operators

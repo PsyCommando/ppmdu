@@ -1,7 +1,7 @@
 =================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - KaoUtil  ==
 =================================================
-Version	   : 0.4
+Version	   : 0.42
 Released   : 2014/12/05
 Written by : psycommando@gmail.com
 
@@ -40,6 +40,9 @@ Changelog:
 - 0.41:(2015/02/09)
          * Fixed a bug where passing an output path wouldn't create the output directory and crash the
            application with a cryptic error message.
+- 0.42:(2015/11/14)
+         * Fixed passing a relative single level output path when unpacking. It would crash trying to get the parent directory!
+         * Fixed packing a kaomado to a relative, non-existing output file. It would crash because poco throws an exception on non-existing paths..
 
 ----------------------------------------------------------------------------------------------------
 License info:

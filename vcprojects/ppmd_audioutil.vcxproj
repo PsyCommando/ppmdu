@@ -142,6 +142,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
+    <ClInclude Include="..\src\dse\dse_conversion.hpp" />
     <ClInclude Include="..\src\dse\dse_conversion_info.hpp" />
     <ClInclude Include="..\src\ext_fmts\wav_io.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
@@ -150,9 +151,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\audio_sample.hpp" />
     <ClInclude Include="..\src\ext_fmts\adpcm.hpp" />
-    <ClInclude Include="..\src\ext_fmts\midi_io.hpp" />
     <ClInclude Include="..\src\ext_fmts\riff.hpp" />
     <ClInclude Include="..\src\ext_fmts\sf2.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
@@ -219,7 +218,6 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\file formats</Filter>
@@ -233,6 +231,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\utils\audio_utilities.hpp" />
     <ClInclude Include="..\src\utils\cmdline_util.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Header Files\ppmdutils\utility</Filter>
@@ -297,12 +296,19 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\audioutil.cpp" />
+    <ClCompile Include="..\src\dse\dse_conversion.cpp" />
     <ClCompile Include="..\src\dse\dse_conversion_info.cpp" />
+    <ClCompile Include="..\src\dse\dse_prgmbank_xml_io.cpp" />
+    <ClCompile Include="..\src\dse\sample_processor.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\dse\dse_containers.cpp" />
     <ClCompile Include="..\src\ext_fmts\adpcm.cpp" />
-    <ClCompile Include="..\src\ext_fmts\midi_io.cpp" />
     <ClCompile Include="..\src\ext_fmts\sf2.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -366,7 +372,6 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_audio_data.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">Source Files\ppmdutils\file formats</Filter>

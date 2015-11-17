@@ -9,7 +9,7 @@ Description: This class is meant to interpret a sequence of DSE audio events int
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-#include <ppmdu/pmd2/pmd2_audio_data.hpp>
+#include <dse/dse_conversion.hpp>
 #include <dse/dse_common.hpp>
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_conversion_info.hpp>

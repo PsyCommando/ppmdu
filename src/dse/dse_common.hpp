@@ -30,6 +30,7 @@ namespace DSE
     const bankid_t      InvalidBankID      = USHRT_MAX;
     const presetid_t    InvalidPresetID    = UCHAR_MAX;
     const dsepresetid_t InvalidDSEPresetID = USHRT_MAX;
+    const uint8_t       InvalidMIDIKey     = UCHAR_MAX; //The default value for the MIDI key
 
 //====================================================================================================
 //  Constants
@@ -472,7 +473,10 @@ namespace DSE
             uint16_t nbsplits  = 0;
             uint8_t  insvol    = 0;
             uint8_t  inspan    = 0;
-            uint16_t unk3      = 0;
+            //uint16_t unk3      = 0;
+            uint8_t  unk3      = 0;
+            uint8_t  unkpoly   = 0;
+
             uint16_t unk4      = 0;
             uint8_t  unk5      = 0;
             uint8_t  nblfos    = 0; //Nb entries in the first table 
@@ -488,6 +492,7 @@ namespace DSE
                          insvol   == other.insvol   && 
                          inspan   == other.inspan   && 
                          unk3     == other.unk3     && 
+                         unkpoly  == other.unkpoly  && 
                          unk4     == other.unk4     && 
                          unk5     == other.unk5     &&  
                          nblfos   == other.nblfos   &&
@@ -510,6 +515,7 @@ namespace DSE
                 itwriteto = utils::WriteIntToBytes( insvol,    itwriteto );
                 itwriteto = utils::WriteIntToBytes( inspan,    itwriteto );
                 itwriteto = utils::WriteIntToBytes( unk3,      itwriteto );
+                itwriteto = utils::WriteIntToBytes( unkpoly,   itwriteto );
                 itwriteto = utils::WriteIntToBytes( unk4,      itwriteto );
                 itwriteto = utils::WriteIntToBytes( unk5,      itwriteto );
                 itwriteto = utils::WriteIntToBytes( nblfos,    itwriteto );
@@ -529,6 +535,7 @@ namespace DSE
                 itReadfrom = utils::ReadIntFromBytes( insvol,    itReadfrom );
                 itReadfrom = utils::ReadIntFromBytes( inspan,    itReadfrom );
                 itReadfrom = utils::ReadIntFromBytes( unk3,      itReadfrom );
+                itReadfrom = utils::ReadIntFromBytes( unkpoly,   itReadfrom );
                 itReadfrom = utils::ReadIntFromBytes( unk4,      itReadfrom );
                 itReadfrom = utils::ReadIntFromBytes( unk5,      itReadfrom );
                 itReadfrom = utils::ReadIntFromBytes( nblfos,    itReadfrom );
@@ -568,6 +575,16 @@ namespace DSE
             uint16_t delay  = 0;
             uint16_t unk32  = 0;
             uint16_t unk33  = 0;
+
+            /*
+                Return true if the LFO's fields have non-default values.
+            */
+            inline bool isLFONonDefault()const
+            {
+                return ( unk52 != 0 && dest != 0 && wshape != 1 && rate != 0 && 
+                         unk29 != 0 && depth != 0 && delay != 0 && unk32 != 0 && 
+                         unk33 != 0 );
+            }
 
             template<class _outit>
                 _outit WriteToContainer( _outit itwriteto )const

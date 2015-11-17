@@ -122,43 +122,43 @@ namespace DSE
 
     /*****************************************************************************************
         ProgramBank
-            Contains the entries for each instruments
-            Data on what samples an instrument uses, how to play those, the key mapping, etc..
+            Contains the entries for each program contained in a SWD file, along with the
+            file's keygroup table!
     *****************************************************************************************/
     class ProgramBank
     {
     public:
         typedef std::unique_ptr<DSE::ProgramInfo> ptrprg_t;
 
-        ProgramBank( std::vector<ptrprg_t> && instinf, std::vector<DSE::KeyGroup> && kgrp )
-            :m_instinfoslots(std::move(instinf)),  //MSVC is too derp to use the right constructor..
+        ProgramBank( std::vector<ptrprg_t> && prgminf, std::vector<DSE::KeyGroup> && kgrp )
+            :m_prgminfoslots(std::move(prgminf)),  //MSVC is too derp to use the right constructor..
              m_Groups(kgrp)
         {}
 
         ProgramBank( ProgramBank && mv )
         {
-            m_instinfoslots = std::move(mv.m_instinfoslots);
+            m_prgminfoslots = std::move(mv.m_prgminfoslots);
             m_Groups        = std::move(mv.m_Groups);
         }
 
         ProgramBank & operator=( ProgramBank&& mv )
         {
-            m_instinfoslots = std::move(mv.m_instinfoslots);
+            m_prgminfoslots = std::move(mv.m_prgminfoslots);
             m_Groups        = std::move(mv.m_Groups);
             return *this;
         }
 
-        ptrprg_t                          & operator[]( size_t index )         { return m_instinfoslots[index]; }
-        const ptrprg_t                    & operator[]( size_t index )const    { return m_instinfoslots[index]; }
+        ptrprg_t                          & operator[]( size_t index )         { return m_prgminfoslots[index]; }
+        const ptrprg_t                    & operator[]( size_t index )const    { return m_prgminfoslots[index]; }
 
-        std::vector<ptrprg_t>             & instinfo()      { return m_instinfoslots; }
-        const std::vector<ptrprg_t>       & instinfo()const { return m_instinfoslots; }
+        std::vector<ptrprg_t>             & PrgmInfo()      { return m_prgminfoslots; }
+        const std::vector<ptrprg_t>       & PrgmInfo()const { return m_prgminfoslots; }
 
-        std::vector<DSE::KeyGroup>        & keygrps()       { return m_Groups;        }
-        const std::vector<DSE::KeyGroup>  & keygrps()const  { return m_Groups;        }
+        std::vector<DSE::KeyGroup>        & Keygrps()       { return m_Groups;        }
+        const std::vector<DSE::KeyGroup>  & Keygrps()const  { return m_Groups;        }
 
     private:
-        std::vector<ptrprg_t>       m_instinfoslots;
+        std::vector<ptrprg_t>       m_prgminfoslots;
         std::vector<DSE::KeyGroup>  m_Groups;
 
         //Can't copy

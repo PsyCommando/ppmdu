@@ -35,7 +35,7 @@ namespace palettetool
 //------------------------------------------------
     const string CPaletteUtil::Exe_Name            = "ppmd_palettetool.exe";
     const string CPaletteUtil::Title               = "Palette Dumper/Bulder";
-    const string CPaletteUtil::Version             = "0.2";
+    const string CPaletteUtil::Version             = "0.21";
     const string CPaletteUtil::Short_Description   = "A utility to dump/build palette files from png and bmp images, and more.";
     const string CPaletteUtil::Long_Description    = 
         "This little utility is meant to be used to easily dump a palette\n"
@@ -173,7 +173,7 @@ namespace palettetool
 
     const vector<argumentparsing_t> & CPaletteUtil::getArgumentsList   ()const { return Arguments_List;          }
     const vector<optionparsing_t>   & CPaletteUtil::getOptionsList     ()const { return Options_List;            }
-    const argumentparsing_t         * CPaletteUtil::getExtraArg        ()const { return &Arguments_List.front(); }
+    const argumentparsing_t         * CPaletteUtil::getExtraArg        ()const { return nullptr; }
     const string                    & CPaletteUtil::getTitle           ()const { return Title;                   }
     const string                    & CPaletteUtil::getExeName         ()const { return Exe_Name;                }
     const string                    & CPaletteUtil::getVersionString   ()const { return Version;                 }
