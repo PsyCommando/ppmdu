@@ -1240,37 +1240,12 @@ namespace DSE
         return make_pair( std::move(mbank), std::move(seqpairs) );
     }
 
-    //std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndSinglePair( const std::string & bank, const std::string & smd, const std::string & swd )
-    //{
-    //    DSE::PresetBank                                       mbank  = DSE::ParseSWDL( bank );
-    //    vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
-    //    Poco::File                                            pathsmd(smd);
-    //    Poco::File                                            pathswd(swd);
-
-    //    seqpairs.push_back( make_pair( DSE::ParseSMDL( pathsmd.path() ), DSE::ParseSWDL( pathswd.path() ) ) );
-
-    //    return make_pair( std::move(mbank), std::move(seqpairs) );
-    //}
-
     std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {
         DSE::PresetBank    bank = DSE::ParseSWDL( swd );
         DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
         return std::make_pair( std::move(seq), std::move(bank) );
     }
-
-    
-
-
-    //DSE::PresetBank LoadSwdBank( const std::string & file )
-    //{
-    //    return move( DSE::ParseSWDL( file ) );
-    //}
-        
-    //DSE::MusicSequence LoadSequence( const std::string & file )
-    //{
-    //    return move( DSE::ParseSMDL( file ) );
-    //}
 
     void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
     {
@@ -1311,13 +1286,13 @@ namespace DSE
                     outwave.SampleRate( ptrinfo->smplrate );
 
                     //Set the loop data
-                    smplchnk.MIDIUnityNote_ = ptrinfo->rootkey;
+                    smplchnk.MIDIUnityNote_ = ptrinfo->rootkey;        //#FIXME: Most of the time, the correct root note is only stored in the preset, not the sample data!
                     smplchnk.samplePeriod_  = (1 / ptrinfo->smplrate);
 
                     if( hexanumbers )
                         sstrname <<"0x" <<hex <<uppercase << cntsmpl <<nouppercase;
                     else
-                        sstrname << cntsmpl;
+                        sstrname <<right <<setw(4) <<setfill('0') << cntsmpl;
 
                     if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
                     {
@@ -1331,14 +1306,14 @@ namespace DSE
                         outwave.GetSamples().front() = move( PCM8RawBytesToPCM16Vec(ptrdata) );
                         sstrname <<"_pcm8";
                         loopinfo.start_ = ptrinfo->loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
-                        loopinfo.end_   = ptrdata->size() * 2; //PCM8 -> PCM16
+                        loopinfo.end_   = ptrdata->size()  * 2; //PCM8 -> PCM16
                     }
                     else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
                     {
                         outwave.GetSamples().front() = move( RawBytesToPCM16Vec(ptrdata) );
                         sstrname <<"_pcm16";
                         loopinfo.start_ = ptrinfo->loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
-                        loopinfo.end_   = ptrdata->size() / 2;
+                        loopinfo.end_   = ptrdata->size()  / 2;
                     }
                     else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
                     {
@@ -1347,7 +1322,7 @@ namespace DSE
 
                     //Add loopinfo!
                     smplchnk.loops_.push_back( loopinfo );
-
+                    outwave.AddRIFFChunk( smplchnk );
                     sstrname<<".wav";
                     outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
                     ++nbsamplesexport;

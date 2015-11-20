@@ -642,7 +642,6 @@ namespace gimg
         if( NB_AVAILABLE_BYTES_OUT * 8u < NB_TOTAL_BITS_IMG )
         {
             //Not enough bytes available to write out the entire image !
-            assert(false);
             throw std::out_of_range("WriteTiledImg() : Output range too small to contain image !");
         }
 

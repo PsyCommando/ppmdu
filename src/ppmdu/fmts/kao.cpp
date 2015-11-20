@@ -185,7 +185,7 @@ namespace filetypes
                 DecompressAT4PX( itpalend, itentryend, m_imgBuffer );
 
                 if(m_bVerbose)
-                    cout << " ..Decompress OK!";
+                    cout << " ..Decompress OK ("  <<m_imgBuffer.size() <<"b)!";
 
                 //C. Parse the image. 
                 // Image pixels seems to be in little endian, and need to be converted to big endian

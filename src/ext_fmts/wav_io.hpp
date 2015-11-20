@@ -162,6 +162,14 @@ namespace wave
             return *this;
         }
 
+        operator riff::Chunk()const
+        {
+            riff::Chunk deschunk( SMPL_ChunkTag );
+            auto        itwrite = std::back_inserter(deschunk.data_);
+            Write(itwrite);
+            return std::move(deschunk);
+        }
+
         /*
             Indicates the position of all loop points and other details.
         */
@@ -374,6 +382,10 @@ namespace wave
 
             waveout.subchunks_.push_back( std::move(datachnk) );
 
+            //Append extra chunks
+            for( size_t cntchunk = 0; cntchunk < m_extrachunks.size(); ++cntchunk )
+                waveout.subchunks_.push_back( m_extrachunks[cntchunk] );
+
             //Write the RIFF
             itwrite = waveout.Write( itwrite );
 
@@ -411,10 +423,12 @@ namespace wave
             {
                 //Find the data chunk
                 size_t datachnkindex = 0;
-                for( ; datachnkindex < myriff.subchunks_.size(); ++datachnkindex )
+                for( size_t cntchunk = 0; cntchunk < myriff.subchunks_.size(); ++cntchunk )
                 {
-                    if( myriff.subchunks_[datachnkindex].fourcc_ == DATA_ChunkTag )
-                        break;
+                    if( myriff.subchunks_[cntchunk].fourcc_ == DATA_ChunkTag )
+                        datachnkindex = cntchunk;
+                    else
+                        m_extrachunks.push_back( myriff.subchunks_[cntchunk] ); //Copy other chunks for later processing
                 }
 
                 if( datachnkindex == myriff.subchunks_.size() )
@@ -442,7 +456,7 @@ namespace wave
                     std::clog << "<!>- Warning: Some samples were omitted while parsing the WAVE container! The size of the data did not match the Nb of samples hinted at in the WAVE header!\n";
             }
             else
-                throw std::runtime_error( "WaveFile::ReadWave(): Error, the data chunk of the WAVE container is missing!!" );
+                throw std::runtime_error( "WaveFile::ReadWave(): Error, one or more chunks missing from the wave container!!" );
 
             return itfile;
         }
@@ -454,9 +468,18 @@ namespace wave
         inline uint32_t SampleRate()const               { return m_samplerate;     }
         inline void     SampleRate( uint32_t smplrate ) { m_samplerate = smplrate; }
 
+        inline const std::deque<riff::Chunk> & ExtraChunks()const { return m_extrachunks; }
+        inline std::deque<riff::Chunk>       & ExtraChunks()      { return m_extrachunks; }
+
+        void AddRIFFChunk( riff::Chunk && achunk )
+        {
+            m_extrachunks.emplace_back( std::move(achunk) );
+        }
+
     private:
         uint32_t                           m_samplerate;
         std::vector<std::vector<sample_t>> m_samples;
+        std::deque<riff::Chunk>            m_extrachunks;
     };
 
 

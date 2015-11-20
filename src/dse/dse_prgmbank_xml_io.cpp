@@ -2,6 +2,7 @@
 #include <pugixml.hpp>
 #include <utils/parse_utils.hpp>
 #include <utils/pugixml_utils.hpp>
+#include <ext_fmts/adpcm.hpp>
 #include <sstream>
 #include <iostream>
 #include <iomanip>
@@ -381,12 +382,13 @@ private:
     void WriteWavInfo( const std::string & destdir )
     {
         using namespace PrgmXML;
-        xml_document doc;
-        xml_node     infonode = doc.append_child( ROOT_WavInfo.c_str() );
-        auto         ptrwavs  = m_presbnk.smplbank().lock();
+        auto ptrwavs = m_presbnk.smplbank().lock();
 
         if( ptrwavs != nullptr )
         {
+            xml_document doc;
+            xml_node     infonode = doc.append_child( ROOT_WavInfo.c_str() );
+
             for( size_t cptwav = 0; cptwav < ptrwavs->NbSlots(); ++cptwav )
             {
                 auto ptrwinf = ptrwavs->sampleInfo(cptwav);
@@ -403,17 +405,19 @@ private:
             clog << "ProgramBankXMLWriter::WriteWavInfo(): No Sample Data";
     }
 
-    void WriteAWav( xml_node parent, const WavInfo & winfo )
+    void WriteAWav( xml_node & parent, const WavInfo & winfo )
     {
         using namespace PrgmXML;
-        xml_document doc;
-        xml_node     infonode = doc.append_child( NODE_Sample.c_str() );
+        WriteCommentNode( parent, "Sample #" + std::to_string( winfo.id ) );
 
+        xml_node infonode = parent.append_child( NODE_Sample.c_str() );
         WriteNodeWithValue( infonode, PROP_ID,          winfo.id ); 
+        WriteCommentNode( infonode, "Tuning Data" );
         WriteNodeWithValue( infonode, PROP_FTune,       winfo.ftune );
         WriteNodeWithValue( infonode, PROP_CTune,       winfo.ctune );
         WriteNodeWithValue( infonode, PROP_RootKey,     winfo.rootkey );
         WriteNodeWithValue( infonode, PROP_KeyTrans,    winfo.ktps );
+        WriteCommentNode( infonode, "Misc" );
         WriteNodeWithValue( infonode, PROP_Volume,      winfo.vol );
         WriteNodeWithValue( infonode, PROP_Pan,         winfo.pan );
         WriteNodeWithValue( infonode, PROP_SmplUnk5,    winfo.unk5 );
@@ -429,9 +433,25 @@ private:
         WriteNodeWithValue( infonode, PROP_SmplUnk62,   winfo.unk62 );
         WriteNodeWithValue( infonode, PROP_SmplUnk13,   winfo.unk13 );
 
-        WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg );
-        WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen );
+        WriteCommentNode( infonode, "Loop Data (in PCM16 sample points)" );
+        //Correct the sample loop points because the samples were exported to PCM16
+        if( winfo.smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
+        {
+            WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg * 2 );
+            WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen * 2 );
+        }
+        else if( winfo.smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+        {
+            WriteNodeWithValue( infonode, PROP_LoopBeg,     (winfo.loopbeg * 4) + ::audio::IMA_ADPCM_PreambleLen );
+            WriteNodeWithValue( infonode, PROP_LoopLen,     (winfo.looplen * 4) + ::audio::IMA_ADPCM_PreambleLen );
+        }
+        else
+        {
+            WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg );
+            WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen );
+        }
 
+        WriteCommentNode( infonode, "Volume Envelope" );
         WriteNodeWithValue( infonode, PROP_EnvOn,         winfo.envon );
         WriteNodeWithValue( infonode, PROP_EnvMulti,      winfo.envmult );
 
@@ -452,6 +472,7 @@ private:
         sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk22);
         infonode.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
         sstrunkcv.str(string());
+
         
         WriteNodeWithValue( infonode, PROP_EnvAtkVol,     winfo.atkvol );
         WriteNodeWithValue( infonode, PROP_EnvAtk,        winfo.attack );
