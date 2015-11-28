@@ -126,7 +126,7 @@ namespace DSE
             mbank     : Path to Master SWD Bank to load.
             singleSF2 : If set to true, the batch loader will do its best to allocate all presets into a single SF2!
         */
-        BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2 = true );
+        BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2 = true, bool lfofxenabled = true );
 
     //-----------------------------
     // Loading Methods
@@ -252,6 +252,7 @@ namespace DSE
     private:
         std::string               m_mbankpath;
         bool                      m_bSingleSF2;
+        bool                      m_lfoeffects; //Whether lfo effects should be processed
 
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;

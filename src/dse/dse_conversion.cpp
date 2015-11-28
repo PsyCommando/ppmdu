@@ -455,8 +455,8 @@ namespace DSE
 //  BatchAudioLoader
 //========================================================================================
 
-    BatchAudioLoader::BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2 )
-        :/*m_mbankpath(mbank),*/ m_bSingleSF2(singleSF2)
+    BatchAudioLoader::BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2, bool lfofxenabled )
+        :/*m_mbankpath(mbank),*/ m_bSingleSF2(singleSF2),m_lfoeffects(lfofxenabled)
     {}
     
     //void BatchAudioLoader::LoadMasterBank()
@@ -735,7 +735,8 @@ namespace DSE
                                const vector<bool>              & loopedsmpls,
                                const vector<KeyGroup>          & keygrps,
                                const shared_ptr<SampleBank>   && smplbnk,
-                               SMDLPresetConversionInfo::PresetConvData  & convinf )
+                               SMDLPresetConversionInfo::PresetConvData  & convinf,
+                               bool                              lfoeffectson )
     {
         using namespace sf2;
         Preset pre(presname, convinf.midipres, bankno );
@@ -759,7 +760,7 @@ namespace DSE
             unsigned int cntlfo = 0;
             for( const auto & lfo : dsePres.m_lfotbl )
             {
-                if( lfo.unk52 != 0 ) //Is the LFO enabled ?
+                if( lfo.unk52 != 0 && lfoeffectson ) //Is the LFO enabled ?
                 {
                     if( utils::LibWide().isLogOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
@@ -1030,7 +1031,7 @@ namespace DSE
             unsigned int cntlfo = 0;
             for( const auto & lfo : curprg.m_lfotbl )
             {
-                if( lfo.unk52 != 0 ) //Is the LFO enabled ?
+                if( lfo.unk52 != 0 && m_lfoeffects ) //Is the LFO enabled ?
                 {
                     if( utils::LibWide().isLogOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
@@ -1223,7 +1224,7 @@ namespace DSE
         int cntpres = 0;
         int cntinst = 0;
 
-        for( size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair )
+        for( size_t cntpair = 0; cntpair < m_pairs.size();  )
         {
             const auto & curpair     = m_pairs[cntpair];
             const auto   prgptr      = curpair.second.prgmbank().lock();
@@ -1234,7 +1235,12 @@ namespace DSE
                 procpres.push_back( move( ProcessDSESamples( *samples, *prgptr ) ) );
                 HandleBakedPrg( procpres.back(), &sf, pairname, cntpair, trackprgconvlist, cntinst, cntpres, prgptr->Keygrps() );
             }
+
+            ++cntpair;
+            if( prgptr != nullptr )
+                cout <<"\rProcessing Samples.." <<right <<setw(3) <<setfill(' ') <<((cntpair * 100) / m_pairs.size())  <<"%";
         }
+        cout <<"\n";
 
         //Write the soundfont
         try
@@ -1315,8 +1321,8 @@ namespace DSE
                                             loopedsmpls,
                                             curkgrp,
                                             m_master.smplbank().lock(),
-                                            itcvtbl->second
-                                            /*curcvinfo._convtbl.at(itcvtbl->first)*/ );
+                                            itcvtbl->second,
+                                            m_lfoeffects );
 
                     ++cntsf2presets;
                 }

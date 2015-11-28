@@ -245,6 +245,15 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionNoSampleBake, &GetInstance(), placeholders::_1 ),
         },
 
+        //nofx
+        {
+            "nofx",
+            0,
+            "Specifying this will disable the processing of LFO effects data.",
+            "-nofx",
+            std::bind( &CAudioUtil::ParseOptionNoFX, &GetInstance(), placeholders::_1 ),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -277,6 +286,7 @@ namespace audioutil
         m_isListPresets = false;
         m_useHexaNumbers= false;
         m_bBakeSamples  = true;
+        m_bUseLFOFx     = true;
         m_nbloops       = 0;
         m_outtype       = eOutputType::SF2;
     }
@@ -541,6 +551,12 @@ namespace audioutil
     bool CAudioUtil::ParseOptionNoSampleBake( const std::vector<std::string> & optdata )
     {
         m_bBakeSamples = false;
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionNoFX( const std::vector<std::string> & optdata )
+    {
+        m_bUseLFOFx = false;
         return true;
     }
 
@@ -819,7 +835,7 @@ namespace audioutil
         {
             //Export the /BGM tracks
             Poco::Path mbankpath(Poco::Path(inputdir).append( "SOUND" ).append("BGM").append("bgm.swd").makeFile().toString());
-            BatchAudioLoader bal;
+            BatchAudioLoader bal( true, m_bUseLFOFx );
             
             //  1. Grab the main sample bank.
             cout <<"\n<*>- Loading master bank " << mbankpath.toString() <<"..\n";
@@ -974,7 +990,7 @@ namespace audioutil
         if( swdfile.exists() && swdfile.isFile() )
         {
             SWDL_Header      matchswdhdr = ReadSwdlHeader( swdfile.path() );
-            BatchAudioLoader myloader;
+            BatchAudioLoader myloader( true, m_bUseLFOFx );
 
             if( matchswdhdr.DoesContainsSamples() )
             {
@@ -1080,7 +1096,7 @@ namespace audioutil
     int CAudioUtil::ExportBatchPairsAndBank()
     {
         //using namespace pmd2::audio;
-        BatchAudioLoader bal;
+        BatchAudioLoader bal(true,m_bUseLFOFx);
 
         if( m_bGM )
             clog<<"<!>- Warning: Commandline parameter GM specified, but GM conversion of is currently unsuported in this mode! Falling back to Roland GS conversion!\n";
@@ -1124,7 +1140,7 @@ namespace audioutil
     int CAudioUtil::ExportBatchPairs()
     {
         //using namespace pmd2::audio;
-        BatchAudioLoader bal;
+        BatchAudioLoader bal(true, m_bUseLFOFx);
 
         if( m_bGM )
             clog<<"<!>- Warning: Commandline parameter GM specified, but GM conversion of is currently unsuported in this mode! Falling back to Roland GS conversion!\n";
