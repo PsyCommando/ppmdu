@@ -64,6 +64,8 @@ namespace audioutil
         bool ParseOptionOutputSF2  ( const std::vector<std::string> & optdata );
         bool ParseOptionOutputXML  ( const std::vector<std::string> & optdata );
 
+        bool ParseOptionNoSampleBake( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -144,6 +146,7 @@ namespace audioutil
         bool        m_isPMD2;         //Whether we should treat the input path as the PMD2 ROM's root data folder
         bool        m_isListPresets;  //Whether the list preset mode was activated !
         bool        m_useHexaNumbers; //Whether applicable exported filenames will contain hexadecimal numbers or decimal
+        bool        m_bBakeSamples;   //Whether each preset's split should have a sample baked for it.
 
         std::string m_mbankpath;
         std::string m_swdlpath;

@@ -257,7 +257,7 @@ namespace DSE
         static const uint32_t Size = 64;
         enum struct eSmplFmt : uint16_t 
         {
-            invalid,
+            invalid   = SHRT_MAX,
             pcm8      = 0x000,
             pcm16     = 0x100,
             ima_adpcm = 0x200,

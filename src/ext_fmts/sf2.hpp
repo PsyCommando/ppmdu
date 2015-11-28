@@ -962,6 +962,34 @@ namespace sf2
         Sample( loadfun_t && funcload, smplcount_t samplelen );
 
         /*
+            This one copy from a range the signed pcm16 data.
+        */
+        template<class _init>
+            Sample( _init               itbeg, 
+                    _init               itend, 
+                    const std::string & name, 
+                    smplcount_t         loopbeg  =     0, 
+                    smplcount_t         loopend  =     0,
+                    uint32_t            smplrate = 44100,
+                    uint8_t             origkey  =    60,
+                    int8_t              pitchcor =     0,
+                    eSmplTy             type     = eSmplTy::monoSample )
+                :m_pcmdata  (itbeg, itend),
+                 m_loopbeg  (loopbeg),
+                 m_loopend  (loopend),
+                 m_name     (name),
+                 m_origkey  (origkey),
+                 m_pitchcorr(pitchcor),
+                 m_samplety (type),
+                 m_smplrate (smplrate),
+                 m_linkedsmpl(0)
+        {
+            m_smpllen = m_pcmdata.size();
+        }
+
+        
+
+        /*
             Obtain the data from the sample.
             This execute the function passed to the constructor, and move the result out!
         */
@@ -1048,6 +1076,7 @@ namespace sf2
 
         loadfun_t                            m_loadfun;
         //std::string                          m_fpath;
+        std::vector<int16_t>                 m_pcmdata;
 
         //std::vector<uint8_t>               * m_pRawVec;
         //uint8_t                            * m_pRaw;

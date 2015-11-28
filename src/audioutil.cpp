@@ -236,6 +236,15 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionOutputXML, &GetInstance(), placeholders::_1 ),
         },
 
+        //nobake -> This disables sample baking
+        {
+            "nobake",
+            0,
+            "Specifying this will disable the rendering of individual samples for every preset split.",
+            "-nobake",
+            std::bind( &CAudioUtil::ParseOptionNoSampleBake, &GetInstance(), placeholders::_1 ),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -267,6 +276,7 @@ namespace audioutil
         m_isPMD2        = false;
         m_isListPresets = false;
         m_useHexaNumbers= false;
+        m_bBakeSamples  = true;
         m_nbloops       = 0;
         m_outtype       = eOutputType::SF2;
     }
@@ -525,6 +535,12 @@ namespace audioutil
     bool CAudioUtil::ParseOptionOutputXML( const std::vector<std::string> & optdata )
     {
         m_outtype = eOutputType::XML;
+        return true;
+    }
+
+    bool CAudioUtil::ParseOptionNoSampleBake( const std::vector<std::string> & optdata )
+    {
+        m_bBakeSamples = false;
         return true;
     }
 
@@ -825,7 +841,7 @@ namespace audioutil
                 //  4. Have the tracks exported to midi and refer to the correct preset ID + Bank
                 cout << "-------------------------------------------------------------\n" 
                      << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-                bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+                bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
             }
             else if( m_outtype == eOutputType::DLS )
             {
@@ -970,7 +986,7 @@ namespace audioutil
 
                 //#Export
                 cout << "<*>- Exporting to MIDI + sounfont..\n";
-                myloader.ExportSoundfontAndMIDIs( outputfile.parent().toString(), m_nbloops );
+                myloader.ExportSoundfontAndMIDIs( outputfile.parent().toString(), m_nbloops, m_bBakeSamples );
                 cout << "\nSuccess!\n";
                 return 0;
             }
@@ -1006,7 +1022,7 @@ namespace audioutil
                     myloader.LoadSmdSwdPair( inputfile.toString(), swdfile.path() );
                     cout << "done!\n"
                          << "<*>- Exporting data to Midi and sounfont..\n";
-                    myloader.ExportSoundfontAndMIDIs( outputfile.parent().toString(), m_nbloops );
+                    myloader.ExportSoundfontAndMIDIs( outputfile.parent().toString(), m_nbloops, m_bBakeSamples );
                     cout << "\nSuccess!\n";
 
                     return 0;
@@ -1082,7 +1098,7 @@ namespace audioutil
         if( m_outtype == eOutputType::SF2 )
         {
             cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
         }
         else if( m_outtype == eOutputType::DLS )
         {
@@ -1120,7 +1136,7 @@ namespace audioutil
         if( m_outtype == eOutputType::SF2 )
         {
             cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops );
+            bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
         }
         else if( m_outtype == eOutputType::DLS )
         {

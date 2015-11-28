@@ -182,7 +182,7 @@ namespace DSE
             Take a vector of 16 bits signed pcm samples as raw bytes, and put them into a vector of
             signed 16 bits integers!
     */
-    std::vector<int16_t> RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    std::vector<int16_t> RawBytesToPCM16Vec( const std::vector<uint8_t> * praw )
     {
         //std::vector<int16_t> out;
         //auto                 itread = praw->begin();
@@ -199,7 +199,7 @@ namespace DSE
         PCM8RawBytesToPCM16Vec
             Take a vector of raw pcm8 samples, and put them into a pcm16 vector!
     */
-    std::vector<int16_t> PCM8RawBytesToPCM16Vec( std::vector<uint8_t> * praw )
+    std::vector<int16_t> PCM8RawBytesToPCM16Vec( const std::vector<uint8_t> * praw )
     {
         //std::vector<int16_t> out;
         //auto                 itread = praw->begin();
@@ -408,6 +408,47 @@ namespace DSE
 
         return volenv;
     }
+
+    WavInfo::eSmplFmt ConvertDSESample( int16_t                                smplfmt, 
+                                        size_t                                 origloopbeg,
+                                        const std::vector<uint8_t>           & in_smpl,
+                                        DSESampleConvertionInfo              & out_cvinfo,
+                                        std::vector<int16_t>                 & out_smpl )
+        //( int16_t                                smplfmt, 
+        //                                wave::smpl_chunk_content::SampleLoop & loopinfo, 
+        //                                const DSE::WavInfo                   & winfo,
+        //                                const std::vector<uint8_t>           & in_smpl,
+        //                                std::vector<int16_t>                 & out_smpl )
+    {
+        if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+        {
+            out_smpl = move(::audio::DecodeADPCM_NDS( in_smpl ) );
+            out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
+            out_cvinfo.loopend_ = ::audio::ADPCMSzToPCM16Sz(in_smpl.size() );
+            return WavInfo::eSmplFmt::ima_adpcm;
+        }
+        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
+        {
+            out_smpl = move( PCM8RawBytesToPCM16Vec(&in_smpl) );
+            out_cvinfo.loopbeg_ = origloopbeg    * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
+            out_cvinfo.loopend_ = in_smpl.size() * 2; //PCM8 -> PCM16
+            return WavInfo::eSmplFmt::pcm8;
+        }
+        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
+        {
+            out_smpl = move( RawBytesToPCM16Vec(&in_smpl) );
+            out_cvinfo.loopbeg_ = origloopbeg    * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
+            out_cvinfo.loopend_ = in_smpl.size() / 2;
+            return WavInfo::eSmplFmt::pcm16;
+        }
+        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
+        {
+
+            return WavInfo::eSmplFmt::psg;
+        }
+        else
+            return WavInfo::eSmplFmt::invalid;
+    }
     
 
 //========================================================================================
@@ -573,7 +614,7 @@ namespace DSE
             myzone.SetSmplMode( eSmplMode::loop );
         }
 
-        //Since the soundfont format has no notion of polyphony, we can only cut keygroup that only allow a single voice
+        //Since the soundfont format has no control on polyphony, we can only cut keygroup that only allow a single voice
         if( dseinst.kgrpid != 0 )
         {
             //if( keygrps.size() > dseinst.kgrpid && keygrps[dseinst.kgrpid].poly == 1 )
@@ -582,9 +623,9 @@ namespace DSE
             //}
             //else
             //{
-                if( dseinst.kgrpid >= keygrps.size() )
-                    cvdata.maxpoly = -1;
-                else
+                //if( dseinst.kgrpid >= keygrps.size() )
+                //    cvdata.maxpoly = -1;
+                //else
                     cvdata.maxpoly = keygrps[dseinst.kgrpid].poly; //let the midi converter handle anything else
             //}
 
@@ -818,7 +859,10 @@ namespace DSE
         sf.AddPreset( std::move(pre) );
     }
 
-    void AddSampleToSoundfont( size_t cntsmslot, shared_ptr<SampleBank> & samples, map<uint16_t,size_t> & swdsmplofftosf,  sf2::SoundFont & sf )
+    void AddSampleToSoundfont( size_t                           cntsmslot, 
+                               shared_ptr<SampleBank>           & samples, 
+                               map<uint16_t,size_t>             & swdsmplofftosf,  
+                               sf2::SoundFont                   & sf )
     {
         using namespace sf2;
 
@@ -894,6 +938,322 @@ namespace DSE
             swdsmplofftosf.emplace( cntsmslot, sf.AddSample( std::move(sm) ) );
         }
     }
+
+    void BatchAudioLoader::HandlePrgSplitBaked( sf2::SoundFont                     * destsf2, 
+                                                const DSE::ProgramInfo::SplitEntry & split,
+                                                size_t                               sf2sampleid,
+                                                const DSE::WavInfo                 & smplinf,
+                                                const DSE::KeyGroup                & keygroup,
+                                                SMDLPresetConversionInfo::PresetConvData  & presetcvinf,
+                                                sf2::Instrument                    * destinstsf2 )
+    {
+        using namespace sf2;
+
+        if( utils::LibWide().isLogOn() )
+            clog <<"\t--- Split#" <<static_cast<unsigned short>(split.id) <<" ---\n";
+
+        //Make a zone for this entry
+        ZoneBag myzone;
+
+        //  --- Set the generators ---
+        //## Key range and vel range MUST be first, or else the soundfont parser will ignore them! ##
+        myzone.SetKeyRange( split.lowkey, split.hikey ); //Key range always in first
+        myzone.SetVelRange( split.lovel,  split.hivel );
+
+        //## Add other generators below ##
+
+        //Fetch Loop Flag
+        if( smplinf.smplloop != 0 )
+            myzone.SetSmplMode( eSmplMode::loop );
+
+        //Since the soundfont format has no control on polyphony, we can only cut keygroup that only allow a single voice
+        if( split.kgrpid != 0 )
+            presetcvinf.maxpoly = keygroup.poly; //let the midi converter handle anything else
+
+        //Root Pitch
+        myzone.SetRootKey(split.rootkey);
+
+        //Volume
+        if( split.smplvol != DSE_LimitsVol.def_ )
+            myzone.SetInitAtt( DseVolToSf2Attenuation(split.smplvol) );
+
+        //Pan
+        if( split.smplpan != DSE_LimitsPan.def_ )
+            myzone.SetPan( DsePanToSf2Pan(split.smplpan) );
+
+        //Volume Envelope
+        Envelope myenv = RemapDSEVolEnvToSF2(DSEEnvelope(split));
+
+        //Set the envelope
+        myzone.SetVolEnvelope( myenv );
+
+        //Sample ID in last
+        myzone.SetSampleId( sf2sampleid );
+
+        destinstsf2->AddZone( std::move(myzone) );
+    }
+
+
+    void BatchAudioLoader::HandleBakedPrgInst( const ProcessedPresets::PresetEntry   & entry, 
+                                               sf2::SoundFont                        * destsf2, 
+                                               const std::string                     & presname, 
+                                               int                                     cntpair, 
+                                               SMDLPresetConversionInfo::PresetConvData  & presetcvinf,
+                                               int                                   & instidcnt,
+                                               int                                   & presetidcnt,
+                                               const std::vector<DSE::KeyGroup>      & keygroups )
+    {
+        using namespace sf2;
+        Preset sf2preset(presname, presetcvinf.midipres, presetcvinf.midibank );
+
+        const auto & curprg      = entry.prginf;
+        const auto & cursmpls    = entry.splitsamples;
+        const auto & cursmplsinf = entry.splitsmplinf;
+
+        if( utils::LibWide().isLogOn() )
+            clog <<"======================\nHandling " <<presname <<"\n======================\n";
+
+
+        //#0 - Add a global zone for global preset settings
+        {
+            ZoneBag global;
+
+            //#1 - Setup Generators
+            if( curprg.m_hdr.insvol != DSE_LimitsVol.def_ )
+                global.SetInitAtt( DseVolToSf2Attenuation(curprg.m_hdr.insvol) );
+
+            // Range of DSE Pan : 0x00 - 0x40 - 0x7F
+            if( curprg.m_hdr.inspan != DSE_LimitsPan.def_ )
+                global.SetPan( DsePanToSf2Pan(curprg.m_hdr.inspan) );
+            
+            //#2 - Setup LFOs
+            unsigned int cntlfo = 0;
+            for( const auto & lfo : curprg.m_lfotbl )
+            {
+                if( lfo.unk52 != 0 ) //Is the LFO enabled ?
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog << "\tLFO" <<cntlfo <<" : Target: ";
+                    
+                    if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
+                    {
+                        //The effect on the pitch can be handled this way
+                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.depth/*lfo.rate*//*/50*/ ) ); //Frequency
+                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.rate ); //Depth /*static_cast<uint16_t>( lround( static_cast<double>(lfo.rate) / 2.5 )*/
+                        global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
+                        
+                        if( utils::LibWide().isLogOn() )
+                            clog << "(1)pitch";
+                    }
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
+                    {
+                        //The effect on the pitch can be handled this way
+                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate/*lfo.rate*//*/50*/ ) ); //Frequency
+                        global.AddGenerator( eSFGen::modLfoToVolume, -(lfo.depth * (20) / 127) /*//*(lfo.depth/10) * -1*/ ); //Depth
+                        global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
+
+                        if( utils::LibWide().isLogOn() )
+                            clog << "(2)volume";
+                    }
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pan) ) //Pan
+                    {
+                        //Leave the data for the MIDI exporter, so maybe it can do something about it..
+                        presetcvinf.extrafx.push_back( 
+                            SMDLPresetConversionInfo::ExtraEffects{ SMDLPresetConversionInfo::eEffectTy::Phaser, lfo.rate, lfo.depth, lfo.delay } 
+                        );
+
+                        
+
+                        //#TODO:
+                        //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
+                        if( utils::LibWide().isLogOn() )
+                            clog << "(3)pan";
+                    }
+                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::UNK_4) )
+                    {
+                        //Unknown LFO target
+                        if( utils::LibWide().isLogOn() )
+                            clog << "(4)unknown";
+                    }
+                    else
+                    {
+                        if( utils::LibWide().isLogOn() )
+                            clog << "(" << static_cast<unsigned short>(lfo.dest) <<")unknown";
+                    }
+
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        clog <<", Frequency: " << static_cast<unsigned short>(lfo.rate) 
+                                << " Hz, Depth: " << static_cast<unsigned short>(lfo.depth) 
+                                << ", Delay: " <<static_cast<unsigned short>(lfo.delay) <<" ms\n";
+                    }
+                }
+                ++cntlfo;
+            }
+
+            //#3 - Add the global zone to the list!
+            if( global.GetNbGenerators() > 0 || global.GetNbModulators() > 0 )
+                sf2preset.AddZone( std::move(global) );
+        }     
+
+        //Process
+        stringstream sstrinstnames;
+        sstrinstnames << "Prg" <<presetidcnt << "->Inst" <<instidcnt;
+        Instrument myinst( sstrinstnames.str() );
+        ZoneBag    instzone;
+
+        for( size_t cntsplit = 0; cntsplit < curprg.m_splitstbl.size(); ++cntsplit )
+        {
+            const auto & cursplit = curprg.m_splitstbl[cntsplit]; 
+#ifdef DEBUG
+            if( cursplit.smplid > curprg.m_splitstbl.size() )
+                assert(false);
+#endif
+            stringstream sstrnames;
+            sstrnames <<"Prg" <<presetidcnt << "->Smpl" <<cntsplit;
+
+            //Place the sample used by the current split in the soundfont
+            size_t sf2smplindex = destsf2->AddSample( sf2::Sample(  cursmpls[cntsplit].begin(), 
+                                                                    cursmpls[cntsplit].end(), 
+                                                                    sstrnames.str(),
+                                                                    cursmplsinf[cntsplit].loopbeg,
+                                                                    cursmplsinf[cntsplit].loopbeg + cursmplsinf[cntsplit].looplen,
+                                                                    cursmplsinf[cntsplit].smplrate,
+                                                                    cursplit.rootkey
+                                                                    ) );
+
+            //Add our split
+            HandlePrgSplitBaked( destsf2, 
+                                 cursplit, 
+                                 sf2smplindex, 
+                                 cursmplsinf[cntsplit], 
+                                 keygroups[cursplit.kgrpid], 
+                                 presetcvinf, 
+                                 &myinst );
+        }
+
+
+        destsf2->AddInstrument( std::move(myinst) );
+        instzone.SetInstrumentId(instidcnt);
+        sf2preset.AddZone( std::move(instzone) ); //Add the instrument zone after the global zone!
+        ++instidcnt; //Increase the instrument count
+        destsf2->AddPreset( std::move(sf2preset) );
+        ++presetidcnt;
+
+    }
+
+
+    //Handles all presets for a file
+    void BatchAudioLoader::HandleBakedPrg( const ProcessedPresets                & entry, 
+                                           sf2::SoundFont                        * destsf2, 
+                                           const std::string                     & curtrkname, 
+                                           int                                     cntpair,
+                                           std::vector<SMDLPresetConversionInfo> & presetcvinf,
+                                           int                                   & instidcnt,
+                                           int                                   & presetidcnt,
+                                           const std::vector<DSE::KeyGroup>      & keygroups
+                                           )
+    {
+        using namespace sf2;
+
+        auto & cvinfo = presetcvinf[cntpair];
+
+        for( const auto & dseprg : entry )
+        {
+            const auto & curprg      = dseprg.second.prginf;
+            const auto & cursmpls    = dseprg.second.splitsamples;
+            const auto & cursmplsinf = dseprg.second.splitsmplinf;
+
+            auto itcvinf = cvinfo.FindConversionInfo( curprg.m_hdr.id );
+
+            if( itcvinf == cvinfo.end() )
+            {
+                clog << "<!>- Warning: The SWDL + SMDL pair #" <<cntpair <<", for preset " <<presetidcnt <<" is missing a conversion info entry.\n";
+#ifdef DEBUG
+                assert(false);
+#else
+                ++presetidcnt;
+                continue;   //Skip this preset
+#endif
+            }
+
+            if( cursmplsinf.size() != cursmpls.size() )
+            {
+                clog << "<!>- Warning: The SWDL + SMDL pair #" <<cntpair <<", for preset " <<presetidcnt <<" has mismatched lists of splits and samples.\n";
+#ifdef DEBUG
+                assert(false);
+#else
+                ++presetidcnt;
+                continue;   //Skip this preset
+#endif
+            }
+
+            stringstream sstrprgname;
+            sstrprgname << curtrkname << "_prg#" <<showbase <<hex <<curprg.m_hdr.id;
+            const string presname = move( sstrprgname.str() );
+
+
+            HandleBakedPrgInst( dseprg.second, destsf2, presname, cntpair, itcvinf->second, instidcnt, presetidcnt, keygroups );
+        }
+    }
+
+    vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfontBakedSamples( const std::string & destf )
+    {
+        using namespace sf2;
+
+        if( m_pairs.size() > CHAR_MAX && !m_bSingleSF2 )
+        {
+            cout << "<!>- Error: Got over 127 different SMDL+SWDL pairs and set to preserve program numbers. Splitting into multiple soundfonts is not implemented yet!\n";
+            //We need to build several smaller sf2 files, each in their own sub-dir with the midis they're tied to!
+            assert(false); //#TODO
+        }
+
+        //If the main bank is not loaded, try to make one out of the loaded pairs!
+        if( !IsMasterBankLoaded() )
+            BuildMasterFromPairs();
+
+        vector<SMDLPresetConversionInfo> trackprgconvlist = move( BuildPresetConversionDB() );
+        SoundFont                        sf( m_master.metadata().fname ); 
+        
+        //Prepare
+        shared_ptr<SampleBank>  samples = m_master.smplbank().lock();
+        deque<ProcessedPresets> procpres; //We need to put all processed stuff in there, because the samples need to exist when the soundfont is written.
+
+        //Counters for the unique preset and instruments IDs
+        int cntpres = 0;
+        int cntinst = 0;
+
+        for( size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair )
+        {
+            const auto & curpair     = m_pairs[cntpair];
+            const auto   prgptr      = curpair.second.prgmbank().lock();
+            string       pairname    = "Trk#" + to_string(cntpair);
+
+            if( prgptr != nullptr )
+            {
+                procpres.push_back( move( ProcessDSESamples( *samples, *prgptr ) ) );
+                HandleBakedPrg( procpres.back(), &sf, pairname, cntpair, trackprgconvlist, cntinst, cntpres, prgptr->Keygrps() );
+            }
+        }
+
+        //Write the soundfont
+        try
+        {
+            sf.Write( destf );
+        }
+        catch( const overflow_error & e )
+        {
+            stringstream sstr;
+            sstr <<"There are too many different parameters throughout the music files in the folder to extract them to a single soundfont file!\n"
+                 << e.what() 
+                 << "\n";
+            throw runtime_error( sstr.str() );
+        }
+
+        return move( trackprgconvlist );
+    }
+
+
 
 
     vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont( const std::string & destf )
@@ -1029,7 +1389,7 @@ namespace DSE
 
     }
 
-    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops )
+    void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops, bool bbakesamples )
     {
         //Export the soundfont first
 
@@ -1037,7 +1397,11 @@ namespace DSE
         outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
         cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
 
-        vector<SMDLPresetConversionInfo> merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
+        vector<SMDLPresetConversionInfo> merged;
+        if( bbakesamples )
+            merged = std::move( ExportSoundfontBakedSamples( outsoundfont.toString() ) );
+        else
+            merged = std::move( ExportSoundfont( outsoundfont.toString() ) );
 
         //Then the MIDIs
         for( size_t i = 0; i < m_pairs.size(); ++i )
@@ -1050,7 +1414,6 @@ namespace DSE
             cerr<<"<*>- Currently exporting smd to " <<fpath.toString() <<"\n";
             DSE::SequenceToMidi( fpath.toString(), 
                                  m_pairs[i].first, 
-                                 //merged.filetopreset[i], 
                                  merged[i],
                                  nbloops,
                                  DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
@@ -1280,6 +1643,7 @@ namespace DSE
                     wave::smpl_chunk_content             smplchnk;
                     stringstream                         sstrname;
                     wave::smpl_chunk_content::SampleLoop loopinfo;
+                    DSESampleConvertionInfo              cvinf;
 
                     //We only have mono samples
                     outwave.GetSamples().resize(1);
@@ -1294,31 +1658,61 @@ namespace DSE
                     else
                         sstrname <<right <<setw(4) <<setfill('0') << cntsmpl;
 
-                    if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+                    switch( ConvertDSESample( ptrinfo->smplfmt, ptrinfo->loopbeg, *ptrdata, cvinf, outwave.GetSamples().front() ) )
                     {
-                        outwave.GetSamples().front() = move(::audio::DecodeADPCM_NDS( *ptrdata ) );
-                        sstrname <<"_adpcm";
-                        loopinfo.start_ = (ptrinfo->loopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
-                        loopinfo.end_   = ::audio::ADPCMSzToPCM16Sz(ptrdata->size() );
+                        case WavInfo::eSmplFmt::ima_adpcm:
+                        {
+                            sstrname <<"_adpcm";
+                            break;
+                        }
+                        case WavInfo::eSmplFmt::pcm8:
+                        {
+                            sstrname <<"_pcm8";
+                            break;
+                        }
+                        case WavInfo::eSmplFmt::pcm16:
+                        {
+                            sstrname <<"_pcm16";
+                            break;
+                        }
+                        case WavInfo::eSmplFmt::psg:
+                        {
+                            clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
+                            break;
+                        }
+                        case WavInfo::eSmplFmt::invalid:
+                        {
+                            clog <<"<!>- Sample# " <<cntsmpl <<" is in an unknown unsported format and was skipped!\n";
+                        }
                     }
-                    else if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
-                    {
-                        outwave.GetSamples().front() = move( PCM8RawBytesToPCM16Vec(ptrdata) );
-                        sstrname <<"_pcm8";
-                        loopinfo.start_ = ptrinfo->loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
-                        loopinfo.end_   = ptrdata->size()  * 2; //PCM8 -> PCM16
-                    }
-                    else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
-                    {
-                        outwave.GetSamples().front() = move( RawBytesToPCM16Vec(ptrdata) );
-                        sstrname <<"_pcm16";
-                        loopinfo.start_ = ptrinfo->loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
-                        loopinfo.end_   = ptrdata->size()  / 2;
-                    }
-                    else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
-                    {
-                        clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
-                    }
+
+                    loopinfo.start_ = cvinf.loopbeg_;
+                    loopinfo.end_   = cvinf.loopend_;
+                    //if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+                    //{
+                    //    outwave.GetSamples().front() = move(::audio::DecodeADPCM_NDS( *ptrdata ) );
+                    //    sstrname <<"_adpcm";
+                    //    loopinfo.start_ = (ptrinfo->loopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
+                    //    loopinfo.end_   = ::audio::ADPCMSzToPCM16Sz(ptrdata->size() );
+                    //}
+                    //else if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
+                    //{
+                    //    outwave.GetSamples().front() = move( PCM8RawBytesToPCM16Vec(ptrdata) );
+                    //    sstrname <<"_pcm8";
+                    //    loopinfo.start_ = ptrinfo->loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
+                    //    loopinfo.end_   = ptrdata->size()  * 2; //PCM8 -> PCM16
+                    //}
+                    //else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
+                    //{
+                    //    outwave.GetSamples().front() = move( RawBytesToPCM16Vec(ptrdata) );
+                    //    sstrname <<"_pcm16";
+                    //    loopinfo.start_ = ptrinfo->loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
+                    //    loopinfo.end_   = ptrdata->size()  / 2;
+                    //}
+                    //else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
+                    //{
+                    //    clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
+                    //}
 
                     //Add loopinfo!
                     smplchnk.loops_.push_back( loopinfo );

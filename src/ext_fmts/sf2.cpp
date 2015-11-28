@@ -1154,7 +1154,10 @@ namespace sf2
     */
     std::vector<pcm16s_t> Sample::Data()const
     {
-        return std::move( m_loadfun() );;
+        if( m_pcmdata.empty() )
+            return std::move( m_loadfun() );
+        else
+            return std::move( m_pcmdata );
     }
 
     void Sample::SetLoopBounds( smplcount_t beg, smplcount_t end )
