@@ -1238,14 +1238,16 @@ namespace DSE
 
             ++cntpair;
             if( prgptr != nullptr )
-                cout <<"\rProcessing Samples.." <<right <<setw(3) <<setfill(' ') <<((cntpair * 100) / m_pairs.size())  <<"%";
+                cout <<"\r\tProcessing samples.." <<right <<setw(3) <<setfill(' ') <<((cntpair * 100) / m_pairs.size())  <<"%";
         }
         cout <<"\n";
 
         //Write the soundfont
         try
         {
+            cout<<"\tWriting soundfont..";
             sf.Write( destf );
+            cout<<"\n";
         }
         catch( const overflow_error & e )
         {
