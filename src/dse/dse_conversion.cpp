@@ -971,12 +971,25 @@ namespace DSE
         if( split.kgrpid != 0 )
             presetcvinf.maxpoly = keygroup.poly; //let the midi converter handle anything else
 
+        int8_t ctuneadd = (split.ftune) / 100;
+        int8_t ftunes   = (split.ftune) % 100; // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
+
+
         //Root Pitch
-        myzone.SetRootKey(split.rootkey);
+        myzone.SetRootKey( split.rootkey ); // + (split.ktps + split.ctune) + ctuneadd ); //split.rootkey
+        //cout << "\trootkey :" << static_cast<short>(split.rootkey + (split.ktps + split.ctune) + ctuneadd) <<"\n"; 
+
+        //Pitch Correction
+
+        //if( split.ftune != 0 )
+        //    myzone.SetFineTune( ftunes );
+
+        //if( split.ctune != DSE::DSEDefaultCoarseTune )
+        //    myzone.SetCoarseTune( split.ctune );
 
         //Volume
-        if( split.smplvol != DSE_LimitsVol.def_ )
-            myzone.SetInitAtt( DseVolToSf2Attenuation(split.smplvol) );
+        //if( split.smplvol != DSE_LimitsVol.def_ )
+        //    myzone.SetInitAtt( DseVolToSf2Attenuation(split.smplvol) );
 
         //Pan
         if( split.smplpan != DSE_LimitsPan.def_ )
@@ -1020,8 +1033,8 @@ namespace DSE
             ZoneBag global;
 
             //#1 - Setup Generators
-            if( curprg.m_hdr.insvol != DSE_LimitsVol.def_ )
-                global.SetInitAtt( DseVolToSf2Attenuation(curprg.m_hdr.insvol) );
+            //if( curprg.m_hdr.insvol != DSE_LimitsVol.def_ )
+            //    global.SetInitAtt( DseVolToSf2Attenuation(curprg.m_hdr.insvol) );
 
             // Range of DSE Pan : 0x00 - 0x40 - 0x7F
             if( curprg.m_hdr.inspan != DSE_LimitsPan.def_ )
@@ -1114,14 +1127,18 @@ namespace DSE
             sstrnames <<"Prg" <<presetidcnt << "->Smpl" <<cntsplit;
 
             //Place the sample used by the current split in the soundfont
-            size_t sf2smplindex = destsf2->AddSample( sf2::Sample(  cursmpls[cntsplit].begin(), 
+            sf2::Sample sampl(  cursmpls[cntsplit].begin(), 
                                                                     cursmpls[cntsplit].end(), 
                                                                     sstrnames.str(),
-                                                                    cursmplsinf[cntsplit].loopbeg,
-                                                                    cursmplsinf[cntsplit].loopbeg + cursmplsinf[cntsplit].looplen,
+                                                                    0,
+                                                                    0,
                                                                     cursmplsinf[cntsplit].smplrate,
                                                                     cursplit.rootkey
-                                                                    ) );
+                                                                    );
+            if( cursmplsinf[cntsplit].smplloop != 0 )
+                sampl.SetLoopBounds( cursmplsinf[cntsplit].loopbeg, cursmplsinf[cntsplit].loopbeg + cursmplsinf[cntsplit].looplen );
+
+            size_t sf2smplindex = destsf2->AddSample( move(sampl) );
 
             //Add our split
             HandlePrgSplitBaked( destsf2, 

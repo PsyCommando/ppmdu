@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <deque>
+//#include <CDSPResampler.h>
 
 using namespace std;
 
@@ -13,6 +14,13 @@ namespace DSE
     {
         return static_cast<uint32_t>( lround( 
                                                 floor( (durationmsec / 1000.0) * static_cast<double>(samplerate) )
+                                            ) );
+    }
+
+    inline uint32_t NbSamplesToMsec( uint32_t samplerate, uint32_t nbsamples )
+    {
+        return static_cast<uint32_t>( lround( 
+                                                floor( ( nbsamples / static_cast<double>(samplerate) ) * 1000.0 )
                                             ) );
     }
 
@@ -58,7 +66,9 @@ namespace DSE
             for( const auto & inf : prestoproc.PrgmInfo() )
             {
                 if( inf != nullptr )
+                {
                     ProcessAPrgm( *inf, processed );
+                }
             }
             return move( processed );
         }
@@ -77,8 +87,7 @@ namespace DSE
 
                 if( psmpl != nullptr && psmplinf != nullptr )
                 {
-                    //ProcessASplit( entry, split, psmpl, psmplinf );
-                    ProcessASplit2( entry, split, prgm.m_lfotbl, psmpl, psmplinf );
+                    ProcessASplit2( entry, split, prgm.m_lfotbl, psmpl, psmplinf, prgm.m_hdr );
                 }
             }
             processed.AddEntry( move(entry) );
@@ -103,7 +112,8 @@ namespace DSE
                             const DSE::ProgramInfo::SplitEntry                  & split, 
                             const std::vector<DSE::ProgramInfo::LFOTblEntry>    & lfos,
                             const std::vector<uint8_t>                          * psmpl, 
-                            const DSE::WavInfo                                  * psmplinf)
+                            const DSE::WavInfo                                  * psmplinf,
+                            const DSE::ProgramInfo::InstInfoHeader              & prgminf )
         {
             const size_t    curindex               = entry.splitsamples.size();
             const bool      IsSampleLooped         = psmplinf->smplloop != 0;
@@ -118,6 +128,8 @@ namespace DSE
             entry.splitsmplinf.push_back( *psmplinf ); //Copy sample info #FIXME: maybe get a custom way to store the relevant data for loop points and sample rate instead ?
             const size_t    SampleLenPreLengthen = entry.splitsamples[curindex].size();
 
+            entry.splitsmplinf[curindex].smplfmt = static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16);
+
             //Update Loop info
             entry.splitsmplinf[curindex].loopbeg  = postconvloop.loopbeg_;
             entry.splitsmplinf[curindex].looplen  = postconvloop.loopend_ - postconvloop.loopbeg_;
@@ -125,6 +137,8 @@ namespace DSE
             // ---- Handle Enveloppe ----
             if( split.envon != 0 )
             {
+                double volumeFactor = ((prgminf.insvol * 100 / 127) / 100.0) * ((split.smplvol * 100 / 127) / 100.0);
+
                 if( IsSampleLooped )
                 {
                     //Loop the sample a few times, so its as long as the envelope
@@ -134,7 +148,7 @@ namespace DSE
                     if( ShouldUnloop )
                     {
                         //We render the envelope and disable looping
-                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate );
+                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
                         entry.splitsmplinf[curindex].smplloop = 0;
                     }
                     else
@@ -143,18 +157,16 @@ namespace DSE
                         Lenghten( entry.splitsamples[curindex], 
                                   (entry.splitsamples[curindex].size() + (entry.splitsmplinf[curindex].looplen ) ), 
                                   postconvloop );
-                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate );
+                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
 
                         //Move the loop to the end
                         entry.splitsmplinf[curindex].loopbeg = (envtotaldursmpl > SampleLenPreLengthen)? envtotaldursmpl : SampleLenPreLengthen;
-
-                        //assert( (entry.splitsmplinf[curindex].loopbeg + entry.splitsmplinf[curindex].looplen) < entry.splitsamples[curindex].size() );
                     }
                 }
                 else
                 {
                     //Render envelope only
-                    ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate );
+                    ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
                 }
 
                 //Set envelope paramters to disabled, except the release
@@ -165,13 +177,38 @@ namespace DSE
                 entry.prginf.m_splitstbl[curindex].decay2  = 0x7F;
                 entry.prginf.m_splitstbl[curindex].sustain = 0x7F;
             }
+            else
+            {
+                clog << "\nSampleID : " <<psmplinf->id <<" has its envelope disabled!\n";
+            }
 
             // ---- Extra Processing ----
             if( ShouldResample() && m_desiredsmplrate != psmplinf->smplrate )
             {
-                Resample( entry.splitsamples[curindex], psmplinf->smplrate, m_desiredsmplrate );
-                //Update sample rate info
-                entry.splitsmplinf[curindex].smplrate = m_desiredsmplrate;
+                const size_t smplszbefresample = entry.splitsamples[curindex].size();
+                DSESampleConvertionInfo postresampleloop;
+                postresampleloop.loopbeg_ = entry.splitsmplinf[curindex].loopbeg;
+                postresampleloop.loopend_ = (entry.splitsmplinf[curindex].loopbeg + entry.splitsmplinf[curindex].looplen);
+
+                if( Resample( entry.splitsamples[curindex], psmplinf->smplrate, m_desiredsmplrate, postresampleloop ) )
+                {
+                    //Update loop points
+                    entry.splitsmplinf[curindex].loopbeg = postresampleloop.loopbeg_;
+
+                    if( postresampleloop.loopend_ > entry.splitsamples[curindex].size() )
+                        postresampleloop.loopend_ = entry.splitsamples[curindex].size();
+
+                    entry.splitsmplinf[curindex].looplen = (postresampleloop.loopend_ - postresampleloop.loopbeg_);
+
+                    const size_t szafterfix = ( entry.splitsmplinf[curindex].looplen + entry.splitsmplinf[curindex].loopbeg );
+
+#ifdef DEBUG
+                    assert( ( szafterfix < entry.splitsamples[curindex].size() ) );
+#endif
+
+                    //Update sample rate info
+                    entry.splitsmplinf[curindex].smplrate = m_desiredsmplrate;
+                }
             }
             if( ShouldApplyFilters() )
             {
@@ -182,126 +219,6 @@ namespace DSE
                 ApplyFx( entry.splitsamples[curindex], entry.splitsmplinf[curindex].smplrate, lfos );
             }
         }
-
-
-        /*
-        */
-        //void ProcessASplit( ProcessedPresets::PresetEntry       & entry, 
-        //                   const DSE::ProgramInfo::SplitEntry   & split, 
-        //                   const std::vector<uint8_t>           * psmpl, 
-        //                   const DSE::WavInfo                   * psmplinf )
-        //{
-        //    const size_t curindex = entry.splitsamples.size();
-
-        //    //1. Convert sample to pcm16
-        //    DSESampleConvertionInfo newloop; //The loop points after conversion
-        //    entry.splitsamples.push_back( move( ConvertSample( *psmpl, psmplinf->smplfmt, psmplinf->loopbeg, newloop ) ) );
-        //    entry.splitsmplinf.push_back( *psmplinf ); //Copy sample info #FIXME: maybe get a custom way to store the relevant data for loop points and sample rate instead ?
-
-        //    const bool doesFadeOut  = ( split.decay != 0x7F && split.sustain  == 0 ) || ( split.decay2 != 0x7F );
-        //    const bool ShouldUnloop = doesFadeOut;/*split.decay2 != 0 || split.decay2 != 0x7F;*/ //If we got a fade-out, we just loop the sample manually!
-        //    const bool IsLooped     = entry.splitsmplinf[curindex].smplloop != 0;
-        //    //const bool   loopedenv   = split.decay2 == 0 || split.decay2 == 0x7F; //If the sample doesn't fade out, it is looped by the sampler. Otherwise, we bake the full duration of the envelope into the sample.
-        //    const size_t origsmpllen = entry.splitsamples[curindex].size(); //The length in sample points of the original sample data
-
-        //    if( split.envon == 0 )
-        //        return; //no envelope processing!
-
-        //    uint32_t envtotaldur = 0;
-
-        //    //Check if envelope looped or not
-        //    //if( loopedenv ) 
-        //    //{
-        //    //    //In looped samples, we just want to bake the attack, hold, decay, and leave the sustain phase as loop
-        //    //    envtotaldur =   DSEEnveloppeDurationToMSec( split.attack, split.envmult ) +
-        //    //                    DSEEnveloppeDurationToMSec( split.hold,   split.envmult );//Total duration of the envelope!!!
-
-        //    //    if( split.sustain != 0x7F && split.decay != 0x7F )
-        //    //        envtotaldur += DSEEnveloppeDurationToMSec( split.decay,  split.envmult ); 
-        //    //}
-        //    //else
-        //    //{
-        //        //Non-looped samples have the extra decay2 param baked into them
-        //        envtotaldur =   DSEEnveloppeDurationToMSec( split.attack, split.envmult ) +
-        //                        DSEEnveloppeDurationToMSec( split.hold,   split.envmult );
-
-        //        if( split.sustain != 0x7F && split.decay != 0x7F )
-        //            envtotaldur += DSEEnveloppeDurationToMSec( split.decay,  split.envmult ); 
-
-        //        if( split.decay2 != 0x7F )
-        //            envtotaldur += DSEEnveloppeDurationToMSec( split.decay2, split.envmult ); //Total duration of the envelope!!!
-        //    //}
-
-
-        //    // ---- Process our enveloppe ---- 
-        //    uint32_t envtotaldursmpl = MsecToNbSamples( psmplinf->smplrate, envtotaldur );//static_cast<uint32_t>( lround( ceil( ( (envtotaldur / 1000.0) * static_cast<double>(psmplinf->smplrate) ) ) ) ); //Result is a number of samples. The total duration in samples.
-
-        //    if( /*loopedenv*/ !ShouldUnloop && IsLooped )
-        //        envtotaldursmpl += (newloop.loopend_ - newloop.loopbeg_); //Add another extra loop so that the sample can be looped at a sustained volume!
-        //    
-        //    //We need to calculate the duration of the sample without looping
-        //    // If its shorter than the enveloppe, we loop until the total duration is reached.
-        //    const size_t newsmpllen = ( origsmpllen >= envtotaldursmpl )? origsmpllen : envtotaldursmpl; //in sample points
-
-        //    //2. Lengthen the sound sample, or not, depending on the volume enveloppe
-        //    if( envtotaldursmpl > origsmpllen && IsLooped )
-        //    {
-        //        Lenghten( entry.splitsamples[curindex], newsmpllen, newloop );
-        //    }
-        //    else if( envtotaldursmpl > origsmpllen && !IsLooped  )
-        //    {
-        //    }
-        //    else if( origsmpllen >= envtotaldursmpl && (split.decay2 != 0x7F || split.sustain == 0) ) //If the envelope is shorter than the sample. 
-        //    {
-        //    }
-
-        //    //3. Apply Volume enveloppe
-        //    ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate );
-
-        //    entry.splitsmplinf[curindex].smplloop = IsLooped && !ShouldUnloop;
-        //    entry.splitsmplinf[curindex].loopbeg  = newloop.loopbeg_;
-        //    entry.splitsmplinf[curindex].looplen  = (newloop.loopend_ - newloop.loopbeg_);
-
-        //    // ---- Update our sample info ----
-        //    //if( ShouldUnloop && IsLooped /*(entry.splitsmplinf[curindex].smplloop)*/ )
-        //    //{
-        //    //    //Disable looping on this sample! As the loop is already rendered into the sample
-        //    //    entry.splitsmplinf[curindex].smplloop = 0;
-        //    //    entry.splitsmplinf[curindex].loopbeg  = 0;
-        //    //    entry.splitsmplinf[curindex].looplen  = newloop.loopend_;
-        //    //}
-        //    //else if( !ShouldUnloop )
-        //    //{
-        //    //    entry.splitsmplinf[curindex].loopbeg  = newloop.loopbeg_;
-        //    //    entry.splitsmplinf[curindex].looplen  = (newloop.loopend_ - newloop.loopbeg_);
-        //    //}
-        //    ///else //if( /*!loopedenv*/ ShouldUnloop )
-
-        //    //else
-        //    //{
-        //    //    //Update sample info
-        //    //    entry.splitsmplinf[curindex].smplloop = 1;
-        //    //    entry.splitsmplinf[curindex].loopbeg  = newloop.loopbeg_;
-        //    //    entry.splitsmplinf[curindex].looplen  = (newloop.loopend_ - newloop.loopbeg_);
-        //    //}
-        //    entry.splitsmplinf[curindex].smplfmt = static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16);
-
-        //    //4. Resample
-        //    if( m_desiredsmplrate != -1 && m_desiredsmplrate != psmplinf->smplrate )
-        //    {
-        //        Resample( entry.splitsamples[curindex], psmplinf->smplrate, m_desiredsmplrate );
-        //        //Update sample rate info
-        //        entry.splitsmplinf[curindex].smplrate = m_desiredsmplrate;
-        //    }
-
-        //    //Set envelope paramters to disabled, except the release
-        //    entry.prginf.m_splitstbl[curindex].atkvol  = 0x00;
-        //    entry.prginf.m_splitstbl[curindex].attack  = 0x00;
-        //    entry.prginf.m_splitstbl[curindex].hold    = 0x00;
-        //    entry.prginf.m_splitstbl[curindex].decay   = 0x00;
-        //    entry.prginf.m_splitstbl[curindex].decay2  = 0x7F;
-        //    entry.prginf.m_splitstbl[curindex].sustain = 0x7F;
-        //}
 
         /*
         */
@@ -318,13 +235,8 @@ namespace DSE
         */
         void Lenghten( vector<int16_t> & smpl, size_t destlen, const DSESampleConvertionInfo & loopinf )
         {
-            std::deque<size_t> loopjunctions;
-
             //Pre-alloc
             smpl.reserve( destlen );
-
-            //Push the first loop junction point 
-            loopjunctions.push_back( smpl.size() );
 
             //Copy samples from the loop, to the end of the entire sample, until we reach the desired amount of samples
             size_t cntsrcsmpl = loopinf.loopbeg_;
@@ -337,68 +249,47 @@ namespace DSE
                 if( cntsrcsmpl < loopinf.loopend_ )
                     ++cntsrcsmpl;
                 else
-                {
-                    //Mark loop pos, and to later smooth them
-                    loopjunctions.push_back( smpl.size() );
                     cntsrcsmpl = loopinf.loopbeg_;
-                }
             }
 
             //Smooth the loop points #TODO
-            //for( const auto & loopjunc : loopjunctions )
-            //{
-            //    if( loopjunc > 8 && (loopjunc < smpl.size() - 8) ) //We need 8 samples before and after to properly smooth things out
-            //    {
-            //    }
-            //}
-        }
-
-        /*
-            Resample the sample.
-        */
-        void Resample( vector<int16_t> & smpl, int origsamplrte, int destsamplrte )
-        {
-            assert(false);
         }
 
         /*
             Apply the envelope phases over time on the sample
         */
-        void ApplyEnveloppe( vector<int16_t> & smpl, const DSE::DSEEnvelope & env, int smplrate )
+        void ApplyEnveloppe( vector<int16_t> & smpl, const DSE::DSEEnvelope & env, int smplrate, double volmul )
         {
-            double lastvolumelvl = 1.0;
+            const double MaxVol        = volmul * 1.0;
+            double       lastvolumelvl = MaxVol;
 
             //Attack
             const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.attack, env.envmulti ) );
-            const double atklvl   = ( ( env.atkvol * 100.0 ) / 128.0 ) / 100.0;
-                //static_cast<int>( ceil( ( DSEEnveloppeDurationToMSec( env.attack, env.envmulti ) * (smplrate * 1000.0) ) / 1000.0 ) );
+            const double atklvl   = (( ( env.atkvol * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.attack != 0 )
-                LerpVol( 0, atknbsmpls, atklvl, 1.0, smpl );
+                LerpVol( 0, atknbsmpls, atklvl, MaxVol, smpl );
 
             //Hold
             const int holdbeg     = atknbsmpls;
             const int holdnbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.hold, env.envmulti ) );
-                //static_cast<int>( ceil( ( DSEEnveloppeDurationToMSec( env.hold, env.envmulti ) * (smplrate * 1000.0) ) / 1000.0 ) );
             const int holdend     = holdbeg + holdnbsmpls;
 
             //Decay
             const int    decaybeg     = holdend;
             int          decaynbsmpls = 0; 
-            const double sustainlvl   = ( ( env.sustain * 100.0 ) / 128.0 ) / 100.0;
-            if( env.decay != 0x7F )
+            const double sustainlvl   = (( ( env.sustain * 100.0 ) / 128.0 ) / 100.0) * volmul;
+            if( env.decay != 0x7F && !(env.decay == 0 && sustainlvl == 0) )
             {
                 decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay, env.envmulti ) );
-                    //static_cast<int>( ceil( ( DSEEnveloppeDurationToMSec( env.decay, env.envmulti ) * (smplrate * 1000.0) ) / 1000.0 ) );
-                LerpVol( decaybeg, decaybeg + decaynbsmpls, 1.0, sustainlvl, smpl );
+                LerpVol( decaybeg, decaybeg + decaynbsmpls, MaxVol, sustainlvl, smpl );
                 lastvolumelvl = sustainlvl;
             }
             
-            if( /*env.decay2 != 0 &&*/ env.decay2 != 0x7F )
+            if( env.decay2 != 0x7F )
             {
                 const int decay2beg     = decaybeg + decaynbsmpls;
                 const int decay2nbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay2, env.envmulti ) );
-                    //static_cast<int>( ceil( ( DSEEnveloppeDurationToMSec( env.decay2, env.envmulti ) * (smplrate * 1000.0) ) / 1000.0 ) );
-                LerpVol( decay2beg, decay2beg + decay2nbsmpls, lastvolumelvl, 0.0, smpl );
+                LerpVol( decay2beg, smpl.size(), lastvolumelvl, 0.0, smpl );
             }
             else
             {
@@ -449,6 +340,84 @@ namespace DSE
                 }
             }
         }
+
+        /*
+            Resample the sample.
+        */
+        bool Resample( vector<int16_t> & smpl, int origsamplrte, int destsamplrte, DSESampleConvertionInfo & inout_newloop )
+        { return false; }
+    //        r8b::CDSPResampler16 resampler( origsamplrte, destsamplrte, smpl.size() );
+    //        vector<double>       tempbuf;
+    //        tempbuf.reserve( smpl.size() );
+
+    //        for( const auto sp : smpl )
+    //            tempbuf.push_back( sp );
+
+    //        double *ptrout = nullptr;
+    //        int     szresampled = 0;
+    //        
+    //        //#FIXME : Ugh, so I can't find any info on how to preserve loop points after resampling for some reasons(thanks google) 
+    //        //          so, I'll do this by doing some extra useless work here.
+    //        if( inout_newloop.loopbeg_ != 0 )
+    //        {
+    //            const uint32_t oldloopbeg = inout_newloop.loopbeg_;
+    //            const uint32_t oldlooplen = (inout_newloop.loopend_ - inout_newloop.loopbeg_);
+    //            vector<int16_t> asmsmplbuff;
+    //            auto            backins = std::back_inserter(asmsmplbuff);
+
+    //            //Loop beg
+    //            szresampled = resampler.process( tempbuf.data(), inout_newloop.loopbeg_, ptrout );
+    //            if( szresampled > 0 && ptrout != nullptr )
+    //            {
+    //                inout_newloop.loopbeg_ = szresampled;
+    //                std::copy_n( ptrout, szresampled, backins );
+    //            }
+    //            else
+    //                return false;
+
+    //            //Loop length
+    //            szresampled = resampler.process( (tempbuf.data() + oldloopbeg), 
+    //                                             oldlooplen, 
+    //                                             ptrout );
+    //            if( szresampled > 0 && ptrout != nullptr )
+    //            {
+    //                inout_newloop.loopend_ = inout_newloop.loopbeg_ + szresampled;
+    //                std::copy_n( ptrout, szresampled, backins );
+    //            }
+    //            else
+    //                return false;
+
+    //            //Reset everything 
+    //            //ptrout      = nullptr; //The resampler class owns the content pointed to, so we can safely set this to null
+    //            //szresampled = 0;
+
+    //            smpl = std::move(asmsmplbuff);
+    //            return true;
+    //        }
+    //        else
+    //        {
+    //            szresampled = resampler.process( tempbuf.data(), tempbuf.size(), ptrout );
+
+    //            if( szresampled > 0 && ptrout != nullptr )
+    //            {
+    //                smpl.resize(szresampled);
+
+    //                for( size_t i = 0; i < smpl.size(); ++i )
+    //                    smpl[i] = ptrout[i];
+
+    //                return true;
+    //            }
+    //            else
+    //            {
+    //                clog << "DSE::SampleProcessor::Resample(): Error, resampling failed! (" <<origsamplrte <<", " <<destsamplrte <<")\n";
+    //#ifdef DEBUG
+    //                assert(false);
+    //#endif
+    //                return false;
+    //            }
+    //        }
+    //    }
+
 
         /*
         */
