@@ -413,6 +413,7 @@ namespace utils{ namespace cmdl
     {
         const auto &   refParams = getArgumentsList();
         vector<string> params    = argsparse.getAllFoundParams();
+        auto           options   = argsparse.getAllFoundOptions();
         //bool           bsuccess = true;
 
         for( unsigned int i = 0; i < refParams.size(); ++i )
@@ -429,10 +430,18 @@ namespace utils{ namespace cmdl
                     throw std::runtime_error(strserror.str());
                 }
             }
-            else if( !(refParams[i].isoptional) )
+            else if( !(refParams[i].isoptional)  )
             {
                 stringstream strserror;
                 strserror <<"Error! Command line is missing the parameter: \"" <<refParams[i].name <<"\"!";
+                throw exMissingParameter(strserror.str());
+            }
+            else if( refParams[i].isoptional && 
+                     refParams[i].myIsRequired != nullptr && 
+                     refParams[i].myIsRequired( options ) )
+            {
+                stringstream strserror;
+                strserror <<"Error! Command line is missing the optional parameter: \"" <<refParams[i].name <<"\" which is required in this case!";
                 throw exMissingParameter(strserror.str());
             }
             //else // We missed an optional param, no big deal!
