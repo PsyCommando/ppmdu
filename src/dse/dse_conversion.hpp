@@ -19,6 +19,7 @@ All wrongs reversed, no crappyrights :P
 #include <memory>
 #include <future>
 #include <map>
+#include <sstream>
 
 //namespace DSE{ struct SMDLPresetConversionInfo; };
 
@@ -188,12 +189,73 @@ namespace DSE
         */
         void ExportXMLAndMIDIs( const std::string & destdir, int nbloops = 0 );
 
+    //
+    //
+    //
+        /*
+            Writes a CVInfo files from the preset data currently loaded!
+        */
+        void WriteBlankCvInfoFile( const std::string & destf );
+
     //-----------------------------
     // State Methods
     //-----------------------------
         bool IsMasterBankLoaded()const;
 
     private:
+        struct audiostats
+        {
+            template<class T>
+                struct LimitVal
+            {
+                typedef T val_t;
+                val_t min;
+                val_t avg;
+                val_t max;
+                int   cntavg; //Count values
+                int   accavg; //Accumulate values
+
+                LimitVal()
+                    :min(0), avg(0), max(0), cntavg(0), accavg(0)
+                {}
+
+                void Process(val_t anotherval )
+                {
+                    if( anotherval < min )
+                        min = anotherval;
+                    else if( anotherval > max )
+                        max = anotherval;
+
+                    ++cntavg;
+                    accavg += anotherval;
+                    avg = static_cast<val_t>(accavg / cntavg);
+                }
+
+                std::string Print()const
+                {
+                    std::stringstream sstr;
+                    sstr <<"(" << static_cast<int>( min ) <<", " <<static_cast<int>( max ) <<" ) Avg : " <<avg; 
+                    return std::move( sstr.str() );
+                }
+            };
+
+            audiostats()
+            {}
+
+            std::string Print()const
+            {
+                std::stringstream sstr;
+                sstr << "Batch Converter Statistics:\n"
+                     << "-----------------------------\n"
+                     << "\tlforate : " <<lforate.Print() <<"\n"
+                     << "\tlfodepth : " <<lfodepth.Print() <<"\n";
+                return std::move(sstr.str());
+            }
+
+            LimitVal<int16_t> lforate;
+            LimitVal<int16_t> lfodepth;
+        };
+
         /*
             GetSizeLargestPrgiChunk
                 Search the entire list of loaded swdl files, and pick the largest prgi chunk.
@@ -256,6 +318,8 @@ namespace DSE
 
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;
+
+        audiostats                m_stats;
 
         BatchAudioLoader( const BatchAudioLoader & )           = delete;
         BatchAudioLoader & operator=(const BatchAudioLoader& ) = delete;

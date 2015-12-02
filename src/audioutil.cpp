@@ -71,7 +71,7 @@ namespace audioutil
         //Input Path argument
         { 
             0,      //first arg
-            false,  //false == mandatory
+            true,  //false == mandatory
             true,   //guaranteed to appear in order
             "input path", 
             "Path to the file/directory to export, or the directory to assemble.",
@@ -80,7 +80,8 @@ namespace audioutil
 #elif __linux__
             "\"/pmd_romdata/data.bin\"",
 #endif
-            std::bind( &CAudioUtil::ParseInputPath, &GetInstance(), placeholders::_1 ),
+            std::bind( &CAudioUtil::ParseInputPath,      &GetInstance(), placeholders::_1 ),
+            std::bind( &CAudioUtil::IsInputPathRequired, &GetInstance(), placeholders::_1 ),
         },
         //Output Path argument
         { 
@@ -102,6 +103,9 @@ namespace audioutil
 //------------------------------------------------
 //  Options Info
 //------------------------------------------------
+
+    const string OPTION_SwdlPathSym = "swdlpath";
+    const string OPTION_SmdlPathSym = "smdlpath";
 
     /*
         Information on all the switches / options to allow the automated parser 
@@ -152,6 +156,16 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionPathToCvInfo, &GetInstance(), placeholders::_1 ),
         },
 
+        //MakeCvInfo
+        {
+            "makecvinfo",
+            0,
+            "This will build a blank populated cvinfo.xml file from all the loaded swdl files specified using the " + OPTION_SwdlPathSym + " option."
+            " The first parameter specified on the commandline will be the name of the outputed cvinfo.xml file!",
+            "-makecvinfo",
+            std::bind( &CAudioUtil::ParseOptionMakeCvinfo, &GetInstance(), placeholders::_1 ),
+        },
+
         //Export Main Bank And Tracks
         //{
         //    "mbat",
@@ -178,7 +192,7 @@ namespace audioutil
 
         //Set SWDLPath
         {
-            "swdlpath",
+            OPTION_SwdlPathSym,
             1,
             "Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored."
             "Is also used to specify where to put assembled DSE Preset during import.",
@@ -188,7 +202,7 @@ namespace audioutil
 
         //Set SMDLPath
         {
-            "smdlpath",
+            OPTION_SmdlPathSym,
             1,
             "Use this to specify the path to the folder where the SMDLs to export are stored."
             "Is also used to specify where to put MIDI files converted to SMDL format.",
@@ -287,6 +301,7 @@ namespace audioutil
         m_useHexaNumbers= false;
         m_bBakeSamples  = true;
         m_bUseLFOFx     = true;
+        m_bMakeCvinfo   = false;
         m_nbloops       = 0;
         m_outtype       = eOutputType::SF2;
     }
@@ -388,7 +403,23 @@ namespace audioutil
             m_inputPath = path;
             return true;
         }
+
         return false;
+    }
+
+    /*
+        When we have some specific options specified, we don't need the input path argument!
+    */
+    bool CAudioUtil::IsInputPathRequired( const std::vector<std::vector<std::string>> & options )
+    {
+        auto itfoundswdl = std::find_if( options.begin(), options.end(), [](const vector<string>& curopt){ return ( curopt.front() == OPTION_SwdlPathSym ); } );
+
+        if( itfoundswdl != options.end() )
+        {
+            return false;
+        }
+
+        return true;
     }
     
     bool CAudioUtil::ParseOutputPath( const string & path )
@@ -560,6 +591,12 @@ namespace audioutil
         return true;
     }
 
+    bool CAudioUtil::ParseOptionMakeCvinfo( const std::vector<std::string> & optdata )
+    {
+        m_bMakeCvinfo = true;
+        return true; 
+    }
+
 //
 //  Program Setup and Execution
 //
@@ -626,6 +663,8 @@ namespace audioutil
             //Batch SWDL Export, or Batch SWDL listing
             if( m_isListPresets )
                 m_operationMode = eOpMode::BatchListSWDLPrgm;   //List SWDL samples and programs
+            else if( m_bMakeCvinfo )
+                m_operationMode = eOpMode::MakeCvInfo;          //Make a blank CVinfo
             else
                 m_operationMode = eOpMode::ExportBatchSWDL;     //Export a batch of SWDL files only !
             m_outputPath = m_inputPath;                         //The only parameter will be the output
@@ -785,6 +824,12 @@ namespace audioutil
                 {
                     cout <<"=== Writing List of Presets + Samples Contained in SWDL ! ===\n";
                     returnval = BatchListSWDLPrgm( m_inputPath );
+                    break;
+                }
+                case eOpMode::MakeCvInfo:
+                {
+                    cout <<"=== Writing a Populated CvInfo XML File ! ===\n";
+                    returnval = MakeCvinfo();
                     break;
                 }
                 default:
@@ -1251,7 +1296,7 @@ namespace audioutil
                 continue;
 
             string        infilename = curpath.getBaseName();
-            cout /*<<right <<setw(60) <<setfill(' ')  << "\r*/<<"Exporting " << infilename << "..\n";
+            cout <<right <<setw(60) <<setfill(' ')  << "\rExporting " << infilename << "..";
 
             MusicSequence smd = move( DSE::ParseSMDL( curpath.toString() ) );
             ExportASequenceToMidi( smd, infilename, Poco::Path(outputDir).append(infilename).setExtension("mid").makeFile(), m_convinfopath, m_nbloops, m_bGM );
@@ -1286,8 +1331,10 @@ namespace audioutil
 
                     for( const auto & split : prgm->m_splitstbl )
                     {
-                        lstfile << "\t\t->Split " <<static_cast<int>(split.id) <<": " 
-                                << "Sample ID( " <<static_cast<int>(split.smplid) << " ), MIDI KeyRange( " <<static_cast<int>(split.lowkey) <<" to " <<static_cast<int>(split.hikey) <<" ),"
+                        lstfile << "\t\t->Split " <<right <<setw(4) <<setfill(' ') <<static_cast<int>(split.id) <<": " 
+                                << "Sample ID( " <<right <<setw(6) <<setfill(' ') <<static_cast<int>(split.smplid) 
+                                << " ), MIDI KeyRange( " <<right <<setw(4) <<setfill(' ') <<static_cast<int>(split.lowkey) <<" to " 
+                                <<right <<setw(4) <<setfill(' ') <<static_cast<int>(split.hikey) <<" ),"
                                 <<" \n";
                     }
                     ++cntprg;
@@ -1316,6 +1363,7 @@ namespace audioutil
              << "\t\"" << inputfile.toString() <<"\"\n"
              << "To:\n"
              << "\t\"" << outputfile.toString() <<"\"\n";
+
 
         std::ofstream lstfile( outputfile.toString() );
         if( !lstfile.is_open() || lstfile.bad() )
@@ -1359,6 +1407,90 @@ namespace audioutil
                 WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
             }
         }
+        cout<<"\n\n<*>- Done !\n";
+        return 0;
+    }
+
+    void MakeInitialCvInfoForPrgmBank( DSE::SMDLPresetConversionInfo & dest, const DSE::ProgramBank & curbank )
+    {
+        for( const auto & aprgm : curbank.PrgmInfo() )
+        {
+            if( aprgm != nullptr )
+            {
+                DSE::SMDLPresetConversionInfo::PresetConvData mycvdat( aprgm->m_hdr.id );
+                mycvdat.midipres = aprgm->m_hdr.id;
+                
+                if( aprgm->m_hdr.id == 0x7F )
+                {
+                    mycvdat.midibank  = 127;
+                    mycvdat.idealchan = 10;
+                }
+                
+                for( const auto & split : aprgm->m_splitstbl )
+                {
+                    mycvdat.origsmplids.push_back( split.smplid );
+
+                    if( (split.hikey - split.lowkey) == 0 ) //Only care about single key splits
+                    {
+                        DSE::SMDLPresetConversionInfo::NoteRemapData nrmap;
+                        nrmap.destnote   = split.hikey;
+                        nrmap.origsmplid = split.smplid;
+                        mycvdat.remapnotes.insert( make_pair( split.hikey, move(nrmap) ) );
+                    }
+                }
+
+                dest.AddPresetConvInfo( aprgm->m_hdr.id, move(mycvdat) );
+            }
+        }
+    }
+
+    int CAudioUtil::MakeCvinfo()
+    {
+        Poco::Path   inputfile(m_swdlpath);
+        Poco::Path   outputfile;
+
+        if( ! m_outputPath.empty() )
+            outputfile = Poco::Path(m_outputPath);
+        else
+            outputfile = Poco::Path(inputfile).setFileName("cvinfo.xml");
+
+        cout << "Exporting cvinfo file:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outputfile.toString() <<"\"\n";
+
+        Poco::DirectoryIterator itdir(m_swdlpath);
+        Poco::DirectoryIterator itend;
+        DSE::SMDLConvInfoDB     cvdb;
+
+        for( ; itdir != itend; ++itdir )
+        {
+            Poco::Path curpath(itdir->path());
+            if( !SameFileExt( curpath.getExtension(), SWDL_FileExtension ) )
+                continue;
+
+            string       infilename = curpath.getBaseName();
+
+            cout <<right <<setw(60) <<setfill(' ') << "\rParsing " << infilename << "..";
+
+            //Load SWDL
+            PresetBank swd = move( DSE::ParseSWDL( curpath.toString() ) );
+            {
+                auto ptrprgms = swd.prgmbank().lock();
+
+                if( ptrprgms != nullptr )
+                {
+                    DSE::SMDLPresetConversionInfo prgscvinf;
+                    MakeInitialCvInfoForPrgmBank( prgscvinf, *ptrprgms );
+                    //Make cvinfo data entry
+                    cvdb.AddConversionInfo( infilename, move(prgscvinf) );
+                }
+            }
+        }
+
+        //Write cvinfo db
+        cvdb.Write( outputfile.toString() );
+
         cout<<"\n\n<*>- Done !\n";
         return 0;
     }

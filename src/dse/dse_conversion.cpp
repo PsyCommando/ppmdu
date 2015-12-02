@@ -177,6 +177,13 @@ namespace DSE
         return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) ) );
     }
 
+    inline int16_t DSE_LFODepthToCents( int16_t depth )
+    {
+        return depth * 10; /*static_cast<int16_t>( lround(depth * 12000.0 / 10000.0 ) )*/;
+
+        //return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(depth)  ) ) );
+    }
+
     /*
         RawBytesToPCM16Vec
             Take a vector of 16 bits signed pcm samples as raw bytes, and put them into a vector of
@@ -860,6 +867,9 @@ namespace DSE
         sf.AddPreset( std::move(pre) );
     }
 
+    /***************************************************************************************
+        AddSampleToSoundfont
+    ***************************************************************************************/
     void AddSampleToSoundfont( size_t                           cntsmslot, 
                                shared_ptr<SampleBank>           & samples, 
                                map<uint16_t,size_t>             & swdsmplofftosf,  
@@ -940,6 +950,9 @@ namespace DSE
         }
     }
 
+    /***************************************************************************************
+        HandlePrgSplitBaked
+    ***************************************************************************************/
     void BatchAudioLoader::HandlePrgSplitBaked( sf2::SoundFont                     * destsf2, 
                                                 const DSE::ProgramInfo::SplitEntry & split,
                                                 size_t                               sf2sampleid,
@@ -996,10 +1009,14 @@ namespace DSE
             myzone.SetPan( DsePanToSf2Pan(split.smplpan) );
 
         //Volume Envelope
-        Envelope myenv = RemapDSEVolEnvToSF2(DSEEnvelope(split));
+        DSEEnvelope dseenv(split);
+        Envelope myenv = RemapDSEVolEnvToSF2(dseenv);
 
         //Set the envelope
         myzone.SetVolEnvelope( myenv );
+        
+        if( dseenv.release != 0 )
+            myzone.AddGenerator( eSFGen::releaseVolEnv, static_cast<sf2::genparam_t>( lround(myenv.release * 1.1) ) );
 
         //Sample ID in last
         myzone.SetSampleId( sf2sampleid );
@@ -1008,6 +1025,9 @@ namespace DSE
     }
 
 
+    /***************************************************************************************
+        HandleBakedPrgInst
+    ***************************************************************************************/
     void BatchAudioLoader::HandleBakedPrgInst( const ProcessedPresets::PresetEntry   & entry, 
                                                sf2::SoundFont                        * destsf2, 
                                                const std::string                     & presname, 
@@ -1048,12 +1068,16 @@ namespace DSE
                 {
                     if( utils::LibWide().isLogOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
+
+                    //Gather statistics
+                    m_stats.lfodepth.Process( lfo.depth );
+                    m_stats.lforate.Process( lfo.rate );
                     
                     if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.depth/*lfo.rate*//*/50*/ ) ); //Frequency
-                        global.AddGenerator( eSFGen::vibLfoToPitch, lfo.rate ); //Depth /*static_cast<uint16_t>( lround( static_cast<double>(lfo.rate) / 2.5 )*/
+                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.rate ) ); //Frequency
+                        global.AddGenerator( eSFGen::vibLfoToPitch, DSE_LFODepthToCents( lfo.depth ) ); //Depth 
                         global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
                         
                         if( utils::LibWide().isLogOn() )
@@ -1062,8 +1086,8 @@ namespace DSE
                     else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
                     {
                         //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate/*lfo.rate*//*/50*/ ) ); //Frequency
-                        global.AddGenerator( eSFGen::modLfoToVolume, -(lfo.depth * (20) / 127) /*//*(lfo.depth/10) * -1*/ ); //Depth
+                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate ) ); //Frequency
+                        global.AddGenerator( eSFGen::modLfoToVolume, DSE_LFODepthToCents( lfo.depth ) ); //Depth
                         global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
 
                         if( utils::LibWide().isLogOn() )
@@ -1075,8 +1099,6 @@ namespace DSE
                         presetcvinf.extrafx.push_back( 
                             SMDLPresetConversionInfo::ExtraEffects{ SMDLPresetConversionInfo::eEffectTy::Phaser, lfo.rate, lfo.depth, lfo.delay } 
                         );
-
-                        
 
                         //#TODO:
                         //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
@@ -1161,7 +1183,10 @@ namespace DSE
     }
 
 
-    //Handles all presets for a file
+    /***************************************************************************************
+        HandleBakedPrg
+            Handles all presets for a file
+    ***************************************************************************************/
     void BatchAudioLoader::HandleBakedPrg( const ProcessedPresets                & entry, 
                                            sf2::SoundFont                        * destsf2, 
                                            const std::string                     & curtrkname, 
@@ -1215,6 +1240,10 @@ namespace DSE
         }
     }
 
+    /***************************************************************************************
+        ExportSoundfontBakedSamples
+            
+    ***************************************************************************************/
     vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfontBakedSamples( const std::string & destf )
     {
         using namespace sf2;
@@ -1229,6 +1258,8 @@ namespace DSE
         //If the main bank is not loaded, try to make one out of the loaded pairs!
         if( !IsMasterBankLoaded() )
             BuildMasterFromPairs();
+
+        m_stats = audiostats(); //reset stats
 
         vector<SMDLPresetConversionInfo> trackprgconvlist = move( BuildPresetConversionDB() );
         SoundFont                        sf( m_master.metadata().fname ); 
@@ -1259,6 +1290,10 @@ namespace DSE
         }
         cout <<"\n";
 
+        //Print Stats
+        if( utils::LibWide().isLogOn() )
+            clog << m_stats.Print();
+
         //Write the soundfont
         try
         {
@@ -1280,7 +1315,10 @@ namespace DSE
 
 
 
-
+    /***************************************************************************************
+        ExportSoundfont
+            
+    ***************************************************************************************/
     vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfont( const std::string & destf )
     {
         using namespace sf2;
@@ -1369,11 +1407,11 @@ namespace DSE
         return move( merged );
     }
 
-
-    /*
-        Export all the presets for each loaded swdl pairs! And if the sample data is present,
-        it will also export it!
-    */
+    /***************************************************************************************
+        ExportXMLPrograms
+            Export all the presets for each loaded swdl pairs! And if the sample data is 
+            present, it will also export it!
+    ***************************************************************************************/
     void BatchAudioLoader::ExportXMLPrograms( const std::string & destf )
     {
         //static const string _DefaultMainSampleDirName = "mainbank";
@@ -1414,6 +1452,9 @@ namespace DSE
 
     }
 
+    /***************************************************************************************
+        ExportSoundfontAndMIDIs
+    ***************************************************************************************/
     void BatchAudioLoader::ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops, bool bbakesamples )
     {
         //Export the soundfont first
@@ -1445,9 +1486,11 @@ namespace DSE
         }
     }
 
-    /*
-        Export all music sequences to midis and export all preset data to xml + pcm16 samples!
-    */
+    /***************************************************************************************
+        ExportXMLAndMIDIs
+            Export all music sequences to midis and export all preset data to 
+            xml + pcm16 samples!
+    ***************************************************************************************/
     void BatchAudioLoader::ExportXMLAndMIDIs( const std::string & destdir, int nbloops )
     {
         static const string _DefaultMainSampleDirName = "mainbank";
@@ -1497,11 +1540,11 @@ namespace DSE
     }
 
 
-    /*
+    /***************************************************************************************
         BuildMasterFromPairs
             If no main bank is loaded, and the loaded pairs contain their own samples, 
             build a main bank from those!
-    */
+    ***************************************************************************************/
     void BatchAudioLoader::BuildMasterFromPairs()
     {
         vector<SampleBank::smpldata_t> smpldata;
@@ -1544,10 +1587,11 @@ namespace DSE
     }
 
 
-    /*
+    /***************************************************************************************
         LoadMatchedSMDLSWDLPairs
-            This function loads all matched smdl + swdl pairs in one or two different directories
-    */
+            This function loads all matched smdl + swdl pairs in one or two different 
+            directories.
+    ***************************************************************************************/
     void BatchAudioLoader::LoadMatchedSMDLSWDLPairs( const std::string & swdldir, const std::string & smdldir )
     {
         //Grab all the swd and smd pairs in the folder

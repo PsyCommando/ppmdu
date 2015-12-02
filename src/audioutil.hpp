@@ -44,6 +44,8 @@ namespace audioutil
         bool ParseInputPath  ( const std::string & path );
         bool ParseOutputPath ( const std::string & path );
 
+        bool IsInputPathRequired( const std::vector<std::vector<std::string>> & options );
+
         //Parsing Options
         bool ParseOptionGeneralMidi( const std::vector<std::string> & optdata ); //Export to general midi format
         bool ParseOptionForceLoops ( const std::vector<std::string> & optdata ); //Loop a track and omit loop markers
@@ -68,6 +70,8 @@ namespace audioutil
 
         bool ParseOptionNoFX( const std::vector<std::string> & optdata );
 
+        bool ParseOptionMakeCvinfo( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -88,6 +92,7 @@ namespace audioutil
         int ExportBatchSMDL();
         int BatchListSWDLPrgm( const std::string & SrcPath );
         int ListSWDLPrgm();
+        int MakeCvinfo();       //Make a blank cvinfo from the swdl loaded!
 
         int BuildSWDL();
         int BuildSMDL();
@@ -126,6 +131,7 @@ namespace audioutil
 
             BatchListSWDLPrgm,   //Outputs a list of the all the programs contained in the specified swdls and samples they uses
             ListSWDLPrgm,   //Outputs a list of the all the programs contained in the specified swdl and samples they uses
+            MakeCvInfo,     //Outputs a blank Cvinfo file for all the swdl loaded !
         };
 
         //Types of output
@@ -139,17 +145,18 @@ namespace audioutil
         //Default filenames names
 
         //Variables
-        std::string m_inputPath;      //This is the input path that was parsed 
-        std::string m_outputPath;     //This is the output path that was parsed
-        std::string m_convinfopath;   //Path to a file containing conversion details for translating preset numbers and etc.
-        eOpMode     m_operationMode;  //This holds what the program should do
-        bool        m_bGM;            //Whether we export to general midi compatible format or not
-        int         m_nbloops;        //The amount of times to loop a track, 0 if should use loop markers instead
-        bool        m_isPMD2;         //Whether we should treat the input path as the PMD2 ROM's root data folder
-        bool        m_isListPresets;  //Whether the list preset mode was activated !
-        bool        m_useHexaNumbers; //Whether applicable exported filenames will contain hexadecimal numbers or decimal
-        bool        m_bBakeSamples;   //Whether each preset's split should have a sample baked for it.
-        bool        m_bUseLFOFx;      //Whether LFO FX are processed
+        std::string m_inputPath;        //This is the input path that was parsed 
+        std::string m_outputPath;       //This is the output path that was parsed
+        std::string m_convinfopath;     //Path to a file containing conversion details for translating preset numbers and etc.
+        eOpMode     m_operationMode;    //This holds what the program should do
+        bool        m_bGM;              //Whether we export to general midi compatible format or not
+        int         m_nbloops;          //The amount of times to loop a track, 0 if should use loop markers instead
+        bool        m_isPMD2;           //Whether we should treat the input path as the PMD2 ROM's root data folder
+        bool        m_isListPresets;    //Whether the list preset mode was activated !
+        bool        m_useHexaNumbers;   //Whether applicable exported filenames will contain hexadecimal numbers or decimal
+        bool        m_bBakeSamples;     //Whether each preset's split should have a sample baked for it.
+        bool        m_bUseLFOFx;        //Whether LFO FX are processed
+        bool        m_bMakeCvinfo;      //Whether we should export a blank cvinfo file!
 
         std::string m_mbankpath;
         std::string m_swdlpath;
