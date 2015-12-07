@@ -179,7 +179,7 @@ namespace DSE
 
     inline int16_t DSE_LFODepthToCents( int16_t depth )
     {
-        return depth * 10; /*static_cast<int16_t>( lround(depth * 12000.0 / 10000.0 ) )*/;
+        return (depth/12) * -1; /*static_cast<int16_t>( lround(depth * 12000.0 / 10000.0 ) )*/;
 
         //return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(depth)  ) ) );
     }
@@ -479,7 +479,9 @@ namespace DSE
 
     void BatchAudioLoader::LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {
-        m_pairs.push_back( move( DSE::LoadSmdSwdPair( smd, swd ) ) );
+        DSE::PresetBank    bank = DSE::ParseSWDL( swd );
+        DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
+        m_pairs.push_back( move( std::make_pair( std::move(seq), std::move(bank) ) ) );
     }
 
     /*
@@ -593,9 +595,8 @@ namespace DSE
                                            sf2::SoundFont                         & sf,
                                            sf2::Instrument                        & inst,
                                            const vector<bool>                     & loopedsmpls,
-                                           //uint16_t                                 dsepresetid,
                                            const vector<ProgramInfo::LFOTblEntry> & lfos,
-                                           const vector<KeyGroup>                 & keygrps,
+                                           const KeyGroupList                     & keygrps,
                                            const SampleBank                       & smplbnk,
                                            SMDLPresetConversionInfo::PresetConvData & cvdata)
     {
@@ -740,7 +741,7 @@ namespace DSE
                                sf2::SoundFont                  & sf,
                                uint16_t                        & instidcnt,
                                const vector<bool>              & loopedsmpls,
-                               const vector<KeyGroup>          & keygrps,
+                               const KeyGroupList              & keygrps,
                                const shared_ptr<SampleBank>   && smplbnk,
                                SMDLPresetConversionInfo::PresetConvData  & convinf,
                                bool                              lfoeffectson )
@@ -1035,7 +1036,7 @@ namespace DSE
                                                SMDLPresetConversionInfo::PresetConvData  & presetcvinf,
                                                int                                   & instidcnt,
                                                int                                   & presetidcnt,
-                                               const std::vector<DSE::KeyGroup>      & keygroups )
+                                               const DSE::KeyGroupList     & keygroups )
     {
         using namespace sf2;
         Preset sf2preset(presname, presetcvinf.midipres, presetcvinf.midibank );
@@ -1075,23 +1076,37 @@ namespace DSE
                     
                     if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
                     {
-                        //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.rate ) ); //Frequency
-                        global.AddGenerator( eSFGen::vibLfoToPitch, DSE_LFODepthToCents( lfo.depth ) ); //Depth 
-                        global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
+                        if( lfo.rate <= 100 )
+                        {
+                            //The effect on the pitch can be handled this way
+                            global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.rate ) ); //Frequency
+                            global.AddGenerator( eSFGen::vibLfoToPitch, DSE_LFODepthToCents( lfo.depth ) ); //Depth 
+                            global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
                         
-                        if( utils::LibWide().isLogOn() )
-                            clog << "(1)pitch";
+                            if( utils::LibWide().isLogOn() )
+                                clog << "(1)pitch";
+                        }
+                        else if( utils::LibWide().isLogOn() )
+                        {
+                            clog << "<!>- LFO Vibrato effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
+                        }
                     }
                     else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
                     {
-                        //The effect on the pitch can be handled this way
-                        global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate ) ); //Frequency
-                        global.AddGenerator( eSFGen::modLfoToVolume, DSE_LFODepthToCents( lfo.depth ) ); //Depth
-                        global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
+                        if( lfo.rate <= 100 )
+                        {
+                            //The effect on the pitch can be handled this way
+                            global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate ) ); //Frequency
+                            global.AddGenerator( eSFGen::modLfoToVolume, DSE_LFODepthToCents( lfo.depth ) ); //Depth
+                            global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
 
-                        if( utils::LibWide().isLogOn() )
-                            clog << "(2)volume";
+                            if( utils::LibWide().isLogOn() )
+                                clog << "(2)volume";
+                        }
+                        else if( utils::LibWide().isLogOn() )
+                        {
+                            clog << "<!>- LFO volume level effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
+                        }
                     }
                     else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pan) ) //Pan
                     {
@@ -1162,12 +1177,17 @@ namespace DSE
 
             size_t sf2smplindex = destsf2->AddSample( move(sampl) );
 
+            //Make sure the KGrp exists, because prof layton is sloppy..
+            const auto * ptrkgrp = &(keygroups.front());
+            if( cursplit.kgrpid < keygroups.size() )
+                ptrkgrp = &(keygroups[cursplit.kgrpid]);
+
             //Add our split
             HandlePrgSplitBaked( destsf2, 
                                  cursplit, 
                                  sf2smplindex, 
                                  cursmplsinf[cntsplit], 
-                                 keygroups[cursplit.kgrpid], 
+                                 *ptrkgrp, 
                                  presetcvinf, 
                                  &myinst );
         }
@@ -1194,7 +1214,7 @@ namespace DSE
                                            std::vector<SMDLPresetConversionInfo> & presetcvinf,
                                            int                                   & instidcnt,
                                            int                                   & presetidcnt,
-                                           const std::vector<DSE::KeyGroup>      & keygroups
+                                           const DSE::KeyGroupList      & keygroups
                                            )
     {
         using namespace sf2;
@@ -1548,6 +1568,7 @@ namespace DSE
     void BatchAudioLoader::BuildMasterFromPairs()
     {
         vector<SampleBank::smpldata_t> smpldata;
+        bool                           bnosmpldata = true;
 
         //Iterate through all the pairs and fill up our sample data list !
         for( size_t cntpairs = 0; cntpairs < m_pairs.size(); cntpairs++ )
@@ -1557,6 +1578,9 @@ namespace DSE
 
             if( ptrsmplbnk != nullptr )
             {
+                //We have sample data
+                bnosmpldata = false;
+
                 //Enlarge our vector when needed!
                 if( ptrsmplbnk->NbSlots() > smpldata.size() )
                     smpldata.resize( ptrsmplbnk->NbSlots() );
@@ -1575,6 +1599,9 @@ namespace DSE
                 }
             }
         }
+
+        if( bnosmpldata )
+            throw runtime_error("BatchAudioLoader::BuildMasterFromPairs(): No sample data found in the DSE containers that were loaded! Its possible the main bank was not loaded?");
 
         DSE_MetaDataSWDL meta;
         meta.fname       = "Main.SWD";
@@ -1628,56 +1655,56 @@ namespace DSE
 //  Functions
 //===========================================================================================
     
-    std::pair<DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
-    {
-        DSE::PresetBank mbank  = DSE::ParseSWDL( bank );
-        vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
+    //std::pair<DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
+    //{
+    //    DSE::PresetBank mbank  = DSE::ParseSWDL( bank );
+    //    vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
 
-        //We can't know for sure if they're always in the same directory!
-        //vector<string> smdfnames;
-        //vector<string> swdfnames;
-        Poco::DirectoryIterator dirend;
-        Poco::File              dirswd( swdroot );
-        Poco::File              dirsmd( smdroot );
-        vector<Poco::File>      cntdirswd;
-        vector<Poco::File>      cntdirsmd;
+    //    //We can't know for sure if they're always in the same directory!
+    //    //vector<string> smdfnames;
+    //    //vector<string> swdfnames;
+    //    Poco::DirectoryIterator dirend;
+    //    Poco::File              dirswd( swdroot );
+    //    Poco::File              dirsmd( smdroot );
+    //    vector<Poco::File>      cntdirswd;
+    //    vector<Poco::File>      cntdirsmd;
 
-        //Fill up file lists
-        dirswd.list(cntdirswd);
-        dirsmd.list(cntdirsmd);
-        
-        //Find and load all smd/swd pairs!
-        for( const auto & smd : cntdirsmd )
-        {
-            const string smdbasename = Poco::Path(smd.path()).getBaseName();
+    //    //Fill up file lists
+    //    dirswd.list(cntdirswd);
+    //    dirsmd.list(cntdirsmd);
+    //    
+    //    //Find and load all smd/swd pairs!
+    //    for( const auto & smd : cntdirsmd )
+    //    {
+    //        const string smdbasename = Poco::Path(smd.path()).getBaseName();
 
-            //Find matching swd
-            vector<Poco::File>::const_iterator itfound = cntdirswd.begin();
-            for( ; itfound != cntdirswd.end(); ++itfound )
-            {
-                if( smdbasename == Poco::Path(itfound->path()).getBaseName() )
-                    break;
-            }
+    //        //Find matching swd
+    //        vector<Poco::File>::const_iterator itfound = cntdirswd.begin();
+    //        for( ; itfound != cntdirswd.end(); ++itfound )
+    //        {
+    //            if( smdbasename == Poco::Path(itfound->path()).getBaseName() )
+    //                break;
+    //        }
 
-            if( itfound == cntdirswd.end() )
-            {
-                cerr<<"Skipping " <<smdbasename <<".smd, because its corresponding " <<smdbasename <<".swd can't be found!\n";
-                continue;
-            }
+    //        if( itfound == cntdirswd.end() )
+    //        {
+    //            cerr<<"Skipping " <<smdbasename <<".smd, because its corresponding " <<smdbasename <<".swd can't be found!\n";
+    //            continue;
+    //        }
 
-            //Parse the files, and push_back the pair
-            seqpairs.push_back( make_pair( DSE::ParseSMDL( smd.path() ), DSE::ParseSWDL( itfound->path() ) ) );
-        }
+    //        //Parse the files, and push_back the pair
+    //        seqpairs.push_back( make_pair( DSE::ParseSMDL( smd.path() ), DSE::ParseSWDL( itfound->path() ) ) );
+    //    }
 
-        return make_pair( std::move(mbank), std::move(seqpairs) );
-    }
+    //    return make_pair( std::move(mbank), std::move(seqpairs) );
+    //}
 
-    std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
-    {
-        DSE::PresetBank    bank = DSE::ParseSWDL( swd );
-        DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
-        return std::make_pair( std::move(seq), std::move(bank) );
-    }
+    //std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
+    //{
+    //    DSE::PresetBank    bank = DSE::ParseSWDL( swd );
+    //    DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
+    //    return std::make_pair( std::move(seq), std::move(bank) );
+    //}
 
     void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
     {

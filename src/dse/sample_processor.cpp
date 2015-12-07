@@ -137,30 +137,53 @@ namespace DSE
             // ---- Handle Enveloppe ----
             if( split.envon != 0 )
             {
-                double volumeFactor = ((prgminf.insvol * 100 / 127) / 100.0) * ((split.smplvol * 100 / 127) / 100.0);
+                double volumeFactor = ( static_cast<int>(prgminf.insvol * 100 / 127) / 100.0) * ( static_cast<int>(split.smplvol * 100 / 127) / 100.0);
 
                 if( IsSampleLooped )
                 {
-                    //Loop the sample a few times, so its as long as the envelope
-                    if( envtotaldursmpl > entry.splitsamples[curindex].size() )
-                        Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop );
-
                     if( ShouldUnloop )
                     {
+                        //Loop the sample a few times, so its as long as the envelope
+                        if( envtotaldursmpl > entry.splitsamples[curindex].size() )
+                            Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop );
+
                         //We render the envelope and disable looping
                         ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
                         entry.splitsmplinf[curindex].smplloop = 0;
                     }
                     else
                     {
+                        //Loop the sample a few times, so its as long as the envelope
+                        if( envtotaldursmpl > entry.splitsamples[curindex].size() )
+                        {
+                            int          nbextraloops = 0;
+                            const size_t durtoloop    = envtotaldursmpl - SampleLenPreLengthen; //entry.splitsmplinf[curindex].loopbeg;
+                            //const size_t resultinglength  = envtotaldursmpl + ( durofunloopedenv % entry.splitsmplinf[curindex].looplen );
+                            
+                            if( ( durtoloop % entry.splitsmplinf[curindex].looplen ) != 0 )
+                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen) + 1;
+                            else
+                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen);
+
+                            LenghtenByNbLoops( entry.splitsamples[curindex], nbextraloops, postconvloop );
+
+                            //Make sure the sample ends only after fully completing its last loop, this will keep 
+                            // the sample from clicking/abruptly cutting to the loop.
+                            //Lenghten( entry.splitsamples[curindex], resultinglength, postconvloop );
+                        }
+
+                        //Save the length of the sample after making it longer, since it differ from "envtotaldursmpl"
+                        const size_t actualnewloopbeg = entry.splitsamples[curindex].size();
+
                         //We copy one loop to the end, render the envelope, Move the loop to the end past the decay phase, and keep looping on.
-                        Lenghten( entry.splitsamples[curindex], 
-                                  (entry.splitsamples[curindex].size() + (entry.splitsmplinf[curindex].looplen ) ), 
-                                  postconvloop );
+                        //Lenghten( entry.splitsamples[curindex], 
+                        //          (entry.splitsamples[curindex].size() + (entry.splitsmplinf[curindex].looplen ) ), 
+                        //          postconvloop );
+                        LenghtenByNbLoops( entry.splitsamples[curindex], 1, postconvloop );
                         ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
 
                         //Move the loop to the end
-                        entry.splitsmplinf[curindex].loopbeg = (envtotaldursmpl > SampleLenPreLengthen)? envtotaldursmpl : SampleLenPreLengthen;
+                        entry.splitsmplinf[curindex].loopbeg = (actualnewloopbeg > SampleLenPreLengthen)? actualnewloopbeg : SampleLenPreLengthen;
                     }
                 }
                 else
@@ -169,7 +192,7 @@ namespace DSE
                     ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
                 }
 
-                //Set envelope paramters to disabled, except the release
+                //Set envelope paramters to disabled, except the release, so we don't end up applying the SF2 envelope over the sample!
                 entry.prginf.m_splitstbl[curindex].atkvol  = 0x00;
                 entry.prginf.m_splitstbl[curindex].attack  = 0x00;
                 entry.prginf.m_splitstbl[curindex].hold    = 0x00;
@@ -256,6 +279,43 @@ namespace DSE
         }
 
         /*
+            Add the loop to the end of the sample the specified amount of times!
+        */
+        void LenghtenByNbLoops( vector<int16_t> & smpl, int nbloops, const DSESampleConvertionInfo & loopinf )
+        {
+            const size_t looplen     = (loopinf.loopend_ - loopinf.loopbeg_);
+            const size_t targetlen   = loopinf.loopbeg_ + ( (nbloops+1) * looplen );
+            const size_t origsmpllen = smpl.size();
+
+            //Pre-alloc
+            smpl.reserve( targetlen );
+            
+            for( int cntloop = 0; cntloop < nbloops; ++cntloop )
+            {
+                for( size_t cntsmpls = loopinf.loopbeg_; cntsmpls < origsmpllen; ++cntsmpls )
+                    smpl.push_back( smpl[cntsmpls] );
+            }
+        }
+        //{
+        //    const size_t looplen   = (loopinf.loopend_ - loopinf.loopbeg_);
+        //    //Pre-alloc
+        //    vector<int16_t> destsmpl(smpl);
+        //    auto            itbackins = back_inserter(destsmpl);
+        //    destsmpl.reserve( loopinf.loopbeg_ + ( nbloops * looplen ) );
+
+        //    //Copy samples from the loop, to the end of the entire sample, until we reach the desired amount of samples
+        //    size_t cntsrcsmpl = loopinf.loopbeg_;
+        //    auto   itloopbeg  = smpl.begin() + cntsrcsmpl;
+
+        //    for( int cntloop = 0; cntloop < nbloops; ++cntloop )
+        //    {
+        //        std::copy_n( itloopbeg, looplen, itbackins );
+        //    }
+
+        //    smpl = move( destsmpl );
+        //}
+
+        /*
             Apply the envelope phases over time on the sample
         */
         void ApplyEnveloppe( vector<int16_t> & smpl, const DSE::DSEEnvelope & env, int smplrate, double volmul )
@@ -265,7 +325,7 @@ namespace DSE
 
             //Attack
             const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.attack, env.envmulti ) );
-            const double atklvl   = (( ( env.atkvol * 100.0 ) / 128.0 ) / 100.0) * volmul;
+            const double atklvl   = (( (static_cast<double>(env.atkvol) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.attack != 0 )
                 LerpVol( 0, atknbsmpls, atklvl, MaxVol, smpl );
 
@@ -277,7 +337,7 @@ namespace DSE
             //Decay
             const int    decaybeg     = holdend;
             int          decaynbsmpls = 0; 
-            const double sustainlvl   = (( ( env.sustain * 100.0 ) / 128.0 ) / 100.0) * volmul;
+            const double sustainlvl   = ( ( (static_cast<double>(env.sustain) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.decay != 0x7F && !(env.decay == 0 && sustainlvl == 0) )
             {
                 decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay, env.envmulti ) );

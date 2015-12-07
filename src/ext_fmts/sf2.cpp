@@ -603,9 +603,9 @@ namespace sf2
                 if( loopbounds.second > loadedsmpl.size() )
                 {
                     cerr << "SoundFontRIFFWriter::WriteSmplChunk(): Sample end out of bound ! Attempting fix..\n";
-#ifdef _DEBUG
-                    assert(false);
-#endif
+//#ifdef _DEBUG
+//                    assert(false);
+//#endif
                     //#FIXME: This is evil! And really stupid. But I can't be bothered to do something less half-assed tonight!
                     //const_cast<Sample&>(smpl).SetLoopBounds( loopbounds.first, loadedsmpl.size() );
                     loopbounds.second = loadedsmpl.size();
