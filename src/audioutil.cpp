@@ -47,7 +47,7 @@ namespace audioutil
 //------------------------------------------------
     const string CAudioUtil::Exe_Name            = "ppmd_audioutil.exe";
     const string CAudioUtil::Title               = "Music and sound import/export tool.";
-    const string CAudioUtil::Version             = "0.13";
+    const string CAudioUtil::Version             = AUDIOUTIL_VER;
     const string CAudioUtil::Short_Description   = "A utility to export and import music and sounds from the PMD2 games.";
     const string CAudioUtil::Long_Description    = 
         "#TODO";

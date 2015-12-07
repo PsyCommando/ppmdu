@@ -20,11 +20,15 @@
 #include <deque>
 #include <set>
 
+#ifndef AUDIOUTIL_VER
+    #define AUDIOUTIL_VER "Poochyena"
+#endif
+
 using namespace std;
 
 namespace DSE
 {
-    static const string UtilityID          = "ExportedWith: ppmd_audioutil.exe ver0.13";
+    static const string UtilityID          = "ExportedWith: ppmd_audioutil.exe ver" AUDIOUTIL_VER;
     static const string TXT_LoopStart      = "LoopStart";
     static const string TXT_LoopEnd        = "LoopEnd";
     static const string TXT_HoldNote       = "HoldNote";
