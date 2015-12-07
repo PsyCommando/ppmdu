@@ -74,6 +74,20 @@ namespace pugixmlutils
         parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value(value.c_str());
     }
 
+    template<>
+        inline void WriteNodeWithValue<int8_t>( pugi::xml_node & parentnode, const pugi::string_t & name, int8_t value )
+    {
+        using namespace pugi;
+        parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value( std::to_string( static_cast<int16_t>(value) ).c_str() );
+    }
+
+    template<>
+        inline void WriteNodeWithValue<uint8_t>( pugi::xml_node & parentnode, const pugi::string_t & name, uint8_t value )
+    {
+        using namespace pugi;
+        parentnode.append_child(name.c_str()).append_child(node_pcdata).set_value( std::to_string( static_cast<uint16_t>(value) ).c_str() );
+    }
+
     /***************************************************************************************
         AppendChildNode
             Makes appending a child node and setting its name easier, clearer with std::string.

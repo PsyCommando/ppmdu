@@ -1,6 +1,7 @@
 #include "swdl.hpp"
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <types/content_type_analyser.hpp>
+#include <dse/dse_containers.hpp>
 #include <utils/library_wide.hpp>
 #include <iostream>
 #include <iomanip>
@@ -60,7 +61,7 @@ namespace DSE
 
         PresetBank Parse()
         {
-            using namespace pmd2::audio;
+            //using namespace pmd2::audio;
             ParseHeader();
             ParseMeta();
 
@@ -105,7 +106,7 @@ namespace DSE
 
         std::unique_ptr<ProgramBank> ParsePrograms()
         {
-            using namespace pmd2::audio;
+            //using namespace pmd2::audio;
 
             //Handle keygroups first
             auto kgrps = ParseKeygroups();
@@ -155,7 +156,7 @@ namespace DSE
 
         vector<KeyGroup> ParseKeygroups()
         {
-            using namespace pmd2::audio;
+            //using namespace pmd2::audio;
 
             if( utils::LibWide().isLogOn() )
                 clog <<"\t== Parsing Keygroups ==\n";

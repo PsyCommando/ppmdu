@@ -97,15 +97,13 @@ namespace filetypes
         //Entry size check 
         if( ( firstentrylen / SUBENTRY_SIZE ) > m_pImportTo->m_nbtocsubentries )
         {
-            assert(false); //IMPLEMENT VARIABLE SIZE ENTRIES IF EVEN POSSIBLE!
-            throw std::length_error("Error: First null entry has unexpected length of " + std::to_string(firstentrylen) );
+            throw std::length_error("KaoParser::ParseKaomado(): First null entry has unexpected length of " + std::to_string(firstentrylen) );
             return;
         }
         //If the entire thing is null..
         if( itfoundnonnull == itend )
         {
-            assert(false);
-            throw std::runtime_error("Error: Entire kaomado is null!");
+            throw std::runtime_error("KaoParser::ParseKaomado(): Entire kaomado is null!");
             return;
         }
 
@@ -127,9 +125,13 @@ namespace filetypes
             cout<<"Parsing kaomado file..\n";
             for( std::size_t i = 0; i < toc.size(); )
             {
+                if(m_bVerbose)
+                    cout <<"TocEntry #"  <<right <<setw(4) <<setfill('0') <<i <<" :\n";
+
                 ittoc = ParseToCEntry( i, ittoc );
                 ++i;
-                cout<<"\r" << ((i * 100) / toc.size())  <<"%";
+                if(!m_bVerbose)
+                    cout<<"\r" << ((i * 100) / toc.size())  <<"%";
             }
             cout << "\n";
         }
@@ -154,9 +156,15 @@ namespace filetypes
         //Go through all our ToC entry's sub-entries
         for( tocsz_t cptsubentry = 0; cptsubentry <  currententry.size(); ++cptsubentry )
         {
+            if(m_bVerbose)
+                cout <<"\tSubEntry #"  <<right <<setw(3) <<setfill('0')  <<cptsubentry <<" : ";
+
             tocsubentry_t tocreadentry; //The entry we just read in the last loop
             tocreadentry = utils::ReadIntFromBytes<tocsubentry_t>( itrawtocentry );
             
+            if(m_bVerbose)
+                cout <<hex <<showbase <<tocreadentry <<dec <<noshowbase;
+
             //Avoid null and invalid entries
             if( CKaomado::isToCSubEntryValid(tocreadentry) )
             {
@@ -170,8 +178,14 @@ namespace filetypes
                 //A. Read the palette
                 graphics::ReadRawPalette_RGB24_As_RGB24( itentryread, itpalend, tmpPortrait.getPalette() );
 
+                if(m_bVerbose)
+                    cout << " ..Pal OK!";
+
                 //B. Read the image
                 DecompressAT4PX( itpalend, itentryend, m_imgBuffer );
+
+                if(m_bVerbose)
+                    cout << " ..Decompress OK ("  <<m_imgBuffer.size() <<"b)!";
 
                 //C. Parse the image. 
                 // Image pixels seems to be in little endian, and need to be converted to big endian
@@ -181,11 +195,21 @@ namespace filetypes
                                        tmpPortrait, 
                                        KAO_PORTRAIT_PIXEL_ORDER_REVERSED );
 
+                if(m_bVerbose)
+                    cout << " ..Img OK!";
+
                 //Refer to the new entry
                 m_pImportTo->registerToCEntry( indexentry, cptsubentry, entryinsertpos );
+
+                if(m_bVerbose)
+                    cout << " ..Done!\n";
             }
             else
+            {
+                if(m_bVerbose)
+                    cout << " ..NULL\n";
                 currententry[cptsubentry] = CKaomado::GetInvalidToCEntry(); //Set anything invalid to invalid!
+            }
         }
         return itrawtocentry;
     }
@@ -238,14 +262,19 @@ namespace filetypes
         unsigned int cptdirs = 0;
         for( Poco::DirectoryIterator ithandledir(*m_pInputPath); ithandledir != itdirend; ++ithandledir )
         {
+            if(m_bVerbose)
+                cout << "Importing " <<Poco::Path(ithandledir->path()).getBaseName() <<"/..\n";
             //Need to wrap it so we keep the header clean.. It will probably get optimized out by the compiler anyways
             ImportDirectory( kao_file_wrapper{ (*ithandledir) } );
 
             ++cptdirs;
-            if(!m_bQuiet)
-                cout<<"\r" <<(cptdirs*100) / ValidDirectories.size() <<"%";
+            if(!m_bVerbose)
+            {
+                if(!m_bQuiet)
+                    cout<<"\r" <<(cptdirs*100) / ValidDirectories.size() <<"%";
+            }
         }
-        if( !m_bQuiet )
+        if( !m_bQuiet || m_bVerbose )
             cout<<"\n";
     }
 
@@ -297,6 +326,9 @@ namespace filetypes
         unsigned int datavecindex = 0;
         Poco::File & animage      = imagefile.myfile; //make an alias
 
+        if(m_bVerbose)
+            cout << "\tImg " << Poco::Path(animage.path()).getFileName() <<"..\n";
+
         try
         {
             //Convert the image and store it in our data vector. And get the index in the data vector it is at.
@@ -324,7 +356,6 @@ namespace filetypes
                         <<", exceeds the number of slots available, " <<(m_pImportTo->m_nbtocsubentries-1) 
                         <<" !\n"
                         <<"Please, number the images from 0 to " <<(m_pImportTo->m_nbtocsubentries-1) <<"!\n";
-            assert(false);
             throw domain_error( strserror.str() );
         }
 
@@ -439,14 +470,23 @@ namespace filetypes
             if( m_pFolderNames != nullptr && m_pFolderNames->size() > i && !m_pFolderNames->at(i).empty() )
                 outfoldernamess<< "_" << m_pFolderNames->at(i);
 
+            if( m_bVerbose )
+            {
+                cout << "Writing TocEntry #" <<right <<setw(4) <<setfill('0') <<i <<" to " << Poco::Path(outfoldernamess.str()).getBaseName() <<"/..\n"; 
+            }
+
             ExportAToCEntry( toc[i]._portraitsentries, outfoldernamess.str() );
 
             //Increment counter here, for the completion indicator to work
             ++i;
-            if( !m_bQuiet )
-                cout<<"\r" << (i*100) / toc.size() <<"%";
+            if( !m_bVerbose )
+            {
+                if( !m_bQuiet )
+                    cout<<"\r" << (i*100) / toc.size() <<"%";
+            }
+
         }
-        if( !m_bQuiet )
+        if( !m_bQuiet || m_bVerbose )
             cout<<"\n";
     }
 
@@ -458,6 +498,11 @@ namespace filetypes
 
         for( tocsz_t j = 0; j < entry.size(); ++j )
         {
+            if( m_bVerbose )
+            {
+                cout <<"\tSubEntry #"  <<right <<setw(3) <<setfill('0')  <<j;
+            }
+
             if( CKaomado::isToCSubEntryValid( entry[j] ) ) //If not a dummy/null pointer
             {
                 stringstream strsOutputPath;
@@ -490,6 +535,15 @@ namespace filetypes
                     strsOutputPath <<"." << PNG_FileExtension;
                     ExportToPNG( m_pExportFrom->m_imgdata[entry[j]], strsOutputPath.str() );
                 }
+
+                if( m_bVerbose )
+                {
+                    cout <<" ..Wrote to " <<Poco::Path(strsOutputPath.str()).getFileName() <<"\n";
+                }
+            }
+            else if( m_bVerbose )
+            {
+                cout <<" ..NULL\n";
             }
         }
     }
@@ -528,16 +582,32 @@ namespace filetypes
         {
             m_curOffTocSub = curoffsetToc; //Where we'll be writing our next sub-entry
 
+            if( m_bVerbose )
+            {
+                cout <<"Writing ToC Entry @" <<hex <<showbase <<m_curOffTocSub <<" : \n" <<dec <<noshowbase;
+            }
+
+            size_t cptsubentry = 0;
             for( const auto & portrait : tocentry._portraitsentries )
+            {
+                if( m_bVerbose )
+                {
+                    cout <<"\tSubEntry #" <<right <<setw(3) <<setfill('0') <<cptsubentry <<" : ";
+                }
                 WriteAPortrait( portrait );
+                ++cptsubentry;
+            }
 
             curoffsetToc += SzToCEntry; //jump to next ToC entry
 
             ++cptcompletion;
-            if( !m_bQuiet )
-                cout<<"\r" << (cptcompletion * 100) / nbentries <<"%";
+            if( !m_bVerbose )
+            {
+                if( !m_bQuiet )
+                    cout<<"\r" << (cptcompletion * 100) / nbentries <<"%";
+            }
         }
-        if( !m_bQuiet )
+        if( !m_bQuiet || m_bVerbose )
             cout<<"\n";
 
         //Align the end of the file on 16 bytes
@@ -567,8 +637,18 @@ namespace filetypes
             auto & currentimg = m_pExportFrom->m_imgdata[portrait];
             portraitpointer   = m_outBuff.size(); //Set the current size as the offset to insert our stuff!
 
+            if( m_bVerbose )
+            {
+                cout <<hex <<showbase <<portraitpointer <<dec <<noshowbase;
+            }
+
             //#3.1 - Write palette
             graphics::WriteRawPalette_RGB24_As_RGB24( m_itOutBuffPushBack, currentimg.getPalette().begin(), currentimg.getPalette().end() );
+
+            if( m_bVerbose )
+            {
+                cout <<" ..PalOK!";
+            }
 
             //Keep track of where the at4px begins
             auto offsetafterpal = m_outBuff.size();
@@ -582,6 +662,11 @@ namespace filetypes
             m_imgBuff.resize(0);
             WriteTiledImg( m_itImgBuffPushBack, currentimg, KAO_PORTRAIT_PIXEL_ORDER_REVERSED );
 
+            if( m_bVerbose )
+            {
+                cout <<" ..ImgOK!";
+            }
+
             //#3.3 - Expand the output to at least the raw image's length, then write at4px
             compression::px_info_header pxinf = CompressToAT4PX( m_imgBuff.begin(), 
                                                                  m_imgBuff.end(), 
@@ -589,13 +674,28 @@ namespace filetypes
                                                                  compression::ePXCompLevel::LEVEL_3,
                                                                  m_bZealousStrSearch );
 
+            if( m_bVerbose )
+            {
+                cout <<" ..CompressOK!";
+            }
+
             //Update the last valid end of data offset (We fill any subsequent invalid entry with this value!)
             m_lastNullEntryVal = - (static_cast<tocsubentry_t>(m_outBuff.size())); //Change the sign to negative too
+
+        }
+        else if( m_bVerbose )
+        {
+            cout <<" ..NULL";
         }
 
         //Write the ToC entry in the space we reserved at the beginning of the output buffer!
         utils::WriteIntToBytes( portraitpointer, m_outBuff.begin() + m_curOffTocSub );
         m_curOffTocSub += sizeof(portraitpointer);
+
+        if( m_bVerbose )
+        {
+            cout <<" ..Done!\n";
+        }
     }
 
 //========================================================================================================

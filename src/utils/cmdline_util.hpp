@@ -59,7 +59,7 @@ namespace utils{ namespace cmdl
     struct argumentparsing_t
     {
         int          argumentorder;     //The order this argument should appear on the parameter list. Counting only other parameters, not options. Starts at 0!
-        bool         isoptional;        //Whether the absense of the parameter can be tolerated or not. 
+        bool         isoptional;        //Whether the absense of the parameter can be tolerated or not. (The myIsRequired function pointer will be used if not null)
         bool         isguaranteedorder; //Whether this parameter is guaranteed appear in this argument order.
         std::string  name;              //A unique name to identify this argument
         std::string  description;       //Short description
@@ -69,8 +69,11 @@ namespace utils{ namespace cmdl
         std::function<bool(const std::string&)> myParseFun;  //Pointer to a function that will parse this argument for the program. 
                                                              //Must return false if it fails to parse !
 
-        std::string *dependson;         //What other argument needs to be parsed before! Use their "name" field's value. Must refer to a static table, because the pointer is never deleted!
-        int          totaldependson;    //The size of the "dependson" string array.
+        //std::string *dependson;         //What other argument needs to be parsed before! Use their "name" field's value. Must refer to a static table, because the pointer is never deleted!
+        //int          totaldependson;    //The size of the "dependson" string array.
+
+        //Functions pointers
+        std::function<bool(const std::vector< std::vector<std::string> >&)> myIsRequired;  //
     };
 
 

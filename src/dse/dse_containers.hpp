@@ -14,6 +14,8 @@ Description: Several container objects for holding the content of loaded DSE fil
 #include <memory>
 #include <future>
 
+//# TODO: Move implementation into CPP !!
+
 namespace DSE
 {
     /*****************************************************************************************
@@ -86,14 +88,41 @@ namespace DSE
         int                                 NbSlots()const     { return m_SampleData.size(); } 
 
         //Access
-        bool                                IsInfoPresent      ( unsigned int index )const { return m_SampleData[index].pinfo_ != nullptr; }
-        bool                                IsDataPresent      ( unsigned int index )const { return m_SampleData[index].pdata_ != nullptr; }
+        bool                                IsInfoPresent      ( unsigned int index )const { return sampleInfo(index) != nullptr; }
+        bool                                IsDataPresent      ( unsigned int index )const { return sample(index)     != nullptr; }
 
-        inline DSE::WavInfo               * sampleInfo         ( unsigned int index )      { return m_SampleData[index].pinfo_.get(); }
-        inline DSE::WavInfo const         * sampleInfo         ( unsigned int index )const { return m_SampleData[index].pinfo_.get(); }
+        inline DSE::WavInfo               * sampleInfo         ( unsigned int index )      
+        { 
+            if( m_SampleData.size() > index )
+                return m_SampleData[index].pinfo_.get(); 
+            else
+                return nullptr;
+        }
 
-        inline std::vector<uint8_t>       * sample             ( unsigned int index )      { return m_SampleData[index].pdata_.get(); }
-        inline const std::vector<uint8_t> * sample             ( unsigned int index )const { return m_SampleData[index].pdata_.get(); }
+        inline DSE::WavInfo const         * sampleInfo         ( unsigned int index )const 
+        { 
+            if( m_SampleData.size() > index )
+                return m_SampleData[index].pinfo_.get(); 
+            else
+                return nullptr;
+        }
+
+
+        inline std::vector<uint8_t>       * sample             ( unsigned int index )      
+        { 
+            if( m_SampleData.size() > index )
+                return m_SampleData[index].pdata_.get(); 
+            else 
+                return nullptr;
+        }
+
+        inline const std::vector<uint8_t> * sample             ( unsigned int index )const 
+        { 
+            if( m_SampleData.size() > index )
+                return m_SampleData[index].pdata_.get(); 
+            else 
+                return nullptr;
+        }
 
         inline std::vector<uint8_t>       * operator[]         ( unsigned int index )      { return sample(index); }
         inline const std::vector<uint8_t> * operator[]         ( unsigned int index )const { return sample(index); }
@@ -119,47 +148,105 @@ namespace DSE
         std::vector<smpldata_t> m_SampleData;
     };
 
+    /*****************************************************************************************
+        KeygroupList
+            Encapsulate and validate keygroups.
+    *****************************************************************************************/
+    class KeyGroupList
+    {
+    public:
+        typedef std::vector<DSE::KeyGroup>::iterator            iterator;
+        typedef std::vector<DSE::KeyGroup>::const_iterator      const_iterator;
+        typedef std::vector<DSE::KeyGroup>::reference           reference;
+        typedef std::vector<DSE::KeyGroup>::const_reference     const_reference;
+
+        KeyGroupList()
+        {}
+
+        KeyGroupList( const std::vector<DSE::KeyGroup> & cpy )
+            :m_groups(cpy)
+        {}
+
+        inline size_t             size()const       { return m_groups.size();  }
+        inline bool               empty()const      { return m_groups.empty(); }
+
+        inline iterator           begin()           { return m_groups.begin(); }
+        inline const_iterator     begin()const      { return m_groups.begin(); }
+        inline iterator           end()             { return m_groups.end(); }
+        inline const_iterator     end()const        { return m_groups.end(); }
+
+        inline reference       & front()            { return m_groups.front(); }
+        inline const_reference & front()const       { return m_groups.front(); }
+        inline reference       & back()             { return m_groups.back(); }
+        inline const_reference & back()const        { return m_groups.back(); }
+
+        //Validated Kgrp access!
+        inline DSE::KeyGroup & operator[]( size_t kgrp )
+        {
+            if( kgrp < size() )
+                return m_groups[kgrp];
+            else
+                return m_groups.front(); //Return the gloabal keygroup if the kgrp number is invalid (This might differ in the way the DSE engine handles out of range kgrp values)
+        }
+
+        inline const DSE::KeyGroup & operator[]( size_t kgrp )const 
+        {
+            if( kgrp < size() )
+                return m_groups[kgrp];
+            else
+                return m_groups.front(); //Return the gloabal keygroup if the kgrp number is invalid (This might differ in the way the DSE engine handles out of range kgrp values)
+        }
+
+        //Access to raw vector
+        inline std::vector<DSE::KeyGroup>       & GetVector()       { return m_groups; }
+        inline const std::vector<DSE::KeyGroup> & GetVector()const  { return m_groups; }
+
+    private:
+        std::vector<DSE::KeyGroup>  m_groups;
+    };
+
 
     /*****************************************************************************************
         ProgramBank
-            Contains the entries for each instruments
-            Data on what samples an instrument uses, how to play those, the key mapping, etc..
+            Contains the entries for each program contained in a SWD file, along with the
+            file's keygroup table!
     *****************************************************************************************/
     class ProgramBank
     {
     public:
         typedef std::unique_ptr<DSE::ProgramInfo> ptrprg_t;
 
-        ProgramBank( std::vector<ptrprg_t> && instinf, std::vector<DSE::KeyGroup> && kgrp )
-            :m_instinfoslots(std::move(instinf)),  //MSVC is too derp to use the right constructor..
+        ProgramBank( std::vector<ptrprg_t> && prgminf, std::vector<DSE::KeyGroup> && kgrp )
+            :m_prgminfoslots(std::move(prgminf)),  //MSVC is too derp to use the right constructor..
              m_Groups(kgrp)
         {}
 
         ProgramBank( ProgramBank && mv )
         {
-            m_instinfoslots = std::move(mv.m_instinfoslots);
+            m_prgminfoslots = std::move(mv.m_prgminfoslots);
             m_Groups        = std::move(mv.m_Groups);
         }
 
         ProgramBank & operator=( ProgramBank&& mv )
         {
-            m_instinfoslots = std::move(mv.m_instinfoslots);
+            m_prgminfoslots = std::move(mv.m_prgminfoslots);
             m_Groups        = std::move(mv.m_Groups);
             return *this;
         }
 
-        ptrprg_t                          & operator[]( size_t index )         { return m_instinfoslots[index]; }
-        const ptrprg_t                    & operator[]( size_t index )const    { return m_instinfoslots[index]; }
+        ptrprg_t                          & operator[]( size_t index )         { return m_prgminfoslots[index]; }
+        const ptrprg_t                    & operator[]( size_t index )const    { return m_prgminfoslots[index]; }
 
-        std::vector<ptrprg_t>             & instinfo()      { return m_instinfoslots; }
-        const std::vector<ptrprg_t>       & instinfo()const { return m_instinfoslots; }
+        std::vector<ptrprg_t>             & PrgmInfo()      { return m_prgminfoslots; }
+        const std::vector<ptrprg_t>       & PrgmInfo()const { return m_prgminfoslots; }
 
-        std::vector<DSE::KeyGroup>        & keygrps()       { return m_Groups;        }
-        const std::vector<DSE::KeyGroup>  & keygrps()const  { return m_Groups;        }
+        KeyGroupList                      & Keygrps()       { return m_Groups;        }
+        const KeyGroupList                & Keygrps()const  { return m_Groups;        }
 
     private:
-        std::vector<ptrprg_t>       m_instinfoslots;
-        std::vector<DSE::KeyGroup>  m_Groups;
+        std::vector<ptrprg_t>       m_prgminfoslots;
+        //std::vector<DSE::KeyGroup>  m_Groups;
+        KeyGroupList                m_Groups;
 
         //Can't copy
         ProgramBank( const ProgramBank& );

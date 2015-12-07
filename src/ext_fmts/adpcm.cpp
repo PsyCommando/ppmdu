@@ -151,7 +151,7 @@ namespace audio
         {}
 
         //Convert to pcm16 signed samples
-        operator std::vector<pcm16s_t>()
+        operator std::vector<int16_t>()
         {
             return DoParse();
         }
@@ -175,7 +175,7 @@ namespace audio
     private:
 
 
-        std::vector<pcm16s_t> DoParse()
+        std::vector<int16_t> DoParse()
         {
             //Clear state
             m_itread = m_data.begin();
@@ -198,9 +198,9 @@ namespace audio
             ach.step      = mytrait::StepSizes[ach.stepindex];
         }
 
-        std::vector<pcm16s_t> ParseSamples()
+        std::vector<int16_t> ParseSamples()
         {
-            std::vector<pcm16s_t> results;
+            std::vector<int16_t> results;
             results.reserve( m_data.size() * 2 );
             
             uint32_t cnt = 0;
@@ -222,7 +222,7 @@ namespace audio
             return std::move( results );
         }
 
-        pcm16s_t ParseSample( uint8_t smpl, chanstate & curchan )
+        int16_t ParseSample( uint8_t smpl, chanstate & curchan )
         {
 		    curchan.step = mytrait::StepSizes[curchan.stepindex];
             int32_t diff = curchan.step >> 3;
@@ -256,7 +256,7 @@ namespace audio
     class IMA_ADPCM_Encoder
     {
     public:
-        IMA_ADPCM_Encoder( const vector<pcm16s_t> & samples, unsigned int nbchannels = 1 )
+        IMA_ADPCM_Encoder( const vector<int16_t> & samples, unsigned int nbchannels = 1 )
         {}
 
         operator vector<uint8_t>()
@@ -273,13 +273,13 @@ namespace audio
 //==============================================================================================
     
     
-    std::vector<pcm16s_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
+    std::vector<int16_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
                                            unsigned int                 nbchannels  )
     {
         return IMA_APCM_Decoder<ADPCM_Trait_IMA>(rawadpcmdata,nbchannels);
     }
 
-    std::vector<uint8_t> EncodeADPCM_IMA( const std::vector<pcm16s_t> & pcmdata,
+    std::vector<uint8_t> EncodeADPCM_IMA( const std::vector<int16_t> & pcmdata,
                                           unsigned int                 nbchannels )
     {
         return IMA_ADPCM_Encoder(pcmdata,nbchannels);
@@ -290,7 +290,7 @@ namespace audio
         return (adpcmbytesz - IMA_ADPCM_PreambleLen) * 2;
     }
 
-    std::vector<pcm16s_t> DecodeADPCM_NDS( const std::vector<uint8_t> & rawadpcmdata,
+    std::vector<int16_t> DecodeADPCM_NDS( const std::vector<uint8_t> & rawadpcmdata,
                                            unsigned int                 nbchannels  )
     {
         return IMA_APCM_Decoder<ADPCM_Trait_NDS>(rawadpcmdata,nbchannels);

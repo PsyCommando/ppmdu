@@ -192,8 +192,8 @@ namespace utils
             Clamps a a value between min and max. 
             Uses bigger than and smaller than operators.
     ************************************************************************************/
-    template< class _Ty, class _Ty2 > inline
-        _Ty Clamp( _Ty val, _Ty2 min, _Ty2 max )
+    template< class _Ty, class _Ty2 > 
+        inline _Ty Clamp( _Ty val, _Ty2 min, _Ty2 max )
     {
         if( val < min )
             return min;

@@ -39,9 +39,7 @@ namespace DSE
         return move(rmap);
     }
 
-//==============================================================================
-//  SMDLConvInfoDBXMLParser
-//==============================================================================
+
     namespace cvinfoXML
     {
         const string ROOT_ConvData   = "DSEConversionData";   //Root node for the XML file.
@@ -67,8 +65,128 @@ namespace DSE
         
     };
 
+//==============================================================================
+//  SMDLConvInfoDBXMLWriter
+//==============================================================================
+
     /*
+        SMDLConvInfoDBXMLWriter
+            This is meant to write out a "blank" populated conversion info file for a 
+            particular DSE track.
     */
+    class SMDLConvInfoDBXMLWriter
+    {
+    public:
+        SMDLConvInfoDBXMLWriter( const SMDLConvInfoDB & db )
+            :m_curdb(db)
+        {}
+
+        void Write(const string & xmlpath)
+        {
+            using namespace pugi;
+            using namespace cvinfoXML;
+
+            xml_document doc;
+            xml_node     root = doc.append_child( ROOT_ConvData.c_str() );
+
+            for( const auto & entry : m_curdb )
+            {
+                WriteATrack( root, entry.first, entry.second );
+            }
+
+            if( ! doc.save_file( xmlpath.c_str() ) )
+                throw std::runtime_error("Can't write xml file " + xmlpath);
+        }
+
+    private:
+        void WriteATrack( pugi::xml_node parent, const std::string & trkname, const SMDLPresetConversionInfo & entry )
+        {
+            using namespace pugi;
+            using namespace cvinfoXML;
+
+            pugixmlutils::WriteCommentNode( parent, "==========================================================================" );
+            pugixmlutils::WriteCommentNode( parent, trkname );
+            pugixmlutils::WriteCommentNode( parent, "==========================================================================" );
+
+            xml_node curtrk = parent.append_child( NODE_Track.c_str() );
+            WriteNodeWithValue( curtrk, PROP_PairName, trkname );
+
+            xml_node curprgms = curtrk.append_child( NODE_Programs.c_str() );
+            //Write all programs
+            for( const auto & prg : entry )
+            {
+                WriteAPrgm( curprgms, prg.first, prg.second );
+            }
+        }
+
+        void WriteAPrgm( pugi::xml_node parent, DSE::dsepresetid_t prgid, const SMDLPresetConversionInfo::PresetConvData & prgm )
+        {
+            using namespace pugi;
+            using namespace cvinfoXML;
+           
+            stringstream sstrname;
+
+            if( prgid == 0x7F ) //Drum are special
+            {
+                sstrname <<hex <<"0x" <<uppercase <<prgid <<nouppercase << " Drumkit";
+            }
+            else
+            {
+                sstrname <<hex <<"0x" <<uppercase <<prgid <<nouppercase << "   (smpl ";  
+                for( const auto & smpl : prgm.origsmplids )
+                    sstrname <<right <<setw(6) <<setfill(' ') <<"0x" <<uppercase <<smpl <<nouppercase <<" ";
+                sstrname <<")";
+            }
+            pugixmlutils::WriteCommentNode( parent, sstrname.str() );
+
+            //Write Program content
+            xml_node curprgm = parent.append_child( NODE_Program.c_str() );
+            WriteNodeWithValue( curprgm, PROP_DSEID,   prgid );
+
+            if( prgid == 0x7F ) //Drum are special
+                WriteNodeWithValue( curprgm, PROP_MIDIPrg, 1 );
+            else
+                WriteNodeWithValue( curprgm, PROP_MIDIPrg, prgm.midipres );
+
+            if( prgm.midibank != 0 )
+                WriteNodeWithValue( curprgm, PROP_MIDIBnk, prgm.midibank );
+
+            if( prgm.idealchan != SMDLPresetConversionInfo::PresetConvData::Invalid_Chan )
+                WriteNodeWithValue( curprgm, PROP_ForceChan, prgm.idealchan );
+
+            //Write KeyRemaps
+            if( ! prgm.remapnotes.empty() )
+                WriteKeyRemaps(curprgm, prgm);
+
+        }
+
+        void WriteKeyRemaps( pugi::xml_node parent, const SMDLPresetConversionInfo::PresetConvData & prgm )
+        {
+            using namespace pugi;
+            using namespace cvinfoXML;
+            
+            xml_node remaps = parent.append_child( NODE_KeyRemaps.c_str() );
+            size_t cntremap = 0;
+            for( const auto & remap : prgm.remapnotes )
+            {
+                stringstream sstrname;
+                sstrname <<hex <<"0x" <<uppercase <<cntremap <<nouppercase << " -  (smpl 0x"
+                         <<uppercase <<remap.second.origsmplid <<nouppercase <<" )";  
+                pugixmlutils::WriteCommentNode( remaps, sstrname.str() );
+                xml_node curremap =  remaps.append_child( NODE_KeyRemap.c_str() );
+                WriteNodeWithValue( curremap, PROP_InKey,  remap.first );
+                WriteNodeWithValue( curremap, PROP_OutKey, remap.second.destnote );
+                ++cntremap;
+            }
+        }
+
+    private:
+        const SMDLConvInfoDB & m_curdb;
+    };
+
+//==============================================================================
+//  SMDLConvInfoDBXMLParser
+//==============================================================================
     class SMDLConvInfoDBXMLParser
     {
     public:
@@ -195,8 +313,8 @@ namespace DSE
         {
             using namespace pugi;
             using namespace cvinfoXML;
-            midinote_t inkey     = 0xFF;
-            midinote_t outkey    = 0xFF;
+            midinote_t inkey     = InvalidMIDIKey;
+            midinote_t outkey    = InvalidMIDIKey;
             presetid_t midprg    = InvalidPresetID;
             bankid_t   midbnk    = InvalidBankID;
             uint8_t    idealchan = UCHAR_MAX;
@@ -215,7 +333,7 @@ namespace DSE
                     idealchan = ( utils::parseByte( keyprop.child_value() ) - 1); //Bring back to 0-15
             }
 
-            if( inkey != 0xFF && outkey != 0xFF )
+            if( inkey != InvalidMIDIKey && outkey != InvalidMIDIKey )
             {
                 SMDLPresetConversionInfo::NoteRemapData rmap;
                 rmap.destnote = outkey;
@@ -263,6 +381,9 @@ namespace DSE
         Parse(cvinfxml);
     }
 
+    SMDLConvInfoDB::SMDLConvInfoDB()
+    {}
+
     /*
         Parse
             Triggers parsing of the specified xml file!
@@ -270,6 +391,15 @@ namespace DSE
     void SMDLConvInfoDB::Parse( const std::string & cvinfxml )
     {
         SMDLConvInfoDBXMLParser(*this).Parse(cvinfxml);
+    }
+
+    /*
+        Write
+            Writes a "blank" Conversion Info file, with all the default values for each programs and splits
+    */
+    void SMDLConvInfoDB::Write( const std::string & cvinfxml )
+    {
+        SMDLConvInfoDBXMLWriter(*this).Write(cvinfxml);
     }
 
 

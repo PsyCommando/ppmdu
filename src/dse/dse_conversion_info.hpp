@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Format for conversion info while converting SMDL files into MIDIs.
 */
 #include <dse/dse_common.hpp>
+#include <dse/dse_containers.hpp>
 #include <string>
 #include <vector>
 #include <map>
@@ -23,9 +24,9 @@ namespace DSE
             This is used to convert dse tracks into midi.
             It contains details on how to remap notes, what midi preset and bank to use for certain DSE Presets.
     */
-    struct SMDLPresetConversionInfo
+    class SMDLPresetConversionInfo
     {
-
+    public:
 
         /*
             eEffectTy 
@@ -60,6 +61,7 @@ namespace DSE
             presetid_t destpreset = InvalidPresetID;  //The preset to use for playing only this note!
             bankid_t   destbank   = InvalidBankID;    //The bank to use for playing only this note!
             uint8_t    idealchan  = UCHAR_MAX;        //The channel the note should be played on!
+            uint16_t   origsmplid = 0;                //The original sample ID associated to this note. Only used when writing a cvinfo file
         };
 
         /*
@@ -70,13 +72,15 @@ namespace DSE
         */
         struct PresetConvData
         {
+            static const uint8_t Invalid_Chan = UCHAR_MAX;
+
             PresetConvData( presetid_t presid         = 0, 
                             bankid_t   bank           = 0, 
-                            uint8_t    maxpolyphony   = 255,    //255 means default polyphony!
-                            uint8_t    prioritygrp    = 0,      //0 means global group!
-                            uint32_t   maxkeyduration = 0,      //0 means ignored!
-                            int8_t     transposenote  = 0,      //0 means don't transpose the notes
-                            uint8_t    preferedchan   = UCHAR_MAX )     //255 means no prefered channel!
+                            uint8_t    maxpolyphony   = 255,        //255 means default polyphony!
+                            uint8_t    prioritygrp    = 0,          //0 means global group!
+                            uint32_t   maxkeyduration = 0,          //0 means ignored!
+                            int8_t     transposenote  = 0,          //0 means don't transpose the notes
+                            uint8_t    preferedchan   = Invalid_Chan)  //255 means no prefered channel!
                 :midipres(presid), 
                  midibank(bank), 
                  maxpoly(maxpolyphony), 
@@ -98,6 +102,8 @@ namespace DSE
             uint32_t                            maxkeydowndur; //The longest note duration allowed in MIDI ticks! Used to get rid of issues caused by notes being held for overly long durations in some SMDL.
             int8_t                              transpose;     //The amount of octaves to transpose the notes played by the instrument. Signed!
             uint8_t                             idealchan;     //The channel to force notes linked to this preset to be played on.
+            //--- Optional Extra Data --- 
+            std::vector<uint16_t>               origsmplids;    //The original sample ids for this preset. Only used when writing a CVinfo file!
         };
 
         typedef std::map<dsepresetid_t, PresetConvData>::iterator       iterator;
@@ -163,12 +169,19 @@ namespace DSE
                 The file will be parsed on construction.
         */
         SMDLConvInfoDB( const std::string & cvinfxml );
+        SMDLConvInfoDB();
 
         /*
             Parse
                 Triggers parsing of the specified xml file!
         */
         void Parse( const std::string & cvinfxml );
+
+        /*
+            Write
+                Writes a "blank" Conversion Info file, with all the default values for each programs and splits
+        */
+        void Write( const std::string & cvinfxml );
 
         /*
             FindConversionInfo
@@ -178,6 +191,8 @@ namespace DSE
         inline const_iterator FindConversionInfo( const std::string & name )const  { return m_convdata.find(name); }
 
         /*
+            AddConversionInfo
+                Add a conversion info entry
         */
         void AddConversionInfo( const std::string & name, SMDLPresetConversionInfo && info );
 

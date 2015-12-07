@@ -39,7 +39,7 @@ namespace pkao_util
 // Constants 
 //=================================================================================================
     static const string EXE_NAME                            = "ppmd_kaoutil.exe";
-    static const string PVERSION                            = "0.41";
+    static const string PVERSION                            = "0.42";
 
     static const string DEFAULT_FACENAMES_FILENAME          = "facenames.txt";
     static const string DEFAULT_POKENAMES_FILENAME          = "pokenames.txt";
@@ -50,10 +50,11 @@ namespace pkao_util
     static const string OPTION_SET_EXPORT_TO_BMP            = "bmp";
     static const string OPTION_QUIET                        = "q";
     static const string OPTION_NON_ZEALOUS_STR_SEARCH       = "nz";
+    const string OPTION_VERBOSE                             = "v";
 
 
     //Definition of all the possible options for the program!
-    static const array<optionparsing_t, 7> MY_OPTIONS  =
+    static const array<optionparsing_t, 8> MY_OPTIONS  =
     {{
         //Disable console output except errors!
         {
@@ -97,6 +98,13 @@ namespace pkao_util
             0,
             "Will output the images as \".bmp\" 4bpp images!",
         },
+
+        //VERBOSE
+        {
+            OPTION_VERBOSE,
+            0,
+            "Will trigger verbose progress output!",
+        },
     }};
 
     //A little struct to make it easier to throw around any new parsed parameters !
@@ -111,6 +119,7 @@ namespace pkao_util
         bool           bisQuiet;
         bool           bIsZealous;
         bool           bExportAsBmp;
+        bool           bisVerbose;
     };
 
 
@@ -256,6 +265,11 @@ namespace pkao_util
                 parameters.bisQuiet = true;
                 success             = true;
             }
+            else if( parsedoption.front().compare(OPTION_VERBOSE) == 0  )
+            {
+                parameters.bisVerbose = true;
+                success               = true;
+            }
         }
 
         return success;
@@ -356,19 +370,21 @@ namespace pkao_util
             {
                 //Ouput path is file!
                 Poco::Path outfile(parameters.outputpath);
-                Poco::File testfile( Poco::Path(outfile).makeParent() );
+                //Poco::File testfile( Poco::Path(outfile).makeAbsolute() );
                 
-                if( testfile.exists() && testfile.isDirectory() && !(outfile.getFileName().empty()) )
-                    outfile.makeAbsolute();
-                else
-                    throw runtime_error("<!>-Fatal Error: Specified output path is invalid ! Aborting !");
-                return std::move(outfile);
+                //if( ( ( testfile.exists() && testfile.isDirectory() ) || (!testfile.exists()) ) && 
+                //    !(outfile.getFileName().empty()) )
+                //    outfile.makeAbsolute();
+                //else
+                //    throw runtime_error("<!>-Fatal Error: Specified output path is invalid ! Aborting !");
+                //return std::move(outfile);
+                return move( Poco::Path(parameters.outputpath).makeAbsolute() );
             }
             else 
             {
                 //Output path is folder!
                 Poco::Path outfolder(parameters.outputpath);
-                Poco::File testparentdir(outfolder.parent());
+                Poco::File testparentdir(outfolder.absolute().makeParent());
 
                 if( testparentdir.exists() && testparentdir.isDirectory() )
                     outfolder.makeAbsolute();
@@ -426,7 +442,7 @@ namespace pkao_util
                     << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet, parameters.bisVerbose)( parameters.inputpath.toString(), kao );
             //kao.ReadEntireKaomado( filedata.begin(), filedata.end(), parameters.bisQuiet );
 
             //Then depending on what the user gave us, we convert and output the kaomado data
@@ -441,7 +457,7 @@ namespace pkao_util
             else
                 outputTy = eSUPPORT_IMG_IO::PNG;
 
-            KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet );
+            KaoWriter mywriter( ppokenames, pfacenames, true, parameters.bisQuiet, parameters.bisVerbose );
             mywriter( kao, outpath.toString(), outputTy );
 
             if( !parameters.bisQuiet )
@@ -481,7 +497,7 @@ namespace pkao_util
                      << "   " <<outpath.toString() <<"\n" <<endl;
             }
 
-            KaoParser(parameters.bisQuiet)( parameters.inputpath.toString(), kao );
+            KaoParser(parameters.bisQuiet, parameters.bisVerbose)( parameters.inputpath.toString(), kao );
 
             //kao.BuildFromFolder(parameters.inputpath.toString(), parameters.bisQuiet );
             //types::bytevec_t filedata = std::move( kao.WriteKaomado( parameters.bisQuiet, parameters.bIsZealous ) );
@@ -489,7 +505,7 @@ namespace pkao_util
             if( !parameters.bisQuiet )
                 cout<<"Writing to file..\n";
 
-            KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet );
+            KaoWriter mywriter( nullptr, nullptr, true, parameters.bisQuiet, parameters.bisVerbose );
             mywriter( kao, outpath.toString() );
 
             //WriteByteVectorToFile( outpath.toString(), filedata );

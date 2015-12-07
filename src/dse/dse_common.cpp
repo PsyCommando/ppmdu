@@ -123,7 +123,6 @@ namespace DSE
             return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20;//25; 
         else
             return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20;//25; 
-
 #else
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]) * 4;

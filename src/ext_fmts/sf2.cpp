@@ -602,13 +602,13 @@ namespace sf2
 
                 if( loopbounds.second > loadedsmpl.size() )
                 {
-                    //#FIXME: This is evil! And really stupid. But I can't be bothered to do something less half-assed tonight!
                     cerr << "SoundFontRIFFWriter::WriteSmplChunk(): Sample end out of bound ! Attempting fix..\n";
+//#ifdef _DEBUG
+//                    assert(false);
+//#endif
+                    //#FIXME: This is evil! And really stupid. But I can't be bothered to do something less half-assed tonight!
                     //const_cast<Sample&>(smpl).SetLoopBounds( loopbounds.first, loadedsmpl.size() );
                     loopbounds.second = loadedsmpl.size();
-#ifdef _DEBUG
-                    assert(false);
-#endif
                 }
 
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
@@ -1154,7 +1154,10 @@ namespace sf2
     */
     std::vector<pcm16s_t> Sample::Data()const
     {
-        return std::move( m_loadfun() );;
+        if( m_pcmdata.empty() )
+            return std::move( m_loadfun() );
+        else
+            return std::move( m_pcmdata );
     }
 
     void Sample::SetLoopBounds( smplcount_t beg, smplcount_t end )

@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.13
+Version	   : 0.2
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -18,6 +18,25 @@ Changelog:
         - Fixed tracks without a loop point from looping!
 - 0.13: (2015/10/17) :
         - Fixed samples not being exported from SWDL files!
+- 0.2   (2015/12/07)
+        - Added Support for generating a conversion info XML file from a set of DSE containers.
+          It means no more adding the data for every single programs by hands, the program writes it all
+          and you can just edit the values as seen fit!
+        - Now renders the samples' volume envelope directly into the sound samples to give a much more 
+          accurate result.(with some mild artifacts for some tracks) 
+          The soundfont generated with this method is much larger! To use the previous
+          method, you can simply put a command line option as specified in the readme.
+        - SYNTH WAVE SOUND SAMPLES, POSSIBLY OTHERS, ARE STILL COMPLETELY OFF-PITCH. 
+          Sorry, but I can't find a solution right now, I'm not an audio engineer, I'm an audio noob.
+          So I'll release the tool in its current state, since this release is long overdue !
+        - Currently, XML + samples export is broken. Import is not yet implemented. So avoid using those!
+        - A bunch of bugfixes, and an extra dose of validation so even professor layton can't crash 
+          the program with its missing references! 
+          (Exporting prof layton's soundtrack needs a bit more involvement and manual work on your part though..
+          Not gonna describe the process here. But try extracting the common.darc file, and feeding the smds and swds to audioutil. 
+          The main bank is named BG.SWD btw.)
+        - MOAR BUGS! I know you guys love those. They're just really well hidden, 
+          and you have to find them by accident :P
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -40,19 +59,23 @@ Special Thanks:
 -> Thanks to the people from GBATemp and Project Pokemon Forums !
 -> Thanks to MNChino for helping with some of my tools !
 -> Thanks to wwylele for helping !
+-> Thanks to TheGuitarHeroe, DAS, and the others for helping me spot audio issues!
+-> Thanks to the people maintaining VGMTrans. It was very informative to see how they tackled some issues!
+-> Thanks to Bregalad who wrote GBA Music Ripper! Once again, reading the code helped immensely figuring out
+   how to take on the file formats in PMD2 !
 -> ..and anyone else I may have forgotten about ! ^^;
 
 ----------------------------------------------------------------------------------------------------
 About:
 ----------------------------------------------------------------------------------------------------
 
-This tool can export various data from the Pokemon Mystery Dungeon : Explorers of Sky/Time/Darkness 
-games(Only tested with Sky for now).
+This tool exports audio from the Pokemon Mystery Dungeon : Explorers of Sky/Time/Darkness games.
+There is also limited support for othe games using the Digital Sound Element sound driver.
+It works very well with Shiren2, and if you can extract the smd and swd files from any other
+DSE-using game and feed those to the program, it will probably be able to export something !
 
-Right now it supports:
-- Game text (Dialog, menus, item names, move names, pokemon names, etc..)
-- Move data (Base power, type, name, descritpion, etc.. )
-- Pokemon data (Name, category, type, stats growth, level-up moves, hm/tm moves, egg moves, etc..)
+It will eventually support importing back into DSE games music tracks and samples!
+
 
 ------------------------------
 --Random Uninteresting Fact--:
@@ -66,18 +89,18 @@ And, I just love that pokemon, so yeah, that's pretty much it..
 How to use:
 ----------------------------------------------------------------------------------------------------
 
-* To export the entire pmd2 BGM folder, just specify the path to the rom's root directory 
-  and the -pmd2 commandline option, like so :
+->  To export the entire pmd2 BGM folder, just specify the path to the rom's root directory 
+    and the -pmd2 commandline option, like so :
 
-    ppmd_audioutil.exe -pmd2 "pmd2_extractedrom/data" "out_bgm"
+        ppmd_audioutil.exe -pmd2 "pmd2_extractedrom/data" "out_bgm"
 
-* To export a single SMDL file as-is, just drag and drop onto the executable.
+->  To export a single SMDL file as-is, just drag and drop onto the executable.
 
-* To export a single SMDL using conversion rules, to make it use standard MIDI instruments
-  specify the path to the conversion info file, using the -cvinfo option at the commandline
-  like this :
+->  To export a single SMDL using conversion rules, to make it use standard MIDI instruments
+    specify the path to the conversion info file, using the -cvinfo option at the commandline
+    like this :
 
-    ppmd_audioutil.exe "pmd2_extractedrom\SOUND\BGM\bgm0003.smd" "bgm0003.mid" -cvinfo "pmd2eos_cvinfo.xml" -fl 1
+        ppmd_audioutil.exe "pmd2_extractedrom\SOUND\BGM\bgm0003.smd" "bgm0003.mid" -cvinfo "pmd2eos_cvinfo.xml" -fl 1
   
   The option -fl 1 tells the program to loop the track again once after it played. It will only loop 
   tracks that have a loop point though.
@@ -85,13 +108,81 @@ How to use:
   You can make your own, edit, or add to the cvinfo XML file ! The details are in the example
   file "pmd2eos_cvinfo.xml" ! 
   
-* To export the content of a SWDL file containing samples, simply drag and drop the file 
+-> To export the content of a SWDL file containing samples, simply drag and drop the file 
   onto the executable!
 
+->  To export a set of smds and swds, WITHOUT a main bank, to a set of MIDIs and a Soundfont file, do the following :
+
+        ppmd_audioutil.exe -swdlpath "path/to/swdfilesdirectory" -smdlpath "path/to/smdfilesdirectory" "OutputDirectory"
+
+    To export a set of smds and swds, WITH a main bank, to a set of MIDIs and a Soundfont file, do the following :
+
+        ppmd_audioutil.exe -swdlpath "path/to/swdfilesdirectory" -smdlpath "path/to/smdfilesdirectory" -mbank "path/to/mainbankfile/mainbank.swd" "OutputDirectory"
+
+    # The option -nofx if specified will ignore all vibrato, phaser, volume oscillation(flanger?), cutoff effect, specified in the
+      preset data! Its recommended to use this option, as the feature is pretty inaccurate and mostly incompatible, thanks to the terrible
+      Soundfont format!
+
+    # The option -nobake force the program to export MIDI + Soundfont without rendering the linear "IAHDSDR" volume envelopes directly into 
+      the samples. The soundont's limited logarithmic DAHDSR envelopes will be used instead and give a much less accurate result.
+
+    # The option -xml will output the DSE data to XML and raw numbered wav samples. The feature is a WIP.
+      This will be eventually used for importing tracks from MIDI and samples back into the DSE format!
+
+->  To list all presets used in a set of DSE containers, specify the path to a bunch of swd files, and append 
+    the option -listpres to the commandline like so:
+
+        ppmd_audioutil.exe -swdlpath "path/to/swdfilesdirectory" "OutputTextFilename.txt" -listpres
+
+->  To generate a "blank", populated conversion info XML file for a set of smds and swds, specify the path to those files,
+    and specify the option -makecvinfo at the commandline, like so:
+
+        ppmd_audioutil.exe -swdlpath "path/to/swdfilesdirectory" -smdlpath "path/to/smdfilesdirectory" "OutputCvInfoFile.xml" -makecvinfo
+
+
+->  To generate a log with a lot of verbose and details on the files handled when doing any of the above operations, simply append
+        
+        -log "logfile/path/logfile.txt"
+
+    to the command line!
+
+
+*** NOTE: The -gm option is essentially unreliable, and bad. There is no way to guarantee that a track will always have
+          less than 15 channels dedicated to chromatic instruments. And if that's the case, then forcing 
+          events to a non-drum channel may be impossible without causing issues during playback, since most 
+          midi players don't expect this kind of messing around. 
+          Thus, the default GS export is preferred!
 
 ----------------------------------------------------------------------------------------------------
 Readme:
 ----------------------------------------------------------------------------------------------------
+A utility to export and import music and sounds from the PMD2 games.
+
+ppmd_audioutil.exe (option) (input path) (output path) 
+  ->option         : An option from the list below..(optional)
+  ->input path(opt): Path to the file/directory to export, or the directory to assemble.
+  ->output path(opt): Output path. The result of the operation will be placed, and named according to this path!
+
+
+Options:
+  -gm        : Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not be a 1:1 copy, and using the original samples with this MIDI won't sound good either..
+  -fl        : This will export to the MIDI file the "intro" once, followed with the notes in-between the loop and end marker the specified number of times. Loop markers will also be omitted!
+  -pmd2      : Specifying this will tell the program that that input path is the root of the extracted ROM's "data" directory.The utility will export the audio content from the entire game's "/SOUND" directory, to a bunch of MIDIs and some soundfonts!
+  -cvinfo    : The cvinfo file is an XML file containing information on how to convert SMDL files to MIDI. It allows to change the original presets/bank to something else automatically. It also allows to transpose notes by a certain preset, or change what key/preset is used when a certain key for a given original preset is played. See the example file for more details!
+  -makecvinfo: This will build a blank populated cvinfo.xml file from all the loaded swdl files specified using the swdlpath option. The first parameter specified on the commandline will be the name of the outputed cvinfo.xml file!
+  -mbank     : Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!Is also used to specify where to put the assembled 
+  -swdlpath  : Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored.Is also used to specify where to put assembled DSE Preset during import.
+  -smdlpath  : Use this to specify the path to the folder where the SMDLs to export are stored.Is also used to specify where to put MIDI files converted to SMDL format.
+  -listpres  : Use this to make the program export a list of all the presets used by the SWDL contained withinthe swdlpath specified, or the input path if doing it for a single SWDL. If a swdlpath was specified, the path to the outputed list is the first argument.If no swdlpath is specified the first argument is the path to the swdl to use, andoptionally the second argument the path to the outputed list!
+  -hexnum    : If this is present, whenever possible, the program will export filenames with hexadecimal numbers in them!
+  -xml       : Specifying this will force outputing a swd soundbank to XML data and pcm16 samples(.wav files).
+  -nobake    : Specifying this will disable the rendering of individual samples for every preset split.
+  -nofx      : Specifying this will disable the processing of LFO effects data.
+  -log       : This option writes a log to the file specified as parameter.
+
+
+Examples:
+ppmd_audioutil.exe -gm -fl (nbofloops) -pmd2 -cvinfo "path/to/conversion/info/file.xml" -makecvinfo -mbank "SOUND/BGM/bgm.swd" -swdlpath "SOUND/BGM" -smdlpath "SOUND/BGM" -listpres -hexnum -sf2 -xml -nobake -nofx -log "logfilename.txt" "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
 
 
 ----------------------------------------------------------------------------------------------------

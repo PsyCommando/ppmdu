@@ -1,7 +1,7 @@
 //#define _USE_MATH_DEFINES
 #include "dse_interpreter.hpp"
 #include <utils/poco_wrapper.hpp>
-#include <ppmdu/pmd2/pmd2_audio_data.hpp>
+#include <dse/dse_conversion.hpp>
 
 #include <jdksmidi/world.h>
 #include <jdksmidi/track.h>
@@ -20,11 +20,15 @@
 #include <deque>
 #include <set>
 
+#ifndef AUDIOUTIL_VER
+    #define AUDIOUTIL_VER "Poochyena"
+#endif
+
 using namespace std;
 
 namespace DSE
 {
-    static const string UtilityID          = "ExportedWith: ppmd_audioutil.exe ver0.1";
+    static const string UtilityID          = "ExportedWith: ppmd_audioutil.exe ver" AUDIOUTIL_VER;
     static const string TXT_LoopStart      = "LoopStart";
     static const string TXT_LoopEnd        = "LoopEnd";
     static const string TXT_HoldNote       = "HoldNote";
