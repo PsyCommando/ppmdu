@@ -2007,7 +2007,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0017-->
+  <!--bgm0017 Battle Against Dusknoir -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0017</PairName>
@@ -2069,6 +2069,7 @@ Example entry:
       <Program>
         <DSEProgramID>121</DSEProgramID>
         <MIDIPreset>48</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -2601,7 +2602,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0025-->
+  <!--bgm0025 Apple Wood-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0025</PairName>
@@ -2621,6 +2622,7 @@ Example entry:
       <Program>
         <DSEProgramID>42</DSEProgramID>
         <MIDIPreset>42</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
       <!--0x2B   (smpl     0x10     0x11     0x12 )-->
       <Program>
@@ -2631,6 +2633,7 @@ Example entry:
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
       <!--0x34   (smpl     0x7E     0x7F     0x80 )-->
       <Program>
