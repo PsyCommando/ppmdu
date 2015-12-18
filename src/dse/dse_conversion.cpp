@@ -10,6 +10,7 @@
 #include <ppmdu/fmts/sedl.hpp>
 #include <ppmdu/fmts/smdl.hpp>
 #include <ppmdu/fmts/swdl.hpp>
+#include <dse/bgm_container.hpp>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -462,14 +463,10 @@ namespace DSE
 //  BatchAudioLoader
 //========================================================================================
 
-    BatchAudioLoader::BatchAudioLoader( /*const std::string & mbank,*/ bool singleSF2, bool lfofxenabled )
-        :/*m_mbankpath(mbank),*/ m_bSingleSF2(singleSF2),m_lfoeffects(lfofxenabled)
+    BatchAudioLoader::BatchAudioLoader( bool singleSF2, bool lfofxenabled )
+        : m_bSingleSF2(singleSF2),m_lfoeffects(lfofxenabled)
     {}
-    
-    //void BatchAudioLoader::LoadMasterBank()
-    //{
-    //    m_master = move( LoadSwdBank( m_mbankpath ) );
-    //}
+
 
     void BatchAudioLoader::LoadMasterBank( const std::string & mbank )
     {
@@ -479,8 +476,13 @@ namespace DSE
 
     void BatchAudioLoader::LoadSmdSwdPair( const std::string & smd, const std::string & swd )
     {
-        DSE::PresetBank    bank = DSE::ParseSWDL( swd );
-        DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
+        DSE::PresetBank    bank( move( DSE::ParseSWDL( swd ) ) );
+        DSE::MusicSequence seq( move( DSE::ParseSMDL( smd ) ) );
+
+        //Tag our files with their original file name, for cvinfo lookups to work!
+        seq.metadata().origfname  = Poco::Path(smd).getBaseName();
+        bank.metadata().origfname = Poco::Path(swd).getBaseName();
+
         m_pairs.push_back( move( std::make_pair( std::move(seq), std::move(bank) ) ) );
     }
 
@@ -1515,7 +1517,6 @@ namespace DSE
     {
         static const string _DefaultMainSampleDirName = "mainbank";
 
-        //If the main bank is not loaded, try to make one out of the loaded pairs!
         if( IsMasterBankLoaded() )
         {
             //Make the main sample bank sub-directory if we have a master bank
@@ -1601,7 +1602,7 @@ namespace DSE
         }
 
         if( bnosmpldata )
-            throw runtime_error("BatchAudioLoader::BuildMasterFromPairs(): No sample data found in the DSE containers that were loaded! Its possible the main bank was not loaded?");
+            throw runtime_error("BatchAudioLoader::BuildMasterFromPairs(): No sample data found in the SWDL containers that were loaded! Its possible the main bank was not loaded, or that no SWDL were loaded.");
 
         DSE_MetaDataSWDL meta;
         meta.fname       = "Main.SWD";
@@ -1651,61 +1652,168 @@ namespace DSE
         cout <<"\n..done\n\n";
     }
 
+
+
+    /*
+        LoadBgmContainer
+            Load a single bgm container file.
+            Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+    */
+    void BatchAudioLoader::LoadBgmContainer( const std::string & file )
+    {
+        auto pairdata( move( ReadBgmContainer( file ) ) );
+
+        //Tag our files with their original file name, for cvinfo lookups to work!
+        pairdata.first.metadata().origfname  = Poco::Path(file).getBaseName();
+        pairdata.second.metadata().origfname = Poco::Path(file).getBaseName();
+
+        m_pairs.push_back( move( std::make_pair( std::move(pairdata.second), std::move(pairdata.first) ) ) );
+    }
+
+    /*
+        LoadBgmContainers
+            Load all pairs in the folder. 
+            Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+
+            - bgmdir : The directory where the bgm containers are located at.
+            - ext    : The file extension the bgm container files have.
+    */
+    void BatchAudioLoader::LoadBgmContainers( const std::string & bgmdir, const std::string & ext )
+    {
+        //Grab all the bgm containers in here
+        Poco::DirectoryIterator dirit(bgmdir);
+        Poco::DirectoryIterator diritend;
+        cout << "<*>- Loading bgm containers *." <<ext <<" in the " << bgmdir <<" directory..\n";
+
+        stringstream sstrloadingmesage;
+        sstrloadingmesage << " *." <<ext <<" loaded] - Currently loading : ";
+        const string loadingmsg = sstrloadingmesage.str();
+
+        unsigned int cntparsed = 0;
+        while( dirit != diritend )
+        {
+            if( dirit->isFile() )
+            {
+                string fext = dirit.path().getExtension();
+                std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+                //Check all smd/swd file pairs
+                try
+                {
+                    if( fext == ext )
+                    {
+                        cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<loadingmsg <<dirit.path().getFileName() <<"..";
+                        LoadBgmContainer( dirit.path().absolute().toString() );
+                        ++cntparsed;
+                    }
+                }
+                catch( std::exception & e )
+                {
+                    cerr <<"\nBatchAudioLoader::LoadBgmContainers(): Exception : " <<e.what() <<"\n"
+                         <<"Skipping file and attemnpting to recover!\n\n";
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        clog <<"\nBatchAudioLoader::LoadBgmContainers(): Exception : " <<e.what() <<"\n"
+                         <<"Skipping file and attemnpting to recover!\n\n";
+                    }
+                }
+            }
+            ++dirit;
+        }
+        cout <<"\n..done\n\n";
+    }
+
+    /*
+        LoadSingleSMDLs
+            Loads only SMDL in the folder.
+    */
+    void BatchAudioLoader::LoadSingleSMDLs( const std::string & smdldir )
+    {
+        //Grab all the swd and smd pairs in the folder
+        Poco::DirectoryIterator dirit(smdldir);
+        Poco::DirectoryIterator diritend;
+        cout << "<*>- Loading smd files in directory \"" << smdldir <<"\"..\n";
+
+        unsigned int cntparsed = 0;
+        while( dirit != diritend )
+        {
+            if( dirit->isFile() )
+            {
+                string fext = dirit.path().getExtension();
+                std::transform(fext.begin(), fext.end(), fext.begin(), ::tolower);
+
+                if( fext == SMDL_FileExtension )
+                {
+                    cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntparsed <<" smd loaded] - Currently loading : " <<dirit.path().getFileName() <<"..";
+                    LoadSMDL( dirit.path().toString() );
+                    ++cntparsed;
+                }
+            }
+            ++dirit;
+        }
+        cout <<"\n..done\n\n";
+    }
+
+    /*
+    */
+    void BatchAudioLoader::LoadSMDL( const std::string & smdl )
+    {
+        m_pairs.push_back( move( make_pair( move(ParseSMDL(smdl)), move( PresetBank() ) ) ) );
+        //Tag our files with their original file name, for cvinfo lookups to work!
+        m_pairs.back().first.metadata().origfname = Poco::Path(smdl).getBaseName();
+    }
+
+    /*
+    */
+    void BatchAudioLoader::ExportMIDIs( const std::string & destdir, const std::string & cvinfopath, int nbloops )
+    {
+        DSE::SMDLConvInfoDB cvinf;
+
+        if( ! cvinfopath.empty() )
+            cvinf.Parse( cvinfopath );
+
+        //Then the MIDIs
+        for( size_t i = 0; i < m_pairs.size(); ++i )
+        {
+            //Lookup cvinfo with the original filename from the game filesystem!
+            auto itfound = cvinf.end();
+
+            if(! cvinf.empty() )
+                itfound = cvinf.FindConversionInfo( m_pairs[i].first.metadata().origfname );
+
+            Poco::Path fpath(destdir);
+            fpath.append( to_string(i) + "_" + m_pairs[i].first.metadata().fname).makeFile().setExtension("mid");
+
+            cout <<"<*>- Currently exporting smd to " <<fpath.toString() <<"\n";
+            if( utils::LibWide().isLogOn() )
+                clog <<"<*>- Currently exporting smd to " <<fpath.toString() <<"\n";
+
+            if( itfound != cvinf.end() )
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog << "<*>- Got conversion info for this track! MIDI will be remapped accordingly!\n";
+                DSE::SequenceToMidi( fpath.toString(), 
+                                     m_pairs[i].first, 
+                                     itfound->second,
+                                     nbloops,
+                                     DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
+            }
+            else
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"<!>- Couldn't find a conversion info entry for this SMDL! Falling back to converting as-is..\n";
+                DSE::SequenceToMidi( fpath.toString(), 
+                                     m_pairs[i].first, 
+                                     nbloops,
+                                     DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
+            }
+        }
+    }
+
 //===========================================================================================
 //  Functions
 //===========================================================================================
     
-    //std::pair<DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs( const std::string & bank, const std::string & smdroot, const std::string & swdroot )
-    //{
-    //    DSE::PresetBank mbank  = DSE::ParseSWDL( bank );
-    //    vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> seqpairs;
-
-    //    //We can't know for sure if they're always in the same directory!
-    //    //vector<string> smdfnames;
-    //    //vector<string> swdfnames;
-    //    Poco::DirectoryIterator dirend;
-    //    Poco::File              dirswd( swdroot );
-    //    Poco::File              dirsmd( smdroot );
-    //    vector<Poco::File>      cntdirswd;
-    //    vector<Poco::File>      cntdirsmd;
-
-    //    //Fill up file lists
-    //    dirswd.list(cntdirswd);
-    //    dirsmd.list(cntdirsmd);
-    //    
-    //    //Find and load all smd/swd pairs!
-    //    for( const auto & smd : cntdirsmd )
-    //    {
-    //        const string smdbasename = Poco::Path(smd.path()).getBaseName();
-
-    //        //Find matching swd
-    //        vector<Poco::File>::const_iterator itfound = cntdirswd.begin();
-    //        for( ; itfound != cntdirswd.end(); ++itfound )
-    //        {
-    //            if( smdbasename == Poco::Path(itfound->path()).getBaseName() )
-    //                break;
-    //        }
-
-    //        if( itfound == cntdirswd.end() )
-    //        {
-    //            cerr<<"Skipping " <<smdbasename <<".smd, because its corresponding " <<smdbasename <<".swd can't be found!\n";
-    //            continue;
-    //        }
-
-    //        //Parse the files, and push_back the pair
-    //        seqpairs.push_back( make_pair( DSE::ParseSMDL( smd.path() ), DSE::ParseSWDL( itfound->path() ) ) );
-    //    }
-
-    //    return make_pair( std::move(mbank), std::move(seqpairs) );
-    //}
-
-    //std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd )
-    //{
-    //    DSE::PresetBank    bank = DSE::ParseSWDL( swd );
-    //    DSE::MusicSequence seq  = DSE::ParseSMDL( smd );
-    //    return std::make_pair( std::move(seq), std::move(bank) );
-    //}
-
     void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
     {
         static const string _DeafaultSamplesSubDir = "samples";
@@ -1784,31 +1892,6 @@ namespace DSE
 
                     loopinfo.start_ = cvinf.loopbeg_;
                     loopinfo.end_   = cvinf.loopend_;
-                    //if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
-                    //{
-                    //    outwave.GetSamples().front() = move(::audio::DecodeADPCM_NDS( *ptrdata ) );
-                    //    sstrname <<"_adpcm";
-                    //    loopinfo.start_ = (ptrinfo->loopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
-                    //    loopinfo.end_   = ::audio::ADPCMSzToPCM16Sz(ptrdata->size() );
-                    //}
-                    //else if( ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
-                    //{
-                    //    outwave.GetSamples().front() = move( PCM8RawBytesToPCM16Vec(ptrdata) );
-                    //    sstrname <<"_pcm8";
-                    //    loopinfo.start_ = ptrinfo->loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
-                    //    loopinfo.end_   = ptrdata->size()  * 2; //PCM8 -> PCM16
-                    //}
-                    //else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
-                    //{
-                    //    outwave.GetSamples().front() = move( RawBytesToPCM16Vec(ptrdata) );
-                    //    sstrname <<"_pcm16";
-                    //    loopinfo.start_ = ptrinfo->loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
-                    //    loopinfo.end_   = ptrdata->size()  / 2;
-                    //}
-                    //else if(ptrinfo->smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
-                    //{
-                    //    clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
-                    //}
 
                     //Add loopinfo!
                     smplchnk.loops_.push_back( loopinfo );

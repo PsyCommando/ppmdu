@@ -57,6 +57,8 @@ namespace gfx_util
         bool ParseOutputPath ( const std::string & path );
         bool ParseExtraPath  ( const std::string & path );
 
+        bool ShouldParseOutputPath( const std::vector<std::vector<std::string>> & optdata, const std::deque<std::string> & priorparam, size_t nblefttoparse );
+
         //Parse Options
         bool ParseOptionQuiet           ( const std::vector<std::string> & optdata );
         bool ParseOptionExportFormat    ( const std::vector<std::string> & optdata );

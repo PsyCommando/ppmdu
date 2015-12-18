@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <cassert>
 
 
 using namespace std;
@@ -203,9 +204,9 @@ namespace utils{ namespace cmdl
     }
 
     //Returns a list of all the found parameters passed at construction.
-    std::vector< std::string > CArgsParser::getAllFoundParams()
+    std::deque< std::string > CArgsParser::getAllFoundParams()
     {
-        vector<string> allparams; 
+        deque<string> allparams; 
         auto           itbefore = m_rawcurarg; //save the initial read pos to restore the object to its previous state
         ResetReadPos(); //make sure we're at the beginning
 
@@ -412,38 +413,55 @@ namespace utils{ namespace cmdl
     void CommandLineUtility::parseArgs( CArgsParser & argsparse )
     {
         const auto &   refParams = getArgumentsList();
-        vector<string> params    = argsparse.getAllFoundParams();
+        deque<string>  params    = argsparse.getAllFoundParams();
         auto           options   = argsparse.getAllFoundOptions();
         //bool           bsuccess = true;
+        deque<string> parsedparams;
 
         for( unsigned int i = 0; i < refParams.size(); ++i )
         {
             unsigned int argorder = refParams[i].argumentorder;
 
-            if( argorder < params.size() )
+            if( refParams[i].isoptional )
             {
-                if( ! refParams[i].myParseFun( params[argorder] ) )
+                if( refParams[i].myShouldParse != nullptr )
+                {
+                    if( !refParams[i].myShouldParse( options, parsedparams, params.size() ) )
+                        continue; //Skip when not the function tells us it should be ignored
+                }
+                else
+                    assert(false); //You must set a "shouldParse" function for optional parameters !!!
+            }
+
+            if( !params.empty() )
+            {
+                if( ! refParams[i].myParseFun( params.front() ) )
                 {
                     stringstream strserror;
-                    strserror <<"Error while parsing \"" <<params[argorder] 
+                    strserror <<"Error while parsing \"" <<params.front() 
                               <<"\"\nas parameter \"" <<refParams[i].name <<"\"!";
                     throw std::runtime_error(strserror.str());
                 }
+                else
+                {
+                    parsedparams.push_back( params.front() );
+                    params.pop_front();
+                }
             }
-            else if( !(refParams[i].isoptional)  )
+            else //if( !(refParams[i].isoptional)  )
             {
                 stringstream strserror;
                 strserror <<"Error! Command line is missing the parameter: \"" <<refParams[i].name <<"\"!";
                 throw exMissingParameter(strserror.str());
             }
-            else if( refParams[i].isoptional && 
-                     refParams[i].myIsRequired != nullptr && 
-                     refParams[i].myIsRequired( options ) )
-            {
-                stringstream strserror;
-                strserror <<"Error! Command line is missing the optional parameter: \"" <<refParams[i].name <<"\" which is required in this case!";
-                throw exMissingParameter(strserror.str());
-            }
+            //else if( refParams[i].isoptional && 
+            //         refParams[i].myShouldParse != nullptr && 
+            //         refParams[i].myShouldParse( options, parsedparams ) )
+            //{
+            //    stringstream strserror;
+            //    strserror <<"Error! Command line is missing the optional parameter: \"" <<refParams[i].name <<"\" which is required in this case!";
+            //    throw exMissingParameter(strserror.str());
+            //}
             //else // We missed an optional param, no big deal!
         }
     }

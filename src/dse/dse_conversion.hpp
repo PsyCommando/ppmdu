@@ -132,18 +132,47 @@ namespace DSE
     //-----------------------------
     // Loading Methods
     //-----------------------------
-        //void LoadMasterBank();
+
+        /*
+            LoadMasterBank
+        */
         void LoadMasterBank( const std::string & mbank );
 
+        /*
+            LoadSmdSwdPair
+        */
         void LoadSmdSwdPair( const std::string & smd, const std::string & swd );
 
-        //For loading all pairs in one or two directories into a batch loader
         /*
             LoadMatchedSMDLSWDLPairs
                 This function loads all matched smdl + swdl pairs in one or two different directories
         */
         void LoadMatchedSMDLSWDLPairs( const std::string & swdldir, const std::string & smdldir );
 
+        /*
+            LoadBgmContainer
+                Load a single bgm container file.
+                Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+        */
+        void LoadBgmContainer( const std::string & file );
+
+        /*
+            LoadBgmContainers
+                Load all pairs in the folder. 
+                Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+
+                - bgmdir : The directory where the bgm containers are located at.
+                - ext    : The file extension the bgm container files have.
+        */
+        void LoadBgmContainers( const std::string & bgmdir, const std::string & ext );
+
+        /*
+            LoadSingleSMDLs
+                Loads only SMDL in the folder.
+        */
+        void LoadSingleSMDLs( const std::string & smdldir );
+
+        void LoadSMDL( const std::string & smdl );
 
     //-----------------------------
     // Exporting Methods
@@ -163,31 +192,41 @@ namespace DSE
         std::vector<SMDLPresetConversionInfo> ExportSoundfontBakedSamples( const std::string & destf );
 
         /*
-            Export all the presets for each loaded swdl pairs! And if the sample data is present,
-            it will also export it!
+            ExportXMLPrograms
+                Export all the presets for each loaded swdl pairs! And if the sample data is present,
+                it will also export it!
         */
         void ExportXMLPrograms( const std::string & destf );
 
         /*
-            Does the same as the "ExportSoundfont" method, but additionnaly also
-            exports all loaded smd as MIDIs, with the appropriate bank events to use
-            the correct instrument presets.
+            ExportSoundfontAndMIDIs
+                Does the same as the "ExportSoundfont" method, but additionnaly also
+                exports all loaded smd as MIDIs, with the appropriate bank events to use
+                the correct instrument presets.
         */
         void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0, bool bbakesamples = true );
 
         /*
-            Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
+            ExportSoundfontAsGM
+                Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
 
-            dsetogm : A map consisting of a list of filenames associated to a vector where each indexes correspond to a
-                      dse preset entry ID (AKA instrument ID), and where the integer at that index correspond to the 
-                      GM patch number to attribute it during conversion.
+                dsetogm : A map consisting of a list of filenames associated to a vector where each indexes correspond to a
+                          dse preset entry ID (AKA instrument ID), and where the integer at that index correspond to the 
+                          GM patch number to attribute it during conversion.
         */
         void ExportSoundfontAsGM( const std::string & destf, const std::map< std::string, std::vector<int> > & dsetogm )const;
 
         /*
-            Export all music sequences to midis and export all preset data to xml + pcm16 samples!
+            ExportXMLAndMIDIs
+                Export all music sequences to midis and export all preset data to xml + pcm16 samples!
         */
         void ExportXMLAndMIDIs( const std::string & destdir, int nbloops = 0 );
+
+        /*
+            ExportMIDIs
+                Export only the sequences that were loaded to MIDI!
+        */
+        void ExportMIDIs( const std::string & destdir, const std::string & cvinfopath = "", int nbloops = 0 );
 
     //
     //
@@ -195,7 +234,7 @@ namespace DSE
         /*
             Writes a CVInfo files from the preset data currently loaded!
         */
-        void WriteBlankCvInfoFile( const std::string & destf );
+        //void WriteBlankCvInfoFile( const std::string & destf );
 
     //-----------------------------
     // State Methods

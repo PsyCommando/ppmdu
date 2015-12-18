@@ -1,4 +1,3 @@
-//#define _USE_MATH_DEFINES
 #include "dse_interpreter.hpp"
 #include <utils/poco_wrapper.hpp>
 #include <dse/dse_conversion.hpp>
@@ -71,7 +70,7 @@ namespace DSE
 //======================================================================================
 //  DSESequenceToMidi_Improv
 //======================================================================================
-
+#if 0
     /*
         Improved version of the DSE MIDI Sequence converter.
 
@@ -181,6 +180,7 @@ namespace DSE
         const MusicSequence * m_seq;          //The Music sequence we're working on
         
     };
+#endif
 
 
 //======================================================================================
@@ -1092,6 +1092,9 @@ namespace DSE
         /*
             RearrangeChannels
                 Try to free channel 10 if possible, and if not, set a track that has a 0x7F program change on chan 10.
+
+                Only for GM conversion. Should probably get phased out eventually, because its pretty bad at its job.
+                Not that swapping stuff from channel to channel is easy..
         */
         void RearrangeChannels()
         {
@@ -1455,6 +1458,8 @@ namespace DSE
                                          DSE::DSE_MetaDataSMDL           & dseMeta )
         {
             using namespace jdksmidi;
+            cerr<<"Not implemented!\n";
+            assert(false);
         }
 
         //
@@ -1471,6 +1476,10 @@ namespace DSE
             const MIDITrack    & track = *( midi.GetTrack(0) );
             const int            nbev  = track.GetNumEvents();
             vector<TrkState>     trkstates( 16 ); //Pre-emptively alloc all midi channels
+
+
+            cerr<<"Not implemented!\n";
+            assert(false);
 
             //Iterate through events
             for( int cntev = 0; cntev < nbev; ++cntev )

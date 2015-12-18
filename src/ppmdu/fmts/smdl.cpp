@@ -5,9 +5,11 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <iterator>
 #include <types/content_type_analyser.hpp>
 
 using namespace std;
@@ -23,162 +25,38 @@ namespace DSE
     static const uint32_t Trk_Chunk_Param1 = 0x1000000;
     static const uint32_t Trk_Chunk_Param2 = 0xFF04;
 
-
-
 //====================================================================================================
 // Utility
 //====================================================================================================
 
 
-
-//====================================================================================================
-//  EvTrack
-//====================================================================================================
-
-    //template<class _EvTy, class _PlayIt, class _TickTy = unsigned long long>
-    //    class BaseTrackPlaybackState
-    //{
-    //public:
-    //    typedef _EvTy   event_t;
-    //    typedef _PlayIt playit_t; //playback iterator
-    //    typedef _TickTy tick_t;   //Type of the tick counter
-
-    //    BaseTrackPlaybackState()
-    //        :nextop(0),curtick(0),curpitch(0),curbpm(0),lastsilence(0)
-    //    {}
-
-    //    virtual ~BaseTrackPlaybackState(){}
-
-    //    //Methods
-    //    virtual void tick() 
-    //    { 
-    //        ++curtick; 
-    //    }
-
-    //    virtual void update()
-    //    {
-    //        if( m_isrealtime && m_curtick >= m_nextop )
-    //        {
-    //            if( m_tohandle != m_itend )
-    //            {
-    //            }
-    //            else
-    //            {
-    //                ++m_itcur;
-    //                m_tohandle = m_itcur
-    //            }
-    //            
-    //        }
-    //        else
-    //        {
-    //            ++m_itcur;
-    //        }
-    //    }
-
-    //protected:
-
-    //    virtual void HandleCurEvent()
-    //    {
-    //    }
-
-    //protected:
-    //    
-    //    bool           m_isrealtime;    //whether is realtime or not
-    //    atomic<tick_t> m_curtick;       //Cur tick counter value
-    //    atomic<tick_t> m_nextop;        //Value of the tick counter when the next operation is executed
-
-    //    uint8_t  m_curpitch;
-    //    uint8_t  m_curbpm;
-    //    uint16_t m_lastsilence;
-
-    //    playit_t m_tohandle;      //The event to handle when curtick == nextop 
-
-    //    playit_t m_itcur;
-    //    playit_t m_itloop;
-    //    playit_t m_itend;
-    //};
-
-
-    //class BaseEvent
-    //{
-    //public:
-    //    BaseEvent(){}
-    //    virtual ~BaseEvent(){}
-
-
-    //};
-
-
-
-
-
-
-    //std::string EvTrack::tostr()const
-    //{
-    //    //auto     itread = m_events.begin();
-    //    //uint8_t      curpitch;
-    //    //uint8_t      curbpm;
-    //    //uint16_t     lastsilence;
-    //    TrackPlaybackState pl;
-    //    stringstream outstr;
-
-
-    //    for( const auto & ev : m_events )
-    //    {
-    //        outstr << pl.printevent(ev) << " ";
-    //    }
-
-    //    return outstr.str();
-    //}
-
-    
-    //std::string TrkEvent::tostr()const
-    //{
-    //    stringstream outstr;
-
-    //    if( dt != 0 )
-    //        outstr <<dec << static_cast<unsigned short>(dt) <<"tu-";
-
-    //    auto evinf = GetEventInfo( static_cast<eTrkEventCodes>(evcode) );
-
-    //    if( evinf.first )
-    //        outstr << evinf.second.evlbl << "-";
-    //    else
-    //        outstr << "INVALID-";
-
-    //    if( evinf.second.nbreqparams >= 1 )
-    //    {
-    //        if( evinf.second.evcodebeg == eTrkEventCodes::NoteOnBeg )
-    //        {
-    //            outstr << "vel:" <<dec << evcode <<"-TrkPitch:";
-    //            
-    //            if(  ) 
-    //            << <<"";
-    //        }
-    //    }
-
-    //    outstr <<dec << static_cast<unsigned short>(dt) <<"tu-";
-
-    //    return outstr.str();
-    //}
-
 //====================================================================================================
 // SMDL_Parser
 //====================================================================================================
 
-    class SMDL_Parser
+    /*
+        SMDL_Parser
+            Takes a random access iterator as template param.
+    */
+    template<class _rait = vector<uint8_t>::const_iterator >
+        class SMDL_Parser
     {
     public:
+        typedef _rait rd_iterator_t;
 
         SMDL_Parser( const vector<uint8_t> & filedata )
-            :m_src(filedata)
+            :m_itbeg(filedata.begin()), m_itend(filedata.end())
+        {}
+
+        SMDL_Parser( _rait itbeg, _rait itend )
+            :m_itbeg(itbeg), m_itend(itend)
         {}
 
         operator MusicSequence()
         {
             //Set our iterator
-            m_itread = m_src.begin();
-            m_itEoC  = DSE::FindNextChunk( m_src.begin(), m_src.end(), DSE::eDSEChunks::eoc ); //Our end is either the eoc chunk, or the vector's end
+            m_itread = m_itbeg;//m_src.begin();
+            m_itEoC  = DSE::FindNextChunk( m_itbeg, m_itend, DSE::eDSEChunks::eoc ); //Our end is either the eoc chunk, or the vector's end
 
             //Get the headers
             ParseHeader();
@@ -263,97 +141,14 @@ namespace DSE
             mtrk.getEvents() = move(parsed.first);
 
             return move(mtrk);
-
-            ////Sanity checks
-            //if( hdr.label != static_cast<uint32_t>(DSE::eDSEChunks::trk) )
-            //{
-            //    throw std::runtime_error( "SMDL_Parser::ParseTrack() : Unexpected chunk ID ! " + to_string(hdr.label) );
-            //}
-            //if( hdr.param1 != Trk_Chunk_Param1 )
-            //{
-            //    cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param1 value is non-default " <<hex <<hdr.param1 <<dec <<" !\n";
-            //}
-            //if( hdr.param2 != Trk_Chunk_Param2 )
-            //{
-            //    cerr <<"SMDL_Parser::ParseTrack() : Track chunk's param2 value is non-default " <<hex <<hdr.param2 <<dec <<" !\n";
-            //}
-
-            ////Set End of track
-            //auto iteot = m_itread + hdr.datlen;
-
-            ////Pre-allocate worst case scenario
-            //trk.reserve( hdr.datlen );
-
-            ////Read preamble
-            //TrkPreamble pre;
-            //m_itread = pre.ReadFromContainer(m_itread);
-
-            ////Parse events
-            //TrkEvent lastev;
-            //while( (lastev.evcode != static_cast<uint8_t>(DSE::eTrkEventCodes::EndOfTrack)) && 
-            //       (m_itread != m_itEoC) )
-            //{
-            //    lastev = std::move(ParseEvent());
-            //    if( lastev.dt != 0 && (lastev.dt & 0xF0) != 0x80 )
-            //        cout<<"DT isssue" <<endl;
-            //    trk.push_back(lastev);
-            //}
-
-            ////Shrink
-            //trk.shrink_to_fit();
         }
 
-        //TrkEvent ParseEvent()
-        //{
-        //    TrkEvent ev;
-        //    uint8_t  first = *m_itread;
-
-        //    //Check if first val is DT
-        //    if( (first & 0xF0) == 0x80 ) //Check if value begins with 0x8X (1000 XXXX)
-        //    {
-        //        ev.dt = first; //& 0xF; //DT is 0x0-0xF //NOTE: we don't know if the DT can't be 0x80.. So we need to leave the full value in there
-        //        ++m_itread; //increment iter
-        //    }
-        //    else
-        //        ev.dt = 0;
-
-        //    //Get the event code
-        //    ev.evcode = *m_itread;
-        //    ++m_itread;
-
-        //    //Check if evcode has a/some parameter(s)
-        //    auto einfo = GetEventInfo( static_cast<DSE::eTrkEventCodes>(ev.evcode) );
-
-        //    //If event doesn't exist in our database
-        //    if( ! einfo.first )
-        //    {
-        //        stringstream sstr;
-        //        sstr << "SMDL_Parser::ParseEvent() : Encountered reset event code 0x" <<hex <<static_cast<uint16_t>(ev.evcode) <<dec <<" !";
-        //        throw std::runtime_error(sstr.str());
-        //    }
-
-        //    //Get up to 2 params
-        //    if( einfo.second.nbreqparams >= 1 )
-        //    {
-        //        ev.param1 = *(m_itread);
-        //        ++m_itread;
-        //    }
-
-        //    if( ( einfo.second.nbreqparams >= 2 ) || 
-        //        ( einfo.second.hasoptparam && (einfo.second.optparammask & ev.param1) != 0 ) ) //Optional second param
-        //    {
-        //        ev.param2 = *(m_itread);
-        //        ++m_itread;
-        //    }
-
-        //    //Done
-        //    return std::move(ev);
-        //}
-
     private:
-        const vector<uint8_t>         & m_src;
-        vector<uint8_t>::const_iterator m_itread;
-        vector<uint8_t>::const_iterator m_itEoC;    //Pos of the "end of chunk" chunk
+        rd_iterator_t                   m_itbeg;
+        rd_iterator_t                   m_itend;
+
+        rd_iterator_t                   m_itread;
+        rd_iterator_t                   m_itEoC;    //Pos of the "end of chunk" chunk
         SMDL_Header                     m_hdr;
         SongChunk                       m_song;
 
@@ -374,12 +169,19 @@ namespace DSE
                  << "Parsing SMDL " <<file << "\n"
                  << "================================================================================\n";
         }
-        return std::move( SMDL_Parser( utils::io::ReadFileToByteVector(file) )); //Apparently it being an implicit move isn't enough for MSVC..
+        return std::move( SMDL_Parser<>( utils::io::ReadFileToByteVector(file) )); //Apparently it being an implicit move isn't enough for MSVC..
+    }
+
+    MusicSequence ParseSMDL( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
+    {
+        return std::move( SMDL_Parser<>( itbeg, itend ));
     }
 
     void WriteSMDL( const std::string & file, const MusicSequence & seq )
     {
-
+        //# TODO : Write the SMDL writer !
+        cerr<<"Not Implemented!\n";
+        assert(false);
     }
 };
 

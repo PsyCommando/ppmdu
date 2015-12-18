@@ -322,7 +322,8 @@ namespace gfx_util
 #elif __linux__
             "\"/mysprites/sprite.wan\"",
 #endif
-            std::bind( &CGfxUtil::ParseOutputPath, &GetInstance(), placeholders::_1 ),
+            std::bind( &CGfxUtil::ParseOutputPath,       &GetInstance(), placeholders::_1 ),
+            std::bind( &CGfxUtil::ShouldParseOutputPath, &GetInstance(), placeholders::_1, placeholders::_2, placeholders::_3 ),
         },
     }};
 
@@ -482,7 +483,9 @@ namespace gfx_util
         {
             "pkportraits",
             0,
-            "Specifying this will export or import pokemon portraits from/to the game. When importing the input is the directory containing all the portraits for each pokemons, and the output the ROM's data root directory. When exporting, the input is the ROM's data directory, and the output the directory where the converted portraits will be placed.",
+            "Specifying this will export or import pokemon portraits from/to the game. When importing the input is the directory "
+            "containing all the portraits for each pokemons, and the output the ROM's data root directory. When exporting, the "
+            "input is the ROM's data directory, and the output the directory where the converted portraits will be placed.",
             "-pkportraits",
             std::bind( &CGfxUtil::ParseOptionPkPortraits,  &GetInstance(), placeholders::_1 ),
         },
@@ -510,18 +513,24 @@ namespace gfx_util
 // Misc Methods
 //------------------------------------------------
 
+    /*
+    */
     CGfxUtil & CGfxUtil::GetInstance()
     {
         static CGfxUtil s_util;
         return s_util;
     }
 
+    /*
+    */
     CGfxUtil::CGfxUtil()
         :CommandLineUtility()
     {
         _Construct();
     }
 
+    /*
+    */
     void CGfxUtil::_Construct()
     {
         clog <<getExeName() <<" " <<getVersionString() <<" initializing..\n";
@@ -560,6 +569,8 @@ namespace gfx_util
     const string                    & CGfxUtil::getMiscSectionText ()const { return Misc_Text;               }
 
 
+    /*
+    */
     void CGfxUtil::ChkAndHndlUnsupportedRawOutput()
     {
         //Currently, we do not support raw image export on sprites !
@@ -573,6 +584,9 @@ namespace gfx_util
 //--------------------------------------------
 //  Mode Execution Methods
 //--------------------------------------------
+
+    /*
+    */
     int CGfxUtil::UnpackSprite()
     {
         utils::MrChronometer chronounpacker( "Unpacking Sprite" );
@@ -622,6 +636,8 @@ namespace gfx_util
         return 0;
     }
 
+    /*
+    */
     int CGfxUtil::BuildSprite()
     {
         utils::MrChronometer chronopacker( "Building Sprite" );
@@ -685,6 +701,8 @@ namespace gfx_util
         return 0;
     }
 
+    /*
+    */
     int CGfxUtil::UnpackAndExportPackedCharSprites()
     {
         utils::ChronoRAII<chrono::seconds> chronounpacker( "Unpacking & Exporting Sprites" );
@@ -823,7 +841,8 @@ namespace gfx_util
         return 0;
     }
 
-
+    /*
+    */
     void BuildSprFromDirAndInsert( vector<uint8_t> & out_sprRaw, 
                                   const Poco::Path & inDirPath, 
                                   bool               importByIndex, 
@@ -867,6 +886,8 @@ namespace gfx_util
         }
     }
 
+    /*
+    */
     int CGfxUtil::PackAndImportCharSprites()
     {
         utils::ChronoRAII<std::chrono::seconds> chronopacker( "Packing & Importing Sprites" );
@@ -995,7 +1016,8 @@ namespace gfx_util
         return 0;
     }
 
-
+    /*
+    */
     int CGfxUtil::DecompressAndHandle()
     {
         utils::MrChronometer chronounpacker( "Unpacking compressed sprite" );
@@ -1046,6 +1068,8 @@ namespace gfx_util
         return 0;
     }
 
+    /*
+    */
     int CGfxUtil::ImportMainFontFile()
     {
         vector<uint8_t> fdata = ReadFileToByteVector( m_inputPath );
@@ -1055,6 +1079,8 @@ namespace gfx_util
         return 0;
     }
     
+    /*
+    */
     int CGfxUtil::ExportMainFontFile()
     {
         assert(false);
@@ -1064,6 +1090,9 @@ namespace gfx_util
 //--------------------------------------------
 //  Parsing Args Methods
 //--------------------------------------------
+
+    /*
+    */
     bool CGfxUtil::ParseInputPath( const string & path )
     {
         Poco::File inputfile(path);
@@ -1077,6 +1106,8 @@ namespace gfx_util
         return false;
     }
     
+    /*
+    */
     bool CGfxUtil::ParseOutputPath( const string & path )
     {
         Poco::Path outpath(path);
@@ -1089,6 +1120,18 @@ namespace gfx_util
         return false;
     }
 
+    /*
+    */
+    bool CGfxUtil::ShouldParseOutputPath( const std::vector<std::vector<std::string>> & optdata, 
+                                          const std::deque<std::string>               & priorparam, 
+                                          size_t                                        nblefttoparse )
+    {
+
+        return (priorparam.size() == 1) && (nblefttoparse != 0);
+    }
+
+    /*
+    */
     bool CGfxUtil::ParseExtraPath( const string & path )
     {
         Poco::Path testpath(path);
@@ -1100,6 +1143,8 @@ namespace gfx_util
         return false;
     }
 
+    /*
+    */
     void CGfxUtil::PrintOperationMode()
     {
         if( m_bQuiet )

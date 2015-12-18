@@ -8,13 +8,13 @@ Description: Utilities for handling Pokemon Mystery Dungeon: Explorers of Sky/Ti
 
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
+
+    #TODO: Move this to DSE folder + remove as many dependencies on PMD2 as possible !!!
+
 */
 #include <dse/dse_common.hpp>
 #include <dse/dse_containers.hpp>
 #include <types/content_type_analyser.hpp>
-
-//Forward declare #TODO: do something less ugly dependency-wise !
-//namespace pmd2 { namespace audio { class MusicSequence; }; };
 
 namespace filetypes
 {
@@ -143,11 +143,10 @@ namespace DSE
 //====================================================================================================
 // Functions
 //====================================================================================================
-
-
-
     MusicSequence ParseSMDL( const std::string & file );
     void          WriteSMDL( const std::string & file, const MusicSequence & seq );
+
+    MusicSequence ParseSMDL( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend );
 
 };
 

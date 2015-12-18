@@ -51,13 +51,19 @@ namespace DSE
 //
 //===============================================================================
 
-    class SWDLParser
+    template<class _rait = std::vector<uint8_t>::const_iterator >
+        class SWDLParser
     {
     public:
+        typedef _rait rd_iterator_t;
+
+        SWDLParser( _rait itbeg, _rait itend )
+            :m_itbeg(itbeg),m_itend(itend)
+        {}
+
         SWDLParser( const std::vector<uint8_t> & src )
-            :m_src(src)
-        {
-        }
+            :m_itbeg(src.begin()),m_itend(src.end())
+        {}
 
         PresetBank Parse()
         {
@@ -85,7 +91,7 @@ namespace DSE
     private:
         void ParseHeader()
         {
-            m_hdr.ReadFromContainer(m_src.begin());
+            m_hdr.ReadFromContainer(m_itbeg);
         }
 
         void ParseMeta()
@@ -115,10 +121,10 @@ namespace DSE
                 clog <<"\t== Parsing Programs ==\n";
 
             //Find the prgi chunk
-            auto itprgi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::prgi );
+            auto itprgi = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::prgi );
 
             //Its possible there are no programs
-            if( itprgi == m_src.end() )
+            if( itprgi == m_itend )
             {
                 if( utils::LibWide().isLogOn() )
                     clog <<"\t\tNo Programs found!\n";
@@ -162,9 +168,9 @@ namespace DSE
                 clog <<"\t== Parsing Keygroups ==\n";
 
             //Find the KGRP chunk
-            auto itkgrp = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::kgrp );
+            auto itkgrp = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::kgrp );
 
-            if( itkgrp == m_src.end() )
+            if( itkgrp == m_itend )
             {
                 if( utils::LibWide().isLogOn() )
                     clog <<"\t\tNo Keygroups found!\n";
@@ -200,9 +206,9 @@ namespace DSE
             vector<SampleBank::smpldata_t> smpldat(std::move( ParseWaviChunk() ));
 
             //Find the PCMD chunk
-            auto itpcmd = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::pcmd );
+            auto itpcmd = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::pcmd );
             
-            if( itpcmd == m_src.end() )
+            if( itpcmd == m_itend )
                 throw std::runtime_error("SWDLParser::ParseSamples(): Couldn't find PCMD chunk!!!!!");
 
             //Get the pcmd chunk's header
@@ -227,9 +233,9 @@ namespace DSE
 
         vector<SampleBank::smpldata_t> ParseWaviChunk()
         {
-            auto itwavi = DSE::FindNextChunk( m_src.begin(), m_src.end(), eDSEChunks::wavi );
+            auto itwavi = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::wavi );
 
-            if( itwavi == m_src.end() )
+            if( itwavi == m_itend )
                 throw std::runtime_error("SWDLParser::ParseWaviChunk(): Couldn't find wavi chunk !!!!!");
 
             ChunkHeader wavihdr;
@@ -259,7 +265,11 @@ namespace DSE
     private:
         DSE_MetaDataSWDL             m_meta;
         SWDL_Header                  m_hdr;
-        const std::vector<uint8_t> & m_src;
+
+        rd_iterator_t                m_itbeg;
+        rd_iterator_t                m_itend;
+
+        //const std::vector<uint8_t> & m_src;
     };
 
 //========================================================================================================
@@ -273,7 +283,13 @@ namespace DSE
                  <<"Parsing SWDL \"" <<filename <<"\"\n"
                  <<"--------------------------------------------------------------------------\n";
         }
-        return std::move( SWDLParser( utils::io::ReadFileToByteVector( filename ) ).Parse() );
+        return std::move( SWDLParser<>( utils::io::ReadFileToByteVector( filename ) ).Parse() );
+    }
+
+    PresetBank ParseSWDL( std::vector<uint8_t>::const_iterator itbeg, 
+                          std::vector<uint8_t>::const_iterator itend )
+    {
+        return std::move( SWDLParser<>( itbeg, itend ).Parse() );
     }
 
 

@@ -8,8 +8,10 @@ Description: Utilities for handling Pokemon Mystery Dungeon: Explorers of Sky/Ti
 
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
+
+    #TODO: Move this to DSE folder + remove as many dependencies on PMD2 as possible !!!
+
 */
-//#include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <dse/dse_common.hpp>
 #include <dse/dse_containers.hpp>
 #include <utils/utility.hpp>
@@ -213,6 +215,10 @@ namespace DSE
 
     PresetBank ParseSWDL( const std::string & filename );
     void       WriteSWDL( const std::string & filename, const PresetBank & audiodata );
+
+    //Parse from a range.
+    PresetBank ParseSWDL( std::vector<uint8_t>::const_iterator itbeg, 
+                          std::vector<uint8_t>::const_iterator itend );
 
     /*
         ReadSwdlHeader

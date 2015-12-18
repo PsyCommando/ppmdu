@@ -924,6 +924,7 @@ namespace DSE
         uint8_t     unk2;       //Some kind of volume value maybe
         std::string fname;      //Internal filename
         DateTime    createtime; //Time this was created on
+        std::string origfname;  //The original filename, in the game's filesystem if applicable
     };
 
     /************************************************************************
