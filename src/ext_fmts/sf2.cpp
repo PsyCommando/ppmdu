@@ -13,7 +13,8 @@ using namespace std;
 
 //This define is meant to be a temporary mean of toggling on and off the adding of loop bytes to make looping
 //  samples much smoother.
-#define SF2_ADD_EXTRA_LOOP_BYTES 1
+//#define SF2_ADD_EXTRA_LOOP_BYTES 1
+#define SF2_ADD_EXTRA_LOOP_BYTES2 1
 
 namespace sf2
 {
@@ -192,7 +193,7 @@ namespace sf2
                 - loopend < (end - 7)
                 - (loopend - loopend) >= 32 
     **************************************************************************************/
-    std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t loopbeg, uint32_t loopend )
+    std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t & loopbeg, uint32_t & loopend )
     {
         const size_t          smpllen      = sample.size();
         const int32_t         looplen      = loopend - loopbeg;
@@ -204,28 +205,13 @@ namespace sf2
         const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEndEdgeDist; //Whether we need to insert samples between loopend and end
         const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
 
-        if( utils::LibWide().isLogOn() )
-        {
-            clog << "\tMakeSampleLoopLegal():\n" <<setw(10) <<setfill(' ')
-                 << "\t\tLength"    <<": " << smpllen <<" smpls\n" <<setw(10)
-                 << "\t\tLoopBeg"   <<": " << loopbeg <<" smpls\n" <<setw(10)
-                 << "\t\tLoopEnd"   <<": " << loopend <<" smpls\n" <<setw(10)
-                 << "\t\tLoopLen"   <<": " << looplen <<" smpls\n" <<setw(10)
-                 <<boolalpha 
-                 << "\t\tDoPrefix"  <<": " << bPrefixSmpls <<"\n" <<setw(10)
-                 << "\t\tDoSufix"   <<": " << bSuffixSmpls <<"\n" <<setw(10)
-                 << "\t\tDoExtraLp" <<": " << bExtraLoops <<"\n";
-        }
-
         if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
             return sample; //Nothing to do here !
 
         const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
         const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
-        const uint32_t nbdummyprefx  = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distbeglp2beg) );
-        const uint32_t nbdummypost   = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distlpend2end) );
 
-        //#1 - Compute size to reserve
+       //#1 - Compute size to reserve
         if( bExtraLoops )
         {
             loopntimes = SfSampleLoopMinLen / looplen; //Compute the amount of times to loop the sample to reach the legal length
@@ -237,10 +223,37 @@ namespace sf2
             allocsz += ( loopntimes * looplen ); //Add those extra loop samples to the amount to reserve
         }
 
+        //
+        unsigned int nbprelps  = 0;
+        unsigned int nbsufflps = 0;
+
         if( bPrefixSmpls )
-            allocsz += nbdummyprefx; //Add the nb of dummy samples to prefix
+        {
+            if( SfSampleLoopMinEdgeDist > looplen ) 
+            {
+                nbprelps = SfSampleLoopMinEdgeDist / looplen;
+                if( SfSampleLoopMinEdgeDist % looplen != 0 )
+                    ++nbprelps;
+            }
+            else
+                ++nbprelps;
+            loopntimes += nbprelps;
+            allocsz += ( nbprelps * looplen ); //Add the nb of dummy samples to prefix
+        }
         if( bSuffixSmpls )
-            allocsz += nbdummypost; //Add the nb of dummy samples to append
+        {
+            if( SfSampleLoopMinEndEdgeDist > looplen ) 
+            {
+                nbsufflps = SfSampleLoopMinEndEdgeDist / looplen;
+                if( SfSampleLoopMinEndEdgeDist % looplen != 0 )
+                    ++nbsufflps;
+            }
+            else
+                ++nbsufflps;
+            loopntimes += nbsufflps;
+            allocsz += ( nbsufflps * looplen ); //Add the nb of dummy samples to append
+        }
+
 
         //#2 - Allocate
         std::vector<pcm16s_t> legalloop;
@@ -252,17 +265,6 @@ namespace sf2
         //Copy whatever is between beg and loopbeg
         std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
 
-        if( bPrefixSmpls )
-        {
-            auto itcpbeg = sample.begin();
-            //std::advance( itcpbeg, distbeglp2beg );
-
-            //if( distbeglp2beg <= 1 )
-                std::fill_n( legalloopins, nbdummyprefx, *itcpbeg );
-            //else
-            //    std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
-        }
-
         //Put the data between the loop points as many times as needed
         auto itlpbeg = sample.begin() + distbeglp2beg;
         for( unsigned int cntlp = 0; cntlp < loopntimes; ++cntlp ) //Copy the sample's looped zone as many times as needed
@@ -271,25 +273,110 @@ namespace sf2
         //Copy whatever is between loopend and end
         std::copy_n( sample.begin(), distlpend2end, legalloopins );
 
-        if( bSuffixSmpls )
-        {
-            auto itcpbeg = sample.begin();
-            std::advance( itcpbeg, distbeglp2beg );
-            std::copy_n( itcpbeg, nbdummypost, legalloopins );
-        }
+        //Move loop points!
+        loopbeg = distbeglp2beg + ( nbprelps * looplen );
+        loopend = loopbeg       + ( ( loopntimes - nbsufflps ) * looplen );
 
-
-        if( utils::LibWide().isLogOn() )
-        {
-            clog <<setw(10) << "\t\tDistBegLpToBeg" <<": " <<distbeglp2beg <<"\n"
-                 <<setw(10) << "\t\tDistEndLpToEnd" <<": " <<distlpend2end <<"\n"
-                 <<setw(10) << "\t\tLoopNTimes"     <<": " <<loopntimes <<"\n";
-        }
-
-        //#4 - Move the legal sample into the old one
         sample = std::move(legalloop);
         return sample;
     }
+    //{
+    //    const size_t          smpllen      = sample.size();
+    //    const int32_t         looplen      = loopend - loopbeg;
+    //    size_t                allocsz      = smpllen;
+    //    uint32_t              loopntimes   = 1;                 //The nb of times the samples should be looped to be legal
+
+    //    //#0 - Determine what to do with this sample
+    //    const bool bPrefixSmpls = loopbeg < SfSampleLoopMinEdgeDist;             //Whether we need to insert samples between beg and loopbeg
+    //    const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEndEdgeDist; //Whether we need to insert samples between loopend and end
+    //    const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
+
+    //    if( utils::LibWide().isLogOn() )
+    //    {
+    //        clog << "\tMakeSampleLoopLegal():\n" <<setw(10) <<setfill(' ')
+    //             << "\t\tLength"    <<": " << smpllen <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopBeg"   <<": " << loopbeg <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopEnd"   <<": " << loopend <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopLen"   <<": " << looplen <<" smpls\n" <<setw(10)
+    //             <<boolalpha 
+    //             << "\t\tDoPrefix"  <<": " << bPrefixSmpls <<"\n" <<setw(10)
+    //             << "\t\tDoSufix"   <<": " << bSuffixSmpls <<"\n" <<setw(10)
+    //             << "\t\tDoExtraLp" <<": " << bExtraLoops <<"\n";
+    //    }
+
+    //    if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
+    //        return sample; //Nothing to do here !
+
+    //    const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
+    //    const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
+    //    const uint32_t nbdummyprefx  = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distbeglp2beg) );
+    //    const uint32_t nbdummypost   = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distlpend2end) );
+
+    //    //#1 - Compute size to reserve
+    //    if( bExtraLoops )
+    //    {
+    //        loopntimes = SfSampleLoopMinLen / looplen; //Compute the amount of times to loop the sample to reach the legal length
+
+    //        //If there is any remainder, just loop it another time !
+    //        if( (SfSampleLoopMinLen % looplen) != 0 )
+    //            ++loopntimes;
+
+    //        allocsz += ( loopntimes * looplen ); //Add those extra loop samples to the amount to reserve
+    //    }
+
+    //    if( bPrefixSmpls )
+    //        allocsz += nbdummyprefx; //Add the nb of dummy samples to prefix
+    //    if( bSuffixSmpls )
+    //        allocsz += nbdummypost; //Add the nb of dummy samples to append
+
+    //    //#2 - Allocate
+    //    std::vector<pcm16s_t> legalloop;
+    //    legalloop.reserve( allocsz );
+
+    //    //#3 - Assemble the new sample
+    //    auto legalloopins = back_inserter( legalloop );
+
+    //    //Copy whatever is between beg and loopbeg
+    //    std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
+
+    //    if( bPrefixSmpls )
+    //    {
+    //        auto itcpbeg = sample.begin();
+    //        //std::advance( itcpbeg, distbeglp2beg );
+
+    //        //if( distbeglp2beg <= 1 )
+    //            std::fill_n( legalloopins, nbdummyprefx, *itcpbeg );
+    //        //else
+    //        //    std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
+    //    }
+
+    //    //Put the data between the loop points as many times as needed
+    //    auto itlpbeg = sample.begin() + distbeglp2beg;
+    //    for( unsigned int cntlp = 0; cntlp < loopntimes; ++cntlp ) //Copy the sample's looped zone as many times as needed
+    //        std::copy_n( itlpbeg, looplen, legalloopins );
+
+    //    //Copy whatever is between loopend and end
+    //    std::copy_n( sample.begin(), distlpend2end, legalloopins );
+
+    //    if( bSuffixSmpls )
+    //    {
+    //        auto itcpbeg = sample.begin();
+    //        std::advance( itcpbeg, distbeglp2beg );
+    //        std::copy_n( itcpbeg, nbdummypost, legalloopins );
+    //    }
+
+
+    //    if( utils::LibWide().isLogOn() )
+    //    {
+    //        clog <<setw(10) << "\t\tDistBegLpToBeg" <<": " <<distbeglp2beg <<"\n"
+    //             <<setw(10) << "\t\tDistEndLpToEnd" <<": " <<distlpend2end <<"\n"
+    //             <<setw(10) << "\t\tLoopNTimes"     <<": " <<loopntimes <<"\n";
+    //    }
+
+    //    //#4 - Move the legal sample into the old one
+    //    sample = std::move(legalloop);
+    //    return sample;
+    //}
 
 //=========================================================================================
 //  SounFontRIFFWriter
@@ -590,6 +677,8 @@ namespace sf2
 
             m_smplswritepos.resize(0);
             m_smplswritepos.reserve(m_sf.GetNbSamples());
+            m_smplnewlppoints.resize(0);
+            m_smplnewlppoints.reserve(m_sf.GetNbSamples());
 
             //Write the samples
             for( const auto & smpl : m_sf.GetSamples() )
@@ -613,6 +702,9 @@ namespace sf2
 
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
                     MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
+
+                m_smplnewlppoints.push_back( move( std::make_pair( static_cast<size_t>(loopbounds.first), 
+                                                                   static_cast<size_t>(loopbounds.second) ) ) );
 
                 ostreambuf_iterator<char> itout(m_out);
 
@@ -739,6 +831,20 @@ namespace sf2
                         loopend = smplbeg + (static_cast<uint32_t>(loop.second) + extrasmpls ); //Compensate for extra required data points for being made loop legal
                     //}
                 }
+
+#elif SF2_ADD_EXTRA_LOOP_BYTES2
+                //Calculate those first, to avoid casting all the time.. 
+                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
+                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t);
+                uint32_t       loopbeg = 0;
+                uint32_t       loopend = 0;
+
+                if( loop.second != 0 )
+                {
+                    loopbeg = smplbeg + (static_cast<uint32_t>(m_smplnewlppoints[i].first)   );
+                    loopend = smplbeg + (static_cast<uint32_t>(m_smplnewlppoints[i].second)  );
+                }
+
 #else
                 //Calculate those first, to avoid casting all the time.. 
                 const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
@@ -1049,6 +1155,8 @@ namespace sf2
 
         //Keep track of where the samples where written, from the beginning of the sounfont structure
         std::vector<std::pair<std::ofstream::streampos,std::ofstream::streampos>> m_smplswritepos;
+        //Keep track of the modified loop points
+        std::vector<std::pair<size_t,size_t>>                                     m_smplnewlppoints;
     };
 
 //=========================================================================================
