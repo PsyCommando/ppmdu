@@ -8,47 +8,48 @@
 using namespace std;
 using namespace utils;
 
+/*
+    #TODO: Move classes into their own header. Leave the function definitions in here and include that other header!
+*/
+
 namespace audio
 {
 //==============================================================================================
 // Constants
 //==============================================================================================
 
-    struct IMA_ADPCM    //#FIXME: When did I write that ? This ain't Java !!
+    namespace IMA_ADPCM    
     {
         static const int NbBitsPerSample = 4;
         static const int NbPossibleCodes = utils::do_exponent_of_2_<NbBitsPerSample>::value;
         static const int NbSteps         = 89;
 
-        static const array<int8_t,  NbPossibleCodes> IndexTable;
-        static const array<int16_t, NbSteps>         StepSizes;
-    };
+        static const std::array<int8_t,NbPossibleCodes> IndexTable =
+        {
+            -1, -1, -1, -1, 
+             2,  4,  6,  8,
+            -1, -1, -1, -1, 
+             2,  4,  6,  8,
+        };
 
-    const std::array<int8_t,IMA_ADPCM::NbPossibleCodes> IMA_ADPCM::IndexTable =
-    {
-        -1, -1, -1, -1, 
-         2,  4,  6,  8,
-        -1, -1, -1, -1, 
-         2,  4,  6,  8,
-    };
-
-    const std::array<int16_t,IMA_ADPCM::NbSteps> IMA_ADPCM::StepSizes = 
-    {
-        7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 
-        19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 
-        50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 
-        130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
-        337, 371, 408, 449, 494, 544, 598, 658, 724, 796,
-        876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 
-        2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358,
-        5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 
-        15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767 
+        static const std::array<int16_t,NbSteps> StepSizes = 
+        {
+            7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 
+            19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 
+            50, 55, 60, 66, 73, 80, 88, 97, 107, 118, 
+            130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
+            337, 371, 408, 449, 494, 544, 598, 658, 724, 796,
+            876, 963, 1060, 1166, 1282, 1411, 1552, 1707, 1878, 2066, 
+            2272, 2499, 2749, 3024, 3327, 3660, 4026, 4428, 4871, 5358,
+            5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899, 
+            15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767 
+        };
     };
 
 
-//
+//==============================================================================================
 //  ADPCMTraits
-//
+//==============================================================================================
     //----------------
     //  IMA ADPCM
     //----------------
@@ -249,6 +250,120 @@ namespace audio
         vector<uint8_t>::const_iterator  m_itread;
     };
 
+
+//==============================================================================================
+// IMA ADPCM Realtime Decoder
+//==============================================================================================
+
+    //#TODO: Needs to be tested !!
+    //This is a verison of the adpcm decoder optimized for real-time applications
+    template<class _ADPCM_Trait, bool _LittleEndian = true>
+        class IMA_APCM_RT_Decoder 
+    {
+        typedef _ADPCM_Trait mytrait;
+        static const bool    IsLittleEndian = _LittleEndian;
+
+        //For decoding multi-channels adpcm
+        struct chanstate
+        {
+            int32_t predictor = 0;
+            int16_t stepindex = 0;
+            int16_t step      = 0;
+        };
+
+    public:
+
+        IMA_APCM_RT_Decoder( unsigned int nbchannels = 1 )
+            :m_chan(nbchannels)
+        {}
+
+        void SetPreambleData( size_t chan, int32_t predictor = 0, int16_t stepindex = 0 )
+        {
+            auto & ach = m_chan.at(chan);
+            //Init channels with initial values for the predictor and step index
+            ach.predictor = mytrait::ClampPredictor( predictor );
+            ach.stepindex = mytrait::ClampStepIndex( stepindex );
+            ach.step      = mytrait::StepSizes[ach.stepindex];
+        }
+
+        /*
+            ParseSome
+                Will parse a set amount of adpcm data and write it starting from itout.
+                - nbtoparse : the nb of BYTES to handle. Not ADPCM samples.
+                - chan      : the channel state to use for parsing.
+
+                The method expects that there are at least "nbtoparse" elemts at itread, and
+                that there is at least ("nbtoparse" * 2) at itout!
+
+                Be sure to set the preamble data before. Since this is meant for realtime, ADPCM preamble
+                data is never assumed to be in the bytes passed to this method!
+        */
+        template<class _init, class _outit>
+            void ParseSome( _init itread, size_t bytestoparse, _outit itout, size_t chan )
+        {
+            if( m_chan.size() >= chan )
+                throw runtime_error( "IMA_APCM_RT_Decoder::ParseSome() : Invalid channel!" );
+
+            for( size_t cntpt = 0;  cntpt < bytestoparse; ++cntpt, ++itread )
+                ParseAByteLittleEndian( *itread, m_chan[chan], itout );
+        }
+
+    private:
+        void ParsePreamble( chanstate & ach )
+        {
+            //Init channels with initial values for the predictor and step index
+            ach.predictor = ReadIntFromBytes<int16_t>(m_itread); //Increments iterator
+            ach.stepindex = mytrait::ClampStepIndex( ReadIntFromBytes<int16_t>(m_itread) );
+            ach.step      = mytrait::StepSizes[ach.stepindex];
+        }
+
+        //Little endian
+        template<class _outit>
+            typename std::enable_if<IsLittleEndian, void>::type ParseAByte( uint8_t by, chanstate & curchan, _outit itout )
+        {
+            static_assert(IsLittleEndian, "IMA_APCM_RT_Decoder::ParseAByte() : Little endian function used for big endian !!"); //#REMOVEME Just there to ensure nothing broke
+            (*itout) = ParseSample( by        & 0x0F, curchan );
+            ++itout;
+            (*itout) = ParseSample( (by >> 4) & 0x0F, curchan );
+            ++itout;
+        }
+
+        //Big endian
+        template<class _outit>
+            typename std::enable_if<!IsLittleEndian, void>::type ParseAByte( uint8_t by, chanstate & curchan, _outit itout )
+        {   
+            static_assert(!IsLittleEndian, "IMA_APCM_RT_Decoder::ParseAByte() : Bif endian function used for little endian !!"); //#REMOVEME Just there to ensure nothing broke
+            (*itout) = ParseSample( (by >> 4) & 0x0F, curchan );
+            ++itout;
+            (*itout) = ParseSample( by        & 0x0F, curchan );
+            ++itout;
+        }
+
+        int16_t ParseSample( uint8_t smpl, chanstate & curchan )
+        {
+		    curchan.step = mytrait::StepSizes[curchan.stepindex];
+            int32_t diff = curchan.step >> 3;
+
+		    if (smpl & 1)
+			    diff += ( curchan.step >> 2 );
+		    if (smpl & 2)
+			    diff += ( curchan.step >> 1 );
+		    if (smpl & 4)
+			    diff += curchan.step;
+		    if (smpl & 8)
+                curchan.predictor = mytrait::ClampPredictor( curchan.predictor - diff );
+            else
+                curchan.predictor = mytrait::ClampPredictor( curchan.predictor + diff );
+
+		    curchan.stepindex = mytrait::ClampStepIndex( curchan.stepindex + mytrait::IndexTable[smpl] );
+
+            return curchan.predictor;
+        }
+
+    private:
+        vector<chanstate> m_chan;
+    };
+
 //==============================================================================================
 // IMA ADPCM Encoder
 //==============================================================================================
@@ -271,7 +386,6 @@ namespace audio
 //==============================================================================================
 // Functions
 //==============================================================================================
-    
     
     std::vector<int16_t> DecodeADPCM_IMA( const std::vector<uint8_t> & rawadpcmdata,
                                            unsigned int                 nbchannels  )
