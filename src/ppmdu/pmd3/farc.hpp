@@ -123,7 +123,7 @@ namespace filetypes
 
 
 //
-//  Functions
+//  Helper Functions
 //
 
     //

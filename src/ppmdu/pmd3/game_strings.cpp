@@ -167,6 +167,7 @@ namespace pmd3
 
             //Assign
             pcat->AddString( uuid, str );
+            return uuid;
         }
 
 
