@@ -8,7 +8,6 @@ Description: Contains utilities to deal with DSE event tracks. Or anything withi
 */
 #include <dse/dse_common.hpp>
 #include <utils/library_wide.hpp>
-//#include <dse/dse_containers.hpp>
 #include <map>
 #include <array>
 #include <cstdint>

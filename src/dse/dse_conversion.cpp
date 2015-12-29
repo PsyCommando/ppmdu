@@ -11,6 +11,7 @@
 #include <ppmdu/fmts/smdl.hpp>
 #include <ppmdu/fmts/swdl.hpp>
 #include <dse/bgm_container.hpp>
+#include <dse/bgm_blob.hpp>
 #include <sstream>
 #include <iomanip>
 #include <iostream>
@@ -29,7 +30,7 @@ using namespace std;
 namespace DSE
 {
     static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
-    static const uint16_t DSE_LowestAttenuation_cB   =  190;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
+    static const uint16_t DSE_LowestAttenuation_cB   =  250;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
     static const uint16_t DSE_SustainFactor_msec     = 3000; //An extra time value to add to the decay when decay1 + decay2 are combined, and the sustain is non-zero
 
 
@@ -1044,8 +1045,8 @@ namespace DSE
         Preset sf2preset(presname, presetcvinf.midipres, presetcvinf.midibank );
 
         const auto & curprg      = entry.prginf;
-        const auto & cursmpls    = entry.splitsamples;
-        const auto & cursmplsinf = entry.splitsmplinf;
+        const auto & cursmpls    = entry.splitsamples;  //PCM16 samples for each split slots
+        const auto & cursmplsinf = entry.splitsmplinf;  //New sample info for each samples in entry.splitsamples
 
         if( utils::LibWide().isLogOn() )
             clog <<"======================\nHandling " <<presname <<"\n======================\n";
@@ -1155,25 +1156,39 @@ namespace DSE
         Instrument myinst( sstrinstnames.str() );
         ZoneBag    instzone;
 
+
+        if( cursmpls.empty() && cursmplsinf.empty() )
+        {
+            clog << "<!>- No samples!!!\n";
+#ifdef _DEBUG
+            assert(false);
+#endif
+            return;
+        }
+        else if( cursmpls.empty() || cursmplsinf.empty() )
+        {
+            clog << "<!>- Mismatch between the nb of sample info and converted samples for this program!!! ( " <<cursmpls.size() <<"," <<cursmplsinf.size() <<" )\n";
+#ifdef _DEBUG
+            assert(false);
+#endif
+            return;
+        }
+
         for( size_t cntsplit = 0; cntsplit < curprg.m_splitstbl.size(); ++cntsplit )
         {
             const auto & cursplit = curprg.m_splitstbl[cntsplit]; 
-#ifdef DEBUG
-            if( cursplit.smplid > curprg.m_splitstbl.size() )
-                assert(false);
-#endif
             stringstream sstrnames;
             sstrnames <<"Prg" <<presetidcnt << "->Smpl" <<cntsplit;
 
             //Place the sample used by the current split in the soundfont
             sf2::Sample sampl(  cursmpls[cntsplit].begin(), 
-                                                                    cursmpls[cntsplit].end(), 
-                                                                    sstrnames.str(),
-                                                                    0,
-                                                                    0,
-                                                                    cursmplsinf[cntsplit].smplrate,
-                                                                    cursplit.rootkey
-                                                                    );
+                                cursmpls[cntsplit].end(), 
+                                sstrnames.str(),
+                                0,
+                                0,
+                                cursmplsinf[cntsplit].smplrate,
+                                cursplit.rootkey );
+
             if( cursmplsinf[cntsplit].smplloop != 0 )
                 sampl.SetLoopBounds( cursmplsinf[cntsplit].loopbeg, cursmplsinf[cntsplit].loopbeg + cursmplsinf[cntsplit].looplen );
 
@@ -1234,23 +1249,28 @@ namespace DSE
             if( itcvinf == cvinfo.end() )
             {
                 clog << "<!>- Warning: The SWDL + SMDL pair #" <<cntpair <<", for preset " <<presetidcnt <<" is missing a conversion info entry.\n";
-#ifdef DEBUG
+#ifdef _DEBUG
                 assert(false);
-#else
+#endif
                 ++presetidcnt;
                 continue;   //Skip this preset
-#endif
             }
 
             if( cursmplsinf.size() != cursmpls.size() )
             {
                 clog << "<!>- Warning: The SWDL + SMDL pair #" <<cntpair <<", for preset " <<presetidcnt <<" has mismatched lists of splits and samples.\n";
-#ifdef DEBUG
+#ifdef _DEBUG
                 assert(false);
-#else
+#endif
                 ++presetidcnt;
                 continue;   //Skip this preset
-#endif
+            }
+            
+            if( cursmplsinf.empty() )
+            {
+                clog << "<!>- Warning: The SWDL + SMDL pair #" <<cntpair <<", for preset " <<presetidcnt <<" has " <<cursmplsinf.size() <<" Sample info slots, and " <<cursmpls.size() <<" samples .\n";
+                ++presetidcnt;
+                continue;   //Skip this preset
             }
 
             stringstream sstrprgname;
@@ -1808,6 +1828,84 @@ namespace DSE
                                      DSE::eMIDIMode::GS );  //This will disable the drum channel, since we don't need it at all!
             }
         }
+    }
+
+
+    /*
+    */
+    void BatchAudioLoader::LoadSMDLSWDLSPairsFromBlob( const std::string & blob )
+    {
+        vector<uint8_t> filedata = utils::io::ReadFileToByteVector( blob );
+
+        BlobScanner<vector<uint8_t>::const_iterator> blobscan( filedata.begin(), filedata.end() );
+        blobscan.Scan();
+        auto foundpairs = blobscan.ListAllMatchingSMDLPairs();
+
+        for( const auto apair : foundpairs )
+        {
+            DSE::PresetBank    bank( move( DSE::ParseSWDL( apair.first._beg,  apair.first._end  ) ) );
+            DSE::MusicSequence seq ( move( DSE::ParseSMDL( apair.second._beg, apair.second._end ) ) );
+
+            //Tag our files with their original file name, for cvinfo lookups to work!
+            seq.metadata().origfname  = apair.second._name;
+            bank.metadata().origfname = apair.first._name;
+
+            m_pairs.push_back( move( std::make_pair( std::move(seq), std::move(bank) ) ) );
+        }
+    }
+
+    /*
+    */
+    void BatchAudioLoader::LoadSMDLSWDLPairsAndBankFromBlob( const std::string & blob, const std::string & bankname )
+    {
+        vector<uint8_t> filedata = utils::io::ReadFileToByteVector( blob );
+
+        BlobScanner<vector<uint8_t>::const_iterator> blobscan( filedata.begin(), filedata.end() );
+        blobscan.Scan();
+        auto foundpairs = blobscan.ListAllMatchingSMDLPairs();
+
+        for( const auto apair : foundpairs )
+        {
+            DSE::PresetBank    bank( move( DSE::ParseSWDL( apair.first._beg,  apair.first._end  ) ) );
+            DSE::MusicSequence seq ( move( DSE::ParseSMDL( apair.second._beg, apair.second._end ) ) );
+
+            //Tag our files with their original file name, for cvinfo lookups to work!
+            seq.metadata().origfname  = apair.second._name;
+            bank.metadata().origfname = apair.first._name;
+
+            m_pairs.push_back( move( std::make_pair( std::move(seq), std::move(bank) ) ) );
+        }
+
+        string fixedbankname;
+        if( bankname.size() > BlobScanner<vector<uint8_t>::const_iterator>::FilenameLength )
+            fixedbankname = bankname.substr( 0, BlobScanner<vector<uint8_t>::const_iterator>::FilenameLength );
+
+        auto foundBank = blobscan.FindSWDL( fixedbankname );
+
+        if( !foundBank.empty() && foundBank.size() == 1 )
+        {
+            const auto & swdlfound = foundBank.front();
+            DSE::PresetBank bank( move( DSE::ParseSWDL( swdlfound._beg, swdlfound._end ) ) );
+            bank.metadata().origfname = swdlfound._name;
+            m_master = move(bank);
+        }
+        else if( foundBank.empty() )
+        {
+            stringstream sstrer;
+            sstrer << "BatchAudioLoader::LoadSMDLSWDLPairsAndBankFromBlob() : Couldn't find a SWDL bank named \""
+                   << fixedbankname
+                   << "\" ! (Name was trimed to 16 characters)";
+            throw runtime_error( sstrer.str() );
+        }
+        else
+        {
+            stringstream sstrer;
+            sstrer << "BatchAudioLoader::LoadSMDLSWDLPairsAndBankFromBlob() : Found more than a single SWDL bank named \""
+                   << fixedbankname
+                   << "\" ! (Name was trimed to 16 characters)";
+            throw runtime_error( sstrer.str() );
+        }
+
     }
 
 //===========================================================================================

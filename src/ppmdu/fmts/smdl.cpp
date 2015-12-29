@@ -1,5 +1,4 @@
 #include "smdl.hpp"
-//#include <ppmdu/pmd2/pmd2_audio_data.hpp>
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_containers.hpp>
 #include <iostream>
@@ -10,10 +9,9 @@
 #include <mutex>
 #include <atomic>
 #include <iterator>
-#include <types/content_type_analyser.hpp>
-
 using namespace std;
-using namespace filetypes;
+
+
 
 namespace DSE
 {
@@ -185,77 +183,82 @@ namespace DSE
     }
 };
 
-//################################### Filetypes Namespace Definitions ###################################
-namespace filetypes
-{
-    const ContentTy CnTy_SMDL {"smdl"}; //Content ID db handle
+//ppmdu's type analysis system
+#ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
 
-//========================================================================================================
-//  smdl_rule
-//========================================================================================================
-    /*
-        smdl_rule
-            Rule for identifying a SMDL file. With the ContentTypeHandler!
-    */
-    class smdl_rule : public IContentHandlingRule
+    #include <types/content_type_analyser.hpp>
+    //################################### Filetypes Namespace Definitions ###################################
+    namespace filetypes
     {
-    public:
-        smdl_rule(){}
-        ~smdl_rule(){}
+        const ContentTy CnTy_SMDL {"smdl"}; //Content ID db handle
 
-        //Returns the value from the content type enum to represent what this container contains!
-        virtual cnt_t getContentType()const
+    //========================================================================================================
+    //  smdl_rule
+    //========================================================================================================
+        /*
+            smdl_rule
+                Rule for identifying a SMDL file. With the ContentTypeHandler!
+        */
+        class smdl_rule : public IContentHandlingRule
         {
-            return filetypes::CnTy_SMDL;
-        }
+        public:
+            smdl_rule(){}
+            ~smdl_rule(){}
 
-        //Returns an ID number identifying the rule. Its not the index in the storage array,
-        // because rules can me added and removed during exec. Thus the need for unique IDs.
-        //IDs are assigned on registration of the rule by the handler.
-        virtual cntRID_t getRuleID()const                          { return m_myID; }
-        virtual void                      setRuleID( cntRID_t id ) { m_myID = id; }
+            //Returns the value from the content type enum to represent what this container contains!
+            virtual cnt_t getContentType()const
+            {
+                return filetypes::CnTy_SMDL;
+            }
 
-        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
-        //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
-        //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
-        //                              vector<uint8_t>::const_iterator   itdataend );
-        virtual ContentBlock Analyse( const analysis_parameter & parameters )
-        {
-            DSE::SMDL_Header headr;
-            ContentBlock cb;
+            //Returns an ID number identifying the rule. Its not the index in the storage array,
+            // because rules can me added and removed during exec. Thus the need for unique IDs.
+            //IDs are assigned on registration of the rule by the handler.
+            virtual cntRID_t getRuleID()const                          { return m_myID; }
+            virtual void                      setRuleID( cntRID_t id ) { m_myID = id; }
 
-            //Read the header
-            headr.ReadFromContainer( parameters._itdatabeg );
+            //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+            //## This method will call "CContentHandler::AnalyseContent()" for each sub-content container found! ##
+            //virtual ContentBlock Analyse( vector<uint8_t>::const_iterator   itdatabeg, 
+            //                              vector<uint8_t>::const_iterator   itdataend );
+            virtual ContentBlock Analyse( const analysis_parameter & parameters )
+            {
+                DSE::SMDL_Header headr;
+                ContentBlock cb;
 
-            //build our content block info 
-            cb._startoffset          = 0;
-            cb._endoffset            = headr.flen;
-            cb._rule_id_that_matched = getRuleID();
-            cb._type                 = getContentType();
+                //Read the header
+                headr.ReadFromContainer( parameters._itdatabeg );
 
-            return cb;
-        }
+                //build our content block info 
+                cb._startoffset          = 0;
+                cb._endoffset            = headr.flen;
+                cb._rule_id_that_matched = getRuleID();
+                cb._type                 = getContentType();
 
-        //This method is a quick boolean test to determine quickly if this content handling
-        // rule matches, without in-depth analysis.
-        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
-                                vector<uint8_t>::const_iterator   itdataend,
-                                const std::string & filext)
-        {
-            return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SMDL_MagicNumber);
-        }
+                return cb;
+            }
 
-    private:
-        cntRID_t m_myID;
+            //This method is a quick boolean test to determine quickly if this content handling
+            // rule matches, without in-depth analysis.
+            virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                                    vector<uint8_t>::const_iterator   itdataend,
+                                    const std::string & filext)
+            {
+                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SMDL_MagicNumber);
+            }
+
+        private:
+            cntRID_t m_myID;
+        };
+
+    //========================================================================================================
+    //  smdl_rule_registrator
+    //========================================================================================================
+        /*
+            smdl_rule_registrator
+                A small singleton that has for only task to register the smdl_rule!
+        */
+        RuleRegistrator<smdl_rule> RuleRegistrator<smdl_rule>::s_instance;
+
     };
-
-//========================================================================================================
-//  smdl_rule_registrator
-//========================================================================================================
-    /*
-        smdl_rule_registrator
-            A small singleton that has for only task to register the smdl_rule!
-    */
-    RuleRegistrator<smdl_rule> RuleRegistrator<smdl_rule>::s_instance;
-
-};
+#endif

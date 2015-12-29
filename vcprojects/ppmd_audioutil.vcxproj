@@ -47,18 +47,21 @@
     <Import Project="shared_build_settings.props" />
     <Import Project="poco_includes.props" />
     <Import Project="xml_includes.props" />
+    <Import Project="content_type_analyser_user.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
     <Import Project="poco_includes.props" />
     <Import Project="xml_includes.props" />
+    <Import Project="content_type_analyser_user.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="shared_build_settings.props" />
     <Import Project="poco_includes.props" />
     <Import Project="xml_includes.props" />
+    <Import Project="content_type_analyser_user.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -82,7 +85,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;AUDIOUTIL_VER="0.2 debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;AUDIOUTIL_VER="0.3 debug";USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,7 +105,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_HAS_ITERATOR_DEBUGGING=0;AUDIOUTIL_VER="0.2 debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;_HAS_ITERATOR_DEBUGGING=0;AUDIOUTIL_VER="0.3 debug";USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -124,7 +127,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;AUDIOUTIL_VER="0.3";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;AUDIOUTIL_VER="0.3";USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,9 +145,11 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\audioutil.hpp" />
+    <ClInclude Include="..\src\dse\bgm_blob.hpp" />
     <ClInclude Include="..\src\dse\bgm_container.hpp" />
     <ClInclude Include="..\src\dse\dse_conversion.hpp" />
     <ClInclude Include="..\src\dse\dse_conversion_info.hpp" />
+    <ClInclude Include="..\src\dse\sadl.hpp" />
     <ClInclude Include="..\src\ext_fmts\wav_io.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">

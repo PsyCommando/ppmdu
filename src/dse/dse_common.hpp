@@ -52,19 +52,60 @@ namespace DSE
         eoc  = 0x656F6320, //"eoc\0x20"
         eod  = 0x656F6420, //"eod\0x20"
     };
-    const int                 NbMidiChannels  = 16;
-    static const unsigned int NB_DSEChunks    = 11;
-    static const uint32_t     SpecialChunkLen = 0xFFFFFFB0; //Value some special chunks have as their length
 
-    extern const std::array<eDSEChunks, NB_DSEChunks> DSEChunksList; //Array containing all chunks labels
+    enum struct eDSEContainers : uint32_t
+    {
+        invalid,
+        smdl = 0x736D646C,  //"smdl"
+        swdl = 0x7377646C,  //"swdl"
+        sedl = 0x7365646C,  //"sedl"
+        sadl = 0x7361646C,  //"sadl"
+    };
+    std::ostream & operator<<( std::ostream &  strm, const DSE::eDSEContainers cnty );
+
+    const int                 NbMidiChannels        = 16;
+    static const unsigned int NB_DSEChunks          = 11;
+    static const unsigned int NB_DSEContainers      = 4;
+    static const uint32_t     SpecialChunkLen       = 0xFFFFFFB0;   //Value some special chunks have as their length
+    static const int16_t      DSERootKey            = 60;           //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
+    const int8_t              DSEDefaultCoarseTune  = -7;           //The default coarse tune value for splits and samples.
+
+    extern const std::array<eDSEChunks,     NB_DSEChunks>      DSEChunksList;    //Array containing all chunks labels
+    extern const std::array<eDSEContainers, NB_DSEContainers>  DSEContainerList; //Array containing all the DSE container's magic number.
 
     //DSE Chunk ID stuff
-    inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
-    inline uint32_t   ChunkIDToInt( eDSEChunks id    );
+    //inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
+    //inline uint32_t   ChunkIDToInt( eDSEChunks id    );
+    inline eDSEChunks IntToChunkID( uint32_t value )
+    {
+        for( auto cid : DSEChunksList )
+        {
+            if( value == static_cast<uint32_t>(cid) )
+                return cid;
+        }
+        return eDSEChunks::invalid;
+    }
+    
+    inline uint32_t ChunkIDToInt( eDSEChunks id )
+    {
+        return static_cast<uint32_t>(id);
+    }
 
+    //DSE Magic Number
+    inline eDSEContainers IntToContainerMagicNum( uint32_t value )  //Return eDSEContainers::invalid, if invalid ID !
+    {
+        for( auto cid : DSEContainerList )
+        {
+            if( value == static_cast<uint32_t>(cid) )
+                return cid;
+        }
+        return eDSEContainers::invalid;
+    }
 
-    static const int16_t DSERootKey           = 60; //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
-    const int8_t         DSEDefaultCoarseTune = -7; //The default coarse tune value for splits and samples.
+    inline uint32_t ContainerMagicNumToInt( eDSEContainers magicn )
+    {
+        return static_cast<uint32_t>(magicn);
+    }
 
 //====================================================================================================
 // Structs

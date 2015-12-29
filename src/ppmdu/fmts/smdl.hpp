@@ -14,12 +14,14 @@ All wrongs reversed, no crappyrights :P
 */
 #include <dse/dse_common.hpp>
 #include <dse/dse_containers.hpp>
-#include <types/content_type_analyser.hpp>
 
-namespace filetypes
-{
-    extern const ContentTy CnTy_SMDL; //Content ID db handle
-};
+#ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
+    #include <types/content_type_analyser.hpp>
+    namespace filetypes
+    {
+        extern const ContentTy CnTy_SMDL; //Content ID db handle
+    };
+#endif
 
 namespace DSE
 {
@@ -27,7 +29,7 @@ namespace DSE
 //====================================================================================================
 //  Typedefs / Enums
 //====================================================================================================
-    static const uint32_t SMDL_MagicNumber = 0x736D646C; //"smdl"
+    static const uint32_t SMDL_MagicNumber = static_cast<uint32_t>(eDSEContainers::smdl); //0x736D646C; //"smdl"
 
 //====================================================================================================
 // Structs

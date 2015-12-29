@@ -37,6 +37,11 @@ using namespace ::utils::io;
 using namespace ::std;
 using namespace ::DSE;
 
+/*
+#TODO:
+    - Make a single function for loading DSE data.
+*/
+
 namespace audioutil
 {
 //=================================================================================================
@@ -110,6 +115,7 @@ namespace audioutil
     const string OPTION_SmdlPathSym = "smdlpath";
     const string OPTION_MkCvInfo    = "makecvinfo";
     const string OPTION_BgmCntPath  = "bgmcntpath";
+    const string OPTION_BgmBlobPath = "blobpath";
 
     /*
         Information on all the switches / options to allow the automated parser 
@@ -227,12 +233,22 @@ namespace audioutil
 
         //Set bgmcnt path
         {
-            "bgmcntpath",
+            OPTION_BgmCntPath,
             2,
             "Use this to specify where to load bgm containers. Aka, SMDL + SWDL wrapped together in a SIR0 wrapper."
             "The second argument is the file extension to look for, as most bgm containers have different file extensions!",
             "-bgmcntpath \"Path/to/BGM\" \"bgm\"",
             std::bind( &CAudioUtil::ParseOptionBGMCntPath, &GetInstance(), placeholders::_1 ),
+        },
+
+        //Set BlobBGMPath
+        {
+            OPTION_BgmBlobPath,
+            1,
+            "Use this to specify the path to a blob of DSE containers to process. AKA a file that contains a bunch of"
+            "SMDL, SWDL, SEDL containers one after the other with no particular structure.",
+            "-blobpath \"Path/to/blob/file.whatever\"",
+            std::bind( &CAudioUtil::ParseOptionBlobPath, &GetInstance(), placeholders::_1 ),
         },
 
         //Export SWDL Preset + Sample List
@@ -475,7 +491,9 @@ namespace audioutil
                                                 return ( curopt.front() == OPTION_SwdlPathSym ) || 
                                                        ( curopt.front() == OPTION_SmdlPathSym ) ||
                                                        ( curopt.front() == OPTION_BgmCntPath )  ||
+                                                       ( curopt.front() == OPTION_BgmBlobPath ) ||
                                                        ( curopt.front() == OPTION_MkCvInfo ); 
+
                                              } );
 
         //If we have an input path option, we do not need the input path parameter!
@@ -493,6 +511,7 @@ namespace audioutil
                                                 return ( curopt.front() == OPTION_SwdlPathSym ) || 
                                                        ( curopt.front() == OPTION_SmdlPathSym ) ||
                                                        ( curopt.front() == OPTION_BgmCntPath )  ||
+                                                       ( curopt.front() == OPTION_BgmBlobPath ) ||
                                                        ( curopt.front() == OPTION_MkCvInfo ); 
                                              } );
 
@@ -700,6 +719,22 @@ namespace audioutil
         return true;
     }
 
+    bool CAudioUtil::ParseOptionBlobPath( const std::vector<std::string> & optdata )
+    {
+        Poco::File bgmblobpath( Poco::Path( optdata[1] ).makeAbsolute() );
+
+        if( bgmblobpath.exists() && bgmblobpath.isFile() )
+        {
+            m_bgmblobpath = optdata[1];
+        }
+        else
+        {
+            cerr << "<!>- ERROR: Invalid path to bgm blob file specified !\n";
+            return false;
+        }
+        return true;
+    }
+
 //
 //  Program Setup and Execution
 //
@@ -749,6 +784,16 @@ namespace audioutil
 
         if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
             throw runtime_error("Specified output path does not exists!");
+
+        //---- Handle cases when the blob container path was specified ----
+        if( !m_bgmblobpath.empty() )
+        {
+            if( m_bMakeCvinfo )
+                m_operationMode = eOpMode::MakeCvInfo;       //Make a blank CVinfo
+            else
+                m_operationMode = eOpMode::ExportBatchPairs; //We exports bgm cnts
+            return;
+        }
 
         //---- Handle cases when the bgm container path was specified ----
         if( !m_bgmcntpath.empty() && !m_bgmcntext.empty() )
@@ -1349,6 +1394,8 @@ namespace audioutil
 
         if( !m_bgmcntpath.empty() && !m_bgmcntext.empty() )
             bal.LoadBgmContainers( m_bgmcntpath, m_bgmcntext );
+        else if( !m_bgmblobpath.empty() )
+            bal.LoadSMDLSWDLSPairsFromBlob(m_bgmblobpath);
         else
             bal.LoadMatchedSMDLSWDLPairs( m_swdlpath, m_smdlpath );
 
@@ -1590,8 +1637,8 @@ namespace audioutil
 
             auto lambdaExport = [&]( const Poco::Path & curpath )
             {
-                string       infilename = curpath.getBaseName();
-                PresetBank swd = move( DSE::ParseSWDL( curpath.toString() ) );
+                string     infilename = curpath.getBaseName();
+                PresetBank swd        = move( DSE::ParseSWDL( curpath.toString() ) );
                 WriteSWDLPresetAndSampleList( infilename, swd, lstfile, m_useHexaNumbers );
             };
 

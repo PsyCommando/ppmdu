@@ -174,6 +174,15 @@ namespace DSE
 
         void LoadSMDL( const std::string & smdl );
 
+
+    //-----------------------------
+        /*
+        */
+        void LoadSMDLSWDLSPairsFromBlob( const std::string & blob );
+        /*
+        */
+        void LoadSMDLSWDLPairsAndBankFromBlob( const std::string & blob, const std::string & bankname );
+
     //-----------------------------
     // Exporting Methods
     //-----------------------------

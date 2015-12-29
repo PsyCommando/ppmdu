@@ -82,6 +82,8 @@ namespace audioutil
 
         bool ParseOptionForceMidi( const std::vector<std::string> & optdata );
 
+        bool ParseOptionBlobPath( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -183,6 +185,7 @@ namespace audioutil
         std::string m_smdlpath;
         std::string m_bgmcntpath;
         std::string m_bgmcntext;
+        std::string m_bgmblobpath;
 
         eOutputType m_outtype;
 

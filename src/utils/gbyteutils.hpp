@@ -186,6 +186,64 @@ namespace utils
         return itin;
     }
 
+
+    /*********************************************************************************************
+        #####LITTLE ENDIAN ########
+        ReadIntFromBytes
+            Tool to read integer values from a byte vector!
+            ** The iterator's passed as input, has its position changed !!
+    *********************************************************************************************/
+    template<class T, class _init, bool _AsLittleEndian> 
+        inline typename std::enable_if<_AsLittleEndian, typename T>::type ReadIntFromBytes( _init & itin, _init itend )
+    {
+        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
+        T out_val = 0;
+
+        auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
+        {
+            T tmp = (*itin);
+            out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
+        };
+
+
+        for( unsigned int i = 0; itin != itend && i < sizeof(T); ++i, ++itin )
+            lambdaShiftBitOr(i);
+
+
+        return out_val;
+    }
+        ///#### BIG ENDIAN #####
+    template<class T, class _init, bool _AsLittleEndian> 
+        inline typename std::enable_if<!_AsLittleEndian, typename T>::type ReadIntFromBytes( _init & itin, _init itend )
+    {
+        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
+        T out_val = 0;
+
+        auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
+        {
+            T tmp = (*itin);
+            out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
+        };
+
+        for( int i = (sizeof(T)-1); itin != itend && i >= 0; --i, ++itin )
+            lambdaShiftBitOr(i);
+
+        return out_val;
+    }
+
+    /*********************************************************************************************
+        ReadIntFromBytes
+            Tool to read integer values from a byte container!
+            
+            #NOTE :The iterator is passed by copy here !! And the incremented iterator is returned!
+    *********************************************************************************************/
+    template<class T, class _init, bool _AsLittleEndian = true> 
+        inline _init ReadIntFromBytes( T & dest, _init itin, _init itend ) //#TODO : Need to make sure that the iterator is really incremented!
+    {
+        dest = ReadIntFromBytes<typename T, typename _init, _AsLittleEndian>( itin, itend );
+        return itin;
+    }
+
     /*********************************************************************************************
         ChangeValueOfASingleByte
             Allows to change the value of a single byte in a larger type! 

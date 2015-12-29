@@ -1,6 +1,10 @@
 #include <types/content_type_analyser.hpp>
 #include <limits>
 
+#ifndef USE_PPMDU_CONTENT_TYPE_ANALYSER
+    static_assert(false, "Possibly forgot to add the preprocessor definition USE_PPMDU_CONTENT_TYPE_ANALYSER to enable the content type analyser! Otherwise, exclude content_type_analyser.cpp from build!")
+#endif
+
 namespace filetypes
 {
 //==================================================================

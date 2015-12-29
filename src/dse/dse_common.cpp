@@ -25,6 +25,14 @@ namespace DSE
         eDSEChunks::eod,
     }};
 
+    const std::array<eDSEContainers, NB_DSEContainers> DSEContainerList
+    {{
+        eDSEContainers::sadl,
+        eDSEContainers::sedl,
+        eDSEContainers::smdl,
+        eDSEContainers::swdl,
+    }};
+
     const std::array<int16_t,128> Duration_Lookup_Table =
     {
         0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 
@@ -82,62 +90,46 @@ namespace DSE
         0x00044A45, 0x00046277, 0x00047B00, 0x7FFFFFFF
     };
 
-    inline eDSEChunks IntToChunkID( uint32_t value )
-    {
-        eDSEChunks valcompare = static_cast<eDSEChunks>(value);
-        
-        for( auto cid : DSEChunksList )
-        {
-            if( valcompare == cid )
-                return valcompare;
-        }
-
-        return eDSEChunks::invalid;
-    }
-    
-    inline uint32_t ChunkIDToInt( eDSEChunks id )
-    {
-        return static_cast<uint32_t>(id);
-    }
+    //inline eDSEChunks IntToChunkID( uint32_t value )
+    //{
+    //    for( auto cid : DSEChunksList )
+    //    {
+    //        if( value == static_cast<uint32_t>(cid) )
+    //            return cid;
+    //    }
+    //    return eDSEChunks::invalid;
+    //}
+    //
+    //inline uint32_t ChunkIDToInt( eDSEChunks id )
+    //{
+    //    return static_cast<uint32_t>(id);
+    //}
 
 //=================================================================================================
 //  DurationLookupTable stuff
 //=================================================================================================
 
-    //#FIXME: MOST LIKELY INNACURATE ! The duration for envelope phases is based around the DSE tick counter. So it may or may not be affected by tempo.
     int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier )
     { 
         param = utils::Clamp( abs(param), 0, 127 );
-        //The value from the table is multiplied by 1,000
-        static const uint32_t UnitSwitch  = 1000;
-        //..then divided by 10,000, to give us a tick quantity
-        static const uint32_t UnitDivisor = 10000;
 #if 1
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
         else
             return (Duration_Lookup_Table[labs(param)] * multiplier);
 #elif 0
+        //The value from the table is multiplied by 1,000
+        static const uint32_t UnitSwitch  = 1000;
+        //..then divided by 10,000, to give us a tick quantity
+        static const uint32_t UnitDivisor = 10000;
+
         //The 20 below looks like a magic number, but that's because it is ^^;
         if( multiplier == 0 )
             return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20;//25; 
         else
             return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20;//25; 
-#else
-        if( multiplier == 0 )
-            return (Duration_Lookup_Table_NullMulti[labs(param)]) * 4;
-        else
-            return (Duration_Lookup_Table[labs(param)] * multiplier) * 4;
 #endif
     }
-
-    //int32_t DSEEnveloppeVolumeTocB( int8_t param )
-    //{
-    //    assert(false);
-    //    return 0;
-    //}
-
-
 
 //
 //
@@ -325,6 +317,13 @@ namespace DSE
 
         strm << "\n" /*<< noshowbase*/;
 
+        return strm;
+    }
+
+    std::ostream & operator<<(std::ostream &strm, const DSE::eDSEContainers cnty )
+    {
+        uint32_t convertedty = static_cast<uint32_t>(cnty);
+        strm << static_cast<char>( convertedty >> 24 ) << static_cast<char>( convertedty >> 16 ) << static_cast<char>( convertedty >> 8 ) << static_cast<char>( convertedty );
         return strm;
     }
 

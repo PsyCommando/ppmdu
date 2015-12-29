@@ -19,13 +19,14 @@ All wrongs reversed, no crappyrights :P
 #include <vector>
 #include <array>
 #include <string>
-#include <types/content_type_analyser.hpp>
 
-namespace filetypes
-{
-    extern const ContentTy CnTy_SWDL; //Content ID db handle 
-};
-
+#ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
+    #include <types/content_type_analyser.hpp>
+    namespace filetypes
+    {
+        extern const ContentTy CnTy_SWDL; //Content ID db handle 
+    };
+#endif
 
 namespace DSE
 {
@@ -36,7 +37,7 @@ namespace DSE
 //====================================================================================================
 //  Constants
 //====================================================================================================
-    static const uint32_t SWDL_MagicNumber = 0x7377646C; //"swdl"
+    static const uint32_t SWDL_MagicNumber = static_cast<uint32_t>(eDSEContainers::swdl);//0x7377646C; //"swdl"
 
 //====================================================================================================
 // Structs

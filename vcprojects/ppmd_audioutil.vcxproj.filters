@@ -201,6 +201,12 @@
     <ClInclude Include="..\src\dse\bgm_container.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\dse\bgm_blob.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dse\sadl.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
