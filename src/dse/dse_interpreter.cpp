@@ -1144,6 +1144,8 @@ namespace DSE
                     m_trackpriorityq.push_back( cnttrk );
             }
 
+            //Push track 0
+            m_trackpriorityq.push_back(0);
 
             //--- Next re-arrange the tracks ! ---
             
@@ -1177,10 +1179,14 @@ namespace DSE
             //--- Step 1! ---
             size_t nbchaninuse = std::count_if( usedchan.begin(), usedchan.end(), [](bool entry){ return entry; } );
 
+            
+
             //First, try to reassign to an empty channel!
             if( nbchaninuse != NbMidiChannels )
             {
-                for( size_t cnttrks = 0; cnttrks < chan10trks.size(); ++cnttrks )
+                const size_t  NbToReloc   = chan10trks.size();
+                deque<size_t> modch10trks;
+                for( size_t cnttrks = 0; cnttrks < NbToReloc; ++cnttrks )
                 {
                     size_t trktorelocate = chan10trks[cnttrks];
 
@@ -1192,17 +1198,19 @@ namespace DSE
                             usedchan[m_trkchanmap[trktorelocate]] = false;   //Vaccate the old channel
                             m_trkchanmap[trktorelocate]           = cntchan;
                             usedchan[cntchan]                     = true;
-                            chan10trks.pop_back(); //Remove a track from the list to relocate!
+                             //Remove a track from the list to relocate!
                         }
+                        else
+                            modch10trks.push_back(trktorelocate);
                     }
                 }
-
+                chan10trks = move(modch10trks);
                 //If we re-assigned all tracks, nothing more to do here !
                 if( chan10trks.empty() )
                     return;
-
                 //If we still haven't reassigned all tracks, we go to step 2
             }
+            
 
             //--- Step 2! ---
             //Then, we'll try to swap our place with a track that makes use of preset 0x7F, which is used for drums usually.
