@@ -9,7 +9,7 @@ Example entry:
     //The name that the SMDL and its accompanying SWDL file share
     <PairName>bgm0001</PairName>
       
-    //A list of all the programs from the track
+    //A list of all the presets/programs(same thing really) from the track
     <Programs>
   
       //A single preset from the original track
@@ -22,7 +22,7 @@ Example entry:
       
         <MaxKeyDownDuration>80</MaxKeyDownDuration>  //(optional)Maximum duration in MIDI ticks that a note for 
                                                      //          this preset can be held. Used to keep some notes 
-                                                     //          from sounding stuck, because of the way the samples's 
+                                                     //          from sounding stuck, because of the way the samples'
                                                      //          volume envelopes in the game are set.
                                                      
         <Transpose>-1</Transpose>                    //(optional)The Nb of octaves to transpose all notes played using this specific preset/program.
@@ -200,36 +200,41 @@ Example entry:
       <Program>
         <DSEProgramID>6</DSEProgramID>
         <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x07 Vibraphone 2 (smpl 0xA0)-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--Bassoon-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
         <MIDIPreset>71</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--Pizzicato Strings2-->
       <Program>
         <DSEProgramID>76</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
     </Programs>
@@ -246,6 +251,7 @@ Example entry:
       <Program>
         <DSEProgramID>1</DSEProgramID>
         <MIDIPreset>84</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x02 Epiano1-->
@@ -282,6 +288,7 @@ Example entry:
       <Program>
         <DSEProgramID>15</DSEProgramID>
         <MIDIPreset>89</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x14 Steel Guitar ( smpl 0xB0, 0xB1 )-->
@@ -307,6 +314,7 @@ Example entry:
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x61 Saw Wave-->
@@ -399,24 +407,26 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
-        <MIDIPreset>49</MIDIPreset>
+        <MIDIPreset>51</MIDIPreset>
       </Program>
 
       <!--0x4B Pizzicato Strings-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x51 Pan Flute (smpl 0x35, 0x36, 0x37)-->
@@ -491,6 +501,7 @@ Example entry:
       <Program>
         <DSEProgramID>1</DSEProgramID>
         <MIDIPreset>84</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x05 Marimba ( smpl 0x2D, 0x2E )-->
@@ -509,6 +520,7 @@ Example entry:
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x15 Nylon Guitar ( smpl 0xB0, 0xB1 )-->
@@ -524,10 +536,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -546,12 +558,14 @@ Example entry:
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x34 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x53 Steel Drum (smpl 0x48 )-->
@@ -612,7 +626,7 @@ Example entry:
   
   
   <!--==========================================================================-->
-  <!--bgm0006-->
+  <!--bgm0006 -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0006</PairName>
@@ -622,45 +636,52 @@ Example entry:
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>92</MIDIPreset>
       </Program>
-      <!--0x4   (smpl     0x260 )-->
+      <!--0x4 Glockenspiel?  (smpl     0x260 )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
-        <MIDIPreset>4</MIDIPreset>
+        <MIDIPreset>10</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xA   (smpl     0x21     0x22 )-->
+      <!--0xA  Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
-        <MIDIPreset>10</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
       <Program>
@@ -706,6 +727,7 @@ Example entry:
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x34 Oboe (smpl 0x82)-->
@@ -718,12 +740,13 @@ Example entry:
       <Program>
         <DSEProgramID>63</DSEProgramID>
         <MIDIPreset>59</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
         <DSEProgramID>72</DSEProgramID>
-        <MIDIPreset>41</MIDIPreset>
+        <MIDIPreset>43</MIDIPreset>
       </Program>
 
       <!--0x52 Brass Instrument?(Set to trombone for now) (smpl 0x84)-->
@@ -875,7 +898,7 @@ Example entry:
           <!--0x4 - Side Stick played at a lower pitch? (smpl 0x3C)-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           
           <!--0x5 - Electric Snare? (smpl 0x3E)-->
@@ -1152,19 +1175,21 @@ Example entry:
       <!--0x17 Dulcimer, or Mandolin ?(smpl 0xB4, 0xB5)-->
       <Program>
         <DSEProgramID>23</DSEProgramID>
-        <MIDIPreset>16</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x2A English Horn ? (smpl 0x10, 0x11, 0x12)-->
       <Program>
         <DSEProgramID>42</DSEProgramID>
         <MIDIPreset>70</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x2E String Ensemble (smpl 0x190)-->
@@ -1177,6 +1202,7 @@ Example entry:
       <Program>
         <DSEProgramID>48</DSEProgramID>
         <MIDIPreset>70</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
@@ -1190,12 +1216,13 @@ Example entry:
       <Program>
         <DSEProgramID>62</DSEProgramID>
         <MIDIPreset>58</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
         <DSEProgramID>72</DSEProgramID>
-        <MIDIPreset>41</MIDIPreset>
+        <MIDIPreset>43</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
 
@@ -1203,6 +1230,7 @@ Example entry:
       <Program>
         <DSEProgramID>82</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x7B Open Surdo(smpl 0x8c)-->
@@ -1298,12 +1326,14 @@ Example entry:
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x08 Glockenspiel? ( smpl 0x260 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x15 Steel Guitar ( smpl 0xB0, 0xB1 )-->
@@ -1319,10 +1349,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x2C (smpl 0x33)-->
@@ -1347,6 +1377,7 @@ Example entry:
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x51 Recorder (smpl 0x270)-->
@@ -1424,10 +1455,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x2B Perc Organ (smpl 0x33)-->
@@ -1507,12 +1538,13 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -1524,6 +1556,7 @@ Example entry:
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x51 Pan Flute  (smpl     0x35     0x36     0x37 )-->
       <Program>
@@ -1539,6 +1572,7 @@ Example entry:
       <Program>
         <DSEProgramID>96</DSEProgramID>
         <MIDIPreset>81</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -1565,12 +1599,12 @@ Example entry:
           <!--0x3 -  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x4 -  (smpl 0x47 )-->
           <Remap>
             <OriginalKey>71</OriginalKey>
-            <RemapedKey>71</RemapedKey>
+            <RemapedKey>69</RemapedKey>
           </Remap>
           <!--0x5 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -1619,10 +1653,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -1699,10 +1733,10 @@ Example entry:
         <MIDIPreset>99</MIDIPreset>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -1765,10 +1799,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
@@ -1865,16 +1899,16 @@ Example entry:
         <Transpose>-1</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
-      <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
+      <!--0x23 Choir Aah? (smpl 0x75, 0x76, 0x77)-->
       <Program>
         <DSEProgramID>35</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>53</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x44 Trumpet Section?  (smpl     0x160 )-->
@@ -1899,13 +1933,14 @@ Example entry:
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x5E Whistle  (smpl     0x26C )-->
       <Program>
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>79</MIDIPreset>
       </Program>
-      <!--0x5F   (smpl     0x26C )-->
+      <!--0x5F Whistle  (smpl     0x26C )-->
       <Program>
         <DSEProgramID>95</DSEProgramID>
         <MIDIPreset>79</MIDIPreset>
@@ -1940,7 +1975,7 @@ Example entry:
           <!--0x1 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x2 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -1980,7 +2015,7 @@ Example entry:
           <!--0x9 -  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0xA -  Crash Cymbals (smpl 0x17)-->
           <Remap>
@@ -1990,7 +2025,7 @@ Example entry:
           <!--0xB -  Unknown Set to Open Surdo (smpl 0x8C )-->
           <Remap>
             <OriginalKey>94</OriginalKey>
-            <RemapedKey>86</RemapedKey>
+            <RemapedKey>87</RemapedKey>
           </Remap>
           <!--0xC -  Shaker (smpl 0x96)-->
           <Remap>
@@ -2016,11 +2051,13 @@ Example entry:
       <Program>
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>63</MIDIPreset>
+
       </Program>
       <!--0x4 Synth Brass  (smpl     0x262 )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>63</MIDIPreset>
+
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -2029,10 +2066,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings  (smpl     0x4A     0x4B )-->
@@ -2040,25 +2077,29 @@ Example entry:
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>51</MIDIPreset>
       </Program>
-      <!--0x3E   (smpl     0x98     0x99     0x9A )-->
+      <!--0x3E Trombone  (smpl     0x98     0x99     0x9A )-->
       <Program>
         <DSEProgramID>62</DSEProgramID>
-        <MIDIPreset>62</MIDIPreset>
+        <MIDIPreset>58</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x3F   (smpl     0x98     0x99     0x9A )-->
+      <!--0x3F Trombone  (smpl     0x98     0x99     0x9A )-->
       <Program>
         <DSEProgramID>63</DSEProgramID>
-        <MIDIPreset>63</MIDIPreset>
+        <MIDIPreset>58</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x43   (smpl     0x276 )-->
+      <!--0x43 Brass Section?  (smpl     0x276 )-->
       <Program>
         <DSEProgramID>67</DSEProgramID>
-        <MIDIPreset>67</MIDIPreset>
+        <MIDIPreset>62</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x44   (smpl     0x276 )-->
+      <!--0x44 Brass Section?  (smpl     0x276 )-->
       <Program>
         <DSEProgramID>68</DSEProgramID>
-        <MIDIPreset>68</MIDIPreset>
+        <MIDIPreset>62</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x61 - Saw Wave  (smpl     0xB7 )-->
       <Program>
@@ -2069,7 +2110,7 @@ Example entry:
       <Program>
         <DSEProgramID>121</DSEProgramID>
         <MIDIPreset>48</MIDIPreset>
-        <Transpose>-2</Transpose>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -2120,10 +2161,10 @@ Example entry:
         <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       
       <!--0x20 Synth Strings  (smpl     0x4A     0x4B )-->
@@ -2248,10 +2289,10 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -2276,15 +2317,15 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -2373,7 +2414,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0022-->
+  <!--bgm0022 - Drenched Buff -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0022</PairName>
@@ -2388,15 +2429,16 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -2404,30 +2446,33 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x37   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x37 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>55</DSEProgramID>
-        <MIDIPreset>55</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x51 Pan Flute  (smpl     0x35     0x36     0x37 )-->
       <Program>
         <DSEProgramID>81</DSEProgramID>
         <MIDIPreset>76</MIDIPreset>
       </Program>
-      <!--0x52   (smpl     0x84     0x72 )-->
+      <!--0x52 Brass Instrument?(Set to trombone for now)  (smpl     0x84     0x72 )-->
       <Program>
         <DSEProgramID>82</DSEProgramID>
-        <MIDIPreset>82</MIDIPreset>
+        <MIDIPreset>57</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x53   (smpl     0x35     0x36     0x37 )-->
+      <!--0x53 Pan Flute  (smpl     0x35     0x36     0x37 )-->
       <Program>
         <DSEProgramID>83</DSEProgramID>
-        <MIDIPreset>83</MIDIPreset>
+        <MIDIPreset>76</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -2491,15 +2536,15 @@ Example entry:
         <DSEProgramID>6</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
-      <!--0x16   (smpl     0xB0     0xB1 )-->
+      <!--0x16 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>22</DSEProgramID>
-        <MIDIPreset>22</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -2507,10 +2552,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x54   (smpl     0xAD     0xAE )-->
       <Program>
@@ -2559,30 +2604,33 @@ Example entry:
   <Track>
     <PairName>bgm0024</PairName>
     <Programs>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -2640,20 +2688,20 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
-      <!--0x37   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x37 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>55</DSEProgramID>
-        <MIDIPreset>55</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -2670,7 +2718,7 @@ Example entry:
           <!--0x1 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x2 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -2740,12 +2788,14 @@ Example entry:
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>10</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--0x15 Steel Guitar ( smpl 0xB0, 0xB1 )-->
@@ -2758,12 +2808,13 @@ Example entry:
       <Program>
         <DSEProgramID>25</DSEProgramID>
         <MIDIPreset>39</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
 
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
 
       <!--0x2B Perc Organ (smpl 0x33)-->
@@ -2775,7 +2826,7 @@ Example entry:
       <!--0x41  ? (smpl 0x94)-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>66</MIDIPreset>
       </Program>
 
       <!--0x42 ? (smpl 0x94)-->
@@ -2800,6 +2851,7 @@ Example entry:
       <Program>
         <DSEProgramID>91</DSEProgramID>
         <MIDIPreset>91</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
 
       <!--Drumkit-->
@@ -2856,10 +2908,11 @@ Example entry:
   <Track>
     <PairName>bgm0027</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -2870,11 +2923,13 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -2885,7 +2940,7 @@ Example entry:
       <!--0x22   (smpl     0x74     0x58 )-->
       <Program>
         <DSEProgramID>34</DSEProgramID>
-        <MIDIPreset>34</MIDIPreset>
+        <MIDIPreset>91</MIDIPreset>
       </Program>
       <!--0x62 Sine Wave  (smpl     0xB8 )-->
       <Program>
@@ -2919,10 +2974,11 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -2934,21 +2990,25 @@ Example entry:
       <Program>
         <DSEProgramID>61</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x3E Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
         <DSEProgramID>62</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x61 - Saw Wave  (smpl     0xB7 )-->
       <Program>
@@ -2959,6 +3019,7 @@ Example entry:
       <Program>
         <DSEProgramID>121</DSEProgramID>
         <MIDIPreset>48</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3012,10 +3073,11 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xD   (smpl     0x2BC     0x2BD )-->
       <Program>
@@ -3034,10 +3096,10 @@ Example entry:
           </Remap>
         </KeyRemaps>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -3086,35 +3148,40 @@ Example entry:
   <Track>
     <PairName>bgm0030</PairName>
     <Programs>
-      <!--0x1   (smpl     0x56     0xA3 )-->
+      <!--0x1 New Age Pad?  (smpl     0x56     0xA3 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xA Music Box  (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -3126,16 +3193,19 @@ Example entry:
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3194,35 +3264,39 @@ Example entry:
         <DSEProgramID>1</DSEProgramID>
         <MIDIPreset>1</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>7</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -3302,10 +3376,11 @@ Example entry:
   <Track>
     <PairName>bgm0032</PairName>
     <Programs>
-      <!--0x1   (smpl     0x56     0xA3 )-->
+      <!--0x1 New Age Pad?  (smpl     0x56     0xA3 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3313,10 +3388,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x5F   (smpl     0xB6 )-->
+      <!--0x5F Square Wave  (smpl     0xB6 )-->
       <Program>
         <DSEProgramID>95</DSEProgramID>
-        <MIDIPreset>95</MIDIPreset>
+        <MIDIPreset>81</MIDIPreset>
       </Program>
       <!--0x60 Square Wave  (smpl     0xB6 )-->
       <Program>
@@ -3365,10 +3440,10 @@ Example entry:
   <Track>
     <PairName>bgm0033</PairName>
     <Programs>
-      <!--0x1   (smpl     0x56     0xA3 )-->
+      <!--0x1 New Age Pad?  (smpl     0x56     0xA3 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3386,10 +3461,10 @@ Example entry:
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>94</MIDIPreset>
       </Program>
-      <!--0x5F   (smpl     0xB6 )-->
+      <!--0x5F Square Wave  (smpl     0xB6 )-->
       <Program>
         <DSEProgramID>95</DSEProgramID>
-        <MIDIPreset>95</MIDIPreset>
+        <MIDIPreset>81</MIDIPreset>
       </Program>
       <!--0x60 Square Wave  (smpl     0xB6 )-->
       <Program>
@@ -3443,30 +3518,33 @@ Example entry:
   <Track>
     <PairName>bgm0034</PairName>
     <Programs>
-      <!--0x3   (smpl     0x26E )-->
+      <!--0x3 Cello  (smpl     0x26E )-->
       <Program>
         <DSEProgramID>3</DSEProgramID>
-        <MIDIPreset>3</MIDIPreset>
+        <MIDIPreset>43</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x4   (smpl     0x26E )-->
+      <!--0x4 Cello  (smpl     0x26E )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
-        <MIDIPreset>4</MIDIPreset>
+        <MIDIPreset>43</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
-      <!--0x16   (smpl     0xB0     0xB1 )-->
+      <!--0x16 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>22</DSEProgramID>
-        <MIDIPreset>22</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3474,15 +3552,16 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x47   (smpl     0x4F )-->
+      <!--0x47 Cello violin or viola  (smpl     0x4F )-->
       <Program>
         <DSEProgramID>71</DSEProgramID>
-        <MIDIPreset>71</MIDIPreset>
+        <MIDIPreset>43</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4A Contrabass  (smpl     0x7D )-->
       <Program>
@@ -3490,20 +3569,21 @@ Example entry:
         <MIDIPreset>44</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x4B   (smpl     0x7D )-->
+      <!--0x4B  Contrabass (smpl     0x7D )-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
-        <MIDIPreset>75</MIDIPreset>
+        <MIDIPreset>44</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x51   (smpl     0x36 )-->
+      <!--0x51 Pan Flute  (smpl     0x36 )-->
       <Program>
         <DSEProgramID>81</DSEProgramID>
-        <MIDIPreset>81</MIDIPreset>
+        <MIDIPreset>76</MIDIPreset>
       </Program>
-      <!--0x52   (smpl     0x36 )-->
+      <!--0x52 Pan Flute  (smpl     0x36 )-->
       <Program>
         <DSEProgramID>82</DSEProgramID>
-        <MIDIPreset>82</MIDIPreset>
+        <MIDIPreset>76</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3520,7 +3600,7 @@ Example entry:
           <!--0x1 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x2 -  Closed Hi-Hat? (smpl 0x29)-->
           <Remap>
@@ -3582,15 +3662,15 @@ Example entry:
         <DSEProgramID>6</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x16   (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>22</DSEProgramID>
-        <MIDIPreset>22</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3598,10 +3678,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3655,10 +3735,10 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3666,20 +3746,22 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3723,25 +3805,27 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>5</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x8D )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>8</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3749,10 +3833,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -3787,25 +3871,28 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>5</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x8D )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>8</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3817,11 +3904,13 @@ Example entry:
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x62 Sine Wave  (smpl     0xB8 )-->
       <Program>
@@ -3880,10 +3969,11 @@ Example entry:
   <Track>
     <PairName>bgm0039</PairName>
     <Programs>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -3891,35 +3981,39 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
         <DSEProgramID>71</DSEProgramID>
-        <MIDIPreset>71</MIDIPreset>
+        <MIDIPreset>41</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
         <DSEProgramID>72</DSEProgramID>
         <MIDIPreset>41</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -3969,10 +4063,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -3993,6 +4087,7 @@ Example entry:
       <Program>
         <DSEProgramID>121</DSEProgramID>
         <MIDIPreset>48</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -4044,12 +4139,12 @@ Example entry:
       <!--0x3   (smpl     0x261 )-->
       <Program>
         <DSEProgramID>3</DSEProgramID>
-        <MIDIPreset>3</MIDIPreset>
+        <MIDIPreset>5</MIDIPreset>
       </Program>
       <!--0x4   (smpl     0x261 )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
-        <MIDIPreset>4</MIDIPreset>
+        <MIDIPreset>5</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -4057,10 +4152,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -4072,15 +4167,17 @@ Example entry:
         <DSEProgramID>57</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -4130,25 +4227,27 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x79  Timpani (smpl     0x7C )-->
       <Program>
@@ -4175,7 +4274,7 @@ Example entry:
           <!--0x2 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x3 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -4213,10 +4312,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -4281,25 +4380,27 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -4353,15 +4454,17 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -4369,10 +4472,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -4389,10 +4492,10 @@ Example entry:
         <DSEProgramID>53</DSEProgramID>
         <MIDIPreset>53</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x4B   (smpl     0x7B )-->
       <Program>
@@ -4550,11 +4653,13 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x1C   (smpl     0x88     0x89 )-->
       <Program>
@@ -4618,42 +4723,53 @@ Example entry:
   <Track>
     <PairName>bgm0048</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+    
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
+      
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x51   (smpl     0x270 )-->
+      
+      <!--0x51 Recorder  (smpl     0x270 )-->
       <Program>
         <DSEProgramID>81</DSEProgramID>
-        <MIDIPreset>81</MIDIPreset>
+        <MIDIPreset>75</MIDIPreset>
       </Program>
-      <!--0x52   (smpl     0x270 )-->
+      
+      <!--0x52 Recorder  (smpl     0x270 )-->
       <Program>
         <DSEProgramID>82</DSEProgramID>
-        <MIDIPreset>82</MIDIPreset>
+        <MIDIPreset>75</MIDIPreset>
       </Program>
     </Programs>
+    
   </Track>
   <!--==========================================================================-->
   <!--bgm0049-->
@@ -4661,25 +4777,30 @@ Example entry:
   <Track>
     <PairName>bgm0049</PairName>
     <Programs>
-      <!--0x1   (smpl     0x56     0xA3 )-->
+    
+    
+      <!--0x1 New Age Pad?  (smpl     0x56     0xA3 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
       </Program>
+      
       <!--0x3   (smpl     0x265 )-->
       <Program>
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>3</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xE   (smpl     0x26     0x27     0x28 )-->
       <Program>
@@ -4745,10 +4866,10 @@ Example entry:
         <DSEProgramID>15</DSEProgramID>
         <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -4818,7 +4939,7 @@ Example entry:
           <!--0x1 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x2 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -4875,10 +4996,10 @@ Example entry:
   <Track>
     <PairName>bgm0051</PairName>
     <Programs>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x10   (smpl     0x191 )-->
       <Program>
@@ -4890,10 +5011,10 @@ Example entry:
         <DSEProgramID>17</DSEProgramID>
         <MIDIPreset>17</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -5019,10 +5140,10 @@ Example entry:
   <Track>
     <PairName>bgm0052</PairName>
     <Programs>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x24 Oh Choir  (smpl     0x75     0x76     0x77 )-->
       <Program>
@@ -5097,10 +5218,10 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>5</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xF   (smpl     0xB9 )-->
       <Program>
@@ -5112,10 +5233,10 @@ Example entry:
         <DSEProgramID>25</DSEProgramID>
         <MIDIPreset>25</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -5275,20 +5396,21 @@ Example entry:
         <DSEProgramID>2</DSEProgramID>
         <MIDIPreset>2</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>7</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5327,20 +5449,21 @@ Example entry:
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>3</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>7</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5379,10 +5502,11 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x273 )-->
       <Program>
@@ -5394,10 +5518,10 @@ Example entry:
         <DSEProgramID>9</DSEProgramID>
         <MIDIPreset>9</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x10   (smpl     0x275 )-->
       <Program>
@@ -5410,10 +5534,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5482,15 +5606,16 @@ Example entry:
   <Track>
     <PairName>bgm0057</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -5498,10 +5623,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
@@ -5585,10 +5710,11 @@ Example entry:
   <Track>
     <PairName>bgm0058</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F )-->
       <Program>
@@ -5600,10 +5726,11 @@ Example entry:
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>10</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -5611,10 +5738,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20   (smpl     0x4A )-->
       <Program>
@@ -5626,10 +5753,10 @@ Example entry:
         <DSEProgramID>44</DSEProgramID>
         <MIDIPreset>18</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato  (smpl     0x79 )-->
       <Program>
@@ -5693,15 +5820,17 @@ Example entry:
   <Track>
     <PairName>bgm0059</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -5709,10 +5838,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5746,16 +5875,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5808,11 +5939,12 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x22   (smpl     0x74     0x58 )-->
       <Program>
@@ -5862,10 +5994,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x21   (smpl     0x74     0x58 )-->
       <Program>
@@ -5878,10 +6010,11 @@ Example entry:
         <MIDIPreset>54</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x60 Square Wave  (smpl     0xB6 )-->
       <Program>
@@ -5956,10 +6089,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -5977,15 +6110,17 @@ Example entry:
         <MIDIPreset>54</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x60 Square Wave  (smpl     0xB6 )-->
       <Program>
@@ -6074,10 +6209,11 @@ Example entry:
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>63</MIDIPreset>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x264 )-->
       <Program>
@@ -6093,16 +6229,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x10   (smpl     0x263 )-->
       <Program>
@@ -6115,10 +6253,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -6131,25 +6269,27 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -6207,11 +6347,12 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
@@ -6236,10 +6377,10 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -6282,6 +6423,7 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -6333,10 +6475,11 @@ Example entry:
   <Track>
     <PairName>bgm0069</PairName>
     <Programs>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
@@ -6401,10 +6544,11 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -6433,16 +6577,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -6450,10 +6596,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -6482,15 +6628,15 @@ Example entry:
   <Track>
     <PairName>bgm0072</PairName>
     <Programs>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
-      <!--0x16   (smpl     0xB0     0xB1 )-->
+      <!--0x16 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>22</DSEProgramID>
-        <MIDIPreset>22</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -6498,10 +6644,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x31   (smpl     0x270 )-->
       <Program>
@@ -6518,10 +6664,10 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -6585,10 +6731,10 @@ Example entry:
         <DSEProgramID>42</DSEProgramID>
         <MIDIPreset>42</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -6759,15 +6905,17 @@ Example entry:
   <Track>
     <PairName>bgm0075</PairName>
     <Programs>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -6775,10 +6923,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -6837,6 +6985,7 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -6844,10 +6993,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -6931,10 +7080,10 @@ Example entry:
         <DSEProgramID>15</DSEProgramID>
         <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20   (smpl     0x4A )-->
       <Program>
@@ -7045,10 +7194,11 @@ Example entry:
   <Track>
     <PairName>bgm0079</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -7059,6 +7209,7 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x53   (smpl     0x48 )-->
       <Program>
@@ -7284,10 +7435,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -7346,10 +7497,11 @@ Example entry:
   <Track>
     <PairName>bgm0083</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x26D )-->
       <Program>
@@ -7384,15 +7536,15 @@ Example entry:
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -7404,10 +7556,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
     </Programs>
   </Track>
@@ -7538,10 +7690,11 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -7557,6 +7710,7 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
     </Programs>
   </Track>
@@ -7566,10 +7720,11 @@ Example entry:
   <Track>
     <PairName>bgm0087</PairName>
     <Programs>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
@@ -7639,10 +7794,11 @@ Example entry:
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>10</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x24 Oh Choir  (smpl     0x75     0x76     0x77 )-->
       <Program>
@@ -7668,10 +7824,11 @@ Example entry:
   <Track>
     <PairName>bgm0089</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F     0x30 )-->
       <Program>
@@ -7682,21 +7839,24 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20   (smpl     0x26A )-->
       <Program>
@@ -7736,20 +7896,21 @@ Example entry:
         <DSEProgramID>3</DSEProgramID>
         <MIDIPreset>3</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -7848,11 +8009,13 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x20   (smpl     0x268 )-->
       <Program>
@@ -7864,15 +8027,15 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
     </Programs>
   </Track>
@@ -7963,10 +8126,11 @@ Example entry:
         <DSEProgramID>1</DSEProgramID>
         <MIDIPreset>1</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xE   (smpl     0x27     0x28 )-->
       <Program>
@@ -8004,10 +8168,10 @@ Example entry:
         <DSEProgramID>92</DSEProgramID>
         <MIDIPreset>92</MIDIPreset>
       </Program>
-      <!--0x5F   (smpl     0xB6 )-->
+      <!--0x5F Square Wave  (smpl     0xB6 )-->
       <Program>
         <DSEProgramID>95</DSEProgramID>
-        <MIDIPreset>95</MIDIPreset>
+        <MIDIPreset>81</MIDIPreset>
       </Program>
       <!--0x60 Square Wave  (smpl     0xB6 )-->
       <Program>
@@ -8266,10 +8430,10 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20   (smpl     0x49     0x4A )-->
       <Program>
@@ -9063,11 +9227,12 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -9117,21 +9282,23 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -9219,25 +9386,27 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x61 - Saw Wave  (smpl     0xB7 )-->
       <Program>
@@ -9286,15 +9455,16 @@ Example entry:
         <DSEProgramID>2</DSEProgramID>
         <MIDIPreset>2</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -9436,15 +9606,16 @@ Example entry:
   <Track>
     <PairName>bgm0131</PairName>
     <Programs>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -9462,15 +9633,15 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>51</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -9554,10 +9725,10 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xE   (smpl     0x26 )-->
       <Program>
@@ -9570,10 +9741,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -9604,10 +9775,10 @@ Example entry:
         <DSEProgramID>15</DSEProgramID>
         <MIDIPreset>99</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -9662,10 +9833,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -9744,10 +9915,10 @@ Example entry:
   <Track>
     <PairName>bgm0135</PairName>
     <Programs>
-      <!--0x1   (smpl     0x56     0xA3 )-->
+      <!--0x1 New Age Pad?  (smpl     0x56     0xA3 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>84</MIDIPreset>
       </Program>
       <!--0x4 Marimba ( smpl 0x2D, 0x2E )-->
       <Program>
@@ -9759,20 +9930,22 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x29   (smpl     0x25C )-->
       <Program>
@@ -9794,10 +9967,10 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x37   (smpl     0x1A     0x1B     0x1C )-->
       <Program>
@@ -9822,20 +9995,22 @@ Example entry:
   <Track>
     <PairName>bgm0136</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>8</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
@@ -9885,20 +10060,22 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -9910,15 +10087,15 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x3F   (smpl     0xA9     0xAA     0xAB )-->
       <Program>
@@ -9983,10 +10160,11 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>52</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -10071,10 +10249,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x2B Perc Organ  (smpl     0x33 )-->
       <Program>
@@ -10111,7 +10289,7 @@ Example entry:
           <!--0x1 -  Side Stick played at a lower pitch? (smpl 0x3C )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x2 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -10152,11 +10330,12 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -10164,10 +10343,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -10223,10 +10402,11 @@ Example entry:
   <Track>
     <PairName>bgm0141</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F     0x30 )-->
       <Program>
@@ -10237,16 +10417,17 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x11   (smpl     0x45 )-->
       <Program>
         <DSEProgramID>17</DSEProgramID>
         <MIDIPreset>17</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10276,10 +10457,11 @@ Example entry:
   <Track>
     <PairName>bgm0142</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F     0x30 )-->
       <Program>
@@ -10290,16 +10472,17 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x11   (smpl     0x45 )-->
       <Program>
         <DSEProgramID>17</DSEProgramID>
         <MIDIPreset>17</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10339,15 +10522,16 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10417,15 +10601,16 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10475,10 +10660,10 @@ Example entry:
   <Track>
     <PairName>bgm0145</PairName>
     <Programs>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10505,20 +10690,22 @@ Example entry:
         <DSEProgramID>59</DSEProgramID>
         <MIDIPreset>59</MIDIPreset>
       </Program>
-      <!--0x3E   (smpl     0x98     0x99     0x9A )-->
+      <!--0x3E Trombone  (smpl     0x98     0x99     0x9A )-->
       <Program>
         <DSEProgramID>62</DSEProgramID>
-        <MIDIPreset>62</MIDIPreset>
+        <MIDIPreset>58</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x41   (smpl     0x2C )-->
+      <!--0x41 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>65</DSEProgramID>
-        <MIDIPreset>65</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x79  Timpani (smpl     0x7C )-->
       <Program>
@@ -10556,11 +10743,13 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -10568,10 +10757,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3C   (smpl     0x274 )-->
       <Program>
@@ -10583,15 +10772,16 @@ Example entry:
         <DSEProgramID>61</DSEProgramID>
         <MIDIPreset>61</MIDIPreset>
       </Program>
-      <!--0x3E   (smpl     0x98     0x99     0x9A )-->
+      <!--0x3E Trombone  (smpl     0x98     0x99     0x9A )-->
       <Program>
         <DSEProgramID>62</DSEProgramID>
-        <MIDIPreset>62</MIDIPreset>
+        <MIDIPreset>58</MIDIPreset>
       </Program>
-      <!--0x40   (smpl     0x2C )-->
+      <!--0x40 French Horn  (smpl     0x2C )-->
       <Program>
         <DSEProgramID>64</DSEProgramID>
-        <MIDIPreset>64</MIDIPreset>
+        <MIDIPreset>61</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -10644,16 +10834,17 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -10707,11 +10898,12 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -10719,10 +10911,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x4F     0x50 )-->
       <Program>
@@ -10815,21 +11007,22 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x273 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -10837,10 +11030,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -10924,10 +11117,10 @@ Example entry:
   <Track>
     <PairName>bgm0150</PairName>
     <Programs>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -10935,10 +11128,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -11023,10 +11216,11 @@ Example entry:
   <Track>
     <PairName>bgm0151</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -11042,21 +11236,23 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -11131,10 +11327,10 @@ Example entry:
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -11142,10 +11338,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -11234,16 +11430,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -11251,10 +11449,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -11319,20 +11517,21 @@ Example entry:
   <Track>
     <PairName>bgm0154</PairName>
     <Programs>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xA   (smpl     0x30 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>10</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -11340,10 +11539,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings  (smpl     0x4A     0x4B )-->
       <Program>
@@ -11366,10 +11565,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -11459,10 +11658,10 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -11526,25 +11725,26 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x42   (smpl     0x259 )-->
       <Program>
@@ -11607,21 +11807,24 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x31   (smpl     0x1A     0x1B     0x1C )-->
       <Program>
@@ -11643,15 +11846,15 @@ Example entry:
         <DSEProgramID>53</DSEProgramID>
         <MIDIPreset>53</MIDIPreset>
       </Program>
-      <!--0x36   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
-        <MIDIPreset>54</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
-      <!--0x37   (smpl     0xA6     0xA7     0xA8 )-->
+      <!--0x37 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>55</DSEProgramID>
-        <MIDIPreset>55</MIDIPreset>
+        <MIDIPreset>71</MIDIPreset>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -11689,16 +11892,17 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x21 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -11710,10 +11914,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x40   (smpl     0x28F )-->
       <Program>
@@ -11808,10 +12012,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -11880,10 +12084,11 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x42   (smpl     0x274 )-->
       <Program>
@@ -11964,7 +12169,7 @@ Example entry:
           <!--0x3 -  (smpl 0x289 )-->
           <Remap>
             <OriginalKey>39</OriginalKey>
-            <RemapedKey>39</RemapedKey>
+            <RemapedKey>37</RemapedKey>
           </Remap>
           <!--0x4 -  (smpl 0x28A )-->
           <Remap>
@@ -12068,10 +12273,11 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -12102,10 +12308,11 @@ Example entry:
   <Track>
     <PairName>bgm0163</PairName>
     <Programs>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F     0x30 )-->
       <Program>
@@ -12116,16 +12323,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xB   (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -12170,20 +12379,21 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>4</MIDIPreset>
       </Program>
-      <!--0x7   (smpl     0x8D )-->
+      <!--0x7 Vibraphone  (smpl     0x8D )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
-        <MIDIPreset>7</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x8   (smpl     0x8D )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>8</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -12224,20 +12434,22 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1A   (smpl     0x5C )-->
+      <!--0x1A Synth Bass 1  (smpl     0x5C )-->
       <Program>
         <DSEProgramID>26</DSEProgramID>
-        <MIDIPreset>26</MIDIPreset>
+        <MIDIPreset>39</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
@@ -12322,20 +12534,22 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1A   (smpl     0x5C )-->
+      <!--0x1A Synth Bass 1  (smpl     0x5C )-->
       <Program>
         <DSEProgramID>26</DSEProgramID>
-        <MIDIPreset>26</MIDIPreset>
+        <MIDIPreset>39</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
@@ -12414,30 +12628,31 @@ Example entry:
   <Track>
     <PairName>bgm0167</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>7</DSEProgramID>
         <MIDIPreset>7</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xD   (smpl     0x66 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x25   (smpl     0x277 )-->
       <Program>
@@ -12449,10 +12664,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x41   (smpl     0x93     0x94 )-->
       <Program>
@@ -12506,10 +12721,11 @@ Example entry:
   <Track>
     <PairName>bgm0168</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0     0x67 )-->
       <Program>
@@ -12530,16 +12746,18 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x20 Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
@@ -12557,10 +12775,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x35   (smpl     0x1A     0x1B     0x1C )-->
       <Program>
@@ -12599,10 +12817,11 @@ Example entry:
   <Track>
     <PairName>bgm0169</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x7   (smpl     0xA0 )-->
       <Program>
@@ -12619,20 +12838,20 @@ Example entry:
         <DSEProgramID>11</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xD   (smpl     0x66 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -12645,10 +12864,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -12692,10 +12911,11 @@ Example entry:
   <Track>
     <PairName>bgm0170</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x9   (smpl     0x2F     0x30 )-->
       <Program>
@@ -12706,36 +12926,38 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x41   (smpl     0x93 )-->
       <Program>
@@ -12760,35 +12982,37 @@ Example entry:
   <Track>
     <PairName>bgm0171</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xA   (smpl     0x30 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>10</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xD   (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -12861,25 +13085,28 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xA Music Box  (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -12892,10 +13119,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -12944,25 +13171,26 @@ Example entry:
         <DSEProgramID>8</DSEProgramID>
         <MIDIPreset>8</MIDIPreset>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
       <!--0xD   (smpl     0x272 )-->
       <Program>
         <DSEProgramID>13</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -13062,30 +13290,34 @@ Example entry:
   <Track>
     <PairName>bgm0174</PairName>
     <Programs>
-      <!--0x6   (smpl     0xA0     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0xA Music Box  (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x21     0x22 )-->
+      <!--0xC Harp  (smpl     0x21     0x22 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -13119,21 +13351,23 @@ Example entry:
       <Program>
         <DSEProgramID>10</DSEProgramID>
         <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xB   (smpl     0x21     0x22 )-->
+      <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
         <DSEProgramID>11</DSEProgramID>
-        <MIDIPreset>11</MIDIPreset>
+        <MIDIPreset>47</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0xC   (smpl     0x66 )-->
+      <!--0xC Tubular Bells  (smpl     0x66 )-->
       <Program>
         <DSEProgramID>12</DSEProgramID>
-        <MIDIPreset>12</MIDIPreset>
+        <MIDIPreset>15</MIDIPreset>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -13146,10 +13380,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x41   (smpl     0x93     0x94 )-->
       <Program>
@@ -13218,10 +13452,10 @@ Example entry:
   <Track>
     <PairName>bgm0176</PairName>
     <Programs>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x23 Choir Ooh? (smpl 0x75, 0x76, 0x77)-->
       <Program>
@@ -13274,10 +13508,11 @@ Example entry:
         <DSEProgramID>75</DSEProgramID>
         <MIDIPreset>75</MIDIPreset>
       </Program>
-      <!--0x52   (smpl     0x84     0x72 )-->
+      <!--0x52 Brass Instrument?(Set to trombone for now)  (smpl     0x84     0x72 )-->
       <Program>
         <DSEProgramID>82</DSEProgramID>
-        <MIDIPreset>82</MIDIPreset>
+        <MIDIPreset>57</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x53   (smpl     0x84     0x72 )-->
       <Program>
@@ -13346,10 +13581,10 @@ Example entry:
         <DSEProgramID>5</DSEProgramID>
         <MIDIPreset>13</MIDIPreset>
       </Program>
-      <!--0x15   (smpl     0xB0     0xB1 )-->
+      <!--0x15 Steel Guitar  (smpl     0xB0     0xB1 )-->
       <Program>
         <DSEProgramID>21</DSEProgramID>
-        <MIDIPreset>21</MIDIPreset>
+        <MIDIPreset>26</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -13367,10 +13602,10 @@ Example entry:
         <DSEProgramID>51</DSEProgramID>
         <MIDIPreset>73</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x47   (smpl     0x51     0x4F     0x50 )-->
       <Program>
@@ -13455,20 +13690,22 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1A   (smpl     0x5C )-->
+      <!--0x1A Synth Bass 1  (smpl     0x5C )-->
       <Program>
         <DSEProgramID>26</DSEProgramID>
-        <MIDIPreset>26</MIDIPreset>
+        <MIDIPreset>39</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
@@ -13878,15 +14115,16 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
@@ -13966,15 +14204,16 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
@@ -14055,20 +14294,22 @@ Example entry:
         <MIDIPreset>39</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x1A   (smpl     0x5C )-->
+      <!--0x1A Synth Bass 1  (smpl     0x5C )-->
       <Program>
         <DSEProgramID>26</DSEProgramID>
-        <MIDIPreset>26</MIDIPreset>
+        <MIDIPreset>39</MIDIPreset>
+        <Transpose>-2</Transpose>
       </Program>
-      <!--0x1D   (smpl     0x8A )-->
+      <!--0x1D Slap Bass  (smpl     0x8A )-->
       <Program>
         <DSEProgramID>29</DSEProgramID>
-        <MIDIPreset>29</MIDIPreset>
+        <MIDIPreset>37</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x1F Synth Strings (smpl 0x49, 0x4A, 0x4B)-->
+      <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>51</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
       <Program>
