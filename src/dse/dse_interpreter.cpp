@@ -894,83 +894,9 @@ namespace DSE
 
             //Put a XG or GS sysex message if specified
             if( m_midimode == eMIDIMode::GS )
-            {
-                {
-                    MIDITimedBigMessage gsreset;
-
-                    gsreset.SetTime(0);
-                    gsreset.SetSysEx(jdksmidi::SYSEX_START_N);
-
-                    MIDISystemExclusive mygssysex;
-                    mygssysex.PutEXC();
-                    mygssysex.PutByte(0x41); //Roland's ID
-                    mygssysex.PutByte(0x10); //Device ID, 0x10 is default 
-                    mygssysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
-                    mygssysex.PutByte(0x12); //0x12 means we're sending data 
-
-                    mygssysex.PutByte(0x40); //highest byte of address
-                    mygssysex.PutByte(0x00); //mid byte of address
-                    mygssysex.PutByte(0x7F); //lowest byte of address
-
-                    mygssysex.PutByte(0x00); //data
-
-                    mygssysex.PutByte(0x41); //checksum
-                    mygssysex.PutEOX();
-
-                    gsreset.CopySysEx( &mygssysex );
-                    m_midiout.GetTrack(0)->PutEvent(gsreset);
-                }
-                {
-                    //Now send the message to turn off the drum channel!
-                    MIDITimedBigMessage gsoffdrums;
-                    gsoffdrums.SetSysEx(jdksmidi::SYSEX_START_N);
-
-                    MIDISystemExclusive drumsysex;
-                    drumsysex.PutByte(0x41); //Roland's ID
-                    drumsysex.PutByte(0x10); //Device ID, 0x10 is default 
-                    drumsysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
-                    drumsysex.PutByte(0x12); //0x12 means we're sending data 
-
-                    drumsysex.PutByte(0x40); //highest byte of address
-                    drumsysex.PutByte(0x10); //mid byte of address
-                    drumsysex.PutByte(0x15); //lowest byte of address
-
-                    drumsysex.PutByte(0x00); //data
-
-                    drumsysex.PutByte(0x1B); //checksum
-                    drumsysex.PutEOX();
-                    gsoffdrums.CopySysEx( &drumsysex );
-                    m_midiout.GetTrack(0)->PutEvent(gsoffdrums);
-                }
-            }
+                WriteGSSysex();
             else if( m_midimode == eMIDIMode::XG )
-            {
-                //Ugh.. I have no clue if that's how I should do this.. 
-                // JDKSmidi has 0 documentation and some of the most 
-                // incoherent and unintuitive layout I've seen.. 
-                // Though I've actually seen worse..
-                MIDITimedBigMessage xgreset;
-                xgreset.SetTime(0);
-                //xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
-
-                std::array<uint8_t,9> XG_SysEx{{0x43,0x10,0x4C,0x00,0x00,0x7E,0x00}};
-                MIDISystemExclusive mysysex( XG_SysEx.data(), XG_SysEx.size(), XG_SysEx.size(), false );
-                xgreset.SetDataLength(9);
-                //mysysex.PutEXC();
-                //mysysex.PutByte(0x43); //Yamaha's ID
-                //mysysex.PutByte(0x10); //Device ID, 0x10 is default 
-                //mysysex.PutByte(0x4c);
-                //mysysex.PutByte(0x00);
-                //mysysex.PutByte(0x00);
-                //mysysex.PutByte(0x7E);
-                //mysysex.PutByte(0x00);
-                //mysysex.PutEOX();
-
-                xgreset.CopySysEx( &mysysex );
-                xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
-                
-                m_midiout.GetTrack(0)->PutEvent(xgreset);
-            }
+                WriteXGSysex();
 
             //Init track 0 with time signature
             MIDITimedBigMessage timesig;
@@ -981,48 +907,89 @@ namespace DSE
             m_midiout.GetTrack( 0 )->PutTextEvent( 0, META_GENERIC_TEXT, UtilityID.c_str(), UtilityID.size() );
         }
 
-        /*
-            ExportAsMultiTrack
-                Method handling export specifically for multi tracks MIDI format 1
-        */
-        //void ExportAsMultiTrack()
-        //{
-        //    using namespace jdksmidi;
-        //    //Setup our track states
-        //    m_trkstates.resize( m_seq.getNbTracks() );
-        //    m_beflooptrkstates.resize(m_seq.getNbTracks());
-        //    m_songlsttick = 0;
+        void WriteGSSysex()
+        {
+            using namespace jdksmidi;
+            {
+                MIDITimedBigMessage gsreset;
 
-        //    //Setup the time signature and etc..
-        //    PrepareMidiFile();
+                gsreset.SetTime(0);
+                gsreset.SetSysEx(jdksmidi::SYSEX_START_N);
 
-        //    //Play all tracks at least once
-        //    for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
-        //    {
-        //        ExportATrack( trkno, trkno );
+                MIDISystemExclusive mygssysex;
+                mygssysex.PutEXC();
+                mygssysex.PutByte(0x41); //Roland's ID
+                mygssysex.PutByte(0x10); //Device ID, 0x10 is default 
+                mygssysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
+                mygssysex.PutByte(0x12); //0x12 means we're sending data 
 
-        //        //Insert loop end event, for all tracks
-        //        if( m_bTrackLoopable )
-        //            m_midiout.GetTrack(trkno)->PutTextEvent( m_trkstates[trkno].ticks_, META_MARKER_TEXT, TXT_LoopEnd.c_str(), TXT_LoopEnd.size() );
-        //    }
+                mygssysex.PutByte(0x40); //highest byte of address
+                mygssysex.PutByte(0x00); //mid byte of address
+                mygssysex.PutByte(0x7F); //lowest byte of address
 
-        //    if( m_bTrackLoopable )
-        //    {
-        //        //Then, if we're set to loop, then loop
-        //        for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
-        //        {
-        //            for( unsigned int trkno = 0; trkno < m_seq.getNbTracks(); ++trkno )
-        //            {
-        //                //Restore track state
-        //                uint32_t backticks        = m_trkstates[trkno].ticks_; //Save ticks
-        //                m_trkstates[trkno]        = m_beflooptrkstates[trkno]; //Overwrite state
-        //                m_trkstates[trkno].ticks_ = backticks;                 //Restore ticks
+                mygssysex.PutByte(0x00); //data
 
-        //                ExportATrack( trkno, trkno, m_trkstates[trkno].looppoint_ );
-        //            }
-        //        }
-        //    }
-        //}
+                mygssysex.PutByte(0x41); //checksum
+                mygssysex.PutEOX();
+
+                gsreset.CopySysEx( &mygssysex );
+                m_midiout.GetTrack(0)->PutEvent(gsreset);
+            }
+            {
+                //Now send the message to turn off the drum channel!
+                MIDITimedBigMessage gsoffdrums;
+                gsoffdrums.SetSysEx(jdksmidi::SYSEX_START_N);
+
+                MIDISystemExclusive drumsysex;
+                drumsysex.PutByte(0x41); //Roland's ID
+                drumsysex.PutByte(0x10); //Device ID, 0x10 is default 
+                drumsysex.PutByte(0x42); //Model ID, 0x42 is universal for Roland
+                drumsysex.PutByte(0x12); //0x12 means we're sending data 
+
+                drumsysex.PutByte(0x40); //highest byte of address
+                drumsysex.PutByte(0x10); //mid byte of address
+                drumsysex.PutByte(0x15); //lowest byte of address
+
+                drumsysex.PutByte(0x00); //data
+
+                drumsysex.PutByte(0x1B); //checksum
+                drumsysex.PutEOX();
+                gsoffdrums.CopySysEx( &drumsysex );
+                m_midiout.GetTrack(0)->PutEvent(gsoffdrums);
+            }
+        }
+
+        void WriteXGSysex()
+        {
+            using namespace jdksmidi;
+            //Ugh.. I have no clue if that's how I should do this.. 
+            // JDKSmidi has 0 documentation and some of the most 
+            // incoherent and unintuitive layout I've seen.. 
+            // Though I've actually seen worse..
+            MIDITimedBigMessage xgreset;
+            xgreset.SetTime(0);
+            //xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
+
+            std::array<uint8_t,9> XG_SysEx{{0x43,0x10,0x4C,0x00,0x00,0x7E,0x00}};
+            MIDISystemExclusive mysysex( XG_SysEx.data(), XG_SysEx.size(), XG_SysEx.size(), false );
+            xgreset.SetDataLength(9);
+            //mysysex.PutEXC();
+            //mysysex.PutByte(0x43); //Yamaha's ID
+            //mysysex.PutByte(0x10); //Device ID, 0x10 is default 
+            //mysysex.PutByte(0x4c);
+            //mysysex.PutByte(0x00);
+            //mysysex.PutByte(0x00);
+            //mysysex.PutByte(0x7E);
+            //mysysex.PutByte(0x00);
+            //mysysex.PutEOX();
+
+            xgreset.CopySysEx( &mysysex );
+            xgreset.SetSysEx(jdksmidi::SYSEX_START_N);
+                
+            //Not sure if this all that I should do.. Documentation is sparse for XG
+
+            m_midiout.GetTrack(0)->PutEvent(xgreset);
+        }
 
         /*
             ExportAsSingleTrack
@@ -1179,8 +1146,6 @@ namespace DSE
             //--- Step 1! ---
             size_t nbchaninuse = std::count_if( usedchan.begin(), usedchan.end(), [](bool entry){ return entry; } );
 
-            
-
             //First, try to reassign to an empty channel!
             if( nbchaninuse != NbMidiChannels )
             {
@@ -1283,11 +1248,10 @@ namespace DSE
             for( ; evno < m_seq.track(intrk).size(); ++evno )
             {
                 if( m_seq[intrk][evno].evcode == static_cast<uint8_t>( DSE::eTrkEventCodes::EndOfTrack ) && 
-                    !ShouldExportEventsPastEoT() )
+                    !ShouldIgnorePrematureEoT() )
                     break; //Break on 0x98 as requested 
 
-                //In GM mode, try to avoid putting any instruments on channel 10 as much as possible.
-                // The user will supply what to play on what channel in the conversion info
+                //Obtain the channel the content of this track is played on
                 uint8_t prefchan = m_seq[intrk].GetMidiChannel();
 
                 if( m_midimode == eMIDIMode::GM )   //In GM mode, use our remapped channel table
@@ -1314,10 +1278,10 @@ namespace DSE
         }
 
         /*
-            ShouldExportEventsPastEoT
-                Returns whether we should keep converting events past the end of the track, if there are any.
+            ShouldIgnorePrematureEoT
+                Returns whether we should keep converting events past any premature end of the track marker, if there are any.
         */
-        bool ShouldExportEventsPastEoT()const
+        bool ShouldIgnorePrematureEoT()const
         {
             return false; //#TODO: Make this configurable
         }
@@ -1388,6 +1352,8 @@ namespace DSE
     /*
         MIDIToDSE
             Convert a MIDI file into a DSE Sequence.
+
+            **WIP**
     */
     class MIDIToDSE
     {
@@ -1401,7 +1367,7 @@ namespace DSE
 
         struct TrkState
         {
-            ticks_t            ticks = 0; //The tick count at which the last event was placed in this track
+            ticks_t            ticks     = 0; //The tick count at which the last event was placed in this track
             ticks_t            lastpause = 0; //Duration of the last pause on this track
             list<NoteOnEvInfo> notes;     //Contains "notes on" messages for which a "note off" was not yet encountered
         };
@@ -1415,7 +1381,7 @@ namespace DSE
         {
             using namespace jdksmidi;
 
-            //Load the MIDI
+            //#1 - Load the MIDI
             MIDIFileReadStreamFile rs           ( m_srcpath.c_str() );
             MIDIMultiTrack         tracks;
             MIDIFileReadMultiTrack track_loader ( &tracks );
@@ -1424,10 +1390,12 @@ namespace DSE
             if( !reader.Parse() ) //Apparently handling errors with exceptions is too much to ask to jdksmidi :P
                 throw runtime_error( "JDKSMIDI: File parsing failed. Reason not specified.." );
 
-            //Convert the MIDI to a sequence
+            //#2 - Convert the MIDI to a sequence
             DSE::DSE_MetaDataSMDL dseMeta;
             dseMeta.fname = utils::GetBaseNameOnly(m_srcpath);
             dseMeta.tpqn  = tracks.GetClksPerBeat();
+
+            //#3 - 
 
             return std::move( ConvertMIDI(tracks,dseMeta) );
         }

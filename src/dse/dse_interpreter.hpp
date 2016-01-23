@@ -13,8 +13,9 @@ All wrongs reversed, no crappyrights :P
 #include <dse/dse_common.hpp>
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_conversion_info.hpp>
-#include <vector>
-#include <map>
+//#include <vector>
+#include <string>
+//#include <map>
 #include <cstdint>
 
 namespace DSE
@@ -54,7 +55,7 @@ namespace DSE
     {
         GM,
         GS,
-        XG,
+        XG, //#TODO: Fix XG export. Though its vastly unsupported.
     };
 
     /*************************************************************************************************
@@ -62,8 +63,7 @@ namespace DSE
             This function convert a MusicSequence to a midi according to the parameters specified!
                 -outmidi    : The path and name of the MIDI file that will be exported.
                 - seq       : The MusicSequence to export.
-                - remapdata : Information on how each presets, translate to MIDI.
-                - midfmt    : The layout of the MIDI file.
+                - remapdata : Information on how each DSE track presets, translate to MIDI presets.
                 - midmode   : The MIDI sub-standard to use for bypassing GM's limitations. 
                               GS is preferred as its the most supported one!
     *************************************************************************************************/
@@ -71,7 +71,6 @@ namespace DSE
                          const MusicSequence            & seq, 
                          const SMDLPresetConversionInfo & remapdata,
                          int                              nbloop      = 0,
-                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
     /*************************************************************************************************
@@ -81,7 +80,6 @@ namespace DSE
     void SequenceToMidi( const std::string              & outmidi, 
                          const MusicSequence            & seq, 
                          int                              nbloop      = 0,
-                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
 
