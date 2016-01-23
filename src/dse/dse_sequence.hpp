@@ -20,9 +20,10 @@ namespace DSE
 //====================================================================================================
 
     //Default tick rate of the Digital Sound Element Sound Driver for sequence playback.
-    static const uint16_t     DefaultTickRte   = 48; //Possibly in ticks per quartner notes
-    static const unsigned int NbTrkDelayValues = 16; //The nb of track delay prefixes in the DSE format
-
+    static const uint16_t     DefaultTickRte   = 48;                //Possibly in ticks per quartner notes
+    static const unsigned int NbTrkDelayValues = 16;                //The nb of track delay prefixes in the DSE format
+    static const uint32_t     TrkParam1Default = 0x01000000;        //The default value for the parameter 1 value in the trk chunk header!
+    static const uint32_t     TrkParam2Default = 0x0000FF04;        //The default value for the parameter 2 value in the trk chunk header!
 
 //  Track Events Specifics Constants
 
@@ -306,21 +307,6 @@ namespace DSE
         "B",
     }};
 
-    ///****************************************************************************
-    //    eNotePitch
-    //        Values indicating how the play note event deal with the track's current 
-    //        pitch.
-    //****************************************************************************/
-    //enum struct eNotePitch : uint8_t
-    //{
-    //    reset     = 0x00,
-    //    lower     = 0x10,
-    //    current   = 0x20,
-    //    higher    = 0x30,
-    //};
-
-
-
 //Bitmasks
     static const uint8_t NoteEvParam1NoteMask     = 0x0F; //( 0000 1111 ) The id of the note "eDSENote" is stored in the lower nybble
     static const uint8_t NoteEvParam1PitchMask    = 0x30; //( 0011 0000 ) The value of those 2 bits in the "param1" of a NoteOn event indicate if/how to modify the track's current pitch.
@@ -355,14 +341,10 @@ namespace DSE
         //Event code range
         eTrkEventCodes evcodebeg;   //Beginning of the range of event codes that can be used to represent this event.
         eTrkEventCodes evcodeend;   //Leave to invalid when is event with single code
-
         //nb params
         uint32_t       nbreqparams; //if has any required parameters
-        bool           hasoptparam; //if has optional param 
-        //bool           isEoT;       //if is end of track marker     #REMOVEME That's not neccessary at all!
-        //bool           isLoopPoint; //if is loop point              #REMOVEME That's not neccessary at all!
-        std::string    evlbl;       //text label for the event
-        std::function<void(const DSESequenceToMidi*, size_t, size_t)> handler;
+        //bool           hasoptparam; //if has optional param  # Only play note events have a variable parameter count!
+        std::string    evlbl;       //text label for the event, mainly for logging/debugging
     };
 
     /************************************************************************
@@ -408,7 +390,6 @@ namespace DSE
     ************************************************************************/
     struct TrkEvent
     {
-        //uint8_t              dt     = 0;
         uint8_t              evcode = 0;
         std::vector<uint8_t> params;
 
@@ -555,8 +536,8 @@ namespace DSE
             if( ! einfo.first ) //If the event was not found
             {
                 std::stringstream sstr;
-                sstr << "Unknown event type 0x" <<std::hex <<static_cast<uint16_t>(by) <<std::dec 
-                     <<" encountered! Cannot continue due to unknown parameter length and possibly mis-alignment..";
+                sstr << "EventParser::beginNewEvent(): Unknown event type 0x" <<std::hex <<static_cast<uint16_t>(by) <<std::dec 
+                     <<" encountered! Cannot continue due to unknown parameter length and possible resulting mis-alignment..";
                 throw std::runtime_error( sstr.str() );
             }
 
@@ -654,6 +635,67 @@ namespace DSE
                                uint8_t & inout_curoctave, 
                                uint8_t & out_param2len, 
                                uint8_t & out_midinote );
+
+    /*****************************************************************
+        WriteTrkChunk
+            This function can be used to write a track of DSE events 
+            into a container using an insertion iterator. 
+
+            - writeit   : Iterator to insert into the destination container.
+            - preamble  : track preamble info.
+            - evbeg     : iterator to the beginning of the events track.
+            - evend     : iterator to the end of the events track.
+            - nbenvents : nb of events in the range. Saves a call to std::distance!
+
+    *****************************************************************/
+    template<class _backinsit, class _inevit>
+        _backinsit WriteTrkChunk( _backinsit         writeit, 
+                                 const TrkPreamble & preamble, 
+                                 _inevit             evbeg, 
+                                 _inevit             evend,
+                                 size_t              nbenvents )
+    {
+        using namespace std;
+        //Write header
+        ChunkHeader hdr;
+        hdr.label  = static_cast<uint32_t>(eDSEChunks::trk);
+        hdr.datlen = TrkPreamble::Size + nbenvents;   //We don't need to count padding here
+        hdr.param1 = TrkParam1Default;
+        hdr.param2 = TrkParam2Default;
+
+        writeit = hdr.WriteToContainer( writeit );
+
+        //Write preamble
+        preamble.WriteToContainer( writeit );
+
+        //Write events
+        for( ; evbeg != evend; ++evbeg )
+        {
+            (*writeit) = evbeg->evcode;
+            ++writeit;
+            for( const auto & aparam : (evbeg->params) )
+            {
+                (*writeit) = aparam;
+                ++writeit;
+            }
+        }
+
+        //Write padding
+        const uint32_t lenmodulo = hdr.datlen % 4;
+        if( lenmodulo != 0 )
+            std::fill_n( writeit, lenmodulo, static_cast<uint8_t>(eTrkEventCodes::EndOfTrack) );
+
+        return writeit;
+    }
+
+    template<class _backinsit, class _inevit>
+        _backinsit WriteTrkChunk( _backinsit         writeit, 
+                                 const TrkPreamble & preamble, 
+                                 _inevit             evbeg, 
+                                 _inevit             evend )
+    {
+        return WriteTrkChunk( writeit, preamble, evbeg, evend, static_cast<size_t>(std::distance( evbeg, evend )) );
+    }
 
     /*
     */
