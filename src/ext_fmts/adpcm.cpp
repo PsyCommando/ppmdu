@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <algorithm>
 #include <cassert>
+#include <fstream>
+
 using namespace std;
 using namespace utils;
 
@@ -408,6 +410,26 @@ namespace audio
                                            unsigned int                 nbchannels  )
     {
         return IMA_APCM_Decoder<ADPCM_Trait_NDS>(rawadpcmdata,nbchannels);
+    }
+
+
+    /*
+        DumpADPCM
+            Write the raw ADPCM data to a file.
+    */
+    void DumpADPCM( const std::string          & outfile,
+                    const std::vector<uint8_t> & rawadpcm )
+    {
+        utils::io::WriteByteVectorToFile( outfile, rawadpcm );
+    }
+
+    /*
+        ReadADPCMDump
+            Read a raw ADPCM dump made with DumpADPCM from a file.
+    */
+    std::vector<uint8_t> ReadADPCMDump( const std::string & infile )
+    {
+        return move( utils::io::ReadFileToByteVector(infile) );
     }
     
 };

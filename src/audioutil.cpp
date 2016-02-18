@@ -309,6 +309,15 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionNoFX, &GetInstance(), placeholders::_1 ),
         },
 
+        //noconvert
+        {
+            "noconvert",
+            0,
+            "Specifying this will disable the convertion of samples to pcm16 when exporting a bank. They'll be exported in their original format.",
+            "-noconvert",
+            std::bind( &CAudioUtil::ParseOptionNoConvertSamples, &GetInstance(), placeholders::_1 ),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -335,16 +344,17 @@ namespace audioutil
     CAudioUtil::CAudioUtil()
         :CommandLineUtility()
     {
-        m_operationMode = eOpMode::Invalid;
-        m_bGM           = false;
-        m_isPMD2        = false;
-        m_isListPresets = false;
-        m_useHexaNumbers= false;
-        m_bBakeSamples  = true;
-        m_bUseLFOFx     = true;
-        m_bMakeCvinfo   = false;
-        m_nbloops       = 0;
-        m_outtype       = eOutputType::SF2;
+        m_operationMode   = eOpMode::Invalid;
+        m_bGM             = false;
+        m_isPMD2          = false;
+        m_isListPresets   = false;
+        m_useHexaNumbers  = false;
+        m_bBakeSamples    = true;
+        m_bUseLFOFx       = true;
+        m_bMakeCvinfo     = false;
+        m_bConvertSamples = true;
+        m_nbloops         = 0;
+        m_outtype         = eOutputType::SF2;
     }
 
     const vector<argumentparsing_t> & CAudioUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -453,7 +463,7 @@ namespace audioutil
                 Poco::Path curpath(itdir->path());
                 if( SameFileExt( curpath.getExtension(), ext ) )
                 {
-                    cout <<right <<setw(60) <<setfill(' ') << descstr << curpath.getBaseName() << "..";
+                    cout <<right <<setw(60) <<setfill(' ') << descstr << curpath.getBaseName() << "..\n";
                     fun(curpath);
                 }
             }
@@ -733,6 +743,11 @@ namespace audioutil
             return false;
         }
         return true;
+    }
+
+    bool CAudioUtil::ParseOptionNoConvertSamples( const std::vector<std::string> & optdata )
+    {
+        return m_bConvertSamples = true;
     }
 
 //
@@ -1179,7 +1194,7 @@ namespace audioutil
 
         //Load SWDL
         PresetBank swd = move( DSE::ParseSWDL( inputfile.toString() ) );
-        ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers );
+        ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers, !m_bConvertSamples );
 
         return 0;
     }
@@ -1459,7 +1474,7 @@ namespace audioutil
                 if( ptrsmpls != nullptr )
                     CreateOutputDir( outNewDir );  //Create sub directory
             }
-            ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers );
+            ExportPresetBank( outNewDir, swd, true, m_useHexaNumbers, !m_bConvertSamples );
         };
 
         ProcessAllFilesWithExtInDir( m_swdlpath, SWDL_FileExtension, "Exporting", lambdaExport );
@@ -1496,6 +1511,7 @@ namespace audioutil
         return 0;
     }
     
+    //#TODO: Replace this so it uses the batch converter class!!
     int CAudioUtil::ExportBatchSMDL()
     {
         //using namespace pmd2::audio;
@@ -1569,7 +1585,7 @@ namespace audioutil
             {
                 if( prgm != nullptr )
                 {
-                    lstfile <<"\n\t*Preset #"<<static_cast<int>(prgm->m_hdr.id) <<"\n"
+                    lstfile <<"\n\t*Preset #"<<static_cast<int>(prgm->id) <<"\n"
                             <<"\t------------------------------------\n";
 
                     for( const auto & split : prgm->m_splitstbl )
@@ -1673,10 +1689,11 @@ namespace audioutil
         {
             if( aprgm != nullptr )
             {
-                DSE::SMDLPresetConversionInfo::PresetConvData mycvdat( static_cast<presetid_t>(aprgm->m_hdr.id) );
-                mycvdat.midipres = static_cast<presetid_t>(aprgm->m_hdr.id);
+                uint16_t prgid = aprgm->id;
+                DSE::SMDLPresetConversionInfo::PresetConvData mycvdat( static_cast<presetid_t>(prgid) );
+                mycvdat.midipres = static_cast<presetid_t>(prgid);
                 
-                if( aprgm->m_hdr.id == 0x7F )
+                if( prgid == 0x7F )
                 {
                     mycvdat.midibank  = 127;
                     mycvdat.idealchan = 10;
@@ -1695,7 +1712,7 @@ namespace audioutil
                     }
                 }
 
-                dest.AddPresetConvInfo( aprgm->m_hdr.id, move(mycvdat) );
+                dest.AddPresetConvInfo( prgid, move(mycvdat) );
             }
         }
     }
@@ -1877,8 +1894,7 @@ int main( int argc, const char * argv[] )
     using namespace audioutil;
     try
     {
-        CAudioUtil & application = CAudioUtil::GetInstance();
-        return application.Main(argc,argv);
+        return CAudioUtil::GetInstance().Main(argc,argv);
     }
     catch( exception & e )
     {

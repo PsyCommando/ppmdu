@@ -37,7 +37,12 @@ namespace DSE
 //====================================================================================================
 //  Constants
 //====================================================================================================
-    static const uint32_t SWDL_MagicNumber = static_cast<uint32_t>(eDSEContainers::swdl);//0x7377646C; //"swdl"
+    static const uint32_t SWDL_MagicNumber     = static_cast<uint32_t>(eDSEContainers::swdl);//0x7377646C; //"swdl"
+    static const uint32_t SWDL_ChunksDefParam1 = 0x4150000;
+    static const uint32_t SWDL_ChunksDefParam2 = 0x10;
+
+    static const uint16_t SWDL_Version415      = 0x415;
+    static const uint16_t SWDL_Version402      = 0x402;
 
 //====================================================================================================
 // Structs
@@ -51,6 +56,14 @@ namespace DSE
     {
         static const uint32_t Size     = 80;
         static const uint32_t FNameLen = 16;
+
+        static const uint16_t DefVersion = SWDL_Version415;
+        static const uint32_t DefUnk10   = 0xAAAAAA00;
+        static const uint32_t DefUnk13   = 0x10;
+
+        static const uint32_t MaskNoPCMD = 0xFFFF0000;
+        static const uint32_t ValNoPCMD  = 0xAAAA0000;
+
 
         static unsigned int size() { return Size; }
 
@@ -105,7 +118,7 @@ namespace DSE
             itwriteto = utils::WriteIntToBytes   ( second,           itwriteto );
             itwriteto = utils::WriteIntToBytes   ( centisec,         itwriteto );
 
-            itwriteto = utils::WriteStrToByteContainer( itwriteto,        fname, fname.size() );
+            itwriteto = utils::WriteStrToByteContainer( itwriteto,   fname.data(), fname.size() );
 
             itwriteto = utils::WriteIntToBytes   ( unk10,            itwriteto );
             itwriteto = utils::WriteIntToBytes   ( unk11,            itwriteto );
@@ -121,6 +134,42 @@ namespace DSE
         }
 
 
+        template<class _init>
+            _init ReadFromContainer( _init itReadfrom, _init itEnd )
+        {
+            itReadfrom = utils::ReadIntFromBytes( magicn,       itReadfrom, itEnd, false ); //iterator is incremented
+            itReadfrom = utils::ReadIntFromBytes( unk18,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( flen,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( version,      itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk1,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk2,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk3,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk4,         itReadfrom, itEnd );
+
+            itReadfrom = utils::ReadIntFromBytes( year,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( month,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( day,          itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( hour,         itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( minute,       itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( second,       itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( centisec,     itReadfrom, itEnd );
+
+            itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
+
+            itReadfrom = utils::ReadIntFromBytes( unk10,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk11,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk12,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk13,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( pcmdlen,      itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk14,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbwavislots,  itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbprgislots,  itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk17,        itReadfrom, itEnd );
+            itReadfrom = utils::ReadIntFromBytes( wavilen,      itReadfrom, itEnd );
+            return itReadfrom;
+        }
+
+        //#DEPRECATED
         template<class _init>
             _init ReadFromContainer(  _init itReadfrom )
         {

@@ -601,7 +601,7 @@ namespace DSE
     {
         using namespace std;
         ChunkHeader hdr;
-        beg = hdr.ReadFromContainer(beg);
+        beg = hdr.ReadFromContainer(beg, end);
 
         if( hdr.label != static_cast<uint32_t>(eDSEChunks::trk) )
             throw runtime_error("ParseTrkChunk(): Unexpected chunk label !");

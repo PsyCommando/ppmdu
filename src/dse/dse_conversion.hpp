@@ -87,7 +87,7 @@ namespace DSE
 
        inline void AddEntry( PresetEntry && entry )
         {
-            m_smpldata.emplace( std::move( std::make_pair( entry.prginf.m_hdr.id, std::move(entry) ) ) );
+            m_smpldata.emplace( std::move( std::make_pair( entry.prginf.id, std::move(entry) ) ) );
         }
 
         inline iterator       begin()      {return m_smpldata.begin();}
@@ -114,6 +114,8 @@ namespace DSE
             Just like what PMD2 uses.
 
             Can also be used to load the master bank, and then either a single or more smd+swd pairs.
+
+            From there, several operations requiring pairs of those files loaded can be done!
     */
     class BatchAudioLoader
     {
@@ -260,7 +262,7 @@ namespace DSE
                 val_t min;
                 val_t avg;
                 val_t max;
-                int   cntavg; //Count values
+                int   cntavg; //Counts nb of value samples
                 int   accavg; //Accumulate values
 
                 LimitVal()
@@ -352,7 +354,7 @@ namespace DSE
                             const DSE::KeyGroupList      & keygroups );
 
         void HandlePrgSplitBaked( sf2::SoundFont                     * destsf2, 
-                                  const DSE::ProgramInfo::SplitEntry & split,
+                                  const DSE::SplitEntry              & split,
                                   size_t                               sf2sampleid,
                                   const DSE::WavInfo                 & smplinf,
                                   const DSE::KeyGroup                & keygroup,
@@ -367,7 +369,7 @@ namespace DSE
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;
 
-        audiostats                m_stats;
+        audiostats                m_stats;      //Used for research mainly. Stores statistics during processing of the DSE files
 
         BatchAudioLoader( const BatchAudioLoader & )           = delete;
         BatchAudioLoader & operator=(const BatchAudioLoader& ) = delete;
@@ -408,11 +410,11 @@ namespace DSE
 
             Return the sample type.
     */
-    WavInfo::eSmplFmt ConvertDSESample( int16_t                                smplfmt, 
-                                        size_t                                 origloopbeg,
-                                        const std::vector<uint8_t>           & in_smpl,
-                                        DSESampleConvertionInfo              & out_cvinfo,
-                                        std::vector<int16_t>                 & out_smpl );
+    eDSESmplFmt ConvertDSESample( int16_t                                smplfmt, 
+                                  size_t                                 origloopbeg,
+                                  const std::vector<uint8_t>           & in_smpl,
+                                  DSESampleConvertionInfo              & out_cvinfo,
+                                  std::vector<int16_t>                 & out_smpl );
 
 
     /*
@@ -469,7 +471,7 @@ namespace DSE
     /*
         Export the PresetBank to a directory as XML and WAV samples.
     */
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true, bool hexanumbers = true );
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true, bool hexanumbers = true, bool noconvert = true );
 
     /*
         To use the ExportSequence,

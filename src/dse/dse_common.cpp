@@ -138,29 +138,16 @@ namespace DSE
         :envmulti(0), atkvol(0), attack(0), hold(0), decay(0), sustain(0), decay2(0), release(0)
     {}
 
-    DSEEnvelope::DSEEnvelope( const ProgramInfo::SplitEntry & splitentry )
-        :envmulti(splitentry.envmult), 
-         atkvol(splitentry.atkvol), 
-         attack(splitentry.attack), 
-         hold(splitentry.hold), 
-         decay(splitentry.decay), 
-         sustain(splitentry.sustain), 
-         decay2(splitentry.decay2), 
-         release(splitentry.release)
-    {}
+    //DSEEnvelope::DSEEnvelope( const SplitEntry & splitentry )
+    //{
+    //    (*this) = splitentry.env;
+    //}
 
-    DSEEnvelope & DSEEnvelope::operator=( const ProgramInfo::SplitEntry & splitentry )
-    {
-        envmulti = splitentry.envmult;
-        atkvol   = splitentry.atkvol; 
-        attack   = splitentry.attack;
-        hold     = splitentry.hold;
-        decay    = splitentry.decay;
-        sustain  = splitentry.sustain; 
-        decay2   = splitentry.decay2;
-        release  = splitentry.release;
-        return *this;
-    }
+    //DSEEnvelope & DSEEnvelope::operator=( const SplitEntry & splitentry )
+    //{
+    //    (*this) = splitentry.env;
+    //    return *this;
+    //}
 
 //==========================================================================================
 //  StreamOperators
@@ -194,18 +181,19 @@ namespace DSE
     std::ostream & operator<<( std::ostream &  strm, const ProgramInfo & other )
     {
         strm << "\t== ProgramInfo ==\n"
-             << "\tID        : " << other.m_hdr.id     <<"\n"
-             << "\tNbSplits  : " << other.m_hdr.nbsplits <<"\n"
-             << "\tVol       : " << static_cast<short>(other.m_hdr.insvol) <<"\n"
-             << "\tPan       : " << static_cast<short>(other.m_hdr.inspan) <<"\n"
-             << "\tUnk3      : " << other.m_hdr.unk3 <<"\n"
-             << "\tUnk4      : " << other.m_hdr.unk4 <<"\n"
-             << "\tUnk5      : " << static_cast<short>(other.m_hdr.unk5) <<"\n"
-             << "\tnblfos    : " << static_cast<short>(other.m_hdr.nblfos) <<"\n"
-             << "\tpadbyte   : " << static_cast<short>(other.m_hdr.padbyte) <<"\n"
-             << "\tUnk7      : " << static_cast<short>(other.m_hdr.unk7) <<"\n"
-             << "\tUnk8      : " << static_cast<short>(other.m_hdr.unk8) <<"\n"
-             << "\tUnk9      : " << static_cast<short>(other.m_hdr.unk9) <<"\n";
+             << "\tID        : " << other.id     <<"\n"
+             << "\tNbSplits  : " << other.m_splitstbl.size() <<"\n"
+             << "\tVol       : " << static_cast<short>(other.prgvol) <<"\n"
+             << "\tPan       : " << static_cast<short>(other.prgpan) <<"\n"
+             //<< "\tUnk3      : " << other.unk3 <<"\n"
+             << "\tUnk4      : " << other.unk4 <<"\n"
+             //<< "\tUnk5      : " << static_cast<short>(other.unk5) <<"\n"
+             << "\tnblfos    : " << static_cast<short>(other.m_lfotbl.size()) <<"\n"
+             << "\tpadbyte   : " << static_cast<short>(other.padbyte) <<"\n"
+             << "\tUnkpoly      : " << static_cast<short>(other.unkpoly) <<"\n"
+             //<< "\tUnk8      : " << static_cast<short>(other.unk8) <<"\n"
+             //<< "\tUnk9      : " << static_cast<short>(other.unk9) <<"\n";
+             ;
 
         //Write the LFOs
         int cntlfo = 0;
@@ -230,7 +218,7 @@ namespace DSE
         for( const auto & split : other.m_splitstbl )
         {
             strm << "\t-- Split #" <<cntlfo <<" --\n"
-                << "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
+                //<< "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
                 << "\tID           : " << static_cast<short>(split.id)        <<"\n"
                 << "\tUnk11        : " << static_cast<short>(split.unk11)     <<"\n"
                 << "\tUnk25        : " << static_cast<short>(split.unk25)     <<"\n"
@@ -242,8 +230,8 @@ namespace DSE
                 << "\thivel        : " << static_cast<short>(split.hivel)     <<"\n"
                 << "\tlovel2       : " << static_cast<short>(split.lovel2)     <<"\n"
                 << "\thivel2       : " << static_cast<short>(split.hivel2)     <<"\n"
-                << "\tunk16        : " << split.unk16     <<"\n"
-                << "\tunk17        : " << split.unk17     <<"\n"
+                //<< "\tunk16        : " << split.unk16     <<"\n"
+                //<< "\tunk17        : " << split.unk17     <<"\n"
                 << "\tsmplid       : " << static_cast<short>(split.smplid)     <<"\n"
                 << "\tftune        : " << static_cast<short>(split.ftune)     <<"\n"
                 << "\tctune        : " << static_cast<short>(split.ctune)     <<"\n"
@@ -252,23 +240,23 @@ namespace DSE
                 << "\tsmplvol      : " << static_cast<short>(split.smplvol)   <<"\n"
                 << "\tsmplpan      : " << static_cast<short>(split.smplpan)   <<"\n"
                 << "\tkgrpid       : " << static_cast<short>(split.kgrpid)  <<"\n"
-                << "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
-                << "\tunk23        : " << split.unk23     <<"\n"
-                << "\tunk24        : " << split.unk24     <<"\n"
+                //<< "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
+                //<< "\tunk23        : " << split.unk23     <<"\n"
+                //<< "\tunk24        : " << split.unk24     <<"\n"
                 << "\tenvon        : " << static_cast<short>(split.envon)     <<"\n"
-                << "\tenvmult      : " << static_cast<short>(split.envmult)     <<"\n"
-                << "\tunk37        : " << static_cast<short>(split.unk37)     <<"\n"
-                << "\tunk38        : " << static_cast<short>(split.unk38)     <<"\n"
-                << "\tunk39        : " << split.unk39     <<"\n"
-                << "\tunk40        : " << split.unk40     <<"\n"
-                << "\tatkvol       : " << static_cast<short>(split.atkvol)     <<"\n"
-                << "\tattack       : " << static_cast<short>(split.attack)     <<"\n"
-                << "\tdecay        : " << static_cast<short>(split.decay)     <<"\n"
-                << "\tsustain      : " << static_cast<short>(split.sustain)     <<"\n"
-                << "\thold         : " << static_cast<short>(split.hold)     <<"\n"
-                << "\tdecay2       : " << static_cast<short>(split.decay2)     <<"\n"
-                << "\trelease      : " << static_cast<short>(split.release)     <<"\n"
-                << "\trx           : " << static_cast<short>(split.rx)     <<"\n"
+                << "\tenvmult      : " << static_cast<short>(split.env.envmulti)     <<"\n"
+                //<< "\tunk37        : " << static_cast<short>(split.env.unk37)     <<"\n"
+                //<< "\tunk38        : " << static_cast<short>(split.env.unk38)     <<"\n"
+                //<< "\tunk39        : " << split.unk39     <<"\n"
+                //<< "\tunk40        : " << split.unk40     <<"\n"
+                << "\tatkvol       : " << static_cast<short>(split.env.atkvol)     <<"\n"
+                << "\tattack       : " << static_cast<short>(split.env.attack)     <<"\n"
+                << "\tdecay        : " << static_cast<short>(split.env.decay)     <<"\n"
+                << "\tsustain      : " << static_cast<short>(split.env.sustain)     <<"\n"
+                << "\thold         : " << static_cast<short>(split.env.hold)     <<"\n"
+                << "\tdecay2       : " << static_cast<short>(split.env.decay2)     <<"\n"
+                << "\trelease      : " << static_cast<short>(split.env.release)     <<"\n"
+                //<< "\trx           : " << static_cast<short>(split.env.rx)     <<"\n"
                 ;
             ++cntsplits;
         }

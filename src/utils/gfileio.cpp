@@ -49,7 +49,7 @@ namespace utils{ namespace io
         if (!(outputfile.good() && outputfile.is_open()))
         {
             stringstream sstr;
-            sstr <<"ERRO: WriteByteVectorToFile() : impossible to open file \"" <<path <<"\"!\n";
+            sstr <<"WriteByteVectorToFile() : impossible to open file \"" <<path <<"\"!\n";
             throw runtime_error(sstr.str());
         }
 

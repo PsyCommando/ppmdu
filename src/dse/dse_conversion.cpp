@@ -210,15 +210,15 @@ namespace DSE
     */
     std::vector<int16_t> PCM8RawBytesToPCM16Vec( const std::vector<uint8_t> * praw )
     {
-        //std::vector<int16_t> out;
-        //auto                 itread = praw->begin();
-        //auto                 itend  = praw->end();
-        //out.reserve(praw->size()*2);
+        std::vector<int16_t> out;
+        auto                 itread = praw->begin();
+        auto                 itend  = praw->end();
+        out.reserve(praw->size()*2);
 
-        //for(; itread != itend; ++itread )
-        //    out.push_back( static_cast<int16_t>(*itread) );
+        for(; itread != itend; ++itread )
+            out.push_back( ( ( static_cast<int16_t>(*itread)  ^ 0x80) * std::numeric_limits<int16_t>::max() ) / std::numeric_limits<uint8_t>::max() ); //Convert from excess-k coding to 2's complement. And scale up to pcm16.
 
-        return std::move( utils::RawPCM8Parser<int16_t>( *praw ) );
+        return std::move(out);//std::move( utils::RawPCM8Parser<int16_t>( *praw ) );
     }
 
 
@@ -418,45 +418,45 @@ namespace DSE
         return volenv;
     }
 
-    WavInfo::eSmplFmt ConvertDSESample( int16_t                                smplfmt, 
-                                        size_t                                 origloopbeg,
-                                        const std::vector<uint8_t>           & in_smpl,
-                                        DSESampleConvertionInfo              & out_cvinfo,
-                                        std::vector<int16_t>                 & out_smpl )
+    eDSESmplFmt ConvertDSESample( int16_t                                smplfmt, 
+                                  size_t                                 origloopbeg,
+                                  const std::vector<uint8_t>           & in_smpl,
+                                  DSESampleConvertionInfo              & out_cvinfo,
+                                  std::vector<int16_t>                 & out_smpl )
         //( int16_t                                smplfmt, 
         //                                wave::smpl_chunk_content::SampleLoop & loopinfo, 
         //                                const DSE::WavInfo                   & winfo,
         //                                const std::vector<uint8_t>           & in_smpl,
         //                                std::vector<int16_t>                 & out_smpl )
     {
-        if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+        if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
         {
             out_smpl = move(::audio::DecodeADPCM_NDS( in_smpl ) );
             out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
             out_cvinfo.loopend_ = ::audio::ADPCMSzToPCM16Sz(in_smpl.size() );
-            return WavInfo::eSmplFmt::ima_adpcm;
+            return eDSESmplFmt::ima_adpcm;
         }
-        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
+        else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
         {
             out_smpl = move( PCM8RawBytesToPCM16Vec(&in_smpl) );
             out_cvinfo.loopbeg_ = origloopbeg    * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
             out_cvinfo.loopend_ = in_smpl.size() * 2; //PCM8 -> PCM16
-            return WavInfo::eSmplFmt::pcm8;
+            return eDSESmplFmt::pcm8;
         }
-        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16) )
+        else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
         {
             out_smpl = move( RawBytesToPCM16Vec(&in_smpl) );
             out_cvinfo.loopbeg_ = origloopbeg    * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
             out_cvinfo.loopend_ = in_smpl.size() / 2;
-            return WavInfo::eSmplFmt::pcm16;
+            return eDSESmplFmt::pcm16;
         }
-        else if( smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::psg) )
+        else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
         {
 
-            return WavInfo::eSmplFmt::psg;
+            return eDSESmplFmt::psg;
         }
         else
-            return WavInfo::eSmplFmt::invalid;
+            return eDSESmplFmt::invalid;
     }
     
 
@@ -593,12 +593,12 @@ namespace DSE
             - smplIdConvTbl : A map mapping the Sample IDs from the DSE swd, to their new ID within the Soundfont file!
             - inst          : The SF2 Instruemnt this dse sample/instrument shall be added to.
     */
-    void DSESplitToSf2InstrumentZone( const ProgramInfo::SplitEntry          & dseinst, 
+    void DSESplitToSf2InstrumentZone( const SplitEntry                            & dseinst, 
                                            const std::map<uint16_t,size_t>        & smplIdConvTbl, 
                                            sf2::SoundFont                         & sf,
                                            sf2::Instrument                        & inst,
                                            const vector<bool>                     & loopedsmpls,
-                                           const vector<ProgramInfo::LFOTblEntry> & lfos,
+                                           const vector<LFOTblEntry>              & lfos,
                                            const KeyGroupList                     & keygrps,
                                            const SampleBank                       & smplbnk,
                                            SMDLPresetConversionInfo::PresetConvData & cvdata)
@@ -667,7 +667,7 @@ namespace DSE
             myzone.SetPan( DsePanToSf2Pan(dseinst.smplpan) );
 
         //Volume Envelope
-        Envelope myenv = RemapDSEVolEnvToSF2(DSEEnvelope(dseinst));
+        Envelope myenv = RemapDSEVolEnvToSF2(dseinst.env);
 
         /*
             ### In order to handle the atkvol param correctly, we'll make a copy of the Instrument, 
@@ -675,12 +675,12 @@ namespace DSE
 
             #TODO : Make this part of the envelope parsing functions !!!
         */
-        if( dseinst.atkvol != 0 && dseinst.attack != 0 )
+        if( dseinst.env.atkvol != 0 && dseinst.env.attack != 0 )
         {
             ZoneBag atkvolzone( myzone );
 
             //Set attenuation to the atkvol value
-            atkvolzone.SetInitAtt( DseVolToSf2Attenuation( dseinst.atkvol ) + 
+            atkvolzone.SetInitAtt( DseVolToSf2Attenuation( dseinst.env.atkvol ) + 
                                    DseVolToSf2Attenuation(dseinst.smplvol) );
 
             //Set hold to the attack's duration
@@ -689,7 +689,7 @@ namespace DSE
             //    atkvolenv.hold = MSecsToTimecents( dseinst.attack - 10 );
             //else
                 atkvolenv.hold = myenv.attack;
-            atkvolenv.decay   = (dseinst.hold > 0)? myenv.hold : (dseinst.decay > 0 || dseinst.decay2 > 0)? myenv.decay : SHRT_MIN; 
+            atkvolenv.decay   = (dseinst.env.hold > 0)? myenv.hold : (dseinst.env.decay > 0 || dseinst.env.decay2 > 0)? myenv.decay : SHRT_MIN; 
             atkvolenv.sustain = SF_GenLimitsVolEnvSustain.max_;
 
             //Leave everything else to default
@@ -760,12 +760,12 @@ namespace DSE
             ZoneBag global;
 
             //#1 - Setup Generators
-            if( dsePres.m_hdr.insvol != DSE_LimitsVol.def_ )
-                global.SetInitAtt( DseVolToSf2Attenuation(dsePres.m_hdr.insvol) );
+            if( dsePres.prgvol != DSE_LimitsVol.def_ )
+                global.SetInitAtt( DseVolToSf2Attenuation(dsePres.prgvol) );
 
             // Range of DSE Pan : 0x00 - 0x40 - 0x7F
-            if( dsePres.m_hdr.inspan != DSE_LimitsPan.def_ )
-                global.SetPan( DsePanToSf2Pan(dsePres.m_hdr.inspan) );
+            if( dsePres.prgpan != DSE_LimitsPan.def_ )
+                global.SetPan( DsePanToSf2Pan(dsePres.prgpan) );
             
             //#2 - Setup LFOs
             unsigned int cntlfo = 0;
@@ -776,7 +776,7 @@ namespace DSE
                     if( utils::LibWide().isLogOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
                     
-                    if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
+                    if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pitch) ) //Pitch
                     {
                         //The effect on the pitch can be handled this way
                         global.AddGenerator( eSFGen::freqVibLFO,    DSE_LFOFrequencyToCents( lfo.depth/*lfo.rate*//*/50*/ ) ); //Frequency
@@ -786,7 +786,7 @@ namespace DSE
                         if( utils::LibWide().isLogOn() )
                             clog << "(1)pitch";
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Volume) ) //Volume
                     {
                         //The effect on the pitch can be handled this way
                         global.AddGenerator( eSFGen::freqModLFO,     DSE_LFOFrequencyToCents(lfo.rate/*lfo.rate*//*/50*/ ) ); //Frequency
@@ -796,7 +796,7 @@ namespace DSE
                         if( utils::LibWide().isLogOn() )
                             clog << "(2)volume";
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pan) ) //Pan
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pan) ) //Pan
                     {
                         //Leave the data for the MIDI exporter, so maybe it can do something about it..
                         convinf.extrafx.push_back( 
@@ -810,7 +810,7 @@ namespace DSE
                         if( utils::LibWide().isLogOn() )
                             clog << "(3)pan";
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::UNK_4) )
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::UNK_4) )
                     {
                         //Unknown LFO target
                         if( utils::LibWide().isLogOn() )
@@ -891,28 +891,28 @@ namespace DSE
             Sample::smplcount_t loopbeg = 0;
             Sample::smplcount_t loopend = 0;
 
-            if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::ima_adpcm ) )
+            if( cursminf.smplfmt == eDSESmplFmt::ima_adpcm )
             {
                 loadfun = std::move( std::bind( ::audio::DecodeADPCM_NDS, std::ref( *samples->sample(cntsmslot) ), 1 ) );
                 smpllen = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot)->size() );
                 loopbeg = (cursminf.loopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
                 loopend = smpllen;
             }
-            else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm16 ) )
+            else if( cursminf.smplfmt == eDSESmplFmt::pcm16 )
             {
                 loadfun = std::move( std::bind( &RawBytesToPCM16Vec, samples->sample(cntsmslot) ) );
                 smpllen = samples->sample(cntsmslot)->size() / 2;
                 loopbeg = cursminf.loopbeg * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
                 loopend = smpllen;
             }
-            else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::pcm8 ) )
+            else if( cursminf.smplfmt == eDSESmplFmt::pcm8 )
             {
                 loadfun = std::move( std::bind( &PCM8RawBytesToPCM16Vec, samples->sample(cntsmslot) ) );
                 smpllen = samples->sample(cntsmslot)->size() * 2; //PCM8 -> PCM16
                 loopbeg = cursminf.loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
                 loopend = smpllen;
             }
-            else if( cursminf.smplfmt == static_cast<uint16_t>( WavInfo::eSmplFmt::psg ) )
+            else if( cursminf.smplfmt == eDSESmplFmt::psg )
             {
                 stringstream sstrerr;
                 sstrerr << "PSG instruments unsuported!";
@@ -921,7 +921,7 @@ namespace DSE
             else
             {
                 stringstream sstrerr;
-                sstrerr << "Unknown sample format (0x" <<hex <<uppercase <<cursminf.smplfmt <<nouppercase <<dec  <<") encountered !";
+                sstrerr << "Unknown sample format (0x" <<hex <<uppercase <<static_cast<uint16_t>(cursminf.smplfmt) <<nouppercase <<dec  <<") encountered !";
                 throw std::runtime_error( sstrerr.str() );
             }
 
@@ -958,7 +958,7 @@ namespace DSE
         HandlePrgSplitBaked
     ***************************************************************************************/
     void BatchAudioLoader::HandlePrgSplitBaked( sf2::SoundFont                     * destsf2, 
-                                                const DSE::ProgramInfo::SplitEntry & split,
+                                                const DSE::SplitEntry              & split,
                                                 size_t                               sf2sampleid,
                                                 const DSE::WavInfo                 & smplinf,
                                                 const DSE::KeyGroup                & keygroup,
@@ -1013,13 +1013,13 @@ namespace DSE
             myzone.SetPan( DsePanToSf2Pan(split.smplpan) );
 
         //Volume Envelope
-        DSEEnvelope dseenv(split);
-        Envelope myenv = RemapDSEVolEnvToSF2(dseenv);
+        //DSEEnvelope dseenv(split);
+        Envelope myenv = RemapDSEVolEnvToSF2(split.env);
 
         //Set the envelope
         myzone.SetVolEnvelope( myenv );
         
-        if( dseenv.release != 0 )
+        if( split.env.release != 0 )
             myzone.AddGenerator( eSFGen::releaseVolEnv, static_cast<sf2::genparam_t>( lround(myenv.release * 1.1) ) );
 
         //Sample ID in last
@@ -1061,8 +1061,8 @@ namespace DSE
             //    global.SetInitAtt( DseVolToSf2Attenuation(curprg.m_hdr.insvol) );
 
             // Range of DSE Pan : 0x00 - 0x40 - 0x7F
-            if( curprg.m_hdr.inspan != DSE_LimitsPan.def_ )
-                global.SetPan( DsePanToSf2Pan(curprg.m_hdr.inspan) );
+            if( curprg.prgpan != DSE_LimitsPan.def_ )
+                global.SetPan( DsePanToSf2Pan(curprg.prgpan) );
             
             //#2 - Setup LFOs
             unsigned int cntlfo = 0;
@@ -1077,7 +1077,7 @@ namespace DSE
                     m_stats.lfodepth.Process( lfo.depth );
                     m_stats.lforate.Process( lfo.rate );
                     
-                    if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pitch) ) //Pitch
+                    if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pitch) ) //Pitch
                     {
                         if( lfo.rate <= 100 )
                         {
@@ -1094,7 +1094,7 @@ namespace DSE
                             clog << "<!>- LFO Vibrato effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
                         }
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Volume) ) //Volume
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Volume) ) //Volume
                     {
                         if( lfo.rate <= 100 )
                         {
@@ -1111,7 +1111,7 @@ namespace DSE
                             clog << "<!>- LFO volume level effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
                         }
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::Pan) ) //Pan
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pan) ) //Pan
                     {
                         //Leave the data for the MIDI exporter, so maybe it can do something about it..
                         presetcvinf.extrafx.push_back( 
@@ -1123,7 +1123,7 @@ namespace DSE
                         if( utils::LibWide().isLogOn() )
                             clog << "(3)pan";
                     }
-                    else if( lfo.dest == static_cast<uint8_t>(ProgramInfo::LFOTblEntry::eLFODest::UNK_4) )
+                    else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::UNK_4) )
                     {
                         //Unknown LFO target
                         if( utils::LibWide().isLogOn() )
@@ -1244,7 +1244,7 @@ namespace DSE
             const auto & cursmpls    = dseprg.second.splitsamples;
             const auto & cursmplsinf = dseprg.second.splitsmplinf;
 
-            auto itcvinf = cvinfo.FindConversionInfo( curprg.m_hdr.id );
+            auto itcvinf = cvinfo.FindConversionInfo( curprg.id );
 
             if( itcvinf == cvinfo.end() )
             {
@@ -1274,7 +1274,7 @@ namespace DSE
             }
 
             stringstream sstrprgname;
-            sstrprgname << curtrkname << "_prg#" <<showbase <<hex <<curprg.m_hdr.id;
+            sstrprgname << curtrkname << "_prg#" <<showbase <<hex <<curprg.id;
             const string presname = move( sstrprgname.str() );
 
 
@@ -1410,7 +1410,7 @@ namespace DSE
                 if( curprginfos[itcvtbl->first] != nullptr )
                 {
                     stringstream sstrprgname;
-                    sstrprgname << pairname << "_prg#" <<showbase <<hex <<curprginfos[itcvtbl->first]->m_hdr.id;
+                    sstrprgname << pairname << "_prg#" <<showbase <<hex <<curprginfos[itcvtbl->first]->id;
                     DSEPresetToSf2Preset( sstrprgname.str(), //pairname + "_prg#" + to_string(curprginfos[itcvtbl->first]->m_hdr.id), 
                                             itcvtbl->second.midibank,
                                             *(curprginfos[itcvtbl->first]),
@@ -1912,7 +1912,7 @@ namespace DSE
 //  Functions
 //===========================================================================================
     
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers )
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly, bool hexanumbers, bool noconvert )
     {
         static const string _DeafaultSamplesSubDir = "samples";
         auto smplptr = bnk.smplbank().lock();
@@ -1941,15 +1941,10 @@ namespace DSE
 
                 if( ptrinfo != nullptr && ptrdata != nullptr )
                 {
-                    wave::PCM16sWaveFile                 outwave;
                     wave::smpl_chunk_content             smplchnk;
                     stringstream                         sstrname;
                     wave::smpl_chunk_content::SampleLoop loopinfo;
                     DSESampleConvertionInfo              cvinf;
-
-                    //We only have mono samples
-                    outwave.GetSamples().resize(1);
-                    outwave.SampleRate( ptrinfo->smplrate );
 
                     //Set the loop data
                     smplchnk.MIDIUnityNote_ = ptrinfo->rootkey;        //#FIXME: Most of the time, the correct root note is only stored in the preset, not the sample data!
@@ -1960,52 +1955,107 @@ namespace DSE
                     else
                         sstrname <<right <<setw(4) <<setfill('0') << cntsmpl;
 
-                    switch( ConvertDSESample( ptrinfo->smplfmt, ptrinfo->loopbeg, *ptrdata, cvinf, outwave.GetSamples().front() ) )
+                    if( ptrinfo->smplfmt == eDSESmplFmt::ima_adpcm && noconvert )
                     {
-                        case WavInfo::eSmplFmt::ima_adpcm:
-                        {
-                            sstrname <<"_adpcm";
-                            break;
-                        }
-                        case WavInfo::eSmplFmt::pcm8:
-                        {
-                            sstrname <<"_pcm8";
-                            break;
-                        }
-                        case WavInfo::eSmplFmt::pcm16:
-                        {
-                            sstrname <<"_pcm16";
-                            break;
-                        }
-                        case WavInfo::eSmplFmt::psg:
-                        {
-                            clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
-                            break;
-                        }
-                        case WavInfo::eSmplFmt::invalid:
-                        {
-                            clog <<"<!>- Sample# " <<cntsmpl <<" is in an unknown unsported format and was skipped!\n";
-                        }
+                        //wave::IMAADPCMWaveFile outwave;
+
+                        ////We only have mono samples
+                        //outwave.GetSamples().resize(1);
+                        //outwave.SampleRate( ptrinfo->smplrate );
+
+                        //std::copy( std::begin(*ptrdata), std::end(*ptrdata), std::back_inserter(outwave.GetSamples().front()) );
+                        cvinf.loopbeg_ = (cvinf.loopbeg_ - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
+                        cvinf.loopend_ = ::audio::ADPCMSzToPCM16Sz( ptrdata->size() );
+
+                        sstrname <<"_adpcm";
+
+                        loopinfo.start_ = cvinf.loopbeg_;
+                        loopinfo.end_   = cvinf.loopend_;
+
+                        ////Add loopinfo!
+                        //smplchnk.loops_.push_back( loopinfo );
+                        //outwave.AddRIFFChunk( smplchnk );
+                        sstrname<<".adpcm";
+                        //outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
+                        audio::DumpADPCM( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString(), *ptrdata );
                     }
+                    else if( ptrinfo->smplfmt == eDSESmplFmt::pcm8 && noconvert )
+                    {
+                        wave::PCM8WaveFile outwave;
 
-                    loopinfo.start_ = cvinf.loopbeg_;
-                    loopinfo.end_   = cvinf.loopend_;
+                        //We only have mono samples
+                        outwave.GetSamples().resize(1);
+                        outwave.SampleRate( ptrinfo->smplrate );
 
-                    //Add loopinfo!
-                    smplchnk.loops_.push_back( loopinfo );
-                    outwave.AddRIFFChunk( smplchnk );
-                    sstrname<<".wav";
-                    outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
+                        auto backins = std::back_inserter(outwave.GetSamples().front());
+                        for( const auto asample : *ptrdata )
+                            (*backins) = asample ^ 0x80; //Flip the first bit, to turn from 2's complement to offset binary(excess-K)
+
+                        sstrname <<"_pcm8";
+                        loopinfo.start_ = cvinf.loopbeg_;
+                        loopinfo.end_   = cvinf.loopend_;
+
+                        //Add loopinfo!
+                        smplchnk.loops_.push_back( loopinfo );
+                        outwave.AddRIFFChunk( smplchnk );
+                        sstrname<<".wav";
+                        outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
+                    }
+                    else
+                    {
+                        wave::PCM16sWaveFile outwave;
+
+                        //We only have mono samples
+                        outwave.GetSamples().resize(1);
+                        outwave.SampleRate( ptrinfo->smplrate );
+
+                        switch( ConvertDSESample( static_cast<uint16_t>(ptrinfo->smplfmt), ptrinfo->loopbeg, *ptrdata, cvinf, outwave.GetSamples().front() ) )
+                        {
+                            case eDSESmplFmt::ima_adpcm:
+                            {
+                                sstrname <<"_adpcm";
+                                break;
+                            }
+                            case eDSESmplFmt::pcm8:
+                            {
+                                sstrname <<"_pcm8";
+                                break;
+                            }
+                            case eDSESmplFmt::pcm16:
+                            {
+                                sstrname <<"_pcm16";
+                                break;
+                            }
+                            case eDSESmplFmt::psg:
+                            {
+                                clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
+                                break;
+                            }
+                            case eDSESmplFmt::invalid:
+                            {
+                                clog <<"<!>- Sample# " <<cntsmpl <<" is in an unknown unsported format and was skipped!\n";
+                            }
+                        }
+
+                        loopinfo.start_ = cvinf.loopbeg_;
+                        loopinfo.end_   = cvinf.loopend_;
+
+                        //Add loopinfo!
+                        smplchnk.loops_.push_back( loopinfo );
+                        outwave.AddRIFFChunk( smplchnk );
+                        sstrname<<".wav";
+                        outwave.WriteWaveFile( Poco::Path(smpldir).append(sstrname.str()).makeFile().absolute().toString() );
+                    }
                     ++nbsamplesexport;
+                    cout <<"\r\tExported " <<nbsamplesexport <<" samples!";
                 }
-                else
-                    clog<<"<!>- Sample + Sample info mismatch detected for index " <<cntsmpl <<"!\n";
+                else if( ptrinfo == nullptr || ptrdata == nullptr )
+                    clog<<"\n<!>- Sample + Sample info mismatch detected for index " <<cntsmpl <<"!\n";
             }
-
-            cout <<"<*>- Exported " <<nbsamplesexport <<" samples !\n";
+            cout <<"\n";
         }
         else
-            cout << "<!>- The SWDL contains no samples to export!\n";
+            cout << "\tNo samples to export!\n";
 
         if( !samplesonly )
         {

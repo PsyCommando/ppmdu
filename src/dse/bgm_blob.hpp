@@ -57,7 +57,7 @@ namespace DSE
                     //Try to see if its indeed the beginning of a DSE header!
                     uint32_t fullmagic   = 0;
                     auto     itbefmagicn = itby; //Save our position before the magic number
-                    auto     aftermagicn = utils::ReadIntFromBytes<uint32_t, decltype(itby), false>( fullmagic, itby, m_srcend );
+                    auto     aftermagicn = utils::ReadIntFromBytes( fullmagic, itby, m_srcend, false );
 
                     eDSEContainers cntty = IntToContainerMagicNum( fullmagic );
                     if( cntty != eDSEContainers::invalid )
@@ -162,7 +162,7 @@ namespace DSE
             //All DSE containers have a filesize 4 bytes after their magic number
             std::advance( itaftermagicnum, 4 );
             uint32_t flen = 0;
-            itaftermagicnum = utils::ReadIntFromBytes<uint32_t, inputiterator, true>( flen, itaftermagicnum, m_srcend );
+            itaftermagicnum = utils::ReadIntFromBytes( flen, itaftermagicnum, m_srcend, true );
 
             //Readfilename
             inputiterator itname = itbefmagicnum;

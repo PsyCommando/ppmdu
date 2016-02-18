@@ -84,6 +84,8 @@ namespace audioutil
 
         bool ParseOptionBlobPath( const std::vector<std::string> & optdata );
 
+        bool ParseOptionNoConvertSamples( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -177,6 +179,7 @@ namespace audioutil
         bool        m_bBakeSamples;     //Whether each preset's split should have a sample baked for it.
         bool        m_bUseLFOFx;        //Whether LFO FX are processed
         bool        m_bMakeCvinfo;      //Whether we should export a blank cvinfo file!
+        bool        m_bConvertSamples;  //Whether the samples should be converted to pcm16 when exporting
         
         //bool        m_bForceMidiExp;    //Whether the user is forcing MIDI export.
 

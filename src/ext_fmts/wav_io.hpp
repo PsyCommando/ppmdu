@@ -299,11 +299,36 @@ namespace wave
 
     };
 
+    /************************************************
+        WaveTrait_PCM8
+            Trait for a PCM 8bits wav file!
+    ************************************************/
+    class WaveTrait_PCM8 : public WaveTrait< 8, uint8_t, eAudioFormat::PCM, true>
+    {
+    public:
+        template<class _init>
+           static sample_t ParseASample( _init & itread )
+        {
+            sample_t tmpsmpl = (*itread);
+            ++itread;
+            return tmpsmpl;
+        }
+
+        template<class _outit>
+           static _outit WriteASample( sample_t smpl, _outit itwrite  )
+        {
+            (*itwrite) = smpl;
+            ++itwrite;
+            return itwrite;
+        }
+
+    };
+
     /*************************************************************************
         WaveFile
             Represent a wave file and operations that can be performed on it.
     **************************************************************************/
-    template<class _WaveTrait = WaveTrait_PCM16s>
+    template<class _WaveTrait>
         class WaveFile
     {
     public:
@@ -486,8 +511,8 @@ namespace wave
 //=============================================================================
 //  Handy Typedefs
 //=============================================================================
-    typedef WaveFile<> PCM16sWaveFile;
-
+    typedef WaveFile<WaveTrait_PCM16s> PCM16sWaveFile;
+    typedef WaveFile<WaveTrait_PCM8>   PCM8WaveFile;
 };
 
 

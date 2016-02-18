@@ -106,7 +106,7 @@ namespace utils
     template<class T, class _outit>
         inline _outit WriteIntToBytes( T val, _outit itout, bool basLittleEndian = true )
     {
-        static_assert( std::numeric_limits<T>::is_integer, "WriteIntToBytes() : Used another types than an integer!" );
+        static_assert( std::numeric_limits<T>::is_integer, "WriteIntToBytes() : Type T is not an integer!" );
 
         //#FIXME: Why is this even necessary?
         auto lambdaShiftAssign = [&val]( unsigned int shiftamt )->uint8_t
@@ -150,7 +150,7 @@ namespace utils
     template<class T, class _init> 
         inline T ReadIntFromBytes( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
     {
-        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
+        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Type T is not an integer!" );
         T out_val = 0;
 
         auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
@@ -188,48 +188,49 @@ namespace utils
 
 
     /*********************************************************************************************
-        #####LITTLE ENDIAN ########
         ReadIntFromBytes
             Tool to read integer values from a byte vector!
             ** The iterator's passed as input, has its position changed !!
     *********************************************************************************************/
-    template<class T, class _init, bool _AsLittleEndian> 
-        inline typename std::enable_if<_AsLittleEndian, typename T>::type ReadIntFromBytes( _init & itin, _init itend )
+    template<class T, class _init> 
+        inline T ReadIntFromBytes( _init & itin, _init itend, bool basLittleEndian = true )
     {
-        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
+        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Type T is not an integer!" );
         T out_val = 0;
 
-        auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
+        if( basLittleEndian )
         {
-            T tmp = (*itin);
-            out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
-        };
-
-
-        for( unsigned int i = 0; itin != itend && i < sizeof(T); ++i, ++itin )
-            lambdaShiftBitOr(i);
-
-
+            for( unsigned int i = 0; (itin != itend) && (i < sizeof(T)); ++i, ++itin )
+            {
+                T tmp = (*itin);
+                out_val |= ( tmp << (i * 8) ) & ( 0xFF << (i*8) );
+            }
+        }
+        else
+        {
+            for( int i = (sizeof(T)-1); (itin != itend) && (i >= 0); --i, ++itin )
+            {
+                T tmp = (*itin);
+                out_val |= ( tmp << (i * 8) ) & ( 0xFF << (i*8) );
+            }
+        }
         return out_val;
     }
-        ///#### BIG ENDIAN #####
-    template<class T, class _init, bool _AsLittleEndian> 
-        inline typename std::enable_if<!_AsLittleEndian, typename T>::type ReadIntFromBytes( _init & itin, _init itend )
-    {
-        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Error, used another types than an integer!" );
-        T out_val = 0;
 
-        auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
-        {
-            T tmp = (*itin);
-            out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
-        };
+    /////#### BIG ENDIAN #####
+    //template<class T, class _init, bool _AsLittleEndian> 
+    //    inline typename std::enable_if<!_AsLittleEndian, typename T>::type ReadIntFromBytes( _init & itin, _init itend )
+    //{
+    //    static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Type T is not an integer!" );
+    //    T out_val = 0;
 
-        for( int i = (sizeof(T)-1); itin != itend && i >= 0; --i, ++itin )
-            lambdaShiftBitOr(i);
-
-        return out_val;
-    }
+    //    for( int i = (sizeof(T)-1); (itin != itend) && (i >= 0); --i, ++itin )
+    //    {
+    //        T tmp = (*itin);
+    //        out_val |= ( tmp << (i * 8) ) & ( 0xFF << (i*8) );
+    //    }
+    //    return out_val;
+    //}
 
     /*********************************************************************************************
         ReadIntFromBytes
@@ -237,10 +238,10 @@ namespace utils
             
             #NOTE :The iterator is passed by copy here !! And the incremented iterator is returned!
     *********************************************************************************************/
-    template<class T, class _init, bool _AsLittleEndian = true> 
-        inline _init ReadIntFromBytes( T & dest, _init itin, _init itend ) //#TODO : Need to make sure that the iterator is really incremented!
+    template<class T, class _init> 
+        inline _init ReadIntFromBytes( T & dest, _init itin, _init itend, bool basLittleEndian = true ) 
     {
-        dest = ReadIntFromBytes<typename T, typename _init, _AsLittleEndian>( itin, itend );
+        dest = ReadIntFromBytes<typename T, typename _init>( itin, itend, basLittleEndian );
         return itin;
     }
 
@@ -249,32 +250,32 @@ namespace utils
             Allows to change the value of a single byte in a larger type! 
             As if it was an array.
     *********************************************************************************************/
-    template< class T >
-        inline T ChangeValueOfASingleByte( T containinginteger, uint8_t newvalue, uint32_t byteoffset  )
-    {
-        static_assert( std::is_pod<T>::value, "ChangeValueOfASingleByte(): Tried to change a byte on a non-POD type!!" );
-        T mask = 0xFFu,
-          val  = newvalue;
+    //template< class T >
+    //    inline T ChangeValueOfASingleByte( T containinginteger, uint8_t newvalue, uint32_t byteoffset  )
+    //{
+    //    static_assert( std::is_pod<T>::value, "ChangeValueOfASingleByte(): Tried to change a byte on a non-POD type!!" );
+    //    T mask = 0xFFu,
+    //      val  = newvalue;
 
-        mask = (mask << (sizeof(T) - byteoffset) * 8); //Am I over cautious ?
-        val  = (val  << (sizeof(T) - byteoffset) * 8);
+    //    mask = (mask << (sizeof(T) - byteoffset) * 8); //Am I over cautious ?
+    //    val  = (val  << (sizeof(T) - byteoffset) * 8);
 
-        return ( (val & mask) | containinginteger );
-    }
+    //    return ( (val & mask) | containinginteger );
+    //}
 
     /*********************************************************************************************
         ChangeValueOfASingleBit
     *********************************************************************************************/
-    template< class T >
-        inline T ChangeValueOfASingleBit( T containinginteger, uint8_t newvalue, uint32_t offsetrighttoleft  )
-    {
-        static_assert( std::is_pod<T>::value, "ChangeValueOfASingleBit(): Tried to change a bit on a non-POD type!!" );
-        if( offsetrighttoleft >= (sizeof(T) * 8) )
-            throw std::overflow_error("ChangeValueOfASingleBit(): Offset too big for integer type specified!");
+    //template< class T >
+    //    inline T ChangeValueOfASingleBit( T containinginteger, uint8_t newvalue, uint32_t offsetrighttoleft  )
+    //{
+    //    static_assert( std::is_pod<T>::value, "ChangeValueOfASingleBit(): Tried to change a bit on a non-POD type!!" );
+    //    if( offsetrighttoleft >= (sizeof(T) * 8) )
+    //        throw std::overflow_error("ChangeValueOfASingleBit(): Offset too big for integer type specified!");
 
-        //Clean the bit then OR the value!
-        return ( (0x01u & newvalue) << offsetrighttoleft ) | (containinginteger & ( ~(0x01u << offsetrighttoleft) ) );
-    }
+    //    //Clean the bit then OR the value!
+    //    return ( (0x01u & newvalue) << offsetrighttoleft ) | (containinginteger & ( ~(0x01u << offsetrighttoleft) ) );
+    //}
 
     /*********************************************************************************************
 
@@ -354,6 +355,19 @@ namespace utils
         //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
         
         for( size_t i = 0; i < strl; ++i, ++itread )
+            str[i] = *itread;
+        return itread;
+
+        //return std::copy_n( , strl, reinterpret_cast<const typename _init::container_type::value_type*>(str) );
+    }
+
+    template<class _init> 
+        _init ReadStrFromByteContainer( _init itread, _init itend, char * str, size_t strl )
+    {
+        //#FIXME: The static assert below is broken with non-backinsert iterators
+        //static_assert( typename std::is_same<typename _init::container_type::value_type, uint8_t>::type::value, "WriteStrToByteContainer: Target container's value_type can't be assigned bytes!" );
+        
+        for( size_t i = 0; (i < strl) && (itend != itread); ++i, ++itread )
             str[i] = *itread;
         return itread;
 

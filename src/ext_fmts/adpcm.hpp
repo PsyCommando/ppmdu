@@ -50,6 +50,24 @@ namespace audio
     std::vector<int16_t> DecodeADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
                                            unsigned int                  nbchannels   = 1 );
 
+
+//====================================================================================================
+// 
+//====================================================================================================
+
+    /*
+        DumpADPCM
+            Write the raw ADPCM data to a file.
+    */
+    void DumpADPCM( const std::string          & outfile,
+                    const std::vector<uint8_t> & rawadpcm );
+
+    /*
+        ReadADPCMDump
+            Read a raw ADPCM dump made with DumpADPCM from a file.
+    */
+    std::vector<uint8_t> ReadADPCMDump( const std::string & infile );
+
 };
 
 #endif

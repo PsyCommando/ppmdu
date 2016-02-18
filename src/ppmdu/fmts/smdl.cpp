@@ -9,6 +9,7 @@
 #include <mutex>
 #include <atomic>
 #include <iterator>
+#include <map>
 using namespace std;
 
 
@@ -20,13 +21,228 @@ namespace DSE
 //====================================================================================================
 
     //Static values of the Parameters for the Trk Chunk
-    static const uint32_t Trk_Chunk_Param1 = 0x1000000;
-    static const uint32_t Trk_Chunk_Param2 = 0xFF04;
+    //static const uint32_t Trk_Chunk_Param1 = 0x1000000;
+    //static const uint32_t Trk_Chunk_Param2 = 0xFF04;
+    ////Static values of the Parameters for the Eoc Chunk
+    //static const uint32_t Eoc_Chunk_Param1 = Trk_Chunk_Param1;
+    //static const uint32_t Eoc_Chunk_Param2 = Trk_Chunk_Param2;
+
+    static const uint32_t EocParam1Default = TrkParam1Default;  //The default value for the parameter 1 value in the eoc chunk header!
+    static const uint32_t EocParam2Default = TrkParam2Default;  //The default value for the parameter 2 value in the eoc chunk header!
+
 
 //====================================================================================================
-// Utility
+// Other Definitions
 //====================================================================================================
 
+    /************************************************************************
+        SongChunk
+            The raw song chunk.
+            For some reasons, most of the data in this chunk rarely ever 
+            changes in-between games or files.. Only the nb of channels and
+            tracks does..
+    ************************************************************************/
+    class SongChunk_v415
+    {
+    public:
+        static const uint32_t SizeNoPadd    = 48; //bytes
+        static const uint32_t LenMaxPadding = 16; //bytes
+        //Default Values
+        static const uint32_t DefUnk1       = 0x1000000;
+        static const uint32_t DefUnk2       = 0xFF10;
+        static const uint32_t DefUnk3       = 0xFFFFFFB0;
+        static const uint16_t DefUnk4       = 0x1;
+        static const uint16_t DefTPQN       = 48;
+        static const uint16_t DefUnk5       = 0xFF01;
+        static const uint32_t DefUnk6       = 0xF000000;
+        static const uint32_t DefUnk7       = 0xFFFFFFFF;
+        static const uint32_t DefUnk8       = 0x40000000;
+        static const uint32_t DefUnk9       = 0x404000;
+        static const uint16_t DefUnk10      = 0x200;
+        static const uint16_t DefUnk11      = 0x800;
+        static const uint32_t DefUnk12      = 0xFFFFFF00;
+
+
+        unsigned int size()const { return SizeNoPadd + unkpad.size(); }
+
+        uint32_t label   = 0;
+        uint32_t unk1    = 0;
+        uint32_t unk2    = 0;
+        uint32_t unk3    = 0;
+        uint16_t unk4    = 0;
+        uint16_t tpqn    = 0;
+        uint16_t unk5    = 0;
+        uint8_t  nbtrks  = 0;
+        uint8_t  nbchans = 0;
+        uint32_t unk6    = 0;
+        uint32_t unk7    = 0;
+        uint32_t unk8    = 0;
+        uint32_t unk9    = 0;
+        uint16_t unk10   = 0;
+        uint16_t unk11   = 0;
+        uint32_t unk12   = 0;
+        std::vector<uint8_t> unkpad;
+
+        //
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToBytes( static_cast<uint32_t>(eDSEChunks::song), itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes( unk1,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk2,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk3,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk4,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( tpqn,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk5,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbtrks,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbchans, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk6,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk7,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk8,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk9,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk10,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk11,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk12,   itwriteto );
+            itwriteto = std::copy( unkpad.begin(), unkpad.end(), itwriteto );
+            return itwriteto;
+        }
+
+        //
+        template<class _init>
+            _init ReadFromContainer(  _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromBytes( label,    itReadfrom, false ); //iterator is incremented
+            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom); 
+            itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( tpqn,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( nbtrks,   itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( nbchans,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( unk12,    itReadfrom);
+
+            for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
+            {
+                if( *itReadfrom == 0xFF )
+                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator when we already know its value..
+                else
+                    break;
+            }
+
+            return itReadfrom;
+        }
+
+        operator SongData()
+        {
+            SongData sdat;
+            sdat.tpqn    = tpqn;
+            sdat.nbtrks  = nbtrks;
+            sdat.nbchans = nbchans;
+            sdat.mainvol = 127;
+            sdat.mainpan = 64;
+            return move(sdat);
+        }
+    };
+
+    /*
+        SongChunk_v402
+            For DSE Version 0x402
+    */
+    class SongChunk_v402
+    {
+    public:
+        static const uint32_t Size = 32; //bytes
+
+        //Default Values
+        static const uint32_t DefUnk1       = 0x1000000;
+        static const uint32_t DefUnk2       = 0xFF10;
+        static const uint32_t DefUnk3       = 0xFFFFFFB0;
+        static const uint16_t DefUnk4       = 0x1;
+        static const uint16_t DefTPQN       = 48;
+        static const uint8_t  DefUnk5       = 0x1;
+        static const uint8_t  DefUnk6       = 0x2;
+        static const uint16_t DefUnk7       = 0x8;
+        static const uint8_t  DefMVol       = 127;
+        static const uint8_t  DefMPan       = 64;
+        static const uint32_t DefUnk8       = 0x0F000000;
+
+        uint32_t size()const { return Size; }
+
+        uint32_t label   = 0;
+        uint32_t unk1    = 0;
+        uint32_t unk2    = 0;
+        uint32_t unk3    = 0;
+        uint16_t unk4    = 0;
+        uint16_t tpqn    = 0;
+        uint8_t  nbtrks  = 0;
+        uint8_t  nbchans = 0;
+        uint8_t  unk5    = 0;
+        uint8_t  unk6    = 0;
+        uint16_t unk7    = 0;
+        int8_t   mainvol = 0;
+        int8_t   mainpan = 0;
+        uint32_t unk8    = 0;
+
+        //
+        template<class _outit>
+            _outit WriteToContainer( _outit itwriteto )const
+        {
+            itwriteto = utils::WriteIntToBytes( static_cast<uint32_t>(eDSEChunks::song), itwriteto, false ); //Force this, to avoid bad surprises
+            itwriteto = utils::WriteIntToBytes( unk1,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk2,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk3,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk4,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( tpqn,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbtrks,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( nbchans, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk5,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk6,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk7,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( mainvol, itwriteto );
+            itwriteto = utils::WriteIntToBytes( mainpan, itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk8,    itwriteto );
+            return itwriteto;
+        }
+
+        //
+        template<class _init>
+            _init ReadFromContainer(  _init itReadfrom )
+        {
+            itReadfrom = utils::ReadIntFromBytes( label,   itReadfrom, false ); //Force this, to avoid bad surprises
+            itReadfrom = utils::ReadIntFromBytes( unk1,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk2,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk3,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk4,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( tpqn,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbtrks,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( nbchans, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk5,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk6,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk7,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( mainvol, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( mainpan, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( unk8,    itReadfrom );
+            return itReadfrom;
+        }
+
+        operator SongData()
+        {
+            SongData sdat;
+            sdat.tpqn    = tpqn;
+            sdat.nbtrks  = nbtrks;
+            sdat.nbchans = nbchans;
+            sdat.mainvol = mainvol;
+            sdat.mainpan = mainpan;
+            return move(sdat);
+        }
+    };
 
 //====================================================================================================
 // SMDL_Parser
@@ -54,12 +270,62 @@ namespace DSE
         {
             //Set our iterator
             m_itread = m_itbeg;//m_src.begin();
+
+            //#FIXME: It might have been easier to just check for trk chunks and stop when none are left? We'd save a lot of iteration!!
             m_itEoC  = DSE::FindNextChunk( m_itbeg, m_itend, DSE::eDSEChunks::eoc ); //Our end is either the eoc chunk, or the vector's end
 
             //Get the headers
             ParseHeader();
             ParseSong();
+            DSE::DSE_MetaDataSMDL meta( MakeMeta() );
 
+            //Check version
+            if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V415) )
+            {
+                //Parse tracks and return
+                return std::move( MusicSequence( ParseAllTracks(), std::move(meta) ) );
+            }
+            else if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V402) )
+            {
+                //Parse tracks and return
+                return std::move( MusicSequence( ParseAllTracks(), std::move(meta) ) );
+            }
+        }
+
+    private:
+
+        //Parse the SMDL header
+        inline void ParseHeader()
+        {
+            m_itread = m_hdr.ReadFromContainer( m_itread, m_itend );
+        }
+
+        //Parse the song chunk
+        inline void ParseSong()
+        {
+            //
+            if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V402) )
+            {
+                SongChunk_v402 schnk;
+                m_itread = schnk.ReadFromContainer( m_itread );
+                m_song = schnk;
+            }
+            else if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V415) )
+            {
+                SongChunk_v415 schnk;
+                m_itread = schnk.ReadFromContainer( m_itread );
+                m_song = schnk;
+            }
+            else
+            {
+                stringstream sstr;
+                sstr << "SMDL_Parser::operator MusicSequence() : DSE version 0x" <<hex <<m_hdr.version <<" is unsupported/unknown at the moment!";
+                throw runtime_error( sstr.str() );
+            }
+        }
+
+        DSE::DSE_MetaDataSMDL MakeMeta()
+        {
             //Build Meta-info
             DSE::DSE_MetaDataSMDL meta;
             meta.createtime.year    = m_hdr.year;
@@ -73,25 +339,8 @@ namespace DSE
             meta.unk1               = m_hdr.unk1;
             meta.unk2               = m_hdr.unk2;
             meta.tpqn               = m_song.tpqn;
-
-            //Parse tracks and return
-            return std::move( MusicSequence( ParseAllTracks(), std::move(meta) ) );
-        }
-
-    private:
-
-        //Parse the SMDL header
-        inline void ParseHeader()
-        {
-            m_itread = m_hdr.ReadFromContainer( m_itread );
-            //Skip padding
-            std::advance( m_itread, 8 );
-        }
-
-        //Parse the song chunk
-        inline void ParseSong()
-        {
-            m_itread = m_song.ReadFromContainer(m_itread);
+            meta.origversion        = intToDseVer( m_hdr.version );
+            return move(meta);
         }
 
         std::vector<MusicTrack> ParseAllTracks()
@@ -125,10 +374,11 @@ namespace DSE
         MusicTrack ParseTrack()
         {
             DSE::ChunkHeader      hdr;
-            hdr.ReadFromContainer(m_itread); //Don't increment itread
+            hdr.ReadFromContainer(m_itread, m_itend); //Don't increment itread
             auto itend     = m_itread + (hdr.datlen + DSE::ChunkHeader::size());
             auto itpreread = m_itread;
             m_itread = itend; //move it past the chunk already
+
             //And skip padding bytes
             for( ;m_itread != m_itEoC && (*m_itread) == static_cast<uint8_t>(eTrkEventCodes::EndOfTrack); ++m_itread );
 
@@ -148,13 +398,149 @@ namespace DSE
         rd_iterator_t                   m_itread;
         rd_iterator_t                   m_itEoC;    //Pos of the "end of chunk" chunk
         SMDL_Header                     m_hdr;
-        SongChunk                       m_song;
+        SongData                        m_song;
 
     };
 
 //====================================================================================================
 // SMDL_Writer
 //====================================================================================================
+
+    template<class _TargetTy>
+        class SMDL_Writer;
+
+
+    template<>
+        class SMDL_Writer<std::ofstream>
+    {
+    public:
+        typedef std::ofstream cnty;
+
+        SMDL_Writer( cnty & tgtcnt, const MusicSequence & srcseq, eDSEVersion dseVersion = eDSEVersion::VDef )
+            :m_tgtcn(tgtcnt), m_src(srcseq), m_version(dseVersion)
+        {
+        }
+
+        void operator()()
+        {
+            std::ostreambuf_iterator<char> itout(m_tgtcn); 
+            std::set<int>                  existingchan;
+
+            //Reserve Header
+            itout = std::fill_n( itout, SMDL_Header::size(), 0 );
+
+            //Reserve Song chunk
+            if( m_version == eDSEVersion::V402 )
+                itout = std::fill_n( itout, SongChunk_v402::Size, 0 );
+            else if( m_version == eDSEVersion::V415 )
+                itout = std::fill_n( itout, (SongChunk_v415::SizeNoPadd + SongChunk_v415::LenMaxPadding), 0 );
+            else
+                throw std::runtime_error( "SMDL_Writer::operator()(): Invalid DSE version supplied!!" );
+
+            //Write tracks
+            for( size_t i = 0; i < m_src.getNbTracks(); ++i )
+            {
+                const DSE::MusicTrack & atrk = m_src[i];
+                TrkPreamble preamble;
+                preamble.trkid  = i;
+                preamble.chanid = atrk.GetMidiChannel();
+                preamble.unk1   = 0;
+                preamble.unk2   = 0;
+                itout           = WriteTrkChunk( itout, preamble, atrk.begin(), atrk.end(), atrk.size() );
+                existingchan.insert( preamble.chanid );
+            }
+
+            //Write end chunk
+            DSE::ChunkHeader eoc;
+            eoc.label  = static_cast<uint32_t>(eDSEChunks::eoc);
+            eoc.datlen = 0;
+            eoc.param1 = EocParam1Default;
+            eoc.param2 = EocParam2Default;
+            itout      = eoc.WriteToContainer( itout );
+
+            //Go back to write the header and song chunk!
+            size_t flen = m_tgtcn.tellp();
+            m_tgtcn.seekp(0); 
+            itout = std::ostreambuf_iterator<char>(m_tgtcn);
+            WriteHeader( itout, existingchan, flen );
+        }
+
+    private:
+
+        void WriteHeader( std::ostreambuf_iterator<char> & itout, const std::set<int> & existingchan, size_t filelen )
+        {
+            //Header
+            SMDL_Header smdhdr; 
+            smdhdr.unk7     = 0;
+            smdhdr.flen     = filelen;
+            smdhdr.version  = DseVerToInt(m_version);
+            smdhdr.unk1     = m_src.metadata().unk1;
+            smdhdr.unk2     = m_src.metadata().unk2;
+            smdhdr.unk3     = 0;
+            smdhdr.unk4     = 0;
+            smdhdr.year     = m_src.metadata().createtime.year;
+            smdhdr.month    = m_src.metadata().createtime.month;
+            smdhdr.day      = m_src.metadata().createtime.day;
+            smdhdr.hour     = m_src.metadata().createtime.hour;
+            smdhdr.minute   = m_src.metadata().createtime.minute;
+            smdhdr.second   = m_src.metadata().createtime.second;
+            smdhdr.centisec = m_src.metadata().createtime.centsec;
+            std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(smdhdr.fname) );
+            smdhdr.unk5     = SMDL_Header::DefUnk5;
+            smdhdr.unk6     = SMDL_Header::DefUnk6;
+            smdhdr.unk8     = SMDL_Header::DefUnk8;
+            smdhdr.unk9     = SMDL_Header::DefUnk9;
+            smdhdr.WriteToContainer( itout ); //The correct magic number for SMDL is forced on write, whatever the value in smdhdr.magicn is.
+
+            //Song Chunk
+            if( m_version == eDSEVersion::V402 )
+            {
+                SongChunk_v402 songchnk;
+                songchnk.unk1    = SongChunk_v402::DefUnk1;
+                songchnk.unk2    = SongChunk_v402::DefUnk2;
+                songchnk.unk3    = SongChunk_v402::DefUnk3;
+                songchnk.unk4    = SongChunk_v402::DefUnk4;
+                songchnk.tpqn    = m_src.metadata().tpqn;
+                songchnk.unk5    = SongChunk_v402::DefUnk5;
+                songchnk.nbtrks  = m_src.getNbTracks();
+                songchnk.nbchans = existingchan.size();
+                songchnk.unk6    = SongChunk_v402::DefUnk6;
+                songchnk.unk7    = SongChunk_v402::DefUnk7;
+                songchnk.mainvol = m_src.metadata().mainvol;
+                songchnk.mainpan = m_src.metadata().mainpan;
+                songchnk.unk8    = SongChunk_v402::DefUnk8;
+                itout = songchnk.WriteToContainer(itout);
+            }
+            else if( m_version == eDSEVersion::V415 )
+            {
+                SongChunk_v415 songchnk;
+                songchnk.unk1    = SongChunk_v415::DefUnk1;
+                songchnk.unk2    = SongChunk_v415::DefUnk2;
+                songchnk.unk3    = SongChunk_v415::DefUnk3;
+                songchnk.unk4    = SongChunk_v415::DefUnk4;
+                songchnk.tpqn    = m_src.metadata().tpqn;
+                songchnk.unk5    = SongChunk_v415::DefUnk5;
+                songchnk.nbtrks  = m_src.getNbTracks();
+                songchnk.nbchans = existingchan.size();
+                songchnk.unk6    = SongChunk_v415::DefUnk6;
+                songchnk.unk7    = SongChunk_v415::DefUnk7;
+                songchnk.unk8    = SongChunk_v415::DefUnk8;
+                songchnk.unk9    = SongChunk_v415::DefUnk9;
+                songchnk.unk10   = SongChunk_v415::DefUnk10;
+                songchnk.unk11   = SongChunk_v415::DefUnk11;
+                songchnk.unk12   = SongChunk_v415::DefUnk12;
+                std::fill_n( std::back_inserter(songchnk.unkpad), SongChunk_v415::LenMaxPadding, 0xFF );
+                itout = songchnk.WriteToContainer(itout); //Correct chunk label is written automatically, bypassing what's in "label"!
+            }
+        }
+
+    private:
+        cnty                & m_tgtcn;
+        const MusicSequence & m_src;
+        eDSEVersion           m_version;
+    };
+
+
 //====================================================================================================
 // Functions
 //====================================================================================================
@@ -177,16 +563,19 @@ namespace DSE
 
     void WriteSMDL( const std::string & file, const MusicSequence & seq )
     {
-        //# TODO : Write the SMDL writer !
-        cerr<<"Not Implemented!\n";
-        assert(false);
+        std::ofstream outf(file, std::ios::out | std::ios::binary );
+
+        if( !outf.is_open() || outf.bad() )
+            throw std::runtime_error( "WriteSMDL(): Couldn't open output file " + file );
+
+        SMDL_Writer<std::ofstream>(outf, seq)();
     }
 };
 
 //ppmdu's type analysis system
 #ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
-
     #include <types/content_type_analyser.hpp>
+
     //################################### Filetypes Namespace Definitions ###################################
     namespace filetypes
     {
