@@ -12,6 +12,7 @@ A bunch of simple tools for doing common tasks when manipulating bytes.
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <cassert>
 
 namespace utils 
 {
@@ -200,18 +201,36 @@ namespace utils
 
         if( basLittleEndian )
         {
-            for( unsigned int i = 0; (itin != itend) && (i < sizeof(T)); ++i, ++itin )
+            unsigned int i = 0;
+            for( ; (itin != itend) && (i < sizeof(T)); ++i, ++itin )
             {
                 T tmp = (*itin);
                 out_val |= ( tmp << (i * 8) ) & ( 0xFF << (i*8) );
             }
+
+            if( i != sizeof(T) )
+            {
+#ifdef _DEBUG
+                assert(false);
+#endif
+                throw std::runtime_error( "ReadIntFromBytes(): Not enough bytes to read from the source container!" );
+            }
         }
         else
         {
-            for( int i = (sizeof(T)-1); (itin != itend) && (i >= 0); --i, ++itin )
+            int i = (sizeof(T)-1);
+            for( ; (itin != itend) && (i >= 0); --i, ++itin )
             {
                 T tmp = (*itin);
                 out_val |= ( tmp << (i * 8) ) & ( 0xFF << (i*8) );
+            }
+
+            if( i != -1 )
+            {
+#ifdef _DEBUG
+                assert(false);
+#endif
+                throw std::runtime_error( "ReadIntFromBytes(): Not enough bytes to read from the source container!" );
             }
         }
         return out_val;
