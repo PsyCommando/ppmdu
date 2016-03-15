@@ -12,6 +12,7 @@
 #include <ppmdu/fmts/swdl.hpp>
 #include <ppmdu/fmts/sedl.hpp>
 #include <dse/bgm_container.hpp>
+#include <ext_fmts/midi_fmtrule.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -129,7 +130,10 @@ namespace audioutil
             0,
             "Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. "
             "Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not "
-            "be a 1:1 copy, and using the original samples with this MIDI won't sound good either..",
+            "be a 1:1 copy, and using the original samples with this MIDI won't sound good either.. "
+            "WARNING: General MIDI offers 16 tracks, with one forced to play drums. But there isn't a track "
+            "forced to play drums in the DSE system. So, some songs with just melody tracks simply can't be "
+            "converted to GM and play correctly!!",
             "-gm",
             std::bind( &CAudioUtil::ParseOptionGeneralMidi, &GetInstance(), placeholders::_1 ),
         },
@@ -878,6 +882,10 @@ namespace audioutil
                 {
                     m_operationMode = eOpMode::ExportSEDL;
                 }
+                else if( cntty._type == static_cast<unsigned int>(filetypes::CnTy_MIDI) )
+                {
+                    m_operationMode = eOpMode::BuildSMDL;
+                }
                 else 
                     throw runtime_error("Unknown file format!");
             }
@@ -1317,8 +1325,26 @@ namespace audioutil
 
     int CAudioUtil::BuildSMDL()
     {
-        cout<< "Not implemented!\n";
-        assert(false);
+        Poco::Path inputfile(m_inputPath);
+        Poco::Path outputfile;
+
+        if( ! m_outputPath.empty() )
+            outputfile = Poco::Path(m_outputPath);
+        else
+            outputfile = inputfile.parent().append( inputfile.getBaseName() ).makeFile().setExtension("smd");
+
+        if( m_bGM )
+            clog<<"<!>- Warning: Commandline parameter GM specified, when building a SMDL the GM option does nothing!\n";
+            
+
+        cout << "Exporting SMDL:\n"
+             << "\t\"" << inputfile.toString() <<"\"\n"
+             << "To:\n"
+             << "\t\"" << outputfile.getBaseName() <<"\"\n";
+
+        DSE::MusicSequence seq = DSE::MidiToSequence(inputfile.toString() );
+        seq.metadata().fname = inputfile.getFileName();
+        DSE::WriteSMDL( outputfile.toString(), seq );
         return 0;
     }
 
@@ -1334,7 +1360,7 @@ namespace audioutil
         //using namespace pmd2::audio;
         BatchAudioLoader bal(true,m_bUseLFOFx);
 
-        Poco::Path   outputDir;
+        Poco::Path outputDir;
 
         if( ! m_outputPath.empty() )
             outputDir = Poco::Path(m_outputPath);

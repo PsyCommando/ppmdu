@@ -93,7 +93,7 @@ namespace DSE
         //Info
 
         //Nb of sample slots with or without data
-        inline int                          NbSlots()const     { return m_SampleData.size(); } 
+        inline size_t                       NbSlots()const     { return m_SampleData.size(); } 
 
         //Access
         bool                                IsInfoPresent      ( unsigned int index )const { return sampleInfo(index) != nullptr; }
@@ -358,7 +358,9 @@ namespace DSE
         iterator       end()      { return m_events.end(); }
         const_iterator end()const { return m_events.end(); }
 
+        bool   empty        ()const       { return m_events.empty();  }
         size_t size         ()const       { return m_events.size();   }
+        
         void   reserve      ( size_t sz ) { m_events.reserve(sz);     }
         void   resize       ( size_t sz ) { m_events.resize(sz);      } 
         void   shrink_to_fit()            { m_events.shrink_to_fit(); }

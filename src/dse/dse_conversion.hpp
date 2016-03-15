@@ -416,6 +416,28 @@ namespace DSE
                                   DSESampleConvertionInfo              & out_cvinfo,
                                   std::vector<int16_t>                 & out_smpl );
 
+    /*
+        ConvertAndLoopDSESample
+            Converts the given raw samples from a DSE compatible format to a signed pcm16 sample.
+
+                * smplfmt    : The DSE sample type ID.
+                * origloopbeg: The begining pos of the loop, straight from the WavInfo struct !
+                * origlooplen: The lenght of the loop, straight from the WavInfo struct !
+                * nbloops    : The nb of times to loop the sample.
+                * in_smpl    : The raw sample data as bytes.
+                * out_cvinfo : The conversion info struct containing details on the resulting sample.
+                * out_smpl   : The resulting signed pcm16 sample.
+
+            Return the sample type.
+    */
+    eDSESmplFmt ConvertAndLoopDSESample( int16_t                                smplfmt, 
+                                         size_t                                 origloopbeg,
+                                         size_t                                 origlooplen,
+                                         size_t                                 nbloops,
+                                         const std::vector<uint8_t>           & in_smpl,
+                                         DSESampleConvertionInfo              & out_cvinfo,
+                                         std::vector<int16_t>                 & out_smpl );
+
 
     /*
         ProcessDSESamples

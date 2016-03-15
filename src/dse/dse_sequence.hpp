@@ -12,6 +12,7 @@ Description: Contains utilities to deal with DSE event tracks. Or anything withi
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <iostream>
 
 namespace DSE
 {
@@ -80,6 +81,55 @@ namespace DSE
 
 
     /****************************************************************************
+        TrkDelayToEvID
+            This is for finding what pause event matches a tick value.
+    ****************************************************************************/
+    static const std::map<eTrkDelays, uint8_t> TrkDelayToEvID
+    {{
+        { eTrkDelays::_half,            0x80 },
+        { eTrkDelays::_dotqtr,          0x81 },
+        { eTrkDelays::_two3rdsofahalf,  0x82 },
+        { eTrkDelays::_qtr,             0x83 },
+        { eTrkDelays::_dot8th,          0x84 },
+        { eTrkDelays::_two3rdsofqtr,    0x85 },
+        { eTrkDelays::_8th,             0x86 },
+        { eTrkDelays::_dot16th,         0x87 },
+        { eTrkDelays::_two3rdsof8th,    0x88 },
+        { eTrkDelays::_16th,            0x89 },
+        { eTrkDelays::_dot32nd,         0x8A },
+        { eTrkDelays::_two3rdsof16th,   0x8B },
+        { eTrkDelays::_32nd,            0x8C },
+        { eTrkDelays::_dot64th,         0x8D },
+        { eTrkDelays::_two3rdsof32th,   0x8E },
+        { eTrkDelays::_64th,            0x8F },
+    }};
+
+
+    /****************************************************************************
+        TicksToTrkDelayID
+
+    ****************************************************************************/
+    static const std::map<uint8_t, eTrkDelays> TicksToTrkDelayID
+    {{
+        { static_cast<uint8_t>(eTrkDelays::_half),            eTrkDelays::_half             },
+        { static_cast<uint8_t>(eTrkDelays::_dotqtr),          eTrkDelays::_dotqtr           },
+        { static_cast<uint8_t>(eTrkDelays::_two3rdsofahalf),  eTrkDelays::_two3rdsofahalf   },
+        { static_cast<uint8_t>(eTrkDelays::_qtr),             eTrkDelays::_qtr              },
+        { static_cast<uint8_t>(eTrkDelays::_dot8th),          eTrkDelays::_dot8th           },
+        { static_cast<uint8_t>(eTrkDelays::_two3rdsofqtr),    eTrkDelays::_two3rdsofqtr     },
+        { static_cast<uint8_t>(eTrkDelays::_8th),             eTrkDelays::_8th              },
+        { static_cast<uint8_t>(eTrkDelays::_dot16th),         eTrkDelays::_dot16th          },
+        { static_cast<uint8_t>(eTrkDelays::_two3rdsof8th),    eTrkDelays::_two3rdsof8th     },
+        { static_cast<uint8_t>(eTrkDelays::_16th),            eTrkDelays::_16th             },
+        { static_cast<uint8_t>(eTrkDelays::_dot32nd),         eTrkDelays::_dot32nd          },
+        { static_cast<uint8_t>(eTrkDelays::_two3rdsof16th),   eTrkDelays::_two3rdsof16th    },
+        { static_cast<uint8_t>(eTrkDelays::_32nd),            eTrkDelays::_32nd             },
+        { static_cast<uint8_t>(eTrkDelays::_dot64th),         eTrkDelays::_dot64th          },
+        { static_cast<uint8_t>(eTrkDelays::_two3rdsof32th),   eTrkDelays::_two3rdsof32th    },
+        { static_cast<uint8_t>(eTrkDelays::_64th),            eTrkDelays::_64th             },
+    }};
+
+    /****************************************************************************
         TickDelayToTrkDelayCodes
             The track delay values from eTrkDelays, but in an map to 
             facilitate getting the corred DSE track Delay code from 
@@ -111,33 +161,86 @@ namespace DSE
     }};
 
 
-    static uint8_t FindClosestTrkDelayCode( uint8_t delayticks )
+
+    static const std::array<eTrkDelays, NbTrkDelayValues> TrkDelayCodesTbl
+    {{
+        eTrkDelays::_half,
+        eTrkDelays::_dotqtr,
+        eTrkDelays::_two3rdsofahalf,
+        eTrkDelays::_qtr,
+        eTrkDelays::_dot8th,
+        eTrkDelays::_two3rdsofqtr,
+        eTrkDelays::_8th,
+        eTrkDelays::_dot16th,
+        eTrkDelays::_two3rdsof8th,
+        eTrkDelays::_16th,
+        eTrkDelays::_dot32nd,
+        eTrkDelays::_two3rdsof16th,
+        eTrkDelays::_32nd,
+        eTrkDelays::_dot64th,
+        eTrkDelays::_two3rdsof32th,
+        eTrkDelays::_64th,
+    }};
+
+
+    /*
+        FindClosestTrkDelayID
+            Find the closest delay event code for a given number of ticks.
+            Returns a pair with the closest pause event found, and a boolean indicating if it could find a 
+            delai below eTrkDelays::_half (96) ticks.
+    */
+    static std::pair<eTrkDelays,bool>  FindClosestTrkDelayID( uint8_t delayticks )
     {
-        for( size_t i = 0; i < TickDelayToTrkDelayCodes.size(); ++i )
+        for( size_t i = 0; i < TrkDelayCodesTbl.size(); ++i )
         {
-            if( delayticks == TickDelayToTrkDelayCodes[i] ) //Exact match
-            {
-                return TickDelayToTrkDelayCodes[i];
-            }
-            else if( (i + 1) < (TickDelayToTrkDelayCodes.size()-1) )
+            if( (i + 1) < (TrkDelayCodesTbl.size()-1) )
             {
                 //Check if the next value is smaller than the delay. If it is, we can't get a value any closer to "delayticks".
-                if( delayticks > TickDelayToTrkDelayCodes[i+1] )
+                if( delayticks > static_cast<uint8_t>(TrkDelayCodesTbl[i+1]) )
                 {
                     //Compare this value and the next and see which one we're closest to
-                    uint8_t diff = TickDelayToTrkDelayCodes[i] - TickDelayToTrkDelayCodes[i+1];
+                    uint8_t diff = static_cast<uint8_t>(TrkDelayCodesTbl[i]) - static_cast<uint8_t>(TrkDelayCodesTbl[i+1]);
 
                     if( delayticks < (diff/2) )
-                        return TickDelayToTrkDelayCodes[i+1]; //The closest value in this case is the next one
+                        return std::move( std::make_pair( TrkDelayCodesTbl[i+1], true ) ); //The closest value in this case is the next one
                     else
-                        return TickDelayToTrkDelayCodes[i];   //The closest value in this case is the current one
+                        return std::move( std::make_pair( TrkDelayCodesTbl[i],   true ) ); //The closest value in this case is the current one
                 }
             }
         }
 
         //If all else fails, return the last!
-        return TickDelayToTrkDelayCodes.back();
+        std::clog << "FindClosestTrkDelayID(): No closer delay found for " <<static_cast<uint16_t>(delayticks) <<" ticks !!\n";
+        return std::move( std::make_pair( eTrkDelays::_half, false ) ); //Couldn't find something below the longest pause!
     }
+
+    //static uint8_t FindClosestTrkDelayCode( uint8_t delayticks )
+    //{
+    //    for( size_t i = 0; i < TickDelayToTrkDelayCodes.size(); ++i )
+    //    {
+    //        if( delayticks == TickDelayToTrkDelayCodes[i] ) //Exact match
+    //        {
+    //            return TickDelayToTrkDelayCodes[i];
+    //        }
+    //        else if( (i + 1) < (TickDelayToTrkDelayCodes.size()-1) )
+    //        {
+    //            //Check if the next value is smaller than the delay. If it is, we can't get a value any closer to "delayticks".
+    //            if( delayticks > TickDelayToTrkDelayCodes[i+1] )
+    //            {
+    //                //Compare this value and the next and see which one we're closest to
+    //                uint8_t diff = TickDelayToTrkDelayCodes[i] - TickDelayToTrkDelayCodes[i+1];
+
+    //                if( delayticks < (diff/2) )
+    //                    return TickDelayToTrkDelayCodes[i+1]; //The closest value in this case is the next one
+    //                else
+    //                    return TickDelayToTrkDelayCodes[i];   //The closest value in this case is the current one
+    //            }
+    //        }
+    //    }
+
+    //    //If all else fails, return the last!
+    //    return TickDelayToTrkDelayCodes.back();
+    //}
 
 
     //Nb of track events in the event enum
@@ -637,6 +740,12 @@ namespace DSE
                                uint8_t & out_midinote );
 
     /*****************************************************************
+        MidiNoteIdToText
+            Return a textual representation of a midi note id!
+    *****************************************************************/
+    std::string MidiNoteIdToText( uint8_t midinote );
+
+    /*****************************************************************
         WriteTrkChunk
             This function can be used to write a track of DSE events 
             into a container using an insertion iterator. 
@@ -649,17 +758,22 @@ namespace DSE
 
     *****************************************************************/
     template<class _backinsit, class _inevit>
-        _backinsit WriteTrkChunk( _backinsit         writeit, 
+        size_t WriteTrkChunk( _backinsit       & writeit, 
                                  const TrkPreamble & preamble, 
                                  _inevit             evbeg, 
                                  _inevit             evend,
                                  size_t              nbenvents )
     {
         using namespace std;
+
+        //Count track size
+        size_t tracklen = 0;
+        for( auto itr = evbeg; itr != evend; ++itr ) tracklen += (itr->params.size() + 1);
+
         //Write header
         ChunkHeader hdr;
         hdr.label  = static_cast<uint32_t>(eDSEChunks::trk);
-        hdr.datlen = TrkPreamble::Size + nbenvents;   //We don't need to count padding here
+        hdr.datlen = TrkPreamble::Size + tracklen;   //We don't need to count padding here
         hdr.param1 = TrkParam1Default;
         hdr.param2 = TrkParam2Default;
 
@@ -680,12 +794,7 @@ namespace DSE
             }
         }
 
-        //Write padding
-        const uint32_t lenmodulo = hdr.datlen % 4;
-        if( lenmodulo != 0 )
-            std::fill_n( writeit, lenmodulo, static_cast<uint8_t>(eTrkEventCodes::EndOfTrack) );
-
-        return writeit;
+        return (hdr.Size + hdr.datlen);
     }
 
     template<class _backinsit, class _inevit>

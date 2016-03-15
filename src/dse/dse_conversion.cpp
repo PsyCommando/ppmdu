@@ -159,7 +159,7 @@ namespace DSE
         }
     }
 
-    //#FIXME: MOST LIKELY INNACURATE !
+    //!#FIXME: MOST LIKELY INNACURATE !
     inline uint16_t DseVolToSf2Attenuation( int8_t dsevol )
     {
         dsevol = abs(dsevol);
@@ -193,14 +193,6 @@ namespace DSE
     */
     std::vector<int16_t> RawBytesToPCM16Vec( const std::vector<uint8_t> * praw )
     {
-        //std::vector<int16_t> out;
-        //auto                 itread = praw->begin();
-        //auto                 itend  = praw->end();
-        //out.reserve(praw->size()/2);
-
-        //while( itread != itend )
-        //    out.push_back( utils::ReadIntFromBytes<int16_t>( itread ) ); //Iterator is incremented
-
         return std::move( utils::RawPCM16Parser<int16_t>( *praw ) );
     }
 
@@ -423,31 +415,36 @@ namespace DSE
                                   const std::vector<uint8_t>           & in_smpl,
                                   DSESampleConvertionInfo              & out_cvinfo,
                                   std::vector<int16_t>                 & out_smpl )
-        //( int16_t                                smplfmt, 
-        //                                wave::smpl_chunk_content::SampleLoop & loopinfo, 
-        //                                const DSE::WavInfo                   & winfo,
-        //                                const std::vector<uint8_t>           & in_smpl,
-        //                                std::vector<int16_t>                 & out_smpl )
     {
         if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
         {
             out_smpl = move(::audio::DecodeADPCM_NDS( in_smpl ) );
             out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
-            out_cvinfo.loopend_ = ::audio::ADPCMSzToPCM16Sz(in_smpl.size() );
+            out_cvinfo.loopend_ = out_smpl.size(); /*::audio::ADPCMSzToPCM16Sz(in_smpl.size() );*/
             return eDSESmplFmt::ima_adpcm;
         }
         else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
         {
             out_smpl = move( PCM8RawBytesToPCM16Vec(&in_smpl) );
             out_cvinfo.loopbeg_ = origloopbeg    * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
-            out_cvinfo.loopend_ = in_smpl.size() * 2; //PCM8 -> PCM16
+            out_cvinfo.loopend_ = out_smpl.size(); //PCM8 -> PCM16
             return eDSESmplFmt::pcm8;
         }
         else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
         {
             out_smpl = move( RawBytesToPCM16Vec(&in_smpl) );
-            out_cvinfo.loopbeg_ = origloopbeg    * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
-            out_cvinfo.loopend_ = in_smpl.size() / 2;
+            //out_smpl = vector<int16_t>( (in_smpl.size() / 2), 0 );
+            out_cvinfo.loopbeg_ = (origloopbeg * 2); //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
+            out_cvinfo.loopend_ = out_smpl.size();
+
+            //if( (out_cvinfo.loopbeg_ - 2) > 0 )
+            //    out_cvinfo.loopbeg_ -= 2;
+
+            //if( (out_cvinfo.loopbeg_ - 1) > 0 && out_cvinfo.loopbeg_ % 2 != 0 )
+            //    out_cvinfo.loopbeg_ -= 1;
+            //else if( (out_cvinfo.loopbeg_ - 3) > 0 && out_cvinfo.loopbeg_ % 2 == 0 )
+            //    out_cvinfo.loopbeg_ -= 3;
+
             return eDSESmplFmt::pcm16;
         }
         else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
@@ -458,7 +455,50 @@ namespace DSE
         else
             return eDSESmplFmt::invalid;
     }
-    
+
+
+    //eDSESmplFmt ConvertAndLoopDSESample( int16_t                                smplfmt, 
+    //                                     size_t                                 origloopbeg,
+    //                                     size_t                                 origlooplen,
+    //                                     size_t                                 nbloops,
+    //                                     const std::vector<uint8_t>           & in_smpl,
+    //                                     DSESampleConvertionInfo              & out_cvinfo,
+    //                                     std::vector<int16_t>                 & out_smpl )
+    //{
+    //    if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+    //    {
+    //        auto postconv = move( ::audio::LoopAndConvertADPCM_NDS( in_smpl, origloopbeg, origlooplen, nbloops, 1 ) );
+    //        
+    //        out_cvinfo.loopbeg_ = postconv.second;
+    //        out_cvinfo.loopend_ = postconv.first.front().size();
+    //        out_smpl = move(postconv.first.front());
+    //        //out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
+    //        //out_cvinfo.loopend_ = ::audio::ADPCMSzToPCM16Sz(in_smpl.size() );
+    //        return eDSESmplFmt::ima_adpcm;
+    //    }
+    //    else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
+    //    {
+    //        out_smpl = move( PCM8RawBytesToPCM16Vec(&in_smpl) );
+    //        out_cvinfo.loopbeg_ = origloopbeg    * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
+    //        out_cvinfo.loopend_ = out_smpl.size(); //in_smpl.size() * 2; //PCM8 -> PCM16
+    //        return eDSESmplFmt::pcm8;
+    //    }
+    //    else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
+    //    {
+    //        out_smpl = move( RawBytesToPCM16Vec(&in_smpl) );
+    //        cerr<< "\n#FIXME ConvertAndLoopDSESample(): PCM16 sample loop beginning kept as-is: " <<origloopbeg <<" \n";
+    //        //#FIXME: changed this just to test if it improves pcm16 looping.
+    //        out_cvinfo.loopbeg_ = origloopbeg;//    * 2; //loopbeg is counted in int32, so multiply by 2 to get the loop beg as pcm16
+    //        out_cvinfo.loopend_ = out_smpl.size();//in_smpl.size() / 2;
+    //        return eDSESmplFmt::pcm16;
+    //    }
+    //    else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
+    //    {
+    //        return eDSESmplFmt::psg;
+    //    }
+    //    else
+    //        return eDSESmplFmt::invalid;
+    //}
 
 //========================================================================================
 //  BatchAudioLoader
@@ -771,6 +811,7 @@ namespace DSE
             unsigned int cntlfo = 0;
             for( const auto & lfo : dsePres.m_lfotbl )
             {
+                //!#TODO: Put the content of the loop in its own function. This also seem like duplicate code!! (HandleBakedPrgInst)
                 if( lfo.unk52 != 0 && lfoeffectson ) //Is the LFO enabled ?
                 {
                     if( utils::LibWide().isLogOn() )
@@ -1068,6 +1109,7 @@ namespace DSE
             unsigned int cntlfo = 0;
             for( const auto & lfo : curprg.m_lfotbl )
             {
+                //!#TODO: Put the content of this loop in a function!!!!
                 if( lfo.unk52 != 0 && m_lfoeffects ) //Is the LFO enabled ?
                 {
                     if( utils::LibWide().isLogOn() )

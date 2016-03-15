@@ -495,7 +495,7 @@ namespace sf2
 
         /*
             GetGenerators
-                Return a reference to the specified generator's value.
+                Return all generators.
         */
         genlist_t       & GetGenerators()      { return m_gens; }
         const genlist_t & GetGenerators()const { return m_gens; }
@@ -505,9 +505,9 @@ namespace sf2
         */
         size_t GetNbGenerators()const;
 
-        //---------------------
-        //  Common Generators
-        //---------------------
+        ////////////////////////////////////////
+        //  Common Generators Helper Methods
+        ////////////////////////////////////////
         
         /*
             Get or Set the sample used by this instrument.
@@ -1126,10 +1126,7 @@ namespace sf2
         size_t                      AddInstrument( Instrument && inst );
         inline Instrument         & GetInstument( size_t index )      { return m_instruments[index]; }
         inline const Instrument   & GetInstument( size_t index )const { return m_instruments[index]; }
-
-        /*
-        */
-        inline size_t GetNbInstruments()const            { return m_instruments.size(); }
+        inline size_t               GetNbInstruments()const           { return m_instruments.size(); }
 
 
         /*

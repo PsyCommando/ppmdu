@@ -20,12 +20,16 @@ All wrongs reversed, no crappyrights :P
 
 namespace DSE
 {
-
+    static const uint32_t NbMicrosecPerMinute = 60000000;
     //#TODO: Put this into a MIDI utility header, or something like that..
     inline uint32_t ConvertTempoToMicrosecPerQuarterNote( uint32_t bpm )
     {
-        static const uint32_t NbMicrosecPerMinute = 60000000;
         return NbMicrosecPerMinute / bpm;
+    }
+
+    inline uint32_t ConvertMicrosecPerQuarterNoteToBPM( uint32_t mpqn )
+    {
+        return mpqn / NbMicrosecPerMinute;
     }
 
 //===============================================================================
@@ -82,6 +86,12 @@ namespace DSE
                          int                              nbloop      = 0,
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
+
+    /*************************************************************************************************
+        MidiToSequence
+            Converts a MIDI file into a DSE Sequence.
+    *************************************************************************************************/
+    MusicSequence MidiToSequence( const std::string & inmidi );
 
 };
 

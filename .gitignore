@@ -191,3 +191,4 @@ Release WinXP
 *.idb
 *.dll
 *.exp
+*.scgdat

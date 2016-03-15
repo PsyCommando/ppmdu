@@ -124,7 +124,10 @@ namespace DSE
 
             // --- Convert Sample ----
             DSESampleConvertionInfo postconvloop; //The loop points after conversion
+            
+            //entry.splitsamples.push_back( move( ConvertAndLoopSample( *psmpl, static_cast<uint16_t>(psmplinf->smplfmt), psmplinf->loopbeg, psmplinf->looplen, 1, postconvloop ) ) );
             entry.splitsamples.push_back( move( ConvertSample( *psmpl, static_cast<uint16_t>(psmplinf->smplfmt), psmplinf->loopbeg, postconvloop ) ) );
+            
             entry.splitsmplinf.push_back( *psmplinf ); //Copy sample info #FIXME: maybe get a custom way to store the relevant data for loop points and sample rate instead ?
             const size_t    SampleLenPreLengthen = entry.splitsamples[curindex].size();
 
@@ -250,6 +253,18 @@ namespace DSE
             vector<int16_t> result;
             //Depending on sample format, convert to pcm16 !
             ConvertDSESample( smplty, origloopbeg, srcsmpl, newloop, result );
+            return std::move(result);
+        }
+
+        /*
+        */
+        vector<int16_t> ConvertAndLoopSample( const vector<uint8_t> & srcsmpl, int16_t smplty, size_t origloopbeg, size_t origlooplen, size_t nbloops, DSESampleConvertionInfo & newloop )
+        {
+            vector<int16_t> result;
+
+            //Depending on sample format, convert to pcm16 !
+            ConvertAndLoopDSESample( smplty, origloopbeg, origlooplen, nbloops, srcsmpl, newloop, result );
+
             return std::move(result);
         }
 

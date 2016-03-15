@@ -150,6 +150,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
     <ClInclude Include="..\src\dse\dse_conversion.hpp" />
     <ClInclude Include="..\src\dse\dse_conversion_info.hpp" />
     <ClInclude Include="..\src\dse\sadl.hpp" />
+    <ClInclude Include="..\src\ext_fmts\midi_fmtrule.hpp" />
     <ClInclude Include="..\src\ext_fmts\wav_io.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -313,6 +314,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
     <ClCompile Include="..\src\dse\dse_conversion_info.cpp" />
     <ClCompile Include="..\src\dse\dse_prgmbank_xml_io.cpp" />
     <ClCompile Include="..\src\dse\sample_processor.cpp" />
+    <ClCompile Include="..\src\ext_fmts\midi_fmtrule.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\dse\dse_containers.cpp" />
     <ClCompile Include="..\src\ext_fmts\adpcm.cpp" />
@@ -451,6 +453,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_audioutil.txt" />
+    <Text Include="commandlines_for_testing.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

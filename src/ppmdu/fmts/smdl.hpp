@@ -176,6 +176,8 @@ namespace DSE
 
             return itReadfrom;
         }
+
+        friend std::ostream & operator<<( std::ostream &os, const SMDL_Header & hdr );
     };
 
 

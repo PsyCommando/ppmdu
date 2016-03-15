@@ -27,6 +27,56 @@ namespace utils
     typedef std::vector<pcm8s_t>  pcm8ssmpls_t;
     typedef std::vector<adpcm4_t> adpcm4smpls_t;
 
+
+//
+//
+//
+    template<class _backinsit>
+        void InterlacePCM16( const std::vector<std::vector<pcm16s_t>> & chanbuff, _backinsit itout )
+    {
+        //Make sure all channel buffers are the same length
+        size_t longest    = 0;
+        //bool   allsamelen = true;
+
+        for( size_t cntchan = 0; cntchan < chanbuff.size(); ++cntchan )
+        {
+            if( longest < chanbuff[cntchan].size() )
+            {
+                //if( longest != 0 )
+                //    allsamelen = false;
+                longest = chanbuff[cntchan].size();
+            }
+        }
+
+        //If not all the same length, add some zeros to the shorter ones
+        //if( !allsamelen )
+        //{
+        //    for( size_t cntchan = 0; cntchan < chanbuff.size(); ++cntchan )
+        //    {
+        //        if( (longest - chanbuff[cntchan].size()) != 0 )
+        //        { 
+        //            auto itblock = std::back_inserter( chanbuff[cntchan] );
+        //            std::fill_n( itblock, (longest - chanbuff[cntchan].size()), 0 ); //Fill with zeros
+        //        }
+        //    }
+        //}
+
+
+        //Interlace samples 
+        for( size_t cntsample = 0; cntsample < longest; ++cntsample )
+        {
+            for( size_t cntchan = 0; cntchan < chanbuff.size(); ++cntchan )
+            {
+                if( cntsample < chanbuff[cntchan].size() )
+                    (*itout) = chanbuff[cntchan][cntsample];
+                else
+                    (*itout) = 0; //Insert zero samples to pad valid samples
+                ++itout;
+            }
+        }
+    }
+
+
 //=============================================================================================
 //  Simple Sample Parsers
 //=============================================================================================

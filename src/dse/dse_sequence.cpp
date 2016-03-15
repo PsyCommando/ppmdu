@@ -2,6 +2,7 @@
 #include "dse_common.hpp"
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 using namespace std;
 
@@ -271,6 +272,16 @@ namespace DSE
 
         //3. Get the midi note
         out_midinote = ( inout_curoctave * static_cast<uint8_t>(eNote::nbNotes) ) + (noteparam1 & 0xF);
+    }
+
+
+    std::string MidiNoteIdToText( uint8_t midinote )
+    {
+        stringstream sstr;
+        uint16_t     key    = midinote % static_cast<uint8_t>(eNote::nbNotes);
+        uint16_t     octave = midinote / static_cast<uint8_t>(eNote::nbNotes);
+        sstr << NoteNames.at(key) << octave;
+        return std::move(sstr.str());
     }
 
 

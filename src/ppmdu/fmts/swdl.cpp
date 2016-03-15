@@ -11,6 +11,8 @@ namespace DSE
 {
 
     static const uint32_t SWDL_PCMDSpecialSize     = 0xAAAA0000; //Value the pcmd lenght in the SWDL header had to indicate it refers to a master bank of samples.
+    //+#FIXME: The upper half is actually the padding byte used by the devs. Not always 0xAAAA
+    
     static const uint32_t SWDL_PCMDSpecialSizeMask = 0xFFFF0000; //Mask to apply to verify the special size. As the two lower bytes seems to contain some value in some swd files!
 
 
@@ -85,35 +87,35 @@ namespace DSE
         static const uint16_t DefUnk22 = 0xFFFF;
         static const uint8_t  DefUnk57 = 0xFF;
 
-        uint16_t unk1     ;
-        uint16_t id       ; //Index/ID of the sample
-        int8_t   ftune    ; 
-        int8_t   ctune    ;
-        uint8_t  rootkey  ; //Possibly the MIDI key matching the pitch the sample was sampled at!
-        int8_t   ktps     ; //Transpose
-        int8_t   vol      ;
-        int8_t   pan      ;
-        uint8_t  unk5     ;
-        uint8_t  unk58    ;
-        uint16_t unk6     ;
-        uint16_t unk7     ;
-        uint16_t version  ; //dse version. usually 0x415
-        uint16_t smplfmt  ; //Format of the sample 0x100 == PCM 16, 0x200 == IMA ADPCM
-        uint8_t  unk9     ;    //Some enum value. Is usually set to 1, but is set to 9 with ADPCM samples.
-        uint8_t  smplloop ;    //loop flag, 1 = loop, 0 = no loop
-        uint8_t  unk10    ;
-        uint8_t  smplblk  ;    //Nb of samples per block of 32 bits
-        uint8_t  unk11    ;    //
-        uint8_t  bitdepth ;    //Nb of bits per sample
-        uint8_t  bps1     ;    //Bytes per sample ?
-        uint8_t  bps2     ;    //Bytes per sample again?
-        uint32_t unk13    ;
-        uint32_t smplrate ; //Sampling rate of the sample
-        uint32_t smplpos  ; //Offset within pcmd chunk of the sample
-        uint32_t loopbeg  ; //Loop start in int32 (based on the resulting PCM16)
-        uint32_t looplen  ; //Length of the sample in int32
-        uint8_t  envon    ;
-        uint8_t  envmult  ;
+        uint16_t unk1;
+        uint16_t id;        //Index/ID of the sample
+        int8_t   ftune; 
+        int8_t   ctune;
+        uint8_t  rootkey;   //Possibly the MIDI key matching the pitch the sample was sampled at!
+        int8_t   ktps;      //Transpose
+        int8_t   vol;
+        int8_t   pan;
+        uint8_t  unk5;
+        uint8_t  unk58;
+        uint16_t unk6;
+        uint16_t unk7;
+        uint16_t version;   //dse version. usually 0x415
+        uint16_t smplfmt;   //Format of the sample 0x100 == PCM 16, 0x200 == IMA ADPCM
+        uint8_t  unk9;      //Some enum value. Is usually set to 1, but is set to 9 with ADPCM samples.
+        uint8_t  smplloop;    //loop flag, 1 = loop, 0 = no loop
+        uint8_t  unk10;
+        uint8_t  smplblk;    //Nb of samples per block of 32 bits
+        uint8_t  unk11;     //
+        uint8_t  bitdepth;    //Nb of bits per sample
+        uint8_t  bps1;      //Bytes per sample ?
+        uint8_t  bps2;      //Bytes per sample again?
+        uint32_t unk13;
+        uint32_t smplrate;  //Sampling rate of the sample
+        uint32_t smplpos;   //Offset within pcmd chunk of the sample
+        uint32_t loopbeg;   //Loop start in int32 (based on the resulting PCM16)
+        uint32_t looplen;   //Length of the sample in int32
+        uint8_t  envon;
+        uint8_t  envmult;
         uint8_t  unk19;
         uint8_t  unk20;
         uint16_t unk21;
@@ -1057,7 +1059,7 @@ namespace DSE
                 itReadfrom = entry.ReadFromContainer(itReadfrom, itpastend);
 
             //16 bytes of padding
-            utils::advAsMuchAsPossible( itReadfrom, itpastend, 16 );
+            itReadfrom = utils::advAsMuchAsPossible( itReadfrom, itpastend, 16 );
 
             for( auto & smpl : m_splitstbl )
                 itReadfrom = smpl.ReadFromContainer(itReadfrom, itpastend );
@@ -1257,7 +1259,6 @@ namespace DSE
             itwriteto = utils::WriteIntToBytes( id,       itwriteto );
             itwriteto = utils::WriteIntToBytes( unk11,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk25,    itwriteto );
-
             itwriteto = utils::WriteIntToBytes( lowkey,   itwriteto );
             itwriteto = utils::WriteIntToBytes( hikey,    itwriteto );
             itwriteto = utils::WriteIntToBytes( lowkey2,  itwriteto );
@@ -1266,41 +1267,31 @@ namespace DSE
             itwriteto = utils::WriteIntToBytes( hivel,    itwriteto );
             itwriteto = utils::WriteIntToBytes( lovel2,   itwriteto );
             itwriteto = utils::WriteIntToBytes( hivel2,   itwriteto );
-
             itwriteto = utils::WriteIntToBytes( unk16,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk17,    itwriteto );
             itwriteto = utils::WriteIntToBytes( smplid,   itwriteto );
-
-            itwriteto = utils::WriteIntToBytes( ftune,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( ctune,   itwriteto );
-
+            itwriteto = utils::WriteIntToBytes( ftune,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( ctune,    itwriteto );
             itwriteto = utils::WriteIntToBytes( rootkey,  itwriteto );
-            itwriteto = utils::WriteIntToBytes( ktps,    itwriteto );
-
+            itwriteto = utils::WriteIntToBytes( ktps,     itwriteto );
             itwriteto = utils::WriteIntToBytes( smplvol,  itwriteto );
             itwriteto = utils::WriteIntToBytes( smplpan,  itwriteto );
-
             itwriteto = utils::WriteIntToBytes( kgrpid,   itwriteto );
             itwriteto = utils::WriteIntToBytes( unk22,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk23,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk24,    itwriteto );
-
             itwriteto = utils::WriteIntToBytes( envon,    itwriteto );
             itwriteto = utils::WriteIntToBytes( envmult,  itwriteto );
             itwriteto = utils::WriteIntToBytes( unk37,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk38,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk39,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk40,    itwriteto );
-
             itwriteto = utils::WriteIntToBytes( atkvol,   itwriteto );
             itwriteto = utils::WriteIntToBytes( attack,   itwriteto );
-
             itwriteto = utils::WriteIntToBytes( decay,    itwriteto );
             itwriteto = utils::WriteIntToBytes( sustain,  itwriteto );
-
             itwriteto = utils::WriteIntToBytes( hold,     itwriteto );
             itwriteto = utils::WriteIntToBytes( decay2,   itwriteto );
-
             itwriteto = utils::WriteIntToBytes( release,  itwriteto );
             itwriteto = utils::WriteIntToBytes( rx,       itwriteto );
             return itwriteto;
@@ -1587,7 +1578,8 @@ namespace DSE
             prginf.unk4      = m_hdr.unk4;
             prginf.padbyte   = m_hdr.padbyte;
 
-            //Ignore kgrp table for now #FIXME
+            //Ignore kgrp table for now 
+            //!#FIXME
 
             //Just copy LFOs directly
             prginf.m_lfotbl = m_lfotbl;
@@ -1609,7 +1601,7 @@ namespace DSE
             m_hdr.unkpoly   = prginf.unkpoly;
             m_hdr.unk4      = prginf.unk4;
             m_hdr.unk5      = 0;
-            m_hdr.nblfos    = static_cast<uint8_t>(prginf.m_lfotbl.size()); //Should always be 4 though #FIXME
+            m_hdr.nblfos    = static_cast<uint8_t>(prginf.m_lfotbl.size()); //!Should always be 4 though #FIXME
             m_hdr.padbyte   = prginf.padbyte;
             m_hdr.unk7      = 0;
             m_hdr.unk8      = 0;
@@ -1647,13 +1639,13 @@ namespace DSE
             m_hdr.unkpoly   = prginf.unkpoly;
             m_hdr.unk4      = prginf.unk4;
             m_hdr.unk5      = 0;
-            m_hdr.nblfos    = static_cast<uint8_t>(prginf.m_lfotbl.size()); //Should always be 4 though #FIXME
+            m_hdr.nblfos    = static_cast<uint8_t>(prginf.m_lfotbl.size()); //!Should always be 4 though #FIXME
             m_hdr.padbyte   = prginf.padbyte;
             m_hdr.unk7      = 0;
             m_hdr.unk8      = 0;
             m_hdr.unk9      = 0;
 
-            //Build a default kgrp table #FIXME
+            //!Build a default kgrp table #FIXME
             for( auto & kgrp : m_kgrp2tbl )
             {
                 kgrp.id       = 0;
@@ -1704,7 +1696,6 @@ namespace DSE
 
         PresetBank Parse()
         {
-            //using namespace pmd2::audio;
             ParseHeader();
             ParseMeta();
 
@@ -1750,6 +1741,13 @@ namespace DSE
         void ParseHeader()
         {
             m_hdr.ReadFromContainer(m_itbeg);
+
+            if( utils::LibWide().isLogOn() )
+                clog << "\tDSE Version: 0x" <<hex <<uppercase <<m_hdr.version <<dec <<nouppercase <<"\n";
+            if( utils::LibWide().isVerboseOn() )
+            {
+                clog <<"#TODO verbose\n";
+            }
         }
 
         void ParseMeta()
@@ -2020,7 +2018,7 @@ namespace DSE
         {
             ChunkHeader hdr;
             hdr.label  = label;
-            hdr.param1 = SWDL_ChunksDefParam1;
+            hdr.param1 = static_cast<uint16_t>(m_version) << 16; //The DSE version is in every chunk's header
             hdr.param2 = SWDL_ChunksDefParam2;
             hdr.datlen = size;
             hdr.WriteToContainer(itout);
@@ -2217,7 +2215,7 @@ namespace DSE
             {
                 ProgramInfo_v415 prginf(entry);
 
-                //Fill in missing data
+                //!#TODO: Fill in missing data
                 assert(false);
 
                 //write
@@ -2227,7 +2225,7 @@ namespace DSE
             {
                 ProgramInfo_v402 prginf(entry);
 
-                //Fill in missing data
+                //!#TODO: Fill in missing data
                 assert(false);
 
                 //write
@@ -2237,7 +2235,7 @@ namespace DSE
 
             //entry.WriteToContainer( itout );
 
-            int offsbegtbl = befentry.seekpos() - beftbl.seekpos();
+            long long offsbegtbl = befentry.seekpos() - beftbl.seekpos();
             if( offsbegtbl > std::numeric_limits<uint16_t>::max() )
                 throw overflow_error("SWDL_Writer::WritePrgiEntry(): Couldn't add offset of entry#" + to_string(entryindex) + " to table. Offset overflows a int16!");
 
@@ -2251,7 +2249,7 @@ namespace DSE
         }
 
         //Return pcm data length
-        size_t WritePCMD( writeit_t & itout, std::vector<uint32_t> & sampleoffsets, const DSE::SampleBank & smplbank )
+        fpos_t WritePCMD( writeit_t & itout, std::vector<uint32_t> & sampleoffsets, const DSE::SampleBank & smplbank )
         {
             //auto ptrsbnk = m_src.smplbank().lock();
             //if( ptrsbnk == nullptr )
@@ -2269,7 +2267,7 @@ namespace DSE
                 if( ptrdata != nullptr )
                 {
                     streampos befsmpl = m_tgtcn.tellp();
-                    sampleoffsets[i]  = befsmpl.seekpos(); //Store sample offset!
+                    sampleoffsets[i]  = static_cast<uint32_t>(befsmpl.seekpos()); //Store sample offset!
                     itout = std::copy( ptrdata->begin(), ptrdata->end(), itout );
                 }
             }
@@ -2281,7 +2279,7 @@ namespace DSE
             
             WriteChunkHeader( itout, 
                               static_cast<uint32_t>(eDSEChunks::pcmd), 
-                              afterdata.seekpos() );
+                              static_cast<uint32_t>(afterdata.seekpos()) );
             //hdr.label  = static_cast<uint32_t>(eDSEChunks::pcmd);
             //hdr.param1 = SWDL_ChunksDefParam1;
             //hdr.param2 = SWDL_ChunksDefParam2;
@@ -2309,7 +2307,7 @@ namespace DSE
             for( const auto & akgrp : kgrplist )
                 akgrp.WriteToContainer(itout);
 
-            uint32_t chunklen = m_tgtcn.tellp();
+            uint32_t chunklen = static_cast<uint32_t>(m_tgtcn.tellp());
 
             //Add padding
             int padlen =  (m_tgtcn.tellp() % 16);

@@ -68,6 +68,41 @@ namespace audio
     */
     std::vector<uint8_t> ReadADPCMDump( const std::string & infile );
 
+
+//====================================================================================================
+// 
+//====================================================================================================
+
+    /*
+        ConvertRangeADPCM_NDS
+            Convert only a range of ADPCM samples into signed PCM16. 
+            - offset     : The start counted as blocks of 4 bytes of the start of the part to convert.
+            - len        : The length counted as blocks of 4 bytes of the part to convert.
+            - nbchannels : The nb of channels the adpcm data has.
+            Returns a multi-dimensional vector with pcm16 samples for each channels.
+    */
+    std::vector<std::vector<int16_t>>   ConvertRangeADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
+                                                  uint32_t                      offset,
+                                                  uint32_t                      len,
+                                                  unsigned int                  nbchannels = 1 );
+
+    /*  
+        LoopAndConvertADPCM_NDS
+            Convert ADPCM for the NDS while also looping it a specified number of times
+            - loopbeg    : The start, counted as blocks of 4 bytes, of the loop's beginning.
+            - looplen    : The length, counted as blocks of 4 bytes, of the loop.
+            - nbloops    : The nb of times to loop the loop in the converted sample.
+            - nbchannels : The nb of channels the adpcm data has.
+
+            Returns a multi-dimensional vector with pcm16 samples for each channels,
+            and the starting pos in samples of the new loop beginning.
+    */
+    std::pair<std::vector<std::vector<int16_t>>, size_t>  LoopAndConvertADPCM_NDS( const std::vector<uint8_t>  & rawadpcmdata,
+                                                  uint32_t                      loopbeg,
+                                                  uint32_t                      looplen,
+                                                  uint32_t                      nbloops    = 1,
+                                                  unsigned int                  nbchannels = 1 );
+
 };
 
 #endif

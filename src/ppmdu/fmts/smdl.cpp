@@ -1,15 +1,17 @@
 #include "smdl.hpp"
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_containers.hpp>
+#include <utils/library_wide.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
-#include <thread>
-#include <mutex>
-#include <atomic>
+//#include <thread>
+//#include <mutex>
+//#include <atomic>
 #include <iterator>
 #include <map>
+#include <cassert>
 using namespace std;
 
 
@@ -151,10 +153,10 @@ namespace DSE
         }
     };
 
-    /*
+    /*****************************************************
         SongChunk_v402
             For DSE Version 0x402
-    */
+    *****************************************************/
     class SongChunk_v402
     {
     public:
@@ -290,6 +292,14 @@ namespace DSE
                 //Parse tracks and return
                 return std::move( MusicSequence( ParseAllTracks(), std::move(meta) ) );
             }
+            else
+            {
+#ifdef _DEBUG
+                cerr << "SMDL_Parser::operator MusicSequence() : Unsupported DSE version!!";
+                assert(false);
+#endif
+                throw runtime_error( "SMDL_Parser::operator MusicSequence() : Unsupported DSE version!!" );
+            }
         }
 
     private:
@@ -298,6 +308,11 @@ namespace DSE
         inline void ParseHeader()
         {
             m_itread = m_hdr.ReadFromContainer( m_itread, m_itend );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog << m_hdr;
+            }
         }
 
         //Parse the song chunk
@@ -308,12 +323,16 @@ namespace DSE
             {
                 SongChunk_v402 schnk;
                 m_itread = schnk.ReadFromContainer( m_itread );
+                if( utils::LibWide().isLogOn() )
+                    clog << schnk;
                 m_song = schnk;
             }
             else if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V415) )
             {
                 SongChunk_v415 schnk;
                 m_itread = schnk.ReadFromContainer( m_itread );
+                if( utils::LibWide().isLogOn() )
+                    clog << schnk;
                 m_song = schnk;
             }
             else
@@ -350,6 +369,9 @@ namespace DSE
 
             try
             {
+                size_t cnttrk = 0;
+                if( utils::LibWide().isLogOn() )
+                    clog << "\t--- Parsing Tracks ---\n";
                 while( m_itread != m_itEoC )
                 {
                     //#1 - Find next track chunk
@@ -358,6 +380,9 @@ namespace DSE
                     {
                         //Parse Track
                         tracks.push_back( ParseTrack() );
+                        if( utils::LibWide().isLogOn() )
+                            clog << "\t- Track " <<cnttrk <<", parsed " << tracks.back().size() <<" event(s)\n";
+                        ++cnttrk;
                     }
                 }
             }
@@ -386,15 +411,14 @@ namespace DSE
 
             MusicTrack mtrk;
             mtrk.SetMidiChannel( parsed.second.chanid );
-            mtrk.getEvents() = move(parsed.first);
+            mtrk.getEvents() = std::move(parsed.first);
 
-            return move(mtrk);
+            return std::move(mtrk);
         }
 
     private:
         rd_iterator_t                   m_itbeg;
         rd_iterator_t                   m_itend;
-
         rd_iterator_t                   m_itread;
         rd_iterator_t                   m_itEoC;    //Pos of the "end of chunk" chunk
         SMDL_Header                     m_hdr;
@@ -424,29 +448,58 @@ namespace DSE
         void operator()()
         {
             std::ostreambuf_iterator<char> itout(m_tgtcn); 
-            std::set<int>                  existingchan;
+            std::set<int>                  existingchan;        //Keep track of the nb of unique channels used by the tracks
+            size_t                         nbwritten    = 0;
 
             //Reserve Header
             itout = std::fill_n( itout, SMDL_Header::size(), 0 );
+            nbwritten += SMDL_Header::size();
 
             //Reserve Song chunk
             if( m_version == eDSEVersion::V402 )
+            {
                 itout = std::fill_n( itout, SongChunk_v402::Size, 0 );
+                nbwritten += SongChunk_v402::Size;
+            }
             else if( m_version == eDSEVersion::V415 )
+            {
                 itout = std::fill_n( itout, (SongChunk_v415::SizeNoPadd + SongChunk_v415::LenMaxPadding), 0 );
+                nbwritten += (SongChunk_v415::SizeNoPadd + SongChunk_v415::LenMaxPadding);
+            }
             else
                 throw std::runtime_error( "SMDL_Writer::operator()(): Invalid DSE version supplied!!" );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog << "-------------------------\n"
+                     << "Writing SMDL\n"
+                     << "-------------------------\n"
+                     << m_src.printinfo() 
+                     <<"\n"
+                     ;
+            }
 
             //Write tracks
             for( size_t i = 0; i < m_src.getNbTracks(); ++i )
             {
+                if( m_src[i].empty() )
+                    continue; //ignore empty tracks
+
                 const DSE::MusicTrack & atrk = m_src[i];
                 TrkPreamble preamble;
                 preamble.trkid  = i;
                 preamble.chanid = atrk.GetMidiChannel();
                 preamble.unk1   = 0;
                 preamble.unk2   = 0;
-                itout           = WriteTrkChunk( itout, preamble, atrk.begin(), atrk.end(), atrk.size() );
+                uint32_t lenmod = WriteTrkChunk( itout, preamble, atrk.begin(), atrk.end(), atrk.size() );
+                nbwritten += lenmod;
+
+                //Write padding
+                lenmod = (lenmod % 4);
+                uint32_t lenpad = lenmod;
+                if( lenmod != 0 )
+                    std::fill_n( itout, lenpad, static_cast<uint8_t>(eTrkEventCodes::EndOfTrack) );
+
                 existingchan.insert( preamble.chanid );
             }
 
@@ -485,7 +538,7 @@ namespace DSE
             smdhdr.minute   = m_src.metadata().createtime.minute;
             smdhdr.second   = m_src.metadata().createtime.second;
             smdhdr.centisec = m_src.metadata().createtime.centsec;
-            std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(smdhdr.fname) );
+            std::copy_n( begin(m_src.metadata().fname), smdhdr.fname.size(), begin(smdhdr.fname) );
             smdhdr.unk5     = SMDL_Header::DefUnk5;
             smdhdr.unk6     = SMDL_Header::DefUnk6;
             smdhdr.unk8     = SMDL_Header::DefUnk8;
@@ -570,7 +623,115 @@ namespace DSE
 
         SMDL_Writer<std::ofstream>(outf, seq)();
     }
+
+    /***********************************************************************
+        operator<< SMDL_Header
+    ***********************************************************************/
+    std::ostream & operator<<( std::ostream &os, const SMDL_Header & hdr )
+    {
+        os  << "\t-- SMDL Header --\n" 
+            <<showbase
+            <<hex <<uppercase
+            << "\tmagicn       : " << hdr.magicn    <<"\n"
+            << "\tUnk7         : " << hdr.unk7     <<"\n"
+            <<dec <<nouppercase
+            << "\tFile lenght  : " << hdr.flen     <<" bytes\n"
+            <<hex <<uppercase
+            << "\tVersion      : " << hdr.version <<"\n"
+            << "\tUnk1         : " << static_cast<short>(hdr.unk1)   <<"\n"
+            << "\tUnk2         : " << static_cast<short>(hdr.unk2)      <<"\n"
+            << "\tUnk3         : " << hdr.unk3     <<"\n"
+            << "\tUnk4         : " << hdr.unk4     <<"\n"
+            <<dec <<nouppercase
+            << "\tYear         : " << hdr.year     <<"\n"
+            << "\tMonth        : " << static_cast<short>(hdr.month)     <<"\n"
+            << "\tDay          : " << static_cast<short>(hdr.day)     <<"\n"
+            << "\tHour         : " << static_cast<short>(hdr.hour)     <<"\n"
+            << "\tMinute       : " << static_cast<short>(hdr.minute)     <<"\n"
+            << "\tSecond       : " << static_cast<short>(hdr.second)     <<"\n"
+            << "\tCentisec     : " << static_cast<short>(hdr.centisec)     <<"\n"
+            << "\tFile Name    : " << string( begin(hdr.fname), end(hdr.fname) ) <<"\n"
+            <<hex <<uppercase
+            << "\tUnk5         : " << hdr.unk5     <<"\n"
+            << "\tUnk6         : " << hdr.unk6     <<"\n"
+            << "\tUnk8         : " << hdr.unk8     <<"\n"
+            << "\tUnk9         : " << hdr.unk9     <<"\n"
+            <<dec <<nouppercase
+            <<noshowbase
+            <<"\n"
+            ;
+        return os;
+    }
+
+    /***********************************************************************
+        operator<< SongChunk_v415
+    ***********************************************************************/
+    std::ostream & operator<<( std::ostream & os, const SongChunk_v415 & sd )
+    {
+        os  << "\t-- Song Chunk v0x415 --\n" 
+            <<showbase
+            <<hex <<uppercase
+            << "\tLabel        : " << sd.label    <<"\n"
+            << "\tUnk1         : " << sd.unk1     <<"\n"
+            << "\tUnk2         : " << sd.unk2     <<"\n"
+            << "\tUnk3         : " << sd.unk3     <<"\n"
+            << "\tUnk4         : " << sd.unk4     <<"\n"
+            <<dec <<nouppercase
+            << "\tTPQN         : " << sd.tpqn     <<"\n"
+            <<hex <<uppercase
+            << "\tUnk5         : " << sd.unk5     <<"\n"
+            <<dec <<nouppercase
+            << "\tNbTracks     : " << static_cast<short>(sd.nbtrks)   <<"\n"
+            << "\tNbChans      : " << static_cast<short>(sd.nbchans)  <<"\n"
+            <<hex <<uppercase
+            << "\tUnk6         : " << sd.unk6     <<"\n"
+            << "\tUnk7         : " << sd.unk7     <<"\n"
+            << "\tUnk8         : " << sd.unk8     <<"\n"
+            << "\tUnk9         : " << sd.unk9     <<"\n"
+            << "\tUnk10        : " << sd.unk10    <<"\n"
+            << "\tUnk11        : " << sd.unk11    <<"\n"
+            << "\tUnk12        : " << sd.unk12    <<"\n"
+            <<dec <<nouppercase
+            <<noshowbase
+            <<"\n"
+            ;
+        return os;
+    }
+
+    /***********************************************************************
+        operator<< SongChunk_v402
+    ***********************************************************************/
+    std::ostream & operator<<( std::ostream & os, const SongChunk_v402 & sd )
+    {
+        os  << "\t-- Song Chunk v0x402 --\n" 
+            <<showbase
+            <<hex <<uppercase
+            << "\tLabel        : " << sd.label    <<"\n"
+            << "\tUnk1         : " << sd.unk1     <<"\n"
+            << "\tUnk2         : " << sd.unk2     <<"\n"
+            << "\tUnk3         : " << sd.unk3     <<"\n"
+            << "\tUnk4         : " << sd.unk4     <<"\n"
+            <<dec <<nouppercase
+            << "\tTPQN         : " << sd.tpqn     <<"\n"
+            << "\tNbTracks     : " << static_cast<short>(sd.nbtrks)   <<"\n"
+            << "\tNbChans      : " << static_cast<short>(sd.nbchans)  <<"\n"
+            <<hex <<uppercase
+            << "\tUnk5         : " << static_cast<short>(sd.unk5)     <<"\n"
+            << "\tUnk6         : " << static_cast<short>(sd.unk6)     <<"\n"
+            << "\tUnk7         : " << sd.unk7     <<"\n"
+            << "\tMainVol      : " << static_cast<short>(sd.mainvol)   <<"\n"
+            << "\tMainPan      : " << static_cast<short>(sd.mainpan)  <<"\n"
+            << "\tUnk8         : " << sd.unk8     <<"\n"
+            <<dec <<nouppercase
+            <<noshowbase
+            <<"\n"
+            ;
+        return os;
+    }
 };
+
+
+
 
 //ppmdu's type analysis system
 #ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER

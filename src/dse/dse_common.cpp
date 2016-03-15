@@ -33,6 +33,8 @@ namespace DSE
         eDSEContainers::swdl,
     }};
 
+
+    //Duration lookup tables for DSE volume envelopes:
     const std::array<int16_t,128> Duration_Lookup_Table =
     {
         0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 
@@ -53,7 +55,7 @@ namespace DSE
         0x1E1E, 0x1F22, 0x2030, 0x2148, 0x2260, 0x2382, 0x2710, 0x7FFF
     };
     
-
+    //Duration lookup tables for DSE volume envelopes:
     const std::array<int32_t,128> Duration_Lookup_Table_NullMulti =
     {
         0x00000000, 0x00000004, 0x00000007, 0x0000000A, 
@@ -156,8 +158,8 @@ namespace DSE
     std::ostream & operator<<(std::ostream &os, const DateTime &obj )
     {
         os << static_cast<unsigned long>(obj.year) <<"/" 
-           <<static_cast<unsigned long>(obj.month) <<"/" 
-           <<static_cast<unsigned long>(obj.day) <<"-" 
+           <<static_cast<unsigned long>(obj.month)+1 <<"/" 
+           <<static_cast<unsigned long>(obj.day)+1 <<"-" 
            <<static_cast<unsigned long>(obj.hour) <<"h" 
            <<static_cast<unsigned long>(obj.minute) <<"m" 
            <<static_cast<unsigned long>(obj.second) <<"s";
@@ -186,7 +188,7 @@ namespace DSE
              << "\tVol       : " << static_cast<short>(other.prgvol) <<"\n"
              << "\tPan       : " << static_cast<short>(other.prgpan) <<"\n"
              //<< "\tUnk3      : " << other.unk3 <<"\n"
-             << "\tUnk4      : " << other.unk4 <<"\n"
+             << "\tUnk4      : " << static_cast<short>(other.unk4) <<"\n"
              //<< "\tUnk5      : " << static_cast<short>(other.unk5) <<"\n"
              << "\tnblfos    : " << static_cast<short>(other.m_lfotbl.size()) <<"\n"
              << "\tpadbyte   : " << static_cast<short>(other.padbyte) <<"\n"
@@ -279,15 +281,16 @@ namespace DSE
 
             if( !ev.params.empty() )
             {
-                strm <<hex <<uppercase <<"( ";
-                for( size_t i = 0; i < ev.params.size(); ++i ) 
                 {
-                    strm <<"0x" <<setfill('0') <<setw(2) <<right << static_cast<unsigned short>(ev.params[i]);
-                    if( i != (ev.params.size() - 1) )
-                        strm << ", ";
-                } 
-
-                strm <<dec <<nouppercase <<" )";
+                    strm <<hex <<uppercase <<"( ";
+                    for( size_t i = 0; i < ev.params.size(); ++i ) 
+                    {
+                        strm <<"0x" <<setfill('0') <<setw(2) <<right << static_cast<unsigned short>(ev.params[i]);
+                        if( i != (ev.params.size() - 1) )
+                            strm << ", ";
+                    } 
+                    strm <<dec <<nouppercase <<" )";
+                }
             }
             else if( ev.evcode >= static_cast<uint8_t>(eTrkEventCodes::Delay_HN) && ev.evcode <= static_cast<uint8_t>(eTrkEventCodes::Delay_64N) )
             {
@@ -302,8 +305,6 @@ namespace DSE
         {
             strm <<"ERROR EVENT CODE " <<uppercase <<hex <<static_cast<unsigned short>(ev.evcode) <<dec <<nouppercase;
         }
-
-        strm << "\n" /*<< noshowbase*/;
 
         return strm;
     }

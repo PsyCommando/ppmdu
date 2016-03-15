@@ -16,6 +16,7 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <map>
 #include <cassert>
 #include <limits>
+#include <iostream>
 
 namespace DSE
 {
@@ -64,6 +65,8 @@ namespace DSE
     std::ostream & operator<<( std::ostream &  strm, const DSE::eDSEContainers cnty );
 
     const int                 NbMidiChannels        = 16;
+    const unsigned int        NB_DSEChannels        = 17;
+    const unsigned int        NB_DSETracks          = 17;
     static const unsigned int NB_DSEChunks          = 11;
     static const unsigned int NB_DSEContainers      = 4;
     static const uint32_t     SpecialChunkLen       = 0xFFFFFFB0;   //Value some special chunks have as their length
@@ -207,6 +210,21 @@ namespace DSE
             result.tm_sec   = second;
             result.tm_isdst = -1; //No info available
             return std::move(result);
+        }
+
+        inline void SetTimeToNow()
+        {
+            std::time_t t  = std::time(nullptr);
+            std::tm     ti;// = *std::localtime(&t);
+            if( ! localtime_s(&ti, &t) )
+                std::clog << "<!>- DSE::DateTime::SetTimeToNow(): localtime_s returned an error while getting the current date!\n";
+            //http://en.cppreference.com/w/cpp/chrono/c/tm
+            year    = ti.tm_year + 1900; //tm_year counts the nb of years since 1900
+            month   = ti.tm_mon;
+            day     = ti.tm_mday-1;      //tm_mday begins at 1, while the time in the DSE timestamp begins at 0!
+            hour    = ti.tm_hour;
+            minute  = ti.tm_min;
+            second  = (ti.tm_sec == 60)? 59 : ti.tm_sec; //We're not dealing with leap seconds...
         }
 
         friend std::ostream & operator<<(std::ostream &os, const DateTime &obj );

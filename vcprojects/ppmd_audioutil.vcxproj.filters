@@ -207,6 +207,9 @@
     <ClInclude Include="..\src\dse\sadl.hpp">
       <Filter>Header Files\ppmdu\file formats\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\midi_fmtrule.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
@@ -335,6 +338,9 @@
     <ClCompile Include="..\src\dse\bgm_container.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\midi_fmtrule.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\pmd2eos_cvinfo.xml">
@@ -345,5 +351,6 @@
     <Text Include="..\readmes\ppmd_audioutil.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="commandlines_for_testing.txt" />
   </ItemGroup>
 </Project>
