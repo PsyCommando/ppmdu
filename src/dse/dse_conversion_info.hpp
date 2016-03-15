@@ -142,9 +142,15 @@ namespace DSE
            convtbl.emplace( std::make_pair( dseid, std::move(remapdat) ) );
         }
 
+        void SetOutputName( const std::string & name ) { outputname = name; }
+
+        const std::string & GetOutputName()const       { return outputname; }
+        std::string       & GetOutputName()            { return outputname; }
+
     private:
         //A list of presets conversion info for each DSE presets specified!
         std::map<dsepresetid_t, PresetConvData> convtbl;
+        std::string                             outputname;
     };
 
 

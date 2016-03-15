@@ -46,6 +46,7 @@ namespace DSE
 
         const string NODE_Track      = "Track";               //Conversion data for a single track.
         const string PROP_PairName   = "PairName";            //Name of the DSE SMD and SWD pair.
+        const string PROP_OutName    = "OutputName";          //Name to give the resulting midi file
         
         const string NODE_Programs   = "Programs";            //List of presets in the file.
         const string NODE_Program    = "Program";             //A single program in the list of program.
@@ -110,6 +111,7 @@ namespace DSE
 
             xml_node curtrk = parent.append_child( NODE_Track.c_str() );
             WriteNodeWithValue( curtrk, PROP_PairName, trkname );
+            WriteNodeWithValue( curtrk, PROP_OutName,  trkname );
 
             xml_node curprgms = curtrk.append_child( NODE_Programs.c_str() );
             //Write all programs
@@ -225,6 +227,8 @@ namespace DSE
             {
                 if( propnode.name() == PROP_PairName )
                     pairname = propnode.child_value();
+                else if( propnode.name() == PROP_OutName )
+                    info.SetOutputName( propnode.child_value() );
                 else if( propnode.name() == NODE_Programs )
                     ParsePrograms( propnode, info, pairname );
             }
