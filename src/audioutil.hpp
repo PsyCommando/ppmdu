@@ -92,7 +92,7 @@ namespace audioutil
         int  GatherArgs        ( int argc, const char * argv[] );
 
         //Exec methods
-        int ExportSWDLBank();
+        //int ExportSWDLBank();
         int ExportSWDL();
         int ExportSMDL();
         int ExportSEDL();

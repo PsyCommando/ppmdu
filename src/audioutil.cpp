@@ -202,7 +202,7 @@ namespace audioutil
         //},
 
 
-        //#TODO : New Implementation for loading DSE stuff. Work in progress!
+        //!#TODO : New Implementation for loading DSE stuff. Work in progress!
         //#################################################
 
         //Set Main Bank
@@ -371,9 +371,9 @@ namespace audioutil
     const string                    & CAudioUtil::getLongDescription ()const { return Long_Description;  }
     const string                    & CAudioUtil::getMiscSectionText ()const { return Misc_Text;         }
 
-//--------------------------------------------
+//------------------------------------------------
 //  Utility
-//--------------------------------------------
+//------------------------------------------------
 
     /*
         MakeOutputDirectory
@@ -474,9 +474,9 @@ namespace audioutil
         }
     }
 
-//--------------------------------------------
+//------------------------------------------------
 //  Parse Args
-//--------------------------------------------
+//------------------------------------------------
     bool CAudioUtil::ParseInputPath( const string & path )
     {
         Poco::Path inputfile(path);
@@ -547,9 +547,9 @@ namespace audioutil
     }
 
 
-//
+//------------------------------------------------
 //  Parse Options
-//
+//------------------------------------------------
 
     bool CAudioUtil::ParseOptionGeneralMidi( const std::vector<std::string> & optdata )
     {
@@ -754,9 +754,9 @@ namespace audioutil
         return m_bConvertSamples = true;
     }
 
-//
+//------------------------------------------------
 //  Program Setup and Execution
-//
+//------------------------------------------------
     int CAudioUtil::GatherArgs( int argc, const char * argv[] )
     {
         int returnval = 0;
@@ -925,12 +925,12 @@ namespace audioutil
         {
             switch(m_operationMode)
             {
-                case eOpMode::ExportSWDLBank:
-                {
-                    cout << "=== Exporting SWD Bank ===\n";
-                    returnval = ExportSWDLBank();
-                    break;
-                }
+                //case eOpMode::ExportSWDLBank:
+                //{
+                //    cout << "=== Exporting SWD Bank ===\n";
+                //    returnval = ExportSWDLBank();
+                //    break;
+                //}
                 case eOpMode::ExportSWDL:
                 {
                     cout << "=== Exporting SWD ===\n";
@@ -1035,16 +1035,16 @@ namespace audioutil
 
 
 //--------------------------------------------
-//  Operation
+//  Operations
 //--------------------------------------------
 
     //#TODO: not sure if this is still relevant..
-    int CAudioUtil::ExportSWDLBank()
-    {
-        cout<< "Not implemented!\n";
-        assert(false);
-        return -1;
-    }
+    //int CAudioUtil::ExportSWDLBank()
+    //{
+    //    cout<< "Not implemented!\n";
+    //    assert(false);
+    //    return -1;
+    //}
 
     /*
         Extract the content of the PMD2
@@ -1133,7 +1133,7 @@ namespace audioutil
         //Export the /ME tracks
         if( medir.exists() && medir.isDirectory() )
         {
-            //#TODO
+            //!#TODO
         }
         else
             cout<<"Skipping missing /SOUND/ME directory\n";
@@ -1143,7 +1143,7 @@ namespace audioutil
         //Export the /SE sounds
         if( sedir.exists() && sedir.isDirectory() )
         {
-            //#TODO
+            //!#TODO
         }
         else
             cout<<"Skipping missing /SOUND/SE directory\n";
@@ -1153,7 +1153,7 @@ namespace audioutil
         //Export the /SWD samples
         if( swddir.exists() && swddir.isDirectory() )
         {
-            //#TODO
+            //!#TODO
         }
         else
             cout<<"Skipping missing /SOUND/SWD directory\n";
@@ -1164,7 +1164,7 @@ namespace audioutil
         //Export the /SYSTEM sounds
         if( sysdir.exists() && sysdir.isDirectory() )
         {
-            //#TODO
+            //!#TODO
         }
         else
             cout<<"Skipping missing /SOUND/SYSTEM directory\n";

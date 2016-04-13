@@ -4,5 +4,6 @@
 
 -pmd2 "originals" "out_audioutil_jan" -nofx -log "out_audioutil_jan/log.txt"
 
-"MakeSMDL/10_B_SYS_MONSTERHO.mid" -log "MakeSMDL/log.txt"
+"out_audioutil_jan/10_B_SYS_MONSTERHO.mid" "MakeSMDL/10_B_SYS_MONSTERHO.smd" -log "MakeSMDL/log.txt"
 
+-smdlpath "Shiren2/mid" -swdlpath "Shiren2/BGM" "out_shiren_mars" -nofx -log "out_shiren_mars/log.txt"

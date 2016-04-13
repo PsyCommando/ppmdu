@@ -27,6 +27,70 @@
 
 using namespace std;
 
+#if 0
+/*
+    Prototype implementation of a more intuitive and less complicated method of loading and handling DSE audio.
+*/
+namespace DSE
+{
+    /*
+    */
+    class AudioDataSet
+    {
+    public:
+        AudioDataSet();
+
+        // 
+        void LoadSMDL       ( const std::string & fpath );
+        void LoadSWDL       ( const std::string & fpath );
+        void LoadMatchedPair( const std::string & smdlpath, const std::string & smdlpath );
+
+        //
+        void BatchLoadSMDL( const std::string & dirpath );
+        void BatchLoadSWDL( const std::string & dirpath );
+
+        //
+        void BatchSMDLFronBlob( const std::string & fpath, uint32_t startoffset = 0, uint32_t endoffset = 0 );
+        void BatchSWDLFronBlob( const std::string & fpath, uint32_t startoffset = 0, uint32_t endoffset = 0 );
+
+        //HasMainBank
+        inline bool HasMainBank()const { return !m_mainbankname.empty(); }
+
+    private:
+
+        //These do some additional processing after parsing is done!
+        void ProcessSMDL( std::istreambuf_iterator<char> itbeg, std::istreambuf_iterator<char> itpastend );
+        void ProcessSWDL( std::istreambuf_iterator<char> itbeg, std::istreambuf_iterator<char> itpastend );
+
+        //If a mainbank SWDL is located, 
+        void InsertSequence( DSE::MusicSequence && seq, const std::string & name );
+        void InsertBank    ( DSE::PresetBank    && bnk, const std::string & name );
+
+        //Determine if a SWDL is a main bank (aka, contains sample data, but no presets!)
+        void CheckAndHandleMainBank( DSE::PresetBank       & bnk );
+        bool IsBankMainBank        ( const DSE::PresetBank & bnk )const;
+
+    private:
+        std::multimap<std::string, DSE::MusicSequence> m_sequences;    // Contains all the parsed DSE sequences(Content of SMDL)
+        std::multimap<std::string, DSE::PresetBank>    m_banks;        // Contains all the parsed DSE PresetBanks(content of SWDL)
+        std::string                                    m_mainbankname; // Used to access the main bank after it was loaded. Empty if no main bank.
+    };
+
+    /*
+    */
+    class AudioDataSetConverter
+    {
+    public:
+        AudioDataSetConverter( const AudioDataSet & dsedata );
+
+
+
+    };
+
+};
+
+#endif
+
 namespace DSE
 {
     static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
@@ -922,11 +986,9 @@ namespace DSE
     {
         using namespace sf2;
 
-        //#TODO: What's below should have its own method..
         if( samples->IsInfoPresent(cntsmslot) && samples->IsDataPresent(cntsmslot) ) 
         {
-            const auto & cursminf = *(samples->sampleInfo(cntsmslot));
-
+            const auto        & cursminf = *(samples->sampleInfo(cntsmslot));
             Sample::loadfun_t   loadfun;
             Sample::smplcount_t smpllen = 0;
             Sample::smplcount_t loopbeg = 0;
