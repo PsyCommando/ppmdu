@@ -699,7 +699,7 @@ namespace filetypes
                                         squareRes :
                                         CalcClosestHighestDenominator( squareRes, TIMG_t::getTileWidth() );
 
-                myres = { resdivbyTile, resdivbyTile };
+                myres = { static_cast<uint32_t>(resdivbyTile), static_cast<uint32_t>(resdivbyTile) };
                 sstr << "\tDefaulting to nearest match divisible by 8 : " <<myres <<" !\n"; //Flush
 
                 std::string strres = sstr.str();

@@ -171,6 +171,7 @@ namespace gimg
         friend struct GenericBitHandler;
 
         typedef ImgPixReader<_Img_T,_outit> parent_t;
+        typedef ImgPixReader<_Img_T,_outit> myty_t;
 
         /***************************************************************************************
             Handle 4bpp pixels only
@@ -357,9 +358,24 @@ namespace gimg
             //m_itOut = destimg.begin();
         }
 
+        ImgPixReader( myty_t & other )
+        {
+            m_pixelHandler  = other.m_pixelHandler;
+            m_bLittleEndian = other.m_bLittleEndian;
+            m_itOut         = other.m_itOut;
+        }
+
         ImgPixReader & operator=( uint8_t abyte )
         {
             m_pixelHandler.Parse( abyte );
+            return (*this);
+        }
+
+        ImgPixReader & operator=( myty_t & other )
+        {
+            m_pixelHandler  = other.m_pixelHandler;
+            m_bLittleEndian = other.m_bLittleEndian;
+            m_itOut         = other.m_itOut;
             return (*this);
         }
 
