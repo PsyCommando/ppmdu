@@ -192,3 +192,5 @@ Release WinXP
 *.dll
 *.exp
 *.scgdat
+/ppmdutilities.VC.db
+*.opendb
