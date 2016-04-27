@@ -7,3 +7,7 @@
 "out_audioutil_jan/10_B_SYS_MONSTERHO.mid" "MakeSMDL/10_B_SYS_MONSTERHO.smd" -log "MakeSMDL/log.txt"
 
 -smdlpath "Shiren2/mid" -swdlpath "Shiren2/BGM" "out_shiren_mars" -nofx -log "out_shiren_mars/log.txt"
+
+-blobpath "inazuma_eleven/sound.pb" "out_inazuma" -nofx -log "out_inazuma/log.txt" -v
+
+-smdlpath "ProfLayton" -swdlpath "ProfLayton" -mbank "ProfLayton/BG.SWD" "out_playton" -nofx -log "out_playton/log.txt" -v

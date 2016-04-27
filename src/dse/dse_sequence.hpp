@@ -34,7 +34,6 @@ namespace DSE
     ****************************************************************************/
     enum struct eTrkDelays : uint8_t
     {
-        //whole         = 192, //Not referred in the system
         _half           = 96, // 1/2 note
         _dotqtr         = 72, // dotted 1/4 note
         _two3rdsofahalf = 64, // (1/2 note)/3 * 2
@@ -319,13 +318,14 @@ namespace DSE
         Unk_0xB6        = 0xB6, //Unknown //#TODO
 
         Unk_0xBC        = 0xBC, //Unknown //#TODO
-        Unk_0xBE        = 0xBE, //Possibly set modulation ?
+        
+        SetMod          = 0xBE, //Possibly set modulation ?
         Unk_0xBF        = 0xBF, //Unknown //#TODO
 
         Unk_0xC0        = 0xC0, //Unknown //#TODO
         Unk_0xC3        = 0xC3, //Unknown //#TODO
 
-        Unk_0xCB        = 0xCB, //Holds the last note indefinitely until another note is played
+        SkipNext2Bytes1 = 0xCB, 
 
         Unk_0xD0        = 0xD0, //Unknown //#TODO
         Unk_0xD1        = 0xD1, //Unknown //#TODO
@@ -334,7 +334,7 @@ namespace DSE
         Unk_0xD4        = 0xD4, //Unknown //#TODO
         Unk_0xD5        = 0xD5, //Unknown //#TODO
         Unk_0xD6        = 0xD6, //Unknown //#TODO
-        PitchBend       = 0xD7, //Pitch bending/modulation/LFO. Not 100% certain.
+        PitchBend       = 0xD7, //Pitch bend
         Unk_0xD8        = 0xD8, //Unknown //#TODO
         Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
         Unk_0xDC        = 0xDC, //Unknown //#TODO
@@ -364,7 +364,7 @@ namespace DSE
 
         Unk_0xF6        = 0xF6, //Unknown //#TODO
 
-        SkipNext2Bytes  = 0xF8, //Skip processing the next 2 bytes
+        SkipNext2Bytes2 = 0xF8, //Skip processing the next 2 bytes
 
     };
 
@@ -372,6 +372,8 @@ namespace DSE
         eNote
             Values indicating each notes that can be represented in a NoteOn 
             event.
+
+            *NOTE : 0xF isn't in here, because it serve a special purpose.
     ****************************************************************************/
     enum struct eNote : uint8_t
     {
@@ -537,66 +539,6 @@ namespace DSE
     };
 
 //====================================================================================================
-// Chunk Headers
-//====================================================================================================
-
-
-
-//====================================================================================================
-// Class
-//====================================================================================================
-
-    /************************************************************************
-        EvTrack
-            A track made out of raw events.
-    ************************************************************************/
-    //class EvTrack
-    //{
-    //public:
-    //    typedef std::vector<TrkEvent>   track_t;
-    //    typedef track_t::iterator       ittrk_t;
-    //    typedef track_t::const_iterator cittrk_t;
-
-    //    EvTrack() 
-    //    {}
-
-    //    // *** Events ops ***
-    //    void             pushback( TrkEvent && ev )      { return m_events.push_back(ev); }
-    //    TrkEvent      && popback ()
-    //    {
-    //        TrkEvent tmp;
-    //        if( !m_events.empty() )
-    //        {
-    //            tmp = std::move( m_events[m_events.size()-1] );
-    //            m_events.pop_back();
-    //        }
-    //        else
-    //            throw std::runtime_error("EvTrack: Event track is empty! Cannot popback!");
-    //        return std::move(tmp);
-    //    }
-
-    //    ittrk_t          begin()                         { return m_events.begin(); }
-    //    cittrk_t         begin()const                    { return m_events.begin(); }
-    //    ittrk_t          end()                           { return m_events.end();   }
-    //    cittrk_t         end()const                      { return m_events.end();   }
-
-    //    TrkEvent       & operator[]( size_t index )      { return m_events[index];  }
-    //    const TrkEvent & operator[]( size_t index )const { return m_events[index];  }
-
-    //    size_t size   ()const                            { return m_events.size();  }
-    //    void   resize ( size_t newsz )                   { m_events.resize(newsz);  }
-    //    void   reserve( size_t ressz )                   { m_events.reserve(ressz); }
-
-
-    //private:
-
-
-    //private:
-    //    track_t m_events;
-    //};
-
-
-//====================================================================================================
 // EventParser
 //====================================================================================================
     /*
@@ -734,10 +676,15 @@ namespace DSE
             This interpret and returns the 3 values that are 
             stored in the playnote event's first parameter.
     *****************************************************************/
-    void ParsePlayNoteParam1(  uint8_t   noteparam1, 
-                               uint8_t & inout_curoctave, 
-                               uint8_t & out_param2len, 
-                               uint8_t & out_midinote );
+    //void ProcPlayNoteParam1 (  uint8_t   noteparam1, 
+    //                           uint8_t & inout_curoctave, 
+    //                           uint8_t & out_param2len, 
+    //                           uint8_t & out_midinote );
+
+    void ParsePlayNoteParam1( uint8_t  noteparam1,
+                              int8_t   & out_octdiff,
+                              uint8_t  & out_notedur,
+                              uint8_t  & out_key );
 
     /*****************************************************************
         MidiNoteIdToText

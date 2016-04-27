@@ -87,7 +87,7 @@ namespace DSE
         { eTrkEventCodes::SetUnk2,          eTrkEventCodes::Invalid, 1, "SetUnk" },
 
         //SkipNextByte
-        { eTrkEventCodes::SkipNextByte,     eTrkEventCodes::Invalid, 0, "SkipNextByte" },
+        { eTrkEventCodes::SkipNextByte,     eTrkEventCodes::Invalid, 1, "SkipNextByte" },
 
         //SetPreset
         { eTrkEventCodes::SetPreset,        eTrkEventCodes::Invalid, 1, "SetPreset" },
@@ -119,8 +119,8 @@ namespace DSE
         //Unk_0xBC
         { eTrkEventCodes::Unk_0xBC,         eTrkEventCodes::Invalid, 1, "## Unk_0xBC ##" },
 
-        //Unk_0xBE
-        { eTrkEventCodes::Unk_0xBE,         eTrkEventCodes::Invalid, 1, "## Unk_0xBE ##" },
+        //SetMod
+        { eTrkEventCodes::SetMod,           eTrkEventCodes::Invalid, 1, "SetMod" },
 
         //Unk_0xBF
         { eTrkEventCodes::Unk_0xBF,         eTrkEventCodes::Invalid, 1, "## Unk_0xBF ##" },
@@ -131,8 +131,8 @@ namespace DSE
         //Unk_0xC3
         { eTrkEventCodes::Unk_0xC3,         eTrkEventCodes::Invalid, 1, "## Unk_0xC3 ##" },
 
-        //Unk_0xCB
-        { eTrkEventCodes::Unk_0xCB,         eTrkEventCodes::Invalid, 2, "## Unk_0xCB ##" },
+        //SkipNext2Bytes1
+        { eTrkEventCodes::SkipNext2Bytes1,  eTrkEventCodes::Invalid, 2, "SkipNext2Bytes" },
 
         //Unk_0xD0
         { eTrkEventCodes::Unk_0xD0,         eTrkEventCodes::Invalid, 1, "## Unk_0xD0 ##" },
@@ -227,8 +227,8 @@ namespace DSE
         //Unk_0xF6
         { eTrkEventCodes::Unk_0xF6,         eTrkEventCodes::Invalid, 1, "## Unk_0xF6 ##" },
 
-        //SkipNext2Bytes
-        { eTrkEventCodes::SkipNext2Bytes,   eTrkEventCodes::Invalid, 0, "SkipNext2Bytes" },
+        //SkipNext2Bytes2
+        { eTrkEventCodes::SkipNext2Bytes2,   eTrkEventCodes::Invalid, 2, "SkipNext2Bytes2" },
 
     }};
 
@@ -258,22 +258,36 @@ namespace DSE
             This interpret and returns the 3 values that are 
             stored in the playnote event's first parameter.
     *****************************************************************/
-    void ParsePlayNoteParam1(  uint8_t   noteparam1, 
-                               uint8_t & inout_curoctave, 
-                               uint8_t & out_param2len, 
-                               uint8_t & out_midinote )
+    //void ProcPlayNoteParam1(  uint8_t   noteparam1, 
+    //                           uint8_t & inout_curoctave, 
+    //                           uint8_t & out_param2len, 
+    //                           uint8_t & out_midinote )
+    //{
+    //    //1. Get param2's len
+    //    out_param2len = ( ( noteparam1 & NoteEvParam1NbParamsMask ) >> 6 ) & 0x3; //(0011) just to be sure no sign bits slip through somehow
+
+    //    //2. Get and apply the octave modifiere
+    //    int8_t octavemod = ( ( (noteparam1 & NoteEvParam1PitchMask) >> 4 ) & 0x3 ) - NoteEvOctaveShiftRange;
+    //    inout_curoctave  = static_cast<int8_t>(inout_curoctave) + octavemod; 
+
+    //    //3. Get the midi note
+    //    out_midinote = ( inout_curoctave * static_cast<uint8_t>(eNote::nbNotes) ) + (noteparam1 & 0xF);
+    //}
+
+    void ParsePlayNoteParam1( uint8_t  noteparam1,
+                              int8_t   & out_octdiff,
+                              uint8_t  & out_notedur,
+                              uint8_t  & out_key )
     {
         //1. Get param2's len
-        out_param2len = ( ( noteparam1 & NoteEvParam1NbParamsMask ) >> 6 ) & 0x3; //(0011) just to be sure no sign bits slip through somehow
+        out_notedur = ( ( noteparam1 & NoteEvParam1NbParamsMask ) >> 6 ) & 0x3; //(0011) just to be sure no sign bits slip through somehow
 
         //2. Get and apply the octave modifiere
-        int8_t octavemod = ( ( (noteparam1 & NoteEvParam1PitchMask) >> 4 ) & 0x3 ) - NoteEvOctaveShiftRange;
-        inout_curoctave  = static_cast<int8_t>(inout_curoctave) + octavemod; 
+        out_octdiff = ( ( (noteparam1 & NoteEvParam1PitchMask) >> 4 ) & 0x3 ) - NoteEvOctaveShiftRange;
 
-        //3. Get the midi note
-        out_midinote = ( inout_curoctave * static_cast<uint8_t>(eNote::nbNotes) ) + (noteparam1 & 0xF);
+        //3. Get the key parameter 0x0 to 0xB, sometimes 0xF for special purpose notes!
+        out_key = (noteparam1 & 0xF);
     }
-
 
     std::string MidiNoteIdToText( uint8_t midinote )
     {

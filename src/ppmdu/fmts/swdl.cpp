@@ -1814,7 +1814,7 @@ namespace DSE
                     curblock.ReadFromContainer( prginfblk + itprgi, m_itend );
                     infslot.reset( new ProgramInfo(curblock) );
 
-                    if( utils::LibWide().isLogOn() )
+                    if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                         clog <<"\tInstrument ID#" <<infslot->id <<":\n" <<*infslot <<"\n";
                 }
             }
@@ -1851,7 +1851,7 @@ namespace DSE
             {
                 itkgrp = grp.ReadFromContainer(itkgrp, m_itend);
 
-                if( utils::LibWide().isLogOn() )
+                if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                     clog <<"\tKeygroup ID#" <<grp.id <<":\n" <<grp <<"\n";
                 
             }

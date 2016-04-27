@@ -332,6 +332,15 @@ namespace audioutil
             "-log \"logfilename.txt\"",
             std::bind( &CAudioUtil::ParseOptionLog, &GetInstance(), placeholders::_1 ),
         },
+
+        //Verbose output
+        {
+            "v",
+            0,
+            "This enables the writing of a lot more info to the logfile!",
+            "-v",
+            std::bind( &CAudioUtil::ParseOptionVerbose, &GetInstance(), placeholders::_1 ),
+        },
     }};
 
 
@@ -609,6 +618,12 @@ namespace audioutil
             cerr << "<!>- ERROR: Invalid path to log file specified! Path is not a file!\n";
             return false;
         }
+    }
+
+    bool CAudioUtil::ParseOptionVerbose( const std::vector<std::string> & optdata )
+    {
+        utils::LibWide().setVerbose(true);
+        return true;
     }
 
     bool CAudioUtil::ParseOptionPathToCvInfo( const std::vector<std::string> & optdata )

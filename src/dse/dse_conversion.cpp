@@ -319,7 +319,7 @@ namespace DSE
         //#TODO: implement scaling by users !!!
         DSEEnvelope interpenv = IntepretEnvelopeDuration(origenv);//IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
 
-        if( utils::LibWide().isLogOn() )
+        if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
         {
             clog<<"\tRemaping DSE( " 
                 <<"atkvol : " << static_cast<short>(origenv.atkvol)       <<", "
@@ -334,23 +334,23 @@ namespace DSE
         //Handle Attack
         if( origenv.attack != 0 )
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog<<"Handling Attack..\n";
 
             volenv.attack = sf2::MSecsToTimecents( interpenv.attack );
         }
-        else if( utils::LibWide().isLogOn() )
+        else if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
             clog<<"Skipping Attack..\n";
 
         //Handle Hold
         if( origenv.hold != 0 )
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog<<"Handling Hold..\n";
 
             volenv.hold = sf2::MSecsToTimecents( interpenv.hold );
         }
-        else if( utils::LibWide().isLogOn() )
+        else if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
             clog<<"Skipping Hold..\n";
 
         //Handle Sustain
@@ -362,7 +362,7 @@ namespace DSE
         //Handle Decay
         if( origenv.decay != 0 && origenv.decay2 != 0 && origenv.decay2 != 0x7F ) 
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<"We got combined decays! decay1-2 : " 
                      <<static_cast<unsigned short>(interpenv.decay) <<" + " 
                      <<static_cast<unsigned short>(interpenv.decay2) << " = " 
@@ -381,7 +381,7 @@ namespace DSE
         }
         else if( origenv.decay != 0 )
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<"Handling single decay..\n";
 
             //We use Decay
@@ -392,7 +392,7 @@ namespace DSE
         }
         else 
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog<<"Decay was 0, falling back to decay 2..\n";
 
             if( origenv.decay2 != 0x7F )
@@ -408,7 +408,7 @@ namespace DSE
         //Handle Release
         if( origenv.release != 0 )
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<"Handling Release..\n";
 
             //if( rel != 0x7F )
@@ -416,10 +416,10 @@ namespace DSE
             //else
             //    volenv.release = SHRT_MAX; //Infinite
         }
-        else if( utils::LibWide().isLogOn() )
+        else if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
             clog <<"Skipping Release..\n";
 
-        if( utils::LibWide().isLogOn() )
+        if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
         {
             clog<<"\tRemaped to (del, atk, hold, dec, sus, rel) ( " 
                 << static_cast<short>(volenv.delay)   <<", "
@@ -709,7 +709,7 @@ namespace DSE
     {
         using namespace sf2;
 
-        if( utils::LibWide().isLogOn() )
+        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
             clog <<"\t--- Split#" <<static_cast<unsigned short>(dseinst.id) <<" ---\n";
 
         //Make a zone for this entry
@@ -878,7 +878,7 @@ namespace DSE
                 //!#TODO: Put the content of the loop in its own function. This also seem like duplicate code!! (HandleBakedPrgInst)
                 if( lfo.unk52 != 0 && lfoeffectson ) //Is the LFO enabled ?
                 {
-                    if( utils::LibWide().isLogOn() )
+                    if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
                     
                     if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pitch) ) //Pitch
@@ -888,7 +888,7 @@ namespace DSE
                         global.AddGenerator( eSFGen::vibLfoToPitch, lfo.rate ); //Depth /*static_cast<uint16_t>( lround( static_cast<double>(lfo.rate) / 2.5 )*/
                         global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
                         
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(1)pitch";
                     }
                     else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Volume) ) //Volume
@@ -898,7 +898,7 @@ namespace DSE
                         global.AddGenerator( eSFGen::modLfoToVolume, -(lfo.depth * (20) / 127) /*//*(lfo.depth/10) * -1*/ ); //Depth
                         global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
 
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(2)volume";
                     }
                     else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::Pan) ) //Pan
@@ -912,22 +912,22 @@ namespace DSE
 
                         //#TODO:
                         //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(3)pan";
                     }
                     else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::UNK_4) )
                     {
                         //Unknown LFO target
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(4)unknown";
                     }
                     else
                     {
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(" << static_cast<unsigned short>(lfo.dest) <<")unknown";
                     }
 
-                    if( utils::LibWide().isLogOn() )
+                    if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                     {
                         clog <<", Frequency: " << static_cast<unsigned short>(lfo.rate) 
                              << " Hz, Depth: " << static_cast<unsigned short>(lfo.depth) 
@@ -1070,7 +1070,7 @@ namespace DSE
     {
         using namespace sf2;
 
-        if( utils::LibWide().isLogOn() )
+        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
             clog <<"\t--- Split#" <<static_cast<unsigned short>(split.id) <<" ---\n";
 
         //Make a zone for this entry
@@ -1174,7 +1174,7 @@ namespace DSE
                 //!#TODO: Put the content of this loop in a function!!!!
                 if( lfo.unk52 != 0 && m_lfoeffects ) //Is the LFO enabled ?
                 {
-                    if( utils::LibWide().isLogOn() )
+                    if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                         clog << "\tLFO" <<cntlfo <<" : Target: ";
 
                     //Gather statistics
@@ -1190,10 +1190,10 @@ namespace DSE
                             global.AddGenerator( eSFGen::vibLfoToPitch, DSE_LFODepthToCents( lfo.depth ) ); //Depth 
                             global.AddGenerator( eSFGen::delayVibLFO,   MSecsToTimecents( lfo.delay ) ); //Delay
                         
-                            if( utils::LibWide().isLogOn() )
+                            if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                                 clog << "(1)pitch";
                         }
-                        else if( utils::LibWide().isLogOn() )
+                        else if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                         {
                             clog << "<!>- LFO Vibrato effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
                         }
@@ -1207,10 +1207,10 @@ namespace DSE
                             global.AddGenerator( eSFGen::modLfoToVolume, DSE_LFODepthToCents( lfo.depth ) ); //Depth
                             global.AddGenerator( eSFGen::delayModLFO,    MSecsToTimecents( lfo.delay ) ); //Delay
 
-                            if( utils::LibWide().isLogOn() )
+                            if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                                 clog << "(2)volume";
                         }
-                        else if( utils::LibWide().isLogOn() )
+                        else if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                         {
                             clog << "<!>- LFO volume level effect was ignored, because the rate(" <<lfo.rate <<") is higher than what Soundfont LFOs supports!\n";
                         }
@@ -1224,22 +1224,22 @@ namespace DSE
 
                         //#TODO:
                         //We still need to figure a way to get the LFO involved, and set the oscilation frequency!
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(3)pan";
                     }
                     else if( lfo.dest == static_cast<uint8_t>(LFOTblEntry::eLFODest::UNK_4) )
                     {
                         //Unknown LFO target
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(4)unknown";
                     }
                     else
                     {
-                        if( utils::LibWide().isLogOn() )
+                        if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                             clog << "(" << static_cast<unsigned short>(lfo.dest) <<")unknown";
                     }
 
-                    if( utils::LibWide().isLogOn() )
+                    if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                     {
                         clog <<", Frequency: " << static_cast<unsigned short>(lfo.rate) 
                                 << " Hz, Depth: " << static_cast<unsigned short>(lfo.depth) 
@@ -1947,7 +1947,20 @@ namespace DSE
 
         for( const auto apair : foundpairs )
         {
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"====================================================================\n"
+                     <<"Parsing SWDL " <<apair.first._name <<"\n"
+                     <<"====================================================================\n";
+            }
             DSE::PresetBank    bank( move( DSE::ParseSWDL( apair.first._beg,  apair.first._end  ) ) );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"====================================================================\n"
+                     <<"Parsing SMDL " <<apair.second._name <<"\n"
+                     <<"====================================================================\n";
+            }
             DSE::MusicSequence seq ( move( DSE::ParseSMDL( apair.second._beg, apair.second._end ) ) );
 
             //Tag our files with their original file name, for cvinfo lookups to work!
@@ -1970,7 +1983,20 @@ namespace DSE
 
         for( const auto apair : foundpairs )
         {
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"====================================================================\n"
+                     <<"Parsing SWDL " <<apair.first._name <<"\n"
+                     <<"====================================================================\n";
+            }
             DSE::PresetBank    bank( move( DSE::ParseSWDL( apair.first._beg,  apair.first._end  ) ) );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"====================================================================\n"
+                     <<"Parsing SMDL " <<apair.second._name <<"\n"
+                     <<"====================================================================\n";
+            }
             DSE::MusicSequence seq ( move( DSE::ParseSMDL( apair.second._beg, apair.second._end ) ) );
 
             //Tag our files with their original file name, for cvinfo lookups to work!
@@ -1989,6 +2015,13 @@ namespace DSE
         if( !foundBank.empty() && foundBank.size() == 1 )
         {
             const auto & swdlfound = foundBank.front();
+            
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"====================================================================\n"
+                     <<"Parsing SWDL " <<swdlfound._name <<"\n"
+                     <<"====================================================================\n";
+            }
             DSE::PresetBank bank( move( DSE::ParseSWDL( swdlfound._beg, swdlfound._end ) ) );
             bank.metadata().origfname = swdlfound._name;
             m_master = move(bank);

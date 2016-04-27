@@ -61,6 +61,7 @@ namespace audioutil
 
         bool ParseOptionMBAT       ( const std::vector<std::string> & optdata ); //Export Master Bank And Tracks using the specified folder.
         bool ParseOptionLog        ( const std::vector<std::string> & optdata ); //Redirects clog to the file specified
+        bool ParseOptionVerbose    ( const std::vector<std::string> & optdata ); //Write more info to the log file!
 
         bool ParseOptionMBank      ( const std::vector<std::string> & optdata );
         bool ParseOptionSWDLPath   ( const std::vector<std::string> & optdata );

@@ -273,7 +273,7 @@ namespace DSE
                 else if( progprop.name() == PROP_Transpose )
                     pconv.transpose = utils::parseSignedByte( progprop.child_value() );
                 else if( progprop.name() == PROP_ForceChan )
-                    pconv.idealchan = (utils::parseByte( progprop.child_value() ) - 1); //Bring back to 0-15
+                    pconv.idealchan = (utils::parseByte( progprop.child_value() ) - 1); //Bring back to 0-15 from 1-16
                 else if( progprop.name() == NODE_KeyRemaps )
                 {
                     ParseKeyRemapData( progprop, pconv, dseid, trkname );

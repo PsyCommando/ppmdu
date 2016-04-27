@@ -50,6 +50,15 @@ namespace DSE
         size_t Scan( bool bquiet = false )
         {
             using namespace std;
+            size_t offset = 0;
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"========================================\n"
+                     <<"Scanning blob..\n"
+                     <<"========================================\n";
+            }
+
             for( auto itby = m_srcbeg; itby != m_srcend;  )
             {
                 if( *itby == FirstCharacterDSEMagicNum )
@@ -62,17 +71,35 @@ namespace DSE
                     eDSEContainers cntty = IntToContainerMagicNum( fullmagic );
                     if( cntty != eDSEContainers::invalid )
                     {
-                        itby = HandleContainer( aftermagicn, itbefmagicn, cntty );
+                        size_t possibleoffset = offset;
+                        itby = HandleContainer( aftermagicn, itbefmagicn, cntty, offset );
 
                         if(!bquiet)
-                            cout << "<*>- Found container " <<m_toc.back()._name <<", of type " <<hex <<showbase <<cntty <<noshowbase <<dec <<" !\n";
+                        {
+                            stringstream sstr;
+                            sstr << "<*>- Found container off: 0x" <<hex <<uppercase <<possibleoffset <<nouppercase <<dec <<", " <<m_toc.back()._name <<", of type " <<hex <<showbase <<cntty <<noshowbase <<dec <<" !\n";
+                            string txt = sstr.str();
+                            cout << txt;
+
+                            if( utils::LibWide().isLogOn() )
+                                clog << txt;
+                        }
                     }
                     else
-                        ++itby;
+                    {
+                        ++itby; 
+                        ++offset;
+                    }
                 }
                 else
-                    ++itby;
+                {
+                    ++itby; 
+                    ++offset;
+                }
             }
+
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n\n";
 
             return m_toc.size();
         }
@@ -156,7 +183,7 @@ namespace DSE
 
     private:
 
-        inputiterator HandleContainer( inputiterator itaftermagicnum, inputiterator itbefmagicnum, eDSEContainers cnty )
+        inputiterator HandleContainer( inputiterator itaftermagicnum, inputiterator itbefmagicnum, eDSEContainers cnty, size_t & offset )
         {
             using namespace std;
             //All DSE containers have a filesize 4 bytes after their magic number
@@ -172,6 +199,7 @@ namespace DSE
 
             //Find the end, and add the entry to the ToC!
             inputiterator itend = utils::advAsMuchAsPossible( itbefmagicnum, m_srcend, flen );
+            offset += flen;
             m_toc.push_back( FoundContainer{ string(itname, itnameed), cnty, itbefmagicnum, itend } );
             return itend;
         }

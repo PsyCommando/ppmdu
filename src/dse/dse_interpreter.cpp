@@ -470,7 +470,7 @@ namespace DSE
             const DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
             
             //Log events if neccessary
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<setfill(' ') <<setw(8) <<right <<state.ticks_ <<"t : " << ev <<setfill(' ') <<setw(16) <<right;
             
             //Handle Pauses then play notes, then anything else!
@@ -503,21 +503,21 @@ namespace DSE
                     }
                     case eTrkEventCodes::SetExpress:
                     {
-                        mess.SetControlChange( trkchan, 0x0B, ev.params.front() );
+                        mess.SetControlChange( trkchan, jdksmidi::C_EXPRESSION, ev.params.front() );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
                         break;
                     }
                     case eTrkEventCodes::SetTrkVol:
                     {
-                        mess.SetControlChange( trkchan, 0x07, ev.params.front() );
+                        mess.SetControlChange( trkchan, jdksmidi::C_MAIN_VOLUME, ev.params.front() );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
                         break;
                     }
                     case eTrkEventCodes::SetTrkPan:
                     {
-                        mess.SetControlChange( trkchan, 0x0A, ev.params.front() );
+                        mess.SetControlChange( trkchan, jdksmidi::C_PAN, ev.params.front() );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
                         break;
@@ -534,6 +534,49 @@ namespace DSE
                         mess.SetPitchBend( trkchan, ( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back() ) ) );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
+                        break;
+                    }
+                    case eTrkEventCodes::SetMod:
+                    {
+                        //This is possibly modulation.
+                        mess.SetControlChange( trkchan, jdksmidi::C_MODULATION, ev.params.front() );
+                        //mess.SetControlChange( trkchan, 33, ev.params.front() );
+                        mess.SetTime(state.ticks_);
+                        outtrack.PutEvent( mess );
+                        break;
+                    }
+                    case eTrkEventCodes::Unk_0xDB:
+                    {
+#if 0
+                        //Possibly Portamento time!
+                        //First turn on or off portamento
+                        MIDITimedBigMessage pmsg;
+                        uint8_t portastate = (ev.params.front() > 0 )? 127 : 0;
+                        pmsg.SetControlChange( trkchan, jdksmidi::C_PORTA,      portastate );
+                        pmsg.SetTime(state.ticks_);
+                        outtrack.PutEvent( pmsg );
+
+                        //Then set portamento time
+                        mess.SetControlChange( trkchan, jdksmidi::C_PORTA_TIME, ev.params.front() );
+                        mess.SetTime(state.ticks_);
+                        outtrack.PutEvent( mess );
+#else
+
+                        MIDITimedBigMessage rpn1msg;
+                        MIDITimedBigMessage rpn2msg;
+                        //0x0 0x0 is pitch bend range
+                        rpn1msg.SetControlChange( trkchan, jdksmidi::C_RPN_LSB, 0 );
+                        rpn1msg.SetTime(state.ticks_);
+                        outtrack.PutEvent( rpn1msg );
+                        rpn2msg.SetControlChange( trkchan, jdksmidi::C_RPN_MSB, 0 );
+                        rpn2msg.SetTime(state.ticks_);
+                        outtrack.PutEvent( rpn2msg );
+
+                        //Possibly pitch bend range?
+                        mess.SetControlChange( trkchan, jdksmidi::C_DATA_ENTRY, ev.params.front() );
+                        mess.SetTime(state.ticks_);
+                        outtrack.PutEvent( mess );
+#endif
                         break;
                     }
                     case eTrkEventCodes::LoopPointSet:
@@ -561,16 +604,12 @@ namespace DSE
 
                     //------------------ Byte Skipping events! ------------------ 
                     case eTrkEventCodes::SkipNextByte:
+                    case eTrkEventCodes::SkipNext2Bytes1:
+                    case eTrkEventCodes::SkipNext2Bytes2:
                     {
-                        state.eventno_ += 1;
+                        //Don't do anything with those, we keep them in there just for reseach purpose
                         break;
                     }
-                    case eTrkEventCodes::SkipNext2Bytes:
-                    {
-                        state.eventno_ += 2;
-                        break;
-                    }
-
                     //------------------ Unsupported Events ------------------ 
                     default:
                     {
@@ -606,7 +645,7 @@ namespace DSE
                 };
             }
 
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                 clog << "\n";
 
             //Event handling done, increment event counter
@@ -817,7 +856,24 @@ namespace DSE
             //Interpret the first parameter byte of the play note event
             midinote_t mnoteid   = 0;
             uint8_t    param2len = 0; //length in bytes of param2
-            ParsePlayNoteParam1( ev.params.front(), state.octave_, param2len, mnoteid );
+            int8_t     octmod    = 0;
+            uint8_t    parsedkey = 0;
+            //ParsePlayNoteParam1( ev.params.front(), state.octave_, param2len, mnoteid );
+
+            ParsePlayNoteParam1( ev.params.front(), octmod, param2len, parsedkey );
+
+            //Special case for when the play note even is 0xF
+            if( parsedkey > static_cast<uint8_t>(eNote::nbNotes) )
+            {
+                clog <<"<!>- Event on track#" <<trkno << ", has key ID 0x" <<hex <<static_cast<short>(parsedkey) <<dec <<"! Unsupported!\n";
+                return;
+            }
+            else
+            {
+                state.octave_ = static_cast<int8_t>(state.octave_) + octmod;                          //Apply octave modification
+                mnoteid       = ( state.octave_ * static_cast<uint8_t>(eNote::nbNotes) ) + parsedkey; //Calculate MIDI key!
+            }
+
 
             //Parse the note hold duration bytes
             uint32_t holdtime = 0;
@@ -862,7 +918,7 @@ namespace DSE
 
             outtrack.PutEvent( mess );
 
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<"=> " << MidiNoteIdToText(mnoteid) << ", ";
             
             //Make the noteoff message
@@ -879,7 +935,7 @@ namespace DSE
                     noteofftime = state.ticks_ +  utils::Clamp( state.lasthold_, 0ui32, itfound->second.maxkeydowndur );
             }
 
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
                 clog <<"hold " <<state.lasthold_ <<" tick(s)";
 
 
@@ -1185,7 +1241,7 @@ namespace DSE
                         {
                             //Re-assign the unused channel
                             usedchan[m_trkchanmap[trktorelocate]] = false;   //Vaccate the old channel
-                            m_trkchanmap[trktorelocate]           = cntchan;
+                            m_trkchanmap[trktorelocate]           = static_cast<uint8_t>(cntchan);
                             usedchan[cntchan]                     = true;
                              //Remove a track from the list to relocate!
                         }
@@ -1264,7 +1320,7 @@ namespace DSE
         */
         void ExportATrack( unsigned int intrk, unsigned int outtrk, size_t evno = 0 )
         {
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn()  )
             {
                 clog <<"---- Exporting Track#" <<intrk <<" ----\n";
             }
@@ -1288,7 +1344,7 @@ namespace DSE
                              *(m_midiout.GetTrack(outtrk)) );
             }
 
-            if( utils::LibWide().isLogOn() )
+            if( utils::LibWide().isLogOn()  && utils::LibWide().isVerboseOn() )
                 clog <<"---- End of Track ----\n\n";
         }
 

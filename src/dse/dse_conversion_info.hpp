@@ -4,7 +4,8 @@
 dse_conversion_info.hpp
 2015/10/11
 psycommando@gmail.com
-Description: Format for conversion info while converting SMDL files into MIDIs.
+Description: Conversion info data used while converting SMDL files into MIDIs.
+             
 */
 #include <dse/dse_common.hpp>
 #include <dse/dse_containers.hpp>
@@ -90,19 +91,19 @@ namespace DSE
                  idealchan(preferedchan)
             {}
 
-            //--- Conversion data ---
+            //** Conversion data ***
             presetid_t                          midipres;      //The midi preset to use for this preset
             bankid_t                            midibank;      //The midi bank to use for this preset
             std::map<midinote_t, NoteRemapData> remapnotes;    //Data on how to remap notes for instruments with complex splits, like drum presets
-            //--- DSE Specific stuff ---
+            //*** DSE Specific stuff ***
             std::vector<ExtraEffects>           extrafx;       //Data on any special effecs to be applied midi-side
             uint8_t                             maxpoly;       //The maximum ammount of simultaneous notes allowed for the preset. Previous notes will be turned off.
             uint8_t                             priority;      //The priority value from the DSE keygroup
-            //--- Extra conversion stuff ---
+            //*** Extra conversion stuff ***
             uint32_t                            maxkeydowndur; //The longest note duration allowed in MIDI ticks! Used to get rid of issues caused by notes being held for overly long durations in some SMDL.
             int8_t                              transpose;     //The amount of octaves to transpose the notes played by the instrument. Signed!
             uint8_t                             idealchan;     //The channel to force notes linked to this preset to be played on.
-            //--- Optional Extra Data --- 
+            //*** Optional Extra Data ***
             std::vector<uint16_t>               origsmplids;    //The original sample ids for this preset. Only used when writing a CVinfo file!
         };
 
@@ -159,9 +160,11 @@ namespace DSE
 //================================================================================
     /*
         SMDLConvInfoDB
+            Basically, a collection of several track conversion info, with facilities for making obtaining conversion
+            info for a specific file easier.
+
             Handles parsing the XML file that specifies what to convert DSE programs to, and what notes to convert 
             specific notes to, and etc..
-
     */
     class SMDLConvInfoDB
     {
