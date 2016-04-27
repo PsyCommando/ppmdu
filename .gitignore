@@ -196,3 +196,5 @@ Release WinXP
 *.opendb
 /ppmdutilities_dependencies.VC.db
 /ppmdutilities.VC.db
+/ppmdutilities_dependencies.VC.db
+/ppmdutilities.VC.db
