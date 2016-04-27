@@ -46,8 +46,8 @@ namespace filetypes
     private:
         static BGP::tilemapdata DecodeTileMappingData( uint16_t entry )
         {
-            return move( BGP::tilemapdata{  entry & 0x3FF,              //0000 0011 1111 1111, tile index
-                                            (entry & 0xF000) >> 12,     //1111 0000 0000 0000, pal index
+            return move( BGP::tilemapdata{  static_cast<uint16_t>(entry & 0x3FF),              //0000 0011 1111 1111, tile index
+                                            static_cast<uint16_t>((entry & 0xF000) >> 12),     //1111 0000 0000 0000, pal index
                                             (entry & 0x800) > 0,        //0000 1000 0000 0000, vflip
                                             (entry & 0x400) > 0} );     //0000 0100 0000 0000, hflip 
         }

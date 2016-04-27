@@ -429,7 +429,7 @@ namespace sf2
         //Functor to replace the generator map sort predicate!
         struct CmpPriority
         {
-            inline bool operator()(eSFGen gen1, eSFGen gen2 ) 
+            inline bool operator()(eSFGen gen1, eSFGen gen2 )const
             { 
                 //Keyrange always in first !
                 if( gen1 == eSFGen::keyRange )

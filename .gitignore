@@ -192,3 +192,10 @@ Release WinXP
 *.dll
 *.exp
 *.scgdat
+/ppmdutilities.VC.db
+*.opendb
+/ppmdutilities_dependencies.VC.db
+/ppmdutilities.VC.db
+/ppmdutilities_dependencies.VC.db
+/ppmdutilities.VC.db
+ppmd3_utilities.VC.db
