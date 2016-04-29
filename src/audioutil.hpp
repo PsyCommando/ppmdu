@@ -106,7 +106,6 @@ namespace audioutil
         int ExportBatchSWDL();
         int ExportBatchSMDL();
         int BatchListSWDLPrgm( const std::string & SrcPath );
-        int ListSWDLPrgm();
         int MakeCvinfo();       //Make a blank cvinfo from the swdl loaded!
 
         int BuildSWDL();

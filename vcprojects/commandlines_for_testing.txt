@@ -11,3 +11,16 @@
 -blobpath "inazuma_eleven/sound.pb" "out_inazuma" -nofx -log "out_inazuma/log.txt" -v
 
 -smdlpath "ProfLayton" -swdlpath "ProfLayton" -mbank "ProfLayton/BG.SWD" "out_playton" -nofx -log "out_playton/log.txt" -v
+
+-bgmcntpath "999" "bgm" "out_999" -nofx -log "out_999/log.txt" -v
+
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt" -v
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+
+-smdlpath "luminous_arc/rip" -swdlpath "luminous_arc/rip" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+-smdlpath "luminous_arc/bf" -swdlpath "luminous_arc/bf" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt" -v
+
+
+
+-bgmcntpath "ZombieDaisuki" "sd" "out_ZombieDaisuki" -log "out_ZombieDaisuki/log.txt" -v

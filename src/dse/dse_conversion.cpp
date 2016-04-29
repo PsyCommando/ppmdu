@@ -627,7 +627,7 @@ namespace DSE
                 int8_t presid = 0;
 
                 if( mystrat.ComputeBankAndInstID( cntpair, cntinst, bankid, presid ) )
-                    target.AddPresetConvInfo( cntinst, SMDLPresetConversionInfo::PresetConvData( presid, bankid ) ); //set pair nb as bank id
+                    target.AddPresetConvInfo( static_cast<dsepresetid_t>(cntinst), SMDLPresetConversionInfo::PresetConvData( presid, bankid ) ); //set pair nb as bank id
                 else
                     throw runtime_error("MakeAPresetBankDBForAPair() : SF2 file is full!!");
             }
@@ -1699,27 +1699,50 @@ namespace DSE
         for( size_t cntpairs = 0; cntpairs < m_pairs.size(); cntpairs++ )
         {
             auto & presetbank = m_pairs[cntpairs].second;
+            auto   ptrprgs    = presetbank.prgmbank().lock();
             auto   ptrsmplbnk = presetbank.smplbank().lock();
 
-            if( ptrsmplbnk != nullptr )
+            if( ptrsmplbnk != nullptr  )
             {
                 //We have sample data
                 bnosmpldata = false;
 
-                //Enlarge our vector when needed!
-                if( ptrsmplbnk->NbSlots() > smpldata.size() )
-                    smpldata.resize( ptrsmplbnk->NbSlots() );
-
-                //Copy the samples over into their matching slot!
-                for( size_t cntsmplslot = 0; cntsmplslot < ptrsmplbnk->NbSlots(); ++cntsmplslot )
+                if( ptrprgs != nullptr )
                 {
-                    if( ptrsmplbnk->IsDataPresent(cntsmplslot) && 
-                        ptrsmplbnk->IsInfoPresent(cntsmplslot) &&
-                        !smpldata[cntsmplslot].pdata_ &&
-                        !smpldata[cntsmplslot].pinfo_ )
+                    //!#FIXME: This is really stupid. Not all games alloc the same ammount of samples as eachothers. 
+
+                    //Enlarge our vector when needed!
+                    //if( ptrsmplbnk->NbSlots() > smpldata.size() )
+                    //    smpldata.resize( ptrsmplbnk->NbSlots() );
+
+                    //Copy the samples over into their matching slot!
+                    for( size_t cntsmplslot = 0; cntsmplslot < ptrsmplbnk->NbSlots(); ++cntsmplslot )
                     {
-                        smpldata[cntsmplslot].pinfo_.reset( new DSE::WavInfo(*ptrsmplbnk->sampleInfo(cntsmplslot) ) );
-                        smpldata[cntsmplslot].pdata_.reset( new std::vector<uint8_t>(*ptrsmplbnk->sample(cntsmplslot)) );
+                        if( ptrsmplbnk->IsDataPresent(cntsmplslot) && 
+                            ptrsmplbnk->IsInfoPresent(cntsmplslot) /*&&
+                            !smpldata[cntsmplslot].pdata_ &&
+                            !smpldata[cntsmplslot].pinfo_*/ )
+                        {
+                            for( auto & prgm : ptrprgs->PrgmInfo() )
+                            {
+                                if( prgm != nullptr )
+                                {
+                                    for( auto & split : prgm->m_splitstbl )
+                                    {
+                                        if( split.smplid == cntsmplslot )
+                                        {
+                                            split.smplid = smpldata.size(); //Reassign sample IDs to our unified table!
+                                        }
+                                    }
+                                }
+                            }
+
+                            //Insert a new sample entry in the table!
+                            SampleBank::smpldata_t blk;
+                            blk.pinfo_.reset( new DSE::WavInfo        (*ptrsmplbnk->sampleInfo(cntsmplslot) ) );
+                            blk.pdata_.reset( new std::vector<uint8_t>(*ptrsmplbnk->sample(cntsmplslot)) );
+                            smpldata.push_back( std::move(blk) );
+                        }
                     }
                 }
             }
@@ -1731,12 +1754,61 @@ namespace DSE
         DSE_MetaDataSWDL meta;
         meta.fname       = "Main.SWD";
         meta.nbprgislots = 0;
-        meta.nbwavislots = smpldata.size();
+        meta.nbwavislots = static_cast<uint16_t>( smpldata.size() );
 
         m_master = move( PresetBank( move(meta), 
                                      move( unique_ptr<SampleBank>(new SampleBank(move( smpldata ))) ) 
                                    ) );
     }
+    //{
+    //    vector<SampleBank::smpldata_t> smpldata;
+    //    bool                           bnosmpldata = true;
+
+    //    //Iterate through all the pairs and fill up our sample data list !
+    //    for( size_t cntpairs = 0; cntpairs < m_pairs.size(); cntpairs++ )
+    //    {
+    //        auto & presetbank = m_pairs[cntpairs].second;
+    //        auto   ptrsmplbnk = presetbank.smplbank().lock();
+
+    //        if( ptrsmplbnk != nullptr )
+    //        {
+    //            //We have sample data
+    //            bnosmpldata = false;
+
+
+    //            //!#FIXME: This is really stupid. Not all games alloc the same ammount of samples as eachothers. 
+
+    //            //Enlarge our vector when needed!
+    //            if( ptrsmplbnk->NbSlots() > smpldata.size() )
+    //                smpldata.resize( ptrsmplbnk->NbSlots() );
+
+    //            //Copy the samples over into their matching slot!
+    //            for( size_t cntsmplslot = 0; cntsmplslot < ptrsmplbnk->NbSlots(); ++cntsmplslot )
+    //            {
+    //                if( ptrsmplbnk->IsDataPresent(cntsmplslot) && 
+    //                    ptrsmplbnk->IsInfoPresent(cntsmplslot) &&
+    //                    !smpldata[cntsmplslot].pdata_ &&
+    //                    !smpldata[cntsmplslot].pinfo_ )
+    //                {
+    //                    smpldata[cntsmplslot].pinfo_.reset( new DSE::WavInfo(*ptrsmplbnk->sampleInfo(cntsmplslot) ) );
+    //                    smpldata[cntsmplslot].pdata_.reset( new std::vector<uint8_t>(*ptrsmplbnk->sample(cntsmplslot)) );
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    if( bnosmpldata )
+    //        throw runtime_error("BatchAudioLoader::BuildMasterFromPairs(): No sample data found in the SWDL containers that were loaded! Its possible the main bank was not loaded, or that no SWDL were loaded.");
+
+    //    DSE_MetaDataSWDL meta;
+    //    meta.fname       = "Main.SWD";
+    //    meta.nbprgislots = 0;
+    //    meta.nbwavislots = static_cast<uint16_t>( smpldata.size() );
+
+    //    m_master = move( PresetBank( move(meta), 
+    //                                 move( unique_ptr<SampleBank>(new SampleBank(move( smpldata ))) ) 
+    //                               ) );
+    //}
 
 
     /***************************************************************************************
@@ -1785,8 +1857,12 @@ namespace DSE
     */
     void BatchAudioLoader::LoadBgmContainer( const std::string & file )
     {
-        auto pairdata( move( ReadBgmContainer( file ) ) );
+        if( utils::LibWide().isLogOn() )
+            clog << "--------------------------------------------------------------------------\n"
+                 << "Parsing BGM container \"" <<Poco::Path(file).getFileName() <<"\"\n"
+                 << "--------------------------------------------------------------------------\n";
 
+        auto pairdata( move( ReadBgmContainer( file ) ) );
         //Tag our files with their original file name, for cvinfo lookups to work!
         pairdata.first.metadata().origfname  = Poco::Path(file).getBaseName();
         pairdata.second.metadata().origfname = Poco::Path(file).getBaseName();
@@ -1945,6 +2021,10 @@ namespace DSE
         blobscan.Scan();
         auto foundpairs = blobscan.ListAllMatchingSMDLPairs();
 
+        size_t cntpairs = 0;
+        cout << "------------------------\n"
+             << "Loading pairs..\n"
+             << "------------------------\n";
         for( const auto apair : foundpairs )
         {
             if( utils::LibWide().isLogOn() )
@@ -1968,7 +2048,12 @@ namespace DSE
             bank.metadata().origfname = apair.first._name;
 
             m_pairs.push_back( move( std::make_pair( std::move(seq), std::move(bank) ) ) );
+
+            ++cntpairs;
+            cout <<"\r[" <<setfill(' ') <<setw(4) <<right <<cntpairs <<" of " <<foundpairs.size() <<" loaded]" <<"..";
         }
+
+        cout<<"\n..done!\n";
     }
 
     /*

@@ -46,9 +46,6 @@
     <Filter Include="pugixml">
       <UniqueIdentifier>{b9e5d948-9f99-41b5-91f0-ace9e3f18324}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\typesupport">
-      <UniqueIdentifier>{7b57d2db-034d-4c5b-9257-a5ae53b73c7a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\typesupport">
       <UniqueIdentifier>{2af5ebf4-05a3-4150-96f4-45c2fe2cfac0}</UniqueIdentifier>
     </Filter>
@@ -63,6 +60,9 @@
     </Filter>
     <Filter Include="Header Files\ppmdu\file formats\TempExtraForParsingText">
       <UniqueIdentifier>{e20a5e4a-09e5-4352-adfc-aa16eedddeda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\typesupport">
+      <UniqueIdentifier>{7b57d2db-034d-4c5b-9257-a5ae53b73c7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -193,13 +193,13 @@
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp">
-      <Filter>Header Files\typesupport</Filter>
+      <Filter>Header Files\ppmdu\typesupport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\bgp.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types\content_type_analyser.hpp">
-      <Filter>Header Files\typesupport</Filter>
+      <Filter>Header Files\ppmdu\typesupport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>

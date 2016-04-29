@@ -43,22 +43,156 @@ namespace DSE
 
         #FIXME : This isn't going to work in every cases! Especially with Version 0x402 DSE
     */
-    bool SWDL_Header::DoesContainsSamples()const
-    {
-        return (pcmdlen > 0) && 
-               ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize);
-    }
+    //bool SWDL_Header::DoesContainsSamples()const
+    //{
+    //    return (pcmdlen > 0) && 
+    //           ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize);
+    //}
 
     /*
         IsSWDLSampleBankOnly
             Returns true if the swdl is only a sample bank, without program info.
     */
-    bool SWDL_Header::IsSampleBankOnly()const
+    //bool SWDL_Header::IsSampleBankOnly()const
+    //{
+    //    return (pcmdlen > 0) &&                                                  // #FIXME : This isn't going to work in every cases! Especially with Version 0x402 DSE
+    //           ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize) && // #FIXME : This isn't going to work in every cases! Especially with Version 0x402 DSE
+    //           (nbprgislots == 0);
+    //}
+
+
+
+
+
+    SWDL_HeaderData & SWDL_HeaderData::operator=( const SWDL_Header_v402 & other )
     {
-        return (pcmdlen > 0) &&                                                  // #FIXME : This isn't going to work in every cases! Especially with Version 0x402 DSE
-               ((pcmdlen & SWDL_PCMDSpecialSizeMask) != SWDL_PCMDSpecialSize) && // #FIXME : This isn't going to work in every cases! Especially with Version 0x402 DSE
-               (nbprgislots == 0);
+        this->unk18           =  other.unk18;
+        this->flen            =  other.flen;
+        this->version         =  other.version;
+        this->unk1            =  other.unk1;
+        this->unk2            =  other.unk2;
+        this->unk3            =  other.unk3;
+        this->unk4            =  other.unk4;
+        this->year            =  other.year;
+        this->month           =  other.month;
+        this->day             =  other.day;
+        this->hour            =  other.hour;
+        this->minute          =  other.minute;
+        this->second          =  other.second;
+        this->centisec        =  other.centisec;
+
+        std::copy( std::begin(other.fname), std::end(other.fname), std::begin(this->fname) );
+
+        //Common 
+        this->nbwavislots     = other.nbwavislots;
+        this->nbprgislots     = other.nbprgislots;
+
+        //v402 only
+        this->nbkeygroups     = other.nbkeygroups;
+        return *this;
     }
+
+    SWDL_HeaderData & SWDL_HeaderData::operator=( const SWDL_Header_v415 & other )
+    {
+        this->unk18           = other.unk18;
+        this->flen            = other.flen;
+        this->version         = other.version;
+        this->unk1            = other.unk1;
+        this->unk2            = other.unk2;
+        this->unk3            = other.unk3;
+        this->unk4            = other.unk4;
+        this->year            = other.year;
+        this->month           = other.month;
+        this->day             = other.day;
+        this->hour            = other.hour;
+        this->minute          = other.minute;
+        this->second          = other.second;
+        this->centisec        = other.centisec;
+
+        std::copy( std::begin(other.fname), std::end(other.fname), std::begin(this->fname) );
+
+        //Common 
+        this->nbwavislots     = other.nbwavislots;
+        this->nbprgislots     = other.nbprgislots;
+
+        //v415 only
+        this->unk14           = other.unk14;
+        this->pcmdlen         = other.pcmdlen;
+        this->wavilen         = other.wavilen;
+        this->unk17           = other.unk17;
+        return *this;
+    }
+
+
+    SWDL_HeaderData::operator SWDL_Header_v402()
+    {
+        SWDL_Header_v402 hdr;
+        hdr.magicn          = static_cast<uint32_t>(eDSEContainers::swdl);
+        hdr.unk18           = 0;
+        hdr.flen            = flen;
+        hdr.version         = SWDL_Header_v402::DefVersion;
+        hdr.unk1            = unk1;
+        hdr.unk2            = unk2;
+        hdr.unk3            = unk3;
+        hdr.unk4            = unk4;
+        hdr.year            = year;
+        hdr.month           = month;
+        hdr.day             = day;
+        hdr.hour            = hour;
+        hdr.minute          = minute;
+        hdr.second          = second;
+        hdr.centisec        = centisec;
+
+        std::copy( std::begin(fname), std::end(fname), std::begin(hdr.fname) );
+
+        hdr.unk10           = SWDL_Header_v402::DefUnk10;
+        hdr.unk11           = 0;
+        hdr.unk12           = 0;
+        hdr.unk13           = SWDL_Header_v402::DefUnk13;
+        hdr.unk15           = 0;
+        hdr.unk16           = 0;
+        hdr.nbwavislots     = static_cast<uint8_t>(nbwavislots);
+        hdr.nbprgislots     = static_cast<uint8_t>(nbprgislots);
+        hdr.nbkeygroups     = nbkeygroups;
+        return move(hdr);
+    }
+
+    SWDL_HeaderData::operator SWDL_Header_v415()
+    {
+        SWDL_Header_v415 hdr;
+
+        hdr.magicn          = static_cast<uint32_t>(eDSEContainers::swdl);
+        hdr.unk18           = 0;
+        hdr.flen            = flen;
+        hdr.version         = SWDL_Header_v415::DefVersion;
+        hdr.unk1            = unk1;
+        hdr.unk2            = unk2;
+        hdr.unk3            = unk3;
+        hdr.unk4            = unk4;
+        hdr.year            = year;
+        hdr.month           = month;
+        hdr.day             = day;
+        hdr.hour            = hour;
+        hdr.minute          = minute;
+        hdr.second          = second;
+        hdr.centisec        = centisec;
+
+        std::copy( std::begin(fname), std::end(fname), std::begin(hdr.fname) );
+        
+        hdr.unk10           = SWDL_Header_v415::DefUnk10;
+        hdr.unk11           = 0;
+        hdr.unk12           = 0;
+        hdr.unk13           = SWDL_Header_v415::DefUnk13;
+        hdr.pcmdlen         = pcmdlen;
+        hdr.unk14           = unk14;
+        hdr.nbwavislots     = nbwavislots;
+        hdr.nbprgislots     = nbprgislots;
+        hdr.unk17           = unk17;
+        hdr.wavilen         = wavilen;
+
+        return move(hdr);
+    }
+
 
 //===============================================================================
 //  Data Structures
@@ -371,7 +505,10 @@ namespace DSE
     ***********************************************/
     struct WavInfo_v402
     {
-        static const uint32_t Size     = 64;
+        //static const uint32_t Size     = 64;
+        static const uint32_t SzType1  = 48; //Smallest size the entry can have
+        static const uint32_t SzType2  = 64; //Biggest size the entry can have
+
         static const uint8_t  DefUnk1  = 0x01;
         static const uint8_t  DefUnk5  = 2;
         static const uint8_t  DefUnk19 = 1;
@@ -381,7 +518,7 @@ namespace DSE
         static const uint8_t  DefUnk57 = 0xFF;
 
         uint8_t  unk1       ;
-        uint16_t id         ; //Index/ID of the sample
+        uint8_t  id         ; //Index/ID of the sample
         int8_t   unk2       ;
         int8_t   unk6       ;
         uint8_t  rootkey    ; //Possibly the MIDI key matching the pitch the sample was sampled at!
@@ -393,7 +530,7 @@ namespace DSE
         uint32_t unk4       ;
         uint8_t  unk5       ;
         uint8_t  smplloop   ; //loop flag, 1 = loop, 0 = no loop
-        uint32_t smplrate   ; //Sampling rate of the sample
+        uint16_t smplrate   ; //Sampling rate of the sample
         uint32_t smplpos    ; //Offset within pcmd chunk of the sample
         uint32_t loopbeg    ; //Loop start in int32 (based on the resulting PCM16)
         uint32_t looplen    ; //Length of the sample in int32
@@ -413,6 +550,8 @@ namespace DSE
         int8_t   release    ;
         int8_t   unk57      ;
 
+        //Set Entry len
+        uint32_t entrylen;
 
         WavInfo_v402()
         {
@@ -447,6 +586,7 @@ namespace DSE
             decay2     = 0;
             release    = 0;
             unk57      = 0;
+            entrylen   = SzType2;
         }
 
         WavInfo_v402( const WavInfo & winf )
@@ -482,6 +622,7 @@ namespace DSE
             decay2     = winf.decay2;
             release    = winf.release;
             unk57      = DefUnk57;
+            entrylen   = SzType2;
         }
 
         //Write the structure using an iterator to a byte container
@@ -505,8 +646,11 @@ namespace DSE
             itwriteto = utils::WriteIntToBytes( smplpos,    itwriteto );
             itwriteto = utils::WriteIntToBytes( loopbeg,    itwriteto );
             itwriteto = utils::WriteIntToBytes( looplen,    itwriteto );
+
             // ... 16 bytes of junk/padding here ....
-            std::fill_n( itwriteto, 16, 0 );
+            if( entrylen == SzType2 )
+                std::fill_n( itwriteto, 16, 0 );
+
             itwriteto = utils::WriteIntToBytes( envon,      itwriteto );
             itwriteto = utils::WriteIntToBytes( envmult,    itwriteto );
             itwriteto = utils::WriteIntToBytes( unk19,      itwriteto );
@@ -545,8 +689,11 @@ namespace DSE
             itRead = utils::ReadIntFromBytes( smplpos,    itRead, itend );
             itRead = utils::ReadIntFromBytes( loopbeg,    itRead, itend );
             itRead = utils::ReadIntFromBytes( looplen,    itRead, itend );
+
             // ... 16 bytes of junk/padding here ....
-            itRead = utils::advAsMuchAsPossible( itRead, itend, 16 );
+            if( entrylen == SzType2 )
+                itRead = utils::advAsMuchAsPossible( itRead, itend, 16 );
+
             itRead = utils::ReadIntFromBytes( envon,      itRead, itend );
             itRead = utils::ReadIntFromBytes( envmult,    itRead, itend );
             itRead = utils::ReadIntFromBytes( unk19,      itRead, itend );
@@ -903,12 +1050,12 @@ namespace DSE
             unk39    = DefUnk39;
             unk40    = DefUnk40;
             atkvol   = sent.env.atkvol;
-            attack   = sent.env.attack;
-            decay    = sent.env.decay;
+            attack   = static_cast<int8_t>(sent.env.attack);
+            decay    = static_cast<int8_t>(sent.env.decay);
             sustain  = sent.env.sustain;
-            hold     = sent.env.hold;
-            decay2   = sent.env.decay2;
-            release  = sent.env.release;
+            hold     = static_cast<int8_t>(sent.env.hold);
+            decay2   = static_cast<int8_t>(sent.env.decay2);
+            release  = static_cast<int8_t>(sent.env.release);
             rx       = DefRX;
             return *this;
         }
@@ -1314,6 +1461,7 @@ namespace DSE
             itReadfrom = utils::ReadIntFromBytes( hivel2,   itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes( unk16,    itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes( unk17,    itReadfrom, itpastend );
+
             itReadfrom = utils::ReadIntFromBytes( smplid,   itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes( ftune,    itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes( ctune,    itReadfrom, itpastend );
@@ -1413,12 +1561,12 @@ namespace DSE
             unk39    = DefUnk39;
             unk40    = DefUnk40;
             atkvol   = sent.env.atkvol;
-            attack   = sent.env.attack;
-            decay    = sent.env.decay;
+            attack   = static_cast<int8_t>(sent.env.attack);
+            decay    = static_cast<int8_t>(sent.env.decay);
             sustain  = sent.env.sustain;
-            hold     = sent.env.hold;
-            decay2   = sent.env.decay2;
-            release  = sent.env.release;
+            hold     = static_cast<int8_t>(sent.env.hold);
+            decay2   = static_cast<int8_t>(sent.env.decay2);
+            release  = static_cast<int8_t>(sent.env.release);
             rx       = DefRX;
             return *this;
         }
@@ -1696,6 +1844,8 @@ namespace DSE
 
         PresetBank Parse()
         {
+            if( utils::LibWide().isLogOn() )
+                clog << "=== Parsing SWDL ===\n";
             ParseHeader();
             ParseMeta();
 
@@ -1711,13 +1861,22 @@ namespace DSE
                     //Grab the info on every samples
                     vector<SampleBank::smpldata_t> smpldat(std::move( ParseWaviChunk<WavInfo_v415>() ));
                     auto psmpls = ParseSamples(smpldat);
+
+                    if( utils::LibWide().isLogOn() )
+                        clog << "\n\n";
+
                     return std::move( PresetBank( move(m_meta), 
                                       move(pinst), 
                                       move(psmpls) ) );
                 }
                 else
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog << "\n\n";
+
                     return std::move( PresetBank( move(m_meta), 
                                       move(pinst) ) );
+                }
             }
             else if( m_hdr.version == DseVerToInt(eDSEVersion::V402) )
             {
@@ -1725,6 +1884,10 @@ namespace DSE
                 //Grab the info on every samples
                 vector<SampleBank::smpldata_t> smpldat(std::move( ParseWaviChunk<WavInfo_v402>() ));
                 auto psmpls = ParseSamples(smpldat);
+
+                if( utils::LibWide().isLogOn() )
+                    clog << "\n\n";
+
                 return std::move( PresetBank( move(m_meta), 
                                   move(pinst), 
                                   move(psmpls) ) );
@@ -1740,7 +1903,16 @@ namespace DSE
     private:
         void ParseHeader()
         {
-            m_hdr.ReadFromContainer(m_itbeg);
+            //!#TODO: Find Version, then use the appropriate header to parse!
+
+            //auto     itversion = std::advance( m_itbeg, SWDL_VersionOffset );
+            //uint16_t dsevers   = utils::ReadIntFromBytes<uint16_t>( itversion, m_itend );
+
+            m_hdr = ReadSwdlHeader( m_itbeg, m_itend );
+
+            //assert(false);
+
+            //m_hdr.ReadFromContainer(m_itbeg);
 
             if( utils::LibWide().isLogOn() )
                 clog << "\tDSE Version: 0x" <<hex <<uppercase <<m_hdr.version <<dec <<nouppercase <<"\n";
@@ -1905,7 +2077,6 @@ namespace DSE
             vector<SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
             
             auto itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
-
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
@@ -1922,9 +2093,82 @@ namespace DSE
             return move(waviptrs);
         }
 
+        template<>
+            vector<SampleBank::smpldata_t> ParseWaviChunk<WavInfo_v402>()
+        {
+            auto itwavi = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::wavi );
+
+            if( itwavi == m_itend )
+                throw std::runtime_error("SWDLParser::ParseWaviChunk(): Couldn't find wavi chunk !!!!!");
+
+            ChunkHeader wavihdr;
+            itwavi = wavihdr.ReadFromContainer( itwavi, m_itend ); //Move iterator past the header
+
+            //Create the vector with the nb of slots mentioned in the header
+            vector<SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
+            
+            auto itlenchk = itwavi; //Copy the iterator to keep one on the start of the wavi data
+
+            //Calculate the length of an entry
+            uint32_t entrylen = 0;
+            uint32_t lastoffs = 0;
+            for( auto & ablock : waviptrs )
+            {
+                //Read a ptr
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itlenchk); //Iterator is incremented
+                if( smplinfoffset != 0 )
+                {
+                    if( lastoffs == 0 )
+                        lastoffs = smplinfoffset;
+                    else
+                    {
+                        entrylen = smplinfoffset - lastoffs;
+                        lastoffs = smplinfoffset;
+                        clog <<"wavi entrylen : " << entrylen <<"\n";
+                        break;
+                    }
+                }
+            }
+
+            auto   itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
+            size_t cntslot   = 0; 
+                                     //
+            for( auto & ablock : waviptrs )
+            {
+                //Read a ptr
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr); //Iterator is incremented
+
+                if( smplinfoffset != 0 )
+                {
+                    WavInfo_v402 winf;
+                    winf.entrylen = entrylen;
+                    winf.ReadFromContainer( smplinfoffset + itwavi, m_itend );
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        clog <<"Sample #" <<cntslot <<", " <<winf.smplrate <<" Hz, ";
+                        if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
+                            clog << "PCM8";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
+                            clog << "PCM16";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+                            clog << "IMA ADPCM";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
+                            clog << "PSG?";
+                        else
+                            clog << "INVALID";
+                        clog << "\n";
+                    }
+                    ablock.pinfo_.reset( new WavInfo(winf) );
+                }
+                ++cntslot;
+            }
+
+            return move(waviptrs);
+        }
+
     private:
         DSE_MetaDataSWDL             m_meta;
-        SWDL_Header                  m_hdr;
+        SWDL_HeaderData              m_hdr;
 
         rd_iterator_t                m_itbeg;
         rd_iterator_t                m_itend;
@@ -1973,11 +2217,13 @@ namespace DSE
             sampleOffsets.resize( ptrsbnk->NbSlots(), 0 );
 
             //Reserve Header
-            itout = std::fill_n( itout, SWDL_Header::Size, 0 );
+            itout = std::fill_n( itout, GetDSEHeaderLen( m_version ), 0 );
 
-            //Reserve Wavi chunk
+            //Calculate and reserve Wavi chunk size
             streampos beforewavi = m_tgtcn.tellp();
-            itout = std::fill_n( itout, SWDL_Header::Size, 0 );
+            size_t    wavisz     = DSE::ChunkHeader::Size + CalculateWaviTableLenWithPadding( *ptrsbnk ) + 
+                                   (WavInfo_v402::SzType2 * ptrsbnk->NbSlots());
+            itout = std::fill_n( itout, wavisz, 0 );
 
             //Write prgi chunk
             WritePrgi(itout);
@@ -1999,7 +2245,7 @@ namespace DSE
 
             //Write EoD
             WriteEod(itout);
-            size_t flen = m_tgtcn.tellp();
+            size_t flen = static_cast<size_t>(m_tgtcn.tellp());
 
             //Write wavi chunk
             m_tgtcn.seekp(beforewavi);
@@ -2026,49 +2272,158 @@ namespace DSE
 
         void WriteHeader( writeit_t & itout, size_t filelen, size_t pcmdatalen, size_t wavilen )
         {
-            SWDL_Header hdr;
-            hdr.unk18    = 0; //Always null
-            hdr.flen     = filelen;
-            hdr.version  = SWDL_Header::DefVersion; 
-            hdr.unk1     = m_src.metadata().unk1;
-            hdr.unk2     = m_src.metadata().unk2;
-            hdr.unk3     = 0; //Always null
-            hdr.unk4     = 0; //Always null
-            hdr.year     = m_src.metadata().createtime.year;
-            hdr.month    = m_src.metadata().createtime.month;
-            hdr.day      = m_src.metadata().createtime.day;
-            hdr.hour     = m_src.metadata().createtime.hour;
-            hdr.minute   = m_src.metadata().createtime.minute;
-            hdr.second   = m_src.metadata().createtime.second;
-            hdr.centisec = m_src.metadata().createtime.centsec;
-            std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(hdr.fname) );
-            hdr.unk10    = SWDL_Header::DefUnk10;
-            hdr.unk11    = 0; //Always null
-            hdr.unk12    = 0; //Always null
-            hdr.unk13    = SWDL_Header::DefUnk13; 
             
-            if( pcmdatalen != 0 )
-                hdr.pcmdlen = pcmdatalen;
+            if( m_version == eDSEVersion::V415 )
+            {
+                SWDL_Header_v415 hdr;
+                hdr.unk18    = 0; //Always null
+                hdr.flen     = filelen;
+                hdr.version  = SWDL_Header_v415::DefVersion; 
+                hdr.unk1     = m_src.metadata().unk1;
+                hdr.unk2     = m_src.metadata().unk2;
+                hdr.unk3     = 0; //Always null
+                hdr.unk4     = 0; //Always null
+                hdr.year     = m_src.metadata().createtime.year;
+                hdr.month    = m_src.metadata().createtime.month;
+                hdr.day      = m_src.metadata().createtime.day;
+                hdr.hour     = m_src.metadata().createtime.hour;
+                hdr.minute   = m_src.metadata().createtime.minute;
+                hdr.second   = m_src.metadata().createtime.second;
+                hdr.centisec = m_src.metadata().createtime.centsec;
+                std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(hdr.fname) );
+                hdr.unk10    = SWDL_Header_v415::DefUnk10;
+                hdr.unk11    = 0; //Always null
+                hdr.unk12    = 0; //Always null
+                hdr.unk13    = SWDL_Header_v415::DefUnk13;
+                if( pcmdatalen != 0 )
+                    hdr.pcmdlen = pcmdatalen;
+                else
+                    hdr.pcmdlen = (SWDL_Header_v415::ValNoPCMD | m_pcmdflag);
+                hdr.unk14    = 0; //Always null
+                
+                auto ptrsmplbnk = m_src.smplbank().lock();
+                if( ptrsmplbnk == nullptr )
+                    throw runtime_error( "SWDL_Writer::WriteHeader() : SWDL has no sample info or data!" );
+                hdr.nbwavislots = static_cast<uint16_t>(ptrsmplbnk->NbSlots());
+
+                auto ptrpresbnk = m_src.prgmbank().lock();
+                if( ptrpresbnk != nullptr )
+                    hdr.nbprgislots = static_cast<uint16_t>(ptrpresbnk->PrgmInfo().size());
+                else
+                    hdr.nbprgislots = 0;
+
+                hdr.unk17   = m_src.metadata().unk17;
+                hdr.wavilen = static_cast<uint16_t>(wavilen);
+                if( wavilen > std::numeric_limits<uint16_t>::max() )
+                    clog << "<!>- Warning: wavi chunk size written to header overflows a 16 bits integer!\n";
+
+                hdr.WriteToContainer(itout);
+            }
+            else if( m_version == eDSEVersion::V402 )
+            {
+                SWDL_Header_v402 hdr;
+                hdr.unk18    = 0; //Always null
+                hdr.flen     = filelen;
+                hdr.version  = SWDL_Header_v402::DefVersion; 
+                hdr.unk1     = m_src.metadata().unk1;
+                hdr.unk2     = m_src.metadata().unk2;
+                hdr.unk3     = 0; //Always null
+                hdr.unk4     = 0; //Always null
+                hdr.year     = m_src.metadata().createtime.year;
+                hdr.month    = m_src.metadata().createtime.month;
+                hdr.day      = m_src.metadata().createtime.day;
+                hdr.hour     = m_src.metadata().createtime.hour;
+                hdr.minute   = m_src.metadata().createtime.minute;
+                hdr.second   = m_src.metadata().createtime.second;
+                hdr.centisec = m_src.metadata().createtime.centsec;
+                std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(hdr.fname) );
+                hdr.unk10    = SWDL_Header_v402::DefUnk10;
+                hdr.unk11    = 0; //Always null
+                hdr.unk12    = 0; //Always null
+                hdr.unk13    = SWDL_Header_v402::DefUnk13;
+                hdr.unk15    = 0; //Always null
+                hdr.unk16    = 0;
+
+                auto ptrsmplbnk = m_src.smplbank().lock();
+                if( ptrsmplbnk == nullptr )
+                    throw runtime_error( "SWDL_Writer::WriteHeader() : SWDL has no sample info or data!" );
+
+                if( ptrsmplbnk->NbSlots() > std::numeric_limits<uint8_t>::max() )
+                    throw std::runtime_error( "SWDL_Writer::WriteHeader() : Nb of sample info slots overflows a uint8!!" );
+
+                hdr.nbwavislots = static_cast<uint16_t>(ptrsmplbnk->NbSlots());
+
+                auto ptrpresbnk = m_src.prgmbank().lock();
+                if( ptrpresbnk != nullptr )
+                {
+                    if( ptrpresbnk->PrgmInfo().size() > std::numeric_limits<uint8_t>::max() )
+                        throw std::runtime_error( "SWDL_Writer::WriteHeader() : Nb of programs overflows a uint8!!" );
+                    hdr.nbprgislots = static_cast<uint16_t>(ptrpresbnk->PrgmInfo().size());
+                }
+                else
+                    hdr.nbprgislots = 0;
+
+                hdr.nbkeygroups = ptrpresbnk->Keygrps().size();
+            }
             else
-                hdr.pcmdlen = (SWDL_Header::ValNoPCMD | m_pcmdflag);
-
-            hdr.unk14    = 0; //Always null
-
-            auto ptrsmplbnk = m_src.smplbank().lock();
-            if( ptrsmplbnk == nullptr )
-                throw runtime_error( "SWDL_Writer::WritePCMD() : SWDL has no sample info or data!" );
-            hdr.nbwavislots = ptrsmplbnk->NbSlots();
-
-            auto ptrpresbnk = m_src.prgmbank().lock();
-            if( ptrpresbnk != nullptr )
-                hdr.nbprgislots = ptrpresbnk->PrgmInfo().size();
-            else
-                hdr.nbprgislots = 0;
-
-            hdr.unk17   = m_src.metadata().unk17;
-            hdr.wavilen = wavilen;
-            hdr.WriteToContainer(itout);
+            {
+                cerr << "SWDL_Writer::WriteHeader() : Invalid DSE version\n";
+                assert(false);
+            }
         }
+
+        //{
+        //    SWDL_Header hdr;
+        //    hdr.unk18    = 0; //Always null
+        //    hdr.flen     = filelen;
+        //    hdr.version  = SWDL_Header::DefVersion; 
+        //    hdr.unk1     = m_src.metadata().unk1;
+        //    hdr.unk2     = m_src.metadata().unk2;
+        //    hdr.unk3     = 0; //Always null
+        //    hdr.unk4     = 0; //Always null
+        //    hdr.year     = m_src.metadata().createtime.year;
+        //    hdr.month    = m_src.metadata().createtime.month;
+        //    hdr.day      = m_src.metadata().createtime.day;
+        //    hdr.hour     = m_src.metadata().createtime.hour;
+        //    hdr.minute   = m_src.metadata().createtime.minute;
+        //    hdr.second   = m_src.metadata().createtime.second;
+        //    hdr.centisec = m_src.metadata().createtime.centsec;
+        //    std::copy( begin(m_src.metadata().fname), end(m_src.metadata().fname), begin(hdr.fname) );
+        //    hdr.unk10    = SWDL_Header::DefUnk10;
+        //    hdr.unk11    = 0; //Always null
+        //    hdr.unk12    = 0; //Always null
+        //    hdr.unk13    = SWDL_Header::DefUnk13; 
+        //    
+        //    if( pcmdatalen != 0 )
+        //        hdr.pcmdlen = pcmdatalen;
+        //    else
+        //        hdr.pcmdlen = (SWDL_Header::ValNoPCMD | m_pcmdflag);
+
+        //    hdr.unk14    = 0; //Always null
+
+        //    auto ptrsmplbnk = m_src.smplbank().lock();
+        //    if( ptrsmplbnk == nullptr )
+        //        throw runtime_error( "SWDL_Writer::WritePCMD() : SWDL has no sample info or data!" );
+        //    hdr.nbwavislots = static_cast<uint16_t>(ptrsmplbnk->NbSlots());
+
+        //    auto ptrpresbnk = m_src.prgmbank().lock();
+        //    if( ptrpresbnk != nullptr )
+        //        hdr.nbprgislots = static_cast<uint16_t>(ptrpresbnk->PrgmInfo().size());
+        //    else
+        //        hdr.nbprgislots = 0;
+
+        //    hdr.unk17   = m_src.metadata().unk17;
+        //    hdr.wavilen = static_cast<uint16_t>(wavilen);
+        //    if( wavilen > std::numeric_limits<uint16_t>::max() )
+        //        clog << "<!>- Warning: wavi chunk size written to header overflows a 16 bits integer!\n";
+        //    hdr.WriteToContainer(itout);
+        //}
+
+        size_t CalculateWaviTableLenWithPadding( const DSE::SampleBank & smplbank )
+        {
+            return (smplbank.NbSlots() * 2) + ((smplbank.NbSlots() * 2) % 16);
+        }
+
 
         size_t WriteWavi( const std::vector<uint32_t> & sampleoffsets, const DSE::SampleBank & smplbank )
         {
@@ -2085,12 +2440,14 @@ namespace DSE
             
             //Reserve Table
             streampos beftbl = m_tgtcn.tellp();
-            std::fill_n( itout, smplbank.NbSlots() * 2, 0 ); //Each slots is 16 bits
-            
-            //Place table padding 
-            int padlen =  (m_tgtcn.tellp() % 16);
-            if( padlen != 0 )
-                std::fill_n( itout, padlen, m_padbyte );
+            std::fill_n( itout, CalculateWaviTableLenWithPadding(smplbank), 0 );
+
+            //std::fill_n( itout, smplbank.NbSlots() * 2, 0 ); //Each slots is 16 bits
+            //
+            ////Place table padding 
+            //int padlen =  (m_tgtcn.tellp() % 16);
+            //if( padlen != 0 )
+            //    std::fill_n( itout, padlen, m_padbyte );
 
             //Write down wavi entries, and add them to the table!
             const size_t nbslots = smplbank.NbSlots();
@@ -2103,7 +2460,7 @@ namespace DSE
 
             //Go back to the beginning and write header!
             streamoff endchunk = m_tgtcn.tellp();
-            size_t    chunklen = (m_tgtcn.tellp() - beftbl);
+            size_t    chunklen = static_cast<size_t>((m_tgtcn.tellp() - beftbl));
             m_tgtcn.seekp(befhdr);
 
             WriteChunkHeader( itout, 
@@ -2384,14 +2741,72 @@ namespace DSE
         return std::move( SWDLParser<>( itbeg, itend ).Parse() );
     }
 
-
-    SWDL_Header ReadSwdlHeader( const std::string & filename )
+    SWDL_HeaderData ReadSwdlHeader( std::vector<uint8_t>::const_iterator itbeg, 
+                                    std::vector<uint8_t>::const_iterator itend )
     {
-        ifstream infile( filename, ios::in | ios::binary );
+        SWDL_HeaderData hdrdata;
+        auto            itbefread = itbeg;
+        uint32_t        magicn = utils::ReadIntFromBytes<uint32_t>( itbeg, itend, false );
+
+        if( magicn == static_cast<uint32_t>(eDSEContainers::swdl) )
+        {
+            std::advance( itbeg, sizeof(uint32_t) * 2 ); //Skip to the version
+            uint16_t vers = utils::ReadIntFromBytes<uint16_t>(itbeg, itend);
+
+            if( vers == static_cast<uint16_t>(eDSEVersion::V402) )
+            {
+                SWDL_Header_v402 hdr;
+                itbefread = hdr.ReadFromContainer( itbefread, itend );
+                hdrdata = hdr;
+            }
+            else if( vers == static_cast<uint16_t>(eDSEVersion::V415) )
+            {
+                SWDL_Header_v415 hdr;
+                itbefread = hdr.ReadFromContainer( itbefread, itend );
+                hdrdata = hdr;
+            }
+            else
+                throw std::runtime_error("ReadSwdlHeader() : Unknown DSE version!");
+        }
+        else
+            throw std::runtime_error("ReadSwdlHeader() : Not a SWDL file!");
+
+        return move(hdrdata);
+    }
+
+    SWDL_HeaderData ReadSwdlHeader( const std::string & filename )
+    {
+        SWDL_HeaderData           hdrdata;
+        ifstream                  infile( filename, ios::in | ios::binary );
         istreambuf_iterator<char> init(infile);
-        SWDL_Header hdr;
-        hdr.ReadFromContainer(init);
-        return move(hdr);
+        istreambuf_iterator<char> end;
+        uint32_t                  magicn = utils::ReadIntFromBytes<uint32_t>( init, end, false );
+
+        if( magicn == static_cast<uint32_t>(eDSEContainers::swdl) )
+        {
+            std::advance( init, sizeof(uint32_t) * 2 ); //Skip to the version
+            uint16_t vers   = utils::ReadIntFromBytes<uint16_t>(init, end);
+            infile.seekg(0);
+
+            if( vers == static_cast<uint16_t>(eDSEVersion::V402) )
+            {
+                SWDL_Header_v402 hdr;
+                init = hdr.ReadFromContainer( init, end );
+                hdrdata = hdr;
+            }
+            else if( vers == static_cast<uint16_t>(eDSEVersion::V415) )
+            {
+                SWDL_Header_v415 hdr;
+                init = hdr.ReadFromContainer( init, end );
+                hdrdata = hdr;
+            }
+            else
+                throw std::runtime_error("ReadSwdlHeader() : Unknown DSE version!");
+        }
+        else
+            throw std::runtime_error("ReadSwdlHeader() : Not a SWDL file!");
+
+        return move(hdrdata);
     }
 
     void WriteSWDL( const std::string & filename, const PresetBank & audiodata )
@@ -2444,11 +2859,9 @@ namespace DSE
             //                              vector<uint8_t>::const_iterator   itdataend );
             virtual ContentBlock Analyse( const analysis_parameter & parameters )
             {
-                DSE::SWDL_Header headr;
+                                //Read the header
+                DSE::SWDL_HeaderData headr = DSE::ReadSwdlHeader( parameters._itdatabeg, parameters._itdataend );
                 ContentBlock cb;
-
-                //Read the header
-                headr.ReadFromContainer( parameters._itdatabeg );
 
                 //build our content block info 
                 cb._startoffset          = 0;

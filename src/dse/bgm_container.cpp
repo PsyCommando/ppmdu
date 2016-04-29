@@ -60,15 +60,22 @@ namespace DSE
                 infile.seekg(0);
                 auto offsets = ReadOffsetsSubHeader( istreambuf_iterator<char>(infile) , hdr.subheaderptr );
 
-                SWDL_Header swdhdr;
-                SMDL_Header smdhdr;
+                //SWDL_HeaderData swdhdr;
+                //SMDL_Header smdhdr;
                 infile.seekg(offsets[0]);
-                swdhdr.ReadFromContainer( istreambuf_iterator<char>(infile) );
+                uint32_t swdlrmagic = utils::ReadIntFromBytes<uint32_t>( istreambuf_iterator<char>(infile), istreambuf_iterator<char>(), false );
+                
+
+                //swdhdr.ReadFromContainer( istreambuf_iterator<char>(infile) );
 
                 infile.seekg(offsets[1]);
-                smdhdr.ReadFromContainer( istreambuf_iterator<char>(infile) );
+                uint32_t smdlrmagic = utils::ReadIntFromBytes<uint32_t>( istreambuf_iterator<char>(infile), istreambuf_iterator<char>(), false );
+                //smdhdr.ReadFromContainer( istreambuf_iterator<char>(infile) );
 
-                if( swdhdr.magicn == SWDL_MagicNumber && smdhdr.magicn == SMDL_MagicNumber )
+                //if( swdhdr.magicn == SWDL_MagicNumber && smdhdr.magicn == SMDL_MagicNumber )
+                //    return true;
+
+                if( swdlrmagic == SWDL_MagicNumber && smdlrmagic == SMDL_MagicNumber )
                     return true;
             }
         }
@@ -95,22 +102,24 @@ namespace DSE
             
         auto        offsets = ReadOffsetsSubHeader( fdata.begin() , hdr.subheaderptr );
 
-        SWDL_Header swdhdr;
-        SMDL_Header smdhdr;
-        swdhdr.ReadFromContainer( fdata.begin() + offsets[0] );
-        smdhdr.ReadFromContainer( fdata.begin() + offsets[1] );
+        //SWDL_Header swdhdr;
+        //SMDL_Header smdhdr;
+        //swdhdr.ReadFromContainer( fdata.begin() + offsets[0] );
+        //smdhdr.ReadFromContainer( fdata.begin() + offsets[1] );
+        uint32_t magicn1 = utils::ReadIntFromBytes<uint32_t>( fdata.begin() + offsets[0], fdata.end(), false );
+        uint32_t magicn2 = utils::ReadIntFromBytes<uint32_t>( fdata.begin() + offsets[1], fdata.end(), false );
 
         size_t smdloffset = 0;
         size_t swdloffset = 0;
 
         //Check that the swdl and smdl containers are in the right order, or adapt if they're inverted
-        if( swdhdr.magicn == SWDL_MagicNumber && smdhdr.magicn == SMDL_MagicNumber )
+        if( magicn1 == SWDL_MagicNumber && magicn2 == SMDL_MagicNumber )
         {
             //If in this order
             swdloffset = offsets[0]; 
             smdloffset = offsets[1];
         }
-        else if( smdhdr.magicn == SWDL_MagicNumber && swdhdr.magicn == SMDL_MagicNumber )
+        else if( magicn2 == SWDL_MagicNumber && magicn1 == SMDL_MagicNumber )
         {
             //If in inverted order
             swdloffset = offsets[1];
@@ -126,20 +135,20 @@ namespace DSE
             //throw runtime_error( "ReadBgmContainer(): Bgm container doesn't contain" );
             sstrerror << "ReadBgmContainer(): Bgm container has unexpected content!";
 
-            if( smdhdr.magicn == SMDL_MagicNumber )
+            if( magicn2 == SMDL_MagicNumber )
                 sstrerror << " SMDL header present! ";
             else
                 sstrerror << " SMDL header missing! ";
 
-            if( swdhdr.magicn == SWDL_MagicNumber )
+            if( magicn1 == SWDL_MagicNumber )
                 sstrerror << "SWDL header present! ";
             else
                 sstrerror << "SWDL header missing! ";
 
-            if( smdhdr.magicn == SEDL_MagicNumber )
+            if( magicn2 == SEDL_MagicNumber )
                 sstrerror << "Found unexpected SEDL header! " << "Bgm container is unexpected sound effect container!";
             else
-                sstrerror << "Found unknown header magic number: " <<showbase <<hex <<smdhdr.magicn <<dec <<noshowbase << "!\n";
+                sstrerror << "Found unknown header magic number: " <<showbase <<hex <<magicn2 <<dec <<noshowbase << "!\n";
             throw runtime_error( sstrerror.str() );
         }
 

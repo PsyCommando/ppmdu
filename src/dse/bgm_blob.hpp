@@ -197,9 +197,28 @@ namespace DSE
             inputiterator itnameed = itname;
             std::advance( itnameed, FilenameLength );
 
-            //Find the end, and add the entry to the ToC!
-            inputiterator itend = utils::advAsMuchAsPossible( itbefmagicnum, m_srcend, flen );
-            offset += flen;
+            inputiterator itend;
+            //Error handling
+            if( flen == 0 )
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog << "<!>- Warning: DSE container has an illegal size of 0!\n\tFalling back to end chunk search to determine size!\n";
+
+                //Search for the eoc/eod chunk manually
+                inputiterator itfound = DSE::FindEndChunk( itaftermagicnum, m_srcend, cnty );
+                if( itfound != m_srcend)
+                    itend = utils::advAsMuchAsPossible( itfound, m_srcend, DSE::ChunkHeader::Size ); //Skip over the end chunk
+                else
+                    itend = m_srcend;
+
+                offset += static_cast<size_t>(std::distance( itbefmagicnum, itend ));
+            }
+            else
+            {
+                //Find the end, and add the entry to the ToC!
+                itend = utils::advAsMuchAsPossible( itbefmagicnum, m_srcend, flen );
+                offset += flen;
+            }
             m_toc.push_back( FoundContainer{ string(itname, itnameed), cnty, itbefmagicnum, itend } );
             return itend;
         }

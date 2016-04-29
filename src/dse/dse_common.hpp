@@ -799,6 +799,44 @@ namespace DSE
         return beg;
     }
 
+
+    /*
+        FindEndChunk
+        
+
+            Use this to locate the proper end chunk depending on the DSE container type!
+    */
+    template<class _init>
+        _init FindEndChunk( _init beg, _init end, eDSEContainers cnty )
+    {
+        switch(cnty)
+        {
+            case eDSEContainers::smdl:
+            {
+                beg = FindNextChunk( beg, end, eDSEChunks::eoc );
+                break;
+            }
+            case eDSEContainers::swdl:
+            case eDSEContainers::sedl:
+            {
+                beg = FindNextChunk( beg, end, eDSEChunks::eod );
+                break;
+            }
+            case eDSEContainers::sadl:
+            {
+                std::cerr << "<!>- Error : FindEndChunk() : SADL doesn't have a end chunk!\n";
+                assert(false);
+            }
+            default:
+            {
+                std::cerr << "<!>- Error : FindEndChunk() : Invalid DSE container type!\n";
+                assert(false);
+            }
+        };
+
+        return beg;
+    }
+
 };
 
 

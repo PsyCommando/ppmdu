@@ -95,14 +95,14 @@ namespace DSE
 
         inline uint32_t CalcTotalEnveloppeDuration( const DSE::SplitEntry  & split )const
         {
-            uint32_t envtotaldur =  DSEEnveloppeDurationToMSec( split.env.attack, split.env.envmulti ) +
-                                    DSEEnveloppeDurationToMSec( split.env.hold,   split.env.envmulti );
+            uint32_t envtotaldur =  DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.attack), static_cast<int8_t>(split.env.envmulti) ) +
+                                    DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.hold),   static_cast<int8_t>(split.env.envmulti) );
 
             if( split.env.sustain != 0x7F && split.env.decay != 0x7F )
-                envtotaldur += DSEEnveloppeDurationToMSec( split.env.decay,  split.env.envmulti ); 
+                envtotaldur += DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.decay),  static_cast<int8_t>(split.env.envmulti) ); 
 
             if( split.env.decay2 != 0x7F )
-                envtotaldur += DSEEnveloppeDurationToMSec( split.env.decay2, split.env.envmulti ); //Total duration of the envelope!!!
+                envtotaldur += DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.decay2), static_cast<int8_t>(split.env.envmulti) ); //Total duration of the envelope!!!
             return envtotaldur;
         }
 
@@ -339,14 +339,16 @@ namespace DSE
             double       lastvolumelvl = MaxVol;
 
             //Attack
-            const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.attack, env.envmulti ) );
+            const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.attack), 
+                                                                                          static_cast<int8_t>(env.envmulti) ) );
             const double atklvl   = (( (static_cast<double>(env.atkvol) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.attack != 0 )
                 LerpVol( 0, atknbsmpls, atklvl, MaxVol, smpl );
 
             //Hold
             const int holdbeg     = atknbsmpls;
-            const int holdnbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.hold, env.envmulti ) );
+            const int holdnbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.hold), 
+                                                                                           static_cast<int8_t>(env.envmulti) ) );
             const int holdend     = holdbeg + holdnbsmpls;
 
             //Decay
@@ -355,7 +357,8 @@ namespace DSE
             const double sustainlvl   = ( ( (static_cast<double>(env.sustain) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.decay != 0x7F && !(env.decay == 0 && sustainlvl == 0) )
             {
-                decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay, env.envmulti ) );
+                decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.decay), 
+                                                                                       static_cast<int8_t>(env.envmulti) ) );
                 LerpVol( decaybeg, decaybeg + decaynbsmpls, MaxVol, sustainlvl, smpl );
                 lastvolumelvl = sustainlvl;
             }
@@ -363,7 +366,8 @@ namespace DSE
             if( env.decay2 != 0x7F )
             {
                 const int decay2beg     = decaybeg + decaynbsmpls;
-                const int decay2nbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay2, env.envmulti ) );
+                const int decay2nbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.decay2), 
+                                                                                                 static_cast<int8_t>(env.envmulti) ) );
                 LerpVol( decay2beg, smpl.size(), lastvolumelvl, 0.0, smpl );
             }
             else

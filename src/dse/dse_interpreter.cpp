@@ -668,7 +668,7 @@ namespace DSE
             //Remap the note
             //auto remapdata = m_convtable->RemapNote( state.origdseprgm_, (mnoteid & 0x7F) ); //Use the original program value for this
             //    
-            //--- Remap the note ---
+            //*** Remap the note ***
             mnoteid = remapdata.destnote;
 
 
@@ -710,7 +710,7 @@ namespace DSE
                 remapdata.destpreset != state.ovrprgm_ && 
                 remapdata.destbank   != state.ovrbank_ ) //Restore if the preset+bank was overriden, but the current preset doesn't define a bank+preset override!
             {
-                //--- Restore override ---
+                //*** Restore override ***
                 state.presetoverriden = false;
                 state.ovrprgm_        = InvalidPresetID;
                 state.ovrbank_        = InvalidBankID;
@@ -727,7 +727,7 @@ namespace DSE
             else if( remapdata.destpreset != InvalidPresetID || 
                      remapdata.destbank   != InvalidBankID )  //If the preset is not being overriden, but the current preset defines valid overrides of the bank+preset!
             {
-                //--- Override Preset and Bank ---
+                //*** Override Preset and Bank ***
                 if( remapdata.destbank != InvalidBankID )
                 {
                     //Check if its necessary to put new events
@@ -1097,7 +1097,7 @@ namespace DSE
             }
 
             //Play all tracks at least once
-            for( unsigned int trkno = 0; trkno < m_trackpriorityq.size() /*m_seq.getNbTracks()*/; ++trkno )
+            for( unsigned int trkno = 0; trkno < m_trackpriorityq.size(); ++trkno )
             {
                 unsigned int curtrk = m_trackpriorityq[trkno];
                 ExportATrack( curtrk, 0 );
@@ -1119,7 +1119,7 @@ namespace DSE
                 //Then, if we're set to loop, then loop
                 for( unsigned int nbloops = 0; nbloops < m_nbloops; ++nbloops )
                 {
-                    for( unsigned int trkno = 0; trkno < m_trackpriorityq.size() /*m_seq.getNbTracks()*/; ++trkno )
+                    for( unsigned int trkno = 0; trkno < m_trackpriorityq.size(); ++trkno )
                     {
                         unsigned int curtrk = m_trackpriorityq[trkno];
 
@@ -1194,7 +1194,7 @@ namespace DSE
             //Push track 0
             m_trackpriorityq.push_back(0);
 
-            //--- Next re-arrange the tracks ! ---
+            //*** Next re-arrange the tracks ! ***
             
             array<bool,NbMidiChannels> usedchan;         //Keep tracks of channels in use
 
@@ -1219,11 +1219,11 @@ namespace DSE
             if( chan10trks.empty() )
                 return;
 
-            //-------------------------------------
-            //-- Mitigate the drum channel issue --
-            //-------------------------------------
+            // -------------------------------------
+            // -- Mitigate the drum channel issue --
+            // -------------------------------------
 
-            //--- Step 1! ---
+            // --- Step 1! ---
             size_t nbchaninuse = std::count_if( usedchan.begin(), usedchan.end(), [](bool entry){ return entry; } );
 
             //First, try to reassign to an empty channel!
@@ -1257,7 +1257,7 @@ namespace DSE
             }
             
 
-            //--- Step 2! ---
+            // --- Step 2! ---
             //Then, we'll try to swap our place with a track that makes use of preset 0x7F, which is used for drums usually.
             deque<std::pair<size_t,size_t>> drumusingchans; //First is track index, second is channel it uses
 
@@ -1282,7 +1282,7 @@ namespace DSE
             //Now, do the actual swapping!
             if( !drumusingchans.empty() )
             {
-                for( /*size_t cnttrks = 0*/; !chan10trks.empty() && !drumusingchans.empty(); /*++cnttrks*/ )
+                for( ; !chan10trks.empty() && !drumusingchans.empty(); )
                 {
                     auto drumuserchan = drumusingchans.back();
 
@@ -1644,7 +1644,7 @@ namespace DSE
             if( delta <= static_cast<ticks_t>(DSE::eTrkDelays::_half) )
             {
                 DSE::TrkEvent pauseev;
-                auto          itfound  = TicksToTrkDelayID.find( delta );
+                auto          itfound  = TicksToTrkDelayID.find( static_cast<uint8_t>(delta) );
                 ticks_t       newdelta = delta;
 
                 //If we have an exact match, go for that!
@@ -1890,7 +1890,7 @@ namespace DSE
                     else if( (noteduration & 0x0000FF00) > 0 )
                         paramlenby = 1;
 
-                    state.lastnotedur = noteduration; //Update last note duration
+                    state.lastnotedur = static_cast<uint32_t>(noteduration); //Update last note duration
                 }
                 
                 trk[noteonev.dseEvIndex].params.front() |= (paramlenby&3) << 6; //Add the nb of param bytes

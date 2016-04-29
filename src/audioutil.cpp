@@ -54,7 +54,11 @@ namespace audioutil
 //------------------------------------------------
     const string CAudioUtil::Exe_Name            = "ppmd_audioutil.exe";
     const string CAudioUtil::Title               = "Music and sound import/export tool.";
+#ifdef _DEBUG
+    const string CAudioUtil::Version             = AUDIOUTIL_VER" debug";
+#else
     const string CAudioUtil::Version             = AUDIOUTIL_VER;
+#endif
     const string CAudioUtil::Short_Description   = "A utility to export and import music and sounds from the PMD2 games.";
     const string CAudioUtil::Long_Description    = 
         "#TODO";
@@ -239,9 +243,9 @@ namespace audioutil
         {
             OPTION_BgmCntPath,
             2,
-            "Use this to specify where to load bgm containers. Aka, SMDL + SWDL wrapped together in a SIR0 wrapper."
+            "Use this to specify where to load bgm containers from. Aka, SMDL + SWDL wrapped together in a SIR0 wrapper."
             "The second argument is the file extension to look for, as most bgm containers have different file extensions!",
-            "-bgmcntpath \"Path/to/BGM\" \"bgm\"",
+            "-bgmcntpath \"Path/to/BGMsDir\" \"bgm\"",
             std::bind( &CAudioUtil::ParseOptionBGMCntPath, &GetInstance(), placeholders::_1 ),
         },
 
@@ -819,7 +823,7 @@ namespace audioutil
         if( !m_outputPath.empty() && !Poco::File( Poco::Path( m_outputPath ).makeAbsolute().parent() ).exists() )
             throw runtime_error("Specified output path does not exists!");
 
-        //---- Handle cases when the blob container path was specified ----
+        // ---- Handle cases when the blob container path was specified ----
         if( !m_bgmblobpath.empty() )
         {
             if( m_bMakeCvinfo )
@@ -829,28 +833,25 @@ namespace audioutil
             return;
         }
 
-        //---- Handle cases when the bgm container path was specified ----
+        // ---- Handle cases when the bgm container path was specified ----
         if( !m_bgmcntpath.empty() && !m_bgmcntext.empty() )
         {
             if( m_bMakeCvinfo )
                 m_operationMode = eOpMode::MakeCvInfo;       //Make a blank CVinfo
             else
                 m_operationMode = eOpMode::ExportBatchPairs; //We exports bgm cnts
-            //m_outputPath    = m_inputPath;                   //The only parameter will be the output
             return;
         }
 
-        //---- Handle cases when the swdl, smdl and/or mainbank paths are specified! ----
+        // ---- Handle cases when the swdl, smdl and/or mainbank paths are specified! ----
         if( !m_mbankpath.empty() && !m_smdlpath.empty() && !m_swdlpath.empty() )
         {
             m_operationMode = eOpMode::ExportBatchPairsAndBank; //We exports pairs with a main bank
-            //m_outputPath = m_inputPath;                         //The only parameter will be the output
             return;
         }
         else if( !m_smdlpath.empty() && !m_swdlpath.empty() )
         {
             m_operationMode = eOpMode::ExportBatchPairs;        //We exports pairs without a main bank
-            //m_outputPath = m_inputPath;                         //The only parameter will be the output
             return;
         }
         else if( !m_swdlpath.empty() )
@@ -873,7 +874,7 @@ namespace audioutil
             return;
         }
 
-        //---- If the above fails, try to guess what to do by input type! ----
+        // ---- If the above fails, try to guess what to do by input type! ----
         if( infile.exists() )
         {
             if( infile.isFile() )
@@ -1340,6 +1341,11 @@ namespace audioutil
 
     int CAudioUtil::BuildSMDL()
     {
+        cout<< "Not implemented!\n";
+        assert(false);
+        return 0;
+
+
         Poco::Path inputfile(m_inputPath);
         Poco::Path outputfile;
 
@@ -1458,26 +1464,6 @@ namespace audioutil
         const string stroutpath = outputDir.toString();
         CreateOutputDir(stroutpath);
         DoExportLoader( bal, stroutpath );
-        //if( m_outtype == eOutputType::SF2 )
-        //{
-        //    cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
-        //}
-        //else if( m_outtype == eOutputType::DLS )
-        //{
-        //    cout << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
-        //    assert(false);
-        //}
-        //else if( m_outtype == eOutputType::XML )
-        //{
-        //    cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
-        //}
-        //else
-        //{
-        //    cout << "Output type is invalid!\n";
-        //    assert(false);
-        //}
         cout <<"..done\n";
 
         return 0;
@@ -1859,12 +1845,6 @@ namespace audioutil
 
         cout<<"\n\n<*>- Done !\n";
         return 0;
-    }
-
-    int CAudioUtil::ListSWDLPrgm()
-    {
-        assert(false); //#REMOVEME
-        return -1;
     }
 
 

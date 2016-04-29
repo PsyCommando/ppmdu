@@ -383,7 +383,7 @@ namespace wave
 
             fmtdat.audiofmt_      =  static_cast<uint16_t>(trait_t::AudioFormat);
             fmtdat.bitspersample_ = trait_t::BitDepth;
-            fmtdat.nbchannels_    = m_samples.size();
+            fmtdat.nbchannels_    = static_cast<uint16_t>(m_samples.size());
             fmtdat.blockalign_    = (fmtdat.nbchannels_ * fmtdat.bitspersample_) / 8;
             fmtdat.samplerate_    = m_samplerate;
             fmtdat.byterate_      = (m_samplerate * fmtdat.nbchannels_ * fmtdat.bitspersample_) / 8;
