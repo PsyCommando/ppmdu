@@ -144,11 +144,21 @@ namespace DSE
 
                 if( IsSampleLooped )
                 {
+                    if( psmplinf->smplfmt != eDSESmplFmt::pcm16 ) //!#FIXME: This is a temporary fix for the pitch issue with pcm16 samples. It makes some samples not loop, and it doesn't fix all samples however..
+                    {
                     if( ShouldUnloop )
                     {
                         //Loop the sample a few times, so its as long as the envelope
                         if( envtotaldursmpl > entry.splitsamples[curindex].size() )
                             Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop );
+
+            ////!###TEST####
+            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
+            //uint32_t   presmplrate                = psmplinf->smplrate;
+            //uint32_t   Newsmplrate                = std::lround((static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(SampleLenPreLengthen)) / 100.0) * presmplrate;
+            //if( bispcm16 )
+            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
+            ////!###TEST####
 
                         //We render the envelope and disable looping
                         ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
@@ -172,21 +182,48 @@ namespace DSE
 
                             //Make sure the sample ends only after fully completing its last loop, this will keep 
                             // the sample from clicking/abruptly cutting to the loop.
-                            //Lenghten( entry.splitsamples[curindex], resultinglength, postconvloop );
                         }
 
                         //Save the length of the sample after making it longer, since it differ from "envtotaldursmpl"
                         const size_t actualnewloopbeg = entry.splitsamples[curindex].size();
 
                         //We copy one loop to the end, render the envelope, Move the loop to the end past the decay phase, and keep looping on.
-                        //Lenghten( entry.splitsamples[curindex], 
-                        //          (entry.splitsamples[curindex].size() + (entry.splitsmplinf[curindex].looplen ) ), 
-                        //          postconvloop );
                         LenghtenByNbLoops( entry.splitsamples[curindex], 1, postconvloop );
                         ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
 
+
+                        ////!###Test release###
+                        //size_t    releasebeg     = entry.splitsamples[curindex].size();
+                        //size_t    nbreleaselp    = 0;
+                        //const int releasenbsmpls = MsecToNbSamples( psmplinf->smplrate,
+                        //                                            DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.release), 
+                        //                                                                        static_cast<int8_t>(split.env.envmulti)));
+                        //if( ( releasenbsmpls % entry.splitsmplinf[curindex].looplen ) != 0 )
+                        //    nbreleaselp = (releasenbsmpls / entry.splitsmplinf[curindex].looplen) + 1;
+                        //else
+                        //    nbreleaselp = (releasenbsmpls / entry.splitsmplinf[curindex].looplen);
+                        //
+                        //LenghtenByNbLoops( entry.splitsamples[curindex], nbreleaselp, postconvloop );
+
+                        //const double sustainlvl   = ( ( (static_cast<double>(split.env.sustain) * 100.0 ) / 128.0 ) / 100.0) * split.env.envmulti;
+                        //if( split.env.decay2 == 0x7F )
+                        //    LerpVol( releasebeg, releasenbsmpls, sustainlvl, 0.0, entry.splitsamples[curindex] ); 
+                        ////!###Test release###
+
+
+            ////!###TEST####
+            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
+            //uint32_t   presmplrate                = psmplinf->smplrate;
+            //double     oldratio                   = static_cast<double>(SampleLenPreLengthen)                / static_cast<double>(presmplrate);
+            //double     newratio                   = static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(presmplrate);
+            //uint32_t   Newsmplrate                = std::lround(( static_cast<double>(entry.splitsamples[curindex].size())) *  fabs( oldratio ) );
+            //if( bispcm16 )
+            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
+            ////!###TEST####
+
                         //Move the loop to the end
                         entry.splitsmplinf[curindex].loopbeg = (actualnewloopbeg > SampleLenPreLengthen)? actualnewloopbeg : SampleLenPreLengthen;
+                    }
                     }
                 }
                 else

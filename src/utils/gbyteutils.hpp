@@ -109,23 +109,31 @@ namespace utils
     {
         static_assert( std::numeric_limits<T>::is_integer, "WriteIntToBytes() : Type T is not an integer!" );
 
-        //#FIXME: Why is this even necessary?
-        auto lambdaShiftAssign = [&val]( unsigned int shiftamt )->uint8_t
-        {
-            T tempshift = 0;
-            tempshift = ( val >> (shiftamt * 8) ) & 0xFF;
-            return tempshift & 0xFF;
-        };
+        ////#FIXME: Why is this even necessary?
+        //auto lambdaShiftAssign = [&val]( unsigned int shiftamt )->uint8_t
+        //{
+        //    T tempshift = 0;
+        //    tempshift = ( val >> (shiftamt * 8) ) & 0xFF;
+        //    return tempshift & 0xFF;
+        //};
 
         if( basLittleEndian )
         {
             for( unsigned int i = 0; i < sizeof(T); ++i, ++itout )
-                (*itout) = lambdaShiftAssign( i );
+            {
+                T tempshift = 0;
+                tempshift = ( val >> (i * 8) ) & 0xFF;
+                (*itout) = tempshift & 0xFF;
+            }
         }
         else
         {
             for( int i = (sizeof(T)-1); i >= 0 ; --i, ++itout )
-                (*itout) = lambdaShiftAssign( i );
+            {
+                T tempshift = 0;
+                tempshift = ( val >> (i * 8) ) & 0xFF;
+                (*itout) = tempshift & 0xFF;
+            }
         }
 
         return itout;

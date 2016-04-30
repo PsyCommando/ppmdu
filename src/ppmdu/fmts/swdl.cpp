@@ -1903,16 +1903,7 @@ namespace DSE
     private:
         void ParseHeader()
         {
-            //!#TODO: Find Version, then use the appropriate header to parse!
-
-            //auto     itversion = std::advance( m_itbeg, SWDL_VersionOffset );
-            //uint16_t dsevers   = utils::ReadIntFromBytes<uint16_t>( itversion, m_itend );
-
             m_hdr = ReadSwdlHeader( m_itbeg, m_itend );
-
-            //assert(false);
-
-            //m_hdr.ReadFromContainer(m_itbeg);
 
             if( utils::LibWide().isLogOn() )
                 clog << "\tDSE Version: 0x" <<hex <<uppercase <<m_hdr.version <<dec <<nouppercase <<"\n";
@@ -1953,7 +1944,7 @@ namespace DSE
             auto kgrps = ParseKeygroups();
 
             if( utils::LibWide().isLogOn() )
-                clog <<"\t== Parsing Programs ==\n";
+                clog <<"== Parsing Programs ==\n";
 
             //Find the prgi chunk
             auto itprgi = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::prgi );
@@ -1987,7 +1978,7 @@ namespace DSE
                     infslot.reset( new ProgramInfo(curblock) );
 
                     if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
-                        clog <<"\tInstrument ID#" <<infslot->id <<":\n" <<*infslot <<"\n";
+                        clog <<"Instrument ID#" <<infslot->id <<":\n" <<*infslot <<"\n";
                 }
             }
             if( utils::LibWide().isLogOn() )
@@ -2000,7 +1991,7 @@ namespace DSE
             //using namespace pmd2::audio;
 
             if( utils::LibWide().isLogOn() )
-                clog <<"\t== Parsing Keygroups ==\n";
+                clog <<"== Parsing Keygroups ==\n";
 
             //Find the KGRP chunk
             auto itkgrp = DSE::FindNextChunk( m_itbeg, m_itend, eDSEChunks::kgrp );
@@ -2024,7 +2015,7 @@ namespace DSE
                 itkgrp = grp.ReadFromContainer(itkgrp, m_itend);
 
                 if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
-                    clog <<"\tKeygroup ID#" <<grp.id <<":\n" <<grp <<"\n";
+                    clog <<"Keygroup ID#" <<grp.id <<":\n" <<grp <<"\n";
                 
             }
 
@@ -2075,8 +2066,15 @@ namespace DSE
 
             //Create the vector with the nb of slots mentioned in the header
             vector<SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"\nReading sample entries..\n"
+                     <<"--------------------------\n";
+            }
             
-            auto itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
+            auto   itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
+            size_t cntslot   = 0; 
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
@@ -2086,8 +2084,24 @@ namespace DSE
                 {
                     _WaviEntryFmt winf;
                     winf.ReadFromContainer( smplinfoffset + itwavi, m_itend );
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        clog <<"\t* Sample #" <<cntslot <<", " <<winf.smplrate <<" Hz, ";
+                        if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
+                            clog << "PCM8";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
+                            clog << "PCM16";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+                            clog << "IMA ADPCM4";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
+                            clog << "PSG?";
+                        else
+                            clog << "UNKNOWN FORMAT( 0x" <<hex <<winf.smplfmt <<dec << " )";
+                        clog << "\n";
+                    }
                     ablock.pinfo_.reset( new WavInfo(winf) );
                 }
+                ++cntslot;
             }
 
             return move(waviptrs);
@@ -2106,6 +2120,12 @@ namespace DSE
 
             //Create the vector with the nb of slots mentioned in the header
             vector<SampleBank::smpldata_t> waviptrs( m_hdr.nbwavislots );
+
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"\nReading sample entries..\n"
+                     <<"--------------------------\n";
+            }
             
             auto itlenchk = itwavi; //Copy the iterator to keep one on the start of the wavi data
 
@@ -2132,7 +2152,6 @@ namespace DSE
 
             auto   itreadptr = itwavi; //Copy the iterator to keep one on the start of the wavi data
             size_t cntslot   = 0; 
-                                     //
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
@@ -2145,17 +2164,17 @@ namespace DSE
                     winf.ReadFromContainer( smplinfoffset + itwavi, m_itend );
                     if( utils::LibWide().isLogOn() )
                     {
-                        clog <<"Sample #" <<cntslot <<", " <<winf.smplrate <<" Hz, ";
+                        clog <<"\t* Sample #" <<cntslot <<", " <<winf.smplrate <<" Hz, ";
                         if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
                             clog << "PCM8";
                         else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
                             clog << "PCM16";
                         else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
-                            clog << "IMA ADPCM";
+                            clog << "IMA ADPCM4";
                         else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
                             clog << "PSG?";
                         else
-                            clog << "INVALID";
+                            clog << "UNKNOWN FORMAT( 0x" <<hex <<winf.smplfmt <<dec << " )";
                         clog << "\n";
                     }
                     ablock.pinfo_.reset( new WavInfo(winf) );

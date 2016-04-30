@@ -378,6 +378,156 @@ namespace sf2
     //    return sample;
     //}
 
+
+//=========================================================================================
+//  Utilities
+//=========================================================================================
+
+/************************************************************************************************************
+    RAII_WriteListChunk
+        Little RAII trick to write the list chunk and avoid needing to do some dumb BS like I used to do!
+
+        Basically, create this within its own sub-scope, run the method that writes the content of the 
+        list chunk, and when the object falls out of scope it'll handle the rest!
+
+*************************************************************************************************************/
+    class RAII_WriteListChunk
+    {
+        std::ofstream                 * m_pout;
+        uint32_t                        m_fmttag;
+        size_t                        * m_onbbyteswritten;
+        std::ostreambuf_iterator<char>  m_itout;
+        std::ofstream::streampos        m_prewrite;
+
+    public:
+
+        RAII_WriteListChunk( std::ofstream & of, uint32_t fmttag, size_t & out_nbbyteswritten )
+            :m_fmttag(fmttag), m_pout(&of), m_onbbyteswritten(&out_nbbyteswritten), m_itout(of), 
+             m_prewrite(of.tellp()) //Save pre-write pos
+        {
+            //Zero out the nb of bytes written
+            (*m_onbbyteswritten) = 0;
+
+            Init();
+        }
+
+        RAII_WriteListChunk( std::ofstream & of, uint32_t fmttag )
+            :m_fmttag(fmttag), m_pout(&of), m_onbbyteswritten(nullptr), m_itout(of), 
+             m_prewrite(of.tellp()) //Save pre-write pos
+        {
+            Init();
+        }
+
+
+        ~RAII_WriteListChunk()
+        {
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+
+            //Save Post-write pos
+            const std::ofstream::streampos postwrite = m_pout->tellp();
+
+            //Seek back to start
+            m_pout->seekp(m_prewrite);
+
+            //Write header
+            riff::ChunkHeader listhdr;
+            listhdr.chunk_id = static_cast<uint32_t>(riff::eChunkIDs::LIST);
+            listhdr.length   = static_cast<uint32_t>(postwrite - m_prewrite) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            m_itout = listhdr.Write(m_itout);
+
+            //Seek back to end
+            m_pout->seekp(postwrite);
+
+            //Return our total
+            if( m_onbbyteswritten != nullptr )
+                (*m_onbbyteswritten) = (postwrite - m_prewrite);
+        }
+
+    private:
+        void Init()
+        {
+            //Skip header size
+            m_itout = std::fill_n( m_itout, riff::ChunkHeader::SIZE, 0 );
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+
+            //Write format tag
+            m_itout = utils::WriteIntToBytes( static_cast<uint32_t>(m_fmttag), m_itout, false );
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+        }
+
+    };
+
+/************************************************************************************************************
+    RAII_WriteChunk
+        Little RAII trick to write the chunk and avoid needing to do some dumb BS like I used to do!
+
+        Basically, create this within its own sub-scope, run the method that writes the content of the 
+        list chunk, and when the object falls out of scope it'll handle the rest!
+
+*************************************************************************************************************/
+    class RAII_WriteChunk
+    {
+        eSF2Tags                        m_tag;
+        std::ofstream                 * m_pout;
+        std::ofstream::streampos        m_prewritepos;
+        std::ostreambuf_iterator<char>  m_itout;
+        size_t                        * m_onbbyteswritten;
+
+    public:
+
+        RAII_WriteChunk( std::ofstream & of, eSF2Tags tag, size_t & out_nbbyteswritten )
+            :m_pout(&of), m_itout(of), m_tag(tag), m_onbbyteswritten(&out_nbbyteswritten),
+             m_prewritepos(of.tellp()) //Save pre-write pos
+        {
+            //Zero out the outputed nb of bytes written
+            (*m_onbbyteswritten) = 0;
+
+            //Skip header size
+            std::fill_n( std::ostreambuf_iterator<char>(of), riff::ChunkHeader::SIZE, 0 );
+        }
+
+        RAII_WriteChunk( std::ofstream & of, eSF2Tags tag )
+            :m_pout(&of), m_itout(of), m_tag(tag), m_onbbyteswritten(nullptr),
+             m_prewritepos(of.tellp()) //Save pre-write pos
+        {
+            //Skip header size
+            std::fill_n( std::ostreambuf_iterator<char>(of), riff::ChunkHeader::SIZE, 0 );
+        }
+
+        ~RAII_WriteChunk()
+        {
+            //Save Post-write pos
+            const std::ofstream::streampos postwrite = m_pout->tellp();
+
+            //Seek back to start
+            m_pout->seekp(m_prewritepos);
+
+            //Write header
+            riff::ChunkHeader listhdr;
+            listhdr.chunk_id = static_cast<uint32_t>(m_tag);
+            listhdr.length   = static_cast<uint32_t>(postwrite - m_prewritepos) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            m_itout = listhdr.Write(m_itout);
+
+            //Seek back to end
+            m_pout->seekp(postwrite);
+
+            //Return our total
+            if( m_onbbyteswritten != nullptr )
+                (*m_onbbyteswritten) = (postwrite - m_prewritepos);
+        }
+    };
+
+
+
+
 //=========================================================================================
 //  SounFontRIFFWriter
 //=========================================================================================
@@ -427,14 +577,34 @@ namespace sf2
             utils::WriteIntToBytes( static_cast<uint32_t>(eSF2Tags::sfbk), ostreambuf_iterator<char>(m_out), false );
 
             //Write the content
-            std::ofstream::streampos datasz = 4; //Count the 4 bytes of the fmt tag
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
+            size_t                   nbwritten = 0; //Variable re-used for keeping track of the nb of bytes written
+            std::ofstream::streampos datasz    = 4; //Count the 4 bytes of the fmt tag
+
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::INFO), nbwritten );
+                WriteInfoList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Build and write the sample data
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::sdta), nbwritten );
+                WriteSdataList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Build and write the HYDRA
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::pdta), nbwritten );
+                WritePdataList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Seek back to start
             //const std::ofstream::streampos postwrite = m_out.tellp();
@@ -460,9 +630,10 @@ namespace sf2
             return (m_out.tellp() - m_prewrite);
         }
 
-    //----------------------------------------------------------------
+    // ----------------------------------------------------------------
     //  Chunk Header Writing
-    //----------------------------------------------------------------
+    // ----------------------------------------------------------------
+#if 0
         /*
             WriteListChunk
                 This method writes the header surrounding a list chunk to the stream.
@@ -556,6 +727,7 @@ namespace sf2
             //Return our total
             return (postwrite - prewrite);
         }
+#endif
 
     //----------------------------------------------------------------
     //  INFO-list
@@ -666,7 +838,11 @@ namespace sf2
         {
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
-            WriteChunk( eSF2Tags::smpl, listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSmplChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::smpl );
+                WriteSmplChunk();
+            //WriteChunk( eSF2Tags::smpl, listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSmplChunk,  this ) ) );
+            }
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -747,8 +923,11 @@ namespace sf2
             WriteHYDRAInstruments();
 
             //Write Sample Headers 
-            WriteChunk( eSF2Tags::shdr, std::bind(&SounFontRIFFWriter::WriteHYDRASampleHeaders,  this ) );
-
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::shdr );
+                WriteHYDRASampleHeaders();
+                //WriteChunk( eSF2Tags::shdr, std::bind(&SounFontRIFFWriter::WriteHYDRASampleHeaders,  this ) );
+            }
             return (GetCurTotalNbByWritten() - prewrite);
         }
 
@@ -757,17 +936,32 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write phdr chunk
-            WriteChunk( eSF2Tags::phdr, listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::phdr );
+                WritePHDRChunk();
+            //WriteChunk( eSF2Tags::phdr, listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) ) );
+            }
 
             //Write pbag
-            WriteChunk( eSF2Tags::pbag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pbag );
+                WritePBagChunk();
+            //WriteChunk( eSF2Tags::pbag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) ) );
+            }
 
             //Write pmod
-            WriteChunk( eSF2Tags::pmod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pmod );
+                WritePModChunk();
+            //WriteChunk( eSF2Tags::pmod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) ) );
+            }
 
             //Write pgen
-            WriteChunk( eSF2Tags::pgen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) ) );
-
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pgen );
+                WritePGenChunk();
+            //WriteChunk( eSF2Tags::pgen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) ) );
+            }
             return (GetCurTotalNbByWritten() - prewrite);
         }
 
@@ -776,16 +970,32 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write inst chunk
-            WriteChunk( eSF2Tags::inst, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) ) );
+            { 
+                RAII_WriteChunk wc( m_out, eSF2Tags::inst ); 
+                WriteInstChunk();
+            //WriteChunk( eSF2Tags::inst, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) ) );
+            }
 
             //Write ibag chunk
-            WriteChunk( eSF2Tags::ibag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::ibag ); 
+                WriteIBagChunk();
+            //WriteChunk( eSF2Tags::ibag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) ) );
+            }
 
             //Write imod chunk
-            WriteChunk( eSF2Tags::imod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::imod ); 
+                WriteIModChunk();
+            //WriteChunk( eSF2Tags::imod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) ) );
+            }
 
             //Write igen chunk
-            WriteChunk( eSF2Tags::igen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::igen ); 
+                WriteIGenChunk();
+            //WriteChunk( eSF2Tags::igen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) ) );
+            }
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -1262,7 +1472,12 @@ namespace sf2
     */
     std::vector<pcm16s_t> Sample::Data()const
     {
-        if( m_pcmdata.empty() )
+        if( m_pcmdata.empty() && !m_loadfun )
+        {
+            clog << "<!>- Warning : Sample::Data() : Sample \"" <<m_name <<"\" contains no PCM data!!\n";
+            return m_pcmdata;
+        }
+        else if( m_pcmdata.empty() )
             return std::move( m_loadfun() );
         else
             return std::move( m_pcmdata );

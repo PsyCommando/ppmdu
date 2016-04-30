@@ -513,7 +513,10 @@ namespace DSE
         }
         else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
         {
-
+            clog << "<!>- Warning: ConvertDSESample(): Samplefmt PSG ???\n";
+#ifdef _DEBUG
+            assert(false);
+#endif
             return eDSESmplFmt::psg;
         }
         else
@@ -750,15 +753,15 @@ namespace DSE
         //int8_t ctuneadd = (dseinst.ftune) / 100;
         //int8_t ftunes   = (dseinst.ftune) % 100; // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
 
-        //#Test set pitch from scratch:
-        myzone.SetRootKey(dseinst.rootkey);//( (dseinst.rootkey - (dseinst.ktps + dseinst.ctune) + ctuneadd) );
+        ////#Test set pitch from scratch:
+        //myzone.SetRootKey(dseinst.rootkey);//( (dseinst.rootkey - (dseinst.ktps + dseinst.ctune) + ctuneadd) );
 
-        //Pitch Correction
+        ////Pitch Correction
         //if( dseinst.ftune != 0 )
-            //myzone.SetFineTune( ftunes/*dseinst.ftune*/ );
+        //    myzone.SetFineTune( ftunes/*dseinst.ftune*/ );
 
         //if( dseinst.ctune != DSE::DSEDefaultCoarseTune )
-            //myzone.SetCoarseTune( /*( dseinst.ctune + 7 ) +*/ ctuneadd );
+        //    myzone.SetCoarseTune( /*( dseinst.ctune + 7 ) +*/ ctuneadd );
 
 
 
@@ -1017,9 +1020,10 @@ namespace DSE
             }
             else if( cursminf.smplfmt == eDSESmplFmt::psg )
             {
-                stringstream sstrerr;
-                sstrerr << "PSG instruments unsuported!";
-                throw std::runtime_error( sstrerr.str() );
+                //stringstream sstrerr;
+                //sstrerr << "PSG instruments unsuported!";
+                //throw std::runtime_error( sstrerr.str() );
+                clog << "<!>- Warning: AddSampleToSoundfont(): Unsuported type 3 sample added!\n";
             }
             else
             {
@@ -1091,25 +1095,32 @@ namespace DSE
         if( split.kgrpid != 0 )
             presetcvinf.maxpoly = keygroup.poly; //let the midi converter handle anything else
 
-        int8_t ctuneadd = (split.ftune) / 100;
-        int8_t ftunes   = (split.ftune) % 100; // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
+        int8_t ctuneadd = (split.ftune) / 100;/*100;*/
+        int8_t ftunes   = (split.ftune) % 100;/*100;*/ // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
 
 
         //Root Pitch
         myzone.SetRootKey( split.rootkey ); // + (split.ktps + split.ctune) + ctuneadd ); //split.rootkey
+        //myzone.SetRootKey( split.rootkey + (/*split.ktps +*/ split.ctune) + ctuneadd );
         //cout << "\trootkey :" << static_cast<short>(split.rootkey + (split.ktps + split.ctune) + ctuneadd) <<"\n"; 
 
         //Pitch Correction
-
         //if( split.ftune != 0 )
         //    myzone.SetFineTune( ftunes );
 
         //if( split.ctune != DSE::DSEDefaultCoarseTune )
         //    myzone.SetCoarseTune( split.ctune );
 
+        //Pitch Correction
+        //if( split.ftune != 0 )
+        //    myzone.SetFineTune( ftunes/*split.ftune*/ );
+
+        //if( split.ctune != DSE::DSEDefaultCoarseTune )
+        //    myzone.SetCoarseTune( /*( split.ctune + 7 ) +*/ split.ctune + ctuneadd );
+
         //Volume
-        //if( split.smplvol != DSE_LimitsVol.def_ )
-        //    myzone.SetInitAtt( DseVolToSf2Attenuation(split.smplvol) );
+        if( split.smplvol != DSE_LimitsVol.def_ )
+            myzone.SetInitAtt( DseVolToSf2Attenuation(split.smplvol) );
 
         //Pan
         if( split.smplpan != DSE_LimitsPan.def_ )
@@ -1443,6 +1454,11 @@ namespace DSE
         //Write the soundfont
         try
         {
+            if( utils::LibWide().isLogOn() )
+            {
+                clog <<"\nWriting Soundfont...\n"
+                     <<"================================================================================\n";
+            }
             cout<<"\tWriting soundfont..";
             sf.Write( destf );
             cout<<"\n";
@@ -1709,8 +1725,6 @@ namespace DSE
 
                 if( ptrprgs != nullptr )
                 {
-                    //!#FIXME: This is really stupid. Not all games alloc the same ammount of samples as eachothers. 
-
                     //Enlarge our vector when needed!
                     //if( ptrsmplbnk->NbSlots() > smpldata.size() )
                     //    smpldata.resize( ptrsmplbnk->NbSlots() );
