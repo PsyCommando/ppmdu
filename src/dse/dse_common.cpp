@@ -25,6 +25,16 @@ namespace DSE
         eDSEChunks::eod,
     }};
 
+    const std::array<eDSEContainers, NB_DSEContainers> DSEContainerList
+    {{
+        eDSEContainers::sadl,
+        eDSEContainers::sedl,
+        eDSEContainers::smdl,
+        eDSEContainers::swdl,
+    }};
+
+
+    //Duration lookup tables for DSE volume envelopes:
     const std::array<int16_t,128> Duration_Lookup_Table =
     {
         0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 
@@ -45,7 +55,7 @@ namespace DSE
         0x1E1E, 0x1F22, 0x2030, 0x2148, 0x2260, 0x2382, 0x2710, 0x7FFF
     };
     
-
+    //Duration lookup tables for DSE volume envelopes:
     const std::array<int32_t,128> Duration_Lookup_Table_NullMulti =
     {
         0x00000000, 0x00000004, 0x00000007, 0x0000000A, 
@@ -82,62 +92,46 @@ namespace DSE
         0x00044A45, 0x00046277, 0x00047B00, 0x7FFFFFFF
     };
 
-    inline eDSEChunks IntToChunkID( uint32_t value )
-    {
-        eDSEChunks valcompare = static_cast<eDSEChunks>(value);
-        
-        for( auto cid : DSEChunksList )
-        {
-            if( valcompare == cid )
-                return valcompare;
-        }
-
-        return eDSEChunks::invalid;
-    }
-    
-    inline uint32_t ChunkIDToInt( eDSEChunks id )
-    {
-        return static_cast<uint32_t>(id);
-    }
+    //inline eDSEChunks IntToChunkID( uint32_t value )
+    //{
+    //    for( auto cid : DSEChunksList )
+    //    {
+    //        if( value == static_cast<uint32_t>(cid) )
+    //            return cid;
+    //    }
+    //    return eDSEChunks::invalid;
+    //}
+    //
+    //inline uint32_t ChunkIDToInt( eDSEChunks id )
+    //{
+    //    return static_cast<uint32_t>(id);
+    //}
 
 //=================================================================================================
 //  DurationLookupTable stuff
 //=================================================================================================
 
-    //#FIXME: MOST LIKELY INNACURATE ! The duration for envelope phases is based around the DSE tick counter. So it may or may not be affected by tempo.
     int32_t DSEEnveloppeDurationToMSec( int8_t param, int8_t multiplier )
     { 
         param = utils::Clamp( abs(param), 0, 127 );
-        //The value from the table is multiplied by 1,000
-        static const uint32_t UnitSwitch  = 1000;
-        //..then divided by 10,000, to give us a tick quantity
-        static const uint32_t UnitDivisor = 10000;
 #if 1
         if( multiplier == 0 )
             return (Duration_Lookup_Table_NullMulti[labs(param)]);
         else
             return (Duration_Lookup_Table[labs(param)] * multiplier);
 #elif 0
+        //The value from the table is multiplied by 1,000
+        static const uint32_t UnitSwitch  = 1000;
+        //..then divided by 10,000, to give us a tick quantity
+        static const uint32_t UnitDivisor = 10000;
+
         //The 20 below looks like a magic number, but that's because it is ^^;
         if( multiplier == 0 )
             return( (Duration_Lookup_Table_NullMulti[param] * UnitSwitch) / UnitDivisor ) * 20;//25; 
         else
             return( ( (Duration_Lookup_Table[param] * multiplier) * UnitSwitch) / UnitDivisor ) * 20;//25; 
-#else
-        if( multiplier == 0 )
-            return (Duration_Lookup_Table_NullMulti[labs(param)]) * 4;
-        else
-            return (Duration_Lookup_Table[labs(param)] * multiplier) * 4;
 #endif
     }
-
-    //int32_t DSEEnveloppeVolumeTocB( int8_t param )
-    //{
-    //    assert(false);
-    //    return 0;
-    //}
-
-
 
 //
 //
@@ -146,29 +140,16 @@ namespace DSE
         :envmulti(0), atkvol(0), attack(0), hold(0), decay(0), sustain(0), decay2(0), release(0)
     {}
 
-    DSEEnvelope::DSEEnvelope( const ProgramInfo::SplitEntry & splitentry )
-        :envmulti(splitentry.envmult), 
-         atkvol(splitentry.atkvol), 
-         attack(splitentry.attack), 
-         hold(splitentry.hold), 
-         decay(splitentry.decay), 
-         sustain(splitentry.sustain), 
-         decay2(splitentry.decay2), 
-         release(splitentry.release)
-    {}
+    //DSEEnvelope::DSEEnvelope( const SplitEntry & splitentry )
+    //{
+    //    (*this) = splitentry.env;
+    //}
 
-    DSEEnvelope & DSEEnvelope::operator=( const ProgramInfo::SplitEntry & splitentry )
-    {
-        envmulti = splitentry.envmult;
-        atkvol   = splitentry.atkvol; 
-        attack   = splitentry.attack;
-        hold     = splitentry.hold;
-        decay    = splitentry.decay;
-        sustain  = splitentry.sustain; 
-        decay2   = splitentry.decay2;
-        release  = splitentry.release;
-        return *this;
-    }
+    //DSEEnvelope & DSEEnvelope::operator=( const SplitEntry & splitentry )
+    //{
+    //    (*this) = splitentry.env;
+    //    return *this;
+    //}
 
 //==========================================================================================
 //  StreamOperators
@@ -177,8 +158,8 @@ namespace DSE
     std::ostream & operator<<(std::ostream &os, const DateTime &obj )
     {
         os << static_cast<unsigned long>(obj.year) <<"/" 
-           <<static_cast<unsigned long>(obj.month) <<"/" 
-           <<static_cast<unsigned long>(obj.day) <<"-" 
+           <<static_cast<unsigned long>(obj.month)+1 <<"/" 
+           <<static_cast<unsigned long>(obj.day)+1 <<"-" 
            <<static_cast<unsigned long>(obj.hour) <<"h" 
            <<static_cast<unsigned long>(obj.minute) <<"m" 
            <<static_cast<unsigned long>(obj.second) <<"s";
@@ -202,18 +183,19 @@ namespace DSE
     std::ostream & operator<<( std::ostream &  strm, const ProgramInfo & other )
     {
         strm << "\t== ProgramInfo ==\n"
-             << "\tID        : " << other.m_hdr.id     <<"\n"
-             << "\tNbSplits  : " << other.m_hdr.nbsplits <<"\n"
-             << "\tVol       : " << static_cast<short>(other.m_hdr.insvol) <<"\n"
-             << "\tPan       : " << static_cast<short>(other.m_hdr.inspan) <<"\n"
-             << "\tUnk3      : " << other.m_hdr.unk3 <<"\n"
-             << "\tUnk4      : " << other.m_hdr.unk4 <<"\n"
-             << "\tUnk5      : " << static_cast<short>(other.m_hdr.unk5) <<"\n"
-             << "\tnblfos    : " << static_cast<short>(other.m_hdr.nblfos) <<"\n"
-             << "\tpadbyte   : " << static_cast<short>(other.m_hdr.padbyte) <<"\n"
-             << "\tUnk7      : " << static_cast<short>(other.m_hdr.unk7) <<"\n"
-             << "\tUnk8      : " << static_cast<short>(other.m_hdr.unk8) <<"\n"
-             << "\tUnk9      : " << static_cast<short>(other.m_hdr.unk9) <<"\n";
+             << "\tID        : " << other.id     <<"\n"
+             << "\tNbSplits  : " << other.m_splitstbl.size() <<"\n"
+             << "\tVol       : " << static_cast<short>(other.prgvol) <<"\n"
+             << "\tPan       : " << static_cast<short>(other.prgpan) <<"\n"
+             //<< "\tUnk3      : " << other.unk3 <<"\n"
+             << "\tUnk4      : " << static_cast<short>(other.unk4) <<"\n"
+             //<< "\tUnk5      : " << static_cast<short>(other.unk5) <<"\n"
+             << "\tnblfos    : " << static_cast<short>(other.m_lfotbl.size()) <<"\n"
+             << "\tpadbyte   : " << static_cast<short>(other.padbyte) <<"\n"
+             << "\tUnkpoly      : " << static_cast<short>(other.unkpoly) <<"\n"
+             //<< "\tUnk8      : " << static_cast<short>(other.unk8) <<"\n"
+             //<< "\tUnk9      : " << static_cast<short>(other.unk9) <<"\n";
+             ;
 
         //Write the LFOs
         int cntlfo = 0;
@@ -238,7 +220,7 @@ namespace DSE
         for( const auto & split : other.m_splitstbl )
         {
             strm << "\t-- Split #" <<cntlfo <<" --\n"
-                << "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
+                //<< "\tUnk10        : " << static_cast<short>(split.unk10)     <<"\n"
                 << "\tID           : " << static_cast<short>(split.id)        <<"\n"
                 << "\tUnk11        : " << static_cast<short>(split.unk11)     <<"\n"
                 << "\tUnk25        : " << static_cast<short>(split.unk25)     <<"\n"
@@ -250,8 +232,8 @@ namespace DSE
                 << "\thivel        : " << static_cast<short>(split.hivel)     <<"\n"
                 << "\tlovel2       : " << static_cast<short>(split.lovel2)     <<"\n"
                 << "\thivel2       : " << static_cast<short>(split.hivel2)     <<"\n"
-                << "\tunk16        : " << split.unk16     <<"\n"
-                << "\tunk17        : " << split.unk17     <<"\n"
+                //<< "\tunk16        : " << split.unk16     <<"\n"
+                //<< "\tunk17        : " << split.unk17     <<"\n"
                 << "\tsmplid       : " << static_cast<short>(split.smplid)     <<"\n"
                 << "\tftune        : " << static_cast<short>(split.ftune)     <<"\n"
                 << "\tctune        : " << static_cast<short>(split.ctune)     <<"\n"
@@ -260,23 +242,23 @@ namespace DSE
                 << "\tsmplvol      : " << static_cast<short>(split.smplvol)   <<"\n"
                 << "\tsmplpan      : " << static_cast<short>(split.smplpan)   <<"\n"
                 << "\tkgrpid       : " << static_cast<short>(split.kgrpid)  <<"\n"
-                << "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
-                << "\tunk23        : " << split.unk23     <<"\n"
-                << "\tunk24        : " << split.unk24     <<"\n"
+                //<< "\tunk22        : " << static_cast<short>(split.unk22)     <<"\n"
+                //<< "\tunk23        : " << split.unk23     <<"\n"
+                //<< "\tunk24        : " << split.unk24     <<"\n"
                 << "\tenvon        : " << static_cast<short>(split.envon)     <<"\n"
-                << "\tenvmult      : " << static_cast<short>(split.envmult)     <<"\n"
-                << "\tunk37        : " << static_cast<short>(split.unk37)     <<"\n"
-                << "\tunk38        : " << static_cast<short>(split.unk38)     <<"\n"
-                << "\tunk39        : " << split.unk39     <<"\n"
-                << "\tunk40        : " << split.unk40     <<"\n"
-                << "\tatkvol       : " << static_cast<short>(split.atkvol)     <<"\n"
-                << "\tattack       : " << static_cast<short>(split.attack)     <<"\n"
-                << "\tdecay        : " << static_cast<short>(split.decay)     <<"\n"
-                << "\tsustain      : " << static_cast<short>(split.sustain)     <<"\n"
-                << "\thold         : " << static_cast<short>(split.hold)     <<"\n"
-                << "\tdecay2       : " << static_cast<short>(split.decay2)     <<"\n"
-                << "\trelease      : " << static_cast<short>(split.release)     <<"\n"
-                << "\trx           : " << static_cast<short>(split.rx)     <<"\n"
+                << "\tenvmult      : " << static_cast<short>(split.env.envmulti)     <<"\n"
+                //<< "\tunk37        : " << static_cast<short>(split.env.unk37)     <<"\n"
+                //<< "\tunk38        : " << static_cast<short>(split.env.unk38)     <<"\n"
+                //<< "\tunk39        : " << split.unk39     <<"\n"
+                //<< "\tunk40        : " << split.unk40     <<"\n"
+                << "\tatkvol       : " << static_cast<short>(split.env.atkvol)     <<"\n"
+                << "\tattack       : " << static_cast<short>(split.env.attack)     <<"\n"
+                << "\tdecay        : " << static_cast<short>(split.env.decay)     <<"\n"
+                << "\tsustain      : " << static_cast<short>(split.env.sustain)     <<"\n"
+                << "\thold         : " << static_cast<short>(split.env.hold)     <<"\n"
+                << "\tdecay2       : " << static_cast<short>(split.env.decay2)     <<"\n"
+                << "\trelease      : " << static_cast<short>(split.env.release)     <<"\n"
+                //<< "\trx           : " << static_cast<short>(split.env.rx)     <<"\n"
                 ;
             ++cntsplits;
         }
@@ -299,15 +281,16 @@ namespace DSE
 
             if( !ev.params.empty() )
             {
-                strm <<hex <<uppercase <<"( ";
-                for( size_t i = 0; i < ev.params.size(); ++i ) 
                 {
-                    strm <<"0x" <<setfill('0') <<setw(2) <<right << static_cast<unsigned short>(ev.params[i]);
-                    if( i != (ev.params.size() - 1) )
-                        strm << ", ";
-                } 
-
-                strm <<dec <<nouppercase <<" )";
+                    strm <<hex <<uppercase <<"( ";
+                    for( size_t i = 0; i < ev.params.size(); ++i ) 
+                    {
+                        strm <<"0x" <<setfill('0') <<setw(2) <<right << static_cast<unsigned short>(ev.params[i]);
+                        if( i != (ev.params.size() - 1) )
+                            strm << ", ";
+                    } 
+                    strm <<dec <<nouppercase <<" )";
+                }
             }
             else if( ev.evcode >= static_cast<uint8_t>(eTrkEventCodes::Delay_HN) && ev.evcode <= static_cast<uint8_t>(eTrkEventCodes::Delay_64N) )
             {
@@ -323,8 +306,13 @@ namespace DSE
             strm <<"ERROR EVENT CODE " <<uppercase <<hex <<static_cast<unsigned short>(ev.evcode) <<dec <<nouppercase;
         }
 
-        strm << "\n" /*<< noshowbase*/;
+        return strm;
+    }
 
+    std::ostream & operator<<(std::ostream &strm, const DSE::eDSEContainers cnty )
+    {
+        uint32_t convertedty = static_cast<uint32_t>(cnty);
+        strm << static_cast<char>( convertedty >> 24 ) << static_cast<char>( convertedty >> 16 ) << static_cast<char>( convertedty >> 8 ) << static_cast<char>( convertedty );
         return strm;
     }
 

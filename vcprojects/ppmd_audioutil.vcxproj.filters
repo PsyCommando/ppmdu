@@ -198,6 +198,18 @@
     <ClInclude Include="..\src\utils\audio_utilities.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\dse\bgm_container.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dse\bgm_blob.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dse\sadl.hpp">
+      <Filter>Header Files\ppmdu\file formats\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\midi_fmtrule.hpp">
+      <Filter>Header Files\ppmdu\external formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\audioutil.cpp">
@@ -311,9 +323,6 @@
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\dse\sample_processor.cpp">
-      <Filter>Source Files\ppmdu\data formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dse\dse_conversion.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
     </ClCompile>
@@ -322,6 +331,15 @@
     </ClCompile>
     <ClCompile Include="..\src\dse\dse_prgmbank_xml_io.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dse\sample_processor.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dse\bgm_container.cpp">
+      <Filter>Source Files\ppmdu\file formats\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\midi_fmtrule.cpp">
+      <Filter>Source Files\ppmdu\external formats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -333,5 +351,6 @@
     <Text Include="..\readmes\ppmd_audioutil.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="commandlines_for_testing.txt" />
   </ItemGroup>
 </Project>

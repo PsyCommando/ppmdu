@@ -34,6 +34,10 @@ namespace statsutil
         bool ParseInputPath  ( const std::string              & path );
         bool ParseOutputPath ( const std::string              & path );
 
+        bool ShouldParseOutputPath( const std::vector<std::vector<std::string>> & optdata, 
+                                    const std::deque<std::string>               & priorparams,
+                                    size_t                                        nblefttoparse );
+
         //Parse Options
         bool ParseOptionPk         ( const std::vector<std::string> & optdata );
         bool ParseOptionMvD        ( const std::vector<std::string> & optdata );

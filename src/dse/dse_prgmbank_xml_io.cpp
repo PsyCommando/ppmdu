@@ -239,15 +239,15 @@ private:
     {
         using namespace PrgmXML;
 
-        WriteCommentNode( parent, "ProgramID : " + std::to_string( curprog.m_hdr.id ) );
+        WriteCommentNode( parent, "ProgramID : " + std::to_string( curprog.id ) );
         xml_node prgnode = parent.append_child( NODE_Program.c_str() );
 
         //Write program header stuff
-        WriteNodeWithValue( prgnode, PROP_ID,           curprog.m_hdr.id );
-        WriteNodeWithValue( prgnode, PROP_Volume,       curprog.m_hdr.insvol );
-        WriteNodeWithValue( prgnode, PROP_Pan,          curprog.m_hdr.inspan );
-        WriteNodeWithValue( prgnode, PROP_PrgmUnk3,     curprog.m_hdr.unk3 );
-        WriteNodeWithValue( prgnode, PROP_PrgmUnkPoly,  curprog.m_hdr.unkpoly );
+        WriteNodeWithValue( prgnode, PROP_ID,           curprog.id );
+        WriteNodeWithValue( prgnode, PROP_Volume,       curprog.prgvol );
+        WriteNodeWithValue( prgnode, PROP_Pan,          curprog.prgpan );
+        //WriteNodeWithValue( prgnode, PROP_PrgmUnk3,     curprog.unk3 );
+        WriteNodeWithValue( prgnode, PROP_PrgmUnkPoly,  curprog.unkpoly );
 
         WriteCommentNode( prgnode, "LFO Settings" );
         {
@@ -265,7 +265,7 @@ private:
         
     }
 
-    void WriteALFO( xml_node & parent, const ProgramInfo::LFOTblEntry & curlfo )
+    void WriteALFO( xml_node & parent, const LFOTblEntry & curlfo )
     {
         using namespace PrgmXML;
 
@@ -289,7 +289,7 @@ private:
         }
     }
 
-    void WriteASplit( xml_node & parent, const ProgramInfo::SplitEntry & cursplit )
+    void WriteASplit( xml_node & parent, const SplitEntry & cursplit )
     {
         using namespace PrgmXML;
         WriteCommentNode( parent, "Split Sample " + to_string(cursplit.smplid) );
@@ -309,37 +309,37 @@ private:
         WriteNodeWithValue( parent, PROP_Volume,            cursplit.smplvol );
         WriteNodeWithValue( parent, PROP_Pan,               cursplit.smplpan );
         WriteNodeWithValue( parent, PROP_SplitKGrp,         cursplit.kgrpid );
-        WriteNodeWithValue( parent, PROP_SplitUnk22,        cursplit.unk22 );
-        WriteNodeWithValue( parent, PROP_SplitUnk23,        cursplit.unk23 );
+        //WriteNodeWithValue( parent, PROP_SplitUnk22,        cursplit.unk22 );
+        //WriteNodeWithValue( parent, PROP_SplitUnk23,        cursplit.unk23 );
         WriteNodeWithValue( parent, PROP_EnvOn,             cursplit.envon );
-        WriteNodeWithValue( parent, PROP_EnvMulti,          cursplit.envmult );
+        WriteNodeWithValue( parent, PROP_EnvMulti,          cursplit.env.envmulti );
 
         stringstream sstrunkcv;
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk37);
-        parent.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk37);
+        //parent.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk38);
-        parent.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk38);
+        //parent.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk39);
-        parent.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk39);
+        //parent.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk40);
-        parent.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk40);
+        //parent.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
         
-        WriteNodeWithValue( parent, PROP_EnvAtkVol,     cursplit.atkvol );
-        WriteNodeWithValue( parent, PROP_EnvAtk,        cursplit.attack );
-        WriteNodeWithValue( parent, PROP_EnvDecay,      cursplit.decay );
-        WriteNodeWithValue( parent, PROP_EnvSustain,    cursplit.sustain );
-        WriteNodeWithValue( parent, PROP_EnvHold,       cursplit.hold );
-        WriteNodeWithValue( parent, PROP_EnvDecay2,     cursplit.decay2 );
-        WriteNodeWithValue( parent, PROP_EnvRelease,    cursplit.release );
-        WriteNodeWithValue( parent, PROP_EnvUnk57,      cursplit.rx );
+        WriteNodeWithValue( parent, PROP_EnvAtkVol,     cursplit.env.atkvol );
+        WriteNodeWithValue( parent, PROP_EnvAtk,        cursplit.env.attack );
+        WriteNodeWithValue( parent, PROP_EnvDecay,      cursplit.env.decay );
+        WriteNodeWithValue( parent, PROP_EnvSustain,    cursplit.env.sustain );
+        WriteNodeWithValue( parent, PROP_EnvHold,       cursplit.env.hold );
+        WriteNodeWithValue( parent, PROP_EnvDecay2,     cursplit.env.decay2 );
+        WriteNodeWithValue( parent, PROP_EnvRelease,    cursplit.env.release );
+        //WriteNodeWithValue( parent, PROP_EnvUnk57,      cursplit.env.rx );
     }
 
 
@@ -420,27 +420,27 @@ private:
         WriteCommentNode( infonode, "Misc" );
         WriteNodeWithValue( infonode, PROP_Volume,      winfo.vol );
         WriteNodeWithValue( infonode, PROP_Pan,         winfo.pan );
-        WriteNodeWithValue( infonode, PROP_SmplUnk5,    winfo.unk5 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk58,   winfo.unk58 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk6,    winfo.unk6 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk59,   winfo.unk59 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk5,    winfo.unk5 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk58,   winfo.unk58 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk6,    winfo.unk6 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk59,   winfo.unk59 );
 
-        WriteNodeWithValue( infonode, PROP_SmplUnk9,    winfo.unk9 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk9,    winfo.unk9 );
         WriteNodeWithValue( infonode, PROP_SmplLoop,    winfo.smplloop );
 
-        WriteNodeWithValue( infonode, PROP_SmplUnk11,   winfo.unk11 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk12,   winfo.unk12 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk62,   winfo.unk62 );
-        WriteNodeWithValue( infonode, PROP_SmplUnk13,   winfo.unk13 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk11,   winfo.unk11 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk12,   winfo.unk12 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk62,   winfo.unk62 );
+        //WriteNodeWithValue( infonode, PROP_SmplUnk13,   winfo.unk13 );
 
         WriteCommentNode( infonode, "Loop Data (in PCM16 sample points)" );
         //Correct the sample loop points because the samples were exported to PCM16
-        if( winfo.smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::pcm8) )
+        if( winfo.smplfmt == eDSESmplFmt::pcm8 )
         {
             WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg * 2 );
             WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen * 2 );
         }
-        else if( winfo.smplfmt == static_cast<uint16_t>(WavInfo::eSmplFmt::ima_adpcm) )
+        else if( winfo.smplfmt == eDSESmplFmt::ima_adpcm )
         {
             WriteNodeWithValue( infonode, PROP_LoopBeg,     (winfo.loopbeg * 4) + ::audio::IMA_ADPCM_PreambleLen );
             WriteNodeWithValue( infonode, PROP_LoopLen,     (winfo.looplen * 4) + ::audio::IMA_ADPCM_PreambleLen );
@@ -455,23 +455,23 @@ private:
         WriteNodeWithValue( infonode, PROP_EnvOn,         winfo.envon );
         WriteNodeWithValue( infonode, PROP_EnvMulti,      winfo.envmult );
 
-        stringstream sstrunkcv;
+        //stringstream sstrunkcv;
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk19);
-        infonode.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk19);
+        //infonode.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk20);
-        infonode.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk20);
+        //infonode.append_child(PROP_EnvUnk20.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk21);
-        infonode.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk21);
+        //infonode.append_child(PROP_EnvUnk21.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
-        sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk22);
-        infonode.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
-        sstrunkcv.str(string());
+        //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(winfo.unk22);
+        //infonode.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
+        //sstrunkcv.str(string());
 
         
         WriteNodeWithValue( infonode, PROP_EnvAtkVol,     winfo.atkvol );
@@ -481,7 +481,7 @@ private:
         WriteNodeWithValue( infonode, PROP_EnvHold,       winfo.hold );
         WriteNodeWithValue( infonode, PROP_EnvDecay2,     winfo.decay2 );
         WriteNodeWithValue( infonode, PROP_EnvRelease,    winfo.release );
-        WriteNodeWithValue( infonode, PROP_EnvUnk57,      winfo.unk57 );
+        //WriteNodeWithValue( infonode, PROP_EnvUnk57,      winfo.unk57 );
 
     }
 

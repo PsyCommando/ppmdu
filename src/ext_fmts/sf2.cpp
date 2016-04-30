@@ -13,7 +13,8 @@ using namespace std;
 
 //This define is meant to be a temporary mean of toggling on and off the adding of loop bytes to make looping
 //  samples much smoother.
-#define SF2_ADD_EXTRA_LOOP_BYTES 1
+//#define SF2_ADD_EXTRA_LOOP_BYTES 1
+#define SF2_ADD_EXTRA_LOOP_BYTES2 1
 
 namespace sf2
 {
@@ -192,7 +193,7 @@ namespace sf2
                 - loopend < (end - 7)
                 - (loopend - loopend) >= 32 
     **************************************************************************************/
-    std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t loopbeg, uint32_t loopend )
+    std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t & loopbeg, uint32_t & loopend )
     {
         const size_t          smpllen      = sample.size();
         const int32_t         looplen      = loopend - loopbeg;
@@ -204,28 +205,13 @@ namespace sf2
         const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEndEdgeDist; //Whether we need to insert samples between loopend and end
         const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
 
-        if( utils::LibWide().isLogOn() )
-        {
-            clog << "\tMakeSampleLoopLegal():\n" <<setw(10) <<setfill(' ')
-                 << "\t\tLength"    <<": " << smpllen <<" smpls\n" <<setw(10)
-                 << "\t\tLoopBeg"   <<": " << loopbeg <<" smpls\n" <<setw(10)
-                 << "\t\tLoopEnd"   <<": " << loopend <<" smpls\n" <<setw(10)
-                 << "\t\tLoopLen"   <<": " << looplen <<" smpls\n" <<setw(10)
-                 <<boolalpha 
-                 << "\t\tDoPrefix"  <<": " << bPrefixSmpls <<"\n" <<setw(10)
-                 << "\t\tDoSufix"   <<": " << bSuffixSmpls <<"\n" <<setw(10)
-                 << "\t\tDoExtraLp" <<": " << bExtraLoops <<"\n";
-        }
-
         if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
             return sample; //Nothing to do here !
 
         const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
         const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
-        const uint32_t nbdummyprefx  = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distbeglp2beg) );
-        const uint32_t nbdummypost   = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distlpend2end) );
 
-        //#1 - Compute size to reserve
+       //#1 - Compute size to reserve
         if( bExtraLoops )
         {
             loopntimes = SfSampleLoopMinLen / looplen; //Compute the amount of times to loop the sample to reach the legal length
@@ -237,10 +223,37 @@ namespace sf2
             allocsz += ( loopntimes * looplen ); //Add those extra loop samples to the amount to reserve
         }
 
+        //
+        unsigned int nbprelps  = 0;
+        unsigned int nbsufflps = 0;
+
         if( bPrefixSmpls )
-            allocsz += nbdummyprefx; //Add the nb of dummy samples to prefix
+        {
+            if( SfSampleLoopMinEdgeDist > looplen ) 
+            {
+                nbprelps = SfSampleLoopMinEdgeDist / looplen;
+                if( SfSampleLoopMinEdgeDist % looplen != 0 )
+                    ++nbprelps;
+            }
+            else
+                ++nbprelps;
+            loopntimes += nbprelps;
+            allocsz += ( nbprelps * looplen ); //Add the nb of dummy samples to prefix
+        }
         if( bSuffixSmpls )
-            allocsz += nbdummypost; //Add the nb of dummy samples to append
+        {
+            if( SfSampleLoopMinEndEdgeDist > looplen ) 
+            {
+                nbsufflps = SfSampleLoopMinEndEdgeDist / looplen;
+                if( SfSampleLoopMinEndEdgeDist % looplen != 0 )
+                    ++nbsufflps;
+            }
+            else
+                ++nbsufflps;
+            loopntimes += nbsufflps;
+            allocsz += ( nbsufflps * looplen ); //Add the nb of dummy samples to append
+        }
+
 
         //#2 - Allocate
         std::vector<pcm16s_t> legalloop;
@@ -252,17 +265,6 @@ namespace sf2
         //Copy whatever is between beg and loopbeg
         std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
 
-        if( bPrefixSmpls )
-        {
-            auto itcpbeg = sample.begin();
-            //std::advance( itcpbeg, distbeglp2beg );
-
-            //if( distbeglp2beg <= 1 )
-                std::fill_n( legalloopins, nbdummyprefx, *itcpbeg );
-            //else
-            //    std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
-        }
-
         //Put the data between the loop points as many times as needed
         auto itlpbeg = sample.begin() + distbeglp2beg;
         for( unsigned int cntlp = 0; cntlp < loopntimes; ++cntlp ) //Copy the sample's looped zone as many times as needed
@@ -271,25 +273,260 @@ namespace sf2
         //Copy whatever is between loopend and end
         std::copy_n( sample.begin(), distlpend2end, legalloopins );
 
-        if( bSuffixSmpls )
-        {
-            auto itcpbeg = sample.begin();
-            std::advance( itcpbeg, distbeglp2beg );
-            std::copy_n( itcpbeg, nbdummypost, legalloopins );
-        }
+        //Move loop points!
+        loopbeg = distbeglp2beg + ( nbprelps * looplen );
+        loopend = loopbeg       + ( ( loopntimes - nbsufflps ) * looplen );
 
-
-        if( utils::LibWide().isLogOn() )
-        {
-            clog <<setw(10) << "\t\tDistBegLpToBeg" <<": " <<distbeglp2beg <<"\n"
-                 <<setw(10) << "\t\tDistEndLpToEnd" <<": " <<distlpend2end <<"\n"
-                 <<setw(10) << "\t\tLoopNTimes"     <<": " <<loopntimes <<"\n";
-        }
-
-        //#4 - Move the legal sample into the old one
         sample = std::move(legalloop);
         return sample;
     }
+    //{
+    //    const size_t          smpllen      = sample.size();
+    //    const int32_t         looplen      = loopend - loopbeg;
+    //    size_t                allocsz      = smpllen;
+    //    uint32_t              loopntimes   = 1;                 //The nb of times the samples should be looped to be legal
+
+    //    //#0 - Determine what to do with this sample
+    //    const bool bPrefixSmpls = loopbeg < SfSampleLoopMinEdgeDist;             //Whether we need to insert samples between beg and loopbeg
+    //    const bool bSuffixSmpls = (smpllen - loopend) < SfSampleLoopMinEndEdgeDist; //Whether we need to insert samples between loopend and end
+    //    const bool bExtraLoops  = looplen < SfSampleLoopMinLen;                  //Whether we need to loop the loop zone a few times to make this legal
+
+    //    if( utils::LibWide().isLogOn() )
+    //    {
+    //        clog << "\tMakeSampleLoopLegal():\n" <<setw(10) <<setfill(' ')
+    //             << "\t\tLength"    <<": " << smpllen <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopBeg"   <<": " << loopbeg <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopEnd"   <<": " << loopend <<" smpls\n" <<setw(10)
+    //             << "\t\tLoopLen"   <<": " << looplen <<" smpls\n" <<setw(10)
+    //             <<boolalpha 
+    //             << "\t\tDoPrefix"  <<": " << bPrefixSmpls <<"\n" <<setw(10)
+    //             << "\t\tDoSufix"   <<": " << bSuffixSmpls <<"\n" <<setw(10)
+    //             << "\t\tDoExtraLp" <<": " << bExtraLoops <<"\n";
+    //    }
+
+    //    if( !bPrefixSmpls && !bSuffixSmpls && !bExtraLoops )
+    //        return sample; //Nothing to do here !
+
+    //    const uint32_t distbeglp2beg = loopbeg;             //The nb of samples between the start of the loop and the beginning of the sample's data
+    //    const uint32_t distlpend2end = (smpllen - loopend); //The nb of samples between the end of the loop and the end of the sample's data
+    //    const uint32_t nbdummyprefx  = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distbeglp2beg) );
+    //    const uint32_t nbdummypost   = std::max(0, static_cast<int32_t>(SfSampleLoopMinEdgeDist - distlpend2end) );
+
+    //    //#1 - Compute size to reserve
+    //    if( bExtraLoops )
+    //    {
+    //        loopntimes = SfSampleLoopMinLen / looplen; //Compute the amount of times to loop the sample to reach the legal length
+
+    //        //If there is any remainder, just loop it another time !
+    //        if( (SfSampleLoopMinLen % looplen) != 0 )
+    //            ++loopntimes;
+
+    //        allocsz += ( loopntimes * looplen ); //Add those extra loop samples to the amount to reserve
+    //    }
+
+    //    if( bPrefixSmpls )
+    //        allocsz += nbdummyprefx; //Add the nb of dummy samples to prefix
+    //    if( bSuffixSmpls )
+    //        allocsz += nbdummypost; //Add the nb of dummy samples to append
+
+    //    //#2 - Allocate
+    //    std::vector<pcm16s_t> legalloop;
+    //    legalloop.reserve( allocsz );
+
+    //    //#3 - Assemble the new sample
+    //    auto legalloopins = back_inserter( legalloop );
+
+    //    //Copy whatever is between beg and loopbeg
+    //    std::copy_n( sample.begin(), distbeglp2beg, legalloopins );
+
+    //    if( bPrefixSmpls )
+    //    {
+    //        auto itcpbeg = sample.begin();
+    //        //std::advance( itcpbeg, distbeglp2beg );
+
+    //        //if( distbeglp2beg <= 1 )
+    //            std::fill_n( legalloopins, nbdummyprefx, *itcpbeg );
+    //        //else
+    //        //    std::copy_n( itcpbeg, nbdummyprefx, legalloopins );
+    //    }
+
+    //    //Put the data between the loop points as many times as needed
+    //    auto itlpbeg = sample.begin() + distbeglp2beg;
+    //    for( unsigned int cntlp = 0; cntlp < loopntimes; ++cntlp ) //Copy the sample's looped zone as many times as needed
+    //        std::copy_n( itlpbeg, looplen, legalloopins );
+
+    //    //Copy whatever is between loopend and end
+    //    std::copy_n( sample.begin(), distlpend2end, legalloopins );
+
+    //    if( bSuffixSmpls )
+    //    {
+    //        auto itcpbeg = sample.begin();
+    //        std::advance( itcpbeg, distbeglp2beg );
+    //        std::copy_n( itcpbeg, nbdummypost, legalloopins );
+    //    }
+
+
+    //    if( utils::LibWide().isLogOn() )
+    //    {
+    //        clog <<setw(10) << "\t\tDistBegLpToBeg" <<": " <<distbeglp2beg <<"\n"
+    //             <<setw(10) << "\t\tDistEndLpToEnd" <<": " <<distlpend2end <<"\n"
+    //             <<setw(10) << "\t\tLoopNTimes"     <<": " <<loopntimes <<"\n";
+    //    }
+
+    //    //#4 - Move the legal sample into the old one
+    //    sample = std::move(legalloop);
+    //    return sample;
+    //}
+
+
+//=========================================================================================
+//  Utilities
+//=========================================================================================
+
+/************************************************************************************************************
+    RAII_WriteListChunk
+        Little RAII trick to write the list chunk and avoid needing to do some dumb BS like I used to do!
+
+        Basically, create this within its own sub-scope, run the method that writes the content of the 
+        list chunk, and when the object falls out of scope it'll handle the rest!
+
+*************************************************************************************************************/
+    class RAII_WriteListChunk
+    {
+        std::ofstream                 * m_pout;
+        uint32_t                        m_fmttag;
+        size_t                        * m_onbbyteswritten;
+        std::ostreambuf_iterator<char>  m_itout;
+        std::ofstream::streampos        m_prewrite;
+
+    public:
+
+        RAII_WriteListChunk( std::ofstream & of, uint32_t fmttag, size_t & out_nbbyteswritten )
+            :m_fmttag(fmttag), m_pout(&of), m_onbbyteswritten(&out_nbbyteswritten), m_itout(of), 
+             m_prewrite(of.tellp()) //Save pre-write pos
+        {
+            //Zero out the nb of bytes written
+            (*m_onbbyteswritten) = 0;
+
+            Init();
+        }
+
+        RAII_WriteListChunk( std::ofstream & of, uint32_t fmttag )
+            :m_fmttag(fmttag), m_pout(&of), m_onbbyteswritten(nullptr), m_itout(of), 
+             m_prewrite(of.tellp()) //Save pre-write pos
+        {
+            Init();
+        }
+
+
+        ~RAII_WriteListChunk()
+        {
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+
+            //Save Post-write pos
+            const std::ofstream::streampos postwrite = m_pout->tellp();
+
+            //Seek back to start
+            m_pout->seekp(m_prewrite);
+
+            //Write header
+            riff::ChunkHeader listhdr;
+            listhdr.chunk_id = static_cast<uint32_t>(riff::eChunkIDs::LIST);
+            listhdr.length   = static_cast<uint32_t>(postwrite - m_prewrite) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            m_itout = listhdr.Write(m_itout);
+
+            //Seek back to end
+            m_pout->seekp(postwrite);
+
+            //Return our total
+            if( m_onbbyteswritten != nullptr )
+                (*m_onbbyteswritten) = (postwrite - m_prewrite);
+        }
+
+    private:
+        void Init()
+        {
+            //Skip header size
+            m_itout = std::fill_n( m_itout, riff::ChunkHeader::SIZE, 0 );
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+
+            //Write format tag
+            m_itout = utils::WriteIntToBytes( static_cast<uint32_t>(m_fmttag), m_itout, false );
+    #ifdef _DEBUG
+            m_pout->flush();
+    #endif
+        }
+
+    };
+
+/************************************************************************************************************
+    RAII_WriteChunk
+        Little RAII trick to write the chunk and avoid needing to do some dumb BS like I used to do!
+
+        Basically, create this within its own sub-scope, run the method that writes the content of the 
+        list chunk, and when the object falls out of scope it'll handle the rest!
+
+*************************************************************************************************************/
+    class RAII_WriteChunk
+    {
+        eSF2Tags                        m_tag;
+        std::ofstream                 * m_pout;
+        std::ofstream::streampos        m_prewritepos;
+        std::ostreambuf_iterator<char>  m_itout;
+        size_t                        * m_onbbyteswritten;
+
+    public:
+
+        RAII_WriteChunk( std::ofstream & of, eSF2Tags tag, size_t & out_nbbyteswritten )
+            :m_pout(&of), m_itout(of), m_tag(tag), m_onbbyteswritten(&out_nbbyteswritten),
+             m_prewritepos(of.tellp()) //Save pre-write pos
+        {
+            //Zero out the outputed nb of bytes written
+            (*m_onbbyteswritten) = 0;
+
+            //Skip header size
+            std::fill_n( std::ostreambuf_iterator<char>(of), riff::ChunkHeader::SIZE, 0 );
+        }
+
+        RAII_WriteChunk( std::ofstream & of, eSF2Tags tag )
+            :m_pout(&of), m_itout(of), m_tag(tag), m_onbbyteswritten(nullptr),
+             m_prewritepos(of.tellp()) //Save pre-write pos
+        {
+            //Skip header size
+            std::fill_n( std::ostreambuf_iterator<char>(of), riff::ChunkHeader::SIZE, 0 );
+        }
+
+        ~RAII_WriteChunk()
+        {
+            //Save Post-write pos
+            const std::ofstream::streampos postwrite = m_pout->tellp();
+
+            //Seek back to start
+            m_pout->seekp(m_prewritepos);
+
+            //Write header
+            riff::ChunkHeader listhdr;
+            listhdr.chunk_id = static_cast<uint32_t>(m_tag);
+            listhdr.length   = static_cast<uint32_t>(postwrite - m_prewritepos) - riff::ChunkHeader::SIZE; //Don't count the header itself
+
+            m_itout = listhdr.Write(m_itout);
+
+            //Seek back to end
+            m_pout->seekp(postwrite);
+
+            //Return our total
+            if( m_onbbyteswritten != nullptr )
+                (*m_onbbyteswritten) = (postwrite - m_prewritepos);
+        }
+    };
+
+
+
 
 //=========================================================================================
 //  SounFontRIFFWriter
@@ -340,14 +577,34 @@ namespace sf2
             utils::WriteIntToBytes( static_cast<uint32_t>(eSF2Tags::sfbk), ostreambuf_iterator<char>(m_out), false );
 
             //Write the content
-            std::ofstream::streampos datasz = 4; //Count the 4 bytes of the fmt tag
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
+            size_t                   nbwritten = 0; //Variable re-used for keeping track of the nb of bytes written
+            std::ofstream::streampos datasz    = 4; //Count the 4 bytes of the fmt tag
+
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::INFO), nbwritten );
+                WriteInfoList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::INFO), std::bind(&SounFontRIFFWriter::WriteInfoList,  this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Build and write the sample data
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::sdta), nbwritten );
+                WriteSdataList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::sdta), std::bind(&SounFontRIFFWriter::WriteSdataList, this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Build and write the HYDRA
-            datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
+            {
+                RAII_WriteListChunk wl( m_out, static_cast<uint32_t>(eSF2Tags::pdta), nbwritten );
+                WritePdataList();
+                //datasz += WriteListChunk( static_cast<uint32_t>(eSF2Tags::pdta), std::bind(&SounFontRIFFWriter::WritePdataList, this ) );
+            }
+            datasz += nbwritten;
+            nbwritten = 0;
 
             //Seek back to start
             //const std::ofstream::streampos postwrite = m_out.tellp();
@@ -373,9 +630,10 @@ namespace sf2
             return (m_out.tellp() - m_prewrite);
         }
 
-    //----------------------------------------------------------------
+    // ----------------------------------------------------------------
     //  Chunk Header Writing
-    //----------------------------------------------------------------
+    // ----------------------------------------------------------------
+#if 0
         /*
             WriteListChunk
                 This method writes the header surrounding a list chunk to the stream.
@@ -469,6 +727,7 @@ namespace sf2
             //Return our total
             return (postwrite - prewrite);
         }
+#endif
 
     //----------------------------------------------------------------
     //  INFO-list
@@ -579,7 +838,11 @@ namespace sf2
         {
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
-            WriteChunk( eSF2Tags::smpl, listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSmplChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::smpl );
+                WriteSmplChunk();
+            //WriteChunk( eSF2Tags::smpl, listmethodfun_t( std::bind(&SounFontRIFFWriter::WriteSmplChunk,  this ) ) );
+            }
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -590,6 +853,8 @@ namespace sf2
 
             m_smplswritepos.resize(0);
             m_smplswritepos.reserve(m_sf.GetNbSamples());
+            m_smplnewlppoints.resize(0);
+            m_smplnewlppoints.reserve(m_sf.GetNbSamples());
 
             //Write the samples
             for( const auto & smpl : m_sf.GetSamples() )
@@ -613,6 +878,9 @@ namespace sf2
 
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
                     MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
+
+                m_smplnewlppoints.push_back( move( std::make_pair( static_cast<size_t>(loopbounds.first), 
+                                                                   static_cast<size_t>(loopbounds.second) ) ) );
 
                 ostreambuf_iterator<char> itout(m_out);
 
@@ -655,8 +923,11 @@ namespace sf2
             WriteHYDRAInstruments();
 
             //Write Sample Headers 
-            WriteChunk( eSF2Tags::shdr, std::bind(&SounFontRIFFWriter::WriteHYDRASampleHeaders,  this ) );
-
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::shdr );
+                WriteHYDRASampleHeaders();
+                //WriteChunk( eSF2Tags::shdr, std::bind(&SounFontRIFFWriter::WriteHYDRASampleHeaders,  this ) );
+            }
             return (GetCurTotalNbByWritten() - prewrite);
         }
 
@@ -665,17 +936,32 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write phdr chunk
-            WriteChunk( eSF2Tags::phdr, listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::phdr );
+                WritePHDRChunk();
+            //WriteChunk( eSF2Tags::phdr, listmethodfun_t( std::bind(&SounFontRIFFWriter::WritePHDRChunk,  this ) ) );
+            }
 
             //Write pbag
-            WriteChunk( eSF2Tags::pbag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pbag );
+                WritePBagChunk();
+            //WriteChunk( eSF2Tags::pbag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePBagChunk,  this ) ) );
+            }
 
             //Write pmod
-            WriteChunk( eSF2Tags::pmod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pmod );
+                WritePModChunk();
+            //WriteChunk( eSF2Tags::pmod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePModChunk,  this ) ) );
+            }
 
             //Write pgen
-            WriteChunk( eSF2Tags::pgen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) ) );
-
+            {
+                RAII_WriteChunk wc(m_out, eSF2Tags::pgen );
+                WritePGenChunk();
+            //WriteChunk( eSF2Tags::pgen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WritePGenChunk,  this ) ) );
+            }
             return (GetCurTotalNbByWritten() - prewrite);
         }
 
@@ -684,16 +970,32 @@ namespace sf2
             const std::ofstream::streampos prewrite = GetCurTotalNbByWritten();
 
             //Write inst chunk
-            WriteChunk( eSF2Tags::inst, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) ) );
+            { 
+                RAII_WriteChunk wc( m_out, eSF2Tags::inst ); 
+                WriteInstChunk();
+            //WriteChunk( eSF2Tags::inst, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteInstChunk,  this ) ) );
+            }
 
             //Write ibag chunk
-            WriteChunk( eSF2Tags::ibag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::ibag ); 
+                WriteIBagChunk();
+            //WriteChunk( eSF2Tags::ibag, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIBagChunk,  this ) ) );
+            }
 
             //Write imod chunk
-            WriteChunk( eSF2Tags::imod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::imod ); 
+                WriteIModChunk();
+            //WriteChunk( eSF2Tags::imod, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIModChunk,  this ) ) );
+            }
 
             //Write igen chunk
-            WriteChunk( eSF2Tags::igen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) ) );
+            {
+                RAII_WriteChunk wc( m_out, eSF2Tags::igen ); 
+                WriteIGenChunk();
+            //WriteChunk( eSF2Tags::igen, listmethodfun_t(  std::bind(&SounFontRIFFWriter::WriteIGenChunk,  this ) ) );
+            }
 
             return (GetCurTotalNbByWritten() - prewrite);
         }
@@ -739,6 +1041,20 @@ namespace sf2
                         loopend = smplbeg + (static_cast<uint32_t>(loop.second) + extrasmpls ); //Compensate for extra required data points for being made loop legal
                     //}
                 }
+
+#elif SF2_ADD_EXTRA_LOOP_BYTES2
+                //Calculate those first, to avoid casting all the time.. 
+                const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
+                const uint32_t smplend = static_cast<uint32_t>(m_smplswritepos[i].second) / sizeof(pcm16s_t);
+                uint32_t       loopbeg = 0;
+                uint32_t       loopend = 0;
+
+                if( loop.second != 0 )
+                {
+                    loopbeg = smplbeg + (static_cast<uint32_t>(m_smplnewlppoints[i].first)   );
+                    loopend = smplbeg + (static_cast<uint32_t>(m_smplnewlppoints[i].second)  );
+                }
+
 #else
                 //Calculate those first, to avoid casting all the time.. 
                 const uint32_t smplbeg = static_cast<uint32_t>(m_smplswritepos[i].first)  / sizeof(pcm16s_t); //In bytes
@@ -1049,6 +1365,8 @@ namespace sf2
 
         //Keep track of where the samples where written, from the beginning of the sounfont structure
         std::vector<std::pair<std::ofstream::streampos,std::ofstream::streampos>> m_smplswritepos;
+        //Keep track of the modified loop points
+        std::vector<std::pair<size_t,size_t>>                                     m_smplnewlppoints;
     };
 
 //=========================================================================================
@@ -1154,7 +1472,12 @@ namespace sf2
     */
     std::vector<pcm16s_t> Sample::Data()const
     {
-        if( m_pcmdata.empty() )
+        if( m_pcmdata.empty() && !m_loadfun )
+        {
+            clog << "<!>- Warning : Sample::Data() : Sample \"" <<m_name <<"\" contains no PCM data!!\n";
+            return m_pcmdata;
+        }
+        else if( m_pcmdata.empty() )
             return std::move( m_loadfun() );
         else
             return std::move( m_pcmdata );

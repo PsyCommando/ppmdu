@@ -16,6 +16,7 @@ Description: Common data between several of the Procyon Studio Digital Sound Ele
 #include <map>
 #include <cassert>
 #include <limits>
+#include <iostream>
 
 namespace DSE
 {
@@ -52,19 +53,117 @@ namespace DSE
         eoc  = 0x656F6320, //"eoc\0x20"
         eod  = 0x656F6420, //"eod\0x20"
     };
-    const int                 NbMidiChannels  = 16;
-    static const unsigned int NB_DSEChunks    = 11;
-    static const uint32_t     SpecialChunkLen = 0xFFFFFFB0; //Value some special chunks have as their length
 
-    extern const std::array<eDSEChunks, NB_DSEChunks> DSEChunksList; //Array containing all chunks labels
+    enum struct eDSEContainers : uint32_t
+    {
+        invalid,
+        smdl = 0x736D646C,  //"smdl"
+        swdl = 0x7377646C,  //"swdl"
+        sedl = 0x7365646C,  //"sedl"
+        sadl = 0x7361646C,  //"sadl"
+    };
+    std::ostream & operator<<( std::ostream &  strm, const DSE::eDSEContainers cnty );
 
-    //DSE Chunk ID stuff
-    inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
-    inline uint32_t   ChunkIDToInt( eDSEChunks id    );
+    const int                 NbMidiChannels        = 16;
+    const unsigned int        NB_DSEChannels        = 17;
+    const unsigned int        NB_DSETracks          = 17;
+    static const unsigned int NB_DSEChunks          = 11;
+    static const unsigned int NB_DSEContainers      = 4;
+    static const uint32_t     SpecialChunkLen       = 0xFFFFFFB0;   //Value some special chunks have as their length
+    static const int16_t      DSERootKey            = 60;           //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
+    const int8_t              DSEDefaultCoarseTune  = -7;           //The default coarse tune value for splits and samples.
+
+    extern const std::array<eDSEChunks,     NB_DSEChunks>      DSEChunksList;    //Array containing all chunks labels
+    extern const std::array<eDSEContainers, NB_DSEContainers>  DSEContainerList; //Array containing all the DSE container's magic number.
+
+    //
+    //
+    //
+    enum struct eDSESmplFmt : uint16_t 
+    {
+        invalid   = SHRT_MAX,
+        pcm8      = 0x000,
+        pcm16     = 0x100,
+        ima_adpcm = 0x200,
+        psg       = 0x300, //Probably not PSG!
+    };
+
+    inline eDSESmplFmt IntToDSESmplFmt( uint16_t val )
+    {
+        if( val == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
+            return eDSESmplFmt::pcm8;
+        else if( val == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
+            return eDSESmplFmt::pcm16;
+        else if( val == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+            return eDSESmplFmt::ima_adpcm;
+        else if( val == static_cast<uint16_t>(eDSESmplFmt::psg) )
+            return eDSESmplFmt::psg;
+        else
+            return eDSESmplFmt::invalid;
+    }
 
 
-    static const int16_t DSERootKey           = 60; //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
-    const int8_t         DSEDefaultCoarseTune = -7; //The default coarse tune value for splits and samples.
+    // -------------------------------
+    // ------- DSE Version IDs -------
+    // -------------------------------
+    enum struct eDSEVersion : uint16_t
+    {
+        V402 = 0x402,   //Used in Luminous Arc
+        V415 = 0x415,   //Used in Pokemon Mystery Dungeon2, Zombi Daisuki, Inayusha Eleven, Professor Layton, etc..
+        VDef = V415,
+        VInvalid = 0,
+    };
+
+    inline eDSEVersion intToDseVer( uint16_t val )
+    {
+        if( val == static_cast<uint16_t>(eDSEVersion::V402) )
+            return eDSEVersion::V402;
+        if( val == static_cast<uint16_t>(eDSEVersion::V415) )
+            return eDSEVersion::V415;
+        else
+            return eDSEVersion::VInvalid;
+    }
+
+    inline uint16_t DseVerToInt( eDSEVersion ver )
+    {
+        return static_cast<uint16_t>(ver);
+    }
+    
+    // -------------------------------
+    // ----- DSE Chunk ID stuff ------
+    // -------------------------------
+    //inline eDSEChunks IntToChunkID( uint32_t   value ); //Return eDSEChunks::invalid, if invalid ID !
+    //inline uint32_t   ChunkIDToInt( eDSEChunks id    );
+    inline eDSEChunks IntToChunkID( uint32_t value )
+    {
+        for( auto cid : DSEChunksList )
+        {
+            if( value == static_cast<uint32_t>(cid) )
+                return cid;
+        }
+        return eDSEChunks::invalid;
+    }
+    
+    inline uint32_t ChunkIDToInt( eDSEChunks id )
+    {
+        return static_cast<uint32_t>(id);
+    }
+
+    //DSE Magic Number
+    inline eDSEContainers IntToContainerMagicNum( uint32_t value )  //Return eDSEContainers::invalid, if invalid ID !
+    {
+        for( auto cid : DSEContainerList )
+        {
+            if( value == static_cast<uint32_t>(cid) )
+                return cid;
+        }
+        return eDSEContainers::invalid;
+    }
+
+    inline uint32_t ContainerMagicNumToInt( eDSEContainers magicn )
+    {
+        return static_cast<uint32_t>(magicn);
+    }
 
 //====================================================================================================
 // Structs
@@ -113,9 +212,45 @@ namespace DSE
             return std::move(result);
         }
 
+        inline void SetTimeToNow()
+        {
+            std::time_t t  = std::time(nullptr);
+            std::tm     ti;// = *std::localtime(&t);
+            if( ! localtime_s(&ti, &t) )
+                std::clog << "<!>- DSE::DateTime::SetTimeToNow(): localtime_s returned an error while getting the current date!\n";
+            //http://en.cppreference.com/w/cpp/chrono/c/tm
+            year    = ti.tm_year + 1900; //tm_year counts the nb of years since 1900
+            month   = ti.tm_mon;
+            day     = ti.tm_mday-1;      //tm_mday begins at 1, while the time in the DSE timestamp begins at 0!
+            hour    = ti.tm_hour;
+            minute  = ti.tm_min;
+            second  = (ti.tm_sec == 60)? 59 : ti.tm_sec; //We're not dealing with leap seconds...
+        }
+
         friend std::ostream & operator<<(std::ostream &os, const DateTime &obj );
     };
 
+    /****************************************************************************************
+        DSEEnvelope
+            Represents a DSE envelope used in the SWDL file format!
+    ****************************************************************************************/
+    struct DSEEnvelope
+    {
+        typedef int16_t timeprop_t;
+        typedef int8_t  volprop_t;
+
+        DSEEnvelope();
+
+        int8_t     envmulti;        //The envelope multiplier
+        
+        volprop_t  atkvol;
+        timeprop_t attack;
+        timeprop_t hold;
+        timeprop_t decay;
+        volprop_t  sustain;
+        timeprop_t decay2;
+        timeprop_t release;
+    };
 
     /****************************************************************************************
         ChunkHeader
@@ -148,270 +283,81 @@ namespace DSE
 
         //Read the structure from an iterator on a byte container
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer(  _init itReadfrom, _init itpastend )
         {
-            label   = utils::ReadIntFromBytes<decltype(label)> (itReadfrom, false ); //iterator is incremented
-            param1  = utils::ReadIntFromBytes<decltype(param1)>(itReadfrom);
-            param2  = utils::ReadIntFromBytes<decltype(param2)>(itReadfrom);
-            datlen  = utils::ReadIntFromBytes<decltype(datlen)>(itReadfrom);
+            label   = utils::ReadIntFromBytes<decltype(label)> (itReadfrom, itpastend, false ); //iterator is incremented
+            param1  = utils::ReadIntFromBytes<decltype(param1)>(itReadfrom, itpastend);
+            param2  = utils::ReadIntFromBytes<decltype(param2)>(itReadfrom, itpastend);
+            datlen  = utils::ReadIntFromBytes<decltype(datlen)>(itReadfrom, itpastend);
             return itReadfrom;
         }
     };
 
     /************************************************************************
-        SongChunk
-            The raw song chunk.
-            For some reasons, most of the data in this chunk rarely ever 
-            changes in-between games or files.. Only the nb of channels and
-            tracks does..
+        SongData
+            A generic version of the DSE Song Chunk meant to contain only 
+            the relevant data and work with any version of DSE!
     ************************************************************************/
-    struct SongChunk
+    struct SongData
     {
-        static const uint32_t SizeNoPadd    = 48; //bytes
-        static const uint32_t LenMaxPadding = 16; //bytes
+        uint16_t tpqn;
+        uint8_t  nbtrks;
+        uint8_t  nbchans;
 
-        unsigned int size()const { return SizeNoPadd + unkpad.size(); }
-
-        uint32_t label   = 0;
-        uint32_t unk1    = 0;
-        uint32_t unk2    = 0;
-        uint32_t unk3    = 0;
-        uint16_t unk4    = 0;
-        uint16_t tpqn    = 0;
-        uint16_t unk5    = 0;
-        uint8_t  nbtrks  = 0;
-        uint8_t  nbchans = 0;
-        uint32_t unk6    = 0;
-        uint32_t unk7    = 0;
-        uint32_t unk8    = 0;
-        uint32_t unk9    = 0;
-        uint16_t unk10   = 0;
-        uint16_t unk11   = 0;
-        uint32_t unk12   = 0;
-        std::vector<uint8_t> unkpad;
-
-        //
-        template<class _outit>
-            _outit WriteToContainer( _outit itwriteto )const
-        {
-            itwriteto = utils::WriteIntToBytes( static_cast<uint32_t>(eDSEChunks::song), itwriteto, false ); //Force this, to avoid bad surprises
-            itwriteto = utils::WriteIntToBytes( unk1,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk2,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk3,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk4,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( tpqn,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk5,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( nbtrks,  itwriteto );
-            itwriteto = utils::WriteIntToBytes( nbchans, itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk6,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk7,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk8,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk9,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk10,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk11,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk12,   itwriteto );
-            itwriteto = std::copy( unkpad.begin(), unkpad.end(), itwriteto );
-            return itwriteto;
-        }
-
-        //
-        template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
-        {
-            itReadfrom = utils::ReadIntFromBytes( label,    itReadfrom, false ); //iterator is incremented
-            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom); 
-            itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( tpqn,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nbtrks,   itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nbchans,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk12,    itReadfrom);
-
-            for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
-            {
-                if( *itReadfrom == 0xFF )
-                    unkpad.push_back( 0xFF ); //save on dereferencing the iterator when we already know its value..
-                else
-                    break;
-            }
-
-            return itReadfrom;
-        }
+        // v0x402 specifics
+        int8_t   mainvol;
+        int8_t   mainpan;
     };
-
 
     /****************************************************************************************
         WavInfo
             Entry from the "wavi" chunk in a swdl file.
     ****************************************************************************************/
+    
+    /*
+        This holds DSE version independent information on samples.
+    */
     struct WavInfo
     {
-        static const uint32_t Size = 64;
-        enum struct eSmplFmt : uint16_t 
-        {
-            invalid   = SHRT_MAX,
-            pcm8      = 0x000,
-            pcm16     = 0x100,
-            ima_adpcm = 0x200,
-            psg       = 0x300,
-        };
-
-        uint16_t unk1       = 0;
-        uint16_t id         = 0; //Index/ID of the sample
-        int8_t   ftune      = 0; 
-        int8_t   ctune      = 0;
-        uint8_t  rootkey    = 0; //Possibly the MIDI key matching the pitch the sample was sampled at!
-        int8_t   ktps       = 0; //Transpose
-        int8_t   vol        = 0;
-        int8_t   pan        = 0;
-        uint8_t  unk5       = 0;
-        uint8_t  unk58      = 0;
-        uint16_t unk6       = 0;
-        uint16_t unk7       = 0;
-        uint16_t unk59      = 0; //
-        uint16_t smplfmt    = 0; //Format of the sample 0x100 == PCM 16, 0x200 == IMA ADPCM
-        uint8_t  unk9       = 0; 
-        uint8_t  smplloop   = 0; //loop flag, 1 = loop, 0 = no loop
-        uint8_t  unk10      = 0;
-        uint8_t  unk60      = 0;
-        uint8_t  unk11      = 0;
-        uint8_t  unk61      = 0;
-        uint8_t  unk12      = 0;
-        uint8_t  unk62      = 0;
-        uint32_t unk13      = 0;
-        uint32_t smplrate   = 0; //Sampling rate of the sample
-        uint32_t smplpos    = 0; //Offset within pcmd chunk of the sample
-        uint32_t loopbeg    = 0; //Loop start in int32 (based on the resulting PCM16)
-        uint32_t looplen    = 0; //Length of the sample in int32
-        uint8_t  envon      = 0;
-        uint8_t  envmult    = 0;
-        uint8_t  unk19      = 0;
-        uint8_t  unk20      = 0;
-        uint16_t unk21      = 0;
-        uint16_t unk22      = 0;
-        int8_t   atkvol     = 0;
-        int8_t   attack     = 0;
-        int8_t   decay      = 0;
-        int8_t   sustain    = 0;
-        int8_t   hold       = 0;
-        int8_t   decay2     = 0;
-        int8_t   release    = 0;
-        int8_t   unk57      = 0;
-
-        //Write the structure using an iterator to a byte container
-        template<class _outit>
-            _outit WriteToContainer( _outit itwriteto )const
-        {
-            itwriteto = utils::WriteIntToBytes( unk1,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( id,        itwriteto );
-            itwriteto = utils::WriteIntToBytes( ftune,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( ctune,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( rootkey,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( ktps,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( vol,       itwriteto );
-            itwriteto = utils::WriteIntToBytes( pan,       itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk5,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk58,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk6,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk7,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk59,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( smplfmt,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk9,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( smplloop,  itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk10,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk60,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk11,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk61,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk12,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk62,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk13,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( smplrate,  itwriteto );
-            itwriteto = utils::WriteIntToBytes( smplpos,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( loopbeg,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( looplen,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( envon,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( envmult,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk19,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk20,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk21,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk22,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( atkvol,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( attack,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( decay,     itwriteto );
-            itwriteto = utils::WriteIntToBytes( sustain,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( hold,      itwriteto );
-            itwriteto = utils::WriteIntToBytes( decay2,    itwriteto );
-            itwriteto = utils::WriteIntToBytes( release,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk57,     itwriteto );
-            return itwriteto;
-        }
-
-        //Read the structure from an iterator on a byte container
-        template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
-        {
-            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( id,       itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( ftune,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( ctune,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( rootkey,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( ktps,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( vol,      itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( pan,      itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk58,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk59,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( smplfmt,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( smplloop, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk60,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk61,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk12,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk62,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk13,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( smplrate, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( smplpos,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( loopbeg,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( looplen,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( envon,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( envmult,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk19,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk20,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk21,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk22,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( atkvol,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( attack,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( decay,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( sustain,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( hold,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( decay2,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( release,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk57,    itReadfrom );
-            return itReadfrom;
-        }
+        uint16_t    id         = 0;
+        int8_t      ftune      = 0; 
+        int8_t      ctune      = 0;
+        uint8_t     rootkey    = 0;
+        int8_t      ktps       = 0;
+        int8_t      vol        = 0;
+        int8_t      pan        = 0;
+        eDSESmplFmt smplfmt    = eDSESmplFmt::invalid;
+        bool        smplloop   = false;
+        uint32_t    smplrate   = 0; //Sampling rate of the sample
+        uint32_t    smplpos    = 0;
+        uint32_t    loopbeg    = 0; //Loop start in int32 (based on the resulting PCM16)
+        uint32_t    looplen    = 0; //Length of the sample in int32
+        //Envelope
+        uint8_t     envon      = 0;
+        uint8_t     envmult    = 0;
+        int8_t      atkvol     = 0;
+        int8_t      attack     = 0;
+        int8_t      decay      = 0;
+        int8_t      sustain    = 0;
+        int8_t      hold       = 0;
+        int8_t      decay2     = 0;
+        int8_t      release    = 0;
     };
 
+
+
     /*****************************************************************************************
-        KeyGroups
-            Contains several groups of notes each with an ID.
+        KeyGroup
+            Contains info on note-stealing priority and voice range, polyphony, and maybe more.
     *****************************************************************************************/
     struct KeyGroup
     {
         friend std::ostream & operator<<( std::ostream &  strm, const DSE::KeyGroup & other );
 
-        static const uint32_t SIZE = 8; //bytes
+        static const uint32_t SIZE     = 8; //bytes
+        static const uint8_t  DefPoly  = 0xFF;
+        static const uint8_t  DefPrio  = 0x08;
+        static const uint8_t  DefVcHi  = 0xF;
         static uint32_t size() {return SIZE;}
 
         uint16_t id       = 0;
@@ -437,476 +383,152 @@ namespace DSE
 
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itpastend )
         {
-            itReadfrom = utils::ReadIntFromBytes( id,       itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( poly,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( priority, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( vclow,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( vchigh,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk50,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk51,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( id,       itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( poly,     itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( priority, itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( vclow,    itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( vchigh,   itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( unk50,    itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes( unk51,    itReadfrom, itpastend );
             return itReadfrom;
         }
     };
 
-    /*****************************************************************************************
-        ProgramInfo
-            Contains data for a single instrument.
-    *****************************************************************************************/
-    class ProgramInfo
+
+    /*---------------------------------------------------------------------
+        LFOTblEntry
+            Contains details on to pass the LFOs during the playback of 
+            a program's samples.
+    ---------------------------------------------------------------------*/
+    struct LFOTblEntry
     {
-    public:
+        static const uint32_t SIZE = 16; //bytes
+        static uint32_t size() { return SIZE; }
 
-        friend std::ostream & operator<<( std::ostream &  strm, const DSE::ProgramInfo & other );
-
-        /*---------------------------------------------------------------------
-            InstInfoHeader
-                First 16 bytes of an instrument info block
-        ---------------------------------------------------------------------*/
-        struct InstInfoHeader
+        enum struct eLFODest : uint8_t
         {
-            static const uint32_t SIZE = 16; //bytes
-            static uint32_t size() { return SIZE; }
-
-            uint16_t id        = 0;
-            uint16_t nbsplits  = 0;
-            uint8_t  insvol    = 0;
-            uint8_t  inspan    = 0;
-            //uint16_t unk3      = 0;
-            uint8_t  unk3      = 0;
-            uint8_t  unkpoly   = 0;
-
-            uint16_t unk4      = 0;
-            uint8_t  unk5      = 0;
-            uint8_t  nblfos    = 0; //Nb entries in the first table 
-            uint8_t  padbyte   = 0; //character used for padding
-            uint8_t  unk7      = 0;
-            uint8_t  unk8      = 0;
-            uint8_t  unk9      = 0;
-
-            inline bool operator==( const InstInfoHeader & other )const
-            {
-                return ( id       == other.id       && 
-                         nbsplits == other.nbsplits && 
-                         insvol   == other.insvol   && 
-                         inspan   == other.inspan   && 
-                         unk3     == other.unk3     && 
-                         unkpoly  == other.unkpoly  && 
-                         unk4     == other.unk4     && 
-                         unk5     == other.unk5     &&  
-                         nblfos   == other.nblfos   &&
-                         padbyte  == other.padbyte  &&
-                         unk7     == other.unk7     &&
-                         unk8     == other.unk8     &&
-                         unk9     == other.unk9     );
-            }
-
-            inline bool operator!=( const InstInfoHeader & other )const
-            {
-                return !( operator==(other));
-            }
-
-            template<class _outit>
-                _outit WriteToContainer( _outit itwriteto )const
-            {
-                itwriteto = utils::WriteIntToBytes( id,        itwriteto );
-                itwriteto = utils::WriteIntToBytes( nbsplits,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( insvol,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( inspan,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk3,      itwriteto );
-                itwriteto = utils::WriteIntToBytes( unkpoly,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk4,      itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk5,      itwriteto );
-                itwriteto = utils::WriteIntToBytes( nblfos,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( padbyte,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk7,      itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk8,      itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk9,      itwriteto );
-                return itwriteto;
-            }
-
-
-            template<class _init>
-                _init ReadFromContainer( _init itReadfrom )
-            {
-                itReadfrom = utils::ReadIntFromBytes( id,        itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( nbsplits,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( insvol,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( inspan,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk3,      itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unkpoly,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk4,      itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk5,      itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( nblfos,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( padbyte,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk7,      itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk8,      itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk9,      itReadfrom );
-                return itReadfrom;
-            }
+            None   = 0,
+            Pitch  = 1,
+            Volume = 2,
+            Pan    = 3,
+            UNK_4  = 4,
         };
 
-        /*---------------------------------------------------------------------
-            LFOTblEntry
-                First table after the header
-        ---------------------------------------------------------------------*/
-        struct LFOTblEntry
+        uint8_t  unk34  = 0;
+        uint8_t  unk52  = 0;
+        uint8_t  dest   = 0;
+        uint8_t  wshape = 0;
+        uint16_t rate   = 0;
+        uint16_t unk29  = 0;
+        uint16_t depth  = 0;
+        uint16_t delay  = 0;
+        uint16_t unk32  = 0;
+        uint16_t unk33  = 0;
+
+        /*
+            Return true if the LFO's fields have non-default values.
+        */
+        inline bool isLFONonDefault()const
         {
-            static const uint32_t SIZE = 16; //bytes
-            static uint32_t size() { return SIZE; }
-
-            enum struct eLFODest : uint8_t
-            {
-                None   = 0,
-                Pitch  = 1,
-                Volume = 2,
-                Pan    = 3,
-                UNK_4  = 4,
-            };
-
-            uint8_t  unk34  = 0;
-            uint8_t  unk52  = 0;
-            uint8_t  dest   = 0;
-            uint8_t  wshape = 0;
-            uint16_t rate   = 0;
-            uint16_t unk29  = 0;
-            uint16_t depth  = 0;
-            uint16_t delay  = 0;
-            uint16_t unk32  = 0;
-            uint16_t unk33  = 0;
-
-            /*
-                Return true if the LFO's fields have non-default values.
-            */
-            inline bool isLFONonDefault()const
-            {
-                return ( unk52 != 0 && dest != 0 && wshape != 1 && rate != 0 && 
-                         unk29 != 0 && depth != 0 && delay != 0 && unk32 != 0 && 
-                         unk33 != 0 );
-            }
-
-            template<class _outit>
-                _outit WriteToContainer( _outit itwriteto )const
-            {
-                itwriteto = utils::WriteIntToBytes( unk34,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk52,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( dest,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( wshape, itwriteto );
-                itwriteto = utils::WriteIntToBytes( rate,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk29,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( depth,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( delay,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk32,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk33,  itwriteto );
-                return itwriteto;
-            }
-
-
-            template<class _init>
-                _init ReadFromContainer( _init itReadfrom )
-            {
-                itReadfrom = utils::ReadIntFromBytes( unk34,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk52,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( dest,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( wshape, itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( rate,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk29,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( depth,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( delay,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk32,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk33,  itReadfrom );
-                return itReadfrom;
-            }
-        };
-
-        /*---------------------------------------------------------------------
-            SplitEntry
-                Data on a particular sample mapped to this instrument
-        ---------------------------------------------------------------------*/
-        struct SplitEntry
-        {
-            static const uint32_t SIZE = 48; //bytes
-            static uint32_t size() { return SIZE; }
-
-            uint8_t  unk10    = 0; //0x0
-            uint8_t  id       = 0; //0x1
-            uint8_t  unk11    = 0; //0x2
-            uint8_t  unk25    = 0; //0x3
-
-            int8_t   lowkey   = 0; //0x4
-            int8_t   hikey    = 0; //0x5
-
-            int8_t   lowkey2  = 0; //0x6
-            int8_t   hikey2   = 0; //0x7
-            int8_t   lovel    = 0; //0x8
-            int8_t   hivel    = 0; //0x9
-            int8_t   lovel2   = 0; //0xA
-            int8_t   hivel2   = 0; //0xB
-
-            uint32_t unk16    = 0; //0xC
-            uint16_t unk17    = 0; //0x10
-            uint16_t smplid   = 0; //0x12
-
-            int8_t  ftune     = 0; //0x14
-            int8_t  ctune     = 0; //0x15
-
-            int8_t  rootkey   = 0; //0x16
-            int8_t  ktps      = 0; //0x17
-
-            uint8_t smplvol   = 0; //0x18
-            uint8_t smplpan   = 0; //0x19
-
-            uint8_t  kgrpid   = 0; //0x1A
-            uint8_t  unk22    = 0; //0x1B
-            uint16_t unk23    = 0; //0x1C
-            uint16_t unk24    = 0; //0x1E
-            //The last 16 bytes are a perfect copy of the last 16 bytes of a wavi info block
-            uint8_t  envon    = 0; //0x20 
-            uint8_t  envmult  = 0; //0x21 //Multiplier for other envelope params
-            uint8_t  unk37    = 0; //0x22
-            uint8_t  unk38    = 0; //0x23
-            uint16_t unk39    = 0; //0x24
-            int16_t  unk40    = 0; //0x26
-
-            int8_t   atkvol   = 0; //0x28
-            int8_t   attack   = 0; //0x29
-
-            int8_t   decay    = 0; //0x2A
-            int8_t   sustain  = 0; //0x2B
-
-            int8_t   hold     = 0; //0x2C
-            int8_t   decay2   = 0; //0x2D
-
-            int8_t   release  = 0; //0x2E
-            int8_t   rx       = 0; //0x2F
-
-            template<class _outit>
-                _outit WriteToContainer( _outit itwriteto )const
-            {
-                itwriteto = utils::WriteIntToBytes( unk10,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( id,       itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk11,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk25,    itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( lowkey,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( hikey,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( lowkey2,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( hikey2,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( lovel,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( hivel,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( lovel2,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( hivel2,   itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( unk16,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk17,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( smplid,   itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( ftune,     itwriteto );
-                itwriteto = utils::WriteIntToBytes( ctune,   itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( rootkey,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( ktps,    itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( smplvol,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( smplpan,  itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( kgrpid,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk22,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk23,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk24,    itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( envon,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( envmult,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk37,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk38,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk39,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( unk40,    itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( atkvol,   itwriteto );
-                itwriteto = utils::WriteIntToBytes( attack,   itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( decay,    itwriteto );
-                itwriteto = utils::WriteIntToBytes( sustain,  itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( hold,     itwriteto );
-                itwriteto = utils::WriteIntToBytes( decay2,   itwriteto );
-
-                itwriteto = utils::WriteIntToBytes( release,  itwriteto );
-                itwriteto = utils::WriteIntToBytes( rx,       itwriteto );
-                return itwriteto;
-            }
-
-
-            template<class _init>
-                _init ReadFromContainer( _init itReadfrom )
-            {
-                itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( id,       itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk25,    itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( lowkey,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( hikey,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( lowkey2,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( hikey2,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( lovel,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( hivel,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( lovel2,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( hivel2,   itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( unk16,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk17,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( smplid,   itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( ftune,     itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( ctune,   itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( rootkey,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( ktps,    itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( smplvol,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( smplpan,  itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( kgrpid,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk22,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk23,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk24,    itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( envon,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( envmult,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk37,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk38,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk39,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( unk40,    itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( atkvol,   itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( attack,   itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( decay,    itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( sustain,  itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( hold,     itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( decay2,   itReadfrom );
-
-                itReadfrom = utils::ReadIntFromBytes( release,  itReadfrom );
-                itReadfrom = utils::ReadIntFromBytes( rx,       itReadfrom );
-
-                return itReadfrom;
-            }
-        };
-
-        //----------------------------
-        //  ProgramInfo
-        //----------------------------
-        ProgramInfo()
-        {}
+            return ( unk52 != 0 && dest != 0 && wshape != 1 && rate != 0 && 
+                        unk29 != 0 && depth != 0 && delay != 0 && unk32 != 0 && 
+                        unk33 != 0 );
+        }
 
         template<class _outit>
             _outit WriteToContainer( _outit itwriteto )const
         {
-            itwriteto = m_hdr.WriteToContainer(itwriteto);
-
-            for( const auto & entry : m_lfotbl )
-                itwriteto = entry.WriteToContainer(itwriteto);
-
-            //16 bytes of padding
-            itwriteto = std::fill_n( itwriteto, 16, m_hdr.padbyte );
-
-            for( const auto & smpl : m_splitstbl )
-                itwriteto = smpl.WriteToContainer(itwriteto);
-
+            itwriteto = utils::WriteIntToBytes( unk34,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk52,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( dest,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( wshape, itwriteto );
+            itwriteto = utils::WriteIntToBytes( rate,   itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk29,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( depth,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( delay,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk32,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk33,  itwriteto );
             return itwriteto;
         }
 
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itpastend )
         {
-            itReadfrom = m_hdr.ReadFromContainer(itReadfrom);
-
-            m_lfotbl   .resize(m_hdr.nblfos);
-            m_splitstbl.resize(m_hdr.nbsplits);
-
-            for( auto & entry : m_lfotbl )
-                itReadfrom = entry.ReadFromContainer(itReadfrom);
-
-            //16 bytes of padding
-            std::advance( itReadfrom, 16 );
-
-            for( auto & smpl : m_splitstbl )
-                itReadfrom = smpl.ReadFromContainer(itReadfrom);
-
+            itReadfrom = utils::ReadIntFromBytes( unk34,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( unk52,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( dest,   itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( wshape, itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( rate,   itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( unk29,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( depth,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( delay,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( unk32,  itReadfrom, itpastend  );
+            itReadfrom = utils::ReadIntFromBytes( unk33,  itReadfrom, itpastend  );
             return itReadfrom;
         }
+    };
 
-        enum struct eCompareRes
-        {
-            different,
-            sharesamples,
-            identical,
-        };
+    /*---------------------------------------------------------------------
+        SplitEntry
+            Data on a particular sample mapped to this instrument
+    ---------------------------------------------------------------------*/
+    struct SplitEntry
+    {
+        uint8_t     id        = 0; //0x1
+        uint8_t     unk11     = 0; //0x2
+        uint8_t     unk25     = 0; //0x3
+        int8_t      lowkey    = 0; //0x4
+        int8_t      hikey     = 0; //0x5
+        int8_t      lowkey2   = 0; //0x6
+        int8_t      hikey2    = 0; //0x7
+        int8_t      lovel     = 0; //0x8
+        int8_t      hivel     = 0; //0x9
+        int8_t      lovel2    = 0; //0xA
+        int8_t      hivel2    = 0; //0xB
+        uint16_t    smplid    = 0; //0x12
+        int8_t      ftune     = 0; //0x14
+        int8_t      ctune     = 0; //0x15
+        int8_t      rootkey   = 0; //0x16
+        int8_t      ktps      = 0; //0x17
+        uint8_t     smplvol   = 0; //0x18
+        uint8_t     smplpan   = 0; //0x19
+        uint8_t     kgrpid    = 0; //0x1A
+        uint8_t     envon     = 0; //0x20
+        DSEEnvelope env;
+    };
 
-        eCompareRes isSimilar( const ProgramInfo & other )const
-        {
-            //
-            size_t  nbmatchsmpls   = 0;
+    /*****************************************************************************************
+        ProgramInfo
+            Contains data for a single instrument.
+            This is a generic version independent version of the program info structure.
+    *****************************************************************************************/
+    class ProgramInfo
+    {
+    public:
+        friend std::ostream & operator<<( std::ostream &  strm, const DSE::ProgramInfo & other );
 
-            //Test shared samples first (We don't care about slight variations in the samples parameters)
-            for( const auto & asmpl : m_splitstbl )
-            {
-                auto found = std::find_if( other.m_splitstbl.begin(), 
-                                           other.m_splitstbl.end(), 
-                                           [&asmpl](const SplitEntry& entry){ return (entry.smplid == asmpl.smplid); } );
-                
-                if( found != other.m_splitstbl.end() )
-                    ++nbmatchsmpls;
-            }
+        /*---------------------------------------------------------------------
+            Program info header stuff
+        ---------------------------------------------------------------------*/
+        uint16_t id        = 0;
+        uint8_t  prgvol    = 0;
+        uint8_t  prgpan    = 0;
+        uint8_t  unkpoly   = 0;
+        uint8_t  unk4      = 0;
+        uint8_t  padbyte   = 0;
 
-            if( nbmatchsmpls != std::max( m_splitstbl.size(), m_splitstbl.size() ) )
-                return eCompareRes::sharesamples;
-            else if( nbmatchsmpls == 0 )
-                return eCompareRes::different;
-
-            //Test header and prestbl for saying the whole thing is identical
-            if( m_hdr == other.m_hdr )
-                return eCompareRes::identical;
-            else
-                return eCompareRes::different;
-        }
-
-    /*private:*/
-        InstInfoHeader           m_hdr;
         std::vector<LFOTblEntry> m_lfotbl;
         std::vector<SplitEntry>  m_splitstbl;
     };
 
 
-    /****************************************************************************************
-        DSEEnvelope
-            Represents a DSE envelope used in the SWDL file format!
-    ****************************************************************************************/
-    struct DSEEnvelope
-    {
-        typedef int16_t timeprop_t;
-        typedef int8_t  volprop_t;
 
-        DSEEnvelope();
 
-        //Build from a split entry
-        DSEEnvelope            ( const ProgramInfo::SplitEntry & splitentry );
-        DSEEnvelope & operator=( const ProgramInfo::SplitEntry & splitentry );
 
-        int8_t     envmulti;        //The envelope multiplier
-        
-        volprop_t  atkvol;
-        timeprop_t attack;
-        timeprop_t hold;
-        timeprop_t decay;
-        volprop_t  sustain;
-        timeprop_t decay2;
-        timeprop_t release;
-    };
+
 
 
 //  DSEMetaData
@@ -917,13 +539,15 @@ namespace DSE
     struct DSE_MetaData
     {
         DSE_MetaData()
-            :unk1(0),unk2(0),createtime()
+            :unk1(0),unk2(0),createtime(), origversion(eDSEVersion::VDef)
         {}
 
         uint8_t     unk1;       //Some kind of ID
         uint8_t     unk2;       //Some kind of volume value maybe
         std::string fname;      //Internal filename
         DateTime    createtime; //Time this was created on
+        std::string origfname;  //The original filename, in the game's filesystem if applicable
+        eDSEVersion origversion;
     };
 
     /************************************************************************
@@ -933,11 +557,14 @@ namespace DSE
     struct DSE_MetaDataSMDL : public DSE_MetaData
     {
         DSE_MetaDataSMDL()
-            :DSE_MetaData(), tpqn(0)
+            :DSE_MetaData(), tpqn(0), mainvol(127), mainpan(64) //#TODO: Replace with constants!
         {}
 
         uint16_t tpqn; //ticks per quarter note
         //More to be added
+        //v0x402 specifics
+        int8_t      mainvol;
+        int8_t      mainpan;
     };
 
     /************************************************************************
@@ -947,11 +574,12 @@ namespace DSE
     struct DSE_MetaDataSWDL : public DSE_MetaData
     {
         DSE_MetaDataSWDL()
-            :DSE_MetaData(), nbwavislots(0), nbprgislots(0)
+            :DSE_MetaData(), nbwavislots(0), nbprgislots(0),unk17(0)
         {}
 
         uint16_t nbwavislots;
         uint16_t nbprgislots;
+        uint16_t unk17;
     };
 
 //====================================================================================================
@@ -1168,6 +796,44 @@ namespace DSE
         }
 
         //Return Result
+        return beg;
+    }
+
+
+    /*
+        FindEndChunk
+        
+
+            Use this to locate the proper end chunk depending on the DSE container type!
+    */
+    template<class _init>
+        _init FindEndChunk( _init beg, _init end, eDSEContainers cnty )
+    {
+        switch(cnty)
+        {
+            case eDSEContainers::smdl:
+            {
+                beg = FindNextChunk( beg, end, eDSEChunks::eoc );
+                break;
+            }
+            case eDSEContainers::swdl:
+            case eDSEContainers::sedl:
+            {
+                beg = FindNextChunk( beg, end, eDSEChunks::eod );
+                break;
+            }
+            case eDSEContainers::sadl:
+            {
+                std::cerr << "<!>- Error : FindEndChunk() : SADL doesn't have a end chunk!\n";
+                assert(false);
+            }
+            default:
+            {
+                std::cerr << "<!>- Error : FindEndChunk() : Invalid DSE container type!\n";
+                assert(false);
+            }
+        };
+
         return beg;
     }
 

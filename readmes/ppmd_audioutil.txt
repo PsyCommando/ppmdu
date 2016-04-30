@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.2
+Version	   : 0.35
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -18,7 +18,7 @@ Changelog:
         - Fixed tracks without a loop point from looping!
 - 0.13: (2015/10/17) :
         - Fixed samples not being exported from SWDL files!
-- 0.2   (2015/12/07)
+- 0.2   (2015/12/07) :
         - Added Support for generating a conversion info XML file from a set of DSE containers.
           It means no more adding the data for every single programs by hands, the program writes it all
           and you can just edit the values as seen fit!
@@ -37,6 +37,53 @@ Changelog:
           The main bank is named BG.SWD btw.)
         - MOAR BUGS! I know you guys love those. They're just really well hidden, 
           and you have to find them by accident :P
+- 0.35 (2016/04/28) :
+        - Added experimental support for ripping matched smd/swd pairs from any non-compressed or encrypted file format.
+          Just use the 
+                        -blobpath "path/to/file/containing/the/swd/and/smd/containers.whatever" 
+          switch at the commandline.
+          Its going to be very buggy, so keep that in mind. If it doesn't work, just rip each SWD and SMD individually
+          and place them in their own files, and use the other commandline options!
+        - Added support for SWD and SMD pairs stored individually into SIR0 containers/files 
+          (The file extension is usually arbirtrary, so check the 4 char code for SIR0). 
+          Use the switch
+                         -bgmcntpath "Path/to/Directory" "FilextensionToLookFor"
+          Just specify what the file extension all SIR0 files have as the second param, and the directory
+          path as first. No need to put a dot or anything before the file extension.
+          Its kind of redundant because the blobscanner can do the same thing, but at least this one
+          can handle the SIR0s in batches unlike the blobscanner method above.
+        - Tweaked some DSE events, and finally properly handles the modulation event, which I forgot
+          about properly implementing for about 6 months now..
+        - Made a lot of fixes and tweaking to everything.
+        - Added a verbose option to cut on log size. The formatting is still pretty terrible, but it does the job.
+        - Fixed a MASSIVE brainfart on my part. Samples weren't being correctly collected when doing a batch export.
+          As a result, only the first samples were collected correctly. Some games which assigned a lot of samples slots
+          were mostly spared from the issue. But it caused massive issues in other games!
+        
+        => KNOWN BUGS:
+            - All PCM16 and possibly PCM8 samples exported to a soundfont will have the wrong pitch:
+                That's due to me having to loop the samples when they're shorter than the shortest allowed samples 
+                length for looping them according to the soundfont specification. And of course, "baking" the volume 
+                envelope in the samples further worsen the issue.
+                I'll have to see how the NDS loops PCM16 and PCM8 samples, because it doesn't appears to have this issue..
+            - Samples don't have LFO effects applied to them:
+                The soundfont format only supports 2 LFOs, while DSE supports 4. Not to mention,
+                the oscillator's frenquency range is much wider on the NDS than in the soundfont format,
+                so the effects are just impossible to convert to something equivalent.
+                And to top it off, the NDS's resampling algorithm or the way the sample points are processed is
+                particular because it gives a sort of ringy effect in some cases. And the people writing music
+                for the games using DSE seems to have taken advantage of that. So it doesn't sound the same at all..
+                Additionally, the depth parameter for the LFOs in DSE are an arbirtrary signed 16 bits integer value.
+                So its hard to guess what it represents. But its definitely not a logarithmic value like the ones used in
+                the sounfont format..
+                And, the DSE format supports many more oscillator waveforms than soundfont can.
+                    
+                    =>tl;dr: Essentially, sounfonts will never be an accurate portrayal of the original music, 
+                             because its literally impossible because of limitations in the sounfont format.
+                             DLS isn't an alternative, as its almost just as limited. SFZ is seldom used,
+                             and I don't know any players that supports those, so that's out of the question too.
+                             I will make a Foobar2000 plugin instead I think.
+
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -63,6 +110,9 @@ Special Thanks:
 -> Thanks to the people maintaining VGMTrans. It was very informative to see how they tackled some issues!
 -> Thanks to Bregalad who wrote GBA Music Ripper! Once again, reading the code helped immensely figuring out
    how to take on the file formats in PMD2 !
+-> Thanks to Ipatrix for his help and advice when dealing with NDS audio and etc!
+-> Thanks to TeamFail for his advice.
+-> Thanks to CyberBotX for the tips and much needed details on the NDS's sound system!
 -> ..and anyone else I may have forgotten about ! ^^;
 
 ----------------------------------------------------------------------------------------------------
@@ -119,16 +169,6 @@ How to use:
 
         ppmd_audioutil.exe -swdlpath "path/to/swdfilesdirectory" -smdlpath "path/to/smdfilesdirectory" -mbank "path/to/mainbankfile/mainbank.swd" "OutputDirectory"
 
-    # The option -nofx if specified will ignore all vibrato, phaser, volume oscillation(flanger?), cutoff effect, specified in the
-      preset data! Its recommended to use this option, as the feature is pretty inaccurate and mostly incompatible, thanks to the terrible
-      Soundfont format!
-
-    # The option -nobake force the program to export MIDI + Soundfont without rendering the linear "IAHDSDR" volume envelopes directly into 
-      the samples. The soundont's limited logarithmic DAHDSR envelopes will be used instead and give a much less accurate result.
-
-    # The option -xml will output the DSE data to XML and raw numbered wav samples. The feature is a WIP.
-      This will be eventually used for importing tracks from MIDI and samples back into the DSE format!
-
 ->  To list all presets used in a set of DSE containers, specify the path to a bunch of swd files, and append 
     the option -listpres to the commandline like so:
 
@@ -142,16 +182,68 @@ How to use:
 
 ->  To generate a log with a lot of verbose and details on the files handled when doing any of the above operations, simply append
         
-        -log "logfile/path/logfile.txt"
+        -log "logfile/path/logfile.txt" -v
 
-    to the command line!
+    to the command line! Optionally remove the -v if there's too much stuff in there!
 
+
+-> To export a batch of SMD and SWD pairs packed together in a SIR0 file, use the following:
+    
+        ppmd_audioutil.exe -bgmcntpath "Path/to/Directory" "FilextensionToLookFor" "Output/Directory"
+
+    Replace the path/to/directory with the path to the directory containing all the SIR0 files containing the
+    matched pairs. And be sure to specify the file extension that the SIR0 files have as the second parameter.
+    No need to put a dot or asterisk before the file extension. Exemple "zip", "bgm", "pb" etc.. 
+
+
+-> To export the SMD and SWD pairs out of a unknown file format, use the following:
+
+        ppmd_audioutil.exe -blobpath "Path/to/blob/file.whatever" "Output/Directory"
+
+    The "Path/to/blob/file.whatever" path specifies the file to scan for SMD/SWD pairs. It will batch export
+    to midi + sounfont all matched pairs it finds by comparing their internal names in their header. 
+
+
+# The option -nofx if specified will ignore all vibrato, phaser, volume oscillation(flanger?), cutoff effect, specified in the
+    preset data! Its recommended to use this option, as the feature is pretty inaccurate and mostly incompatible, thanks to the terrible
+    Soundfont format!
+
+# The option -nobake force the program to export MIDI + Soundfont without rendering the linear "IAHDSDR" volume envelopes directly into 
+    the samples. The soundont's limited logarithmic DAHDSR envelopes will be used instead and give a much less accurate result.
+
+# The option -xml will output the DSE data to XML and raw numbered wav samples. The feature is a WIP.
+    This will be eventually used for importing tracks from MIDI and samples back into the DSE format!
+
+#  Use the -midi switch to force an export to midi with no soundfont! The midi files converted this way will be converted
+    according to the details specified in any "CVInfo" file specified at the commandline using the -cvinfo switch.
 
 *** NOTE: The -gm option is essentially unreliable, and bad. There is no way to guarantee that a track will always have
           less than 15 channels dedicated to chromatic instruments. And if that's the case, then forcing 
           events to a non-drum channel may be impossible without causing issues during playback, since most 
           midi players don't expect this kind of messing around. 
           Thus, the default GS export is preferred!
+
+
+----------------------------------------------------------------------------------------------------
+About CVInfo files
+----------------------------------------------------------------------------------------------------
+Since tracks used by most games won't use typical General Midi preset numbers, they'll sound like
+an horrible cacophony if just ripped as-is. 
+
+Since its impossible to guess what instruments is what, the program can use a file to tell it how
+each presets should be converted. 
+What MIDI instrument preset to use, if the notes needs to be transposed, if a different bank needs to
+be used, or remapping keys for drum kit instruments.
+
+This file format is simple human editable XML. And a tailor made base CVInfo file can be
+automatically generated for you using the -makecvinfo option at the commandline.
+You then only need to modify the content of the file to your liking!
+
+And then you can specify that file at the command line using the -cvinfo option whenver you convert
+the files to MIDI only. And all the resulting MIDI files will be converted according to your specifications!
+
+An example CVInfo file is provided for Pokemon Mystery Dungeon : Explorers of Sky.  It contains a 
+list of all the tags and what they do, along with a lot more details on what can be done!
 
 ----------------------------------------------------------------------------------------------------
 Readme:
@@ -165,24 +257,73 @@ ppmd_audioutil.exe (option) (input path) (output path)
 
 
 Options:
-  -gm        : Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not be a 1:1 copy, and using the original samples with this MIDI won't sound good either..
-  -fl        : This will export to the MIDI file the "intro" once, followed with the notes in-between the loop and end marker the specified number of times. Loop markers will also be omitted!
-  -pmd2      : Specifying this will tell the program that that input path is the root of the extracted ROM's "data" directory.The utility will export the audio content from the entire game's "/SOUND" directory, to a bunch of MIDIs and some soundfonts!
-  -cvinfo    : The cvinfo file is an XML file containing information on how to convert SMDL files to MIDI. It allows to change the original presets/bank to something else automatically. It also allows to transpose notes by a certain preset, or change what key/preset is used when a certain key for a given original preset is played. See the example file for more details!
-  -makecvinfo: This will build a blank populated cvinfo.xml file from all the loaded swdl files specified using the swdlpath option. The first parameter specified on the commandline will be the name of the outputed cvinfo.xml file!
-  -mbank     : Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!Is also used to specify where to put the assembled 
-  -swdlpath  : Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored.Is also used to specify where to put assembled DSE Preset during import.
-  -smdlpath  : Use this to specify the path to the folder where the SMDLs to export are stored.Is also used to specify where to put MIDI files converted to SMDL format.
-  -listpres  : Use this to make the program export a list of all the presets used by the SWDL contained withinthe swdlpath specified, or the input path if doing it for a single SWDL. If a swdlpath was specified, the path to the outputed list is the first argument.If no swdlpath is specified the first argument is the path to the swdl to use, andoptionally the second argument the path to the outputed list!
+  -gm        : Specifying this will modify the MIDIs to fit as much as possible with the General Midi standard. 
+                Instruments remapped, and etc.. In short, the resulting MIDI will absolutely not be a 1:1 copy, 
+                and using the original samples with this MIDI won't sound good either.. WARNING: General MIDI offers 
+                16 tracks, with one forced to play drums. But there isn't a track forced to play drums in the DSE system. 
+                So, some songs with just melody tracks simply can't be converted to GM and play correctly!!
+
+  -fl        : This will export to the MIDI file the "intro" once, followed with the notes in-between the loop 
+                and end marker the specified number of times. Loop markers will also be omitted!
+
+  -pmd2      : Specifying this will tell the program that that input path is the root of the extracted ROM's 
+                "data" directory.The utility will export the audio content from the entire 
+                game's "/SOUND" directory, to a bunch of MIDIs and some soundfonts!
+
+  -cvinfo    : The cvinfo file is an XML file containing information on how to convert SMDL files to MIDI. 
+                It allows to change the original presets/bank to something else automatically. It also allows to 
+                transpose notes by a certain preset, or change what key/preset is used when a certain key for a given 
+                original preset is played. See the example file for more details!
+
+  -makecvinfo: This will build a blank populated cvinfo.xml file from all the loaded swdl files specified using the 
+                swdlpath option. or the bgmcntpath. The first parameter specified on the commandline will be the name 
+                of the outputed cvinfo.xml file!
+
+  -forcemidi : Specifying this will force a MIDI only export, regardless of the parameters specified.This is useful 
+                when loading bgm containers for example, and wanting to export them to MIDIsaccording or not to the 
+                rules specified in a cvinfo XML file.
+
+  -mbank     : Use this to specify the path to the main sample bank that the SMDL to export will use, if applicable!
+                Is also used to specify where to put the assembled 
+
+  -swdlpath  : Use this to specify the path to the folder where the SWDLs matching the SMDL to export are stored.
+                Is also used to specify where to put assembled DSE Preset during import.
+
+  -smdlpath  : Use this to specify the path to the folder where the SMDLs to export are stored.
+                Is also used to specify where to put MIDI files converted to SMDL format.
+
+  -bgmcntpath: Use this to specify where to load bgm containers from. Aka, SMDL + SWDL wrapped together in a 
+                SIR0 wrapper.The second argument is the file extension to look for, as most bgm containers have 
+                different file extensions!
+
+  -blobpath  : Use this to specify the path to a blob of DSE containers to process. AKA a file that contains 
+                a bunch ofSMDL, SWDL, SEDL containers one after the other with no particular structure.
+
+  -listpres  : Use this to make the program export a list of all the presets used by the SWDL contained withinthe 
+                swdlpath specified, or the input path if doing it for a single SWDL. If a swdlpath was specified, 
+                the path to the outputed list is the first argument.If no swdlpath is specified the first argument 
+                is the path to the swdl to use, andoptionally the second argument the path to the outputed list!
+
   -hexnum    : If this is present, whenever possible, the program will export filenames with hexadecimal numbers in them!
+
+  -sf2       : Specifying this will export a swd soundbank to a soundfont if applicable.
+
   -xml       : Specifying this will force outputing a swd soundbank to XML data and pcm16 samples(.wav files).
+
   -nobake    : Specifying this will disable the rendering of individual samples for every preset split.
+
   -nofx      : Specifying this will disable the processing of LFO effects data.
+
+  -noconvert : Specifying this will disable the convertion of samples to pcm16 when exporting a bank. They'll be 
+                exported in their original format.
+
   -log       : This option writes a log to the file specified as parameter.
+
+  -v         : This enables the writing of a lot more info to the logfile!
 
 
 Examples:
-ppmd_audioutil.exe -gm -fl (nbofloops) -pmd2 -cvinfo "path/to/conversion/info/file.xml" -makecvinfo -mbank "SOUND/BGM/bgm.swd" -swdlpath "SOUND/BGM" -smdlpath "SOUND/BGM" -listpres -hexnum -sf2 -xml -nobake -nofx -log "logfilename.txt" "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
+ppmd_audioutil.exe -gm -fl (nbofloops) -pmd2 -cvinfo "path/to/conversion/info/file.xml" -makecvinfo -forcemidi -mbank "SOUND/BGM/bgm.swd" -swdlpath "SOUND/BGM" -smdlpath "SOUND/BGM" -bgmcntpath "Path/to/BGMsDir" "bgm" -blobpath "Path/to/blob/file.whatever" -listpres -hexnum -sf2 -xml -nobake -nofx -noconvert -log "logfilename.txt" -v "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
 
 
 ----------------------------------------------------------------------------------------------------

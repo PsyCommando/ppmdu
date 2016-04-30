@@ -54,6 +54,8 @@ namespace DSE
             }
         };
         typedef SampleBlock smpldata_t;
+        typedef std::vector<smpldata_t>::iterator       iterator;
+        typedef std::vector<smpldata_t>::const_iterator const_iterator;
 
         SampleBank( std::vector<smpldata_t> && smpls )
             :m_SampleData(std::move(smpls)) //MSVC is too derp to use the correct constructor..
@@ -81,11 +83,17 @@ namespace DSE
             return *this;
         }
 
+        inline iterator       begin()     { return m_SampleData.begin(); }
+        inline const_iterator begin()const{ return m_SampleData.begin(); }
+        inline iterator       end()       { return m_SampleData.end();   }
+        inline const_iterator end()const  { return m_SampleData.end();   }
+        inline size_t         size()const { return NbSlots(); }
+
     public:
         //Info
 
         //Nb of sample slots with or without data
-        int                                 NbSlots()const     { return m_SampleData.size(); } 
+        inline size_t                       NbSlots()const     { return m_SampleData.size(); } 
 
         //Access
         bool                                IsInfoPresent      ( unsigned int index )const { return sampleInfo(index) != nullptr; }
@@ -350,7 +358,9 @@ namespace DSE
         iterator       end()      { return m_events.end(); }
         const_iterator end()const { return m_events.end(); }
 
+        bool   empty        ()const       { return m_events.empty();  }
         size_t size         ()const       { return m_events.size();   }
+        
         void   reserve      ( size_t sz ) { m_events.reserve(sz);     }
         void   resize       ( size_t sz ) { m_events.resize(sz);      } 
         void   shrink_to_fit()            { m_events.shrink_to_fit(); }

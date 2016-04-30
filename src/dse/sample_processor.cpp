@@ -87,48 +87,51 @@ namespace DSE
 
                 if( psmpl != nullptr && psmplinf != nullptr )
                 {
-                    ProcessASplit2( entry, split, prgm.m_lfotbl, psmpl, psmplinf, prgm.m_hdr );
+                    ProcessASplit2( entry, split, prgm.m_lfotbl, psmpl, psmplinf, prgm );
                 }
             }
             processed.AddEntry( move(entry) );
         }
 
-        inline uint32_t CalcTotalEnveloppeDuration( const DSE::ProgramInfo::SplitEntry  & split )const
+        inline uint32_t CalcTotalEnveloppeDuration( const DSE::SplitEntry  & split )const
         {
-            uint32_t envtotaldur =  DSEEnveloppeDurationToMSec( split.attack, split.envmult ) +
-                                    DSEEnveloppeDurationToMSec( split.hold,   split.envmult );
+            uint32_t envtotaldur =  DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.attack), static_cast<int8_t>(split.env.envmulti) ) +
+                                    DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.hold),   static_cast<int8_t>(split.env.envmulti) );
 
-            if( split.sustain != 0x7F && split.decay != 0x7F )
-                envtotaldur += DSEEnveloppeDurationToMSec( split.decay,  split.envmult ); 
+            if( split.env.sustain != 0x7F && split.env.decay != 0x7F )
+                envtotaldur += DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.decay),  static_cast<int8_t>(split.env.envmulti) ); 
 
-            if( split.decay2 != 0x7F )
-                envtotaldur += DSEEnveloppeDurationToMSec( split.decay2, split.envmult ); //Total duration of the envelope!!!
+            if( split.env.decay2 != 0x7F )
+                envtotaldur += DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.decay2), static_cast<int8_t>(split.env.envmulti) ); //Total duration of the envelope!!!
             return envtotaldur;
         }
 
         /*
         */
-        void ProcessASplit2(ProcessedPresets::PresetEntry                       & entry, 
-                            const DSE::ProgramInfo::SplitEntry                  & split, 
-                            const std::vector<DSE::ProgramInfo::LFOTblEntry>    & lfos,
-                            const std::vector<uint8_t>                          * psmpl, 
-                            const DSE::WavInfo                                  * psmplinf,
-                            const DSE::ProgramInfo::InstInfoHeader              & prgminf )
+        void ProcessASplit2(ProcessedPresets::PresetEntry           & entry, 
+                            const DSE::SplitEntry                   & split, 
+                            const std::vector<DSE::LFOTblEntry>     & lfos,
+                            const std::vector<uint8_t>              * psmpl, 
+                            const DSE::WavInfo                      * psmplinf,
+                            const DSE::ProgramInfo                  & prgminf )
         {
             const size_t    curindex               = entry.splitsamples.size();
             const bool      IsSampleLooped         = psmplinf->smplloop != 0;
-            const bool      ShouldUnloop           = ( split.sustain == 0 ) || ( split.decay2 != 0x7F );
+            const bool      ShouldUnloop           = ( split.env.sustain == 0 ) || ( split.env.decay2 != 0x7F );
             const bool      ShouldRenderEnvAndLoop = !ShouldUnloop && IsSampleLooped;
             const uint32_t  envtotaldur            = CalcTotalEnveloppeDuration(split);
             const uint32_t  envtotaldursmpl        = MsecToNbSamples( psmplinf->smplrate, envtotaldur );
 
             // --- Convert Sample ----
             DSESampleConvertionInfo postconvloop; //The loop points after conversion
-            entry.splitsamples.push_back( move( ConvertSample( *psmpl, psmplinf->smplfmt, psmplinf->loopbeg, postconvloop ) ) );
+            
+            //entry.splitsamples.push_back( move( ConvertAndLoopSample( *psmpl, static_cast<uint16_t>(psmplinf->smplfmt), psmplinf->loopbeg, psmplinf->looplen, 1, postconvloop ) ) );
+            entry.splitsamples.push_back( move( ConvertSample( *psmpl, static_cast<uint16_t>(psmplinf->smplfmt), psmplinf->loopbeg, postconvloop ) ) );
+            
             entry.splitsmplinf.push_back( *psmplinf ); //Copy sample info #FIXME: maybe get a custom way to store the relevant data for loop points and sample rate instead ?
             const size_t    SampleLenPreLengthen = entry.splitsamples[curindex].size();
 
-            entry.splitsmplinf[curindex].smplfmt = static_cast<uint16_t>(WavInfo::eSmplFmt::pcm16);
+            entry.splitsmplinf[curindex].smplfmt = eDSESmplFmt::pcm16;
 
             //Update Loop info
             entry.splitsmplinf[curindex].loopbeg  = postconvloop.loopbeg_;
@@ -137,18 +140,28 @@ namespace DSE
             // ---- Handle Enveloppe ----
             if( split.envon != 0 )
             {
-                double volumeFactor = ( static_cast<int>(prgminf.insvol * 100 / 127) / 100.0) * ( static_cast<int>(split.smplvol * 100 / 127) / 100.0);
+                double volumeFactor = ( static_cast<int>(prgminf.prgvol * 100 / 127) / 100.0) * ( static_cast<int>(split.smplvol * 100 / 127) / 100.0);
 
                 if( IsSampleLooped )
                 {
+                    if( psmplinf->smplfmt != eDSESmplFmt::pcm16 ) //!#FIXME: This is a temporary fix for the pitch issue with pcm16 samples. It makes some samples not loop, and it doesn't fix all samples however..
+                    {
                     if( ShouldUnloop )
                     {
                         //Loop the sample a few times, so its as long as the envelope
                         if( envtotaldursmpl > entry.splitsamples[curindex].size() )
                             Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop );
 
+            ////!###TEST####
+            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
+            //uint32_t   presmplrate                = psmplinf->smplrate;
+            //uint32_t   Newsmplrate                = std::lround((static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(SampleLenPreLengthen)) / 100.0) * presmplrate;
+            //if( bispcm16 )
+            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
+            ////!###TEST####
+
                         //We render the envelope and disable looping
-                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
+                        ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
                         entry.splitsmplinf[curindex].smplloop = 0;
                     }
                     else
@@ -169,36 +182,63 @@ namespace DSE
 
                             //Make sure the sample ends only after fully completing its last loop, this will keep 
                             // the sample from clicking/abruptly cutting to the loop.
-                            //Lenghten( entry.splitsamples[curindex], resultinglength, postconvloop );
                         }
 
                         //Save the length of the sample after making it longer, since it differ from "envtotaldursmpl"
                         const size_t actualnewloopbeg = entry.splitsamples[curindex].size();
 
                         //We copy one loop to the end, render the envelope, Move the loop to the end past the decay phase, and keep looping on.
-                        //Lenghten( entry.splitsamples[curindex], 
-                        //          (entry.splitsamples[curindex].size() + (entry.splitsmplinf[curindex].looplen ) ), 
-                        //          postconvloop );
                         LenghtenByNbLoops( entry.splitsamples[curindex], 1, postconvloop );
-                        ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
+                        ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
+
+
+                        ////!###Test release###
+                        //size_t    releasebeg     = entry.splitsamples[curindex].size();
+                        //size_t    nbreleaselp    = 0;
+                        //const int releasenbsmpls = MsecToNbSamples( psmplinf->smplrate,
+                        //                                            DSEEnveloppeDurationToMSec( static_cast<int8_t>(split.env.release), 
+                        //                                                                        static_cast<int8_t>(split.env.envmulti)));
+                        //if( ( releasenbsmpls % entry.splitsmplinf[curindex].looplen ) != 0 )
+                        //    nbreleaselp = (releasenbsmpls / entry.splitsmplinf[curindex].looplen) + 1;
+                        //else
+                        //    nbreleaselp = (releasenbsmpls / entry.splitsmplinf[curindex].looplen);
+                        //
+                        //LenghtenByNbLoops( entry.splitsamples[curindex], nbreleaselp, postconvloop );
+
+                        //const double sustainlvl   = ( ( (static_cast<double>(split.env.sustain) * 100.0 ) / 128.0 ) / 100.0) * split.env.envmulti;
+                        //if( split.env.decay2 == 0x7F )
+                        //    LerpVol( releasebeg, releasenbsmpls, sustainlvl, 0.0, entry.splitsamples[curindex] ); 
+                        ////!###Test release###
+
+
+            ////!###TEST####
+            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
+            //uint32_t   presmplrate                = psmplinf->smplrate;
+            //double     oldratio                   = static_cast<double>(SampleLenPreLengthen)                / static_cast<double>(presmplrate);
+            //double     newratio                   = static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(presmplrate);
+            //uint32_t   Newsmplrate                = std::lround(( static_cast<double>(entry.splitsamples[curindex].size())) *  fabs( oldratio ) );
+            //if( bispcm16 )
+            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
+            ////!###TEST####
 
                         //Move the loop to the end
                         entry.splitsmplinf[curindex].loopbeg = (actualnewloopbeg > SampleLenPreLengthen)? actualnewloopbeg : SampleLenPreLengthen;
+                    }
                     }
                 }
                 else
                 {
                     //Render envelope only
-                    ApplyEnveloppe( entry.splitsamples[curindex], DSEEnvelope(split), psmplinf->smplrate, volumeFactor );
+                    ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
                 }
 
                 //Set envelope paramters to disabled, except the release, so we don't end up applying the SF2 envelope over the sample!
-                entry.prginf.m_splitstbl[curindex].atkvol  = 0x00;
-                entry.prginf.m_splitstbl[curindex].attack  = 0x00;
-                entry.prginf.m_splitstbl[curindex].hold    = 0x00;
-                entry.prginf.m_splitstbl[curindex].decay   = 0x00;
-                entry.prginf.m_splitstbl[curindex].decay2  = 0x7F;
-                entry.prginf.m_splitstbl[curindex].sustain = 0x7F;
+                entry.prginf.m_splitstbl[curindex].env.atkvol  = 0x00;
+                entry.prginf.m_splitstbl[curindex].env.attack  = 0x00;
+                entry.prginf.m_splitstbl[curindex].env.hold    = 0x00;
+                entry.prginf.m_splitstbl[curindex].env.decay   = 0x00;
+                entry.prginf.m_splitstbl[curindex].env.decay2  = 0x7F;
+                entry.prginf.m_splitstbl[curindex].env.sustain = 0x7F;
             }
             else
             {
@@ -250,6 +290,18 @@ namespace DSE
             vector<int16_t> result;
             //Depending on sample format, convert to pcm16 !
             ConvertDSESample( smplty, origloopbeg, srcsmpl, newloop, result );
+            return std::move(result);
+        }
+
+        /*
+        */
+        vector<int16_t> ConvertAndLoopSample( const vector<uint8_t> & srcsmpl, int16_t smplty, size_t origloopbeg, size_t origlooplen, size_t nbloops, DSESampleConvertionInfo & newloop )
+        {
+            vector<int16_t> result;
+
+            //Depending on sample format, convert to pcm16 !
+            ConvertAndLoopDSESample( smplty, origloopbeg, origlooplen, nbloops, srcsmpl, newloop, result );
+
             return std::move(result);
         }
 
@@ -324,14 +376,16 @@ namespace DSE
             double       lastvolumelvl = MaxVol;
 
             //Attack
-            const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.attack, env.envmulti ) );
+            const int atknbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.attack), 
+                                                                                          static_cast<int8_t>(env.envmulti) ) );
             const double atklvl   = (( (static_cast<double>(env.atkvol) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.attack != 0 )
                 LerpVol( 0, atknbsmpls, atklvl, MaxVol, smpl );
 
             //Hold
             const int holdbeg     = atknbsmpls;
-            const int holdnbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.hold, env.envmulti ) );
+            const int holdnbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.hold), 
+                                                                                           static_cast<int8_t>(env.envmulti) ) );
             const int holdend     = holdbeg + holdnbsmpls;
 
             //Decay
@@ -340,7 +394,8 @@ namespace DSE
             const double sustainlvl   = ( ( (static_cast<double>(env.sustain) * 100.0 ) / 128.0 ) / 100.0) * volmul;
             if( env.decay != 0x7F && !(env.decay == 0 && sustainlvl == 0) )
             {
-                decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay, env.envmulti ) );
+                decaynbsmpls += MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.decay), 
+                                                                                       static_cast<int8_t>(env.envmulti) ) );
                 LerpVol( decaybeg, decaybeg + decaynbsmpls, MaxVol, sustainlvl, smpl );
                 lastvolumelvl = sustainlvl;
             }
@@ -348,7 +403,8 @@ namespace DSE
             if( env.decay2 != 0x7F )
             {
                 const int decay2beg     = decaybeg + decaynbsmpls;
-                const int decay2nbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( env.decay2, env.envmulti ) );
+                const int decay2nbsmpls = MsecToNbSamples( smplrate, DSEEnveloppeDurationToMSec( static_cast<int8_t>(env.decay2), 
+                                                                                                 static_cast<int8_t>(env.envmulti) ) );
                 LerpVol( decay2beg, smpl.size(), lastvolumelvl, 0.0, smpl );
             }
             else
@@ -488,7 +544,7 @@ namespace DSE
 
         /*
         */
-        void ApplyFx( vector<int16_t> & smpl, int smplrate, const std::vector<DSE::ProgramInfo::LFOTblEntry> & lfos )
+        void ApplyFx( vector<int16_t> & smpl, int smplrate, const std::vector<DSE::LFOTblEntry> & lfos )
         {
             //#TODO: Add LFO processing
         }

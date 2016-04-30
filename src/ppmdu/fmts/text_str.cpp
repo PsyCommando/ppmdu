@@ -12,6 +12,8 @@
 #include <map>
 using namespace std;
 
+#define PMD2_STRINGS_NO_LOCALE 
+
 namespace pmd2 { namespace filetypes
 {
 //
@@ -108,6 +110,8 @@ namespace pmd2 { namespace filetypes
                     len = (m_ptrTable[i+1] - m_ptrTable[i]);
 
                 char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
+                
+#ifndef PMD2_STRINGS_NO_LOCALE
                 stringstream out;
                 out.imbue(m_locale);
 
@@ -141,6 +145,25 @@ namespace pmd2 { namespace filetypes
                 }
 
                 m_txtstr[i] = out.str();
+#else
+                auto strbackins = std::back_inserter( m_txtstr[i] );
+                for( unsigned int cntc = 0; cntc < len; ++cntc )
+                {
+                    char c = ptrstr[cntc];
+                    if( c == '\n' )
+                    {
+                        (*strbackins) = '\\';
+                        (*strbackins) = 'n';
+                    }
+                    else if( c == '\0' )
+                    {
+                        (*strbackins) = '\\';
+                        (*strbackins) = '0';
+                    }
+                    else
+                        (*strbackins) = c;
+                }
+#endif
                 ++i;
             }
             cout<<" Done!\n";

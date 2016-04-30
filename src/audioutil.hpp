@@ -9,6 +9,7 @@ Description: Code for the audioutil utility for Pokemon Mystery Dungeon : Explor
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
+#include <dse/dse_conversion.hpp>
 #include <utils/cmdline_util.hpp>
 #include <string>
 #include <vector>
@@ -44,7 +45,12 @@ namespace audioutil
         bool ParseInputPath  ( const std::string & path );
         bool ParseOutputPath ( const std::string & path );
 
-        bool IsInputPathRequired( const std::vector<std::vector<std::string>> & options );
+        bool ShouldParseInputPath ( const std::vector<std::vector<std::string>> & options, 
+                                    const std::deque<std::string>               & priorparams, 
+                                    size_t                                        nblefttoparse );
+        bool ShouldParseOutputPath( const std::vector<std::vector<std::string>> & options, 
+                                    const std::deque<std::string>               & priorparams, 
+                                    size_t                                        nblefttoparse );
 
         //Parsing Options
         bool ParseOptionGeneralMidi( const std::vector<std::string> & optdata ); //Export to general midi format
@@ -55,6 +61,7 @@ namespace audioutil
 
         bool ParseOptionMBAT       ( const std::vector<std::string> & optdata ); //Export Master Bank And Tracks using the specified folder.
         bool ParseOptionLog        ( const std::vector<std::string> & optdata ); //Redirects clog to the file specified
+        bool ParseOptionVerbose    ( const std::vector<std::string> & optdata ); //Write more info to the log file!
 
         bool ParseOptionMBank      ( const std::vector<std::string> & optdata );
         bool ParseOptionSWDLPath   ( const std::vector<std::string> & optdata );
@@ -72,13 +79,21 @@ namespace audioutil
 
         bool ParseOptionMakeCvinfo( const std::vector<std::string> & optdata );
 
+        bool ParseOptionBGMCntPath( const std::vector<std::string> & optdata );
+
+        bool ParseOptionForceMidi( const std::vector<std::string> & optdata );
+
+        bool ParseOptionBlobPath( const std::vector<std::string> & optdata );
+
+        bool ParseOptionNoConvertSamples( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
         int  GatherArgs        ( int argc, const char * argv[] );
 
         //Exec methods
-        int ExportSWDLBank();
+        //int ExportSWDLBank();
         int ExportSWDL();
         int ExportSMDL();
         int ExportSEDL();
@@ -91,12 +106,18 @@ namespace audioutil
         int ExportBatchSWDL();
         int ExportBatchSMDL();
         int BatchListSWDLPrgm( const std::string & SrcPath );
-        int ListSWDLPrgm();
         int MakeCvinfo();       //Make a blank cvinfo from the swdl loaded!
 
         int BuildSWDL();
         int BuildSMDL();
         int BuildSEDL();
+
+        //Utility
+        /*
+            DoExportLoader
+                Will export the content of the batch loader according to the output type selected by the user.
+        */
+        void DoExportLoader( DSE::BatchAudioLoader & bal, const std::string & outputpath );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -137,9 +158,10 @@ namespace audioutil
         //Types of output
         enum struct eOutputType
         {
-            XML,    // For exporting before editing tracks and their samples/instrument data
-            SF2,    // For exporting a Sounfont
-            DLS,    // For possible DLS support in the future
+            XML,        // For exporting before editing tracks and their samples/instrument data
+            SF2,        // For exporting a Sounfont
+            DLS,        // For possible DLS support in the future
+            MIDI_Only,  // For exporting only MIDIs
         };
 
         //Default filenames names
@@ -157,10 +179,16 @@ namespace audioutil
         bool        m_bBakeSamples;     //Whether each preset's split should have a sample baked for it.
         bool        m_bUseLFOFx;        //Whether LFO FX are processed
         bool        m_bMakeCvinfo;      //Whether we should export a blank cvinfo file!
+        bool        m_bConvertSamples;  //Whether the samples should be converted to pcm16 when exporting
+        
+        //bool        m_bForceMidiExp;    //Whether the user is forcing MIDI export.
 
         std::string m_mbankpath;
         std::string m_swdlpath;
         std::string m_smdlpath;
+        std::string m_bgmcntpath;
+        std::string m_bgmcntext;
+        std::string m_bgmblobpath;
 
         eOutputType m_outtype;
 

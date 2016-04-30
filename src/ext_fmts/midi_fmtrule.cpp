@@ -1,35 +1,34 @@
-#include "sedl.hpp"
+#include "midi_fmtrule.hpp"
+#include <cstdint>
+#include <utils/gbyteutils.hpp>
 using namespace std;
 
-namespace DSE
-{
-    //Put code here
-};
+static const uint32_t MIDI_MagicNum = 0x4D546864;
 
 #ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
     #include <types/content_type_analyser.hpp>
 
     namespace filetypes
     {
-        const ContentTy CnTy_SEDL {"sedl"}; //Content ID db handle
+        const ContentTy CnTy_MIDI{"midi"}; //Content ID db handle
 
     //========================================================================================================
-    //  sedl_rule
+    //  midi_rule
     //========================================================================================================
         /*
-            sedl_rule
+            midi_rule
                 Rule for identifying a SMDL file. With the ContentTypeHandler!
         */
-        class sedl_rule : public IContentHandlingRule
+        class midi_rule : public IContentHandlingRule
         {
         public:
-            sedl_rule(){}
-            ~sedl_rule(){}
+            midi_rule(){}
+            ~midi_rule(){}
 
             //Returns the value from the content type enum to represent what this container contains!
             virtual cnt_t getContentType()const
             {
-                return filetypes::CnTy_SEDL;
+                return CnTy_MIDI;
             }
 
             //Returns an ID number identifying the rule. Its not the index in the storage array,
@@ -44,18 +43,13 @@ namespace DSE
             //                              vector<uint8_t>::const_iterator   itdataend );
             virtual ContentBlock Analyse( const analysis_parameter & parameters )
             {
-                DSE::SEDL_Header headr;
+                size_t       fsize = std::distance( parameters._itparentbeg, parameters._itparentend );
                 ContentBlock cb;
-
-                //Read the header
-                headr.ReadFromContainer( parameters._itdatabeg );
-
                 //build our content block info 
                 cb._startoffset          = 0;
-                cb._endoffset            = headr.flen;
+                cb._endoffset            = fsize;
                 cb._rule_id_that_matched = getRuleID();
                 cb._type                 = getContentType();
-
                 return cb;
             }
 
@@ -65,7 +59,7 @@ namespace DSE
                                    vector<uint8_t>::const_iterator   itdataend,
                                    const std::string & filext)
             {
-                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SEDL_MagicNumber);
+                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg, itdataend, false) == MIDI_MagicNum);
             }
 
         private:
@@ -73,12 +67,12 @@ namespace DSE
         };
 
     //========================================================================================================
-    //  sedl_rule_registrator
+    //  midi_rule_registrator
     //========================================================================================================
         /*
-            sedl_rule_registrator
-                A small singleton that has for only task to register the sedl_rule!
+            midi_rule_registrator
+                A small singleton that has for only task to register the midi_rule!
         */
-        RuleRegistrator<sedl_rule> RuleRegistrator<sedl_rule>::s_instance;
+        RuleRegistrator<midi_rule> RuleRegistrator<midi_rule>::s_instance;
     };
 #endif

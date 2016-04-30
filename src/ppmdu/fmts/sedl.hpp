@@ -10,17 +10,19 @@ License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicd
 All wrongs reversed, no crappyrights :P
 */
 #include <dse/dse_common.hpp>
-#include <types/content_type_analyser.hpp>
 
-namespace filetypes
-{
-    extern const ContentTy CnTy_SEDL; //Content ID db handle
-};
+#ifdef USE_PPMDU_CONTENT_TYPE_ANALYSER
+    #include <types/content_type_analyser.hpp>
+    namespace filetypes
+    {
+        extern const ContentTy CnTy_SEDL; //Content ID db handle
+    };
+#endif
 
 namespace DSE
 {
 
-    static const uint32_t SEDL_MagicNumber = 0x7365646C; //"sedl"
+    static const uint32_t SEDL_MagicNumber = static_cast<uint32_t>(eDSEContainers::sedl);//0x7365646C; //"sedl"
 
 
     /****************************************************************************************

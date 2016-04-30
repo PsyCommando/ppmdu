@@ -10,6 +10,7 @@ Description: A baseclass for automating common tasks performed by simple command
 */
 //#include <utils/utility.hpp>
 #include <vector>
+#include <deque>
 #include <string>
 #include <functional>
 #include <memory>
@@ -73,7 +74,9 @@ namespace utils{ namespace cmdl
         //int          totaldependson;    //The size of the "dependson" string array.
 
         //Functions pointers
-        std::function<bool(const std::vector< std::vector<std::string> >&)> myIsRequired;  //
+        std::function<bool(const std::vector<std::vector<std::string>>&, 
+                           const std::deque<std::string>&,
+                           size_t)> myShouldParse;  // The first is a list of all options parsed, the second is a list of all arguments parsed before this one! The third is the amount of parameters left to parse, including the once currently being parsed.
     };
 
 
@@ -124,7 +127,7 @@ namespace utils{ namespace cmdl
         std::vector< std::vector<std::string> > getAllFoundOptions();
 
         //Returns a list of all the found parameters passed at construction.
-        std::vector< std::string > getAllFoundParams();
+        std::deque< std::string > getAllFoundParams();
 
         //Returns a list of all the found extra parameters passed at construction.
         std::vector< std::string > getAllAdditionalParams();

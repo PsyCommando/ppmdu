@@ -90,7 +90,8 @@ namespace statsutil
 #elif __linux__
             "\"/pmd_romdata/data\"",
 #endif
-            std::bind( &CStatsUtil::ParseOutputPath, &GetInstance(), placeholders::_1 ),
+            std::bind( &CStatsUtil::ParseOutputPath,       &GetInstance(), placeholders::_1 ),
+            std::bind( &CStatsUtil::ShouldParseOutputPath, &GetInstance(), placeholders::_1, placeholders::_2, placeholders::_3 ),
         },
     }};
 
@@ -255,6 +256,13 @@ namespace statsutil
             return true;
         }
         return false;
+    }
+
+    bool CStatsUtil::ShouldParseOutputPath( const std::vector<std::vector<std::string>> & optdata, 
+                                            const std::deque<std::string>               & priorparams,
+                                            size_t                                        nblefttoparse )
+    {
+        return ( priorparams.size() == 1 ) && ( nblefttoparse > 0 );
     }
 
 //

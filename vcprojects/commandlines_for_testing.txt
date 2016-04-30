@@ -1,0 +1,31 @@
+-smdlpath "originals/SOUND/BGM/" "out_audioutil_jan_midi" -nofx -log "out_audioutil_jan_midi/log.txt" -cvinfo "../resources/pmd2eos_cvinfo.xml"
+
+-smdlpath "originals/SOUND/BGM/" "out_audioutil_jan_midi_gm" -nofx -log "out_audioutil_jan_midi_gm/log.txt" -cvinfo "../resources/pmd2eos_cvinfo.xml" -gm -fl 2
+
+-pmd2 "originals" "out_audioutil_jan" -nofx -log "out_audioutil_jan/log.txt"
+-pmd2 "originals" "out_audioutil_jan"-log "out_audioutil_jan/log.txt"
+
+"out_audioutil_jan/10_B_SYS_MONSTERHO.mid" "MakeSMDL/10_B_SYS_MONSTERHO.smd" -log "MakeSMDL/log.txt"
+
+-smdlpath "Shiren2/mid" -swdlpath "Shiren2/BGM" "out_shiren_mars" -nofx -log "out_shiren_mars/log.txt"
+
+-blobpath "inazuma_eleven/sound.pb" "out_inazuma" -nofx -log "out_inazuma/log.txt" -v
+
+-smdlpath "ProfLayton" -swdlpath "ProfLayton" -mbank "ProfLayton/BG.SWD" "out_playton" -nofx -log "out_playton/log.txt" -v
+
+-bgmcntpath "999" "bgm" "out_999" -log "out_999/log.txt" -v
+-bgmcntpath "999" "bgm" "out_999" -nofx -log "out_999/log.txt" -v
+-bgmcntpath "999" "bgm" "out_999_midi/999cvinfo.xml" -log "out_999_midi/log.txt" -v -makecvinfo
+-bgmcntpath "999" "bgm" "out_999_midi" -log "out_999_midi/log.txt" -v -forcemidi
+
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt" -v
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+
+-smdlpath "luminous_arc/rip" -swdlpath "luminous_arc/rip" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+-smdlpath "luminous_arc/bf" -swdlpath "luminous_arc/bf" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt"
+-blobpath "luminous_arc/snd.iear" "out_luminous_arc" -nofx -log "out_luminous_arc/log.txt" -v
+
+
+
+-bgmcntpath "ZombieDaisuki" "sd" "out_ZombieDaisuki" -log "out_ZombieDaisuki/log.txt" -v
+

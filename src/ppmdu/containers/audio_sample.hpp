@@ -16,6 +16,7 @@ Description: Various tools for representing raw audio data.
     //Sample formats
     typedef int16_t pcm16s_t;
     typedef int8_t  pcm8s_t;
+    typedef uint8_t pcm8_t;
     typedef uint8_t adpcm4_t; 
 
     //Sample containers

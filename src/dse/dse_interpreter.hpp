@@ -13,18 +13,23 @@ All wrongs reversed, no crappyrights :P
 #include <dse/dse_common.hpp>
 #include <dse/dse_sequence.hpp>
 #include <dse/dse_conversion_info.hpp>
-#include <vector>
-#include <map>
+//#include <vector>
+#include <string>
+//#include <map>
 #include <cstdint>
 
 namespace DSE
 {
-
+    static const uint32_t NbMicrosecPerMinute = 60000000;
     //#TODO: Put this into a MIDI utility header, or something like that..
     inline uint32_t ConvertTempoToMicrosecPerQuarterNote( uint32_t bpm )
     {
-        static const uint32_t NbMicrosecPerMinute = 60000000;
         return NbMicrosecPerMinute / bpm;
+    }
+
+    inline uint32_t ConvertMicrosecPerQuarterNoteToBPM( uint32_t mpqn )
+    {
+        return mpqn / NbMicrosecPerMinute;
     }
 
 //===============================================================================
@@ -54,7 +59,7 @@ namespace DSE
     {
         GM,
         GS,
-        XG,
+        XG, //#TODO: Fix XG export. Though its vastly unsupported.
     };
 
     /*************************************************************************************************
@@ -62,8 +67,7 @@ namespace DSE
             This function convert a MusicSequence to a midi according to the parameters specified!
                 -outmidi    : The path and name of the MIDI file that will be exported.
                 - seq       : The MusicSequence to export.
-                - remapdata : Information on how each presets, translate to MIDI.
-                - midfmt    : The layout of the MIDI file.
+                - remapdata : Information on how each DSE track presets, translate to MIDI presets.
                 - midmode   : The MIDI sub-standard to use for bypassing GM's limitations. 
                               GS is preferred as its the most supported one!
     *************************************************************************************************/
@@ -71,7 +75,6 @@ namespace DSE
                          const MusicSequence            & seq, 
                          const SMDLPresetConversionInfo & remapdata,
                          int                              nbloop      = 0,
-                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
     /*************************************************************************************************
@@ -81,9 +84,14 @@ namespace DSE
     void SequenceToMidi( const std::string              & outmidi, 
                          const MusicSequence            & seq, 
                          int                              nbloop      = 0,
-                         /*eMIDIFormat                      midfmt      = eMIDIFormat::SingleTrack,*/
                          eMIDIMode                        midmode     = eMIDIMode::GS );
 
+
+    /*************************************************************************************************
+        MidiToSequence
+            Converts a MIDI file into a DSE Sequence.
+    *************************************************************************************************/
+    MusicSequence MidiToSequence( const std::string & inmidi );
 
 };
 

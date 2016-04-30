@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <cassert>
+#include <iterator>
 
 using namespace filetypes;
 using namespace std;

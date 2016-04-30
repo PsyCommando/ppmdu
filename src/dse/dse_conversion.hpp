@@ -87,7 +87,7 @@ namespace DSE
 
        inline void AddEntry( PresetEntry && entry )
         {
-            m_smpldata.emplace( std::move( std::make_pair( entry.prginf.m_hdr.id, std::move(entry) ) ) );
+            m_smpldata.emplace( std::move( std::make_pair( entry.prginf.id, std::move(entry) ) ) );
         }
 
         inline iterator       begin()      {return m_smpldata.begin();}
@@ -114,6 +114,8 @@ namespace DSE
             Just like what PMD2 uses.
 
             Can also be used to load the master bank, and then either a single or more smd+swd pairs.
+
+            From there, several operations requiring pairs of those files loaded can be done!
     */
     class BatchAudioLoader
     {
@@ -132,18 +134,56 @@ namespace DSE
     //-----------------------------
     // Loading Methods
     //-----------------------------
-        //void LoadMasterBank();
+
+        /*
+            LoadMasterBank
+        */
         void LoadMasterBank( const std::string & mbank );
 
+        /*
+            LoadSmdSwdPair
+        */
         void LoadSmdSwdPair( const std::string & smd, const std::string & swd );
 
-        //For loading all pairs in one or two directories into a batch loader
         /*
             LoadMatchedSMDLSWDLPairs
                 This function loads all matched smdl + swdl pairs in one or two different directories
         */
         void LoadMatchedSMDLSWDLPairs( const std::string & swdldir, const std::string & smdldir );
 
+        /*
+            LoadBgmContainer
+                Load a single bgm container file.
+                Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+        */
+        void LoadBgmContainer( const std::string & file );
+
+        /*
+            LoadBgmContainers
+                Load all pairs in the folder. 
+                Bgm containers are SWDL and SMDL pairs packed into a single file using a SIR0 container.
+
+                - bgmdir : The directory where the bgm containers are located at.
+                - ext    : The file extension the bgm container files have.
+        */
+        void LoadBgmContainers( const std::string & bgmdir, const std::string & ext );
+
+        /*
+            LoadSingleSMDLs
+                Loads only SMDL in the folder.
+        */
+        void LoadSingleSMDLs( const std::string & smdldir );
+
+        void LoadSMDL( const std::string & smdl );
+
+
+    //-----------------------------
+        /*
+        */
+        void LoadSMDLSWDLSPairsFromBlob( const std::string & blob );
+        /*
+        */
+        void LoadSMDLSWDLPairsAndBankFromBlob( const std::string & blob, const std::string & bankname );
 
     //-----------------------------
     // Exporting Methods
@@ -163,31 +203,41 @@ namespace DSE
         std::vector<SMDLPresetConversionInfo> ExportSoundfontBakedSamples( const std::string & destf );
 
         /*
-            Export all the presets for each loaded swdl pairs! And if the sample data is present,
-            it will also export it!
+            ExportXMLPrograms
+                Export all the presets for each loaded swdl pairs! And if the sample data is present,
+                it will also export it!
         */
         void ExportXMLPrograms( const std::string & destf );
 
         /*
-            Does the same as the "ExportSoundfont" method, but additionnaly also
-            exports all loaded smd as MIDIs, with the appropriate bank events to use
-            the correct instrument presets.
+            ExportSoundfontAndMIDIs
+                Does the same as the "ExportSoundfont" method, but additionnaly also
+                exports all loaded smd as MIDIs, with the appropriate bank events to use
+                the correct instrument presets.
         */
         void ExportSoundfontAndMIDIs( const std::string & destdir, int nbloops = 0, bool bbakesamples = true );
 
         /*
-            Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
+            ExportSoundfontAsGM
+                Attempts to export as a sounfont, following the General MIDI standard instrument patch list.
 
-            dsetogm : A map consisting of a list of filenames associated to a vector where each indexes correspond to a
-                      dse preset entry ID (AKA instrument ID), and where the integer at that index correspond to the 
-                      GM patch number to attribute it during conversion.
+                dsetogm : A map consisting of a list of filenames associated to a vector where each indexes correspond to a
+                          dse preset entry ID (AKA instrument ID), and where the integer at that index correspond to the 
+                          GM patch number to attribute it during conversion.
         */
         void ExportSoundfontAsGM( const std::string & destf, const std::map< std::string, std::vector<int> > & dsetogm )const;
 
         /*
-            Export all music sequences to midis and export all preset data to xml + pcm16 samples!
+            ExportXMLAndMIDIs
+                Export all music sequences to midis and export all preset data to xml + pcm16 samples!
         */
         void ExportXMLAndMIDIs( const std::string & destdir, int nbloops = 0 );
+
+        /*
+            ExportMIDIs
+                Export only the sequences that were loaded to MIDI!
+        */
+        void ExportMIDIs( const std::string & destdir, const std::string & cvinfopath = "", int nbloops = 0 );
 
     //
     //
@@ -195,7 +245,7 @@ namespace DSE
         /*
             Writes a CVInfo files from the preset data currently loaded!
         */
-        void WriteBlankCvInfoFile( const std::string & destf );
+        //void WriteBlankCvInfoFile( const std::string & destf );
 
     //-----------------------------
     // State Methods
@@ -212,7 +262,7 @@ namespace DSE
                 val_t min;
                 val_t avg;
                 val_t max;
-                int   cntavg; //Count values
+                int   cntavg; //Counts nb of value samples
                 int   accavg; //Accumulate values
 
                 LimitVal()
@@ -304,7 +354,7 @@ namespace DSE
                             const DSE::KeyGroupList      & keygroups );
 
         void HandlePrgSplitBaked( sf2::SoundFont                     * destsf2, 
-                                  const DSE::ProgramInfo::SplitEntry & split,
+                                  const DSE::SplitEntry              & split,
                                   size_t                               sf2sampleid,
                                   const DSE::WavInfo                 & smplinf,
                                   const DSE::KeyGroup                & keygroup,
@@ -319,7 +369,7 @@ namespace DSE
         DSE::PresetBank           m_master;
         std::vector<smdswdpair_t> m_pairs;
 
-        audiostats                m_stats;
+        audiostats                m_stats;      //Used for research mainly. Stores statistics during processing of the DSE files
 
         BatchAudioLoader( const BatchAudioLoader & )           = delete;
         BatchAudioLoader & operator=(const BatchAudioLoader& ) = delete;
@@ -360,11 +410,33 @@ namespace DSE
 
             Return the sample type.
     */
-    WavInfo::eSmplFmt ConvertDSESample( int16_t                                smplfmt, 
-                                        size_t                                 origloopbeg,
-                                        const std::vector<uint8_t>           & in_smpl,
-                                        DSESampleConvertionInfo              & out_cvinfo,
-                                        std::vector<int16_t>                 & out_smpl );
+    eDSESmplFmt ConvertDSESample( int16_t                                smplfmt, 
+                                  size_t                                 origloopbeg,
+                                  const std::vector<uint8_t>           & in_smpl,
+                                  DSESampleConvertionInfo              & out_cvinfo,
+                                  std::vector<int16_t>                 & out_smpl );
+
+    /*
+        ConvertAndLoopDSESample
+            Converts the given raw samples from a DSE compatible format to a signed pcm16 sample.
+
+                * smplfmt    : The DSE sample type ID.
+                * origloopbeg: The begining pos of the loop, straight from the WavInfo struct !
+                * origlooplen: The lenght of the loop, straight from the WavInfo struct !
+                * nbloops    : The nb of times to loop the sample.
+                * in_smpl    : The raw sample data as bytes.
+                * out_cvinfo : The conversion info struct containing details on the resulting sample.
+                * out_smpl   : The resulting signed pcm16 sample.
+
+            Return the sample type.
+    */
+    eDSESmplFmt ConvertAndLoopDSESample( int16_t                                smplfmt, 
+                                         size_t                                 origloopbeg,
+                                         size_t                                 origlooplen,
+                                         size_t                                 nbloops,
+                                         const std::vector<uint8_t>           & in_smpl,
+                                         DSESampleConvertionInfo              & out_cvinfo,
+                                         std::vector<int16_t>                 & out_smpl );
 
 
     /*
@@ -421,7 +493,7 @@ namespace DSE
     /*
         Export the PresetBank to a directory as XML and WAV samples.
     */
-    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true, bool hexanumbers = true );
+    void ExportPresetBank( const std::string & directory, const DSE::PresetBank & bnk, bool samplesonly = true, bool hexanumbers = true, bool noconvert = true );
 
     /*
         To use the ExportSequence,

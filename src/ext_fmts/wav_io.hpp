@@ -299,11 +299,36 @@ namespace wave
 
     };
 
+    /************************************************
+        WaveTrait_PCM8
+            Trait for a PCM 8bits wav file!
+    ************************************************/
+    class WaveTrait_PCM8 : public WaveTrait< 8, uint8_t, eAudioFormat::PCM, true>
+    {
+    public:
+        template<class _init>
+           static sample_t ParseASample( _init & itread )
+        {
+            sample_t tmpsmpl = (*itread);
+            ++itread;
+            return tmpsmpl;
+        }
+
+        template<class _outit>
+           static _outit WriteASample( sample_t smpl, _outit itwrite  )
+        {
+            (*itwrite) = smpl;
+            ++itwrite;
+            return itwrite;
+        }
+
+    };
+
     /*************************************************************************
         WaveFile
             Represent a wave file and operations that can be performed on it.
     **************************************************************************/
-    template<class _WaveTrait = WaveTrait_PCM16s>
+    template<class _WaveTrait>
         class WaveFile
     {
     public:
@@ -358,7 +383,7 @@ namespace wave
 
             fmtdat.audiofmt_      =  static_cast<uint16_t>(trait_t::AudioFormat);
             fmtdat.bitspersample_ = trait_t::BitDepth;
-            fmtdat.nbchannels_    = m_samples.size();
+            fmtdat.nbchannels_    = static_cast<uint16_t>(m_samples.size());
             fmtdat.blockalign_    = (fmtdat.nbchannels_ * fmtdat.bitspersample_) / 8;
             fmtdat.samplerate_    = m_samplerate;
             fmtdat.byterate_      = (m_samplerate * fmtdat.nbchannels_ * fmtdat.bitspersample_) / 8;
@@ -486,8 +511,8 @@ namespace wave
 //=============================================================================
 //  Handy Typedefs
 //=============================================================================
-    typedef WaveFile<> PCM16sWaveFile;
-
+    typedef WaveFile<WaveTrait_PCM16s> PCM16sWaveFile;
+    typedef WaveFile<WaveTrait_PCM8>   PCM8WaveFile;
 };
 
 
