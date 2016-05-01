@@ -89,8 +89,17 @@ namespace sf2
     ***********************************************************************************/
     inline int32_t MSecsToTimecents( int32_t msecs )
     {
-        double dmsec = ( static_cast<double>(msecs) / 1000.00 );
-        return lround( 1200.00 * log2(dmsec) );
+        double sec = ( static_cast<double>(msecs) / 1000.00 );
+        //!#FIXME: I hate logs... And I hate time cents..
+        //!        I can't figure out who has the correct formula to turn msec into timecents..
+        return lround( (sec / log( 2.00 )) /*+ 6.66666 */);
+        //return lround( log(sec) / log( 2.00 ) * 1200.00 );
+        //return lround( 1200.00 * log2(sec) );
+    }
+
+    inline int32_t MSecsToTimecentsDecay( int32_t msecs )
+    {
+        return MSecsToTimecents(msecs);
     }
 
 //===========================================================================================
