@@ -77,7 +77,7 @@ namespace sf2
     static const uint32_t    SfEntryIMod_Len         = 10;
     static const uint32_t    SfEntryIGen_Len         =  4;
 
-    static const string      SF_DefIsng              = "EMU8000";
+    static const string      SF_DefIsng              = "E-mu 10K1"; // "EMU8000"; //"E-mu 10K1";
     static const string      SF_DefSft               = "ppmd_audioutil";
     static const ifilDat     SF_VersChnkData         ( 2, 1 );  //Soundfont 2.01
 
@@ -876,8 +876,10 @@ namespace sf2
                     loopbounds.second = loadedsmpl.size();
                 }
 
+#if 0
                 if( labs(loopbounds.second - loopbounds.first) != 0 )
                     MakeSampleLoopLegal( loadedsmpl, loopbounds.first, loopbounds.second );
+#endif
 
                 m_smplnewlppoints.push_back( move( std::make_pair( static_cast<size_t>(loopbounds.first), 
                                                                    static_cast<size_t>(loopbounds.second) ) ) );
@@ -1342,8 +1344,8 @@ namespace sf2
             {
                 const auto & curzone = content.GetZone(cntzone);
                 WriteABag( itout, gencnt, modcnt );
-                gencnt += curzone.GetNbGenerators();
-                modcnt += curzone.GetNbModulators();
+                gencnt += static_cast<uint16_t>( curzone.GetNbGenerators() ); //The ammount is checked before writing the sf2, so we can do this cast.
+                modcnt += static_cast<uint16_t>( curzone.GetNbModulators() );
             }
 
         }

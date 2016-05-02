@@ -3,7 +3,7 @@
 -smdlpath "originals/SOUND/BGM/" "out_audioutil_jan_midi_gm" -nofx -log "out_audioutil_jan_midi_gm/log.txt" -cvinfo "../resources/pmd2eos_cvinfo.xml" -gm -fl 2
 
 -pmd2 "originals" "out_audioutil_jan" -nofx -log "out_audioutil_jan/log.txt"
--pmd2 "originals" "out_audioutil_jan"-log "out_audioutil_jan/log.txt"
+-pmd2 "originals" "out_audioutil_jan" -log "out_audioutil_jan/log.txt"
 
 "out_audioutil_jan/10_B_SYS_MONSTERHO.mid" "MakeSMDL/10_B_SYS_MONSTERHO.smd" -log "MakeSMDL/log.txt"
 

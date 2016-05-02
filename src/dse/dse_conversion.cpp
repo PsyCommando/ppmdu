@@ -317,7 +317,8 @@ namespace DSE
         sf2::Envelope volenv;
        
         //#TODO: implement scaling by users !!!
-        DSEEnvelope interpenv = IntepretEnvelopeDuration(origenv);//IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
+        //DSEEnvelope interpenv = IntepretEnvelopeDuration(origenv);
+        DSEEnvelope interpenv = IntepretAndScaleEnvelopeDuration(origenv, 1.0, 1.0, 1.0, 1.0, 1.0 );
 
         if( utils::LibWide().isLogOn() && utils::LibWide().isVerboseOn() )
         {
@@ -370,12 +371,12 @@ namespace DSE
 
             //If decay is set to infinite, we just ignore it!
             if( origenv.decay == 0x7F )
-                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 ) /*+ sustainfactor*/;
+                volenv.decay   = sf2::MSecsToTimecentsDecay( interpenv.decay2 ) /*+ sustainfactor*/;
             else if( origenv.sustain == 0 ) //The sustain check is to avoid the case where the first decay phase already should have brought the volume to 0 before the decay2 phase would do anything. 
-                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay ) /*+ sustainfactor*/;
+                volenv.decay   = sf2::MSecsToTimecentsDecay( interpenv.decay ) /*+ sustainfactor*/;
             else
             {
-                volenv.decay = sf2::MSecsToTimecents( interpenv.decay + interpenv.decay2 ) /*+ sustainfactor*/; //Add an extra factor based on the sustain value
+                volenv.decay = sf2::MSecsToTimecentsDecay( interpenv.decay + interpenv.decay2 ) /*+ sustainfactor*/; //Add an extra factor based on the sustain value
             }
             volenv.sustain = DSE_InfiniteAttenuation_cB;
         }
@@ -386,7 +387,7 @@ namespace DSE
 
             //We use Decay
             //if( decay != 0x7F )
-                volenv.decay = sf2::MSecsToTimecents( interpenv.decay );
+                volenv.decay = sf2::MSecsToTimecentsDecay( interpenv.decay );
             //else
             //    volenv.sustain = 0; //No decay at all
         }
@@ -398,7 +399,7 @@ namespace DSE
             if( origenv.decay2 != 0x7F )
             {
                 //We want to fake the volume going down until complete silence, while the key is still held down 
-                volenv.decay   = sf2::MSecsToTimecents( interpenv.decay2 );
+                volenv.decay   = sf2::MSecsToTimecentsDecay( interpenv.decay2 );
                 volenv.sustain = DSE_InfiniteAttenuation_cB;
             }
             else
@@ -412,7 +413,7 @@ namespace DSE
                 clog <<"Handling Release..\n";
 
             //if( rel != 0x7F )
-                volenv.release = sf2::MSecsToTimecents( interpenv.release );
+                volenv.release = sf2::MSecsToTimecentsDecay( interpenv.release );
             //else
             //    volenv.release = SHRT_MAX; //Infinite
         }
@@ -754,7 +755,7 @@ namespace DSE
         //int8_t ftunes   = (dseinst.ftune) % 100; // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
 
         ////#Test set pitch from scratch:
-        //myzone.SetRootKey(dseinst.rootkey);//( (dseinst.rootkey - (dseinst.ktps + dseinst.ctune) + ctuneadd) );
+        myzone.SetRootKey(dseinst.rootkey);//( (dseinst.rootkey - (dseinst.ktps + dseinst.ctune) + ctuneadd) );
 
         ////Pitch Correction
         //if( dseinst.ftune != 0 )

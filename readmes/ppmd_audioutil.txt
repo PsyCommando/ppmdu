@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.35
+Version	   : 0.36
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -83,6 +83,17 @@ Changelog:
                              DLS isn't an alternative, as its almost just as limited. SFZ is seldom used,
                              and I don't know any players that supports those, so that's out of the question too.
                              I will make a Foobar2000 plugin instead I think.
+- 0.36 (2016/05/01) :
+        - Fixed "-nobake" generated sounfonts from sounding horribly off-pitch. Because I forgot to uncomment
+          the line assigning the root key to each samples while I was testing stuff.
+        - Removed the sample length legality check when building a soundfont. So really short samples
+          aren't mangled anymore.
+
+        + I'm still desperatly looking for help with the envelope duration calculations. Because the formula:
+            lround( 1200 * log2(durationinsecond) )
+          doesn't seems to give me accurate envelope phase durations, and that even considering that soundfont
+          envelopes are logarithmic.
+        + Still also trying to fix pitch issues with some samples.. But I got nothing..
 
 
 ----------------------------------------------------------------------------------------------------
