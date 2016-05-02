@@ -107,7 +107,7 @@ namespace compression
             All the possible operations that can be done to compress data!
             Entries 0 to 8 correspond to their respective ctrl flag indexes!
         *********************************************************************************/
-        static enum struct ePXOperation : int8_t
+        enum struct ePXOperation : int8_t
         {
             COPY_ASIS                                 =-1,
             COPY_NYBBLE_4TIMES                        = 0,

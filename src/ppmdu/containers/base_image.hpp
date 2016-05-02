@@ -32,7 +32,7 @@ namespace gimg
         typedef _Child           child_t;
         typedef _PIXEL_T         pixel_t;
 
-        //------ Methods ------
+        // ------ Methods ------
         //Access the image data like a linear 1D array
         virtual pixel_t & operator[]( unsigned int pos ) = 0;
 
@@ -114,7 +114,7 @@ namespace gimg
         //typedef _PIXEL_T pixel_t; //#FIXED: This would conflict in multi-inheritance situations
         typedef _Color_T pal_color_t;
 
-        //------ Methods ------
+        // ------ Methods ------
         //Accessors
         virtual std::vector<pal_color_t>       & getPalette()                                         = 0;
         virtual const std::vector<pal_color_t> & getPalette()const                                    = 0;
@@ -144,9 +144,9 @@ namespace gimg
     template<class _Img_T, class _outit>
         class ImgPixReader
     {
-    //---------------------------------
+    // ---------------------------------
     //       Constants + Typedefs
-    //---------------------------------
+    // ---------------------------------
     public:
         static const unsigned int BytesPerPixel = _Img_T::pixel_t::mypixeltrait_t::BYTES_PER_PIXEL;
         static const unsigned int BitsPerPixel  = _Img_T::pixel_t::mypixeltrait_t::BITS_PER_PIXEL; //If constexpr would work in vs, this would be less ugly !
@@ -157,9 +157,9 @@ namespace gimg
         typedef _outit                                                 outit_t;
 
     private:
-    //---------------------------------
+    // ---------------------------------
     //        Optimized Handlers
-    //---------------------------------
+    // ---------------------------------
         /*
             Those structs contain specialised handling code for specific types of pixels.
             They're instantiated depeneding on the pixel format of image we're handling,
@@ -181,6 +181,16 @@ namespace gimg
             Handle4bpp( parent_t * parentpixreader )
                 :m_pPixEater(parentpixreader)
             {}
+
+            Handle4bpp( const Handle4bpp & tocopy )
+                :m_pPixEater(tocopy.m_pPixEater)
+            {}
+
+            Handle4bpp & operator=( const Handle4bpp & tocopy )
+            {
+                m_pPixEater = tocopy.m_pPixEater;
+                return *this;
+            }
 
             static const bool ShouldUse = BitsPerPixel == 4 && BytesPerPixel == 1;
 
@@ -219,6 +229,22 @@ namespace gimg
                 m_itBuff = m_buffer.begin();
             }
 
+            Handle8bppMultiBytes( const Handle8bppMultiBytes & tocopy )
+                :m_pPixEater(tocopy.m_pPixEater), m_buffer(tocopy.m_buffer)
+            {
+                m_itBuff = m_buffer.begin();
+                std::advance( m_itBuff, std::distance( tocopy.m_buffer.begin(), tocopy.m_itBuff ) ); //Move iterator to same position
+            }
+
+            Handle8bppMultiBytes & operator=( const Handle8bppMultiBytes & tocopy )
+            {
+                m_pPixEater = tocopy.m_pPixEater;
+                m_buffer    = tocopy.m_buffer;
+                m_itBuff    = m_buffer.begin();
+                std::advance( m_itBuff, std::distance( tocopy.m_buffer.begin(), tocopy.m_itBuff ) ); //Move iterator to same position
+                return *this;
+            }
+
             static const bool ShouldUse = BitsPerPixel == 8 && BytesPerPixel > 1; //#FIXME: Um, this makes no sense, no ? BitsPerPixel should be > 8, right ?
 
             inline void Parse( uint8_t abyte )
@@ -249,6 +275,16 @@ namespace gimg
                 :m_pPixEater(pixreader)
             {}
 
+            Handle8bpp( const Handle8bpp & tocopy )
+                :m_pPixEater(tocopy.m_pPixEater)
+            {}
+
+            Handle8bpp & operator=( const Handle8bpp & tocopy )
+            {
+                m_pPixEater = tocopy.m_pPixEater;
+                return *this;
+            }
+
             static const bool ShouldUse = BitsPerPixel == 8 && BytesPerPixel == 1;
 
             inline void Parse( uint8_t abyte )
@@ -270,6 +306,17 @@ namespace gimg
             GenericBitHandler( parent_t * pixreader )
                 :m_bitsbuff(pixreader->m_itOut),m_pPixEater(pixreader)
             {}
+
+            GenericBitHandler( const GenericBitHandler & tocopy )
+                :m_bitsbuff(tocopy.m_pPixEater->m_itOut), m_pPixEater(tocopy.m_pPixEater)
+            {}
+
+            GenericBitHandler & operator=( const GenericBitHandler & tocopy )
+            {
+                m_pPixEater = tocopy.m_pPixEater;
+                m_bitsbuff  = tocopy.m_pPixEater->m_itOut;
+                return *this;
+            }
 
             ~GenericBitHandler()
             {
@@ -300,6 +347,18 @@ namespace gimg
                     :itout(theitout)
                 { 
                     reset();
+                }
+
+                BitEater( const BitEater & tocopy )
+                    :itout(tocopy.itout), curbit(tocopy.curbit), buffer(tocopy.buffer)
+                {}
+
+                BitEater & operator=( const BitEater & tocopy )
+                {
+                    itout  = tocopy.itout; 
+                    curbit = tocopy.curbit; 
+                    buffer = tocopy.buffer;
+                    return *this;
                 }
 
                 inline void reset()
@@ -335,9 +394,9 @@ namespace gimg
         };
 
     
-    //---------------------------------
+    // ---------------------------------
     //   Optimized handler selector
-    //---------------------------------
+    // ---------------------------------
     public:
         typedef typename std::conditional<Handle4bpp::ShouldUse, Handle4bpp,
                          typename std::conditional<Handle8bpp::ShouldUse, Handle8bpp, 
@@ -345,9 +404,9 @@ namespace gimg
                                            GenericBitHandler >::type >::type >::type
                 handlerstruct_t;    //The struct containing the optimized handling code for the pixel we're dealing with !
 
-    //---------------------------------
+    // ---------------------------------
     //     Constructor + Operator
-    //---------------------------------
+    // ---------------------------------
         explicit ImgPixReader( outit_t itoutbeg, bool bLittleEndian = true )
             :m_itOut(itoutbeg), m_bLittleEndian(bLittleEndian), m_pixelHandler(this)
         {}
@@ -358,12 +417,9 @@ namespace gimg
             //m_itOut = destimg.begin();
         }
 
-        ImgPixReader( myty_t & other )
-        {
-            m_pixelHandler  = other.m_pixelHandler;
-            m_bLittleEndian = other.m_bLittleEndian;
-            m_itOut         = other.m_itOut;
-        }
+        ImgPixReader( const myty_t & other )
+            :m_pixelHandler(other.m_pixelHandler), m_bLittleEndian(other.m_bLittleEndian), m_itOut(other.m_itOut)
+        {}
 
         ImgPixReader & operator=( uint8_t abyte )
         {
@@ -371,7 +427,7 @@ namespace gimg
             return (*this);
         }
 
-        ImgPixReader & operator=( myty_t & other )
+        ImgPixReader & operator=( const myty_t & other )
         {
             m_pixelHandler  = other.m_pixelHandler;
             m_bLittleEndian = other.m_bLittleEndian;
@@ -394,9 +450,9 @@ namespace gimg
         class ImgPixWriter
     {
     public:
-    //---------------------------------
+    // ---------------------------------
     //       Constants + Typedefs
-    //---------------------------------
+    // ---------------------------------
     
         static const unsigned int BytesPerPixel = _Pixel_T::mypixeltrait_t::BYTES_PER_PIXEL;
         static const unsigned int BitsPerPixel  = _Pixel_T::mypixeltrait_t::BITS_PER_PIXEL; //If constexpr would work in vs, this would be less ugly !
@@ -410,9 +466,13 @@ namespace gimg
 
     public:
         ImgPixWriter( container_t & container, bool blittleendian = true )
-            :m_container(container),m_bLittleEndian(blittleendian), m_pixelHandler( (*const_cast<my_t*>(this)))
+            :m_container(std::addressof(container)),m_bLittleEndian(blittleendian), m_pixelHandler( (*const_cast<my_t*>(this)))
         {
         }
+
+        ImgPixWriter( const my_t & tocopy )
+            :m_container(tocopy.m_container),m_bLittleEndian(tocopy.m_bLittleEndian), m_pixelHandler(tocopy.m_pixelHandler)
+        {}
 
         ~ImgPixWriter()
         {
@@ -453,13 +513,17 @@ namespace gimg
             static const bool IsAdequate = (BitsPerPixel > 8) && (BitsPerPixel % 8 == 0) && (BytesPerPixel > 1);
 
             HndlrMBy( my_t & parent )
-                :m_pixwriter(parent)
+                :m_pixwriter(std::addressof(parent))
+            {}
+
+            HndlrMBy( const HndlrMBy & tocopy )
+                :m_pixwriter(tocopy.m_pixwriter)
             {}
 
             void Convert( const pixel_t & pix )
             {
                 for( unsigned int i = 0; i < BytesPerPixel; ++i )
-                    parent.m_container.push_back( static_cast<uint8_t>( pix.getWholePixelData() >> (i * 8) ) );
+                    m_pixwriter->m_container.push_back( static_cast<uint8_t>( pix.getWholePixelData() >> (i * 8) ) );
             }
 
             /*
@@ -469,7 +533,7 @@ namespace gimg
             {
             }
 
-            my_t & m_pixwriter;
+            my_t * m_pixwriter;
         };
 
         /*
@@ -480,12 +544,16 @@ namespace gimg
             static const bool IsAdequate = (BitsPerPixel == 8) && (BytesPerPixel == 1);
 
             Hndlr8bpp( my_t & parent )
-                :m_pixwriter(parent)
+                :m_pixwriter(std::addressof(parent))
+            {}
+
+            Hndlr8bpp( const Hndlr8bpp & tocopy )
+                :m_pixwriter(tocopy.m_pixwriter)
             {}
 
             void Convert( const pixel_t & pix )
             {
-                m_pixwriter.m_container.push_back(pix.getWholePixelData());
+                m_pixwriter->m_container->push_back(pix.getWholePixelData());
             }
 
             /*
@@ -495,7 +563,7 @@ namespace gimg
             {
             }
 
-            my_t & m_pixwriter;
+            my_t * m_pixwriter;
         };
 
         /*
@@ -506,14 +574,18 @@ namespace gimg
             static const bool IsAdequate = (BitsPerPixel == 4) && (BytesPerPixel == 1);
 
             Hndlr4bpp( my_t & parent )
-                :m_pixwriter(parent), m_writeSlot2(false), m_buf(0)
+                :m_pixwriter(std::addressof(parent)), m_writeSlot2(false), m_buf(0)
+            {}
+
+            Hndlr4bpp( const Hndlr4bpp & tocopy )
+                :m_pixwriter(tocopy.m_pixwriter), m_writeSlot2(tocopy.m_writeSlot2), m_buf(tocopy.m_buf)
             {}
 
             void Convert( const pixel_t & pix )
             {
                 if( !m_writeSlot2 )
                 {
-                    if( m_pixwriter.m_bLittleEndian )
+                    if( m_pixwriter->m_bLittleEndian )
                         m_buf |= (pix.getWholePixelData() & 0xf);
                     else
                         m_buf |= ((pix.getWholePixelData() & 0xf) << 4);
@@ -521,12 +593,12 @@ namespace gimg
                 }
                 else
                 {
-                    if( m_pixwriter.m_bLittleEndian )
+                    if( m_pixwriter->m_bLittleEndian )
                         m_buf |= ((pix.getWholePixelData() & 0xf) << 4 );
                     else
                         m_buf |= (pix.getWholePixelData() & 0xf);
 
-                    m_pixwriter.m_container.push_back(m_buf);
+                    m_pixwriter->m_container.push_back(m_buf);
                     m_writeSlot2 = false;
                     m_buf = 0;
                 }
@@ -539,7 +611,7 @@ namespace gimg
             {
                 if( m_writeSlot2 )
                 {
-                    m_pixwriter.m_container.push_back(m_buf);
+                    m_pixwriter->m_container.push_back(m_buf);
                     m_writeSlot2 = false;
                     m_buf = 0;
                 }
@@ -547,7 +619,7 @@ namespace gimg
 
             bool      m_writeSlot2; //If False, fill first slot, if true, fill second slot!
             uint8_t   m_buf;
-            my_t    & m_pixwriter;
+            my_t    * m_pixwriter;
         };
 
         /*
@@ -559,12 +631,16 @@ namespace gimg
             static const bool IsAdequate = !Hndlr4bpp::IsAdequate && !Hndlr8bpp::IsAdequate && !HndlrMBy::IsAdequate;
 
             HndlrBit( my_t & parent )
-                :m_pixwriter(parent), m_curbit(0), m_buf(0)
+                :m_pixwriter(std::addressof(parent)), m_curbit(0), m_buf(0)
+            {}
+
+            HndlrBit( const HndlrBit & tocopy )
+                :m_pixwriter(tocopy.m_pixwriter), m_curbit(tocopy.m_curbit), m_buf(tocopy.m_buf)
             {}
 
             void Convert( const pixel_t & pix )
             {
-                if( m_pixwriter.m_bLittleEndian )
+                if( m_pixwriter->m_bLittleEndian )
                     ConvertLittleEndian(pix);
                 else
                     ConvertBigEndian(pix);
@@ -583,7 +659,7 @@ namespace gimg
                         --m_curbit;
                     else
                     {
-                        m_pixwriter.m_container.push_back(m_buf);
+                        m_pixwriter->m_container->push_back(m_buf);
                         m_curbit = 7;
                         m_buf    = 0;
                     }
@@ -601,7 +677,7 @@ namespace gimg
                         ++m_curbit;
                     else
                     {
-                        m_pixwriter.m_container.push_back(m_buf);
+                        m_pixwriter->m_container->push_back(m_buf);
                         m_curbit = 0;
                         m_buf    = 0;
                     }
@@ -613,15 +689,15 @@ namespace gimg
             */
             void Flush()
             {
-                if( m_pixwriter.m_bLittleEndian && m_curbit > 0 )
+                if( m_pixwriter->m_bLittleEndian && m_curbit > 0 )
                 {
-                    m_pixwriter.m_container.push_back(m_buf);
+                    m_pixwriter->m_container->push_back(m_buf);
                     m_curbit = 0;
                     m_buf    = 0;
                 }
-                else if( !m_pixwriter.m_bLittleEndian && m_curbit < 7 )
+                else if( !m_pixwriter->m_bLittleEndian && m_curbit < 7 )
                 {
-                    m_pixwriter.m_container.push_back(m_buf);
+                    m_pixwriter->m_container->push_back(m_buf);
                     m_curbit = 7;
                     m_buf    = 0;
                 }
@@ -629,7 +705,7 @@ namespace gimg
 
             uint8_t   m_curbit;
             uint8_t   m_buf;
-            my_t    & m_pixwriter;
+            my_t    * m_pixwriter;
         };
 
         /*
@@ -643,7 +719,7 @@ namespace gimg
                 pixhndlr_t;
 
     private:
-        container_t & m_container;
+        container_t * m_container;
         bool          m_bLittleEndian;
         pixhndlr_t    m_pixelHandler;
     };

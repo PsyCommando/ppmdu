@@ -49,6 +49,8 @@ namespace pmd2{ namespace graphics
             case eRes::_64x32: return graphics::RES_64x32_SPRITE;
             case eRes::_32x64: return graphics::RES_32x64_SPRITE;
         };
+
+        clog << "<!>- MetaFrame::eResToResolution() : Invalid Resolution!";
         assert(false); //Asked for invalid resolution !
         return RES_INVALID;
     }
@@ -97,13 +99,13 @@ namespace pmd2{ namespace graphics
         //Get the resolution
         resolution      = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
         
-        //x offset flags
+        // x offset flags
         vFlip           = utils::IsBitOn( offxfl, 13u );
         hFlip           = utils::IsBitOn( offxfl, 12u );
         out_isLastFrm   = utils::IsBitOn( offxfl, 11u ); //X bit 5, tells whether this is the last meta-f in a grp
         XOffbit6        = utils::IsBitOn( offxfl, 10u );
         XOffbit7        = utils::IsBitOn( offxfl,  9u );
-        //y offset flags
+        // y offset flags
         YOffbit3        = utils::IsBitOn( offyfl, 13u );
         Mosaic          = utils::IsBitOn( offyfl, 12u );
         YOffbit5        = utils::IsBitOn( offyfl, 11u );
