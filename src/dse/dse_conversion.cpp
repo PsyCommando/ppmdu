@@ -93,8 +93,8 @@ namespace DSE
 
 namespace DSE
 {
-    static const uint16_t DSE_InfiniteAttenuation_cB = 1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
-    static const uint16_t DSE_LowestAttenuation_cB   =  250;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
+    static const uint16_t DSE_InfiniteAttenuation_cB =  960;//1440;//1440; //sf2::SF_GenLimitsInitAttenuation.max_;
+    static const uint16_t DSE_LowestAttenuation_cB   =  300;//200; //This essentially defines the dynamic range of the tracks. It sets how low the most quiet sound can go. Which is around -20 dB
     static const uint16_t DSE_SustainFactor_msec     = 3000; //An extra time value to add to the decay when decay1 + decay2 are combined, and the sustain is non-zero
 
 
@@ -243,6 +243,7 @@ namespace DSE
         return static_cast<int16_t>( lround( 1200.00 * log2( static_cast<double>(freqhz) / ReferenceFreq ) ) );
     }
 
+    //!#FIXME: MOST LIKELY INNACURATE !
     inline int16_t DSE_LFODepthToCents( int16_t depth )
     {
         return (depth/12) * -1; /*static_cast<int16_t>( lround(depth * 12000.0 / 10000.0 ) )*/;
@@ -295,6 +296,7 @@ namespace DSE
         outenv.attack  = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.attack),  outenv.envmulti) *     atkf * ovrllscale ) );
         outenv.hold    = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.hold),    outenv.envmulti) *    holdf * ovrllscale ) );
         outenv.decay   = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay),   outenv.envmulti) *   decayf * ovrllscale ) );
+        outenv.decay2  = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay2),  outenv.envmulti) *   decayf * ovrllscale ) );
         outenv.release = static_cast<DSEEnvelope::timeprop_t>( lround( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.release), outenv.envmulti) * releasef * ovrllscale ) );
         return outenv;
     }
@@ -305,6 +307,7 @@ namespace DSE
         outenv.attack  = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.attack),  outenv.envmulti) );
         outenv.hold    = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.hold),    outenv.envmulti) );
         outenv.decay   = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay),   outenv.envmulti) );
+        outenv.decay2  = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.decay2),  outenv.envmulti) );
         outenv.release = static_cast<DSEEnvelope::timeprop_t>( DSEEnveloppeDurationToMSec( static_cast<int8_t>(outenv.release), outenv.envmulti) );
         return outenv;
     }
@@ -481,12 +484,12 @@ namespace DSE
                                   DSESampleConvertionInfo              & out_cvinfo,
                                   std::vector<int16_t>                 & out_smpl )
     {
-        if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+        if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm4) )
         {
             out_smpl = move(::audio::DecodeADPCM_NDS( in_smpl ) );
             out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
             out_cvinfo.loopend_ = out_smpl.size(); /*::audio::ADPCMSzToPCM16Sz(in_smpl.size() );*/
-            return eDSESmplFmt::ima_adpcm;
+            return eDSESmplFmt::ima_adpcm4;
         }
         else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
         {
@@ -512,13 +515,13 @@ namespace DSE
 
             return eDSESmplFmt::pcm16;
         }
-        else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
+        else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm3) )
         {
             clog << "<!>- Warning: ConvertDSESample(): Samplefmt PSG ???\n";
 #ifdef _DEBUG
             assert(false);
 #endif
-            return eDSESmplFmt::psg;
+            return eDSESmplFmt::ima_adpcm3;
         }
         else
             return eDSESmplFmt::invalid;
@@ -533,7 +536,7 @@ namespace DSE
     //                                     DSESampleConvertionInfo              & out_cvinfo,
     //                                     std::vector<int16_t>                 & out_smpl )
     //{
-    //    if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+    //    if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm4) )
     //    {
     //        auto postconv = move( ::audio::LoopAndConvertADPCM_NDS( in_smpl, origloopbeg, origlooplen, nbloops, 1 ) );
     //        
@@ -542,7 +545,7 @@ namespace DSE
     //        out_smpl = move(postconv.first.front());
     //        //out_cvinfo.loopbeg_ = (origloopbeg - SizeADPCMPreambleWords) * 8; //loopbeg is counted in int32, for APCM data, so multiply by 8 to get the loop beg as pcm16. Subtract one, because of the preamble.
     //        //out_cvinfo.loopend_ = ::audio::ADPCMSzToPCM16Sz(in_smpl.size() );
-    //        return eDSESmplFmt::ima_adpcm;
+    //        return eDSESmplFmt::ima_adpcm4;
     //    }
     //    else if( smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm8) )
     //    {
@@ -998,7 +1001,7 @@ namespace DSE
             Sample::smplcount_t loopbeg = 0;
             Sample::smplcount_t loopend = 0;
 
-            if( cursminf.smplfmt == eDSESmplFmt::ima_adpcm )
+            if( cursminf.smplfmt == eDSESmplFmt::ima_adpcm4 )
             {
                 loadfun = std::move( std::bind( ::audio::DecodeADPCM_NDS, std::ref( *samples->sample(cntsmslot) ), 1 ) );
                 smpllen = ::audio::ADPCMSzToPCM16Sz(samples->sample(cntsmslot)->size() );
@@ -1019,7 +1022,7 @@ namespace DSE
                 loopbeg = cursminf.loopbeg * 4; //loopbeg is counted in int32, for PCM8 data, so multiply by 4 to get the loop beg as pcm16
                 loopend = smpllen;
             }
-            else if( cursminf.smplfmt == eDSESmplFmt::psg )
+            else if( cursminf.smplfmt == eDSESmplFmt::ima_adpcm3 )
             {
                 //stringstream sstrerr;
                 //sstrerr << "PSG instruments unsuported!";
@@ -1090,34 +1093,50 @@ namespace DSE
 
         //Fetch Loop Flag
         if( smplinf.smplloop != 0 )
-            myzone.SetSmplMode( eSmplMode::loop );
+        {
+            if( smplinf.smplloop == 1 )
+                myzone.SetSmplMode( eSmplMode::loop );
+            else if( smplinf.smplloop == 3 )
+                myzone.SetSmplMode( eSmplMode::loopWhileHold );
+        }
 
         //Since the soundfont format has no control on polyphony, we can only cut keygroup that only allow a single voice
         if( split.kgrpid != 0 )
             presetcvinf.maxpoly = keygroup.poly; //let the midi converter handle anything else
 
-        int8_t ctuneadd = (split.ftune) / 100;/*100;*/
-        int8_t ftunes   = (split.ftune) % 100;/*100;*/ // utils::Clamp( dseinst.ftune, sf2::SF_GenLimitsFineTune.min_, sf2::SF_GenLimitsFineTune.max_ ); 
+        //Compute the diff between the sample's and the split's tuning values
+        uint8_t rawftune        = static_cast<uint8_t>( lround( (split.ftune / 255.0) * 100.0) );
+        int8_t  finetunevalue   = (rawftune%100);
+        int8_t  coarsetunevalue = split.ctune + (rawftune/100);
+        int8_t  rootkey         = smplinf.rootkey - split.ktps;
 
+        //!#DELETEME: Once pitch is fixed!
+        if( utils::LibWide().isLogOn() )
+        {
+            clog << "==>Smpl # " <<smplinf.id << "\n"
+                 << "\t=>RootKeySet          : " <<static_cast<short>(rootkey) << "\n"
+                 << "\t=>ctune smpl vs split : " <<static_cast<short>(smplinf.ctune) <<" vs " <<static_cast<short>(split.ctune) <<"\n"
+                 << "\t=>ftune smpl vs split : " <<static_cast<short>(smplinf.ftune) <<" vs " <<static_cast<short>(split.ftune) <<"\n"
+                 << "\t=>coarsetunevalue     : " <<static_cast<short>(coarsetunevalue) <<"\n"
+                 << "\t=>finetunevalue       : " <<static_cast<short>(finetunevalue) <<"\n"
+                ;
+        }
+        
+        myzone.SetRootKey(rootkey);
 
-        //Root Pitch
-        myzone.SetRootKey( split.rootkey ); // + (split.ktps + split.ctune) + ctuneadd ); //split.rootkey
-        //myzone.SetRootKey( split.rootkey + (/*split.ktps +*/ split.ctune) + ctuneadd );
-        //cout << "\trootkey :" << static_cast<short>(split.rootkey + (split.ktps + split.ctune) + ctuneadd) <<"\n"; 
+        m_stats.rootkey  .Process(rootkey);
+        m_stats.ftunesmpl.Process(smplinf.ftune);
+        m_stats.ctunesmpl.Process(smplinf.ctune);
+        m_stats.ftunesplt.Process(split.ftune);
+        m_stats.ctunesplt.Process(split.ctune);
+        m_stats.ktpssplt .Process(split.ktps);
+        m_stats.ktpssmpl .Process(smplinf.ktps);
 
-        //Pitch Correction
-        //if( split.ftune != 0 )
-        //    myzone.SetFineTune( ftunes );
+        if( finetunevalue != 0 )
+            myzone.SetFineTune(finetunevalue);
 
-        //if( split.ctune != DSE::DSEDefaultCoarseTune )
-        //    myzone.SetCoarseTune( split.ctune );
-
-        //Pitch Correction
-        //if( split.ftune != 0 )
-        //    myzone.SetFineTune( ftunes/*split.ftune*/ );
-
-        //if( split.ctune != DSE::DSEDefaultCoarseTune )
-        //    myzone.SetCoarseTune( /*( split.ctune + 7 ) +*/ split.ctune + ctuneadd );
+        //if( coarsetunevalue != 0 )
+        //    myzone.SetCoarseTune(coarsetunevalue);
 
         //Volume
         if( split.smplvol != DSE_LimitsVol.def_ )
@@ -1134,8 +1153,8 @@ namespace DSE
         //Set the envelope
         myzone.SetVolEnvelope( myenv );
         
-        if( split.env.release != 0 )
-            myzone.AddGenerator( eSFGen::releaseVolEnv, static_cast<sf2::genparam_t>( lround(myenv.release * 1.1) ) );
+        //if( split.env.release != 0 )
+        //    myzone.AddGenerator( eSFGen::releaseVolEnv, static_cast<sf2::genparam_t>( lround(myenv.release * 1.1) ) );
 
         //Sample ID in last
         myzone.SetSampleId( sf2sampleid );
@@ -1303,7 +1322,8 @@ namespace DSE
                                 0,
                                 0,
                                 cursmplsinf[cntsplit].smplrate,
-                                cursplit.rootkey );
+                                cursmplsinf[cntsplit].rootkey/*,
+                                static_cast<uint8_t>(lround((cursmplsinf[cntsplit].ftune / 255.0) * 100.0))%100 */ );
 
             if( cursmplsinf[cntsplit].smplloop != 0 )
                 sampl.SetLoopBounds( cursmplsinf[cntsplit].loopbeg, cursmplsinf[cntsplit].loopbeg + cursmplsinf[cntsplit].looplen );
@@ -1548,10 +1568,15 @@ namespace DSE
                 }
                 else
                 {
+                    cerr << "\n<!>- ERROR: BatchAudioLoader::ExportSoundfont(): Got nullptr for a conversion info entry!!\n";
                     assert(false); //This should never happen..
                 }
             }
         }
+
+        //Print Stats
+        if( utils::LibWide().isLogOn() )
+            clog << m_stats.Print();
 
         //Write the soundfont
         try
@@ -2192,7 +2217,7 @@ namespace DSE
                     else
                         sstrname <<right <<setw(4) <<setfill('0') << cntsmpl;
 
-                    if( ptrinfo->smplfmt == eDSESmplFmt::ima_adpcm && noconvert )
+                    if( ptrinfo->smplfmt == eDSESmplFmt::ima_adpcm4 && noconvert )
                     {
                         //wave::IMAADPCMWaveFile outwave;
 
@@ -2248,7 +2273,7 @@ namespace DSE
 
                         switch( ConvertDSESample( static_cast<uint16_t>(ptrinfo->smplfmt), ptrinfo->loopbeg, *ptrdata, cvinf, outwave.GetSamples().front() ) )
                         {
-                            case eDSESmplFmt::ima_adpcm:
+                            case eDSESmplFmt::ima_adpcm4:
                             {
                                 sstrname <<"_adpcm";
                                 break;
@@ -2263,11 +2288,7 @@ namespace DSE
                                 sstrname <<"_pcm16";
                                 break;
                             }
-                            case eDSESmplFmt::psg:
-                            {
-                                clog <<"<!>- Sample# " <<cntsmpl <<" is an unsported PSG sample and was skipped!\n";
-                                break;
-                            }
+                            case eDSESmplFmt::ima_adpcm3:
                             case eDSESmplFmt::invalid:
                             {
                                 clog <<"<!>- Sample# " <<cntsmpl <<" is in an unknown unsported format and was skipped!\n";

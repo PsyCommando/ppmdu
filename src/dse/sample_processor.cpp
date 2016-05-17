@@ -140,25 +140,18 @@ namespace DSE
             // ---- Handle Enveloppe ----
             if( split.envon != 0 )
             {
-                double volumeFactor = ( static_cast<int>(prgminf.prgvol * 100 / 127) / 100.0) * ( static_cast<int>(split.smplvol * 100 / 127) / 100.0);
+                //double volumeFactor = ( static_cast<int>(prgminf.prgvol * 100 / 127) / 100.0) * ( static_cast<int>(split.smplvol * 100 / 127) / 100.0);
+                double volumeFactor = (prgminf.prgvol / 127.0) * ( split.smplvol / 127.0);
 
                 if( IsSampleLooped )
                 {
-                    if( psmplinf->smplfmt != eDSESmplFmt::pcm16 ) //!#FIXME: This is a temporary fix for the pitch issue with pcm16 samples. It makes some samples not loop, and it doesn't fix all samples however..
+                    if( psmplinf->smplfmt != eDSESmplFmt::pcm16 ) //!#FIXME: This is a temporary fix for the pitch issue with pcm16 samples. It doesn't fix all samples however..
                     {
                     if( ShouldUnloop )
                     {
                         //Loop the sample a few times, so its as long as the envelope
                         if( envtotaldursmpl > entry.splitsamples[curindex].size() )
-                            Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop );
-
-            ////!###TEST####
-            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
-            //uint32_t   presmplrate                = psmplinf->smplrate;
-            //uint32_t   Newsmplrate                = std::lround((static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(SampleLenPreLengthen)) / 100.0) * presmplrate;
-            //if( bispcm16 )
-            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
-            ////!###TEST####
+                            Lenghten( entry.splitsamples[curindex], envtotaldursmpl, postconvloop ); 
 
                         //We render the envelope and disable looping
                         ApplyEnveloppe( entry.splitsamples[curindex], split.env, psmplinf->smplrate, volumeFactor );
@@ -169,14 +162,15 @@ namespace DSE
                         //Loop the sample a few times, so its as long as the envelope
                         if( envtotaldursmpl > entry.splitsamples[curindex].size() )
                         {
-                            int          nbextraloops = 0;
+                            unsigned int nbextraloops = 0;
                             const size_t durtoloop    = envtotaldursmpl - SampleLenPreLengthen; //entry.splitsmplinf[curindex].loopbeg;
                             //const size_t resultinglength  = envtotaldursmpl + ( durofunloopedenv % entry.splitsmplinf[curindex].looplen );
                             
+                            //Check if the nb of extra samples to loop for is divisible by the loop lenght!
                             if( ( durtoloop % entry.splitsmplinf[curindex].looplen ) != 0 )
-                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen) + 1;
+                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen) + 1; //!#FIXME : TOO LONG!!
                             else
-                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen);
+                                nbextraloops = (durtoloop / entry.splitsmplinf[curindex].looplen); //!#FIXME : TOO LONG!!
 
                             LenghtenByNbLoops( entry.splitsamples[curindex], nbextraloops, postconvloop );
 
@@ -203,23 +197,14 @@ namespace DSE
                         //else
                         //    nbreleaselp = (releasenbsmpls / entry.splitsmplinf[curindex].looplen);
                         //
-                        //LenghtenByNbLoops( entry.splitsamples[curindex], nbreleaselp, postconvloop );
-
                         //const double sustainlvl   = ( ( (static_cast<double>(split.env.sustain) * 100.0 ) / 128.0 ) / 100.0) * split.env.envmulti;
                         //if( split.env.decay2 == 0x7F )
+                        //{
+                        //    LenghtenByNbLoops( entry.splitsamples[curindex], nbreleaselp, postconvloop );
                         //    LerpVol( releasebeg, releasenbsmpls, sustainlvl, 0.0, entry.splitsamples[curindex] ); 
+                        //    entry.splitsmplinf[curindex].smplloop = 3; //Set loopmode to 3 (That's not in the DSE specs, but its a cheap way to get the SF to have the right loopmode)
+                        //}
                         ////!###Test release###
-
-
-            ////!###TEST####
-            //const bool bispcm16                   = (psmplinf->smplfmt == eDSESmplFmt::pcm16);
-            //uint32_t   presmplrate                = psmplinf->smplrate;
-            //double     oldratio                   = static_cast<double>(SampleLenPreLengthen)                / static_cast<double>(presmplrate);
-            //double     newratio                   = static_cast<double>(entry.splitsamples[curindex].size()) / static_cast<double>(presmplrate);
-            //uint32_t   Newsmplrate                = std::lround(( static_cast<double>(entry.splitsamples[curindex].size())) *  fabs( oldratio ) );
-            //if( bispcm16 )
-            //    entry.splitsmplinf[curindex].smplrate = Newsmplrate;
-            ////!###TEST####
 
                         //Move the loop to the end
                         entry.splitsmplinf[curindex].loopbeg = (actualnewloopbeg > SampleLenPreLengthen)? actualnewloopbeg : SampleLenPreLengthen;
@@ -246,33 +231,33 @@ namespace DSE
             }
 
             // ---- Extra Processing ----
-            if( ShouldResample() && m_desiredsmplrate != psmplinf->smplrate )
-            {
-                const size_t smplszbefresample = entry.splitsamples[curindex].size();
-                DSESampleConvertionInfo postresampleloop;
-                postresampleloop.loopbeg_ = entry.splitsmplinf[curindex].loopbeg;
-                postresampleloop.loopend_ = (entry.splitsmplinf[curindex].loopbeg + entry.splitsmplinf[curindex].looplen);
-
-                if( Resample( entry.splitsamples[curindex], psmplinf->smplrate, m_desiredsmplrate, postresampleloop ) )
-                {
-                    //Update loop points
-                    entry.splitsmplinf[curindex].loopbeg = postresampleloop.loopbeg_;
-
-                    if( postresampleloop.loopend_ > entry.splitsamples[curindex].size() )
-                        postresampleloop.loopend_ = entry.splitsamples[curindex].size();
-
-                    entry.splitsmplinf[curindex].looplen = (postresampleloop.loopend_ - postresampleloop.loopbeg_);
-
-                    const size_t szafterfix = ( entry.splitsmplinf[curindex].looplen + entry.splitsmplinf[curindex].loopbeg );
-
-#ifdef DEBUG
-                    assert( ( szafterfix < entry.splitsamples[curindex].size() ) );
-#endif
-
-                    //Update sample rate info
-                    entry.splitsmplinf[curindex].smplrate = m_desiredsmplrate;
-                }
-            }
+//            if( ShouldResample() && m_desiredsmplrate != psmplinf->smplrate )
+//            {
+//                const size_t smplszbefresample = entry.splitsamples[curindex].size();
+//                DSESampleConvertionInfo postresampleloop;
+//                postresampleloop.loopbeg_ = entry.splitsmplinf[curindex].loopbeg;
+//                postresampleloop.loopend_ = (entry.splitsmplinf[curindex].loopbeg + entry.splitsmplinf[curindex].looplen);
+//
+//                if( Resample( entry.splitsamples[curindex], psmplinf->smplrate, m_desiredsmplrate, postresampleloop ) )
+//                {
+//                    //Update loop points
+//                    entry.splitsmplinf[curindex].loopbeg = postresampleloop.loopbeg_;
+//
+//                    if( postresampleloop.loopend_ > entry.splitsamples[curindex].size() )
+//                        postresampleloop.loopend_ = entry.splitsamples[curindex].size();
+//
+//                    entry.splitsmplinf[curindex].looplen = (postresampleloop.loopend_ - postresampleloop.loopbeg_);
+//
+//                    const size_t szafterfix = ( entry.splitsmplinf[curindex].looplen + entry.splitsmplinf[curindex].loopbeg );
+//
+//#ifdef DEBUG
+//                    assert( ( szafterfix < entry.splitsamples[curindex].size() ) );
+//#endif
+//
+//                    //Update sample rate info
+//                    entry.splitsmplinf[curindex].smplrate = m_desiredsmplrate;
+//                }
+//            }
             if( ShouldApplyFilters() )
             {
                 ApplyFilters( entry.splitsamples[curindex], entry.splitsmplinf[curindex].smplrate );
@@ -418,8 +403,8 @@ namespace DSE
 
         void LerpVol( size_t begsmpl, size_t endsmpl, double initvol, double destvol, vector<int16_t> & smpl )
         {
-            if( initvol != destvol )
-            {
+            //if( initvol != destvol )
+            //{
                 //Lerp the volume between the two values
                 size_t dist        = endsmpl - begsmpl;
                 double rate        = (destvol - initvol) / dist;
@@ -438,23 +423,23 @@ namespace DSE
                     smpl[cntlerp] = static_cast<int16_t>( scaledsmpl );
                     curvolratio  += rate;
                 }
-            }
-            else
-            {
-                //If there's no differences, just set everything to the same volume
-                for( size_t cntlerp = begsmpl; cntlerp < endsmpl; ++cntlerp )
-                {
-                    double scaledsmpl = lround( smpl[cntlerp] * destvol );
+            //}
+            //else
+            //{
+            //    //If there's no differences, just set everything to the same volume
+            //    for( size_t cntlerp = begsmpl; cntlerp < endsmpl; ++cntlerp )
+            //    {
+            //        double scaledsmpl = lround( smpl[cntlerp] * destvol );
 
-                    //Clamp
-                    if( scaledsmpl > SHRT_MAX )
-                        scaledsmpl = SHRT_MAX;
-                    else if( scaledsmpl < SHRT_MIN )
-                        scaledsmpl = SHRT_MIN;
+            //        //Clamp
+            //        if( scaledsmpl > SHRT_MAX )
+            //            scaledsmpl = SHRT_MAX;
+            //        else if( scaledsmpl < SHRT_MIN )
+            //            scaledsmpl = SHRT_MIN;
 
-                    smpl[cntlerp] = static_cast<int16_t>( scaledsmpl );
-                }
-            }
+            //        smpl[cntlerp] = static_cast<int16_t>( scaledsmpl );
+            //    }
+            //}
         }
 
         /*

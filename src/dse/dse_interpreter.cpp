@@ -22,7 +22,7 @@
 
 
 #ifndef AUDIOUTIL_VER
-    #define AUDIOUTIL_VER "Poochyena"
+    #define AUDIOUTIL_VER "Poochyena_lol"
 #endif
 
 using namespace std;
@@ -38,9 +38,6 @@ namespace DSE
     static const int8_t DSE_MaxOctave      = 9; //The maximum octave value possible to handle
     const int           NbMidiKeysInOctave = static_cast<uint8_t>(eNote::nbNotes);
     const uint8_t       MIDIDrumChannel    = 9;
-
-    //const int8_t        NBMidiOctaves      = 128 / NbMidiKeysInOctave; //128 keys total, 12 keys per octave
-
     static const uint8_t MIDI_CC32_BankLSB = 32; 
 
     //
@@ -364,8 +361,9 @@ namespace DSE
                     state.chanoverriden  = false;
                     state.ovrchan_       = UCHAR_MAX;
 
-                    clog << "Couldn't find a matching bank for preset #" 
-                         << static_cast<short>(ev.params.front()) <<" ! Setting to bank " <<state.curbank_ <<" !\n";
+                    clog << "Unspecified program # " 
+                         << static_cast<short>(ev.params.front()) <<" being used in the track! Prefixing a bank change to bank #" 
+                         <<state.curbank_                         <<" to mark the invalid program!\n";
                 }
 
             }
@@ -531,7 +529,7 @@ namespace DSE
                     case eTrkEventCodes::PitchBend: //################### FIXME LATER ######################
                     {
                         //NOTE: Pitch bend's range is implementation specific in MIDI. Though PMD2's pitch bend range may vary per program split
-                        mess.SetPitchBend( trkchan, ( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back() ) ) );
+                        mess.SetPitchBend( trkchan, ( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back()) ) );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
                         break;

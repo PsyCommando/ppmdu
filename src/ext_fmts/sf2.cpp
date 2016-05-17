@@ -193,6 +193,7 @@ namespace sf2
                 - loopend < (end - 7)
                 - (loopend - loopend) >= 32 
     **************************************************************************************/
+#if 0
     std::vector<pcm16s_t> & MakeSampleLoopLegal( std::vector<pcm16s_t> & sample, uint32_t & loopbeg, uint32_t & loopend )
     {
         const size_t          smpllen      = sample.size();
@@ -280,6 +281,7 @@ namespace sf2
         sample = std::move(legalloop);
         return sample;
     }
+#endif
     //{
     //    const size_t          smpllen      = sample.size();
     //    const int32_t         looplen      = loopend - loopbeg;
@@ -1859,7 +1861,8 @@ namespace sf2
         if( tune != SF_GenLimitsCoarseTune.def_ )
             AddGenerator( eSFGen::coarseTune, utils::Clamp( tune, SF_GenLimitsCoarseTune.min_, SF_GenLimitsCoarseTune.max_ ) );
 #else
-        AddGenerator( eSFGen::coarseTune, tune );
+        if( tune != SF_GenLimitsCoarseTune.def_ )
+            AddGenerator( eSFGen::coarseTune, tune );
 #endif
     }
     
@@ -1883,8 +1886,13 @@ namespace sf2
     */
     void BaseGeneratorUser::SetFineTune( int16_t ftune )
     {
+#if 0
         if( ftune != SF_GenLimitsFineTune.def_ )
             AddGenerator( eSFGen::fineTune, utils::Clamp( ftune, SF_GenLimitsFineTune.min_, SF_GenLimitsFineTune.max_ ) );
+#else
+        if( ftune != SF_GenLimitsFineTune.def_ )
+            AddGenerator( eSFGen::fineTune, ftune );
+#endif
     }
 
     int16_t BaseGeneratorUser::GetFineTune()const

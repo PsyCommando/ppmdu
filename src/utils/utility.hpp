@@ -16,6 +16,8 @@ Description: A header with a bunch of useful includes for the PPMD utilities.
 #include <iosfwd>
 #include <type_traits>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 namespace utils
 {
@@ -209,6 +211,40 @@ namespace utils
             Use this to make a pause for user input that will work on any OS.
     ************************************************************************************/
     void PortablePause();
+
+
+    /************************************************************************************
+        PrintHex
+            Functor that prints numbers as hexadecimal values
+    ************************************************************************************/
+
+    template<typename T, unsigned int TPadLen = (sizeof(T) * 2)>
+        inline std::string _PrintHex( T value, bool putpadding = true )
+    {
+        std::stringstream sstr;
+        sstr <<"0x";
+        sstr << std::setw( putpadding? TPadLen : 0 )  <<std::setfill('0');
+        sstr <<std::hex <<std::uppercase << value;
+        return sstr.str();
+    }
+
+    template<typename T>
+        inline std::string PrintHex( T value, bool putpadding = true )
+    {
+        return _PrintHex(value, putpadding);
+    }
+
+    template<>
+        inline std::string PrintHex<char>( char value, bool putpadding )
+    {
+        return _PrintHex<short,(sizeof(char) * 2)>(value, putpadding);
+    }
+
+    template<>
+        inline std::string PrintHex<unsigned char>( unsigned char value, bool putpadding )
+    {
+        return _PrintHex<unsigned short,(sizeof(unsigned char) * 2)>(value, putpadding);
+    }
 
 };
 

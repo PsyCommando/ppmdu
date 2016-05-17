@@ -29,7 +29,7 @@ namespace DSE
     {{
         { eDSESmplFmt::pcm8,      1, 4,  8, 1 },
         { eDSESmplFmt::pcm16,     1, 2, 16, 2 },
-        { eDSESmplFmt::ima_adpcm, 9, 8,  4, 1 },
+        { eDSESmplFmt::ima_adpcm4, 9, 8,  4, 1 },
         //Idk if there are any other formats.
     }};
 
@@ -223,7 +223,7 @@ namespace DSE
 
         uint16_t unk1;
         uint16_t id;        //Index/ID of the sample
-        int8_t   ftune; 
+        uint8_t  ftune; 
         int8_t   ctune;
         uint8_t  rootkey;   //Possibly the MIDI key matching the pitch the sample was sampled at!
         int8_t   ktps;      //Transpose
@@ -816,7 +816,7 @@ namespace DSE
         uint32_t unk16  ; //0xC
         uint16_t unk17  ; //0x10
         uint16_t smplid ; //0x12
-        int8_t   ftune  ; //0x14
+        uint8_t  ftune  ; //0x14
         int8_t   ctune  ; //0x15
         int8_t   rootkey; //0x16 
         int8_t   ktps   ; //0x17 //Key transposition
@@ -1326,7 +1326,7 @@ namespace DSE
         uint32_t unk16;     //0xC
         uint8_t  unk17;     //0x10
         uint8_t  smplid;    //0x11
-        int8_t   ftune;     //0x12
+        uint8_t  ftune;     //0x12
         int8_t   ctune;     //0x13
         int8_t   rootkey;   //0x14
         int8_t   ktps;      //0x15
@@ -1727,7 +1727,7 @@ namespace DSE
             prginf.padbyte   = m_hdr.padbyte;
 
             //Ignore kgrp table for now 
-            //!#FIXME
+            //!#FIXME: Handle that weird table!!
 
             //Just copy LFOs directly
             prginf.m_lfotbl = m_lfotbl;
@@ -2091,10 +2091,10 @@ namespace DSE
                             clog << "PCM8";
                         else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
                             clog << "PCM16";
-                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm4) )
                             clog << "IMA ADPCM4";
-                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
-                            clog << "PSG?";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm3) )
+                            clog << "IMA ADPCM3?";
                         else
                             clog << "UNKNOWN FORMAT( 0x" <<hex <<winf.smplfmt <<dec << " )";
                         clog << "\n";
@@ -2169,10 +2169,10 @@ namespace DSE
                             clog << "PCM8";
                         else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
                             clog << "PCM16";
-                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm4) )
                             clog << "IMA ADPCM4";
-                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::psg) )
-                            clog << "PSG?";
+                        else if( winf.smplfmt == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm3) )
+                            clog << "IMA ADPCM3?";
                         else
                             clog << "UNKNOWN FORMAT( 0x" <<hex <<winf.smplfmt <<dec << " )";
                         clog << "\n";

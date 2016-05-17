@@ -636,31 +636,31 @@ namespace DSE
     {
         os  << "\t-- SMDL Header --\n" 
             <<showbase
-            <<hex <<uppercase
-            << "\tmagicn       : " << hdr.magicn    <<"\n"
-            << "\tUnk7         : " << hdr.unk7     <<"\n"
+
+            << "\tmagicn       : " << utils::PrintHex(hdr.magicn)                   <<"\n"
+            << "\tUnk7         : " << utils::PrintHex(hdr.unk7)                     <<"\n"
             <<dec <<nouppercase
             << "\tFile lenght  : " << hdr.flen     <<" bytes\n"
-            <<hex <<uppercase
-            << "\tVersion      : " << hdr.version <<"\n"
-            << "\tUnk1         : " << static_cast<short>(hdr.unk1)   <<"\n"
-            << "\tUnk2         : " << static_cast<short>(hdr.unk2)      <<"\n"
-            << "\tUnk3         : " << hdr.unk3     <<"\n"
-            << "\tUnk4         : " << hdr.unk4     <<"\n"
+
+            << "\tVersion      : " << utils::PrintHex(hdr.version)                  <<"\n"
+            << "\tUnk1         : " << utils::PrintHex(hdr.unk1)                     <<"\n"
+            << "\tUnk2         : " << utils::PrintHex(hdr.unk2)                     <<"\n"
+            << "\tUnk3         : " << utils::PrintHex(hdr.unk3)                     <<"\n"
+            << "\tUnk4         : " << utils::PrintHex(hdr.unk4)                     <<"\n"
             <<dec <<nouppercase
             << "\tYear         : " << hdr.year     <<"\n"
-            << "\tMonth        : " << static_cast<short>(hdr.month)     <<"\n"
-            << "\tDay          : " << static_cast<short>(hdr.day)     <<"\n"
-            << "\tHour         : " << static_cast<short>(hdr.hour)     <<"\n"
-            << "\tMinute       : " << static_cast<short>(hdr.minute)     <<"\n"
-            << "\tSecond       : " << static_cast<short>(hdr.second)     <<"\n"
-            << "\tCentisec     : " << static_cast<short>(hdr.centisec)     <<"\n"
-            << "\tFile Name    : " << string( begin(hdr.fname), end(hdr.fname) ) <<"\n"
-            <<hex <<uppercase
-            << "\tUnk5         : " << hdr.unk5     <<"\n"
-            << "\tUnk6         : " << hdr.unk6     <<"\n"
-            << "\tUnk8         : " << hdr.unk8     <<"\n"
-            << "\tUnk9         : " << hdr.unk9     <<"\n"
+            << "\tMonth        : " << static_cast<short>(hdr.month)                 <<"\n"
+            << "\tDay          : " << static_cast<short>(hdr.day)                   <<"\n"
+            << "\tHour         : " << static_cast<short>(hdr.hour)                  <<"\n"
+            << "\tMinute       : " << static_cast<short>(hdr.minute)                <<"\n"
+            << "\tSecond       : " << static_cast<short>(hdr.second)                <<"\n"
+            << "\tCentisec     : " << static_cast<short>(hdr.centisec)              <<"\n"
+            << "\tFile Name    : " << string( begin(hdr.fname), end(hdr.fname) )    <<"\n"
+
+            << "\tUnk5         : " << utils::PrintHex(hdr.unk5)                     <<"\n"
+            << "\tUnk6         : " << utils::PrintHex(hdr.unk6)                     <<"\n"
+            << "\tUnk8         : " << utils::PrintHex(hdr.unk8)                     <<"\n"
+            << "\tUnk9         : " << utils::PrintHex(hdr.unk9)                     <<"\n"
             <<dec <<nouppercase
             <<noshowbase
             <<"\n"
@@ -674,30 +674,28 @@ namespace DSE
     std::ostream & operator<<( std::ostream & os, const SongChunk_v415 & sd )
     {
         os  << "\t-- Song Chunk v0x415 --\n" 
-            <<showbase
-            <<hex <<uppercase
-            << "\tLabel        : " << sd.label    <<"\n"
-            << "\tUnk1         : " << sd.unk1     <<"\n"
-            << "\tUnk2         : " << sd.unk2     <<"\n"
-            << "\tUnk3         : " << sd.unk3     <<"\n"
-            << "\tUnk4         : " << sd.unk4     <<"\n"
+
+            << "\tLabel        : " << utils::PrintHex(sd.label)    <<"\n"
+            << "\tUnk1         : " << utils::PrintHex(sd.unk1)     <<"\n"
+            << "\tUnk2         : " << utils::PrintHex(sd.unk2)     <<"\n"
+            << "\tUnk3         : " << utils::PrintHex(sd.unk3)     <<"\n"
+            << "\tUnk4         : " << utils::PrintHex(sd.unk4)     <<"\n"
             <<dec <<nouppercase
             << "\tTPQN         : " << sd.tpqn     <<"\n"
-            <<hex <<uppercase
-            << "\tUnk5         : " << sd.unk5     <<"\n"
+
+            << "\tUnk5         : " << utils::PrintHex(sd.unk5)     <<"\n"
             <<dec <<nouppercase
             << "\tNbTracks     : " << static_cast<short>(sd.nbtrks)   <<"\n"
             << "\tNbChans      : " << static_cast<short>(sd.nbchans)  <<"\n"
-            <<hex <<uppercase
-            << "\tUnk6         : " << sd.unk6     <<"\n"
-            << "\tUnk7         : " << sd.unk7     <<"\n"
-            << "\tUnk8         : " << sd.unk8     <<"\n"
-            << "\tUnk9         : " << sd.unk9     <<"\n"
-            << "\tUnk10        : " << sd.unk10    <<"\n"
-            << "\tUnk11        : " << sd.unk11    <<"\n"
-            << "\tUnk12        : " << sd.unk12    <<"\n"
+
+            << "\tUnk6         : " << utils::PrintHex(sd.unk6)     <<"\n"
+            << "\tUnk7         : " << utils::PrintHex(sd.unk7)     <<"\n"
+            << "\tUnk8         : " << utils::PrintHex(sd.unk8)     <<"\n"
+            << "\tUnk9         : " << utils::PrintHex(sd.unk9)     <<"\n"
+            << "\tUnk10        : " << utils::PrintHex(sd.unk10)    <<"\n"
+            << "\tUnk11        : " << utils::PrintHex(sd.unk11)    <<"\n"
+            << "\tUnk12        : " << utils::PrintHex(sd.unk12)    <<"\n"
             <<dec <<nouppercase
-            <<noshowbase
             <<"\n"
             ;
         return os;
@@ -709,26 +707,24 @@ namespace DSE
     std::ostream & operator<<( std::ostream & os, const SongChunk_v402 & sd )
     {
         os  << "\t-- Song Chunk v0x402 --\n" 
-            <<showbase
-            <<hex <<uppercase
-            << "\tLabel        : " << sd.label    <<"\n"
-            << "\tUnk1         : " << sd.unk1     <<"\n"
-            << "\tUnk2         : " << sd.unk2     <<"\n"
-            << "\tUnk3         : " << sd.unk3     <<"\n"
-            << "\tUnk4         : " << sd.unk4     <<"\n"
+
+            << "\tLabel        : " << utils::PrintHex(sd.label)    <<"\n"
+            << "\tUnk1         : " << utils::PrintHex(sd.unk1)     <<"\n"
+            << "\tUnk2         : " << utils::PrintHex(sd.unk2)     <<"\n"
+            << "\tUnk3         : " << utils::PrintHex(sd.unk3)     <<"\n"
+            << "\tUnk4         : " << utils::PrintHex(sd.unk4)     <<"\n"
             <<dec <<nouppercase
             << "\tTPQN         : " << sd.tpqn     <<"\n"
             << "\tNbTracks     : " << static_cast<short>(sd.nbtrks)   <<"\n"
             << "\tNbChans      : " << static_cast<short>(sd.nbchans)  <<"\n"
-            <<hex <<uppercase
-            << "\tUnk5         : " << static_cast<short>(sd.unk5)     <<"\n"
-            << "\tUnk6         : " << static_cast<short>(sd.unk6)     <<"\n"
-            << "\tUnk7         : " << sd.unk7     <<"\n"
-            << "\tMainVol      : " << static_cast<short>(sd.mainvol)   <<"\n"
-            << "\tMainPan      : " << static_cast<short>(sd.mainpan)  <<"\n"
-            << "\tUnk8         : " << sd.unk8     <<"\n"
+
+            << "\tUnk5         : " << utils::PrintHex(sd.unk5)     <<"\n"
+            << "\tUnk6         : " << utils::PrintHex(sd.unk6)     <<"\n"
+            << "\tUnk7         : " << utils::PrintHex(sd.unk7)     <<"\n"
+            << "\tMainVol      : " << utils::PrintHex(sd.mainvol)   <<"\n"
+            << "\tMainPan      : " << utils::PrintHex(sd.mainpan)  <<"\n"
+            << "\tUnk8         : " << utils::PrintHex(sd.unk8)     <<"\n"
             <<dec <<nouppercase
-            <<noshowbase
             <<"\n"
             ;
         return os;

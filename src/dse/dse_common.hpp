@@ -71,7 +71,7 @@ namespace DSE
     static const unsigned int NB_DSEContainers      = 4;
     static const uint32_t     SpecialChunkLen       = 0xFFFFFFB0;   //Value some special chunks have as their length
     static const int16_t      DSERootKey            = 60;           //By default the root key for dse sequences is assumed to be 60 the MIDI standard's middle C, AKA C4
-    const int8_t              DSEDefaultCoarseTune  = -7;           //The default coarse tune value for splits and samples.
+
 
     extern const std::array<eDSEChunks,     NB_DSEChunks>      DSEChunksList;    //Array containing all chunks labels
     extern const std::array<eDSEContainers, NB_DSEContainers>  DSEContainerList; //Array containing all the DSE container's magic number.
@@ -81,11 +81,11 @@ namespace DSE
     //
     enum struct eDSESmplFmt : uint16_t 
     {
-        invalid   = SHRT_MAX,
-        pcm8      = 0x000,
-        pcm16     = 0x100,
-        ima_adpcm = 0x200,
-        psg       = 0x300, //Probably not PSG!
+        invalid    = SHRT_MAX,
+        pcm8       = 0x000,
+        pcm16      = 0x100,
+        ima_adpcm4 = 0x200,
+        ima_adpcm3 = 0x300, //Not sure!
     };
 
     inline eDSESmplFmt IntToDSESmplFmt( uint16_t val )
@@ -94,10 +94,10 @@ namespace DSE
             return eDSESmplFmt::pcm8;
         else if( val == static_cast<uint16_t>(eDSESmplFmt::pcm16) )
             return eDSESmplFmt::pcm16;
-        else if( val == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm) )
-            return eDSESmplFmt::ima_adpcm;
-        else if( val == static_cast<uint16_t>(eDSESmplFmt::psg) )
-            return eDSESmplFmt::psg;
+        else if( val == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm4) )
+            return eDSESmplFmt::ima_adpcm4;
+        else if( val == static_cast<uint16_t>(eDSESmplFmt::ima_adpcm3) )
+            return eDSESmplFmt::ima_adpcm3;
         else
             return eDSESmplFmt::invalid;
     }
@@ -320,14 +320,14 @@ namespace DSE
     struct WavInfo
     {
         uint16_t    id         = 0;
-        int8_t      ftune      = 0; 
+        uint8_t     ftune      = 0; 
         int8_t      ctune      = 0;
         uint8_t     rootkey    = 0;
         int8_t      ktps       = 0;
         int8_t      vol        = 0;
         int8_t      pan        = 0;
         eDSESmplFmt smplfmt    = eDSESmplFmt::invalid;
-        bool        smplloop   = false;
+        uint8_t     smplloop   = 0; //0=noloop, 1==loop, 3==loop and continue playback
         uint32_t    smplrate   = 0; //Sampling rate of the sample
         uint32_t    smplpos    = 0;
         uint32_t    loopbeg    = 0; //Loop start in int32 (based on the resulting PCM16)
@@ -489,7 +489,7 @@ namespace DSE
         int8_t      lovel2    = 0; //0xA
         int8_t      hivel2    = 0; //0xB
         uint16_t    smplid    = 0; //0x12
-        int8_t      ftune     = 0; //0x14
+        uint8_t     ftune     = 0; //0x14
         int8_t      ctune     = 0; //0x15
         int8_t      rootkey   = 0; //0x16
         int8_t      ktps      = 0; //0x17

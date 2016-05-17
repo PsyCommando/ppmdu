@@ -440,7 +440,7 @@ private:
             WriteNodeWithValue( infonode, PROP_LoopBeg,     winfo.loopbeg * 2 );
             WriteNodeWithValue( infonode, PROP_LoopLen,     winfo.looplen * 2 );
         }
-        else if( winfo.smplfmt == eDSESmplFmt::ima_adpcm )
+        else if( winfo.smplfmt == eDSESmplFmt::ima_adpcm4 )
         {
             WriteNodeWithValue( infonode, PROP_LoopBeg,     (winfo.loopbeg * 4) + ::audio::IMA_ADPCM_PreambleLen );
             WriteNodeWithValue( infonode, PROP_LoopLen,     (winfo.looplen * 4) + ::audio::IMA_ADPCM_PreambleLen );

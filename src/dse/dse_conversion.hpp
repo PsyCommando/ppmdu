@@ -259,6 +259,21 @@ namespace DSE
                 struct LimitVal
             {
                 typedef T val_t;
+                
+                //Figure out what type we should cast the value into, so that it prints properly (mainly for int8s..)
+                typedef typename std::conditional< std::is_floating_point<T>::value, double,
+                                                   typename std::conditional<std::is_integral<T>::value, long, 
+                                                                             typename std::conditional< std::is_convertible<T,int>::value, long, void>::type
+                                                                            >::type
+                                                 >::type cast_base_t;
+                static_assert(!std::is_same<cast_base_t, void>::value, "LimitVal<T>(): T isn't castable to an integer, or a dobule!");
+                //Next, make signed or unsigned depending on the type of T
+                typedef typename std::conditional< 
+                                                  std::is_signed<T>::value, 
+                                                  typename std::make_signed<cast_base_t>::type, 
+                                                  typename std::make_unsigned<cast_base_t>::type
+                                                 >::type cast_t;
+                
                 val_t min;
                 val_t avg;
                 val_t max;
@@ -284,7 +299,9 @@ namespace DSE
                 std::string Print()const
                 {
                     std::stringstream sstr;
-                    sstr <<"(" << static_cast<int>( min ) <<", " <<static_cast<int>( max ) <<" ) Avg : " <<avg; 
+                    sstr <<"(" <<static_cast<cast_t>(min) <<", " 
+                               <<static_cast<cast_t>(max) <<" ) Avg : " 
+                               <<static_cast<cast_t>(avg); 
                     return std::move( sstr.str() );
                 }
             };
@@ -297,13 +314,29 @@ namespace DSE
                 std::stringstream sstr;
                 sstr << "Batch Converter Statistics:\n"
                      << "-----------------------------\n"
-                     << "\tlforate : " <<lforate.Print() <<"\n"
-                     << "\tlfodepth : " <<lfodepth.Print() <<"\n";
+                     << "\tlforate      : " <<lforate.Print()   <<"\n"
+                     << "\tlfodepth     : " <<lfodepth.Print()  <<"\n"
+                     << "\troot key     : " <<rootkey.Print()   <<"\n"
+                     << "\tktps split   : " <<ktpssplt.Print()    <<"\n"
+                     << "\tktps sample  : " <<ktpssmpl.Print()    <<"\n"
+
+                     << "\tctune sample : " <<ctunesmpl.Print()   <<"\n"
+                     << "\tctune split  : " <<ctunesplt.Print()   <<"\n"
+                     << "\tftune sample : " <<ftunesmpl.Print()   <<"\n"
+                     << "\tftune split  : " <<ftunesplt.Print()   <<"\n"
+                    ;
                 return std::move(sstr.str());
             }
 
             LimitVal<int16_t> lforate;
             LimitVal<int16_t> lfodepth;
+            LimitVal<int8_t>  rootkey;
+            LimitVal<uint8_t> ftunesmpl;
+            LimitVal<uint8_t> ftunesplt;
+            LimitVal<int8_t>  ctunesmpl;
+            LimitVal<int8_t>  ctunesplt;
+            LimitVal<int8_t>  ktpssplt;
+            LimitVal<int8_t>  ktpssmpl;
         };
 
         /*
@@ -458,23 +491,6 @@ namespace DSE
     //-------------------
     //  Audio Loaders
     //-------------------
-
-    // ======================= 1. Main Bank + Sequences + RefBanks ( smdl or sedl ) ( mainbank.swd + 001.smd + 001.swd ) =======================
-    //std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndPairs     ( const std::string & bank, const std::string & smdroot, const std::string & swdroot );
-    //std::pair< DSE::PresetBank, std::vector<std::pair<DSE::MusicSequence,DSE::PresetBank>> > LoadBankAndSinglePair( const std::string & bank, const std::string & smd,     const std::string & swd );
-
-    // ======================= 2. 1 Sequence + 1 Bank ( 001.smd + 001.swd ) =======================
-    //std::pair<DSE::MusicSequence,DSE::PresetBank> LoadSmdSwdPair( const std::string & smd, const std::string & swd );
-
-    // ======================= 3. Individual Bank ( bank.swd ) =======================
-    //DSE::PresetBank LoadSwdBank( const std::string & file );
-
-    // ======================= 4. Sequence only =======================
-    //DSE::MusicSequence LoadSequence( const std::string & file );
-
-
-
-
 
     //-------------------
     //  Audio Exporters
