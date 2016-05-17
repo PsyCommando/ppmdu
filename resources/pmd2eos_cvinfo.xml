@@ -1648,10 +1648,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Open Hi Conga (smpl 0x13 )-->
           <Remap>
@@ -2490,10 +2490,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -3056,10 +3056,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -3222,10 +3222,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Bongo Mid (smpl 0x03)-->
           <Remap>
@@ -3795,10 +3795,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Bongo Mid (smpl 0x03)-->
           <Remap>
@@ -4294,10 +4294,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  (smpl 0x8B )-->
           <Remap>
@@ -4390,7 +4390,7 @@ Example entry:
             <OriginalKey>40</OriginalKey>
             <RemapedKey>40</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0x5E )-->
+          <!--0x4 - Tambourine (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
@@ -4455,12 +4455,12 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x5E )-->
+          <!--0x1 - Tambourine  (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
@@ -4549,10 +4549,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -5313,10 +5313,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Mute Hi Conga (smpl 0x15 )-->
           <Remap>
@@ -5851,7 +5851,7 @@ Example entry:
             <OriginalKey>41</OriginalKey>
             <RemapedKey>41</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0x5E )-->
+          <!--0x4 - Tambourine (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
@@ -5946,7 +5946,7 @@ Example entry:
             <OriginalKey>36</OriginalKey>
             <RemapedKey>36</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x5E )-->
+          <!--0x1 - Tambourine  (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
@@ -7138,10 +7138,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -7207,10 +7207,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Bongo Mid (smpl 0x03)-->
           <Remap>
@@ -8385,12 +8385,12 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x5E )-->
+          <!--0x1 - Tambourine  (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
@@ -10812,10 +10812,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -10886,10 +10886,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
           <!--0x1 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -11142,10 +11142,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 - Short Guiro (smpl 0x45 )-->
+          <!--0x0 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
-            <RemapedKey>75</RemapedKey>
+            <RemapedKey>82</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -13815,7 +13815,7 @@ Example entry:
             <OriginalKey>53</OriginalKey>
             <RemapedKey>53</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x5E )-->
+          <!--0x1 - Tambourine  (smpl 0x5E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
