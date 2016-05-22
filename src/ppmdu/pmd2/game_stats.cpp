@@ -23,8 +23,8 @@ namespace pmd2{ namespace stats
 //==========================================================================================
 //
 //==========================================================================================
-    static const string BalanceDirectory  = "BALANCE";
-    static const string GameTextDirectory = "MESSAGE";
+    const string BalanceDirectory  = "BALANCE";
+    const string GameTextDirectory = "MESSAGE";
 
     //std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
     //{
@@ -32,6 +32,8 @@ namespace pmd2{ namespace stats
     //    "EoS",
     //    "EoTD",
     //};
+
+    const string GameDataDir = "data";
 
 
     const string GameStats::DefPkmnDir    = "pokemon_data";
@@ -64,8 +66,16 @@ namespace pmd2{ namespace stats
 //==========================================================================================
 
     GameStats::GameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
-        :m_dataFolder(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
-    {}
+        :m_romrootdir(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
+    {
+        m_dataFolder = Poco::Path(pmd2rootdir).append(GameDataDir).toString();
+    }
+
+    void GameStats::setRomRootDir( const std::string & path )
+    {
+        m_romrootdir = path;
+        m_dataFolder = Poco::Path(path).append(GameDataDir).toString();
+    }
 
 //--------------------------------------------------------------
 //  Game Analysis
@@ -188,7 +198,7 @@ namespace pmd2{ namespace stats
     void GameStats::Load( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         Load();
     }
@@ -202,7 +212,7 @@ namespace pmd2{ namespace stats
     void GameStats::LoadStrings( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         LoadStrings();
     }
@@ -233,7 +243,7 @@ namespace pmd2{ namespace stats
     void GameStats::LoadPkmn( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         LoadPkmn();
     }
@@ -269,7 +279,7 @@ namespace pmd2{ namespace stats
     void GameStats::LoadMoves( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         LoadMoves();
     }
@@ -302,7 +312,7 @@ namespace pmd2{ namespace stats
     void GameStats::LoadItems( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         LoadItems();
     }
@@ -361,7 +371,7 @@ namespace pmd2{ namespace stats
     void GameStats::Write( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         Write();
     }
@@ -379,7 +389,7 @@ namespace pmd2{ namespace stats
     {
         using namespace filetypes;
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         WritePkmn();
     }
@@ -470,7 +480,7 @@ namespace pmd2{ namespace stats
     void GameStats::WriteMoves( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         WriteMoves();
     }
@@ -497,7 +507,7 @@ namespace pmd2{ namespace stats
     void GameStats::WriteStrings( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         WriteStrings();
     }
@@ -534,7 +544,7 @@ namespace pmd2{ namespace stats
     void GameStats::WriteItems( const std::string & rootdatafolder )
     {
         if( !rootdatafolder.empty() )
-            m_dataFolder = rootdatafolder;
+            setRomRootDir(rootdatafolder);
 
         WriteItems();
     }

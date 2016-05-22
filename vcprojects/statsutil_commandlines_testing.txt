@@ -1,0 +1,3 @@
+-e "ExplorersOfSkyOriginal" "ExplorersOfSky" -str
+-e "EoSJapan" "EoSJapanOut" -str
+-e -romroot "EoSRomRoot" "EoSOut" -script

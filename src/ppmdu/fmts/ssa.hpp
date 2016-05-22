@@ -9,9 +9,13 @@ Description: Utilities for handling SSA/SSE/SSS files.
 #include <vector>
 #include <string>
 #include <utils/utility.hpp>
+#include <ppmdu/pmd2/pmd2_scripts.hpp>
 
 namespace filetypes
 {
+    const std::string SSA_FileExt = "ssa";
+    const std::string SSE_FileExt = "sse";
+    const std::string SSS_FileExt = "sss";
 
     /*
         ssa_header
@@ -63,10 +67,13 @@ namespace filetypes
         }
     };
 
+//=======================================================================================
+//  Functions
+//=======================================================================================
     /*
     */
-
-
+    pmd2::ScriptEntityData ParseScriptData( const std::string & fpath );
+    void                   WriteScriptData( const std::string & fpath, const pmd2::ScriptEntityData & scrdat );
 };
 
 #endif

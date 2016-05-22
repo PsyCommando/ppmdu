@@ -420,6 +420,26 @@ namespace utils
             return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
     }
 
+    /*
+        ReadCStrFromBytes
+            Reads a null terminated 8bits c-string.
+
+            -> beg is modified!
+    */
+    template<class _init>
+        std::string ReadCStrFromBytes( _init & beg, _init pastend )
+    {
+        std::string result;
+
+        for( ;beg != pastend && (*beg) != 0; ++beg )
+            result.push_back(*beg);
+
+        if( beg == pastend )
+            throw runtime_error("String went past expected end!");
+
+        return std::move(result);
+    }
+
     /*********************************************************************************************
         AppendPaddingBytes
             This function takes a back insert iterator and the length of the container to append padding

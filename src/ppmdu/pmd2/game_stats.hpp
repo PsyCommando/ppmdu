@@ -31,8 +31,15 @@ namespace pmd2{ namespace stats
     extern const std::string ItemsStatsFile;      //
     extern const std::string ExcItmsStatsFile;    //
 
-    //Game data location list, from rom root!
+    //Game data location list, from "data" dir!
     extern const std::string GameStatsFolderPath; // "/BALANCE"
+
+
+
+    //Path under the rom root to the game's file system
+    extern const std::string GameDataDir;
+    extern const std::string BalanceDirectory;
+    extern const std::string GameTextDirectory;
 
 //==================================================================================
 //  Functions
@@ -92,8 +99,8 @@ namespace pmd2{ namespace stats
         void                  Items( const ItemsDB &  newdata ) { m_itemsData = newdata; }
 
         //Accessors
-        inline void                setCurDataDir( const std::string & path ) { m_dataFolder = path; }
-        inline const std::string & getCurDataDir()const                      { return m_dataFolder; }
+        void                setRomRootDir( const std::string & path ); //{ m_romrootdir = path; }
+        inline const std::string & getRomRootDir()const                      { return m_romrootdir; }
 
         //Accessors
 
@@ -263,6 +270,7 @@ namespace pmd2{ namespace stats
 
     private:
 
+        std::string        m_romrootdir;
         std::string        m_dataFolder;
         std::string        m_gamelangfile;
         GameLanguageLoader m_possibleLang;

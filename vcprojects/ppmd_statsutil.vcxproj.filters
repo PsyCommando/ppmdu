@@ -64,6 +64,15 @@
     <Filter Include="Source Files\ppmdu\file formats\scripts">
       <UniqueIdentifier>{57aa908b-68ad-48de-9dc1-a819f55491d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{c0f05f26-cfe7-42f8-b080-ea99d69159bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\DungeonData">
+      <UniqueIdentifier>{a7335d1b-5345-43d6-af6a-685052ba4c35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\DungeonData">
+      <UniqueIdentifier>{801d6383-73b3-4467-a367-29f607f9585d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ext_fmts\bmp_io.cpp">
@@ -194,6 +203,21 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp">
+      <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp">
+      <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\mappa.cpp">
+      <Filter>Source Files\ppmdu\file formats\DungeonData</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -347,11 +371,27 @@
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp">
       <Filter>Header Files\ppmdu\file formats\Scripts</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\zlib-1.2.8\zlib.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp">
+      <Filter>Header Files\ppmdu\file formats\DungeonData</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt">
       <Filter>Resource Files</Filter>
     </Text>
+    <Text Include="statsutil_commandlines_testing.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\gamelang.xml">

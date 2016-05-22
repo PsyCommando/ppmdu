@@ -64,6 +64,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
@@ -77,18 +78,18 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
@@ -106,15 +107,18 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\mappa.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
@@ -229,21 +233,24 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\statsutil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\basetypes.hpp">
@@ -372,6 +379,7 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
+    <Text Include="statsutil_commandlines_testing.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\resources\gamelang.xml">

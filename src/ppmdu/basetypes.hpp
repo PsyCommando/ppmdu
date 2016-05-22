@@ -10,6 +10,7 @@ Description: Handle the definitions for basic types, and attempt to ensure porta
 ##TODO: Is this really useful ?
 
 */
+//!#DELETE : Delete this file, its useless!
 #include <vector>
 #include <array>
 #include <string>

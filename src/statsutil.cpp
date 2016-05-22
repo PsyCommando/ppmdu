@@ -4,7 +4,7 @@
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
-#include <ppmdu/pmd2/pmd2_scripts.hpp>
+//#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -19,6 +19,7 @@ using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::pmd2::stats;
 using namespace ::pmd2;
+
 
 namespace statsutil
 {
@@ -105,6 +106,7 @@ namespace statsutil
     */
     const vector<optionparsing_t> CStatsUtil::Options_List=
     {{
+//!#TODO: Fix the command line parameters because this is really confusing!!!!!!!!!!!!!!!!!
         //Force Import
         {
             "i",
@@ -180,7 +182,21 @@ namespace statsutil
             "-gl \"PathToGameLangFile/gamelang.xml\"",
             std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
         },
+////////////////////////////////////////////////////////////////////////////////////////////
 
+        //Specify the root of the extracted rom directory to work with
+        {
+            "romroot",
+            1,
+            "Specify the root of the extracted rom directory to work with! The directory must contain "
+            "both a \"data\" and \"overlay\" directory, and at least a \"arm9.bin\" file! "
+            "The \"data\" directory must contain the rom's files and directories!"
+            "The \"overlay\" directory must contain the rom's many \"overlay_00xx.bin\" files!",
+            "-romroot \"path/to/extracted/rom/root/directory\"",
+            std::bind( &CStatsUtil::ParseOptionRomRoot, &GetInstance(), placeholders::_1 ),
+        },
+
+////////////////////////////////////////////////////////////////////////////////////////////
         //Turns on logging
         {
             "log",
@@ -235,12 +251,11 @@ namespace statsutil
 //--------------------------------------------
     bool CStatsUtil::ParseInputPath( const string & path )
     {
-        Poco::File inputfile(path);
+        Poco::Path inputfile(path);
 
-        //check if path exists
-        if( inputfile.exists() && ( inputfile.isFile() || inputfile.isDirectory() ) )
+        if( inputfile.isFile() || inputfile.isDirectory() )
         {
-            m_inputPath = path;
+            m_firstparam = path;
             return true;
         }
         return false;
@@ -287,6 +302,11 @@ namespace statsutil
     bool CStatsUtil::ParseOptionStrings( const std::vector<std::string> & optdata )
     {
         return m_hndlStrings = true;
+    }
+
+    bool CStatsUtil::ParseOptionScripts( const std::vector<std::string> & optdata )
+    {
+        return m_hndlScripts = true;
     }
 
     bool CStatsUtil::ParseOptionForceImport( const std::vector<std::string> & optdata )
@@ -349,12 +369,20 @@ namespace statsutil
         return true;
     }
 
-    bool CStatsUtil::ParseOptionScripts( const std::vector<std::string> & optdata )
+    bool CStatsUtil::ParseOptionRomRoot( const std::vector<std::string> & optdata )
     {
-        m_hndlScripts = true;
+        if( optdata.size() > 1 )
+        {
+            if( utils::isFolder( optdata[1] ) )
+            {
+                m_romrootdir = optdata[1];
+                cout << "<!>- Set \"" <<optdata[1]  <<"\" as ROM root directory!\n";
+            }
+            else
+                throw runtime_error("Path to ROM root directory does not exists, or is inaccessible!");
+        }
         return true;
     }
-
 //
 //
 //
@@ -405,8 +433,24 @@ namespace statsutil
     }
 
     void CStatsUtil::DetermineOperation()
+#if 1
     {
-        Poco::Path inpath( m_inputPath );
+        Poco::Path inpath( m_firstparam );
+        Poco::File infile( inpath );
+
+        if( m_operationMode != eOpMode::Invalid )
+            return; //Skip if we have a forced mode
+        if( !m_romrootdir.empty() && m_force == eOpForce::None )
+            throw runtime_error("CStatsUtil::DetermineOperation() : We got a ROM root directory, but no import or export specifier!");
+        else if( !m_romrootdir.empty() && m_force != eOpForce::None )
+            return;
+
+        //!#TODO: Handle drag and drop
+        assert(false);
+    }
+#else
+    {
+        Poco::Path inpath( m_firstparam );
         Poco::File infile( inpath );
 
         if( m_operationMode != eOpMode::Invalid )
@@ -440,7 +484,7 @@ namespace statsutil
                     if( m_force == eOpForce::Export )
                         m_operationMode = eOpMode::ExportGameStrings;
                     else
-                        throw runtime_error("Can't import game strings from a directory : " + m_inputPath);
+                        throw runtime_error("Can't import game strings from a directory : " + m_firstparam);
                 }
                 else if( m_hndlItems )
                 {
@@ -473,7 +517,7 @@ namespace statsutil
                 }
                 else
                 {
-                    if( m_force == eOpForce::Import || isImportAllDir(m_inputPath) )
+                    if( m_force == eOpForce::Import || isImportAllDir(m_firstparam) )
                         m_operationMode = eOpMode::ImportAll;
                     else
                         m_operationMode = eOpMode::ExportAll; //If all else fails, try an export all!
@@ -486,6 +530,7 @@ namespace statsutil
             throw runtime_error("The input path does not exists!");
 
     }
+#endif
 
     int CStatsUtil::Execute()
     {
@@ -493,99 +538,134 @@ namespace statsutil
         utils::MrChronometer chronoexecuter("Total time elapsed");
         try
         {
-            switch(m_operationMode)
+            if( m_force != eOpForce::None )
             {
-                case eOpMode::ImportPokemonData:
-                {
-                    cout << "=== Importing Pokemon data ===\n";
-                    returnval = DoImportPokemonData();
-                    break;
-                }
-                case eOpMode::ExportPokemonData:
-                {
-                    cout << "=== Exporting Pokemon data ===\n";
-                    returnval = DoExportPokemonData();
-                    break;
-                }
-                case eOpMode::ImportItemsData:
-                {
-                    cout << "=== Importing items data ===\n";
-                    returnval = DoImportItemsData();
-                    break;
-                }
-                case eOpMode::ExportItemsData:
-                {
-                    cout << "=== Exporting items data ===\n";
-                    returnval = DoExportItemsData();
-                    break;
-                }
-                case eOpMode::ImportMovesData:
-                {
-                    cout << "=== Importing moves data ===\n";
-                    returnval = DoImportMovesData();
-                    break;
-                }
-                case eOpMode::ExportMovesData:
-                {
-                    cout << "=== Exporting moves data ===\n";
-                    returnval = DoExportMovesData();
-                    break;
-                }
-                case eOpMode::ImportGameStrings:
-                {
-                    cout << "=== Importing game strings ===\n";
-                    returnval = DoImportGameStrings();
-                    break;
-                }
-                case eOpMode::ExportGameStrings:
-                {
-                    cout << "=== Exporting game strings ===\n";
-                    returnval = DoExportGameStrings();
-                    break;
-                }
-                case eOpMode::ExportGameStringsFromFile:
-                {
-                    cout << "=== Exporting game strings from file directly ===\n";
-                    returnval = DoExportGameStringsFromFile();
-                    break;
-                }
-                case eOpMode::ImportGameScripts:
-                {
-                    cout << "=== Importing game scripts ===\n";
-                    returnval = DoImportGameScripts();
-                    break;
-                }
-                case eOpMode::ExportGameScripts:
-                {
-                    cout << "=== Exporting game scripts ===\n";
-                    returnval = DoExportGameScripts();
-                    break;
-                }
+                //Since we have many things we can do, let them all be done one after the other!
+                if( m_romrootdir.empty() )
+                    throw runtime_error("No extracted ROM root directory was specified using the \"-romroot\" option!");
+                if( !utils::isFolder( m_romrootdir ) )
+                    throw runtime_error("Extracted ROM root directory path doesn't exist, or isn't a directory!");
 
-                case eOpMode::ImportAll:
+                GameStats gstats( m_romrootdir, m_langconf );
+
+                switch(m_force)
                 {
-                    cout << "=== Importing ALL ===\n";
-                    returnval = DoImportAll();
-                    break;
-                }
-                case eOpMode::ExportAll:
-                {
-                    cout << "=== Exporting ALL ===\n";
-                    returnval = DoExportAll();
-                    break;
-                }
-                default:
-                {
-                    throw runtime_error( "Invalid operation mode. Something is wrong with the arguments!" );
-                }
-            };
+                    case eOpForce::Import:
+                    {
+                        cout << "=== Import ===\n";
+                        returnval = HandleImport(m_firstparam, gstats);
+                        break;
+                    }
+                    case eOpForce::Export:
+                    {
+                        cout << "=== Export ===\n";
+                        returnval = HandleExport(m_firstparam, gstats);
+                        break;
+                    }
+                };
+            }
+            else
+            {
+                //!Handle drag and drop!
+                assert(false);
+            }
+
+            ////OLD 
+            //switch(m_operationMode)
+            //{
+            //    case eOpMode::ImportPokemonData:
+            //    {
+            //        cout << "=== Importing Pokemon data ===\n";
+            //        returnval = DoImportPokemonData();
+            //        break;
+            //    }
+            //    case eOpMode::ExportPokemonData:
+            //    {
+            //        cout << "=== Exporting Pokemon data ===\n";
+            //        returnval = DoExportPokemonData();
+            //        break;
+            //    }
+            //    case eOpMode::ImportItemsData:
+            //    {
+            //        cout << "=== Importing items data ===\n";
+            //        returnval = DoImportItemsData();
+            //        break;
+            //    }
+            //    case eOpMode::ExportItemsData:
+            //    {
+            //        cout << "=== Exporting items data ===\n";
+            //        returnval = DoExportItemsData();
+            //        break;
+            //    }
+            //    case eOpMode::ImportMovesData:
+            //    {
+            //        cout << "=== Importing moves data ===\n";
+            //        returnval = DoImportMovesData();
+            //        break;
+            //    }
+            //    case eOpMode::ExportMovesData:
+            //    {
+            //        cout << "=== Exporting moves data ===\n";
+            //        returnval = DoExportMovesData();
+            //        break;
+            //    }
+            //    case eOpMode::ImportGameStrings:
+            //    {
+            //        cout << "=== Importing game strings ===\n";
+            //        returnval = DoImportGameStrings();
+            //        break;
+            //    }
+            //    case eOpMode::ExportGameStrings:
+            //    {
+            //        cout << "=== Exporting game strings ===\n";
+            //        returnval = DoExportGameStrings();
+            //        break;
+            //    }
+            //    case eOpMode::ExportGameStringsFromFile:
+            //    {
+            //        cout << "=== Exporting game strings from file directly ===\n";
+            //        returnval = DoExportGameStringsFromFile();
+            //        break;
+            //    }
+            //    case eOpMode::ImportGameScripts:
+            //    {
+            //        cout << "=== Importing game scripts ===\n";
+            //        returnval = DoImportGameScripts();
+            //        break;
+            //    }
+            //    case eOpMode::ExportGameScripts:
+            //    {
+            //        cout << "=== Exporting game scripts ===\n";
+            //        returnval = DoExportGameScripts();
+            //        break;
+            //    }
+
+            //    case eOpMode::ImportAll:
+            //    {
+            //        cout << "=== Importing ALL ===\n";
+            //        returnval = DoImportAll();
+            //        break;
+            //    }
+            //    case eOpMode::ExportAll:
+            //    {
+            //        cout << "=== Exporting ALL ===\n";
+            //        returnval = DoExportAll();
+            //        break;
+            //    }
+            //    default:
+            //    {
+            //        throw runtime_error( "Invalid operation mode. Something is wrong with the arguments!" );
+            //    }
+            //};
         }
         catch(Poco::Exception & e )
         {
+            cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
             clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
         }
         catch( exception &e )
         {
+            cerr <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
             clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
         }
         return returnval;
@@ -594,6 +674,117 @@ namespace statsutil
 //--------------------------------------------
 //  Operation
 //--------------------------------------------
+
+    int CStatsUtil::HandleImport( const std::string & frompath, pmd2::stats::GameStats & gstats )
+    {
+
+
+        if(m_hndlStrings)
+        {
+            cout << "=== Importing Strings ===\n";
+            gstats.AnalyzeGameDir();
+            gstats.ImportStrings(frompath);
+            gstats.WriteStrings();
+        }
+
+        if(m_hndlScripts)
+        {
+            cout << "=== Importing Scripts ===\n";
+        }
+
+        if(m_hndlPkmn)
+        {
+            cout << "=== Importing Pokemon Data ===\n";
+            gstats.ImportPkmn(frompath);
+            gstats.WritePkmn();
+        }
+
+        if(m_hndlMoves)
+        {
+            cout << "=== Importing Pokemon Move Data ===\n";
+            gstats.ImportMoves(frompath);
+            gstats.WriteMoves ();
+        }
+
+        if(m_hndlItems)
+        {
+            cout << "=== Importing Item Data ===\n";
+            gstats.ImportItems(frompath);
+            gstats.WriteItems();
+        }
+
+        return 0;
+    }
+    
+    int CStatsUtil::HandleExport( const std::string & topath,   GameStats & gstats )
+    {
+        Poco::Path outpath  = Poco::Path(topath).makeAbsolute();
+        Poco::File parentout = outpath;
+        if( ! parentout.exists() )
+        {
+            cout << "Created output directory \"" << parentout.path() <<"\"!\n";
+            parentout.createDirectory();
+        }
+
+        if(m_hndlStrings)
+        {
+            cout << "=== Exporting Game Strings ===\n";
+            gstats.LoadStrings();
+            gstats.ExportStrings( Poco::Path(outpath).append(DefExportStrName).makeFile().toString() );
+        }
+
+        if(m_hndlScripts)
+        {
+            cout << "=== Exporting Scripts ===\n";
+
+        }
+
+        if(m_hndlPkmn)
+        {
+            cout << "=== Exporting Pokemon Data ===\n";
+            Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefPkmnDir);
+            gstats.LoadPkmn();
+            if( ! fTestOut.exists() )
+            {
+                cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+                fTestOut.createDirectory();
+            }
+            gstats.ExportPkmn( fTestOut.path() );
+        }
+
+        if(m_hndlMoves)
+        {
+            cout << "=== Exporting Pokemon Move Data ===\n";
+            Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefMvDir);
+            gstats.LoadMoves();
+            if( ! fTestOut.exists() )
+            {
+                cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+                fTestOut.createDirectory();
+            }
+            gstats.ExportMoves( fTestOut.path() );
+        }
+
+        if(m_hndlItems)
+        {
+            cout << "=== Exporting Item Data ===\n";
+            Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefItemsDir);
+            gstats.LoadItems();
+            if( ! fTestOut.exists() )
+            {
+                cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+                fTestOut.createDirectory();
+            }
+            gstats.ExportItems( fTestOut.path() );
+        }
+
+        return 0;
+    }
+
+
+
+
+
     int CStatsUtil::DoImportGameData()
     {
         int returnval = -1;
@@ -614,14 +805,14 @@ namespace statsutil
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
         GameStats gstats( m_outputPath, m_langconf );
-        gstats.ImportPkmn( m_inputPath );
+        gstats.ImportPkmn( m_firstparam );
         gstats.WritePkmn( m_outputPath );
         return 0;
     }
 
     int CStatsUtil::DoExportPokemonData()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -633,7 +824,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        GameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_firstparam, m_langconf );
         gstats.LoadPkmn();
 
         //Test output path
@@ -656,14 +847,14 @@ namespace statsutil
             throw runtime_error("Output path doesn't exist, or isn't a directory!");
 
         GameStats gstats( m_outputPath, m_langconf );
-        gstats.ImportItems( m_inputPath );
+        gstats.ImportItems( m_firstparam );
         gstats.WriteItems( m_outputPath );
         return 0;
     }
 
     int CStatsUtil::DoExportItemsData()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -675,7 +866,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        GameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_firstparam, m_langconf );
         gstats.LoadItems();
 
         //Test output path
@@ -692,7 +883,7 @@ namespace statsutil
 
     int CStatsUtil::DoImportMovesData()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -703,7 +894,7 @@ namespace statsutil
         outpath = Poco::Path(m_outputPath);
 
         GameStats gstats ( m_outputPath, m_langconf );
-        gstats.ImportMoves( m_inputPath );
+        gstats.ImportMoves( m_firstparam );
         gstats.WriteMoves ( m_outputPath );
 
         return 0;
@@ -711,7 +902,7 @@ namespace statsutil
 
     int CStatsUtil::DoExportMovesData()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -723,7 +914,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        GameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_firstparam, m_langconf );
         gstats.LoadMoves();
 
         //Test output path
@@ -740,7 +931,7 @@ namespace statsutil
 
     int CStatsUtil::DoImportGameStrings()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -751,7 +942,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
             GameStats gstats( outpath.toString(), m_langconf );
             gstats.AnalyzeGameDir();
-            gstats.ImportStrings( m_inputPath );
+            gstats.ImportStrings( m_firstparam );
             gstats.WriteStrings();
         }
         else
@@ -761,11 +952,11 @@ namespace statsutil
             if( ! m_flocalestr.empty() )
             {
                 auto myloc = std::locale( m_flocalestr );
-                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine( m_inputPath, myloc ), myloc );
+                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine( m_firstparam, myloc ), myloc );
             }
             else
             {
-                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine(m_inputPath) );
+                pmd2::filetypes::WriteTextStrFile( outpath.toString(), utils::io::ReadTextFileLineByLine(m_firstparam) );
             }
         }
         return 0;
@@ -773,7 +964,7 @@ namespace statsutil
 
     int CStatsUtil::DoExportGameStrings()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
 
         if( m_outputPath.empty() )
@@ -793,7 +984,7 @@ namespace statsutil
         if( !m_forcedLocale )
         {
             cout << "Detecting game language...\n";
-            GameStats mystats( m_inputPath, m_langconf );
+            GameStats mystats( m_firstparam, m_langconf );
             mystats.LoadStrings();
             cout << "Writing...\n";
             mystats.ExportStrings( outpath.toString() );
@@ -811,7 +1002,7 @@ namespace statsutil
     //For exporting the game strings from the text_*.str file directly
     int CStatsUtil::DoExportGameStringsFromFile()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -828,7 +1019,7 @@ namespace statsutil
 
     int CStatsUtil::DoImportAll()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -840,14 +1031,14 @@ namespace statsutil
         outpath = Poco::Path(m_outputPath);
 
         GameStats gstats ( m_outputPath, m_langconf );
-        gstats.ImportAll( m_inputPath );
+        gstats.ImportAll( m_firstparam );
         gstats.Write();
         return 0;
     }
 
     int CStatsUtil::DoExportAll()
     {
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
@@ -859,7 +1050,7 @@ namespace statsutil
             outpath = Poco::Path(m_outputPath).makeAbsolute();
         }
 
-        GameStats gstats( m_inputPath, m_langconf );
+        GameStats gstats( m_firstparam, m_langconf );
         gstats.Load();
 
         //Test output path
@@ -875,37 +1066,44 @@ namespace statsutil
 
     int CStatsUtil::DoExportGameScripts()
     {
-        //Validate output + input paths
-        Poco::Path inpath(m_inputPath);
-        Poco::Path outpath;
-        
-        if( m_outputPath.empty() )
-            outpath = inpath.absolute().makeParent().append(DefExportScriptsDir);
-        else
-            outpath = Poco::Path(m_outputPath).makeAbsolute();
+        ////Validate output + input paths
+        //Poco::Path inpath(m_firstparam);
+        //Poco::Path outpath;
+        //
+        //if( m_outputPath.empty() )
+        //    outpath = inpath.absolute().makeParent().append(DefExportScriptsDir);
+        //else
+        //    outpath = Poco::Path(m_outputPath).makeAbsolute();
 
-        Poco::File fTestOut = outpath;
-        if( ! fTestOut.exists() )
-        {
-            cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
-            fTestOut.createDirectory();
-        }
-        else if( ! fTestOut.isDirectory() )
-            throw runtime_error("CStatsUtil::DoExportGameScripts(): Output path is not a directory!");
+        //Poco::File fTestOut = outpath;
+        //if( ! fTestOut.exists() )
+        //{
+        //    cout << "Created output directory \"" << fTestOut.path() <<"\"!\n";
+        //    fTestOut.createDirectory();
+        //}
+        //else if( ! fTestOut.isDirectory() )
+        //    throw runtime_error("CStatsUtil::DoExportGameScripts(): Output path is not a directory!");
 
-        //Setup the script handler
-        GameScripts scripts( inpath.absolute().toString() );
+
+        ////Setup the script handler
+        //auto locandvers = DetermineGameVersionAndLocale( inpath.absolute().toString() );
+
+        //if( locandvers.first == eGameVersion::Invalid || locandvers.second == eGameLocale::Invalid  )
+        //    throw std::runtime_error( "CStatsUtil::DoExportGameScripts(): Invalid game version or locale!" );
+
+        //GameScripts scripts( inpath.absolute().toString(), locandvers.second, locandvers.first );
+        //scripts.Load();
 
         //Convert to XML
-        scripts.ExportScriptsToXML( outpath.toString() );
-
+        //scripts.ExportScriptsToXML( outpath.toString() );
+        assert(false);
         return 0;
     }
 
     int CStatsUtil::DoImportGameScripts()
     {
         //Validate output + input paths
-        Poco::Path inpath(m_inputPath);
+        Poco::Path inpath(m_firstparam);
         Poco::Path outpath;
 
         if( m_outputPath.empty() )
@@ -917,11 +1115,11 @@ namespace statsutil
         outpath = Poco::Path(m_outputPath);
 
         //Setup the script handler
-        GameScripts scripts( outpath.absolute().toString() );
+        //GameScripts scripts( outpath.absolute().toString() );
 
         //Import from XML
-        scripts.ImportScriptsFromXML( inpath.absolute().toString() );
-
+        //scripts.ImportScriptsFromXML( inpath.absolute().toString() );
+        assert(false);
         return 0;
     }
 
@@ -953,70 +1151,70 @@ namespace statsutil
 // Main Function
 //=================================================================================================
 
-#include <ppmdu/fmts/integer_encoding.hpp>
+//#include <ppmdu/fmts/integer_encoding.hpp>
 
-int Sir0Decoder( int argc, const char *argv[] )
-{
-    using namespace statsutil;
-    {
-        utils::MrChronometer chronoTester("Total time elapsed");
-        cout<<"Decoding..\n";
-        vector<uint8_t> encodedptrs = ReadFileToByteVector( argv[1] );
-        auto result = utils::DecodeIntegers<uint32_t>( encodedptrs.begin(), encodedptrs.end() );
-        cout<<"Done! Decoded " <<result.size() <<" values.\n";
-
-        uint32_t accumulator = 0;
-        for( const auto & val : result )
-        {
-            accumulator += val;
-            cout<<"0x"<<hex<<accumulator<<"\n";
-        }
-        cout<<dec<<"Done!\n";
-    }
-
-    return 0;
-}
-
-int IntegerDecoder( int argc, const char *argv[] )
-{
-    using namespace statsutil;
-    {
-        utils::MrChronometer chronoTester("Total time elapsed");
-        vector<uint8_t> encodedints = ReadFileToByteVector( argv[1] );
-        auto itRead = encodedints.begin();
-        auto itEnd  = encodedints.end();
-
-        auto itfindend = encodedints.begin();
-        //Exclude padding if neccessary
-        for( ; itfindend != itEnd; ++itfindend )
-        {
-            if( (*itfindend) == 0xAA && ( std::distance( itfindend, itEnd ) <= 15u ) && std::all_of( itfindend, itEnd, [](uint8_t val){return val == 0xAA;} ) )
-                break;
-        }
-        itEnd = itfindend;
-
-
-        unsigned int cnt = 0;
-        cout<<"Decoding integer lists..\n";
-        while( itRead != itEnd )
-        {
-            cout<<"List #" <<dec <<cnt <<"\n";
-        
-            vector<uint32_t> result; 
-            itRead = utils::DecodeIntegers( itRead, itEnd, back_inserter(result) );
-            cout <<"Has " <<result.size() <<" values.\n";
-
-            for( const auto & val : result )
-            {
-                cout <<"0x" <<uppercase <<hex <<val <<nouppercase <<"\n";
-            }
-            ++cnt;
-        }
-        cout<<dec<<"Done!\n";
-    }
-
-    return 0;
-}
+//int Sir0Decoder( int argc, const char *argv[] )
+//{
+//    using namespace statsutil;
+//    {
+//        utils::MrChronometer chronoTester("Total time elapsed");
+//        cout<<"Decoding..\n";
+//        vector<uint8_t> encodedptrs = ReadFileToByteVector( argv[1] );
+//        auto result = utils::DecodeIntegers<uint32_t>( encodedptrs.begin(), encodedptrs.end() );
+//        cout<<"Done! Decoded " <<result.size() <<" values.\n";
+//
+//        uint32_t accumulator = 0;
+//        for( const auto & val : result )
+//        {
+//            accumulator += val;
+//            cout<<"0x"<<hex<<accumulator<<"\n";
+//        }
+//        cout<<dec<<"Done!\n";
+//    }
+//
+//    return 0;
+//}
+//
+//int IntegerDecoder( int argc, const char *argv[] )
+//{
+//    using namespace statsutil;
+//    {
+//        utils::MrChronometer chronoTester("Total time elapsed");
+//        vector<uint8_t> encodedints = ReadFileToByteVector( argv[1] );
+//        auto itRead = encodedints.begin();
+//        auto itEnd  = encodedints.end();
+//
+//        auto itfindend = encodedints.begin();
+//        //Exclude padding if neccessary
+//        for( ; itfindend != itEnd; ++itfindend )
+//        {
+//            if( (*itfindend) == 0xAA && ( std::distance( itfindend, itEnd ) <= 15u ) && std::all_of( itfindend, itEnd, [](uint8_t val){return val == 0xAA;} ) )
+//                break;
+//        }
+//        itEnd = itfindend;
+//
+//
+//        unsigned int cnt = 0;
+//        cout<<"Decoding integer lists..\n";
+//        while( itRead != itEnd )
+//        {
+//            cout<<"List #" <<dec <<cnt <<"\n";
+//        
+//            vector<uint32_t> result; 
+//            itRead = utils::DecodeIntegers( itRead, itEnd, back_inserter(result) );
+//            cout <<"Has " <<result.size() <<" values.\n";
+//
+//            for( const auto & val : result )
+//            {
+//                cout <<"0x" <<uppercase <<hex <<val <<nouppercase <<"\n";
+//            }
+//            ++cnt;
+//        }
+//        cout<<dec<<"Done!\n";
+//    }
+//
+//    return 0;
+//}
 
 //#TODO: Move the main function somewhere else !
 int main( int argc, const char * argv[] )

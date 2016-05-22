@@ -2,6 +2,7 @@
 #define STATS_UTIL_HPP
 #include <utils/cmdline_util.hpp>
 #include <ppmdu/basetypes.hpp>
+#include <ppmdu/pmd2/game_stats.hpp>
 
 namespace statsutil
 {
@@ -50,6 +51,9 @@ namespace statsutil
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
 
+
+        bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -74,6 +78,9 @@ namespace statsutil
 
         int DoImportAll();
         int DoExportAll();
+
+        int HandleImport( const std::string & frompath, pmd2::stats::GameStats & gstats );
+        int HandleExport( const std::string & topath,   pmd2::stats::GameStats & gstats );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -128,11 +135,13 @@ namespace statsutil
         };
 
         //Variables
-        std::string m_inputPath;      //This is the input path that was parsed 
+        std::string m_firstparam;      //This is the input path that was parsed 
         std::string m_outputPath;     //This is the output path that was parsed
+
         eOpMode     m_operationMode;  //This holds what the program should do
         std::string m_langconf;       //The path to the language configuration file!
         std::string m_flocalestr;     //The forced locale string
+        std::string m_romrootdir;     //The extracting rom's root directory
 
         bool        m_forcedLocale;   //Whether the -locale command line option was used at all.
         bool        m_hndlStrings;    //If we need to handle only a game string related OP, this is true!

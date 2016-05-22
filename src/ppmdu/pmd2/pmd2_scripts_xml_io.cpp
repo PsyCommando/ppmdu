@@ -35,13 +35,5 @@ namespace pmd2
 //==============================================================================
 //  GameScripts
 //==============================================================================
-    void GameScripts::ImportScriptsFromXML( const std::string & importdir )
-    {
-        assert(false);
-    }
 
-    void GameScripts::ExportScriptsToXML  ( const std::string & exportdir )
-    {
-        assert(false);
-    }
 };
