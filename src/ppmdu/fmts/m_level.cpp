@@ -112,9 +112,11 @@ namespace filetypes
 
         vector<uint8_t> Write()
         {
+            if( m_Pkmns.empty() )
+                throw std::runtime_error( "MLevelWriter::Write(): There are no entries to write! This should never happen!" );
+
             //
             vector<vector<uint8_t>> outBuff(m_Pkmns.size());
-            //outBuff.resize(0); //preserve alloc allow pushbacks
 
             //
             vector<uint8_t> swapbuff;
@@ -125,11 +127,11 @@ namespace filetypes
             {
                 WriteEntry( m_Pkmns[i], pokedatbuff );
                 CompressToPKDPX( pokedatbuff.begin(), pokedatbuff.end(), swapbuff );
-                outBuff[i] = MakeSIR0Wrap( swapbuff );
+                outBuff[i] = std::move( MakeSIR0Wrap( swapbuff, 0xAA ) );
             }
 
+            
             CPack myPack( std::move(outBuff) );
-
             //#FIXME: this might require a different offset for EoT/EoD
             myPack.setForceFirstFilePosition( MLevel_ForcedOffset_EoS );
             return myPack.OutputPack();
@@ -143,13 +145,13 @@ namespace filetypes
 
             for( const auto & entry : pkmnentry.statsgrowth )
             {
-                WriteVal( entry.first, itat );
-                WriteVal( entry.second.HP, itat );
+                WriteVal( entry.first,      itat );
+                WriteVal( entry.second.HP,  itat );
                 WriteVal( entry.second.Atk, itat );
                 WriteVal( entry.second.SpA, itat );
                 WriteVal( entry.second.Def, itat );
                 WriteVal( entry.second.SpD, itat );
-                WriteVal( uint16_t(0), itat );      //Entry ends with null uint16
+                WriteVal( uint16_t(0),      itat );      //Entry ends with null uint16
             }
         }
 
