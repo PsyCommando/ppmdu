@@ -290,7 +290,6 @@
     <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp" />
-    <ClInclude Include="..\src\ppmdu\containers\simple_img.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp" />

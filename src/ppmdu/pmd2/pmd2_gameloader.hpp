@@ -16,7 +16,7 @@ Description:
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_graphics.hpp>
 #include <ppmdu/pmd2/pmd2_audio.hpp>
-#include <ppmdu/pmd2/pmd2_asm_data.hpp>
+#include <ppmdu/pmd2/pmd2_asm_manip.hpp>
 
 namespace pmd2
 {

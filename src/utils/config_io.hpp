@@ -24,6 +24,8 @@ Description:
         #TODO: not gonna use this..
 
 */
+//!Will use json or xml instead!!!
+
 #include <vector>
 #include <string>
 #include <sstream>

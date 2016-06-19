@@ -197,8 +197,10 @@ namespace pmd2
         void LoadDirectory    (const std::string       & path);
         void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
         void LoadGrpDus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+        void LoadLoneSSS      ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
         void LoadGrpU         ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
         void LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+
 
         void LoadLSD   ( ScriptSet   & curset, const std::string & fpath );
         void LoadSSB   ( ScriptGroup & tgtgrp, const std::string & fpath );
@@ -512,6 +514,21 @@ namespace pmd2
         //If we do, parse the dusXX.ssb files too.
     }
 
+    void GameScriptsHandler::LoadLoneSSS( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    {
+        auto itfoundlsd = std::find_if( fqueue.begin(), fqueue.end(), [&](const Poco::Path & entry)->bool
+        {
+            return utils::CompareStrIgnoreCase(entry.getExtension(),  filetypes::SSS_FileExt );
+        });
+        if( itfoundlsd != fqueue.end() )
+        {
+            clog << "\n\tParsing lone sss files..";
+            ScriptGroup lonesss( itfoundlsd->getBaseName(), eScriptGroupType::UNK_loneSSS );
+            LoadSSData( lonesss, itfoundlsd->toString() );
+            out_scrset.Components().push_back( std::move(lonesss) );
+            clog <<"\n";
+        }
+    }
 
     void GameScriptsHandler::LoadAUGrp( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset, std::deque<Poco::Path>::iterator itfound )
     {
@@ -682,11 +699,14 @@ namespace pmd2
         //#6 Load 'u' prefixed files
         LoadGrpU( processqueue, curset );
 
-        //#7 - Add the set to the list
+        //#7 Load lone sss files.
+        LoadLoneSSS(processqueue, curset);
+
+        //#8 - Add the set to the list
         m_parent.m_sets.emplace( std::make_pair( curdir.getBaseName(), std::move(curset) ) );
 
 
-        //#8 - List files remaining in the queue
+        //#9 - List files remaining in the queue
         if( !processqueue.empty() )
         {
             clog <<"\n\t" <<processqueue.size() <<" files were ignored:\n";

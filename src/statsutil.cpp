@@ -4,6 +4,7 @@
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
+#include <utils/library_wide.hpp>
 //#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <iostream>
 #include <iomanip>
@@ -13,7 +14,6 @@
 #include <Poco/File.h>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
-#include <utils/library_wide.hpp>
 using namespace ::std;
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
@@ -332,7 +332,8 @@ namespace statsutil
             catch(exception & )
             {
                 cerr << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
-                clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
+                if( utils::LibWide().isLogOn() )
+                    clog << "ERROR: Invalid locale string specified : \"" <<optdata[1] <<"\"\n";
                 return false;
             }
             m_flocalestr   = optdata[1];
@@ -446,6 +447,7 @@ namespace statsutil
             return;
 
         //!#TODO: Handle drag and drop
+        cerr <<"#TODO: Fix file handling and detection!\n";
         assert(false);
     }
 #else
@@ -547,18 +549,24 @@ namespace statsutil
                     throw runtime_error("Extracted ROM root directory path doesn't exist, or isn't a directory!");
 
                 GameStats gstats( m_romrootdir, m_langconf );
-
+                cout <<"\n";
                 switch(m_force)
                 {
                     case eOpForce::Import:
                     {
-                        cout << "=== Import ===\n";
+                        cout <<"================================================\n"
+                             <<"                     Import                     \n"
+                             <<"================================================\n\n"
+                            ;
                         returnval = HandleImport(m_firstparam, gstats);
                         break;
                     }
                     case eOpForce::Export:
                     {
-                        cout << "=== Export ===\n";
+                        cout <<"================================================\n"
+                             <<"                     Export                     \n"
+                             <<"================================================\n\n"
+                            ;
                         returnval = HandleExport(m_firstparam, gstats);
                         break;
                     }
@@ -661,12 +669,14 @@ namespace statsutil
         catch(Poco::Exception & e )
         {
             cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
-            clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
         }
         catch( exception &e )
         {
             cerr <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
-            clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
         }
         return returnval;
     }
@@ -677,39 +687,53 @@ namespace statsutil
 
     int CStatsUtil::HandleImport( const std::string & frompath, pmd2::stats::GameStats & gstats )
     {
-
+        bool bhandleall = !m_hndlStrings && !m_hndlItems && !m_hndlMoves && !m_hndlPkmn && !m_hndlScripts;
 
         if(m_hndlStrings)
         {
-            cout << "=== Importing Strings ===\n";
+            cout <<"\nGame Strings\n"
+                 <<"---------------------------------\n";
             gstats.AnalyzeGameDir();
             gstats.ImportStrings(frompath);
             gstats.WriteStrings();
         }
 
-        if(m_hndlScripts)
+        if(m_hndlScripts || bhandleall)
         {
-            cout << "=== Importing Scripts ===\n";
+            cout <<"\nScripts\n"
+                 <<"---------------------------------\n";
         }
 
-        if(m_hndlPkmn)
+        if(m_hndlPkmn || bhandleall)
         {
-            cout << "=== Importing Pokemon Data ===\n";
-            gstats.ImportPkmn(frompath);
+            cout <<"\nPokemon Data\n"
+                 <<"---------------------------------\n";
+
+            Poco::Path Pkmndatadir(frompath);
+            Pkmndatadir.append(pmd2::stats::GameStats::DefPkmnDir);
+            gstats.ImportPkmn(Pkmndatadir.toString());
             gstats.WritePkmn();
         }
 
-        if(m_hndlMoves)
+        if(m_hndlMoves || bhandleall)
         {
-            cout << "=== Importing Pokemon Move Data ===\n";
-            gstats.ImportMoves(frompath);
+            cout <<"\nPokemon Move Data\n"
+                 <<"-----------------------------------\n";
+
+            Poco::Path mvdatadir(frompath);
+            mvdatadir.append(pmd2::stats::GameStats::DefMvDir);
+            gstats.ImportMoves(mvdatadir.toString());
             gstats.WriteMoves ();
         }
 
-        if(m_hndlItems)
+        if(m_hndlItems || bhandleall)
         {
-            cout << "=== Importing Item Data ===\n";
-            gstats.ImportItems(frompath);
+            cout <<"\nItem Data\n"
+                 <<"-----------------------------------\n";
+
+            Poco::Path itemdatadir(frompath);
+            itemdatadir.append(pmd2::stats::GameStats::DefItemsDir);
+            gstats.ImportItems(itemdatadir.toString());
             gstats.WriteItems();
         }
 
@@ -718,30 +742,37 @@ namespace statsutil
     
     int CStatsUtil::HandleExport( const std::string & topath,   GameStats & gstats )
     {
-        Poco::Path outpath  = Poco::Path(topath).makeAbsolute();
+        Poco::Path outpath   = Poco::Path(topath).makeAbsolute();
         Poco::File parentout = outpath;
+
+        bool bhandleall = !m_hndlStrings && !m_hndlItems && !m_hndlMoves && !m_hndlPkmn && !m_hndlScripts;
+
         if( ! parentout.exists() )
         {
             cout << "Created output directory \"" << parentout.path() <<"\"!\n";
             parentout.createDirectory();
         }
 
-        if(m_hndlStrings)
+        if(m_hndlStrings || bhandleall)
         {
-            cout << "=== Exporting Game Strings ===\n";
+            cout <<"\nGame Strings\n"
+                 <<"---------------------------------\n";
             gstats.LoadStrings();
             gstats.ExportStrings( Poco::Path(outpath).append(DefExportStrName).makeFile().toString() );
         }
 
-        if(m_hndlScripts)
+        if(m_hndlScripts || bhandleall)
         {
-            cout << "=== Exporting Scripts ===\n";
+            cout <<"\nScripts\n"
+                 <<"---------------------------------\n";
 
         }
 
-        if(m_hndlPkmn)
+        if(m_hndlPkmn || bhandleall)
         {
-            cout << "=== Exporting Pokemon Data ===\n";
+            cout <<"\nPokemon Data\n"
+                 <<"---------------------------------\n";
+
             Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefPkmnDir);
             gstats.LoadPkmn();
             if( ! fTestOut.exists() )
@@ -752,9 +783,11 @@ namespace statsutil
             gstats.ExportPkmn( fTestOut.path() );
         }
 
-        if(m_hndlMoves)
+        if(m_hndlMoves || bhandleall)
         {
-            cout << "=== Exporting Pokemon Move Data ===\n";
+            cout <<"\nPokemon Move Data\n"
+                 <<"-----------------------------------\n";
+
             Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefMvDir);
             gstats.LoadMoves();
             if( ! fTestOut.exists() )
@@ -765,9 +798,11 @@ namespace statsutil
             gstats.ExportMoves( fTestOut.path() );
         }
 
-        if(m_hndlItems)
+        if(m_hndlItems || bhandleall)
         {
-            cout << "=== Exporting Item Data ===\n";
+            cout <<"\nExporting Item Data\n"
+                 <<"-----------------------------------\n";
+
             Poco::File fTestOut = Poco::Path(outpath).append(GameStats::DefItemsDir);
             gstats.LoadItems();
             if( ! fTestOut.exists() )

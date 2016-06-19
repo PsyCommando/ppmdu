@@ -8,7 +8,10 @@ Description:
     Contains a singleton holding information relevant to how most of the library should behave.
     Basically, a form of clean "globals" !
 
-    #TODO: Use a map with named parameters instead ! It'll make it much more versatile.
+    #TODO: Use a map with named parameters instead ! It'll make it much more versatile. 
+           And name it "SharedArguments".
+           Then, individual application can implement their own wrapper over that that
+           just parses the relevant data for the duration of the execution.
 */
 #include <ppmdu/basetypes.hpp>
 #include <locale>

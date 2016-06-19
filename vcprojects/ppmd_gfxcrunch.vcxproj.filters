@@ -258,9 +258,6 @@
     <ClInclude Include="..\src\utils\pugixml_utils.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\simple_img.hpp">
-      <Filter>Header Files\ppmdu\data formats</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">

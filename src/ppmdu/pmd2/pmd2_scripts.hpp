@@ -56,6 +56,7 @@ namespace pmd2
         UNK_dus,        //Scripts not in a LSD, all components labelled "dus", possibly with a 2 digit numbers suffixed. 
         UNK_u,          //Scripts not in a LSD, but has u prefixed before another prefix(s,m,n,etc), and one or two 2 digit numbers. 
         UNK_fromlsd,    //Script group whose name is in the LSD (Aka regular scripts)
+        UNK_loneSSS,    //A lone SSS script data file
         NbTypes,
     };
 

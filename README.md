@@ -51,7 +51,19 @@ http://projectpokemon.org/wiki/Pokemon_Mystery_Dungeon_Explorers_of_Sky
   Eventually more tools will come. 
   Even possibly full-fledged editors with a user interface! Ideally, I'd let 3rd parties make their own editors that uses my tools, as it lets me focus on research, while they can focus on making a good GUI. But we'll see.
   
-## Licence:
+## Portability:
+  This was mainly made on several version of Visual Studio. So while I tried to keep everything portable, and use portable 
+  libraries, there might be some issues from time to time compiling on GCC or using Clang+LLVM. 
+  
+### Mingw
+  If you're using Mingw on windows, I suggest you use MSys for building the dependencies. Especially since POCO for some reasons
+  won't compile on Mingw without some messing around. Unless if ran in MSys using ./configure and make. 
+  The line I used to configure it is (Feel free to remove --static or --shared or add --no-tests and play around with it): 
+  ./configure --prefix=INSERT_PATH_TO_LIB_RELEASE_HERE --no-samples --no-tests --static --shared --omit=Crypto,NetSSL_OpenSSL,Zip,Data,Data/SQLite,Data/ODBC,Data/MySQL,MongoDB,PDF,CppParser,PageCompiler,Net
+  
+  Then I just ran "make -j 8"(-j 8 is for 8 core machines) and "make install". The --minimal switch makes the whole thing only compile the 
+  
+## License:
   Those tools and their source code, excluding the content of the /lib/ directory (present only for convenience), is [Creative Common 0](https://creativecommons.org/publicdomain/zero/1.0/), AKA Public Domain. 
   Do what you want with it. Use the code in your coding horror museum, copy-paste it in your pmd2 tools, anything.. XD 
   You don't have to credit me, but its always appreciated if you do ! And I'd love to see what people will do with this code.

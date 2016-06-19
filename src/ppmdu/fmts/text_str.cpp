@@ -166,7 +166,7 @@ namespace pmd2 { namespace filetypes
 #endif
                 ++i;
             }
-            cout<<" Done!\n";
+            clog<<" Done!\n";
         }
 
         std::string              m_strFilePath;

@@ -11910,10 +11910,10 @@ Example entry:
             <OriginalKey>46</OriginalKey>
             <RemapedKey>46</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0xBB )-->
+          <!--0x4 - Short Guiro?  (smpl 0xBB )-->
           <Remap>
             <OriginalKey>47</OriginalKey>
-            <RemapedKey>47</RemapedKey>
+            <RemapedKey>73</RemapedKey>
           </Remap>
           <!--0x5 -  (smpl 0x2BE )-->
           <Remap>
