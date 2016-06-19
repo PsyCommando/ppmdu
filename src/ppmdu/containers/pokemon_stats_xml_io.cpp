@@ -321,7 +321,7 @@ namespace pmd2 {namespace stats
                 //Write lvl-up data
                 xml_node lvlnode = growthnode.append_child( NODE_Level.c_str() );
                 //Exp Required
-                WriteNodeWithValue( lvlnode, PROP_ExpReq, FastTurnIntToCStr(sg[i].first) );
+                WriteNodeWithValue( lvlnode, PROP_ExpReq, FastTurnIntToCStr( sg[i].first) );
 
                 //Stats
                 WriteNodeWithValue( lvlnode, PROP_HP,     FastTurnIntToCStr(sg[i].second.HP) );
@@ -411,7 +411,7 @@ namespace pmd2 {namespace stats
         {
             try
             {
-                m_out.Pkmn() = ReadAllPokemon(srcdir);
+                m_out.Pkmn() = std::move( ReadAllPokemon(srcdir) );
                 m_out.isEoSData(m_isEoS);
             }
             catch( exception & e )
@@ -435,6 +435,9 @@ namespace pmd2 {namespace stats
                 if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
                     filelst.push_back( (itDir.path().absolute().toString()) );
             }
+
+            if( filelst.empty() )
+                throw std::runtime_error( "PokemonDB_XMLParser::ReadAllPokemon(): Couldn't find any xml files under the path \"" + srcdir + "\"!" );
 
             vector<CPokemon> result;
             result.reserve(filelst.size());

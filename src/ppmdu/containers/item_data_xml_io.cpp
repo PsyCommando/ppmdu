@@ -465,6 +465,7 @@ namespace pmd2 { namespace stats
         void _ParseEoTDData( const pugi::xml_node & itemnode, stats::itemdata & item )
         {
             //#TODO: Finish _ParseEoTDData !
+            cerr <<"\nExplorers of Time and Darkness data parsing not implemented yet!!!\n";
             assert(false);
 
             using namespace itemxml;

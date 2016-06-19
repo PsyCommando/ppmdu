@@ -156,7 +156,7 @@ namespace filetypes
 
         //Check folder exists
         if( !utils::isFolder(pathdir) )
-            throw runtime_error("<!>-Error: Invalid input path !");
+            throw runtime_error("CPack::LoadFolder(): Invalid input path !");
 
         //Clear current data, reset forced first file offset to 0
         ClearState();
@@ -203,12 +203,11 @@ namespace filetypes
     //void CPack::OutputToFile( const std::string & pathfile )
     vector<uint8_t> CPack::OutputPack()
     {
-        //utils::MrChronometer chronotwat("Writing Pack File");
         //Build the FOT
         BuildFOT();
 
         if( m_OffsetTable.empty() )
-            throw std::runtime_error( "Couldn't fill the FoT!" );
+            throw std::runtime_error( "CPack::OutputPack(): No subfiles. File offset table was empty!" );
 
         vector<uint8_t> result( PredictTotalFileSize() );
         auto            ittwritepos = WriteFullHeader( result.begin() );
@@ -221,10 +220,10 @@ namespace filetypes
 
     void CPack::OutputToFolder( const std::string & pathdir )
     {
-        MrChronometer chronooutputer( "Unpacking Files" );
+        //MrChronometer chronooutputer( "Unpacking Files" );
 
         if( !utils::DoCreateDirectory( pathdir ) )
-            throw exception("Invalid output path!");
+            throw runtime_error("CPack::OutputToFolder(): Invalid output path!");
 
         //write them out
         for( unsigned int i = 0; i < m_SubFiles.size(); ++i)
@@ -286,7 +285,7 @@ namespace filetypes
     void CPack::ReadSubFilesFromPackFileUsingFOT( vector<uint8_t>::const_iterator itbegin )
     {
         if( m_OffsetTable.empty() )
-            throw std::runtime_error( "The FoT contains no entries!" );
+            throw std::runtime_error( "CPack::ReadSubFilesFromPackFileUsingFOT(): The file allocation table contains no entries!" );
 
         //assert( !m_OffsetTable.empty() ); //If this happens, the method was probably called before the FOT was built..
         const auto NB_SUBFILES = m_OffsetTable.size(); //Avoid doing function calls all the time, and also allow compiler optimization for constants
