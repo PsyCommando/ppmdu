@@ -214,14 +214,11 @@ namespace filetypes
 
     vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar )
     {
-        //Calculate padding first, to ensure the end offset is valid
-        uint32_t lenpadding = data.size() % 16;
-
         //Make the SIR0 data
-        sir0_head_and_list sir0data = MakeSIR0ForData( 0, data.size() + lenpadding );
+        sir0_head_and_list sir0data = std::move( MakeSIR0ForData( 0, data.size() + CalculateLengthPadding( data.size(), 16u ) ) );
 
         //Call the function handling everything else
-        return MakeSIR0Wrap( data, sir0data, padchar );
+        return std::move( MakeSIR0Wrap( data, sir0data, padchar ) );
     }
 
     //vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data, 

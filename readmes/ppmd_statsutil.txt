@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
-Version	   : 0.21
+Version	   : 0.22
 Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -22,6 +22,8 @@ Changelog:
     * Removed support for Explorers of Time/Darkness for now. The format differs too much!
 -0.21(2015/09/10):
     * Fixed game string import.
+-0.22(2016/06/18):
+    * Fixed bad SIR0 padding.
 
 ----------------------------------------------------------------------------------------------------
 License info:

@@ -8,6 +8,8 @@ psycommando@gmail.com
 Description:
 A bunch of simple tools for doing common tasks when manipulating bytes.
 */
+
+//!#TODO: this needs a serious cleanup!!
 #include <vector>
 #include <cstdint>
 #include <limits>
@@ -420,21 +422,38 @@ namespace utils
             return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
     }
 
+
+    /*********************************************************************************************
+        CalculateLengthPadding
+            Calculates the length of padding required to align an address/length
+            on the given value!
+            
+            Parameters:
+                - length : The length to align.
+                - alignon: The number by which the length should be divisible by.
+
+            Return:
+                The length of the padding necessary to align the given length on
+                "alignon".
+    *********************************************************************************************/
+    template<typename _SizeTy>
+        inline _SizeTy CalculateLengthPadding( _SizeTy length, _SizeTy alignon )
+    {
+        return ( (length % alignon) != 0 )? (alignon - (length % alignon)) : 0;
+    }
+
+
     /*********************************************************************************************
         AppendPaddingBytes
             This function takes a back insert iterator and the length of the container to append padding
-            to, along with the divisor to determine how much padding is needed.
+            to, along with the length to align on to determine how much padding is needed.
     *********************************************************************************************/
     template<class _backinit>
-        void AppendPaddingBytes( _backinit itinsertat, unsigned int lentoalign, unsigned int alignon, const uint8_t PadByte = 0 )
+        void AppendPaddingBytes( _backinit itinsertat, size_t lentoalign, size_t alignon, const uint8_t PadByte = 0 )
     {
-    //# Insert padding at the current write position, to align the next entry on "alignon" bytes
-        if( (lentoalign % alignon) != 0 )
-        {
-            uint32_t lenpadding = ( CalcClosestHighestDenominator( lentoalign, alignon ) -  lentoalign );
-            for( unsigned int ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
-                itinsertat = PadByte;
-        }
+        size_t lenpadding = CalculateLengthPadding(lentoalign, alignon);
+        for( size_t ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
+            itinsertat = PadByte;
     }
 
 //===============================================================================
