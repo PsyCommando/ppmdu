@@ -29,6 +29,7 @@ namespace filetypes
         void Parse( std::vector<PokeMonsterData> & out_pkmns )
         {
             m_itReadPos = m_rawdata.begin();
+            m_itend     = m_rawdata.end();
             m_pPkmns    = &out_pkmns;
             //
             ParseHeader();
@@ -41,7 +42,7 @@ namespace filetypes
 
         void ParseHeader()
         {
-            m_itReadPos = m_header.ReadFromContainer( m_itReadPos );
+            m_itReadPos = m_header.ReadFromContainer( m_itReadPos, m_itend );
 
             if( !m_header.isValid() )
             {
@@ -56,7 +57,7 @@ namespace filetypes
             const uint32_t NbEntries = m_header.nbentries;
             m_pPkmns->reserve(NbEntries);
 
-            for( unsigned int i = 0; (i < NbEntries) && (m_itReadPos != m_rawdata.end()); ++i )
+            for( unsigned int i = 0; (i < NbEntries) && (m_itReadPos != m_itend); ++i )
                 m_pPkmns->push_back( ParseAnEntry() );
         }
 
@@ -115,11 +116,12 @@ namespace filetypes
         template<class T>
             inline void ParseVal( T & var )
         {
-            var = utils::ReadIntFromBytes<T>(m_itReadPos);
+            var = utils::ReadIntFromBytes<T>(m_itReadPos, m_itend);
         }
 
     private:
         vector<uint8_t>::const_iterator m_itReadPos;
+        vector<uint8_t>::const_iterator m_itend;
         monstermd_header                m_header;
         vector<uint8_t>                 m_rawdata;
         std::vector<stats::PokeMonsterData>  * m_pPkmns;

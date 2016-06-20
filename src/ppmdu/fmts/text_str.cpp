@@ -81,14 +81,14 @@ namespace pmd2 { namespace filetypes
             auto itptrs = m_filedata.begin();
 
             //First get the first pointer to get the end of the ptr table!
-            uint32_t endptrtbl = utils::ReadIntFromBytes<uint32_t>( itptrs );  //iterator is incremented
+            uint32_t endptrtbl = utils::ReadIntFromBytes<uint32_t>( itptrs, m_filedata.end() );  //iterator is incremented
             m_ptrTable.reserve( endptrtbl / sizeof(uint32_t) );                     //reserve memory for all pointers
             m_ptrTable.push_back( endptrtbl );
 
             //Read all pointers
             auto itendptrs = m_filedata.begin() + endptrtbl;
             for( ; itptrs != itendptrs; )
-                m_ptrTable.push_back( utils::ReadIntFromBytes<uint32_t>( itptrs ) );
+                m_ptrTable.push_back( utils::ReadIntFromBytes<uint32_t>( itptrs, m_filedata.end() ) );
         }
 
         void ReadStrings()

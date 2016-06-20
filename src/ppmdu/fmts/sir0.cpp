@@ -215,7 +215,7 @@ namespace filetypes
     vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar )
     {
         //Make the SIR0 data
-        sir0_head_and_list sir0data = std::move( MakeSIR0ForData( 0, data.size() + CalculateLengthPadding( data.size(), 16u ) ) );
+        sir0_head_and_list sir0data = std::move( MakeSIR0ForData( 0, CalculatePaddedLengthTotal( data.size(), 16u ) ) );
 
         //Call the function handling everything else
         return std::move( MakeSIR0Wrap( data, sir0data, padchar ) );
@@ -381,7 +381,7 @@ namespace filetypes
         ContentBlock cb;
 
         //Read the header
-        headr.ReadFromContainer( parameters._itdatabeg );
+        headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -391,7 +391,7 @@ namespace filetypes
 
         //Try to guess what is the subcontent
         analysis_parameter paramtopass( parameters._itparentbeg,
-                                        parameters._itparentbeg, 
+                                        parameters._itparentend, 
                                         parameters._itparentbeg, 
                                         parameters._itparentend );
 
@@ -413,7 +413,7 @@ namespace filetypes
     // rule matches, without in-depth analysis.
     bool sir0_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        return ReadIntFromBytes<uint32_t>(itdatabeg,false) == MagicNumber_SIR0;
+        return ReadIntFromBytes<uint32_t>(itdatabeg,itdataend,false) == MagicNumber_SIR0;
     }
 
 //========================================================================================================

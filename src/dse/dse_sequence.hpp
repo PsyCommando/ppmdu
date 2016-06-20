@@ -528,12 +528,12 @@ namespace DSE
         }
 
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            trkid  = utils::ReadIntFromBytes<decltype(trkid)> (itReadfrom);
-            chanid = utils::ReadIntFromBytes<decltype(chanid)>(itReadfrom);
-            unk1   = utils::ReadIntFromBytes<decltype(unk1)>  (itReadfrom);
-            unk2   = utils::ReadIntFromBytes<decltype(unk2)>  (itReadfrom);
+            trkid  = utils::ReadIntFromBytes<decltype(trkid)> ( itReadfrom, itPastEnd );
+            chanid = utils::ReadIntFromBytes<decltype(chanid)>( itReadfrom, itPastEnd );
+            unk1   = utils::ReadIntFromBytes<decltype(unk1)>  ( itReadfrom, itPastEnd );
+            unk2   = utils::ReadIntFromBytes<decltype(unk2)>  ( itReadfrom, itPastEnd );
             return itReadfrom;
         }
     };
@@ -660,7 +660,7 @@ namespace DSE
 
         vector<TrkEvent> events;
         TrkPreamble      preamb;
-        beg = preamb.ReadFromContainer(beg);
+        beg = preamb.ReadFromContainer(beg, end);
 
         events.reserve( hdr.datlen ); //Reserve worst case scenario
         for_each( beg, 

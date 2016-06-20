@@ -55,10 +55,10 @@ namespace filetypes
 
         //Reading the magic number, and endzero value is solely for validating on read.
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itpastend )
         {
-            magicn    = utils::ReadIntFromBytes<decltype(magicn)>   (itReadfrom, false ); //iterator is incremented
-            nbentries = utils::ReadIntFromBytes<decltype(nbentries)>(itReadfrom); //iterator is incremented
+            magicn    = utils::ReadIntFromBytes<decltype(magicn)>   (itReadfrom, itpastend, false ); //iterator is incremented
+            nbentries = utils::ReadIntFromBytes<decltype(nbentries)>(itReadfrom, itpastend); //iterator is incremented
             return itReadfrom;
         }
     };

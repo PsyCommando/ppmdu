@@ -139,8 +139,11 @@ namespace gfx_util
     {
         while( bDoUpdate )
         {
-            uint32_t percent = ( (100 * completed.load()) / total );
-            cout << "\r" <<setw(3) <<setfill(' ') <<percent <<"%";
+            if( completed.load() <= total )
+            {
+                uint32_t percent = ( (100 * completed.load()) / total );
+                cout << "\r" <<setw(3) <<setfill(' ') <<percent <<"%" <<setw(15) <<setfill(' ') <<" ";
+            }
             this_thread::sleep_for( ProgressUpdThWait );
         }
     }
@@ -490,14 +493,14 @@ namespace gfx_util
             std::bind( &CGfxUtil::ParseOptionPkPortraits,  &GetInstance(), placeholders::_1 ),
         },
 
-        ////Pokemon Sprites
-        //{
-        //    "pksprites",
-        //    0,
-        //    "Specifying this will cause the program to import or export pokemon sprites. When importing, the input is the directory containing the 3 subdirectories matching the 3 sprite files, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the three sprite files will be exported to.",
-        //    "-pksprites",
-        //    std::bind( &CGfxUtil::ParseOptionPkSprites,  &GetInstance(), placeholders::_1 ),
-        //},
+        //Pokemon Sprites
+        {
+            "pkspr",
+            0,
+            "Specifying this will cause the program to import or export pokemon sprites. When importing, the input is the directory containing the 3 subdirectories matching the 3 sprite files, and the output is the ROM's data root directory. When exporting, the input is the ROM's data root directory, and the output is the directory where the three sprite files will be exported to.",
+            "-pkspr",
+            std::bind( &CGfxUtil::ParseOptionPkSprites,  &GetInstance(), placeholders::_1 ),
+        },
 
         ////Props/misc Sprites
         //{
@@ -901,7 +904,7 @@ namespace gfx_util
         future<void>                 updtProgress;
         atomic<bool>                 shouldUpdtProgress = true;
         multitask::CMultiTaskHandler taskmanager;
-        atomic<uint32_t>             completed;
+        atomic<uint32_t>             completed = 0;
 
         auto lambdaWrapBuildSpr = [&]( vector<uint8_t> & out_sprRaw, const Poco::File & infile, bool importByIndex, bool bShouldCompress )->bool
         {

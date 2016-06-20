@@ -52,7 +52,7 @@ namespace filetypes
             {
                 while( itdatabeg != itdataend )
                 {
-                    uint32_t acolor = utils::ReadIntFromBytes<uint32_t>( itdatabeg, false );
+                    uint32_t acolor = utils::ReadIntFromBytes<uint32_t>( itdatabeg, itdataend, false );
                     if( (acolor & pmd2::graphics::RGBX_UNUSED_BYTE_VALUE) == 0 )
                         return false;
                 }

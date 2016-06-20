@@ -48,7 +48,8 @@ namespace filetypes
         inline unsigned int size()const{return ENTRY_LEN;}
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom,
+                                                                std::vector<uint8_t>::const_iterator itPastEnd);
 
 
 		uint32_t _fileOffset,
@@ -70,7 +71,8 @@ namespace filetypes
         bool                isValid()const;
 
         std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const;
-        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
+        std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom,
+                                                                std::vector<uint8_t>::const_iterator itPastEnd );
     };
 
 //===============================================================================
@@ -159,7 +161,7 @@ namespace filetypes
         void ClearState();
 
         //Returns a vector filled with the rigth ammount of padding bytes for the header based on the current object's state
-        void MakeHeaderPaddingBytes( std::vector<uint8_t> & paddingbytes )const;
+        //void MakeHeaderPaddingBytes( std::vector<uint8_t> & paddingbytes )const;
         uint32_t CalcAmountHeaderPaddingBytes()const;
 
         //Used to calculate the size of a packfile header based only on the parameters of the method
@@ -171,22 +173,24 @@ namespace filetypes
         
         
         //------- Raw Reading Pack File Operations --------
-        std::vector<uint8_t>::const_iterator ReadHeader( std::vector<uint8_t>::const_iterator itbegin, pfheader & out_mahead )const;
+        //std::vector<uint8_t>::const_iterator ReadHeader( std::vector<uint8_t>::const_iterator itbegin, pfheader & out_mahead )const;
 
         //Reads the File Offset Table from the raw pack file data into the object's FOT
-        void     ReadFOTFromPackFile( std::vector<uint8_t>::const_iterator itbegin, unsigned int nbsubfiles );
+        void     ReadFOTFromPackFile( std::vector<uint8_t>::const_iterator itbegin, std::vector<uint8_t>::const_iterator itend, unsigned int nbsubfiles );
 
         //Reads subfiles from the raw file data based on what is currently in the object's File Offset Table
         // The iterator must be at the beginning of the entire file's raw data !
         //  NOTE: This method expects you to have called ReadFOTFromPackFile first to populate the FOT! 
         //        Or at least to have a FOT longer than 0 !  
-        void     ReadSubFilesFromPackFileUsingFOT( std::vector<uint8_t>::const_iterator itbegin );
+        void     ReadSubFilesFromPackFileUsingFOT( std::vector<uint8_t>::const_iterator itbegin, std::vector<uint8_t>::const_iterator itend );
 
         //Returns the forced offset from the file's raw data is using one, or 0 if its not!
-        uint32_t CPack::IsPackFileUsingForcedFFOffset( std::vector<uint8_t>::const_iterator itbeg, unsigned int nbsubfiles )const;
+        uint32_t CPack::IsPackFileUsingForcedFFOffset( std::vector<uint8_t>::const_iterator itbeg, 
+                                                       std::vector<uint8_t>::const_iterator itend, 
+                                                       unsigned int                         nbsubfiles )const;
 
         //Opens for copying to the subfile vector a single file. 
-        void     ReadLooseFileToFileDataVector( const std::string & inpath, unsigned long long filesize, uint32_t insertatindex );
+        //void     ReadLooseFileToFileDataVector( const std::string & inpath, unsigned long long filesize, uint32_t insertatindex );
 
         //------- Raw Writing Pack File Operations --------
 

@@ -146,36 +146,34 @@ namespace DSE
         }
 
         //#DEPRECATED: Now using the version above that includes a safety range check.
-        template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
-        {
-            itReadfrom = utils::ReadIntFromBytes( magicn,   itReadfrom, false ); //false to write as big endian ,iterator is incremented
-            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( flen,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( version,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom );
+        //template<class _init>
+        //    _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
+        //{
+        //    itReadfrom = utils::ReadIntFromBytes( magicn,   itReadfrom, itPastEnd, false ); //false to write as big endian ,iterator is incremented
+        //    itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( flen,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( version,  itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( year,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( month,    itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( day,      itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( hour,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( minute,   itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( second,   itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( centisec, itReadfrom, itPastEnd );
 
-            itReadfrom = utils::ReadIntFromBytes( year,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( month,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( day,      itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( hour,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( minute,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( second,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( centisec, itReadfrom );
+        //    itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
 
-            itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
+        //    itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom, itPastEnd );
+        //    itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom, itPastEnd );
 
-            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom );
-
-            itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom );
-
-            return itReadfrom;
-        }
+        //    return itReadfrom;
+        //}
 
         friend std::ostream & operator<<( std::ostream &os, const SMDL_Header & hdr );
     };

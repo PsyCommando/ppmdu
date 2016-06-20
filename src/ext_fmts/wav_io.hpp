@@ -72,20 +72,20 @@ namespace wave
         }
 
         template<class _init>
-            _init Read( _init itread )
+            _init Read( _init itread, _init itend )
         {
-            itread = utils::ReadIntFromBytes( audiofmt_,      itread );
-            itread = utils::ReadIntFromBytes( nbchannels_,    itread );
-            itread = utils::ReadIntFromBytes( samplerate_,    itread );
-            itread = utils::ReadIntFromBytes( byterate_,      itread );
-            itread = utils::ReadIntFromBytes( blockalign_,    itread );
-            itread = utils::ReadIntFromBytes( bitspersample_, itread );
+            itread = utils::ReadIntFromBytes( audiofmt_,      itread, itend );
+            itread = utils::ReadIntFromBytes( nbchannels_,    itread, itend );
+            itread = utils::ReadIntFromBytes( samplerate_,    itread, itend );
+            itread = utils::ReadIntFromBytes( byterate_,      itread, itend );
+            itread = utils::ReadIntFromBytes( blockalign_,    itread, itend );
+            itread = utils::ReadIntFromBytes( bitspersample_, itread, itend );
             return itread;
         }
 
         inline void Read( const riff::Chunk & chunk )
         {
-            Read(chunk.data_.begin());
+            Read(chunk.data_.begin(), chunk.data_.end());
         }
 
         WAVE_fmt_chunk & operator=( const riff::Chunk & chunk )
@@ -134,26 +134,26 @@ namespace wave
         }
 
         template<class _init>
-            _init Read( _init itread )
+            _init Read( _init itread, _init itend )
         {
-            itread = utils::ReadIntFromBytes( manufacturer_,        itread );
-            itread = utils::ReadIntFromBytes( product_,             itread );
-            itread = utils::ReadIntFromBytes( samplePeriod_,        itread );
-            itread = utils::ReadIntFromBytes( MIDIUnityNote_,       itread );
-            itread = utils::ReadIntFromBytes( MIDIPitchFraction_,   itread );
-            itread = utils::ReadIntFromBytes( SMPTEFormat_,         itread );
-            itread = utils::ReadIntFromBytes( SMPTEOffset_,         itread );
-            itread = utils::ReadIntFromBytes( sampleLoops_,         itread );
-            itread = utils::ReadIntFromBytes( samplerData_,         itread );
+            itread = utils::ReadIntFromBytes( manufacturer_,        itread, itend );
+            itread = utils::ReadIntFromBytes( product_,             itread, itend );
+            itread = utils::ReadIntFromBytes( samplePeriod_,        itread, itend );
+            itread = utils::ReadIntFromBytes( MIDIUnityNote_,       itread, itend );
+            itread = utils::ReadIntFromBytes( MIDIPitchFraction_,   itread, itend );
+            itread = utils::ReadIntFromBytes( SMPTEFormat_,         itread, itend );
+            itread = utils::ReadIntFromBytes( SMPTEOffset_,         itread, itend );
+            itread = utils::ReadIntFromBytes( sampleLoops_,         itread, itend );
+            itread = utils::ReadIntFromBytes( samplerData_,         itread, itend );
             loops_.resize(sampleLoops_);
             for( auto & aloop : loops_ )
-                itread = aloop.Read(itread);
+                itread = aloop.Read(itread, itend);
             return itread;
         }
 
         inline void Read( const riff::Chunk & chunk )
         {
-            Read(chunk.data_.begin());
+            Read(chunk.data_.begin(), chunk.data_.end() );
         }
 
         smpl_chunk_content & operator=( const riff::Chunk & chunk )
@@ -199,14 +199,14 @@ namespace wave
             }
 
             template<class _init>
-                _init Read( _init itread )
+                _init Read( _init itread, _init itend )
             {
-                itread = utils::ReadIntFromBytes( identifier_, itread );
-                itread = utils::ReadIntFromBytes( type_,       itread );
-                itread = utils::ReadIntFromBytes( start_,      itread );
-                itread = utils::ReadIntFromBytes( end_,        itread );
-                itread = utils::ReadIntFromBytes( fraction_,   itread );
-                itread = utils::ReadIntFromBytes( playCount_,  itread );
+                itread = utils::ReadIntFromBytes( identifier_, itread, itend );
+                itread = utils::ReadIntFromBytes( type_,       itread, itend );
+                itread = utils::ReadIntFromBytes( start_,      itread, itend );
+                itread = utils::ReadIntFromBytes( end_,        itread, itend );
+                itread = utils::ReadIntFromBytes( fraction_,   itread, itend );
+                itread = utils::ReadIntFromBytes( playCount_,  itread, itend );
                 return itread;
             }
         };

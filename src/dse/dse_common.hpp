@@ -756,7 +756,7 @@ namespace DSE
             for( auto & potential : possibleid )
             {
                 //Check if its really the chunk's header start, or just a coincidence
-                uint32_t actualid = utils::ReadIntFromBytes<uint32_t>( _init(beg), false ); //Make a copy of beg, to avoid it being incremented
+                uint32_t actualid = utils::ReadIntFromBytes<uint32_t>( _init(beg), end, false ); //Make a copy of beg, to avoid it being incremented
 
                 if( actualid == static_cast<uint32_t>(chnkid) ) //Check if we match the chunk we're looking for
                     return beg;
@@ -766,7 +766,7 @@ namespace DSE
 
                     //Read the chunk's size and skip if possible
                     std::advance( beg, ChunkHeader::OffsetDataLen );
-                    uint32_t chnksz = utils::ReadIntFromBytes<uint32_t>(beg);
+                    uint32_t chnksz = utils::ReadIntFromBytes<uint32_t>(beg, end);
 
                     if( chnksz != DSE::SpecialChunkLen ) //Some chunks have an invalid length that is equal to this value.
                     {

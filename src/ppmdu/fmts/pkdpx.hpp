@@ -74,15 +74,16 @@ namespace filetypes
         }
 
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
             for( uint8_t & abyte : magicn )
             {
-                abyte = *itReadfrom; 
-                ++itReadfrom;
+                abyte = utils::ReadIntFromBytes<uint8_t>(itReadfrom,itPastEnd);
+                //abyte = *itReadfrom; 
+                //++itReadfrom;
             }
 
-            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom,itPastEnd); //iterator is incremented
 
             for( uint8_t & aflag : flaglist )
             {
@@ -90,7 +91,7 @@ namespace filetypes
                 ++itReadfrom;
             }
 
-            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom); //iterator is incremented
+            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom,itPastEnd); //iterator is incremented
 
             return itReadfrom;
         }

@@ -37,7 +37,7 @@ namespace filetypes
             for( const auto & pokesubf : mypack.SubFiles() )
             {
                 sir0_header hdr;
-                hdr.ReadFromContainer( pokesubf.begin() );
+                hdr.ReadFromContainer( pokesubf.begin(), pokesubf.end() );
 
                 //In Explorers of Time/Darkness some pokemon's level data is compressed
                 // as AT4PX!
@@ -92,7 +92,7 @@ namespace filetypes
         template<class T>
             inline void ReadVal( T & val, vector<uint8_t>::const_iterator & itat )
         {
-            val = utils::ReadIntFromBytes<T>( itat );
+            val = utils::ReadIntFromBytes<T>( itat, m_rawdata.end() );
         }
 
         const std::vector<uint8_t>      & m_rawdata;

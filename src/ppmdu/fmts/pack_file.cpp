@@ -33,7 +33,7 @@ namespace filetypes
 
     uint32_t ComputeFileNBPaddingBytes( uint32_t filelen )
     {
-        return ( GetNextInt32DivisibleBy16( filelen ) - filelen );
+        return CalculateLengthPadding( filelen, 16u );// ( GetNextInt32DivisibleBy16( filelen ) - filelen );
     }
 
 
@@ -48,10 +48,11 @@ namespace filetypes
         return itwriteto;
     }
 
-    std::vector<uint8_t>::const_iterator fileIndex::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    std::vector<uint8_t>::const_iterator fileIndex::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom, 
+                                                                       std::vector<uint8_t>::const_iterator itpastend )
     {
-        _fileOffset = utils::ReadIntFromBytes<decltype(_fileOffset)>(itReadfrom);
-        _fileLength = utils::ReadIntFromBytes<decltype(_fileLength)>(itReadfrom);
+        _fileOffset = utils::ReadIntFromBytes<decltype(_fileOffset)>(itReadfrom,itpastend);
+        _fileLength = utils::ReadIntFromBytes<decltype(_fileLength)>(itReadfrom,itpastend);
         return itReadfrom;
     }
 
@@ -66,10 +67,11 @@ namespace filetypes
         return itwriteto;
     }
 
-    std::vector<uint8_t>::const_iterator pfheader::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
+    std::vector<uint8_t>::const_iterator pfheader::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom,
+                                                                      std::vector<uint8_t>::const_iterator itPastEnd)
     {
-        _zeros   = utils::ReadIntFromBytes<decltype(_zeros)>  (itReadfrom);
-        _nbfiles = utils::ReadIntFromBytes<decltype(_nbfiles)>(itReadfrom);
+        _zeros   = utils::ReadIntFromBytes<decltype(_zeros)>  (itReadfrom,itPastEnd);
+        _nbfiles = utils::ReadIntFromBytes<decltype(_nbfiles)>(itReadfrom,itPastEnd);
         return itReadfrom;
     }
 
@@ -116,7 +118,8 @@ namespace filetypes
 
     uint32_t CPack::PredictHeaderSizeWithPadding( uint32_t nbsubfiles )
     {
-        return GetNextInt32DivisibleBy16( PredictHeaderSize(nbsubfiles) );
+        const uint32_t hdrlen = PredictHeaderSize(nbsubfiles);
+        return CalculatePaddedLengthTotal( hdrlen, 16u );
     }
 
     uint32_t CPack::getCurrentPredictedHeaderLengthWithForcedOffset()const
@@ -137,17 +140,17 @@ namespace filetypes
 
         //#1 - Read header
         pfheader mahead;
-        mahead.ReadFromContainer(beg);
+        mahead.ReadFromContainer(beg, end);
 
 	    //----------- Analyze file ----------
         //Is it using a forced first file offset ?
-        m_ForcedFirstFileOffset = IsPackFileUsingForcedFFOffset( beg, mahead._nbfiles );
+        m_ForcedFirstFileOffset = IsPackFileUsingForcedFFOffset( beg, end, mahead._nbfiles );
 
         //Fill the File Offset Table
-        ReadFOTFromPackFile( beg, mahead._nbfiles );
+        ReadFOTFromPackFile( beg, end, mahead._nbfiles );
 
         //Get the file data
-        ReadSubFilesFromPackFileUsingFOT( beg );
+        ReadSubFilesFromPackFileUsingFOT( beg, end );
     }
 
     void CPack::LoadFolder( const std::string & pathdir )
@@ -245,7 +248,7 @@ namespace filetypes
         {
             m_OffsetTable.push_back( fileIndex( offsetsofar, entry.size() ) );
             offsetsofar += entry.size();
-            offsetsofar =  GetNextInt32DivisibleBy16( offsetsofar ); //compensate for padding
+            offsetsofar =  CalculatePaddedLengthTotal( offsetsofar, 16u ); //compensate for padding
         }
     }
 
@@ -259,30 +262,35 @@ namespace filetypes
         return headerlengthwithpadding - PredictHeaderSize( m_OffsetTable.size() );
     }
 
-    vector<uint8_t>::const_iterator CPack::ReadHeader( vector<uint8_t>::const_iterator itbegin, pfheader & out_mahead )const
-    {
-        return out_mahead.ReadFromContainer(itbegin);
-    }
+    //vector<uint8_t>::const_iterator CPack::ReadHeader( vector<uint8_t>::const_iterator itbegin, 
+    //                                                   vector<uint8_t>::const_iterator itpastend, 
+    //                                                  pfheader                        & out_mahead )const
+    //{
+    //    return out_mahead.ReadFromContainer(itbegin, itpastend);
+    //}
 
     // !!- OK -!!
-    void CPack::ReadFOTFromPackFile( vector<uint8_t>::const_iterator itbegin, unsigned int nbsubfiles )
+    void CPack::ReadFOTFromPackFile( vector<uint8_t>::const_iterator itbegin, 
+                                     vector<uint8_t>::const_iterator itend, 
+                                     unsigned int                    nbsubfiles )
     {
-        const uint32_t       TOTAL_BYTES_FOT = nbsubfiles * SZ_OFFSET_TBL_ENTRY;
+        const uint32_t                  TOTAL_BYTES_FOT = nbsubfiles * SZ_OFFSET_TBL_ENTRY;
         vector<uint8_t>::const_iterator itt             = itbegin;
         m_OffsetTable.resize( nbsubfiles );
 
-        std::advance(    itt,  OFFSET_TBL_FIRST_ENTRY );                    //Move to beginning of FOT
+        std::advance(itt,  OFFSET_TBL_FIRST_ENTRY);                    //Move to beginning of FOT
 
         for( auto & entry : m_OffsetTable )
         {
             fileIndex fi;
-            itt = fi.ReadFromContainer(itt);
+            itt = fi.ReadFromContainer(itt, itend);
             entry = fi;
         }
     }
 
 
-    void CPack::ReadSubFilesFromPackFileUsingFOT( vector<uint8_t>::const_iterator itbegin )
+    void CPack::ReadSubFilesFromPackFileUsingFOT( vector<uint8_t>::const_iterator itbegin,
+                                                  vector<uint8_t>::const_iterator itend )
     {
         if( m_OffsetTable.empty() )
             throw std::runtime_error( "CPack::ReadSubFilesFromPackFileUsingFOT(): The file allocation table contains no entries!" );
@@ -304,7 +312,9 @@ namespace filetypes
     }
 
     // !!- OK -!!
-    uint32_t CPack::IsPackFileUsingForcedFFOffset( vector<uint8_t>::const_iterator itbeg, unsigned int nbsubfiles )const
+    uint32_t CPack::IsPackFileUsingForcedFFOffset( vector<uint8_t>::const_iterator itbeg, 
+                                                   vector<uint8_t>::const_iterator itend, 
+                                                   unsigned int                    nbsubfiles )const
     {
         uint32_t             expectedlength;
         uint32_t             actuallength;
@@ -315,7 +325,7 @@ namespace filetypes
         //Get the actual first file offset from the file
         std::advance( ittread, OFFSET_TBL_FIRST_ENTRY );
 
-        actuallength = utils::ReadIntFromBytes<uint32_t>(ittread);
+        actuallength = utils::ReadIntFromBytes<uint32_t>(ittread, itend);
 
         //compare with first subfile's offset in file's offset table
         return ( actuallength > expectedlength ) ? actuallength : 0;
@@ -327,7 +337,7 @@ namespace filetypes
         uint32_t filesizesofar = getCurrentPredictedHeaderLengthWithForcedOffset();
 
         for( auto &subfile : m_SubFiles )
-            filesizesofar = GetNextInt32DivisibleBy16( subfile.size() + filesizesofar );
+            filesizesofar = CalculatePaddedLengthTotal( subfile.size() + filesizesofar, 16u );
 
         return filesizesofar;
     }
@@ -467,14 +477,14 @@ namespace filetypes
         ContentBlock cb;
 
         //Read the header
-        headr.ReadFromContainer( parameters._itdatabeg );
+        headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
         //Get the last entry in the FOT and add its len to its offset to get the end offset!
         auto itlastentry = parameters._itdatabeg;
         advance( itlastentry, OFFSET_TBL_FIRST_ENTRY + ( headr._nbfiles * SZ_OFFSET_TBL_ENTRY ) );
 
         fileIndex lastentry;
-        lastentry.ReadFromContainer( itlastentry );
+        lastentry.ReadFromContainer( itlastentry, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -490,8 +500,8 @@ namespace filetypes
     bool packfile_rule::isMatch( std::vector<uint8_t>::const_iterator itdatabeg, std::vector<uint8_t>::const_iterator itdataend , const std::string & filext )
     {
         pfheader headr;
-        itdatabeg = headr.ReadFromContainer( itdatabeg );
-        uint32_t nextint = utils::ReadIntFromBytes<uint32_t>(itdatabeg); //We know that the next value is the first entry in the ToC, if its really a pack file!
+        itdatabeg = headr.ReadFromContainer( itdatabeg, itdataend );
+        uint32_t nextint = utils::ReadIntFromBytes<uint32_t>(itdatabeg, itdataend); //We know that the next value is the first entry in the ToC, if its really a pack file!
         
         bool     filextokornotthere = filext.compare( pmd2::filetypes::PACK_FILEX ) == 0;
 

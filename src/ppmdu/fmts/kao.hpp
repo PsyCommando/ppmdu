@@ -106,6 +106,7 @@ namespace filetypes
         std::vector<uint8_t>::const_iterator ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, 
                                                             std::vector<uint8_t>::const_iterator     itrawtocentry );
         uint32_t             GetLenRawPortraitData( std::vector<uint8_t>::const_iterator itdatabeg, 
+                                                    std::vector<uint8_t>::const_iterator itdataend, 
                                                     tocsubentry_t                        entryoffset );
 
         void ImportFromFolders();

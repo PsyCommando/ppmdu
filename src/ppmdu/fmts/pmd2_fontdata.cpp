@@ -30,11 +30,11 @@ namespace pmd2 { namespace filetypes
         static const uint32_t SZ = sizeof(decltype(width)) + sizeof(decltype(height)) + sizeof(decltype(offset));
 
         template<class _init>
-            _init ReadFromContainer( _init itreadat )
+            _init ReadFromContainer( _init itreadat, _init itpastend )
         {
-            width  = utils::ReadIntFromBytes<int8_t> (itreadat);
-            height = utils::ReadIntFromBytes<int8_t> (itreadat);
-            offset = utils::ReadIntFromBytes<int16_t>(itreadat);
+            width  = utils::ReadIntFromBytes<int8_t> (itreadat, itpastend);
+            height = utils::ReadIntFromBytes<int8_t> (itreadat, itpastend);
+            offset = utils::ReadIntFromBytes<int16_t>(itreadat, itpastend);
             return itreadat;
         }
 
@@ -98,7 +98,7 @@ namespace pmd2 { namespace filetypes
             auto            itEnd  = m_fontfiledata.end();
 
             //Get nb of character entries
-            uint32_t nbentries = utils::ReadIntFromBytes<uint32_t>( itRead );
+            uint32_t nbentries = utils::ReadIntFromBytes<uint32_t>( itRead, itEnd );
 
             //Validate size
             uint32_t expected  = (m_fontfiledata.size() - 4) / SizeMainFontDataEntry;
@@ -121,8 +121,8 @@ namespace pmd2 { namespace filetypes
             {
                 chardat_t & acharent = m_fontdata[i];
 
-                acharent.charcode = utils::ReadIntFromBytes<uint16_t>( itRead );
-                acharent.unk1     = utils::ReadIntFromBytes<uint16_t>( itRead );
+                acharent.charcode = utils::ReadIntFromBytes<uint16_t>( itRead, itEnd );
+                acharent.unk1     = utils::ReadIntFromBytes<uint16_t>( itRead, itEnd );
 
                 //Read image data here
                 acharent.imgdat.resize( MainFontRes.width, MainFontRes.height );
@@ -199,7 +199,7 @@ namespace pmd2 { namespace filetypes
         operator std::vector<gimg::image_i8bpp>()
         {
             RawFontToCEntry                first;
-            first.ReadFromContainer(m_fdata.begin());
+            first.ReadFromContainer(m_fdata.begin(), m_fdata.end());
 
             auto                           itToC    = m_fdata.begin();
             auto                           itToCEnd = m_fdata.begin() + first.offset;
@@ -210,7 +210,7 @@ namespace pmd2 { namespace filetypes
             {
                 //Read ToC entry
                 RawFontToCEntry cur;
-                itToC = cur.ReadFromContainer( itToC );
+                itToC = cur.ReadFromContainer( itToC, itToCEnd );
 
                 gimg::image_i8bpp curimg;
 

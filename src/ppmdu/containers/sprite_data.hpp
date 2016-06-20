@@ -185,7 +185,9 @@ namespace pmd2{ namespace graphics
     // IO Methods
     //-----------------------------
         //#TODO: we'll need to make a proper generic sprite data class that isn't heavily based on the structure of wan files...
-        std::vector<uint8_t>::const_iterator ReadFromWANContainer( std::vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm );
+        std::vector<uint8_t>::const_iterator ReadFromWANContainer( std::vector<uint8_t>::const_iterator & itread, 
+                                                                   std::vector<uint8_t>::const_iterator   itpastend, 
+                                                                   bool                                 & out_isLastFrm );
         void WriteToWANContainer( std::back_insert_iterator<std::vector<uint8_t>> itbackins, bool setLastBit )const; //setLastBit set this to true for the last frame in a group !
 
     //-----------------------------

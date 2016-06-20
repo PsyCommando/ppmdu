@@ -57,17 +57,17 @@ namespace filetypes
         /**************************************************************
         **************************************************************/
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itpastend )
         {
-            magic       = utils::ReadIntFromBytes<decltype(magic)>      (itReadfrom, false); //Magic number is big endian
-            ptrImg      = utils::ReadIntFromBytes<decltype(ptrImg)>     (itReadfrom);
-            imglen      = utils::ReadIntFromBytes<decltype(imglen)>     (itReadfrom);
-            unk0        = utils::ReadIntFromBytes<decltype(unk0)>       (itReadfrom);
-            unk1        = utils::ReadIntFromBytes<decltype(unk1)>       (itReadfrom);
-            imgWidth    = utils::ReadIntFromBytes<decltype(imgWidth)>   (itReadfrom);
-            imgHeight   = utils::ReadIntFromBytes<decltype(imgHeight)>  (itReadfrom);
-            ptrPal      = utils::ReadIntFromBytes<decltype(ptrPal)>     (itReadfrom);
-            nbColorsPal = utils::ReadIntFromBytes<decltype(nbColorsPal)>(itReadfrom);
+            magic       = utils::ReadIntFromBytes<decltype(magic)>      (itReadfrom, itpastend, false); //Magic number is big endian
+            ptrImg      = utils::ReadIntFromBytes<decltype(ptrImg)>     (itReadfrom, itpastend);
+            imglen      = utils::ReadIntFromBytes<decltype(imglen)>     (itReadfrom, itpastend);
+            unk0        = utils::ReadIntFromBytes<decltype(unk0)>       (itReadfrom, itpastend);
+            unk1        = utils::ReadIntFromBytes<decltype(unk1)>       (itReadfrom, itpastend);
+            imgWidth    = utils::ReadIntFromBytes<decltype(imgWidth)>   (itReadfrom, itpastend);
+            imgHeight   = utils::ReadIntFromBytes<decltype(imgHeight)>  (itReadfrom, itpastend);
+            ptrPal      = utils::ReadIntFromBytes<decltype(ptrPal)>     (itReadfrom, itpastend);
+            nbColorsPal = utils::ReadIntFromBytes<decltype(nbColorsPal)>(itReadfrom, itpastend);
             return itReadfrom;
         }
     };

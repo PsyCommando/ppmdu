@@ -72,7 +72,7 @@ namespace pmd2 { namespace graphics
 
     //This function returns the appropriate Resolution for the specified amount of pixels
     // of the image data. 
-    const utils::Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount );
+    //const utils::Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount );
  
 
 
@@ -86,57 +86,57 @@ namespace pmd2 { namespace graphics
             RLE table in-between the time its stored in 
             memory and the time its written to file.
     *******************************************************/
-    struct RLE_TableEntry
-    {
-        uint32_t  pixelsource_,  //Either an offset within the file, or a value to repeat several times.
-                  pixelamount_,  //Either the length to read at the offset, or the amount of times to repeat the value of pixel source
-                  unknown_val_;  //No ideas what its for at this point
-        bool      bPSourceIsOffset;
+    //struct RLE_TableEntry
+    //{
+    //    uint32_t  pixelsource_,  //Either an offset within the file, or a value to repeat several times.
+    //              pixelamount_,  //Either the length to read at the offset, or the amount of times to repeat the value of pixel source
+    //              unknown_val_;  //No ideas what its for at this point
+    //    bool      bPSourceIsOffset;
 
-        RLE_TableEntry( uint32_t pixelsrc = 0, uint32_t pixelamt = 0, uint32_t unknval = 0 );
+    //    RLE_TableEntry( uint32_t pixelsrc = 0, uint32_t pixelamt = 0, uint32_t unknval = 0 );
 
-        bool isNullEntry()const;
-        bool isPixelSourceOffset()const;
-        void setPixelSourceIsOffset( bool ispsourceoffset ); //Set wether the "pixelsource_" value is an offset, or not
+    //    bool isNullEntry()const;
+    //    bool isPixelSourceOffset()const;
+    //    void setPixelSourceIsOffset( bool ispsourceoffset ); //Set wether the "pixelsource_" value is an offset, or not
 
-        uint32_t & operator[]( unsigned int index );
-    };
+    //    uint32_t & operator[]( unsigned int index );
+    //};
 
 //==================================================================
 // PMD2 Sprite RLE Functions
 //==================================================================
 
-    //#TODO : Make a functors for all that stuff. It will help reduce the massive
-    //        amount of sub-function we got in the cpp right now !
+    ////#TODO : Make a functors for all that stuff. It will help reduce the massive
+    ////        amount of sub-function we got in the cpp right now !
 
-    //#TODO : Change the logic behind the RLE encoding, because the game seems to actually not
-    //        handle encoding anything but sequences of zeros.. 
+    ////#TODO : Change the logic behind the RLE encoding, because the game seems to actually not
+    ////        handle encoding anything but sequences of zeros.. 
 
-    //read the data of a frameblock inside a vector of chars. 
-    //The itterator should be at the FRM_IN position of the ptr table near the end of the frame data.
-    //The second iterator should be either the FRM_BEG of the next frame block, or the PAL_BEG if its the last frame block !
-    // in_rawfile is the vector containing all the raw data for the whole file
-    void RLE_DecodeFrame( const std::vector<uint8_t>      & in_rawfile, 
-                           std::vector<uint8_t>::iterator   ittptrs, 
-                           std::vector<uint8_t>           & out_decompframe );
+    ////read the data of a frameblock inside a vector of chars. 
+    ////The itterator should be at the FRM_IN position of the ptr table near the end of the frame data.
+    ////The second iterator should be either the FRM_BEG of the next frame block, or the PAL_BEG if its the last frame block !
+    //// in_rawfile is the vector containing all the raw data for the whole file
+    //void RLE_DecodeFrame( const std::vector<uint8_t>      & in_rawfile, 
+    //                       std::vector<uint8_t>::iterator   ittptrs, 
+    //                       std::vector<uint8_t>           & out_decompframe );
 
-    //Compress a frame to the PMD RLE format
-    //Input: 
-    //      - Raw image/frame data
-    //      - baseoffset : the offset to add to all the offset computed in the RLE table.
-    //Output:
-    //      - out_resultdata : The image data with the compressed sections removed 
-    //      - out_rletable   : The RLE table with all the compression info
-    void RLE_EncodeFrame( const std::vector<uint8_t>     & in_frame, 
-                          std::vector<uint8_t>           & out_resultdata, 
-                          std::vector<RLE_TableEntry>    & out_rletable, 
-                          std::vector<uint8_t>::size_type  baseoffset );
+    ////Compress a frame to the PMD RLE format
+    ////Input: 
+    ////      - Raw image/frame data
+    ////      - baseoffset : the offset to add to all the offset computed in the RLE table.
+    ////Output:
+    ////      - out_resultdata : The image data with the compressed sections removed 
+    ////      - out_rletable   : The RLE table with all the compression info
+    //void RLE_EncodeFrame( const std::vector<uint8_t>     & in_frame, 
+    //                      std::vector<uint8_t>           & out_resultdata, 
+    //                      std::vector<RLE_TableEntry>    & out_rletable, 
+    //                      std::vector<uint8_t>::size_type  baseoffset );
 
 
-    //Compress a frame using the RLE format that PMD2 uses. And output both the uncompressable data and RLE table into a vector
-    //  of std::pair. This is to allow to adjust the offsets in the RLE table easily when comes the time to assemble the file back together 
-    void RLE_EncodeFrame_PushBackToVector( const std::vector<uint8_t> & in_frame, 
-                                           std::vector< std::pair< std::vector<uint8_t>, std::vector<RLE_TableEntry> > > & out_result );
+    ////Compress a frame using the RLE format that PMD2 uses. And output both the uncompressable data and RLE table into a vector
+    ////  of std::pair. This is to allow to adjust the offsets in the RLE table easily when comes the time to assemble the file back together 
+    //void RLE_EncodeFrame_PushBackToVector( const std::vector<uint8_t> & in_frame, 
+    //                                       std::vector< std::pair< std::vector<uint8_t>, std::vector<RLE_TableEntry> > > & out_result );
 
 
 };};

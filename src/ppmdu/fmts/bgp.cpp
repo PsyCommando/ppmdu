@@ -55,7 +55,7 @@ namespace filetypes
         void DoParse()
         {
             DecompressBGP();
-            m_hdr.ReadFromContainer( m_bgpdata.begin() );
+            m_hdr.ReadFromContainer( m_bgpdata.begin(), m_bgpdata.end() );
             ParsePalette();
             ParseTileMapping();
             ParseTiles();
@@ -89,7 +89,7 @@ namespace filetypes
             {
                 apal.resize(PaletteNbColors);
                 for( size_t cntcol = 0; cntcol < PaletteNbColors; ++cntcol )
-                    itreadpal = apal[cntcol].ReadAsRawByte(itreadpal);
+                    itreadpal = apal[cntcol].ReadAsRawByte(itreadpal, m_bgpdata.end());
             }
         }
 
@@ -103,7 +103,7 @@ namespace filetypes
 
             for( size_t cnttme = 0; cnttme < nbtilemapentries; ++cnttme )
             {
-                m_out.m_mappingdat[cnttme] = move( DecodeTileMappingData( utils::ReadIntFromBytes<uint16_t>(itreadmap) ) ); //iterator incremented
+                m_out.m_mappingdat[cnttme] = move( DecodeTileMappingData( utils::ReadIntFromBytes<uint16_t>(itreadmap,m_bgpdata.end()) ) ); //iterator incremented
             }
         }
 

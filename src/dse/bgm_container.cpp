@@ -23,12 +23,12 @@ namespace DSE
         Returns the offsets of the swdl and smdl in order.
     */
     template<class _init>
-        std::array<uint32_t,2> ReadOffsetsSubHeader( _init itread, uint32_t subhdroffset )
+        std::array<uint32_t,2> ReadOffsetsSubHeader( _init itread, _init itpastend, uint32_t subhdroffset )
     {
         std::array<uint32_t,2> offsets = {0};
         std::advance( itread, subhdroffset );
-        itread = utils::ReadIntFromBytes( offsets[0], itread );
-        itread = utils::ReadIntFromBytes( offsets[1], itread );
+        itread = utils::ReadIntFromBytes( offsets[0], itread, itpastend);
+        itread = utils::ReadIntFromBytes( offsets[1], itread, itpastend);
         return offsets;
     }
 
@@ -54,11 +54,11 @@ namespace DSE
         {
             sir0_header hdr;
 
-            hdr.ReadFromContainer( istreambuf_iterator<char>(infile) );
+            hdr.ReadFromContainer( istreambuf_iterator<char>(infile), istreambuf_iterator<char>() );
             if( hdr.magic == sir0_header::MAGIC_NUMBER )
             {
                 infile.seekg(0);
-                auto offsets = ReadOffsetsSubHeader( istreambuf_iterator<char>(infile) , hdr.subheaderptr );
+                auto offsets = ReadOffsetsSubHeader( istreambuf_iterator<char>(infile), istreambuf_iterator<char>(), hdr.subheaderptr );
 
                 //SWDL_HeaderData swdhdr;
                 //SMDL_Header smdhdr;
@@ -95,12 +95,12 @@ namespace DSE
         vector<uint8_t> fdata( move( utils::io::ReadFileToByteVector( filepath ) ) );
         sir0_header     hdr;
 
-        hdr.ReadFromContainer( fdata.begin() );
+        hdr.ReadFromContainer( fdata.begin(), fdata.end() );
 
         if( hdr.magic != sir0_header::MAGIC_NUMBER )
             throw runtime_error( "ReadBgmContainer() : File is missing SIR0 header!" );
             
-        auto        offsets = ReadOffsetsSubHeader( fdata.begin() , hdr.subheaderptr );
+        auto        offsets = ReadOffsetsSubHeader( fdata.begin(), fdata.end(), hdr.subheaderptr );
 
         //SWDL_Header swdhdr;
         //SMDL_Header smdhdr;

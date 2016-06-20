@@ -52,16 +52,16 @@ namespace filetypes
 
         //
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( palbeg,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( pallen,     itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( tilesptr,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( tileslen,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( tmapdatptr, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( tmapdatlen, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( bgpunk3,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( bgpunk4,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( palbeg,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( pallen,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tilesptr,   itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tileslen,   itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tmapdatptr, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tmapdatlen, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( bgpunk3,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( bgpunk4,    itReadfrom, itPastEnd );
             return itReadfrom;
         }
     };

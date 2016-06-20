@@ -114,9 +114,6 @@
     <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\gstringutils.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>

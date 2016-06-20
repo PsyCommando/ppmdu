@@ -51,13 +51,13 @@ namespace filetypes
         /**************************************************************
         **************************************************************/
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itread, _init itend )
         {
-            magic     = utils::ReadIntFromBytes<decltype(magic)>    (itReadfrom, false); //Magic number is big endian
-            nbEntries = utils::ReadIntFromBytes<decltype(nbEntries)>(itReadfrom);
-            unk0      = utils::ReadIntFromBytes<decltype(unk0)>     (itReadfrom);
-            unk1      = utils::ReadIntFromBytes<decltype(unk1)>     (itReadfrom);
-            return itReadfrom;
+            magic     = utils::ReadIntFromBytes<decltype(magic)>    (itread, itend, false); //Magic number is big endian
+            nbEntries = utils::ReadIntFromBytes<decltype(nbEntries)>(itread, itend);
+            unk0      = utils::ReadIntFromBytes<decltype(unk0)>     (itread, itend);
+            unk1      = utils::ReadIntFromBytes<decltype(unk1)>     (itread, itend);
+            return itread;
         }
     };
 

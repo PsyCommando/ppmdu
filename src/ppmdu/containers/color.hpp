@@ -63,10 +63,10 @@ namespace gimg
             return itwhere;
         }
 
-        template<class _init> inline _init ReadAsRawByte( _init itwhere, bool blittleendianorder = true ) //#TODO: is "blittleendianorder" a good name ? what about "binvertendian" ?
+        template<class _init> inline _init ReadAsRawByte( _init itwhere, _init itpastend, bool blittleendianorder = true ) //#TODO: is "blittleendianorder" a good name ? what about "binvertendian" ?
         {
             for( unsigned int i = 0; i < NB_COMPONENTS; ++i  )
-                m_colcomponents[i] = utils::ReadIntFromBytes<colordata_t>( itwhere, blittleendianorder );
+                m_colcomponents[i] = utils::ReadIntFromBytes<colordata_t>( itwhere, itpastend, blittleendianorder );
             return itwhere;
         }
 

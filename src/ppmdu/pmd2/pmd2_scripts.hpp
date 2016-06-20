@@ -21,7 +21,7 @@ namespace pmd2
     **********************************************************************************/
     //Unique Files
     const std::string ScriptNames_enter    = "enter.sse";       //enter.sse
-    const std::string ScriptNames_dus      = "dus.sss";         //dus.sss
+    const std::string ScriptNames_dus      = "dus.sss";         //dus.sss           //!#TODO: change this. We found hus.sss and mus.sss exist too
     const std::string ScriptNames_unionall = "unionall.ssb";    //unionall.ssb
 
     //Name lens

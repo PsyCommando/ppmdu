@@ -1,6 +1,6 @@
 #include "pmd2_gameloader.hpp"
 #include <utils/utility.hpp>
-
+#include <ppmdu/pmd2/pmd2.hpp>
 using namespace std;
 
 namespace pmd2
@@ -47,7 +47,7 @@ namespace pmd2
             {
                 if( utils::isFolder(fpath) )
                 {
-                    if( AnalyzeDirForPMD2Dirs(fpath) != eGameVersion::Invalid )
+                    if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
                     {
                         size_t lastslashpos = string::npos;
                         for( size_t i = 0; i < fpath.size(); ++i )

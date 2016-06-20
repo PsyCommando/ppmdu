@@ -99,7 +99,7 @@ namespace pmd2 { namespace graphics
         //Write palette
         while( itbeg != itend )
         {
-            itbeg = temp.ReadAsRawByte( itbeg );
+            itbeg = temp.ReadAsRawByte( itbeg, itend );
             out_palette.push_back( std::move(temp) );
         }
 
@@ -144,7 +144,7 @@ namespace pmd2 { namespace graphics
         while( itbeg != itend )
         {
             colRGB24 temp;
-            itbeg = temp.ReadAsRawByte( itbeg, false );
+            itbeg = temp.ReadAsRawByte( itbeg, itend, false );
             ++itbeg; //Skip the ignored 0x80 byte
             out_palette.push_back( std::move(temp) );
         }

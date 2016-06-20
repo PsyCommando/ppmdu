@@ -111,24 +111,24 @@ namespace DSE
 
         //
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( label,    itReadfrom, false ); //iterator is incremented
-            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom); 
-            itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( tpqn,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nbtrks,   itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nbchans,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unk12,    itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( label,    itReadfrom, itPastEnd, false ); //iterator is incremented
+            itReadfrom = utils::ReadIntFromBytes( unk1,     itReadfrom, itPastEnd ); 
+            itReadfrom = utils::ReadIntFromBytes( unk2,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk3,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk4,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tpqn,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk5,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbtrks,   itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbchans,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk6,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk7,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk8,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk9,     itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk10,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk11,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk12,    itReadfrom, itPastEnd );
 
             for( uint32_t i = 0; i < LenMaxPadding; ++i, ++itReadfrom )
             {
@@ -215,22 +215,22 @@ namespace DSE
 
         //
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( label,   itReadfrom, false ); //Force this, to avoid bad surprises
-            itReadfrom = utils::ReadIntFromBytes( unk1,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk2,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk3,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk4,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( tpqn,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( nbtrks,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( nbchans, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk5,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk6,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk7,    itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( mainvol, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( mainpan, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unk8,    itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( label,   itReadfrom, itPastEnd, false ); //Force this, to avoid bad surprises
+            itReadfrom = utils::ReadIntFromBytes( unk1,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk2,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk3,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk4,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( tpqn,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbtrks,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbchans, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk5,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk6,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk7,    itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( mainvol, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( mainpan, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unk8,    itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -324,7 +324,7 @@ namespace DSE
             if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V402) )
             {
                 SongChunk_v402 schnk;
-                m_itread = schnk.ReadFromContainer( m_itread );
+                m_itread = schnk.ReadFromContainer( m_itread, m_itend );
                 if( utils::LibWide().isLogOn() )
                     clog << schnk;
                 m_song = schnk;
@@ -332,7 +332,7 @@ namespace DSE
             else if( m_hdr.version == static_cast<uint16_t>(eDSEVersion::V415) )
             {
                 SongChunk_v415 schnk;
-                m_itread = schnk.ReadFromContainer( m_itread );
+                m_itread = schnk.ReadFromContainer( m_itread, m_itend );
                 if( utils::LibWide().isLogOn() )
                     clog << schnk;
                 m_song = schnk;
@@ -782,7 +782,7 @@ namespace DSE
                 ContentBlock cb;
 
                 //Read the header
-                headr.ReadFromContainer( parameters._itdatabeg );
+                headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
                 //build our content block info 
                 cb._startoffset          = 0;
@@ -796,10 +796,10 @@ namespace DSE
             //This method is a quick boolean test to determine quickly if this content handling
             // rule matches, without in-depth analysis.
             virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
-                                    vector<uint8_t>::const_iterator   itdataend,
-                                    const std::string & filext)
+                                   vector<uint8_t>::const_iterator   itdataend,
+                                   const std::string               & filext)
             {
-                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SMDL_MagicNumber);
+                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg, itdataend, false) == DSE::SMDL_MagicNumber);
             }
 
         private:

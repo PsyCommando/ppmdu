@@ -152,7 +152,7 @@ namespace utils{ namespace io
                 {
                     //#2 - move 10 bytes forward and read the nb of colors
                     foundDataChunk += 10;
-                    nbcolors = ReadIntFromBytes<uint16_t>( foundDataChunk );
+                    nbcolors = ReadIntFromBytes<uint16_t>( foundDataChunk, in_riffpalette.end() );
                 }
                 else
                     throw exception("Invalid RIFF palette!");

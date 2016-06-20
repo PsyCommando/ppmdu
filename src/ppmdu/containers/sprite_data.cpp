@@ -82,15 +82,17 @@ namespace pmd2{ namespace graphics
     }
 
 
-    vector<uint8_t>::const_iterator MetaFrame::ReadFromWANContainer( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
+    vector<uint8_t>::const_iterator MetaFrame::ReadFromWANContainer( vector<uint8_t>::const_iterator & itread,  
+                                                                     vector<uint8_t>::const_iterator   itpastend, 
+                                                                     bool                            & out_isLastFrm )
     {
         //Read the raw values first
-        imageIndex      = utils::ReadIntFromBytes<decltype(imageIndex)>(itread); //itread is incremented automatically!
-        unk0            = utils::ReadIntFromBytes<decltype(unk0)>(itread);
-        uint16_t offyfl = utils::ReadIntFromBytes<uint16_t>(itread);
-        uint16_t offxfl = utils::ReadIntFromBytes<uint16_t>(itread);
-        unk15           = utils::ReadIntFromBytes<decltype(unk15)>(itread);
-        unk1            = utils::ReadIntFromBytes<decltype(unk1)>(itread);
+        imageIndex      = utils::ReadIntFromBytes<decltype(imageIndex)>(itread,itpastend); //itread is incremented automatically!
+        unk0            = utils::ReadIntFromBytes<decltype(unk0)>      (itread,itpastend);
+        uint16_t offyfl = utils::ReadIntFromBytes<uint16_t>            (itread,itpastend);
+        uint16_t offxfl = utils::ReadIntFromBytes<uint16_t>            (itread,itpastend);
+        unk15           = utils::ReadIntFromBytes<decltype(unk15)>     (itread,itpastend);
+        unk1            = utils::ReadIntFromBytes<decltype(unk1)>      (itread,itpastend);
 
         //Set the cleaned offsets
         offsetY         = 0x03FF & offyfl; //keep the 10 lowest bits

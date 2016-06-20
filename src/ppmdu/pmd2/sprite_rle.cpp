@@ -88,7 +88,9 @@ namespace pmd2 { namespace compression
     {
     }
 
-    uint32_t rle_decoder::operator()( vector<uint8_t>::const_iterator itbeg, vector<uint8_t>::const_iterator itfrmin )
+    uint32_t rle_decoder::operator()( vector<uint8_t>::const_iterator itbeg, 
+                                      vector<uint8_t>::const_iterator itend, 
+                                      vector<uint8_t>::const_iterator itfrmin )
     {
         if( m_pOutput == nullptr )
         {
@@ -107,7 +109,7 @@ namespace pmd2 { namespace compression
         {
             rle_table_entry entry;
             //Read current entry
-            itfrmin = entry.ReadFromContainer( itfrmin );
+            itfrmin = entry.ReadFromContainer( itfrmin, itend );
             //advance( itfrmin, entry.size() ); //Increment reading position in the RLE table
 
             imagesz8bpp += entry.pixamt * 2; //Multiply the bytes per 2, because we're exporting to 8bpp!

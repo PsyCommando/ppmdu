@@ -151,7 +151,7 @@ namespace ppx_extract
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
         sir0_header hdr;
-        hdr.ReadFromContainer( itdatabeg );
+        hdr.ReadFromContainer( itdatabeg, itdataend );
         DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
@@ -159,7 +159,7 @@ namespace ppx_extract
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
         sir0_header hdr;
-        hdr.ReadFromContainer( itdatabeg );
+        hdr.ReadFromContainer( itdatabeg, itdataend );
         DoDecompressPKDPX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
