@@ -193,6 +193,9 @@ namespace pmd2
         void Load();
         void Write();
 
+        void Import( const std::string & dir );
+        void Export( const std::string & dir );
+
     private:
         void LoadDirectory    (const std::string       & path);
         void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
@@ -242,19 +245,19 @@ namespace pmd2
     {
         string basename = Poco::Path(fpath).getBaseName();
 
-        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScript( fpath, m_parent.m_scrloc, m_parent.m_gameversion ))));
-        //if( m_parent.m_gameversion == eGameVersion::EoS )
+        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScript( fpath, m_parent.m_scrRegion, m_parent.m_gameVersion ))));
+        //if( m_parent.m_gameVersion == eGameVersion::EoS )
         //{
-        //    if( m_parent.m_scrloc == eGameLocale::NorthAmerica )
+        //    if( m_parent.m_scrRegion == eGameRegion::NorthAmerica )
         //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoS( fpath ))));
-        //    else if( m_parent.m_scrloc == eGameLocale::Europe )
+        //    else if( m_parent.m_scrRegion == eGameRegion::Europe )
         //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoSPal( fpath ))));
         //}
-        //else if(m_parent.m_gameversion == eGameVersion::EoTEoD)
+        //else if(m_parent.m_gameVersion == eGameVersion::EoTEoD)
         //{
-        //    if( m_parent.m_scrloc == eGameLocale::NorthAmerica )
+        //    if( m_parent.m_scrRegion == eGameRegion::NorthAmerica )
         //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoTD( fpath ))));
-        //    else if( m_parent.m_scrloc == eGameLocale::Europe )
+        //    else if( m_parent.m_scrRegion == eGameRegion::Europe )
         //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoTDPal( fpath ))));
         //}
         //else
@@ -722,14 +725,23 @@ namespace pmd2
 
     }
 
+    void GameScriptsHandler::Import( const std::string & dir )
+    {
+    }
+
+    void GameScriptsHandler::Export( const std::string & dir )
+    {
+    }
+
+
 
 //==============================================================================
 //  GameScripts
 //==============================================================================
 
 
-    GameScripts::GameScripts(const std::string & scrdir, eGameLocale loc, eGameVersion gver )
-        :m_scriptdir(scrdir), m_scrloc(loc), m_gameversion(gver), m_pHandler(new GameScriptsHandler(*this))
+    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver )
+        :m_scriptdir(scrdir), m_scrRegion(greg), m_gameVersion(gver), m_pHandler(new GameScriptsHandler(*this))
     {}
 
     GameScripts::~GameScripts()
@@ -745,6 +757,14 @@ namespace pmd2
     void GameScripts::Write()
     {
         m_pHandler->Write();
+    }
+
+    void GameScripts::Import(const std::string & dir)
+    {
+    }
+    
+    void GameScripts::Export(const std::string & dir)
+    {
     }
 
     ScriptSet * GameScripts::AccessScriptSet(const std::string & setname)

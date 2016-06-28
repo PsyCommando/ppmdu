@@ -308,6 +308,28 @@ namespace pmd2
     }
 
     /*
+    */
+    StringsCatalog GameLanguageLoader::FindAllBlockOffsets(const std::string & textFileName )const
+    {
+        StringsCatalog cata;
+        for( const auto & entry : m_langData )
+        {
+            if( entry.textStrFName == textFileName )
+            {
+                cata.SetLocaleString(entry.localeStr);
+                for( size_t cntblk = 0; cntblk < StrBlocksNames.size(); ++cntblk )
+                {
+                    auto found = entry.strBlockOffsets.find( StrBlocksNames[cntblk] );
+                    if( found != entry.strBlockOffsets.end() )
+                        cata.AddStringBlock( static_cast<eStrBNames>(cntblk), found->second.first, found->second.second );
+                }
+            }
+        }
+        return std::move(cata);
+    }
+
+
+    /*
         For a given string block name inside the text_*.str file, returns whether the 
         block was found, and the index of the first string in that block. The result
         is put into a pair.
@@ -328,5 +350,15 @@ namespace pmd2
         return make_pair(false,make_pair(uint32_t(0),uint32_t(0)));
     }
 
+
+    const GameLanguageLoader::glang_t * GameLanguageLoader::GetLanguage(const std::string & langname)const
+    {
+        for( const auto & entry : m_langData )
+        {
+            if( entry.language == langname )
+                return &entry;
+        }
+        return nullptr;
+    }
 
 };

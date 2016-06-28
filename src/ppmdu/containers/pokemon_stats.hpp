@@ -8,11 +8,13 @@ Description:
     Generic storage classes for containing the pokemon data, and abstracting the lower-level storage format used by the game!
 */
 #include <ppmdu/basetypes.hpp>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 #include <utils/utility.hpp>
 #include <array>
 #include <vector>
 #include <map>
 #include <string>
+#include <memory>
 
 namespace pmd2 { namespace stats 
 {
@@ -454,20 +456,29 @@ namespace pmd2 { namespace stats
         
         The code expercts the amount of name strings matches the amount of pokemon in the PokemonDB object !
     */
+    //void      ExportPokemonsToXML  ( const PokemonDB                         & src,
+    //                                 std::vector<std::string>::const_iterator  itbegnames,
+    //                                 std::vector<std::string>::const_iterator  itbegcat,
+    //                                 const std::string                       & destdir );
+
     void      ExportPokemonsToXML  ( const PokemonDB                         & src,
-                                     std::vector<std::string>::const_iterator  itbegnames,
-                                     std::vector<std::string>::const_iterator  itbegcat,
+                                     const GameText                          * gtext,
                                      const std::string                       & destdir );
+
     /*
         Read pokemon data from several xml files in a directory, into a PokemonDB.
         Also import string data from the xml files into the ranges specified by the 4 iterators.
     */
-    void      ImportPokemonsFromXML( const std::string                  & srcdir, 
-                                     PokemonDB                          & out_pkdb,
-                                     std::vector<std::string>::iterator   itbegnames,
-                                     std::vector<std::string>::iterator   itendnames,
-                                     std::vector<std::string>::iterator   itbegcat,
-                                     std::vector<std::string>::iterator   itendcat );
+    //void      ImportPokemonsFromXML( const std::string                  & srcdir, 
+    //                                 PokemonDB                          & out_pkdb,
+    //                                 std::vector<std::string>::iterator   itbegnames,
+    //                                 std::vector<std::string>::iterator   itendnames,
+    //                                 std::vector<std::string>::iterator   itbegcat,
+    //                                 std::vector<std::string>::iterator   itendcat );
+
+    void      ImportPokemonsFromXML ( const std::string                 & srcdir, 
+                                      PokemonDB                         & out_pkdb,
+                                      GameText                          * inout_gtext );
 
     /*
         Export pokemon data to XML

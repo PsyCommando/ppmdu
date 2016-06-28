@@ -79,8 +79,8 @@ namespace statsutil
         int DoImportAll();
         int DoExportAll();
 
-        int HandleImport( const std::string & frompath, pmd2::stats::GameStats & gstats );
-        int HandleExport( const std::string & topath,   pmd2::stats::GameStats & gstats );
+        int HandleImport( const std::string & frompath, pmd2::GameDataLoader & gloader );
+        int HandleExport( const std::string & topath,   pmd2::GameDataLoader & gloader );
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -94,6 +94,8 @@ namespace statsutil
 
         //Default filenames names
         static const std::string                                 DefExportStrName;
+        static const std::string                                 DefExportStrDirName;
+        static const std::string                                 DefExportScriptDirName;
         //static const std::string                                 DefExportPkmnOutDir;
         //static const std::string                                 DefExportMvDir;
         //static const std::string                                 DefExportItemsDir;

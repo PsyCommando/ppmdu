@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <locale>
 #include <vector>
+#include <utility>
+#include <functional>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/File.h>
 #include <Poco/Path.h>
@@ -26,34 +28,35 @@ namespace pmd2 { namespace stats
     namespace movesXML
     {
 
-        static const string ROOT_Move    = "Move";
+        const string ROOT_Move    = "Move";
+        const string ATTR_GameVer = "GameVersion";
 
-        static const string NODE_Strings = "Strings";
-        static const string PROP_Name    = "Name";
-        static const string PROP_Desc    = "Description";
+        const string NODE_Strings = "Strings";
+        const string PROP_Name    = "Name";
+        const string PROP_Desc    = "Description";
 
-        static const string NODE_Data    = "Data";
-        static const string PROP_BasePow = "BasePower";
-        static const string PROP_Type    = "Type";
-        static const string PROP_Category= "Category";
-        static const string PROP_Unk4    = "Unk4";
-        static const string PROP_Unk5    = "Unk5";
-        static const string PROP_BasePP  = "BasePP";
-        static const string PROP_Unk6    = "Unk6";
-        static const string PROP_Unk7    = "Unk7";
-        static const string PROP_Accuracy= "Accuracy";
-        static const string PROP_Unk9    = "Unk9";
-        static const string PROP_Unk10   = "Unk10";
-        static const string PROP_Unk11   = "Unk11";
-        static const string PROP_Unk12   = "Unk12";
-        static const string PROP_Unk13   = "Unk13";
-        static const string PROP_Unk14   = "Unk14";
-        static const string PROP_Unk15   = "Unk15";
-        static const string PROP_Unk16   = "Unk16";
-        static const string PROP_Unk17   = "Unk17";
-        static const string PROP_Unk18   = "Unk18";
-        static const string PROP_MoveID  = "MoveID";
-        static const string PROP_Unk19   = "Unk19";
+        const string NODE_Data    = "Data";
+        const string PROP_BasePow = "BasePower";
+        const string PROP_Type    = "Type";
+        const string PROP_Category= "Category";
+        const string PROP_Unk4    = "Unk4";
+        const string PROP_Unk5    = "Unk5";
+        const string PROP_BasePP  = "BasePP";
+        const string PROP_Unk6    = "Unk6";
+        const string PROP_Unk7    = "Unk7";
+        const string PROP_Accuracy= "Accuracy";
+        const string PROP_Unk9    = "Unk9";
+        const string PROP_Unk10   = "Unk10";
+        const string PROP_Unk11   = "Unk11";
+        const string PROP_Unk12   = "Unk12";
+        const string PROP_Unk13   = "Unk13";
+        const string PROP_Unk14   = "Unk14";
+        const string PROP_Unk15   = "Unk15";
+        const string PROP_Unk16   = "Unk16";
+        const string PROP_Unk17   = "Unk17";
+        const string PROP_Unk18   = "Unk18";
+        const string PROP_MoveID  = "MoveID";
+        const string PROP_Unk19   = "Unk19";
     };
 
 //=================================================================================
@@ -65,15 +68,20 @@ namespace pmd2 { namespace stats
     class MoveDB_XMLWriter
     {
     public:
-        MoveDB_XMLWriter( const MoveDB                   & src1,
-                          const MoveDB                   & src2,
-                          vector<string>::const_iterator  itbegnames,
-                          vector<string>::const_iterator  itbegdesc )
-            :m_src1(src1), m_src2(src2), m_itnames(itbegnames), m_itdescs(itbegdesc)
+        MoveDB_XMLWriter( const MoveDB      & src1,
+                          const MoveDB      * src2   = nullptr,
+                          const GameText    * pgtext = nullptr )
+            :m_src1(src1), m_psrc2(src2), m_pgametext(pgtext), m_bNoStrings(false)
         {}
 
         void Write( const std::string & destdir )
         {
+            if( !m_pgametext || ( m_pgametext && !m_pgametext->AreStringsLoaded() ) )
+            {
+                clog << "<!>- MoveDB_XMLWriter::Write(): No strings loaded! Ignoring strings!(Names, descriptions, etc..)\n";
+                m_bNoStrings = true;
+            }
+
             if( !utils::isFolder(destdir) )
             {
                 stringstream sstr;
@@ -81,43 +89,64 @@ namespace pmd2 { namespace stats
                 throw runtime_error( sstr.str() );
             }
 
-            if( !m_src2.empty() )
-            {
+            if( !m_psrc2 )
                 WriteEoS( destdir );
-            }
             else
-            {
                 WriteEoTD( destdir );
-            }
         }
 
     private:
 
+        inline string PrepareMvNameFName( const string & name, eGameLanguages lang  )
+        {
+            const string * plocstr = m_pgametext->GetLocaleString(lang);
+            if( plocstr )
+                return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ), std::locale( *plocstr ) ); //Remove ending "\0" and remove illegal characters for filesystem
+            else 
+                return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) );
+        }
+
+        stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntmv )
+        {
+            const string * pfstr = nullptr;
+            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::MvNames, cntmv )) )
+            {
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntmv <<"_" 
+                          <<PrepareMvNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
+            }
+            else
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntmv <<".xml";
+
+            return out_fname;
+        }
+
+
         void WriteEoS( const std::string & destdir )
         {
             using namespace movesXML;
-            auto         itcurname = m_itnames;
-            auto         itcurdesc = m_itdescs;
             const string dirprefix = utils::TryAppendSlash( destdir );
             stringstream fname;
 
-            if( m_src1.size() != m_src2.size() )
+            if( m_src1.size() != m_psrc2->size() )
                 throw runtime_error("Size mismatch between the two move data lists! One list of moves is longer than the other!");
 
-            for( unsigned int i = 0; i < m_src1.size(); ++i, ++itcurname, ++itcurdesc )
+            for( unsigned int cntmv = 0; cntmv < m_src1.size(); ++cntmv/*, ++itcurname, ++itcurdesc*/ )
             {
                 fname.str(string());
                 xml_document doc;
                 xml_node     movedata = doc.append_child( ROOT_Move.c_str() );
+                AppendAttribute( movedata, ATTR_GameVer, pmd2::GetGameVersionName( eGameVersion::EoS ) );
                 WriteCommentNode( movedata, "Pokemon Mystery Dungeon: Explorers of Sky move data" );
-                WriteCommentNode( movedata, "In-game text" );
-                WriteStrings( movedata, *itcurname, *itcurdesc );
-                WriteCommentNode( movedata, "Move data from waza_p.bin" );
-                WriteMove( movedata, m_src1[i] );
-                WriteCommentNode( movedata, "Move data from waza_p2.bin" );
-                WriteMove( movedata, m_src2[i] );
 
-                fname <<dirprefix <<setw(4) <<setfill('0') <<dec <<i <<"_" << PrepareMvNameFName(*itcurname) <<".xml";
+                if( !m_bNoStrings )
+                    WriteStrings( movedata, cntmv );
+
+                WriteCommentNode( movedata, "Move data from waza_p.bin" );
+                WriteMove( movedata, m_src1[cntmv] );
+                WriteCommentNode( movedata, "Move data from waza_p2.bin" );
+                WriteMove( movedata, (*m_psrc2)[cntmv] );
+
+                MakeFilename(fname, dirprefix, cntmv);
 
                 if( ! doc.save_file( fname.str().c_str() ) )
                 {
@@ -131,23 +160,25 @@ namespace pmd2 { namespace stats
         void WriteEoTD( const std::string & destdir )
         {
             using namespace movesXML;
-            auto         itcurname = m_itnames;
-            auto         itcurdesc = m_itdescs;
             const string dirprefix = utils::TryAppendSlash( destdir );
             stringstream fname;
 
-            for( unsigned int i = 0; i < m_src1.size(); ++i, ++itcurname, ++itcurdesc )
+            for( unsigned int cntmv = 0; cntmv < m_src1.size(); ++cntmv/*, ++itcurname, ++itcurdesc*/ )
             {
                 fname.str(string());
                 xml_document doc;
                 xml_node     movedata = doc.append_child( ROOT_Move.c_str() );
+                AppendAttribute( movedata, ATTR_GameVer, pmd2::GetGameVersionName( eGameVersion::EoTEoD ) );
                 WriteCommentNode( movedata, "Pokemon Mystery Dungeon: Explorers of Time/Darkness move data" );
-                WriteCommentNode( movedata, "In-game text" );
-                WriteStrings( movedata, *itcurname, *itcurdesc );
-                WriteCommentNode( movedata, "Move data from waza_p.bin" );
-                WriteMove   ( movedata, m_src1[i] );
 
-                fname <<dirprefix <<setw(4) <<setfill('0') <<dec <<i <<"_" << PrepareMvNameFName(*itcurname) <<".xml";
+                if( !m_bNoStrings )
+                    WriteStrings( movedata, cntmv );
+
+                WriteCommentNode( movedata, "Move data from waza_p.bin" );
+                WriteMove   ( movedata, m_src1[cntmv] );
+
+                MakeFilename(fname, dirprefix, cntmv);
+                //fname <<dirprefix <<setw(4) <<setfill('0') <<dec <<i <<"_" << PrepareMvNameFName(*itcurname) <<".xml";
 
                 if( ! doc.save_file( fname.str().c_str() ) )
                 {
@@ -158,20 +189,25 @@ namespace pmd2 { namespace stats
             }
         }
 
-
-
-        inline string PrepareMvNameFName( const string & name )
-        {
-            return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) ); //Remove ending "\0" and remove illegal characters for filesystem
-        }
-
-        void WriteStrings( xml_node & pn, const string & name, const string & desc )
+        void WriteStrings( xml_node & mn, unsigned int cntmv )
         {
             using namespace movesXML;
-            xml_node strnode = pn.append_child( NODE_Strings.c_str() );
-            WriteNodeWithValue( strnode, PROP_Name, utils::StrRemoveAfter( name, "\\0" ).c_str() ); //remove trailling \0
-            WriteNodeWithValue( strnode, PROP_Desc, utils::StrRemoveAfter( desc, "\\0" ).c_str() ); //remove trailling \0
+            WriteCommentNode( mn, "In-game text" );
+            xml_node strnode = mn.append_child( NODE_Strings.c_str() );
 
+            //Add all loaded languages
+            for( const auto & alang : *m_pgametext )
+            {
+                xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
+                //Write Name
+                const string * pname = alang.second.GetStringInBlock(eStrBNames::MvNames,cntmv);
+                if( pname )
+                    WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
+                //Write Description
+                const string * pdesc = alang.second.GetStringInBlock(eStrBNames::MvDesc,cntmv);
+                if( pdesc )
+                    WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pdesc, "\\0" ) ); //remove ending \0
+            }
         }
 
         void WriteMove( xml_node & pn, const MoveData & mvdata )
@@ -203,9 +239,9 @@ namespace pmd2 { namespace stats
 
     private:
         const MoveDB                   &m_src1;
-        const MoveDB                   &m_src2;
-        vector<string>::const_iterator  m_itnames;
-        vector<string>::const_iterator  m_itdescs;
+        const MoveDB                   *m_psrc2;
+        const GameText                 *m_pgametext;
+        bool                            m_bNoStrings;
     };
 
     /**********************************************************************
@@ -216,12 +252,23 @@ namespace pmd2 { namespace stats
     public:
         typedef pair<vector<string>::iterator,vector<string>::iterator> range_t;
 
-        MoveDB_XMLParser( MoveDB & out_mdb1, MoveDB & out_mdb2, range_t mnit, range_t mdit )
-            :m_out1(out_mdb1), m_out2(out_mdb2), m_moveNames(mnit), m_moveDescs(mdit)
+        /*
+        */
+        MoveDB_XMLParser( MoveDB & out_mdb1, MoveDB * out_mdb2 = nullptr, GameText * pgtext = nullptr )
+            :m_out1(out_mdb1), m_pout2(out_mdb2), m_pgametext(pgtext),m_bNoStrings(false), m_bParseMoveId(false)
         {}
 
-        void Parse( const string & srcdir ) 
+        /*
+        */
+        void Parse( const string & srcdir, bool bparsemoveids = true ) 
         {
+            m_bParseMoveId = bparsemoveids;
+            if( !m_pgametext || ( m_pgametext && !m_pgametext->AreStringsLoaded() ) )
+            {
+                clog << "<!>- MoveDB_XMLParser::Parse(): No strings loaded! Ignoring strings!(Names, descriptions, etc..)\n";
+                m_bNoStrings = true;
+            }
+
             try
             {
                 Poco::DirectoryIterator itDirEnd;
@@ -248,55 +295,47 @@ namespace pmd2 { namespace stats
 
     private:
 
+        /*
+            Decides whether to parse the move id from the filename or just use the file counter value instead.
+        */
+        uint32_t GetCurrentMoveId( const std::string & mv, uint32_t cntmv )
+        {
+            uint32_t moveid = 0;
+            if( m_bParseMoveId )
+            {
+                stringstream sstrmoveid;
+                auto         itendnumber = std::find_if_not( mv.begin(), 
+                                                             mv.end(), 
+                                                             std::bind( &(std::isalnum<char>), 
+                                                                        std::placeholders::_1, 
+                                                                        std::ref(locale::classic()) ) );
+                sstrmoveid << string( mv.begin(), itendnumber );
+                sstrmoveid >> moveid;
+            }
+            else
+                moveid = cntmv;
+            return moveid;
+        }
+
+        /*
+        */
         void ReadAllMoves( const vector<string> & files )
         {
             using namespace movesXML;
-
-            //Check first file whether the format is for EoS data or EoTD
-            xml_document doccheck;
-            xml_parse_result loadres = doccheck.load_file(files.front().c_str());
-            if( ! loadres )
-            {
-                stringstream sstr;
-                sstr <<"Can't load XML document \"" <<files.front() <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
-                throw std::runtime_error(sstr.str());
-            }
-
-
-            auto chkchilds = doccheck.first_child().children(NODE_Data.c_str());
-            bool has2data  = std::distance( chkchilds.begin(), chkchilds.end() ) > 1; //If has 2 is EoS
-
-            uint32_t cnt =0;
-            for( auto & child : chkchilds )
-                ++cnt;
-
             MoveDB result1;
             MoveDB result2;
-            auto   itNames    = m_moveNames.first;
-            auto   itNamesEnd = m_moveNames.second;
-            auto   itDesc     = m_moveDescs.first;
-            auto   itDescEnd  = m_moveDescs.second;
 
             result1.reserve(files.size());
 
-            if(has2data)
+            if( !m_pout2 )
                 result2.reserve(files.size());
 
             //Parse files
+            uint32_t cntmv = 0;
             for( auto & mv : files )
             {
-                if( itNames == itNamesEnd || itDesc == itDescEnd )
-                {
-                    stringstream sstrerr;
-                    sstrerr << "Reached end of move name or move description list before all move were parsed "
-                            << "while parsing file \"" <<mv <<"\"";
-                    throw runtime_error( sstrerr.str() );
-                }
-
-                string & strname = *itNames;
-                string & strdesc  = *itDesc;
-
-                xml_document doc;
+                uint32_t         moveid = GetCurrentMoveId( mv, cntmv );
+                xml_document     doc;
                 xml_parse_result loadres = doc.load_file(mv.c_str());
                 if( ! loadres )
                 {
@@ -305,27 +344,69 @@ namespace pmd2 { namespace stats
                     throw std::runtime_error(sstr.str());
                 }
 
-                if( has2data )
-                    HandleMoveEoS( doc.first_child(), strname, strdesc, result1, result2 );
-                else
-                    HandleMoveEoTD( doc.first_child(), strname, strdesc, result1 );
+                pugi::xml_node movenode  = doc.child(ROOT_Move.c_str());
+                if( !movenode )
+                {
+                    clog <<"<!>- MoveDB_XML_Parser::ReadAllMoves(): No move data found in XML file \"" <<mv <<"\". Skipping..\n";
+                    continue;
+                }
 
-                ++itNames;
-                ++itDesc;
+                eGameVersion gamever = DetectGameVersion(movenode);
+
+                if( gamever == eGameVersion::EoS )
+                    HandleMoveEoS( movenode, moveid, result1, result2 );
+                else if( gamever == eGameVersion::EoTEoD )
+                    HandleMoveEoTD( movenode, moveid, result1 );
+                else
+                {
+                    clog <<"<!>- MoveDB_XML_Parser::ReadAllMoves(): Got move with invalid game version.. Skipping..\n";
+                    continue;
+                }
+
+                ++cntmv;
             }
 
             m_out1 = move( result1 );
-            m_out2 = move( result2 );
+            if( m_pout2 )
+                *m_pout2 = move( result2 );
+            else if( !result2.empty() )
+            {
+                clog << "<!>- MoveDB_XML_Parser::ReadAllMoves(): Warning: Parsed extra move data for EoS, but the data was expected to be for EoT/D..\n";
+            }
         }
 
-        void HandleMoveEoS( xml_node & pn, string & name, string & desc, MoveDB & result1, MoveDB & result2 )
+        /*
+        */
+        eGameVersion DetectGameVersion( xml_node & movenode )
+        {
+            using namespace movesXML;
+            auto          datanchilds = movenode.children(NODE_Data.c_str());
+            xml_attribute agv         = movenode.attribute(ATTR_GameVer.c_str());
+            eGameVersion  gamever     = eGameVersion::Invalid;
+
+            if( agv )
+                gamever = StrToGameVersion( agv.as_string() );
+            else
+            {
+                clog <<"<!>- MoveDB_XML_Parser::ReadAllMoves(): No game version attribute string was found! Guessing what game its for..\n";
+                if( std::distance( datanchilds.begin(), datanchilds.end() ) > 1 ) //If has 2 is EoS
+                    gamever = eGameVersion::EoS;
+                else
+                    gamever = eGameVersion::EoTEoD;
+            }
+            return gamever;
+        }
+
+        /*
+        */
+        void HandleMoveEoS( xml_node & pn, uint32_t moveid, MoveDB & result1, MoveDB & result2 )
         {
             using namespace movesXML;
             bool breadData1 = false; //This is to alternate between data entry 1 and 2
             for( auto & cnode : pn.children() )
             {
-                if( cnode.name() == NODE_Strings )
-                    ReadStrings( cnode, name, desc );
+                if( !m_bNoStrings && cnode.name() == NODE_Strings )
+                    ReadStrings( cnode, moveid );
                 else if( cnode.name() == NODE_Data )
                 {
                     if( !breadData1 )
@@ -342,56 +423,73 @@ namespace pmd2 { namespace stats
             }
         }
 
-        void HandleMoveEoTD( xml_node & pn, string & name, string & desc, MoveDB & result1 )
+        /*
+        */
+        void HandleMoveEoTD( xml_node & pn, uint32_t moveid, MoveDB & result1 )
         {
             using namespace movesXML;
             for( auto & cnode : pn.children() )
             {
-                if( cnode.name() == NODE_Strings )
-                    ReadStrings( cnode, name, desc );
+                if( !m_bNoStrings && cnode.name() == NODE_Strings )
+                    ReadStrings( cnode, moveid );
                 else if( cnode.name() == NODE_Data )
                     result1.push_back(ReadMoveData( cnode ));
             }
         }
 
-        //MoveData ReadMove( xml_node & pn, string & name, string & desc )
-        //{
-        //    using namespace movesXML;
-        //    MoveData md;
-
-        //    for( auto & curnode : pn.children() )
-        //    {
-        //        if( curnode.name() == NODE_Strings )
-        //        {
-        //            ReadStrings( curnode, name, desc );
-        //           
-        //        }
-        //        else if( curnode.name() == NODE_Data )
-        //        {
-        //            md = ReadMoveData( curnode );
-        //        }
-        //    }
-        //    return move(md);
-        //}
-
-        void ReadStrings( xml_node & pn, string & name, string & desc )
+        /*
+        */
+        void ReadStrings( xml_node & pn, uint32_t moveid )
         {
             using namespace movesXML;
             for( auto & curnode : pn.children() )
             {
-                if( curnode.name() == PROP_Name )
+                eGameLanguages glang = StrToGameLang(curnode.name());
+                if( glang != eGameLanguages::invalid )
                 {
-                    name = curnode.child_value();
-                    name += "\\0"; //Add the trailing 0
+                    //Parse multi-language strings
+                    ReadLangStrings(curnode, glang, moveid);
                 }
-                else if( curnode.name() == PROP_Desc )
+                else
                 {
-                    desc = curnode.child_value();
-                    desc += "\\0"; //Add the trailing 0
+                    //If the game isn't multi-lingual, just parse the strings for english
+                    clog<<"<!>- MoveDB_XML_Parser::ReadStrings() : Found a non language named node!\n";
+                    ReadLangStrings(curnode, eGameLanguages::english, moveid);
                 }
             }
         }
 
+        /*
+        */
+        void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t moveid )
+        {
+            using namespace movesXML;
+            StringAccessor * plangstr = m_pgametext->GetStrings(lang);
+            if( !plangstr )
+            {
+                clog<<"<!>- MoveDB_XML_Parser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
+                return;
+            }
+
+            for( auto & curnode : langnode.children() )
+            {
+                if( curnode.name() == PROP_Name )
+                {
+                    string name = curnode.child_value();
+                    name += "\\0"; //put back the \0
+                    *(plangstr->GetStringInBlock( eStrBNames::MvNames, moveid )) = name;
+                }
+                else if( curnode.name() == PROP_Desc )
+                {
+                    string desc = curnode.child_value();
+                    desc += "\\0"; //put back the \0
+                    *(plangstr->GetStringInBlock( eStrBNames::MvDesc, moveid )) = desc;
+                }
+            }
+        }
+
+        /*
+        */
         MoveData ReadMoveData( xml_node & pn )
         {
             using namespace movesXML;
@@ -447,10 +545,11 @@ namespace pmd2 { namespace stats
         }
 
     private:
-        MoveDB & m_out1;
-        MoveDB & m_out2;
-        range_t  m_moveNames;
-        range_t  m_moveDescs;
+        MoveDB      & m_out1;
+        MoveDB      * m_pout2;
+        GameText    * m_pgametext;
+        bool          m_bNoStrings;
+        bool          m_bParseMoveId;
     };
 
 //=================================================================================
@@ -460,12 +559,11 @@ namespace pmd2 { namespace stats
         Export move data to XML files.
     **********************************************************************/
     void      ExportMovesToXML     ( const MoveDB                            & src1,
-                                     const MoveDB                            & src2,
-                                     std::vector<std::string>::const_iterator  itbegnames,
-                                     std::vector<std::string>::const_iterator  itbegdesc,
+                                     const MoveDB                            * src2,
+                                     const GameText                          * gtext,
                                      const std::string                       & destdir )
     {
-        MoveDB_XMLWriter(src1,src2,itbegnames,itbegdesc).Write(destdir);
+        MoveDB_XMLWriter(src1, src2, gtext).Write(destdir);
     }
 
     /**********************************************************************
@@ -473,14 +571,12 @@ namespace pmd2 { namespace stats
     **********************************************************************/
     void      ImportMovesFromXML   ( const std::string                  & srcdir, 
                                      MoveDB                             & out_mvdb1,
-                                     MoveDB                             & out_mvdb2,
-                                     std::vector<std::string>::iterator   itbegnames,
-                                     std::vector<std::string>::iterator   itendnames,
-                                     std::vector<std::string>::iterator   itbegdesc,
-                                     std::vector<std::string>::iterator   itenddesc )
+                                     MoveDB                             * out_mvdb2,
+                                     GameText                           * gtext )
     {
-        
-        MoveDB_XMLParser( out_mvdb1, out_mvdb2, make_pair( itbegnames, itendnames ), make_pair( itbegdesc, itenddesc ) ).Parse( srcdir );
+        MoveDB_XMLParser(out_mvdb1, out_mvdb2, gtext).Parse(srcdir);
     }
+
+
 
 };};

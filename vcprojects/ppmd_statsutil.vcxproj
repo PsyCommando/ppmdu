@@ -112,6 +112,9 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
@@ -121,6 +124,8 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
@@ -211,6 +216,8 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gamedataio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
@@ -222,11 +229,6 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
-    <ClInclude Include="..\src\ppmdu\basetypes.hpp">
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils</Filter>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp" />
@@ -328,6 +330,11 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
       <DeploymentContent>true</DeploymentContent>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\pmd2data.xml">
+      <SubType>Designer</SubType>
+    </Xml>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

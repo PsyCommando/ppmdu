@@ -32,11 +32,12 @@
 #include <Poco/DirectoryIterator.h>
 #include <Poco/Exception.h>
 
+//!#FIXME: The program right now isn't very functional!!!
 /*
 #TODO: Once we got the proper replacement for loading game strings in place, replace this and remove
        all the other extra unneeded files included in compilation!
 */
-#include <ppmdu/pmd2/game_stats.hpp>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 
 using namespace ::std;
 using namespace ::pmd2;
@@ -1961,40 +1962,55 @@ namespace gfx_util
 
         //Load pokemon name and face names from the game text!
         //#TODO: Replace this with the new text loading system!
-        pmd2::stats::GameStats gs( m_inputPath, DefLangConfFile );
-        gs.LoadStrings();
+        auto gamedetails = pmd2::DetermineGameVersionAndLocale( m_inputPath );
+        pmd2::GameText gt( m_inputPath, gamedetails.first, gamedetails.second, DefLangConfFile );
+        gt.Load();
+
+        pmd2::GameText::langstr_t * strass = gt.GetStrings();
+        if( !strass )
+            throw std::runtime_error("DUCK");
+        
+        auto boundsnames = strass->GetBoundsStringsBlock(eStrBNames::PkmnNames);
+        auto boundsportr = strass->GetBoundsStringsBlock(eStrBNames::PortraitNames);
+
+        vector<string> resfacenames;
+        vector<string> rawfacenames;
+        vector<string> respokenames;
+        if( boundsnames.first != boundsnames.second && boundsportr.first != boundsportr.second )
+        {
+            auto itpokeins = back_inserter(respokenames);
+            //Copy names twice, to match the content of the kaomado file!
+            std::copy( boundsnames.first, boundsnames.second, itpokeins );
+            std::copy( boundsnames.first, boundsnames.second, itpokeins );
+
+            rawfacenames = std::move(vector<string>(boundsportr.first, boundsportr.second));
+            resfacenames.reserve(DEF_KAO_TOC_ENTRY_NB_PTR);
+        }
 
         //Prepare name tables
-        vector<string> pokenames( gs.GetPokemonNameBeg(), gs.GetPokemonNameEnd() );
-        vector<string> facenames( gs.GetPortraitNamesBeg(), gs.GetPortraitNamesEnd() );
-        vector<string> resfacenames;
-        vector<string> respokenames;
-        resfacenames.reserve(DEF_KAO_TOC_ENTRY_NB_PTR);
-        respokenames.reserve(pokenames.size() * 2);
+        //vector<string> pokenames( strass.GetPokemonNameBeg(), gs.GetPokemonNameEnd() );
+        //vector<string> facenames( gs.GetPortraitNamesBeg(), gs.GetPortraitNamesEnd() );
 
-        auto itpokeins = back_inserter(respokenames);
-        //Copy names twice, to match the content of the kaomado file!
-        std::copy( pokenames.begin(), pokenames.end(), itpokeins );
-        std::copy( pokenames.begin(), pokenames.end(), itpokeins );
+
 
         //Build facename list!
-        if( facenames.size() < DEF_KAO_TOC_ENTRY_NB_PTR )
+        if( rawfacenames.size() < DEF_KAO_TOC_ENTRY_NB_PTR )
         {
             //Fill
-            for( size_t i = 0; i < facenames.size(); ++i )
+            for( size_t i = 0; i < rawfacenames.size(); ++i )
             {
-                auto & fn = facenames[i];
+                auto & fn = rawfacenames[i];
                 resfacenames.push_back( move(fn) );
                 resfacenames.push_back( "FLIP_" + *(resfacenames.end()) );
             }
 
             //Fill missing spot with empty strings
-            const size_t slotsleft = ( DEF_KAO_TOC_ENTRY_NB_PTR - facenames.size() );
+            const size_t slotsleft = ( DEF_KAO_TOC_ENTRY_NB_PTR - rawfacenames.size() );
             for( size_t i = 0; i < slotsleft; ++i )
                 resfacenames.push_back( "" );
         }
         else
-            resfacenames = move( facenames );
+            resfacenames = move( rawfacenames );
 
         KaoWriter mywriter( &respokenames, &resfacenames );
         mywriter( kao, outpath.toString(), m_PrefOutFormat );
@@ -2035,8 +2051,19 @@ namespace gfx_util
         outdir.makeAbsolute().makeDirectory();
         Poco::File mnstrdir(inmonster);
 
-        stats::GameStats gs( m_inputPath, DefLangConfFile );
-        gs.LoadStrings();
+        auto gamedetails = pmd2::DetermineGameVersionAndLocale( m_inputPath );
+        pmd2::GameText gt( m_inputPath, gamedetails.first, gamedetails.second, DefLangConfFile );
+        gt.Load();
+
+        pmd2::GameText::langstr_t * strass = gt.GetStrings();
+
+        if( !strass )
+            throw std::runtime_error("DUCK");
+
+        auto strnamebounds = strass->GetBoundsStringsBlock(eStrBNames::PkmnNames);
+
+        if( strnamebounds.first == strnamebounds.second )
+            throw std::runtime_error("DUCK");
 
         //Currently, we do not support raw image export on sprites !
         ChkAndHndlUnsupportedRawOutput();
@@ -2054,8 +2081,10 @@ namespace gfx_util
             throw runtime_error(sstr.str());
         }
 
+
+
         //Make the pokemon name vector
-        vector<string> pknames( gs.GetPokemonNameBeg(), gs.GetPokemonNameEnd() );
+        vector<string> pknames( strnamebounds.first, strnamebounds.second );
 
         //Export the three sprite files
         for( size_t i = 0; i < PackedPokemonSpritesFiles.size(); ++i )

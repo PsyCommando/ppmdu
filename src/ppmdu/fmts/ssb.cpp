@@ -78,8 +78,8 @@ namespace filetypes
     public:
         typedef _Init                           initer;
 
-        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameLocale scrloc )
-            :m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrlocale(scrloc)
+        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc )
+            :m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrRegion(scrloc)
         {}
 
         ScriptedSequence Parse()
@@ -98,7 +98,7 @@ namespace filetypes
         {
             uint16_t scriptdatalen = 0;
 
-            if( m_scrlocale == eGameLocale::NorthAmerica )
+            if( m_scrRegion == eGameRegion::NorthAmerica )
             {
                 ssb_header hdr;
                 m_hdrlen = ssb_header::LEN;
@@ -109,7 +109,7 @@ namespace filetypes
                 scriptdatalen = hdr.scriptdatlen;
                 m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
             }
-            else if( m_scrlocale == eGameLocale::Europe )
+            else if( m_scrRegion == eGameRegion::Europe )
             {
                 ssb_header_pal hdr;
                 m_hdrlen = ssb_header_pal::LEN;
@@ -124,14 +124,14 @@ namespace filetypes
                 m_stringblksSizes.push_back( hdr.stritalen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strspalen * ScriptWordLen );
             }
-            else if( m_scrlocale == eGameLocale::Japan )
+            else if( m_scrRegion == eGameRegion::Japan )
             {
                 cout<<"SSB_Parser::ParseHeader(): Japanese handling not implemented yet!\n";
                 assert(false);
             }
             else
             {
-                cout<<"SSB_Parser::ParseHeader(): Unknown script locale!!\n";
+                cout<<"SSB_Parser::ParseHeader(): Unknown script region!!\n";
                 assert(false);
             }
 
@@ -291,7 +291,7 @@ namespace filetypes
         vector<group_entry> m_grps;
 
         eOpCodeVersion       m_scrversion; 
-        eGameLocale        m_scrlocale;
+        eGameRegion        m_scrRegion;
     };
 
 //=======================================================================================
@@ -304,14 +304,14 @@ namespace filetypes
     /*
         ParseScript
     */
-    pmd2::ScriptedSequence ParseScript(const std::string & scriptfile, eGameLocale gloc, eGameVersion gvers)
+    pmd2::ScriptedSequence ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = eOpCodeVersion::EoS;
 
         if( gvers == eGameVersion::EoS )
             opvers = eOpCodeVersion::EoS;
-        else if( gvers == eGameVersion::EoTEoD )
+        else if( gvers == eGameVersion::EoT || gvers == eGameVersion::EoD )
             opvers = eOpCodeVersion::EoTD;
         else
             throw std::runtime_error("ParseScript(): Wrong game version!!");

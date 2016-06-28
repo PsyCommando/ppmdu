@@ -12,12 +12,25 @@ namespace pmd2
 // GameDataLoader
 //===========================================================================================
 
-    GameDataLoader::GameDataLoader( const std::string & romroot )
-        :m_romroot(romroot), m_gamelocale(eGameLocale::Invalid), m_gameversion(eGameVersion::Invalid)
+    GameDataLoader::GameDataLoader( const std::string & romroot, const std::string & gamelangxml )
+        :m_romroot(romroot), m_gameregion(eGameRegion::Invalid), m_gameversion(eGameVersion::Invalid), m_gamelangfile(gamelangxml),
+        m_bAnalyzed(false)
     {}
 
     GameDataLoader::~GameDataLoader()
-    {}
+    {
+        //We delete the unique ptr in order here, to avoid issues with circular ownership
+        m_audio   .reset(nullptr);
+        m_graphics.reset(nullptr);
+        m_stats   .reset(nullptr);
+        m_asmmanip.reset(nullptr);
+        m_scripts .reset(nullptr);
+
+        //Text has to be destroyed last to avoid possible circular ownership lockups
+        if( !m_text.unique() ) 
+            clog<<"<!>- Warning! While destroying the Gameloader object, there were still " <<m_text.use_count() <<" others owner of the GameText pointer!!\n";
+        m_text.reset();
+    }
 
     void GameDataLoader::AnalyseGame()
     {
@@ -32,7 +45,12 @@ namespace pmd2
             if( fname == DirName_DefData )
                 bfounddata = true;
             else if( fname == DirName_DefOverlay )
-                bfoundoverlay = true;
+            {
+                stringstream sstoverlays;
+                sstoverlays << utils::TryAppendSlash(m_romroot) <<DirName_DefOverlay; 
+                auto overlaycnt = utils::ListDirContent_FilesAndDirs( sstoverlays.str(), true );
+                bfoundoverlay = !overlaycnt.empty();
+            }
             else if( fname == FName_ARM9Bin )
                 bfoundarm9 = true;
 
@@ -40,83 +58,136 @@ namespace pmd2
                 break;
         }
 
-        if( !bfounddata )
-        {
-            auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
-            for( const auto & fpath : pathlst )
-            {
-                if( utils::isFolder(fpath) )
-                {
-                    if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
-                    {
-                        size_t lastslashpos = string::npos;
-                        for( size_t i = 0; i < fpath.size(); ++i )
-                        {
-                            if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
-                                lastslashpos = i;
-                        }
+        //If we can't find a directory named data, try to find one that contains the typical PMD2 files
+        //if( !bfounddata )
+        //{
+        //    clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
 
-                        if( lastslashpos != string::npos )
-                            m_datadiroverride = fpath.substr( lastslashpos+1 );
-                        break;
-                    }
-                }
-            }
-        }
+        //    //Found the directory that contains the PMD2 filetree
+        //    auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
+        //    for( const auto & fpath : pathlst )
+        //    {
+        //        if( utils::isFolder(fpath) )
+        //        {
+        //            if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
+        //            {
+        //                size_t lastslashpos = string::npos;
+        //                for( size_t i = 0; i < fpath.size(); ++i )
+        //                {
+        //                    if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
+        //                        lastslashpos = i;
+        //                }
 
-        //
-        assert(false);
+        //                if( lastslashpos != string::npos )
+        //                {
+        //                    clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
+        //                    bfounddata = true;
+        //                    m_datadiroverride = fpath.substr( lastslashpos+1 );
+        //                }
+        //                break;
+        //            }
+        //        }
+        //    }
+        //}
+
+        //Save the result of our analysis.
+        m_nodata     = !bfounddata;
+        m_noarm9     = !bfoundarm9;
+        m_nooverlays = !bfoundoverlay;
+        m_bAnalyzed  = true;
     }
 
 // ======================== Loading ========================
     void GameDataLoader::Load()
     {
-        AnalyseGame();
-        //Stuff
-        assert(false);
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        LoadGameText();
+        LoadScripts();
+        LoadGraphics();
+        LoadStats();
+        LoadAudio();
+        LoadAsm();
     }
 
     GameText * GameDataLoader::LoadGameText()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            m_text.reset( new GameText );
+        if(!m_bAnalyzed)
+            AnalyseGame();
 
-        //Stuff
-        assert(false);
+        if( m_nodata )
+            return nullptr;
+
+        if( !m_text )
+        {
+            stringstream gamefsroot;
+            gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
+            m_text.reset( new GameText( gamefsroot.str(), m_gameversion, m_gameregion, m_gamelangfile ) );
+            m_text->Load();
+        }
         return m_text.get();
     }
 
     GameScripts * GameDataLoader::LoadScripts()
     {
-        AnalyseGame();
-        if( m_scripts == nullptr )
-            m_scripts.reset( new GameScripts( m_romroot, m_gamelocale, m_gameversion ) );
+        if(!m_bAnalyzed)
+            AnalyseGame();
 
-        //Stuff
-        assert(false);
+        if( m_nodata )
+            return nullptr;
+
+        if( !m_scripts )
+        {
+            stringstream scriptdir;
+            scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
+            m_scripts.reset( new GameScripts( scriptdir.str(), m_gameregion, m_gameversion ) );
+            m_scripts->Load();
+        }
         return m_scripts.get();
     }
 
     GameGraphics * GameDataLoader::LoadGraphics()
     {
-        AnalyseGame();
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_nodata )
+            return nullptr;
+
         //Stuff
         assert(false);
         return m_graphics.get();
     }
 
-    stats::GameStats * GameDataLoader::LoadStats()
+    GameStats * GameDataLoader::LoadStats()
     {
-        AnalyseGame();
-        //Stuff
-        assert(false);
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_nodata )
+            return nullptr;
+
+        //Need to load game text for this
+        if( !m_text )
+            LoadGameText();
+
+        if( !m_stats )
+        {
+            m_stats.reset( new GameStats( m_romroot, m_gameversion, m_gameregion, shared_ptr<GameText>(m_text) ) );
+            m_stats->Load();
+        }
         return m_stats.get();
     }
 
     GameAudio * GameDataLoader::LoadAudio()
     {
-        AnalyseGame();
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_nodata )
+            return nullptr;
+
         //Stuff
         assert(false);
         return m_audio.get();
@@ -124,45 +195,84 @@ namespace pmd2
 
     PMD2_ASM_Manip * GameDataLoader::LoadAsm()
     {
-        AnalyseGame();
-        //Stuff
-        assert(false);
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_noarm9 && m_nooverlays )
+            return nullptr;
+
+        //if( !m_asmmanip )
+        //{
+        //    m_asmmanip.reset( new PMD2_ASM_Manip( ASM_Data_Loader(m_romroot), m_gameversion, m_gameregion ) );
+        //    m_asmmanip->Load();
+        //}
         return m_asmmanip.get();
     }
 
 // ======================== Writing ========================
     void GameDataLoader::Write()
     {
-        AnalyseGame();
-        //Stuff
-        assert(false);
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_text != nullptr )
+            WriteGameText();
+        if( m_scripts != nullptr )
+            WriteScripts();
+        if( m_graphics != nullptr )
+            WriteGraphics();
+        if( m_stats != nullptr )
+            WriteStats();
+        if( m_audio != nullptr )
+            WriteAudio();
+        if( m_asmmanip != nullptr )
+            WriteAsm();
     }
 
     void GameDataLoader::WriteGameText()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteGameText() : No game text to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
 
-        //Stuff
-        assert(false);
+        if( m_nodata )
+            return;
+
+        if( !m_text )
+        {
+            clog <<"<!>- GameDataLoader::WriteGameText(): Nothing to write!\n";
+            return;
+        }
+
+        m_text->Write();
     }
 
     void GameDataLoader::WriteScripts()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteScripts() : No game scripts to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
 
-        //Stuff
-        assert(false);
+        if( m_nodata )
+            return;
+
+        if( !m_scripts )
+        {
+            clog <<"<!>- GameDataLoader::WriteScripts(): Nothing to write!\n";
+            return;
+        }
+
+        m_scripts->Write();
     }
 
     void GameDataLoader::WriteGraphics()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteGraphics() : No game graphics to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_nodata )
+            return;
+
+        if( !m_graphics )
+            return;
 
         //Stuff
         assert(false);
@@ -170,19 +280,31 @@ namespace pmd2
 
     void GameDataLoader::WriteStats()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteStats() : No game stats to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
 
-        //Stuff
-        assert(false);
+        if( m_nodata )
+            return;
+
+        if( !m_stats )
+        {
+            clog <<"<!>- GameDataLoader::WriteStats(): Nothing to write!\n";
+            return;
+        }
+        
+        m_stats->Write();
     }
 
     void GameDataLoader::WriteAudio()
     {
-        AnalyseGame();
-        if( m_text == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteAudio() : No game audio to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_nodata )
+            return;
+
+        if( !m_audio )
+            return;
 
         //Stuff
         assert(false);
@@ -190,9 +312,19 @@ namespace pmd2
 
     void GameDataLoader::WriteAsm()
     {
-        AnalyseGame();
-        if( m_asmmanip == nullptr )
-            throw std::runtime_error("GameDataLoader::WriteAsm() : No asm data to write!!");
+        if(!m_bAnalyzed)
+            AnalyseGame();
+
+        if( m_noarm9 && m_nooverlays )
+            return;
+
+        if( !m_asmmanip )
+        {
+            clog <<"<!>- GameDataLoader::WriteAsm(): Nothing to write!\n";
+            return;
+        }
+
+        //m_asmmanip->Write();
     }
 
 // ======================== Data Access ========================
@@ -208,8 +340,8 @@ namespace pmd2
     GameGraphics            * GameDataLoader::GetGraphics()                             { return m_graphics.get(); }
     const GameGraphics      * GameDataLoader::GetGraphics() const                       { return m_graphics.get(); }
 
-    stats::GameStats        * GameDataLoader::GetStats()                                { return m_stats.get(); }
-    const stats::GameStats  * GameDataLoader::GetStats() const                          { return m_stats.get(); }
+    GameStats               * GameDataLoader::GetStats()                                { return m_stats.get(); }
+    const GameStats         * GameDataLoader::GetStats() const                          { return m_stats.get(); }
 
     GameAudio               * GameDataLoader::GetAudio()                                { return m_audio.get(); }
     const GameAudio         * GameDataLoader::GetAudio() const                          { return m_audio.get(); }

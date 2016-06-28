@@ -157,7 +157,7 @@ namespace pmd2
     public:
         enum struct eStrLang : size_t
         {
-            english = 0,
+            english = 0, //Shared for all single language builds
             french  = 1,
             german  = 2,
             italian = 3,
@@ -387,12 +387,14 @@ namespace pmd2
     public:
         friend class GameScriptsHandler;
         //scrdir : the directory of the game we want to load from/write to.
-        GameScripts(const std::string & scrdir, eGameLocale loc, eGameVersion gver );
+        GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver );
         ~GameScripts();
 
         //File IO
         void Load (); //Indexes all scripts. The actual sets are loaded on demand.
         void Write(); //Writes all script sets that were modified.
+        void Import(const std::string & dir);
+        void Export(const std::string & dir);
 
         //Access
         ScriptSet * AccessScriptSet( const std::string & setname );
@@ -400,10 +402,19 @@ namespace pmd2
     private:
         std::string                         m_scriptdir;
         std::map<std::string,ScriptSet>     m_sets;
-        eGameLocale                         m_scrloc;
-        eGameVersion                        m_gameversion;
+        eGameRegion                         m_scrRegion;
+        eGameVersion                        m_gameVersion;
         std::unique_ptr<GameScriptsHandler> m_pHandler;
     };
+
+
+//
+//  Import/Export
+//
+
+    void      ScriptSetToXML( const ScriptSet   & set,    eGameRegion greg,       eGameVersion gver, const std::string & destdir );
+    ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
+
 };
 
 #endif

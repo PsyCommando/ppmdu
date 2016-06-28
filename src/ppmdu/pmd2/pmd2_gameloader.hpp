@@ -20,26 +20,6 @@ Description:
 
 namespace pmd2
 {
-
-//======================================================================================
-//  Game Config Loader
-//======================================================================================
-
-    /*
-        GameConfigLoader
-            This object identifies the version of the game being loaded
-    */
-    //class GameConfigLoader
-    //{
-    //public:
-    //    GameConfigLoader( const std::wstring & pathConf ); //Path to master xml config file
-
-
-
-    //private:
-    //    std::wstring m_pathConf;
-    //};
-
 //======================================================================================
 //  GameDataLoader
 //======================================================================================
@@ -55,28 +35,32 @@ namespace pmd2
     class GameDataLoader
     {
     public:
-        GameDataLoader( const std::string & romroot );
+        GameDataLoader( const std::string & romroot, const std::string & gamelangxmlfile = "gamelang.xml" );
         ~GameDataLoader();
 
         //Set ROM Root Dir (Directory conatining arm9.bin, data, and overlay directory)
-        void SetRomRoot( const std::string & romroot );
+        void                SetRomRoot( const std::string & romroot );
         const std::string & GetRomRoot()const;
+
+        //Return the game version and locale
+        inline eGameRegion   GetGameRegion ()const {return m_gameregion; }
+        inline eGameVersion  GetGameVersion()const {return m_gameversion;}
 
         //Handles Loading the Game Data
         void Load();
 
-        //#TODO: implement those in their respective cpp file. To reduce dependencies.
+        
         GameText         * LoadGameText();
         GameScripts      * LoadScripts();
         GameGraphics     * LoadGraphics();
-        stats::GameStats * LoadStats();
+        GameStats        * LoadStats();
         GameAudio        * LoadAudio();
         PMD2_ASM_Manip   * LoadAsm();
 
         //Handles Writing the Game Data
         void Write();
 
-        //#TODO: implement those in their respective cpp file. To reduce dependencies.
+
         void WriteGameText();
         void WriteScripts();
         void WriteGraphics();
@@ -87,45 +71,52 @@ namespace pmd2
         /*
             Access to the sub-sections of the game's data
         */
-        GameText               * GetGameText();
-        const GameText         * GetGameText()const;
+        GameText                * GetGameText();
+        const GameText          * GetGameText()const;
 
         //
-        GameScripts            * GetScripts();
-        const GameScripts      * GetScripts()const;
+        GameScripts             * GetScripts();
+        const GameScripts       * GetScripts()const;
 
         //
-        GameGraphics           * GetGraphics();
-        const GameGraphics     * GetGraphics()const;
+        GameGraphics            * GetGraphics();
+        const GameGraphics      * GetGraphics()const;
 
         //
-        stats::GameStats       * GetStats();
-        const stats::GameStats * GetStats()const;
+        GameStats               * GetStats();
+        const GameStats         * GetStats()const;
 
         //
-        GameAudio              * GetAudio();
-        const GameAudio        * GetAudio()const;
+        GameAudio               * GetAudio();
+        const GameAudio         * GetAudio()const;
 
         //
-        PMD2_ASM_Manip         * GetAsmManip();
-        const PMD2_ASM_Manip   * GetAsmManip()const;
+        PMD2_ASM_Manip          * GetAsmManip();
+        const PMD2_ASM_Manip    * GetAsmManip()const;
 
     private:
         void AnalyseGame();
 
     private:
-        std::unique_ptr<GameText>            m_text;
+        std::shared_ptr<GameText>            m_text;
         std::unique_ptr<GameScripts>         m_scripts;
         std::unique_ptr<GameGraphics>        m_graphics;
-        std::unique_ptr<stats::GameStats>    m_stats;
+        std::unique_ptr<GameStats>           m_stats;
         std::unique_ptr<GameAudio>           m_audio;
         std::unique_ptr<PMD2_ASM_Manip>      m_asmmanip;
         std::string                          m_romroot;
         std::string                          m_datadiroverride; //Contains the name of the data directory if name non-default
+        std::string                          m_gamelangfile;
 
         //State
-        eGameLocale                          m_gamelocale;
+        eGameRegion                          m_gameregion;
         eGameVersion                         m_gameversion;
+        bool                                 m_bAnalyzed;
+
+        //Error conditions
+        bool                                 m_nodata;      //This is true, if there is no data directory
+        bool                                 m_noarm9;      //This is true if there is no arm9.bin file
+        bool                                 m_nooverlays;  //This is true if there are no overlay directory or overlay files
 
         //No copies
         GameDataLoader(const GameDataLoader&)            = delete;
