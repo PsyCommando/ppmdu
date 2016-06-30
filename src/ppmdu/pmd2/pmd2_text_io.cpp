@@ -42,7 +42,7 @@ namespace pmd2
             {
                 std::string    basename    = std::move( utils::GetBaseNameOnly(afile) );
                 eGameLanguages glang       = StrToGameLang(basename);
-                const auto   * langdetails =  m_gamelang.GetLanguage( basename );
+                const auto   * langdetails =  m_conf.GetLanguageFilesDB().GetByLanguage( glang );
 
                 if( glang == eGameLanguages::invalid || !langdetails )
                 {
@@ -50,8 +50,12 @@ namespace pmd2
                     continue;
                 }
 
-                std::vector<string> strs = utils::io::ReadTextFileLineByLine( afile, std::locale(langdetails->localeStr) );
-                m_languages.insert_or_assign( glang, std::move(StringAccessor( std::move(strs), std::move(m_gamelang.FindAllBlockOffsets(langdetails->textStrFName))))  );
+                std::vector<string> strs = utils::io::ReadTextFileLineByLine( afile, std::locale(langdetails->GetLocaleString()) );
+                m_languages.insert_or_assign( glang, 
+                                                std::move(StringAccessor( std::move(strs), 
+                                                                        std::move( StringsCatalog(*langdetails)))
+                                                        )
+                                            );
             }
         }
     }

@@ -5,6 +5,7 @@ pmd2_configloader.hpp
 Description: Loads on demand certain values from the config file!
 */
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -15,6 +16,7 @@ Description: Loads on demand certain values from the config file!
 
 namespace pmd2
 {
+    const std::string DefConfigFileName = "pmd2data.xml";
 
     enum struct eBinaryLocations : unsigned int
     {
@@ -30,41 +32,39 @@ namespace pmd2
 
         NbLocations,        //Must be last
     };
-
     extern const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames;
 
 
-    enum struct eStringBlocks : unsigned int
-    {
-        PkmnNames = 0,
-        PkmnCats,
-        MvNames,
-        MvDesc,
-        ItemNames,
-        ItemDescS,
-        ItemDescL,
-        AbilityNames,
-        AbilityDesc,
-        TypeNames,
-        PortraitNames,
+    //enum struct eStringBlocks : unsigned int
+    //{
+    //    PkmnNames = 0,
+    //    PkmnCats,
+    //    MvNames,
+    //    MvDesc,
+    //    ItemNames,
+    //    ItemDescS,
+    //    ItemDescL,
+    //    AbilityNames,
+    //    AbilityDesc,
+    //    TypeNames,
+    //    PortraitNames,
 
-        //Add new string types above!
-        NBEntries,
-        Invalid,
-    };
-
-    extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
+    //    //Add new string types above!
+    //    NBEntries,
+    //    Invalid,
+    //};
+    //extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
 
 
     enum struct eGameConstants :unsigned int
     {
-        Invalid = 0,
-        NbPossibleHeros,
+        NbPossibleHeros= 0,
         NbPossiblePartners,
         NbUniqueEntities,
         NbTotalEntities,
 
         NbEntries,
+        Invalid,
     };
     extern const std::array<std::string, static_cast<uint32_t>(eGameConstants::NbEntries)> GameConstantNames;
 
@@ -89,204 +89,82 @@ namespace pmd2
         uint32_t    end;
     };
 
-
-    struct GameStringData
-    {
-        std::string     filename;
-        eGameLanguages  lang;
-        std::string     localestr;
-    };
-
-    
-
-//========================================================================================
-//  GameVersionsData
-//========================================================================================
-    /*
-        Base class for the various data accessor. Just to save on rewriting those every times.
-    */
-    //template<typename _VALT>
-    //    class BaseGameKeyValData
-    //{
-    //public:
-    //    typedef _VALT                                   value_t;
-    //    typedef std::unordered_map<std::string,value_t> gvcnt_t;
-    //    typedef gvcnt_t::iterator                       iterator;
-    //    typedef gvcnt_t::const_iterator                 const_iterator;
-
-    //    BaseGameKeyValData(){}
-
-    //    BaseGameKeyValData(gvcnt_t&& data)
-    //        :m_kvdata(std::forward<gvcnt_t>(data))
-    //    {}
-
-    //    BaseGameKeyValData(BaseGameKeyValData&& mv) {this->operator=(std::forward<BaseGameKeyValData>(mv));}
-
-    //    const BaseGameKeyValData & operator=(BaseGameKeyValData&& mv)
-    //    { 
-    //        this->m_kvdata = std::move(mv.m_kvdata);
-    //        return *this;
-    //    }
-
-    //    inline iterator         begin()      { return m_kvdata.begin(); }
-    //    inline const_iterator   begin()const { return m_kvdata.begin(); }
-    //    inline iterator         end  ()      { return m_kvdata.end(); }
-    //    inline const_iterator   end  ()const { return m_kvdata.end(); }
-    //    inline size_t           size ()const { return m_kvdata.size(); }
-    //    inline bool             empty()const { return m_kvdata.empty(); }
-
-    //protected:
-    //    gvcnt_t m_kvdata;
-    //};
-
-
-//========================================================================================
-//  GameVersionsData
-//========================================================================================
-    //class GameVersionsData : public BaseGameKeyValData<GameVersionInfo>
-    //{
-    //public:
-    //    using BaseGameKeyValData::BaseGameKeyValData;
-
-    //    const_iterator GetVersionForArm9Off14( uint16_t arm9off14 )const;
-    //    const_iterator GetVersionForId       ( const std::string & id )const;
-    //};
-
-//
-//  GameConstantsData
-//
-    //class GameConstantsData 
-    //{
-    //public:
-    //    typedef std::unordered_map<,> cnt_t;
-
-    //    GameConstantsData(){}
-    //    GameConstantsData( gvcnt_t && gvinf );
-
-
-    //    const_iterator GetConstant( eGameVersion vers, const std::string & name )const;
-    //};
-
-//
-//  GameBinaryOffsets
-//
-
-    /*
-    */
-    //class GameBinaryOffsets
-    //{
-    //public:
-    //    typedef std::unordered_map<eBinaryLocations,GameBinaryOffsetInfo> cnt_t;
-    //    typedef cnt_t::iterator                                           iterator;
-    //    typedef cnt_t::const_iterator                                     const_iterator;
-
-    //    GameBinaryOffsets( cnt_t && locations )
-    //        :m_locations(std::forward<cnt_t>(locations))
-    //    {}
-
-    //    GameBinaryOffsets( GameBinaryOffsets && mv )
-    //    {
-    //        this->operator=(std::forward<GameBinaryOffsets>(mv));
-    //    }
-
-    //    const GameBinaryOffsets& operator=(GameBinaryOffsets && mv)
-    //    {
-    //        this->m_locations = std::move(m_locations);
-    //        return *this;
-    //    }
-
-    //    const const_iterator GetLocationInfo( eBinaryLocations loc )const
-    //    {
-    //        return m_locations.find(loc);
-    //    }
-
-    //    inline iterator       begin()      { return m_locations.begin(); }
-    //    inline const_iterator begin()const { return m_locations.begin(); }
-    //    inline iterator       end()      { return m_locations.end(); }
-    //    inline const_iterator end()const { return m_locations.end(); }
-
-    //    inline bool empty()const {return m_locations.empty();}
-    //    inline size_t size()const {return m_locations.size();}
-
-    //private:
-    //    cnt_t       m_locations;
-    //};
-
 //
 //  GameStrings
 //
-    class GameStringIndex
+    class LanguageFilesDB
     {
     public:
-        struct strbounds
-        {
-            uint16_t beg;
-            uint16_t end;
-        };
+        //struct strbounds
+        //{
+        //    uint16_t beg;
+        //    uint16_t end;
+        //};
 
-        /*
-        */
-        class BlocksIndex
-        {
-        public:
-            typedef std::unordered_map<eStringBlocks, strbounds> blkcnt_t;
-            typedef blkcnt_t::iterator                           iterator;
-            typedef blkcnt_t::const_iterator                     const_iterator;
+        /************************************************************************************
+            StringBlocks
+                Represent a single language/text_*.str file.
+        ************************************************************************************/
+        //class StringBlocks
+        //{
+        //public:
+        //    typedef std::unordered_map<eStringBlocks, strbounds_t>  blkcnt_t;
+        //    typedef blkcnt_t::iterator                              iterator;
+        //    typedef blkcnt_t::const_iterator                        const_iterator;
 
-            BlocksIndex( std::string && strfname, std::string && strloc, eGameLanguages lang, blkcnt_t && blocks )
-                :m_strfname(std::forward<std::string>(strfname)),
-                 m_strlocale(std::forward<std::string>(strloc)),
-                 m_lang(lang),
-                 m_blocks(std::forward<blkcnt_t>(blocks))
-            {}
+        //    StringBlocks( std::string && strfname, std::string && strloc, eGameLanguages lang, blkcnt_t && blocks )
+        //        :m_strfname(std::forward<std::string>(strfname)),
+        //         m_strlocale(std::forward<std::string>(strloc)),
+        //         m_lang(lang),
+        //         m_blocks(std::forward<blkcnt_t>(blocks))
+        //    {}
 
-            const BlocksIndex & operator=( BlocksIndex && mv )
-            {
-                this->m_blocks    = std::move(mv.m_blocks);
-                this->m_strfname  = std::move(mv.m_strfname);
-                this->m_strlocale = std::move(mv.m_strlocale);
-                return *this;
-            }
+        //    const StringBlocks & operator=( StringBlocks && mv )
+        //    {
+        //        this->m_blocks    = std::move(mv.m_blocks);
+        //        this->m_strfname  = std::move(mv.m_strfname);
+        //        this->m_strlocale = std::move(mv.m_strlocale);
+        //        return *this;
+        //    }
 
-            BlocksIndex( BlocksIndex && mv )
-            {
-                this->operator=(std::move(mv));
-            }
+        //    StringBlocks( StringBlocks && mv )
+        //    {
+        //        this->operator=(std::move(mv));
+        //    }
 
-            inline const_iterator GetStrBlock(eStringBlocks blk)const {return m_blocks.find(blk);}
+        //    inline const_iterator GetStrBlock(eStringBlocks blk)const {return m_blocks.find(blk);}
 
-            inline const std::string & GetLocaleStr()const  {return m_strlocale;}
-            inline const std::string & GetStrFName()const   {return m_strfname;}
-            inline const eGameLanguages GetLanguage()const {return m_lang;}
+        //    inline const std::string & GetLocaleStr()const  {return m_strlocale;}
+        //    inline const std::string & GetStrFName()const   {return m_strfname;}
+        //    inline const eGameLanguages GetLanguage()const {return m_lang;}
 
-        private:
-            blkcnt_t        m_blocks;
-            std::string     m_strfname;
-            std::string     m_strlocale;
-            eGameLanguages  m_lang;
-        };
+        //private:
+        //    blkcnt_t        m_blocks;
+        //    std::string     m_strfname;
+        //    std::string     m_strlocale;
+        //    eGameLanguages  m_lang;
+        //};
 
 
         typedef std::string                                 gameid_t;      // <-
         typedef std::string                                 strfname_t;    // <- Made those to make it a bit more intuitive
         typedef std::string                                 blockname_t;   // <-
-        typedef BlocksIndex                                 blocks_t;      
+        typedef StringsCatalog                              blocks_t;      
         typedef std::unordered_map<strfname_t, blocks_t>    strfiles_t;    
 
-
-        GameStringIndex()
+        LanguageFilesDB()
         {}
 
-        GameStringIndex( strfiles_t && strdata )
+        LanguageFilesDB( strfiles_t && strdata )
             :m_strindex(std::forward<strfiles_t>(strdata))
         {}
 
-        GameStringIndex( GameStringIndex && mv )
+        LanguageFilesDB( LanguageFilesDB && mv )
         {
-            this->operator=(std::forward<GameStringIndex>(mv));
+            this->operator=(std::forward<LanguageFilesDB>(mv));
         }
 
-        const GameStringIndex & operator=( GameStringIndex && mv )
+        const LanguageFilesDB & operator=( LanguageFilesDB && mv )
         {
             this->m_strindex = std::move(mv.m_strindex);
             return *this;
@@ -295,13 +173,28 @@ namespace pmd2
         /*
             returns null if block not found!
         */
-        const blocks_t * GetStrBlocks( const strfname_t & strfname )const
+        const blocks_t * GetByTextFName( const strfname_t & strfname )const
         {
             auto foundstrf = m_strindex.find(strfname);
             if( foundstrf != m_strindex.end() )
                 return &(foundstrf->second);
             else
                 return nullptr;
+        }
+
+        const blocks_t * GetByLanguage( eGameLanguages lang )const
+        {
+            for( const auto & entry : m_strindex )
+            {
+                if( entry.second.GetLanguage() == lang )
+                    return &(entry.second);
+            }
+            return nullptr;
+        }
+
+        inline const strfiles_t & Languages()const
+        {
+            return m_strindex;
         }
 
     private:
@@ -313,23 +206,29 @@ namespace pmd2
 //  ConfigLoader
 //========================================================================================
 
-    /*
-        Load constants as needed from the XML file.
-    */
-    //class ConfigLoaderImpl;
+    /************************************************************************************
+        ConfigLoader
+            Load constants as needed from the XML file.
+    ************************************************************************************/
     class ConfigLoader
     {
         friend class ConfigXMLParser;
         typedef std::unordered_map<eBinaryLocations,GameBinaryOffsetInfo> bincnt_t;
         typedef std::unordered_map<eGameConstants,  std::string>          constcnt_t;
     public:
+
         /*
             - arm9off14: The short stored at offset 14 in the ARM9 bin
         */
-        ConfigLoader( uint16_t arm9off14, const std::string & configfile = "pmd2data.xml" );
+        ConfigLoader( uint16_t arm9off14, const std::string & configfile = DefConfigFileName );
+
+        /*
+            Allows to get a result from the config file knowing only the region and game version!
+        */
+        ConfigLoader( eGameVersion version, eGameRegion region, const std::string & configfile = DefConfigFileName );
 
         inline const GameVersionInfo & GetGameVersion         ()const {return m_versioninfo;}
-        inline const GameStringIndex & GetGameStringIndex     ()const {return m_strindex;}
+        inline const LanguageFilesDB & GetLanguageFilesDB     ()const {return m_langdb;}
         inline const std::string     & GetGameConstantAsString( eGameConstants gconst )const{return m_constants.at(gconst);}
 
         int                            GetGameConstantAsInt   ( eGameConstants gconst )const;
@@ -337,7 +236,8 @@ namespace pmd2
         const GameBinaryOffsetInfo   & GetGameBinaryOffset    ( eBinaryLocations loc )const { return m_binoffsets.at(loc); }
 
     private:
-        void Parse();
+        void Parse(uint16_t arm9off14);
+        void Parse(eGameVersion version, eGameRegion region);
 
     private:
         
@@ -347,15 +247,48 @@ namespace pmd2
         GameVersionInfo     m_versioninfo;
         constcnt_t          m_constants;
         bincnt_t            m_binoffsets;
-        GameStringIndex     m_strindex;
-
-        //ConfigLoader(const ConfigLoader &) = delete;
-        //ConfigLoader(ConfigLoader &&) = delete;
-        //const ConfigLoader& operator=(const ConfigLoader &) = delete;
-        //ConfigLoader& operator=(ConfigLoader &&) = delete;
-
-        //std::unique_ptr<ConfigLoaderImpl> m_pimpl;
+        LanguageFilesDB     m_langdb;
     };
+
+//
+//  ConfigInstance
+//
+    /*
+        Helper for making a single instance of the config loader available to what uses it accross the program.
+    */
+    //class ConfigInstance
+    //{
+    //public:
+    //    static ConfigInstance & Instance()
+    //    {
+    //        return s_instance;
+    //    }
+
+    //    inline ConfigLoader * CreateLoader( uint16_t arm9off14, const std::string & configfile = DefConfigFileName )
+    //    {
+    //        m_ploader.reset(new ConfigLoader( arm9off14, configfile ));
+    //    }
+
+    //    inline std::weak_ptr<ConfigLoader> GetLoaderWeakptr()
+    //    {
+    //        return m_ploader;
+    //    }
+
+    //    inline ConfigLoader* GetLoader()
+    //    {
+    //        return m_ploader.get();
+    //    }
+
+    //    inline bool WasInitialised()const
+    //    {
+    //        return m_ploader != nullptr;
+    //    }
+
+    //private:
+    //    std::shared_ptr<ConfigLoader> m_ploader;
+    //    static ConfigInstance         s_instance;
+    //};
+
 };
 
 #endif

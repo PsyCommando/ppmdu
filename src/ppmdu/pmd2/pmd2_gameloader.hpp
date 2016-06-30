@@ -35,7 +35,8 @@ namespace pmd2
     class GameDataLoader
     {
     public:
-        GameDataLoader( const std::string & romroot, const std::string & gamelangxmlfile = "gamelang.xml" );
+        //GameDataLoader( const std::string & romroot, const std::string & gamelangxmlfile = "gamelang.xml" );
+        GameDataLoader( const std::string & romroot, const std::string & pmd2confxmlfile = DefConfigFileName );
         ~GameDataLoader();
 
         //Set ROM Root Dir (Directory conatining arm9.bin, data, and overlay directory)
@@ -43,13 +44,12 @@ namespace pmd2
         const std::string & GetRomRoot()const;
 
         //Return the game version and locale
-        inline eGameRegion   GetGameRegion ()const {return m_gameregion; }
-        inline eGameVersion  GetGameVersion()const {return m_gameversion;}
+        inline eGameRegion   GetGameRegion ()const {return m_conf->GetGameVersion().region; }
+        inline eGameVersion  GetGameVersion()const {return m_conf->GetGameVersion().version;}
 
         //Handles Loading the Game Data
         void Load();
 
-        
         GameText         * LoadGameText();
         GameScripts      * LoadScripts();
         GameGraphics     * LoadGraphics();
@@ -94,23 +94,28 @@ namespace pmd2
         PMD2_ASM_Manip          * GetAsmManip();
         const PMD2_ASM_Manip    * GetAsmManip()const;
 
-    private:
-        void AnalyseGame();
+        const ConfigLoader      * GetConfig()const;
 
     private:
+        void AnalyseGame();
+        bool LoadConfig();
+
+    private:
+        std::shared_ptr<ConfigLoader>        m_conf;
         std::shared_ptr<GameText>            m_text;
         std::unique_ptr<GameScripts>         m_scripts;
         std::unique_ptr<GameGraphics>        m_graphics;
         std::unique_ptr<GameStats>           m_stats;
         std::unique_ptr<GameAudio>           m_audio;
         std::unique_ptr<PMD2_ASM_Manip>      m_asmmanip;
+
         std::string                          m_romroot;
         std::string                          m_datadiroverride; //Contains the name of the data directory if name non-default
-        std::string                          m_gamelangfile;
+        std::string                          m_configfile;
 
         //State
-        eGameRegion                          m_gameregion;
-        eGameVersion                         m_gameversion;
+        //eGameRegion                          m_gameregion;
+        //eGameVersion                         m_gameversion;
         bool                                 m_bAnalyzed;
 
         //Error conditions

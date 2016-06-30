@@ -5,9 +5,11 @@ pmd2_text.hpp
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_langconf.hpp>
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 namespace pmd2
 {
@@ -47,9 +49,9 @@ namespace pmd2
         inline const std::vector<std::string> & Strings()const { return m_strings; }
 
         //
-        std::string * GetStringInBlock( eStrBNames blkty, size_t index ) 
+        std::string * GetStringInBlock( eStringBlocks blkty, size_t index ) 
         {
-            const StringsCatalog::strbounds_t * pbounds = m_cata[blkty];
+            const strbounds_t * pbounds = m_cata[blkty];
 
             if( !pbounds )
                 return nullptr;
@@ -63,14 +65,14 @@ namespace pmd2
             return &(m_strings[pbounds->beg + index]);
         }
 
-        const std::string * GetStringInBlock( eStrBNames blkty, size_t index )const
+        const std::string * GetStringInBlock( eStringBlocks blkty, size_t index )const
         {
             return const_cast<StringAccessor*>(this)->GetStringInBlock(blkty, index);
         }
 
-        std::pair<iterator,iterator> GetBoundsStringsBlock( eStrBNames blk )
+        std::pair<iterator,iterator> GetBoundsStringsBlock( eStringBlocks blk )
         {
-            const StringsCatalog::strbounds_t * pbounds = m_cata[blk];
+            const strbounds_t * pbounds = m_cata[blk];
             if( !pbounds )
                 return std::make_pair( end(), end() );
 
@@ -79,9 +81,9 @@ namespace pmd2
             return std::make_pair( blkbeg, blkend );
         }
 
-        std::pair<const_iterator,const_iterator> GetBoundsStringsBlock( eStrBNames blk )const
+        std::pair<const_iterator,const_iterator> GetBoundsStringsBlock( eStringBlocks blk )const
         {
-            const StringsCatalog::strbounds_t * pbounds = m_cata[blk];
+            const strbounds_t * pbounds = m_cata[blk];
             if( !pbounds )
                 return std::make_pair( end(), end() );
 
@@ -90,9 +92,19 @@ namespace pmd2
             return std::make_pair( blkbeg, blkend );
         }
 
-        const std::string & GetLocaleString()const
+        inline const std::string & GetLocaleString()const
         {
             return m_cata.GetLocaleString();
+        }
+
+        inline const std::string & GetTextFName()const
+        {
+            return m_cata.GetStrFName();
+        }
+
+        inline eGameLanguages GetLanguage()const
+        {
+            return m_cata.GetLanguage();
         }
 
     private:
@@ -111,27 +123,33 @@ namespace pmd2
     class GameText
     {
     public:
-        typedef StringAccessor                      langstr_t;
-        typedef std::map<eGameLanguages, langstr_t> langtbl_t;
-        typedef langtbl_t::iterator                 iterator;
-        typedef langtbl_t::const_iterator           const_iterator;
+        typedef StringAccessor                                langstr_t;
+        typedef std::unordered_map<eGameLanguages, langstr_t> langtbl_t;
+        typedef langtbl_t::iterator                           iterator;
+        typedef langtbl_t::const_iterator                     const_iterator;
 
-        GameText( const std::string & pmd2fsdir, eGameVersion version, eGameRegion gamereg, const std::string & gamelangxmlfile )
-            :m_pmd2fsdir(pmd2fsdir), m_version(version),m_gamelang(gamelangxmlfile, version), m_region(gamereg)
+        //GameText( const std::string & pmd2fsdir, eGameVersion version, eGameRegion gamereg, const std::string & gamelangxmlfile )
+        //    :m_pmd2fsdir(pmd2fsdir), m_version(version),m_gamelang(gamelangxmlfile, version), m_region(gamereg)
+        //{}
+
+        GameText( const std::string & pmd2fsdir, const ConfigLoader & conf )
+            :m_pmd2fsdir(pmd2fsdir), m_conf(conf)//m_version(version),m_gamelang(gamelangxmlfile, version), m_region(gamereg)
         {}
 
         void                Load ();
         void                Write()const;
         inline bool         AreStringsLoaded()const  { return !m_languages.empty(); }
-        inline eGameRegion  GetRegion()const         { return m_region; }
+        inline eGameRegion  GetRegion()const         { return m_conf.GetGameVersion().region; }
 
         /*
             GetGameLangLoader
                 Provide access to the game language loader to query more details about
                  the loaded languages.
         */
-        inline GameLanguageLoader       & GetGameLangLoader()      {return m_gamelang;}
-        inline const GameLanguageLoader & GetGameLangLoader()const {return m_gamelang;}
+        //inline GameLanguageLoader       & GetGameLangLoader()      {return m_gamelang;}
+        //inline const GameLanguageLoader & GetGameLangLoader()const {return m_gamelang;}
+
+        inline const GameVersionInfo & GetGameVersionInfo()const { return m_conf.GetGameVersion(); }
 
 
         const std::string * GetLocaleString(eGameLanguages lang)const 
@@ -208,15 +226,13 @@ namespace pmd2
             ImportText
                 Import text from a directory containing text files for each languages.
         */
-        void ImportText( const std::string & indir  );
+        void ImportText( const std::string & indir );
 
 
     private:
-        std::string                         m_pmd2fsdir;
-        eGameVersion                        m_version;
-        eGameRegion                         m_region;
-        GameLanguageLoader                  m_gamelang;
-        std::map<eGameLanguages, langstr_t> m_languages;
+        std::string          m_pmd2fsdir;
+        const ConfigLoader & m_conf;
+        langtbl_t            m_languages;
     };
 
 };

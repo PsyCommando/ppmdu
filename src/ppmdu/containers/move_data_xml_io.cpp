@@ -57,6 +57,9 @@ namespace pmd2 { namespace stats
         const string PROP_Unk18   = "Unk18";
         const string PROP_MoveID  = "MoveID";
         const string PROP_Unk19   = "Unk19";
+
+        const char * GameVer_EoS  = "EoS";
+        const char * GameVer_EoTD = "EoTEoD";
     };
 
 //=================================================================================
@@ -109,7 +112,7 @@ namespace pmd2 { namespace stats
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntmv )
         {
             const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::MvNames, cntmv )) )
+            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::MvNames, cntmv )) )
             {
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntmv <<"_" 
                           <<PrepareMvNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
@@ -168,7 +171,8 @@ namespace pmd2 { namespace stats
                 fname.str(string());
                 xml_document doc;
                 xml_node     movedata = doc.append_child( ROOT_Move.c_str() );
-                AppendAttribute( movedata, ATTR_GameVer, pmd2::GetGameVersionName( eGameVersion::EoTEoD ) );
+                AppendAttribute( movedata, ATTR_GameVer, pmd2::GetGameVersionName( eGameVersion::EoT ) );
+                AppendAttribute( movedata, ATTR_GameVer, pmd2::GetGameVersionName( eGameVersion::EoD ) );
                 WriteCommentNode( movedata, "Pokemon Mystery Dungeon: Explorers of Time/Darkness move data" );
 
                 if( !m_bNoStrings )
@@ -200,11 +204,11 @@ namespace pmd2 { namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                const string * pname = alang.second.GetStringInBlock(eStrBNames::MvNames,cntmv);
+                const string * pname = alang.second.GetStringInBlock(eStringBlocks::MvNames,cntmv);
                 if( pname )
                     WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
                 //Write Description
-                const string * pdesc = alang.second.GetStringInBlock(eStrBNames::MvDesc,cntmv);
+                const string * pdesc = alang.second.GetStringInBlock(eStringBlocks::MvDesc,cntmv);
                 if( pdesc )
                     WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pdesc, "\\0" ) ); //remove ending \0
             }
@@ -355,7 +359,7 @@ namespace pmd2 { namespace stats
 
                 if( gamever == eGameVersion::EoS )
                     HandleMoveEoS( movenode, moveid, result1, result2 );
-                else if( gamever == eGameVersion::EoTEoD )
+                else if( gamever == eGameVersion::EoT || gamever == eGameVersion::EoD )
                     HandleMoveEoTD( movenode, moveid, result1 );
                 else
                 {
@@ -392,7 +396,7 @@ namespace pmd2 { namespace stats
                 if( std::distance( datanchilds.begin(), datanchilds.end() ) > 1 ) //If has 2 is EoS
                     gamever = eGameVersion::EoS;
                 else
-                    gamever = eGameVersion::EoTEoD;
+                    gamever = eGameVersion::EoT;
             }
             return gamever;
         }
@@ -477,13 +481,13 @@ namespace pmd2 { namespace stats
                 {
                     string name = curnode.child_value();
                     name += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::MvNames, moveid )) = name;
+                    *(plangstr->GetStringInBlock( eStringBlocks::MvNames, moveid )) = name;
                 }
                 else if( curnode.name() == PROP_Desc )
                 {
                     string desc = curnode.child_value();
                     desc += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::MvDesc, moveid )) = desc;
+                    *(plangstr->GetStringInBlock( eStringBlocks::MvDesc, moveid )) = desc;
                 }
             }
         }

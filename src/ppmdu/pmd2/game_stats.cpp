@@ -798,12 +798,12 @@ namespace pmd2
 
     //std::vector<std::string>::iterator GameStats::GetPokemonNameBeg()
     //{
-    //    return (m_gameStrings.begin() + strBounds(eStrBNames::PkmnNames).beg );
+    //    return (m_gameStrings.begin() + strBounds(eStringBlocks::PkmnNames).beg );
     //}
 
     //std::vector<std::string>::iterator GameStats::GetPokemonNameEnd()
     //{
-    //    return (m_gameStrings.begin() + strBounds(eStrBNames::PkmnNames).end );
+    //    return (m_gameStrings.begin() + strBounds(eStringBlocks::PkmnNames).end );
     //}
 
     //std::vector<std::string>::const_iterator GameStats::GetPokemonCatBeg()const
@@ -816,11 +816,11 @@ namespace pmd2
     //}
     //std::vector<std::string>::iterator GameStats::GetPokemonCatBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::PkmnCats).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PkmnCats).beg );
     //}
     //std::vector<std::string>::iterator GameStats::GetPokemonCatEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::PkmnCats).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PkmnCats).end );
     //}
 
 
@@ -836,12 +836,12 @@ namespace pmd2
 
     //std::vector<std::string>::iterator       GameStats::GetMoveNamesBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvNames).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetMoveNamesEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::MvNames).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvNames).end );
     //}
 
     //std::vector<std::string>::const_iterator GameStats::GetMoveDescBeg()const
@@ -856,12 +856,12 @@ namespace pmd2
 
     //std::vector<std::string>::iterator       GameStats::GetMoveDescBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvDesc).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetMoveDescEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::MvDesc).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvDesc).end );
     //}
 
     //std::vector<std::string>::const_iterator GameStats::GetItemNamesBeg()const
@@ -876,12 +876,12 @@ namespace pmd2
 
     //std::vector<std::string>::iterator       GameStats::GetItemNamesBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemNames).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemNames).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetItemNamesEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemNames).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemNames).end );
     //}
 
     //std::vector<std::string>::const_iterator GameStats::GetItemShortDescBeg()const
@@ -896,12 +896,12 @@ namespace pmd2
 
     //std::vector<std::string>::iterator       GameStats::GetItemShortDescBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescS).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescS).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetItemShortDescEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescS).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescS).end );
     //}
 
     //std::vector<std::string>::const_iterator GameStats::GetItemLongDescBeg()const
@@ -927,72 +927,72 @@ namespace pmd2
 
     //std::vector<std::string>::iterator       GameStats::GetPortraitNamesBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PortraitNames).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetPortraitNamesEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::PortraitNames).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PortraitNames).end );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetItemLongDescBeg()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescL).beg );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescL).beg );
     //}
 
     //std::vector<std::string>::iterator       GameStats::GetItemLongDescEnd()
     //{
-    //    return (m_gameStrings.begin() +strBounds(eStrBNames::ItemDescL).end );
+    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescL).end );
     //}
 
     //std::string & GameStats::GetPokemonNameStr( uint16_t pkmnindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::PkmnNames).beg + pkmnindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::PkmnNames).beg + pkmnindex];
     //}
 
     //std::string & GameStats::GetPkmnCatNameStr( uint16_t pkmnindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::PkmnCats).beg + pkmnindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::PkmnCats).beg + pkmnindex];
     //}
 
     //std::string & GameStats::GetMoveNameStr( uint16_t moveindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::MvNames).beg + moveindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::MvNames).beg + moveindex];
     //}
 
     //std::string & GameStats::GetMoveDexcStr( uint16_t moveindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::MvDesc).beg + moveindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::MvDesc).beg + moveindex];
     //}
 
     //std::string & GameStats::GetAbilityNameStr( uint8_t abilityindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::AbilityNames).beg + abilityindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::AbilityNames).beg + abilityindex];
     //}
 
     //std::string & GameStats::GetAbilityDescStr( uint8_t abilityindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::AbilityDesc).beg + abilityindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::AbilityDesc).beg + abilityindex];
     //}
 
     //std::string & GameStats::GetTypeNameStr( uint8_t type )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::TypeNames).beg + type];
+    //    return m_gameStrings[strBounds(eStringBlocks::TypeNames).beg + type];
     //}
 
     //std::string & GameStats::GetItemNameStr( uint16_t itemindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::ItemNames).beg + itemindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::ItemNames).beg + itemindex];
     //}
 
     //std::string & GameStats::GetItemSDescStr( uint16_t itemindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::ItemDescS).beg + itemindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::ItemDescS).beg + itemindex];
     //}
 
     //std::string & GameStats::GetItemLDescStr( uint16_t itemindex )
     //{
-    //    return m_gameStrings[strBounds(eStrBNames::ItemDescL).beg + itemindex];
+    //    return m_gameStrings[strBounds(eStringBlocks::ItemDescL).beg + itemindex];
     //}
 
 

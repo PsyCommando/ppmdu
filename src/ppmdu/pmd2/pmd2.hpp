@@ -182,7 +182,7 @@ namespace pmd2
     */
     extern const std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames;
 
-    const std::string & GetGameVersionName( eGameVersion gv )
+    inline const std::string & GetGameVersionName( eGameVersion gv )
     {
         if( gv < eGameVersion::NBGameVers )
             return GameVersionNames[static_cast<size_t>(gv)];

@@ -55,7 +55,7 @@ namespace utils
     }
 
     //Read entire directory content to string vector
-    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly )
+    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly, bool noslashaftdir )
     {
         vector<string>          dircontent;
         Poco::DirectoryIterator itdir(dirpath);
@@ -70,7 +70,10 @@ namespace utils
                 else if( itdir->isDirectory() )
                 {
                     stringstream sstr;
-                    dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() + "/" );
+                    if( noslashaftdir )
+                        dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() );
+                    else
+                        dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() + "/" );
                 }
             }
             else

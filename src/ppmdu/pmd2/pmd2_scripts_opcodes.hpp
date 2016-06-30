@@ -795,7 +795,7 @@ namespace pmd2
     *************************************************************************************/
     inline const OpCodeInfoEoTD * FindOpCodeInfo_EoTD( uint16_t opcode )
     {
-        if( opcode > OpCodesInfoListEoTD.size() )
+        if( opcode < OpCodesInfoListEoTD.size() )
             return &(OpCodesInfoListEoTD[opcode]);
         else
             return nullptr;
@@ -847,7 +847,7 @@ namespace pmd2
     *************************************************************************************/
     inline const OpCodeInfoEoS * FindOpCodeInfo_EoS( uint16_t opcode )
     {
-        if( opcode > OpCodesInfoListEoS.size() )
+        if( opcode < OpCodesInfoListEoS.size() )
             return &(OpCodesInfoListEoS[opcode]);
         else
             return nullptr;

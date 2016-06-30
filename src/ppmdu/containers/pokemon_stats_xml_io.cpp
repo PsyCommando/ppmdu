@@ -180,9 +180,9 @@ namespace pmd2 {namespace stats
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntpkmn )
         {
             const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::PkmnNames, cntpkmn )) )
+            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn )) )
             {
-                //const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::PkmnNames, cntpkmn );
+                //const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn );
                 //if( pfstr )
                     out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
                 //else
@@ -206,7 +206,7 @@ namespace pmd2 {namespace stats
                 MakeFilename(sstrfname, outpathpre, cntpkmn);
                 //if( !m_bNoStrings )
                 //{
-                //    const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::PkmnNames, cntpkmn );
+                //    const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn );
                 //    if( pfstr )
                 //        sstrfname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
                 //    else
@@ -274,11 +274,11 @@ namespace pmd2 {namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                const string * pname = alang.second.GetStringInBlock(eStrBNames::PkmnNames,pkindex);
+                const string * pname = alang.second.GetStringInBlock(eStringBlocks::PkmnNames,pkindex);
                 if( pname )
                     WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
                 //Write Category
-                const string * pcat = alang.second.GetStringInBlock(eStrBNames::PkmnCats,pkindex);
+                const string * pcat = alang.second.GetStringInBlock(eStringBlocks::PkmnCats,pkindex);
                 if( pcat )
                     WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pcat, "\\0" ) ); //remove ending \0
             }
@@ -726,13 +726,13 @@ namespace pmd2 {namespace stats
                 {
                     string pkname = curnode.child_value();
                     pkname += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::PkmnNames, cntpkmn )) = pkname;
+                    *(plangstr->GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn )) = pkname;
                 }
                 else if( curnode.name() == PROP_Category )
                 {
                     string pkcat = curnode.child_value();
                     pkcat += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::PkmnCats, cntpkmn )) = pkcat;
+                    *(plangstr->GetStringInBlock( eStringBlocks::PkmnCats, cntpkmn )) = pkcat;
                 }
             }
         }

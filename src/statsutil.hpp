@@ -3,6 +3,7 @@
 #include <utils/cmdline_util.hpp>
 #include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/game_stats.hpp>
+#include <ppmdu/pmd2/pmd2_gameloader.hpp>
 
 namespace statsutil
 {
@@ -47,9 +48,10 @@ namespace statsutil
         bool ParseOptionForceImport( const std::vector<std::string> & optdata );
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
-        bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
+        //bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
+        bool ParseOptionConfig     ( const std::vector<std::string> & optdata );
 
 
         bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
@@ -141,7 +143,8 @@ namespace statsutil
         std::string m_outputPath;     //This is the output path that was parsed
 
         eOpMode     m_operationMode;  //This holds what the program should do
-        std::string m_langconf;       //The path to the language configuration file!
+        //std::string m_langconf;       //The path to the language configuration file!
+        std::string m_pmd2cfg;        //The path to the configuration file!
         std::string m_flocalestr;     //The forced locale string
         std::string m_romrootdir;     //The extracting rom's root directory
 

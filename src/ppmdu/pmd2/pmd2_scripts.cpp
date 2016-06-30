@@ -222,7 +222,7 @@ namespace pmd2
     void GameScriptsHandler::Load ()
     {
         using namespace utils;
-        auto filelist = ListDirContent_FilesAndDirs( m_parent.m_scriptdir );
+        auto filelist = ListDirContent_FilesAndDirs( m_parent.m_scriptdir, false, true );
 
         for( const auto & dir : filelist )
         {
@@ -602,21 +602,21 @@ namespace pmd2
             ssapath.append(fname).setExtension(filetypes::SSA_FileExt);
 
             //#2 - Pop those out of the queue + verify if they exist at the same time
-            auto itfoundssb = std::find_if( std::begin(fqueue), std::end(fqueue), [&ssbpath]( const Poco::Path & path )->bool
+            auto itfoundssb = std::find_if( fqueue.begin(), fqueue.end(), [&ssbpath]( const Poco::Path & path )->bool
             {
                 return (ssbpath.toString() == path.toString());
             } );
-            auto itfoundssa = std::find_if( std::begin(fqueue), std::end(fqueue), [&ssapath]( const Poco::Path & path )->bool
+            auto itfoundssa = std::find_if( fqueue.begin(), fqueue.end(), [&ssapath]( const Poco::Path & path )->bool
             {
                 return (ssapath.toString() == path.toString());
             } );
 
-            if( itfoundssb != std::end(fqueue) )
+            if( itfoundssb != fqueue.end() )
                 fqueue.erase(itfoundssb);
             else
                 throw std::runtime_error("GameScriptsHandler::LoadGrpLSDContent(): Expected SSB file named" + ssbpath.toString() + ", but couldn't find it..");
 
-            if( itfoundssa != std::end(fqueue) )
+            if( itfoundssa != fqueue.end() )
                 fqueue.erase(itfoundssa);
             else
                 throw std::runtime_error("GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" + ssapath.toString() + ", but couldn't find it..");
@@ -656,16 +656,17 @@ namespace pmd2
 
         //#1 Check for unionall.ssb
         {
-            auto itfoundlsd = std::find_if( processqueue.begin(), processqueue.end(), [&](const Path & entry)->bool
+            auto itfoundunion= std::find_if( processqueue.begin(), processqueue.end(), [&](const Path & entry)->bool
             {
                 return utils::CompareStrIgnoreCase(entry.getFileName(),  ScriptNames_unionall );
             });
-            if( itfoundlsd != processqueue.end() )
+            if( itfoundunion != processqueue.end() )
             {
                 clog << "\n\tParsing unionall.ssb..";
                 ScriptGroup unionall( "unionall", eScriptGroupType::UNK_unionall );
-                LoadSSB( unionall, itfoundlsd->toString() );
+                LoadSSB( unionall, itfoundunion->toString() );
                 curset.Components().push_back( std::move(unionall) );
+                processqueue.erase(itfoundunion);
                 clog <<"\n";
             }
         }

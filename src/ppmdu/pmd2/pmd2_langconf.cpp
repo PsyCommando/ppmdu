@@ -47,7 +47,7 @@ namespace pmd2
     static const string DefMoveData1ExportDir = "move_data1";
     static const string DefMoveData2ExportDir = "move_data2";
 
-    const array<string, static_cast<uint32_t>(eStrBNames::NBEntries)> StrBlocksNames = 
+    const array<string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StrBlocksNames = 
     {
         "Pokemon Names",
         "Pokemon Categories",
@@ -321,7 +321,7 @@ namespace pmd2
                 {
                     auto found = entry.strBlockOffsets.find( StrBlocksNames[cntblk] );
                     if( found != entry.strBlockOffsets.end() )
-                        cata.AddStringBlock( static_cast<eStrBNames>(cntblk), found->second.first, found->second.second );
+                        cata.AddStringBlock( static_cast<eStringBlocks>(cntblk), found->second.first, found->second.second );
                 }
             }
         }

@@ -89,6 +89,7 @@ namespace filetypes
             ParseGroups   ();
             ParseCode     ();
             ParseConstants();
+            ParseStrings  ();
             return std::move(m_out);
         }
 
@@ -97,6 +98,7 @@ namespace filetypes
         void ParseHeader()
         {
             uint16_t scriptdatalen = 0;
+            uint16_t constdatalen  = 0;
 
             if( m_scrRegion == eGameRegion::NorthAmerica )
             {
@@ -104,9 +106,10 @@ namespace filetypes
                 m_hdrlen = ssb_header::LEN;
                 m_cur = hdr.ReadFromContainer( m_cur, m_end );
 
-                m_nbconsts    = hdr.nbconst;
-                m_nbstrs      = hdr.nbstrs;
-                scriptdatalen = hdr.scriptdatlen;
+                m_nbconsts     = hdr.nbconst;
+                m_nbstrs       = hdr.nbstrs;
+                scriptdatalen  = hdr.scriptdatlen;
+                constdatalen   = hdr.consttbllen;
                 m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
             }
             else if( m_scrRegion == eGameRegion::Europe )
@@ -118,6 +121,7 @@ namespace filetypes
                 m_nbconsts    = hdr.nbconst;
                 m_nbstrs      = hdr.nbstrs;
                 scriptdatalen = hdr.scriptdatlen;
+                constdatalen  = hdr.consttbllen;
                 m_stringblksSizes.push_back( hdr.strenglen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strfrelen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strgerlen * ScriptWordLen );
@@ -144,7 +148,7 @@ namespace filetypes
             m_datalen        = (m_dathdr.datalen * ScriptWordLen);
             m_constoffset    = m_hdrlen + m_datalen;         //Group table is included into the datalen
             //m_codeoffset    = header_t::LEN + ssb_data_hdr::LEN + (m_dathdr.nbgrps * group_entry::LEN);
-            m_stringblockbeg = m_hdrlen + (scriptdatalen * ScriptWordLen);
+            m_stringblockbeg = m_hdrlen + (scriptdatalen * ScriptWordLen) + (constdatalen*2);
         }
 
         void ParseGroups()
@@ -179,7 +183,15 @@ namespace filetypes
             for( size_t cntgrp = 0; cntgrp < m_dathdr.nbgrps; ++cntgrp )
             {
                 ScriptInstrGrp grp;
-                grp.instructions = std::move( ParseInstructionSequence( (m_grps[cntgrp].begoffset * ScriptWordLen) + m_hdrlen, opcodefinder ) );
+                size_t absgrpbeg = (m_grps[cntgrp].begoffset * ScriptWordLen) + m_hdrlen;
+                size_t absgrpend = ((cntgrp +1) < m_dathdr.nbgrps)?
+                                    (m_grps[cntgrp+1].begoffset * ScriptWordLen) + m_hdrlen :   //If we have another group after, this is the end
+                                    m_datalen + m_hdrlen;                                       //If we have no group after, end of script data is end
+
+
+                grp.instructions = std::move( ParseInstructionSequence( absgrpbeg, 
+                                                                        absgrpend,
+                                                                        opcodefinder ) );
                 grp.type         = m_grps[cntgrp].type;
                 grp.unk2         = m_grps[cntgrp].unk2;
                 m_out.Groups().push_back( std::move(grp) );
@@ -188,16 +200,18 @@ namespace filetypes
 
 
         template<typename _InstFinder>
-            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, _InstFinder & opcodefinder )
+            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, size_t endoffset, _InstFinder & opcodefinder )
         {
             deque<ScriptInstruction> sequence;
             m_cur = m_beg;
             std::advance( m_cur, foffset ); 
+            auto itendseq= m_beg;
+            std::advance( itendseq, endoffset);
 
 
-            while( m_cur != m_end )
+            while( m_cur != itendseq )
             {
-                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( m_cur, m_end );
+                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( m_cur, itendseq );
 
                 if( curop != NullOpCode )
                 {
@@ -233,38 +247,52 @@ namespace filetypes
                     break;
             }
 
+            return std::move(sequence);
         }
 
 
         void ParseConstants()
         {
-            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings( m_constoffset,  m_nbconsts ));
+            const size_t strlutlen = (m_nbstrs * 2); // In the file, the offset for each constants in the constant table includes the 
+                                                     // length of the string lookup table(string pointers). Here, to compensate
+                                                     // we subtract the length of the string LUT from each pointer read.
+            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings( m_constoffset, m_constoffset, m_nbconsts, strlutlen ));
         }
 
         void ParseStrings()
         {
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringblockbeg;
+            size_t begoffset      = ( m_nbconsts != 0 )? m_constoffset : m_stringblockbeg;
+           
             for( size_t i = 0; i < m_stringblksSizes.size(); ++i )
             {
-                m_out.StrTbl(i) = std::move(ParseOffsetTblAndStrings( strparseoffset, m_nbstrs ));
+                m_out.StrTbl(i) = std::move(ParseOffsetTblAndStrings( strparseoffset, begoffset, m_nbstrs ));
                 strparseoffset += m_stringblksSizes[i]; //Add the size of the last block, so we have the offset of the next table
             }
         }
 
-        std::deque<std::string> ParseOffsetTblAndStrings( size_t foffset, uint16_t nbtoparse )
+        /*
+            relptroff == The position in the file against which the offsets in the table are added to.
+            offsetdiff == this value will be subtracted from every ptr read in the table.
+        */
+        std::deque<std::string> ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
         {
             std::deque<std::string> strings;
             //Parse regular strings here
-            initer itstrtbl = m_beg;
-            std::advance( itstrtbl, foffset );
-            initer itcurtable = itstrtbl;
+            initer itoreltblbeg = m_beg;
+            std::advance( itoreltblbeg, relptroff);
+            //initer itstrtbl = m_beg;
+            //std::advance( itstrtbl, foffset );
+            initer itluttable = m_beg;
+            std::advance(itluttable, foffset);
+            
 
             //Parse string table
-            for( size_t cntstr = 0; cntstr < nbtoparse && itcurtable != m_end; ++cntstr )
+            for( size_t cntstr = 0; cntstr < nbtoparse && itluttable != m_end; ++cntstr )
             {
-                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itcurtable, m_end ); //Offset is in bytes this time!
-                initer   itstr     = itstrtbl;
+                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itluttable, m_end ) - offsetdiff; //Offset is in bytes this time!
+                initer   itstr     = itoreltblbeg;
                 std::advance(itstr,stroffset);
                 strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
             }

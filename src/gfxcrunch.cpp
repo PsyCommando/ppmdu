@@ -37,6 +37,7 @@
 #TODO: Once we got the proper replacement for loading game strings in place, replace this and remove
        all the other extra unneeded files included in compilation!
 */
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 #include <ppmdu/pmd2/pmd2_text.hpp>
 
 using namespace ::std;
@@ -349,6 +350,15 @@ namespace gfx_util
             "-q",
             std::bind( &CGfxUtil::ParseOptionQuiet, &GetInstance(), placeholders::_1 ),
         },
+        //Set path to PMD2 Config file
+        {
+            "cfg",
+            1,
+            "Set a non-default path to the pmd2data.xml file.",
+            "-cfg \"path/to/pmd2/config/data/file\"",
+            std::bind( &CGfxUtil::ParseOptionConfig, &GetInstance(), placeholders::_1 ),
+        },
+
         // Enable Logging
         {
             "log",
@@ -559,6 +569,7 @@ namespace gfx_util
         m_pathToPokeSprNamesFile = DefPathPokeSprNames;
         m_pathToFaceNamesFile    = DefPathFaceNames;
         m_pathToPokeNamesFile    = DefPathPokeNames;
+        m_pmd2cfg                = pmd2::DefConfigFileName;
 
     }
 
@@ -1545,6 +1556,21 @@ namespace gfx_util
         return true;
     }
 
+    bool CGfxUtil::ParseOptionConfig( const std::vector<std::string> & optdata )
+    {
+        if( optdata.size() > 1 )
+        {
+            if( utils::isFile( optdata[1] ) )
+            {
+                m_pmd2cfg = optdata[1];
+                cout << "<!>- Set \"" <<optdata[1]  <<"\" as path to pmd2data file!\n";
+            }
+            else
+                throw runtime_error("New path to pmd2data file does not exists, or is inaccessible!");
+        }
+        return true;
+    }
+
 
 //--------------------------------------------
 //  Main Exec functions
@@ -1961,17 +1987,17 @@ namespace gfx_util
         KaoParser()( inpath.toString(), kao );
 
         //Load pokemon name and face names from the game text!
-        //#TODO: Replace this with the new text loading system!
         auto gamedetails = pmd2::DetermineGameVersionAndLocale( m_inputPath );
-        pmd2::GameText gt( m_inputPath, gamedetails.first, gamedetails.second, DefLangConfFile );
+        pmd2::ConfigLoader conf( gamedetails.first, gamedetails.second, m_pmd2cfg );
+        pmd2::GameText     gt( m_inputPath, conf );
         gt.Load();
 
         pmd2::GameText::langstr_t * strass = gt.GetStrings();
         if( !strass )
             throw std::runtime_error("DUCK");
         
-        auto boundsnames = strass->GetBoundsStringsBlock(eStrBNames::PkmnNames);
-        auto boundsportr = strass->GetBoundsStringsBlock(eStrBNames::PortraitNames);
+        auto boundsnames = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
+        auto boundsportr = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PortraitNames);
 
         vector<string> resfacenames;
         vector<string> rawfacenames;
@@ -2052,7 +2078,8 @@ namespace gfx_util
         Poco::File mnstrdir(inmonster);
 
         auto gamedetails = pmd2::DetermineGameVersionAndLocale( m_inputPath );
-        pmd2::GameText gt( m_inputPath, gamedetails.first, gamedetails.second, DefLangConfFile );
+        pmd2::ConfigLoader conf( gamedetails.first, gamedetails.second, m_pmd2cfg );
+        pmd2::GameText     gt  ( m_inputPath,       conf );
         gt.Load();
 
         pmd2::GameText::langstr_t * strass = gt.GetStrings();
@@ -2060,7 +2087,7 @@ namespace gfx_util
         if( !strass )
             throw std::runtime_error("DUCK");
 
-        auto strnamebounds = strass->GetBoundsStringsBlock(eStrBNames::PkmnNames);
+        auto strnamebounds = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
 
         if( strnamebounds.first == strnamebounds.second )
             throw std::runtime_error("DUCK");

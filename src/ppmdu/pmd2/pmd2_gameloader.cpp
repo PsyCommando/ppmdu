@@ -1,6 +1,7 @@
 #include "pmd2_gameloader.hpp"
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <fstream>
 using namespace std;
 
 namespace pmd2
@@ -13,7 +14,7 @@ namespace pmd2
 //===========================================================================================
 
     GameDataLoader::GameDataLoader( const std::string & romroot, const std::string & gamelangxml )
-        :m_romroot(romroot), m_gameregion(eGameRegion::Invalid), m_gameversion(eGameVersion::Invalid), m_gamelangfile(gamelangxml),
+        :m_romroot(romroot), /*m_gameregion(eGameRegion::Invalid), m_gameversion(eGameVersion::Invalid),*/ m_configfile(gamelangxml),
         m_bAnalyzed(false)
     {}
 
@@ -35,7 +36,7 @@ namespace pmd2
     void GameDataLoader::AnalyseGame()
     {
         //Look for arm9.bin, then for the data/MESSAGE and data/BALANCE folder content
-        auto filelst       = utils::ListDirContent_FilesAndDirs( m_romroot, true );
+        auto filelst       = utils::ListDirContent_FilesAndDirs( m_romroot, true, true );
         bool bfoundarm9    = false;
         bool bfoundoverlay = false;
         bool bfounddata    = false;
@@ -95,6 +96,48 @@ namespace pmd2
         m_noarm9     = !bfoundarm9;
         m_nooverlays = !bfoundoverlay;
         m_bAnalyzed  = true;
+
+        if( m_noarm9 || (!m_noarm9 && !LoadConfig()) )
+        {
+            //Fallback to old method of finding game version, if we don't have the arm9 handy, or if the arm9 scan didn't work
+            stringstream fsroot;
+            fsroot << utils::TryAppendSlash(m_romroot) <<DirName_DefData;
+            auto result = DetermineGameVersionAndLocale( fsroot.str() );
+            
+            if( result.first != eGameVersion::Invalid && result.second != eGameRegion::Invalid )
+                m_conf.reset( new ConfigLoader(result.first, result.second, m_configfile) );
+            else
+                throw std::runtime_error("GameDataLoader::AnalyseGame(): Couldn't determine the version of the pmd2 ROM data!");
+        }
+    }
+
+    bool GameDataLoader::LoadConfig()
+    {
+        try 
+        {
+            stringstream arm9path;
+            uint16_t     arm9off14 = 0;
+            arm9path << utils::TryAppendSlash(m_romroot) <<FName_ARM9Bin; 
+            ifstream arm9f( arm9path.str(), std::ios::in | std::ios::binary );
+            arm9f.seekg(14);
+            utils::ReadIntFromBytes( arm9off14, std::istreambuf_iterator<char>(arm9f.rdbuf()), std::istreambuf_iterator<char>() );
+            
+            if( arm9off14 != 0 )
+            {
+                m_conf.reset( new ConfigLoader(arm9off14, m_configfile) );
+                return true;
+            }
+            else
+            {
+                clog <<"<!>- GameDataLoader::AnalyseGame(): The 14th short in \"" + FName_ARM9Bin + "\" file didn't match anything. Falling back to other detection method.\n";
+                return false;
+            }
+        }
+        catch(...)
+        {
+            //Normally, do something here
+            std::rethrow_exception( std::current_exception() );
+        }
     }
 
 // ======================== Loading ========================
@@ -123,8 +166,14 @@ namespace pmd2
         {
             stringstream gamefsroot;
             gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
-            m_text.reset( new GameText( gamefsroot.str(), m_gameversion, m_gameregion, m_gamelangfile ) );
-            m_text->Load();
+
+            if( m_conf )
+            {
+                m_text.reset( new GameText( gamefsroot.str(), *m_conf ) );
+                m_text->Load();
+            }
+            else
+                clog <<"<!>- GameDataLoader::LoadGameText(): No game config data was loaded! Skipping on loading game text!\n";
         }
         return m_text.get();
     }
@@ -141,7 +190,7 @@ namespace pmd2
         {
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
-            m_scripts.reset( new GameScripts( scriptdir.str(), m_gameregion, m_gameversion ) );
+            m_scripts.reset( new GameScripts( scriptdir.str(), GetGameRegion(), GetGameVersion() ) );
             m_scripts->Load();
         }
         return m_scripts.get();
@@ -174,7 +223,7 @@ namespace pmd2
 
         if( !m_stats )
         {
-            m_stats.reset( new GameStats( m_romroot, m_gameversion, m_gameregion, shared_ptr<GameText>(m_text) ) );
+            m_stats.reset( new GameStats( m_romroot, GetGameVersion(), GetGameRegion(), shared_ptr<GameText>(m_text) ) );
             m_stats->Load();
         }
         return m_stats.get();
@@ -203,7 +252,7 @@ namespace pmd2
 
         //if( !m_asmmanip )
         //{
-        //    m_asmmanip.reset( new PMD2_ASM_Manip( ASM_Data_Loader(m_romroot), m_gameversion, m_gameregion ) );
+        //    m_asmmanip.reset( new PMD2_ASM_Manip( ASM_Data_Loader(m_romroot), GetGameVersion(), GetGameRegion() ) );
         //    m_asmmanip->Load();
         //}
         return m_asmmanip.get();
@@ -348,5 +397,10 @@ namespace pmd2
 
     PMD2_ASM_Manip          * GameDataLoader::GetAsmManip()                             { return m_asmmanip.get(); }
     const PMD2_ASM_Manip    * GameDataLoader::GetAsmManip() const                       { return m_asmmanip.get(); }
+
+    const ConfigLoader * GameDataLoader::GetConfig() const
+    {
+        return nullptr;
+    }
 
 };

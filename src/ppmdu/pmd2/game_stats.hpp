@@ -260,7 +260,7 @@ namespace pmd2
         void _WriteItemData   ();
         void _WriteDungeonData();
 
-        //inline strbounds_t strBounds( eStrBNames what )const
+        //inline strbounds_t strBounds( eStringBlocks what )const
         //{
         //    return m_strOffsets[static_cast<uint32_t>(what)];
         //}

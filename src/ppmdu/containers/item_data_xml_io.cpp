@@ -142,7 +142,7 @@ namespace pmd2 { namespace stats
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntitem )
         {
             const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStrBNames::ItemNames, cntitem )) )
+            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::ItemNames, cntitem )) )
             {
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntitem <<"_" 
                           <<PrepareItemFName(*pfstr, m_pgametext->begin()->first) <<".xml";
@@ -206,11 +206,11 @@ namespace pmd2 { namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                WriteStringNode( langnode, PROP_Name,      alang.second.GetStringInBlock(eStrBNames::ItemNames, cntitem) );
+                WriteStringNode( langnode, PROP_Name,      alang.second.GetStringInBlock(eStringBlocks::ItemNames, cntitem) );
                 //Write Description
-                WriteStringNode( langnode, PROP_ShortDesc, alang.second.GetStringInBlock(eStrBNames::ItemDescS, cntitem) );
+                WriteStringNode( langnode, PROP_ShortDesc, alang.second.GetStringInBlock(eStringBlocks::ItemDescS, cntitem) );
                 //Write Description
-                WriteStringNode( langnode, PROP_LongDesc,  alang.second.GetStringInBlock(eStrBNames::ItemDescL, cntitem) );
+                WriteStringNode( langnode, PROP_LongDesc,  alang.second.GetStringInBlock(eStringBlocks::ItemDescL, cntitem) );
             }
         }
 
@@ -374,19 +374,19 @@ namespace pmd2 { namespace stats
                 {
                     string itemname = curnode.child_value();
                     itemname += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::ItemNames, itemID )) = itemname;
+                    *(plangstr->GetStringInBlock( eStringBlocks::ItemNames, itemID )) = itemname;
                 }
                 else if( curnode.name() == PROP_ShortDesc )
                 {
                     string itemdescsh = curnode.child_value();
                     itemdescsh += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::ItemDescS, itemID )) = itemdescsh;
+                    *(plangstr->GetStringInBlock( eStringBlocks::ItemDescS, itemID )) = itemdescsh;
                 }
                 else if( curnode.name() == PROP_LongDesc )
                 {
                     string itemdescl = curnode.child_value();
                     itemdescl += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStrBNames::ItemDescL, itemID )) = itemdescl;
+                    *(plangstr->GetStringInBlock( eStringBlocks::ItemDescL, itemID )) = itemdescl;
                 }
             }
         }

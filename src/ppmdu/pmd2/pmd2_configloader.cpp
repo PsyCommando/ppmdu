@@ -2,23 +2,24 @@
 #include <utils/pugixml_utils.hpp>
 #include <utils/parse_utils.hpp>
 #include <iostream>
+#include <functional>
 using namespace std;
 
 namespace pmd2
 {
     const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames=
     {
-        "PkmnNames",
-        "PkmnCats",
-        "MvNames",
-        "MvDesc",
-        "ItemNames",
-        "ItemDescS",
-        "ItemDescL",
-        "AbilityNames",
-        "AbilityDesc",
-        "TypeNames",
-        "PortraitNames",
+        "Pokemon Names",
+        "Pokemon Categories",
+        "Move Names",
+        "Move Descriptions",
+        "Item Names",
+        "Item Short Descriptions",
+        "Item Long Descriptions",
+        "Ability Names",
+        "Ability Descriptions",
+        "Type Names",
+        "Portrait Names",
     };
 
 
@@ -79,35 +80,35 @@ namespace pmd2
 
     namespace ConfigXML
     {
-        const char * ROOT_PMD2      = "PMD2";
+        const string ROOT_PMD2      = "PMD2";
 
-        const char * NODE_GameEd    = "GameEditions";
-        const char * NODE_Game      = "Game";
-        const char * NODE_GConsts   = "GameConstants";
-        const char * NODE_Binaries  = "Binaries";
-        const char * NODE_Bin       = "Bin";
-        const char * NODE_Block     = "Block";
-        const char * NODE_StrIndex  = "StringIndexData";
-        const char * NODE_Language  = "Language";
-        const char * NODE_StrBlk    = "StringBlock";
-        const char * NODE_Value     = "Value";
+        const string NODE_GameEd    = "GameEditions";
+        const string NODE_Game      = "Game";
+        const string NODE_GConsts   = "GameConstants";
+        const string NODE_Binaries  = "Binaries";
+        const string NODE_Bin       = "Bin";
+        const string NODE_Block     = "Block";
+        const string NODE_StrIndex  = "StringIndexData";
+        const string NODE_Language  = "Language";
+        const string NODE_StrBlk    = "StringBlock";
+        const string NODE_Value     = "Value";
 
-        const char * ATTR_ID        = "id";
-        const char * ATTR_ID2       = "id2";
-        const char * ATTR_GameCode  = "gamecode";
-        const char * ATTR_Version   = "version";
-        const char * ATTR_Version2  = "version2";
-        const char * ATTR_Region    = "region";
-        const char * ATTR_ARM9Off   = "arm9off14";
-        const char * ATTR_DefLang   = "defaultlang";
-        const char * ATTR_Support   = "issupported";
-        const char * ATTR_Val       = "value";
-        const char * ATTR_Name      = "name";
-        const char * ATTR_Beg       = "beg";
-        const char * ATTR_End       = "end";
-        const char * ATTR_Loc       = "locale";
-        const char * ATTR_FName     = "filename";
-        const char * ATTR_FPath     = "filepath";
+        const string ATTR_ID        = "id";
+        const string ATTR_ID2       = "id2";
+        const string ATTR_GameCode  = "gamecode";
+        const string ATTR_Version   = "version";
+        const string ATTR_Version2  = "version2";
+        const string ATTR_Region    = "region";
+        const string ATTR_ARM9Off   = "arm9off14";
+        const string ATTR_DefLang   = "defaultlang";
+        const string ATTR_Support   = "issupported";
+        const string ATTR_Val       = "value";
+        const string ATTR_Name      = "name";
+        const string ATTR_Beg       = "beg";
+        const string ATTR_End       = "end";
+        const string ATTR_Loc       = "locale";
+        const string ATTR_FName     = "filename";
+        const string ATTR_FPath     = "filepath";
 
     };
 
@@ -187,13 +188,7 @@ namespace pmd2
         void ParseDataForGameVersion( uint16_t arm9off14, ConfigLoader & target )
         {
             if( FindGameVersion(arm9off14) )
-            {
-                target.m_strindex    = std::move( GameStringIndex(ParseGameStringIndices()) );
-                target.m_binoffsets  = std::move( ParseBinaries() );
-                target.m_constants   = std::move( ParseConstants() ); 
-
-                target.m_versioninfo = std::move(m_curversion); //Done in last
-            }
+                DoParse(target);
             else
             {
                 throw std::runtime_error("ConfigXMLParser::ParseDataForGameVersion(): Couldn't find a matching game version "
@@ -202,23 +197,70 @@ namespace pmd2
             }
         }
 
+        void ParseDataForGameVersion( eGameVersion version, eGameRegion region, ConfigLoader & target )
+        {
+            if( FindGameVersion(version, region) )
+                DoParse(target);
+            else
+            {
+                throw std::runtime_error("ConfigXMLParser::ParseDataForGameVersion(): Couldn't find a matching game version "
+                                         "from comparing the region and version specified, to the values in the "
+                                         "configuration file!");
+            }
+        }
+
     private:
+
+        void DoParse(ConfigLoader & target)
+        {
+            target.m_langdb      = std::move( LanguageFilesDB(ParseLanguages()) );
+            target.m_binoffsets  = std::move( ParseBinaries() );
+            target.m_constants   = std::move( ParseConstants() ); 
+
+            target.m_versioninfo = std::move(m_curversion); //Done in last
+        }
+
+        bool FindGameVersion( eGameVersion version, eGameRegion region )
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            auto lambdafind = [version, region]( xml_node curnode )->bool
+            {
+                xml_attribute reg = curnode.attribute(ATTR_Region.c_str());
+                xml_attribute ver = curnode.attribute(ATTR_Version.c_str());
+                return (reg && ver) && ( ( StrToGameVersion(ver.value()) == version ) && ( StrToGameRegion(reg.value()) == region ) );
+            };
+            return FindGameVersion( lambdafind );
+        }
 
         bool FindGameVersion(uint16_t arm9off14)
         {
             using namespace pugi;
             using namespace ConfigXML;
-            xml_node gamed = m_doc.child(ROOT_PMD2).child(NODE_GameEd);
+            auto lambdafind = [&]( xml_node curnode )->bool
+            {
+                xml_attribute foundattr = curnode.attribute(ATTR_ARM9Off.c_str());
+                return foundattr && (static_cast<decltype(m_curversion.arm9off14)>(foundattr.as_uint()) == arm9off14);
+            };
+            return FindGameVersion( lambdafind );
+        }
+        
+        bool FindGameVersion( std::function<bool(pugi::xml_node)> && predicate )
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node gamed = m_doc.child(ROOT_PMD2.c_str()).child(NODE_GameEd.c_str());
 
             if( !gamed )
                 return false;
 
-            for( auto & curvernode : gamed.children(NODE_Game) )
+            for( auto & curvernode : gamed.children(NODE_Game.c_str()) )
             {
                 //GameVersionInfo curver;
-                xml_attribute foundattr = curvernode.attribute(ATTR_ARM9Off);
+                //xml_attribute foundattr = curvernode.attribute(ATTR_ARM9Off);
 
-                if( foundattr && static_cast<decltype(m_curversion.arm9off14)>(foundattr.as_uint()) == arm9off14 )
+                //if( foundattr && static_cast<decltype(m_curversion.arm9off14)>(foundattr.as_uint()) == arm9off14 )
+                if( predicate(curvernode) )
                 {
                     for( auto & curattr : curvernode.attributes() )
                     {
@@ -243,25 +285,25 @@ namespace pmd2
             return false;
         }
 
-        GameStringIndex::strfiles_t ParseGameStringIndices()
+        LanguageFilesDB::strfiles_t ParseLanguages()
         {
             using namespace ConfigXML;
             using namespace pugi;
-            GameStringIndex::strfiles_t dest;
+            LanguageFilesDB::strfiles_t dest;
 
-            xml_node gamevernode = m_doc.child(ROOT_PMD2).child(NODE_StrIndex);
+            xml_node gamevernode = m_doc.child(ROOT_PMD2.c_str()).child(NODE_StrIndex.c_str());
 
-            for( auto gamev : gamevernode.children(NODE_Game) )
+            for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
             {
-                xml_attribute id  = gamev.attribute(ATTR_ID);
-                xml_attribute id2 = gamev.attribute(ATTR_ID2);
+                xml_attribute id  = gamev.attribute(ATTR_ID.c_str());
+                xml_attribute id2 = gamev.attribute(ATTR_ID2.c_str());
                 if( id.value() == m_curversion.id || id2.value() == m_curversion.id )
                 {
-                    for( auto lang : gamev.children(NODE_Language) )
+                    for( auto lang : gamev.children(NODE_Language.c_str()) )
                     {
-                        xml_attribute fname    = lang.attribute(ATTR_FName);
-                        xml_attribute langname = lang.attribute(ATTR_Name);
-                        xml_attribute loc      = lang.attribute(ATTR_Loc);
+                        xml_attribute fname    = lang.attribute(ATTR_FName.c_str());
+                        xml_attribute langname = lang.attribute(ATTR_Name.c_str());
+                        xml_attribute loc      = lang.attribute(ATTR_Loc.c_str());
                         eGameLanguages elang   = StrToGameLang(langname.value());
                         
                         if(elang >= eGameLanguages::NbLang )
@@ -270,23 +312,23 @@ namespace pmd2
                                                       std::string(langname.value()) + "\" in config file!!");
                         }
 
-                        dest.emplace( fname, std::move(ParseLang(gamev, fname.value(), loc.value(), elang )) );
+                        dest.emplace( fname.value(), std::move(ParseALang(lang, fname.value(), loc.value(), elang )) );
                     }
                 }
             }
             return std::move(dest);
         }
 
-        GameStringIndex::blocks_t ParseLang( pugi::xml_node langnode, std::string && fname, std::string && locale, eGameLanguages lang )
+        LanguageFilesDB::blocks_t ParseALang( pugi::xml_node langnode, std::string && fname, std::string && locale, eGameLanguages lang )
         {
             using namespace ConfigXML;
             using namespace pugi;
-            GameStringIndex::blocks_t::blkcnt_t dest;
+            LanguageFilesDB::blocks_t::blkcnt_t dest;
 
             for( auto strblk : langnode )
             {
-                string                     blkn;
-                GameStringIndex::strbounds bnd;
+                string      blkn;
+                strbounds_t bnd;
                 for( auto att : strblk.attributes() )
                 {
                     if( att.name() == ATTR_Name )
@@ -296,10 +338,13 @@ namespace pmd2
                     else if( att.name() == ATTR_End )
                         bnd.end = att.as_uint();
                 }
-                dest.emplace( std::move(blkn), std::move(bnd) );
+                eStringBlocks strblock = FindStrBlock(blkn);
+
+                if( strblock != eStringBlocks::Invalid )
+                    dest.emplace( strblock, std::move(bnd) );
             }
             
-            return std::move(GameStringIndex::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
+            return std::move(LanguageFilesDB::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
         }
 
 
@@ -307,8 +352,8 @@ namespace pmd2
         {
             using namespace pugi;
             using namespace ConfigXML;
-            xml_node binnode  = m_doc.child(ROOT_PMD2).child(NODE_Binaries);
-            xml_node foundver = binnode.find_child_by_attribute( NODE_Game, ATTR_ID, m_curversion.id.c_str() );
+            xml_node binnode  = m_doc.child(ROOT_PMD2.c_str()).child(NODE_Binaries.c_str());
+            xml_node foundver = binnode.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
 
             if( !foundver )
             {
@@ -317,16 +362,15 @@ namespace pmd2
             }
             ConfigLoader::bincnt_t dest;
 
-            for( auto curbin : foundver.children(NODE_Bin) )
+            for( auto curbin : foundver.children(NODE_Bin.c_str()) )
             {
-                xml_attribute xfpath = curbin.attribute(ATTR_FPath);
-                string        fpath  = xfpath.value();
+                xml_attribute xfpath = curbin.attribute(ATTR_FPath.c_str());
 
-                for( auto curblock : curbin.children(NODE_Block) )
+                for( auto curblock : curbin.children(NODE_Block.c_str()) )
                 {
                     GameBinaryOffsetInfo bifo;
                     string               blkname;
-                    bifo.fpath = fpath;
+                    bifo.fpath = xfpath.value();
                     for( auto att : curblock.attributes() )
                     {
                         if( att.name() == ATTR_Name )
@@ -348,19 +392,19 @@ namespace pmd2
         {
             using namespace pugi;
             using namespace ConfigXML;
-            xml_node constnode  = m_doc.child(ROOT_PMD2).child(NODE_GConsts);
+            xml_node constnode  = m_doc.child(ROOT_PMD2.c_str()).child(NODE_GConsts.c_str());
             ConfigLoader::constcnt_t dest;
 
-            for( auto ver : constnode.children(NODE_Game) )
+            for( auto ver : constnode.children(NODE_Game.c_str()) )
             {
-                xml_attribute xv1 = ver.attribute(ATTR_Version);
-                xml_attribute xv2 = ver.attribute(ATTR_Version2);
+                xml_attribute xv1 = ver.attribute(ATTR_Version.c_str());
+                xml_attribute xv2 = ver.attribute(ATTR_Version2.c_str());
                 if( StrToGameVersion(xv1.value()) == m_curversion.version || StrToGameVersion(xv2.value()) == m_curversion.version )
                 {
-                    for( auto value : ver.children(NODE_Value) )
+                    for( auto value : ver.children(NODE_Value.c_str()) )
                     {
-                        xml_attribute xid  = value.attribute(ATTR_ID);
-                        xml_attribute xval = value.attribute(ATTR_Val);
+                        xml_attribute xid  = value.attribute(ATTR_ID.c_str());
+                        xml_attribute xval = value.attribute(ATTR_Val.c_str());
                         eGameConstants gconst = FindGameConstantName(xid.value());
                         if( gconst != eGameConstants::Invalid )
                             dest.emplace( gconst, std::move(std::string(xval.value())) );
@@ -384,7 +428,12 @@ namespace pmd2
     ConfigLoader::ConfigLoader(uint16_t arm9off14, const std::string & configfile)
         :m_conffile(configfile),m_arm9off14(arm9off14)
     {
-        Parse();
+        Parse(arm9off14);
+    }
+
+    ConfigLoader::ConfigLoader(eGameVersion version, eGameRegion region, const std::string & configfile)
+    {
+        Parse(version,region);
     }
 
     int ConfigLoader::GetGameConstantAsInt(eGameConstants gconst) const
@@ -397,11 +446,20 @@ namespace pmd2
         return utils::parseHexaValToValue<unsigned int>( m_constants.at(gconst) );
     }
 
-
-
-    void ConfigLoader::Parse()
+    void ConfigLoader::Parse( uint16_t arm9off14 )
     {
-        ConfigXMLParser(m_conffile).ParseDataForGameVersion(m_arm9off14,*this);
+        ConfigXMLParser(m_conffile).ParseDataForGameVersion(arm9off14,*this);
     }
+
+    void ConfigLoader::Parse(eGameVersion version, eGameRegion region)
+    {
+        ConfigXMLParser(m_conffile).ParseDataForGameVersion(version, region, *this);
+    }
+
+
+//
+//
+//
+    //ConfigInstance ConfigInstance::s_instance;
 
 };

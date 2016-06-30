@@ -172,9 +172,9 @@ namespace pmd2
         return std::move(resultpair);
     }
 
-    const std::string & GetGameVersionName( eGameVersion gv )
-    {
-        return GameVersionNames[static_cast<size_t>(gv)];
-    }
+    //const std::string & GetGameVersionName( eGameVersion gv )
+    //{
+    //    return GameVersionNames[static_cast<size_t>(gv)];
+    //}
 
 };

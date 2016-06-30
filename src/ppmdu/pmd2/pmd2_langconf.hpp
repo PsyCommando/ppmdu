@@ -13,6 +13,7 @@ Description:
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <array>
 #include <ppmdu/pmd2/pmd2.hpp>
 
@@ -24,7 +25,7 @@ namespace pmd2
 
         **NEED TO KEEP THIS IN SYNC WITH StrBlocksNames**
     */
-    enum struct eStrBNames : unsigned int
+    enum struct eStringBlocks : unsigned int
     {
         PkmnNames = 0,
         PkmnCats,
@@ -40,9 +41,19 @@ namespace pmd2
 
         //Add new string types above!
         NBEntries,
+        Invalid,
     };
 
-    extern const std::array<std::string, static_cast<uint32_t>(eStrBNames::NBEntries)> StrBlocksNames;
+    extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StrBlocksNames;
+
+    /*
+        Boundaries for strings
+    */
+    struct strbounds_t
+    {
+        uint32_t beg;
+        uint32_t end;
+    };
 
 //==================================================================================
 //   StringsCatalog
@@ -53,34 +64,56 @@ namespace pmd2
     class StringsCatalog
     {
     public:
+        typedef std::unordered_map<eStringBlocks,strbounds_t> blkcnt_t;
 
-        /*
-            Boundaries for strings
-        */
-        struct strbounds_t
+        StringsCatalog(){}
+
+        StringsCatalog( std::string && strfname, std::string && locstr, eGameLanguages lang, blkcnt_t && blocks )
+            :m_localeStr(std::move(locstr)), m_strfname(std::move(strfname)), m_lang(lang), m_offsets(std::move(blocks))
+        {}
+
+        StringsCatalog( StringsCatalog && mv )
         {
-            uint32_t beg;
-            uint32_t end;
-        };
-
-    public:
-
-        const std::string GetLocaleString()const
-        {
-            return m_localeStr;
+            this->operator=(std::forward<StringsCatalog>(mv));
         }
 
-        void SetLocaleString( const std::string & locstr )
+        StringsCatalog( const StringsCatalog & cp )
         {
-            m_localeStr = locstr;
+            this->operator=(cp);
         }
 
-        void AddStringBlock( eStrBNames blkty, uint32_t beg, uint32_t end )
+        const StringsCatalog & operator=( StringsCatalog && mv )
         {
-            m_offsets.emplace( std::make_pair( blkty, strbounds_t{beg,end} ) );
+            this->m_localeStr = std::move(mv.m_localeStr);
+            this->m_offsets   = std::move(mv.m_offsets);
+            this->m_strfname  = std::move(mv.m_strfname);
+            this->m_lang      = std::move(mv.m_lang);
+            return *this;
         }
 
-        inline const strbounds_t * operator[]( eStrBNames blkty )const
+        const StringsCatalog & operator=( const StringsCatalog & cp )
+        {
+            this->m_localeStr = cp.m_localeStr;
+            this->m_offsets   = cp.m_offsets;
+            this->m_strfname  = cp.m_strfname;
+            this->m_lang      = cp.m_lang;
+            return *this;
+        }
+
+        //Accessor
+        inline const std::string & GetLocaleString()const                         { return m_localeStr; }
+        inline void                SetLocaleString( const std::string & locstr )  { m_localeStr = locstr; }
+
+        inline const std::string & GetStrFName()const                           { return m_strfname; }
+        inline void                SetStrFName( const std::string & strfname )  { m_strfname = strfname; }
+
+        inline eGameLanguages      GetLanguage()const                           { return m_lang; }
+        inline void                SetLanguage( eGameLanguages lang )           { m_lang = lang; }
+
+        void AddStringBlock ( eStringBlocks blkty, uint32_t beg, uint32_t end )    { m_offsets.emplace( std::make_pair( blkty, strbounds_t{beg,end} ) ); }
+        void AddStringBlocks( blkcnt_t && blocks )                              { m_offsets = std::move(blocks); }
+
+        inline const strbounds_t * operator[]( eStringBlocks blkty )const
         {
             auto found = m_offsets.find( blkty );
 
@@ -92,8 +125,8 @@ namespace pmd2
 
         inline const strbounds_t * operator[]( size_t blkindex )const
         {
-            if( blkindex < static_cast<unsigned int>(eStrBNames::NBEntries) )
-                return operator[]( static_cast<eStrBNames>(blkindex) );
+            if( blkindex < static_cast<unsigned int>(eStringBlocks::NBEntries) )
+                return operator[]( static_cast<eStringBlocks>(blkindex) );
             else
                 return nullptr;
         }
@@ -102,8 +135,10 @@ namespace pmd2
         inline size_t size ()const { return m_offsets.size();  }
 
     private:
-        std::map<eStrBNames,strbounds_t> m_offsets;
-        std::string                      m_localeStr;
+        blkcnt_t        m_offsets;
+        std::string     m_localeStr;
+        std::string     m_strfname;
+        eGameLanguages  m_lang;
     };
 
 //==================================================================================

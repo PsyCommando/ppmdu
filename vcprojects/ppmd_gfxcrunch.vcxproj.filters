@@ -25,9 +25,6 @@
     <Filter Include="Header Files\ppmdu\file formats">
       <UniqueIdentifier>{2f4bc14d-fdf0-4084-9e6d-236810cf4d14}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\ppmdu\utility">
-      <UniqueIdentifier>{0ffe7cd6-c304-4288-9a99-bc5ac16aa7f9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ppmdu">
       <UniqueIdentifier>{f6eebc07-b798-41f0-889f-e845866999bf}</UniqueIdentifier>
     </Filter>
@@ -61,7 +58,10 @@
     <Filter Include="Header Files\ppmdu\file formats\TempExtraForParsingText">
       <UniqueIdentifier>{e20a5e4a-09e5-4352-adfc-aa16eedddeda}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\ppmdu\typesupport">
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{0ffe7cd6-c304-4288-9a99-bc5ac16aa7f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\typesupport">
       <UniqueIdentifier>{7b57d2db-034d-4c5b-9257-a5ae53b73c7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -139,34 +139,34 @@
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\cmdline_util.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gbyteutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gfileio.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gfileutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gstringutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\handymath.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\library_wide.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\poco_wrapper.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\utility.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ext_fmts\supported_io.hpp">
       <Filter>Header Files\ppmdu\external formats</Filter>
@@ -193,13 +193,13 @@
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp">
-      <Filter>Header Files\ppmdu\typesupport</Filter>
+      <Filter>Header Files\typesupport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\bgp.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types\content_type_analyser.hpp">
-      <Filter>Header Files\ppmdu\typesupport</Filter>
+      <Filter>Header Files\typesupport</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
@@ -253,10 +253,13 @@
       <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\parse_utils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\pugixml_utils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -413,6 +416,15 @@
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\resources\pokesprites_names.txt">
@@ -434,6 +446,9 @@
       <Filter>Resource Files</Filter>
     </Xml>
     <Xml Include="..\resources\animres.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\pmd2data.xml">
       <Filter>Resource Files</Filter>
     </Xml>
   </ItemGroup>
