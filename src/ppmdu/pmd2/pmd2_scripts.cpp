@@ -13,6 +13,7 @@
 #include <utils/poco_wrapper.hpp>
 #include <utils/utility.hpp>
 #include <utils/library_wide.hpp>
+#include <functional>
 using namespace std;
 
 
@@ -21,80 +22,66 @@ namespace pmd2
 //==============================================================================
 //  
 //==============================================================================
- 
-//
-//
-//
-    //template<typename init_t>
-    //    ScriptIdentifier::IdToken ParseToken( init_t & itbeg, init_t itend )
-    //{
+    const std::regex MatchScriptFileTypes( ".*\\.(("s + filetypes::SSS_FileExt + 
+                                           ")|("s + filetypes::SSA_FileExt + 
+                                           ")|("s + filetypes::SSB_FileExt + 
+                                           ")|("s + filetypes::LSD_FileExt + "))"s );
 
-    //}
+    const std::string ScriptRegExNameNumSSBSuff = "(\\d\\d)\\."s + filetypes::SSB_FileExt;
 
-
-    //ScriptIdentifier ScriptIdentifier::ParseScriptIdentifier( const std::string & scrid )
-    //{
-    //    ScriptIdentifier outscrid;
-    //    static const char EnterFirstLetter = 'e';
-    //    static const char DusFirstLetter   = 'd';
-    //    static const char UFirstLetter     = 'u';
-
-    //    if(scrid.size() < 2)
-    //    {
-    //        assert(false);
-    //    }
-
-    //    outscrid.type = eScriptGroupType::INVALID;
-
-    //    switch( scrid.front() )
-    //    {
-    //        case EnterFirstLetter:
-    //        {
-    //            auto itfound = std::search( ScriptPrefix_enter.begin(), ScriptPrefix_enter.end(), scrid.begin(), scrid.end() );
-    //            if( itfound != scrid.end() )
-    //            {
-    //                outscrid.type = eScriptGroupType::UNK_enter;
-
-    //                //If the filename has a number appended, parse that!
-    //                if( ScriptPrefix_enter.size() < scrid.size() ) 
-    //                    outscrid.tokens.push_back( ParseToken( (scrid.begin() + ScriptPrefix_enter.size()), scrid.end() ) );
-    //            }
-    //            break;
-    //        }
-    //        case DusFirstLetter:
-    //        {
-    //            auto itfound = std::search( ScriptPrefix_enter.begin(), ScriptPrefix_enter.end(), scrid.begin(), scrid.end() );
-    //            if( itfound != scrid.end() )
-    //            {
-    //                outscrid.type = eScriptGroupType::UNK_dus;
-    //            }
-    //            break;
-    //        }
-    //        case UFirstLetter:
-    //        {
-    //            ///validate that next character is a letter, and the next after that is a number
-    //            if( !std::isalpha( scrid[1], locale::classic() ) || std::isalpha( scrid[2], locale::classic() )  )
-    //                break;
-    //            
-    //            outscrid.type = eScriptGroupType::UNK_u;
-    //            break;
-    //        }
-    //    };
-
-    //    //If we end up here with no script type, its not a static name or 'u' prefix!!
-    //    if( outscrid.type == eScriptGroupType::INVALID )
-    //    {
-    //        outscrid.type = eScriptGroupType::UNK_fromlsd;
+    const std::array<std::string, static_cast<size_t>(eScrDataTy::NbTypes)> ScriptDataTypeStrings = 
+    {
+        filetypes::SSE_FileExt,
+        filetypes::SSS_FileExt,
+        filetypes::SSA_FileExt,
+    };
 
 
-    //    }
+    const std::string & ScriptDataTypeToFileExtension( eScrDataTy scrdatty )
+    {
+        switch(scrdatty)
+        {
+            case eScrDataTy::SSA:
+            {
+                return filetypes::SSA_FileExt;
+            }
+            case eScrDataTy::SSE:
+            {
+                return filetypes::SSE_FileExt;
+            }
+            case eScrDataTy::SSS:
+            {
+                return filetypes::SSS_FileExt;
+            }
+            default:
+            {
+                throw std::runtime_error("ScriptDataTypeToFileExtension() : Invalid script data type!");
+            }
+        };
+    }
 
-    //    return outscrid;
-    //}
+    const std::string & ScriptDataTypeToStr(eScrDataTy scrdatty)
+    {
+        if( scrdatty < eScrDataTy::NbTypes )
+            return ScriptDataTypeStrings[static_cast<size_t>(scrdatty)];
+        else
+            return Generic_Invalid;
+    }
+
+    eScrDataTy StrToScriptDataType(const std::string & scrdatstr)
+    {
+        for( size_t cnt = 0; cnt < ScriptDataTypeStrings.size(); ++cnt )
+            if( scrdatstr == ScriptDataTypeStrings[cnt] ) return static_cast<eScrDataTy>(cnt);
+        return eScrDataTy::Invalid;
+    }
+
 
 //==============================================================================
 //  ScriptedSequence
 //==============================================================================
+
+
+
     ScriptedSequence::ScriptedSequence(const ScriptedSequence & tocopy)
         :m_name(tocopy.m_name), m_originalfname(tocopy.m_originalfname),
          m_groups(tocopy.m_groups), m_strtable(tocopy.m_strtable),
@@ -127,6 +114,25 @@ namespace pmd2
         return *this;
     }
 
+    void ScriptedSequence::InsertStrLanguage(eGameLanguages lang, strtbl_t && strings)
+    {
+        m_strtable.insert_or_assign( lang, std::forward<strtbl_t>(strings) );
+    }
+
+    inline ScriptedSequence::strtbl_t * ScriptedSequence::StrTbl(eGameLanguages lang)
+    {
+        auto itfound = m_strtable.find(lang);
+
+        if( itfound !=  m_strtable.end() )
+            return &(itfound->second);
+        else
+            return nullptr;
+    }
+
+    inline const ScriptedSequence::strtbl_t * ScriptedSequence::StrTbl(eGameLanguages lang) const
+    {
+        return const_cast<ScriptedSequence*>(this)->StrTbl(lang);
+    }
 
 /***********************************************************************************************
     ScriptGroup
@@ -185,23 +191,48 @@ namespace pmd2
     {
     public:
 
+        typedef std::unordered_map<std::string,ScriptSet> settbl_t;
+
         GameScriptsHandler( GameScripts & parent )
             :m_parent(parent)
         {}
 
         //IO
-        void Load();
-        void Write();
+        settbl_t Load()
+        {
+            using namespace utils;
+            auto filelist = ListDirContent_FilesAndDirs( m_parent.m_scriptdir, false, true );
+            settbl_t dest;
 
-        void Import( const std::string & dir );
-        void Export( const std::string & dir );
+            for( const auto & dir : filelist )
+            {
+                if( isFolder(dir) )
+                    dest.emplace( std::forward<string>(utils::GetBaseNameOnly(dir)), std::forward<ScriptSet>(LoadDirectory(dir)) );
+            }
+            return std::move(dest);
+        }
+        
+        template<typename _init>
+            void Write( _init itbeg, _init itend )
+        {
+            for( ; itbeg != itend; ++itbeg )
+                WriteDirectory(*itbeg);
+        }
+
+        //Load and write a single "Event"
+        ScriptSet LoadDirectory (const std::string & path);
+        void      WriteDirectory(const ScriptSet   & set, const std::string & path );
 
     private:
-        void LoadDirectory    (const std::string       & path);
         void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadGrpDus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadLoneSSS      ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadGrpU         ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+
+        //void LoadGrpDus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+        //void LoadGrpHus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+        //void LoadGrpMus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+        //void LoadLoneSSS      ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+        //void LoadGrpU         ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
+
+        void LoadSub          ( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
         void LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
 
 
@@ -209,9 +240,13 @@ namespace pmd2
         void LoadSSB   ( ScriptGroup & tgtgrp, const std::string & fpath );
         void LoadSSData( ScriptGroup & tgtgrp, const std::string & fpath );
 
-        void LoadAUGrp( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset, std::deque<Poco::Path>::iterator itfound);
+        //void LoadAUGrp( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset, std::deque<Poco::Path>::iterator itfound);
         void LoadScrDataAndMatchedNumberedSSBs( const std::string & prefix, const std::string & fext, eScriptGroupType grpty, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset  );
         void LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptGroup & tgtgrp );
+
+
+        void WriteLSD   ( const ScriptSet & curset, const std::string & fpath );
+        void WriteGroups( const ScriptSet & curset, const std::string & dirpath );
 
     private:
         GameScripts & m_parent;
@@ -219,22 +254,6 @@ namespace pmd2
 
 // GameScriptsHandler implementation!
 //==============================================================================
-    void GameScriptsHandler::Load ()
-    {
-        using namespace utils;
-        auto filelist = ListDirContent_FilesAndDirs( m_parent.m_scriptdir, false, true );
-
-        for( const auto & dir : filelist )
-        {
-            if( isFolder(dir) )
-                LoadDirectory(dir);
-        }
-    }
-
-    void GameScriptsHandler::Write()
-    {
-        assert(false);
-    }
 
     void GameScriptsHandler::LoadLSD( ScriptSet & curset, const std::string & fpath)
     {
@@ -244,27 +263,11 @@ namespace pmd2
     void GameScriptsHandler::LoadSSB(ScriptGroup & tgtgrp, const std::string & fpath)
     {
         string basename = Poco::Path(fpath).getBaseName();
+        auto script = std::move( filetypes::ParseScript(fpath, m_parent.m_scrRegion, m_parent.m_gameVersion) );
+        script.SetFileName(Poco::Path(fpath).getFileName());
+        script.SetName(basename);
+        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
 
-        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScript( fpath, m_parent.m_scrRegion, m_parent.m_gameVersion ))));
-        //if( m_parent.m_gameVersion == eGameVersion::EoS )
-        //{
-        //    if( m_parent.m_scrRegion == eGameRegion::NorthAmerica )
-        //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoS( fpath ))));
-        //    else if( m_parent.m_scrRegion == eGameRegion::Europe )
-        //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoSPal( fpath ))));
-        //}
-        //else if(m_parent.m_gameVersion == eGameVersion::EoTEoD)
-        //{
-        //    if( m_parent.m_scrRegion == eGameRegion::NorthAmerica )
-        //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoTD( fpath ))));
-        //    else if( m_parent.m_scrRegion == eGameRegion::Europe )
-        //        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, filetypes::ParseScriptEoTDPal( fpath ))));
-        //}
-        //else
-        //{
-        //    cerr <<"GameScripts::LoadSSB(): Unknown game version!!\n";
-        //    assert(false);
-        //}
     }
 
 
@@ -283,18 +286,19 @@ namespace pmd2
         {
             itfound = std::find_if( fqueue.begin(), fqueue.end(), [&]( const Poco::Path & ap )->bool
             {
-                if( utils::CompareStrIgnoreCase(ap.getExtension(), filetypes::SSB_FileExt) ) //Check if we got the right extension
-                {
-                    string fname = ap.getBaseName();
-                    if( (fname.size() == prefix.size() + 2) &&                              //Check if the length is even valid
-                        std::isdigit( fname[prefix.size()],   std::locale::classic() ) && 
-                        std::isdigit( fname[prefix.size()+1], std::locale::classic() ))     //Check if it ends with 2 digits
-                    {
-                        auto   itfoundprfx = std::search( fname.begin(), fname.end(), prefix.begin(), prefix.end() );
-                        return (itfoundprfx == fname.begin()); //Check if the filename contains the prefix at the beginning of it
-                    }
-                }
-                return false;
+                return isNumberedSSB( prefix, ap.getFileName() );
+                //if( utils::CompareStrIgnoreCase(ap.getExtension(), filetypes::SSB_FileExt) ) //Check if we got the right extension
+                //{
+                //    string fname = ap.getBaseName();
+                //    if( (fname.size() == prefix.size() + 2) &&                              //Check if the length is even valid
+                //        std::isdigit( fname[prefix.size()],   std::locale::classic() ) && 
+                //        std::isdigit( fname[prefix.size()+1], std::locale::classic() ))     //Check if it ends with 2 digits
+                //    {
+                //        auto   itfoundprfx = std::search( fname.begin(), fname.end(), prefix.begin(), prefix.end() );
+                //        return (itfoundprfx == fname.begin()); //Check if the filename contains the prefix at the beginning of it
+                //    }
+                //}
+                //return false;
             } ); 
 
             if( itfound != fqueue.end() )
@@ -303,46 +307,13 @@ namespace pmd2
                 clog << "\n\tFound matching ssb, " <<curbasename <<", for prefix " <<prefix  <<"\n";
                 LoadSSB( tgtgrp, curbasename );
                 fqueue.erase(itfound);
+                itfound = fqueue.begin(); //Re-assign here, because the iterator got invalidated
             }
 
         }while( itfound != fqueue.end() );
-
-
-        //for( auto itqueue = loopq.begin(); itqueue != loopq.end(); ++itqueue )
-        //{
-        //    string fname   = itqueue->getBaseName();
-        //    auto   itfound = std::search( fname.begin(), fname.end(), prefix.begin(), prefix.end() );
-
-        //    if( itfound != fname.end() && 
-        //        fname.size() == (prefix.size() + 2) &&     // That size is that of "enter" + a 2 digit number!
-        //        std::isdigit( fname[prefix.size()],   std::locale::classic() ) &&
-        //        std::isdigit( fname[prefix.size()+1], std::locale::classic() ))  //Check if the last 2 characters are digits!
-        //    {
-        //        string fext = itqueue->getExtension();
-        //        if( fext == filetypes::SSB_FileExt )
-        //        {
-        //            LoadSSB( tgtgrp, itqueue->toString() );
-        //        }
-        //        else if( fext == filetypes::SSS_FileExt )
-        //        {
-        //            clog << "Found an extra " <<prefix <<".sss file!! Not supposed to happen!!\n";
-        //            assert(false);
-        //        }
-        //        else if( fext == filetypes::SSE_FileExt )
-        //        {
-        //            clog << "Found an extra " <<prefix <<".sse file!! Not supposed to happen!!\n";
-        //            assert(false);
-        //        }
-        //        else
-        //        {
-        //            clog << "Found " <<prefix <<" component with unexpected file extension! " <<itqueue->getFileName() <<"\n";
-        //            assert(false);
-        //        }
-        //        fqueue.erase(itqueue);
-        //    }
-
-        //}
     }
+
+
 
 
     void GameScriptsHandler::LoadScrDataAndMatchedNumberedSSBs( const std::string      & prefix, 
@@ -357,7 +328,9 @@ namespace pmd2
         for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
         {
             if( itqueue->getBaseName() == prefix )
-                itfounddata = itqueue;
+            {
+                itfounddata = itqueue; break;
+            }
         }
 
         //#2 - If we don't return early!
@@ -386,201 +359,19 @@ namespace pmd2
 
     void GameScriptsHandler::LoadGrpEnter( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
     {
-        LoadScrDataAndMatchedNumberedSSBs( ScriptNames_enter, filetypes::SSE_FileExt, eScriptGroupType::UNK_enter, fqueue, out_scrset );
+        if( fqueue.empty() ) 
+            return;
 
-
-        ////Find if we have a enter.sse file first.
-        //auto itfoundenter = fqueue.end();
-
-        ////### Find if we have a enter.sse file! ###
-        //for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
-        //{
-        //    if( itqueue->getBaseName() == ScriptNames_enter )
-        //        itfoundenter = itqueue;
-        //}
-
-        ////If we don't return early!
-        //if( itfoundenter == fqueue.end() )
-        //{
-        //    if( utils::LibWide().isLogOn() )
-        //        clog << "\n\tNo " <<ScriptNames_enter <<" data found!\n";
-        //    return;
-        //}
-        //else
-        //{
-        //    clog <<"\n\tLoading " <<ScriptPrefix_enter <<"." <<filetypes::SSE_FileExt <<" and its dependencies..";
-        //}
-
-        ////### Otherwise keep going and load the sse ###
-        //ScriptGroup entergrp( ScriptPrefix_enter, eScriptGroupType::UNK_enter );
-        //LoadSSData( entergrp, itfoundenter->toString() );
-        ////Pop it from the queue
-        //fqueue.erase(itfoundenter);
-
-        //LoadNumberedSSBForPrefix( fqueue, ScriptPrefix_enter, entergrp );
-        
-        //### Then find the matching ssb ###
-        //for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
-        //{
-        //    string fname   = itqueue->getBaseName();
-        //    auto   itfound = std::search( ScriptPrefix_enter.begin(), ScriptPrefix_enter.end(), fname.begin(), fname.end() );
-
-        //    if( itfound != fname.end() && 
-        //        fname.size() == (ScriptPrefix_enter.size() + 2) &&     // That size is that of "enter" + a 2 digit number!
-        //       std::isdigit( fname.back(), std::locale::classic() ) )  //Check if the last character is a digit!
-        //    {
-        //        string fext = itqueue->getExtension();
-        //        if( fext == filetypes::SSB_FileExt )
-        //        {
-        //            LoadSSB( entergrp, itqueue->toString() );
-        //        }
-        //        else if( fext == filetypes::SSE_FileExt )
-        //        {
-        //            clog << "Found an extra enter.sse file!! Not supposed to happen!!\n";
-        //            assert(false);
-        //        }
-        //        else
-        //        {
-        //            clog << "Found enter component with unexpected file extension! " <<itqueue->getFileName() <<"\n";
-        //            assert(false);
-        //        }
-        //        fqueue.erase(itqueue);
-        //    }
-
-        //}
-        //out_scrset.Components().push_back(std::move(entergrp));
+        LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptGroupType::UNK_enter, fqueue, out_scrset );
     }
 
-    void GameScriptsHandler::LoadGrpDus( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    void GameScriptsHandler::LoadSub( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
     {
-        LoadScrDataAndMatchedNumberedSSBs( ScriptNames_dus, filetypes::SSS_FileExt, eScriptGroupType::UNK_dus, fqueue, out_scrset );
-
-        ////Find if we have a dus.sss file first.
-        //auto itfounddus = fqueue.end();
-
-        ////### Find if we have a dus.sss file! ###
-        //for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
-        //{
-        //    if( itqueue->getBaseName() == ScriptNames_dus )
-        //        itfounddus = itqueue;
-        //}
-
-        ////If we don't return early!
-        //if( itfounddus == fqueue.end() )
-        //{
-        //    if( utils::LibWide().isLogOn() )
-        //        clog << "\t- No " <<ScriptNames_dus <<" data found!\n";
-        //    return;
-        //}
-        //else
-        //{
-        //    clog <<"\n\tLoading " <<ScriptNames_dus <<"." <<filetypes::SSS_FileExt <<" and its dependencies..";
-        //}
-
-        ////### Otherwise keep going and load the sse ###
-        //ScriptGroup dusgrp( ScriptPrefix_dus, eScriptGroupType::UNK_dus );
-        //LoadSSData( dusgrp, itfounddus->toString() );
-        ////Pop it from the queue
-        //fqueue.erase(itfounddus);
-
-        //LoadNumberedSSBForPrefix( fqueue, ScriptPrefix_dus, dusgrp );
-
-        //for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
-        //{
-        //    string fname   = itqueue->getBaseName();
-        //    auto   itfound = std::search( ScriptPrefix_dus.begin(), ScriptPrefix_dus.end(), fname.begin(), fname.end() );
-
-        //    if( itfound != fname.end() && 
-        //        fname.size() == (ScriptPrefix_dus.size() + 2) &&     // That size is that of "dus" + a 2 digit number!
-        //       std::isdigit( fname.back(), std::locale::classic() ) )  //Check if the last character is a digit! )
-        //    {
-        //        string fext = itqueue->getExtension();
-        //        if( fext == filetypes::SSB_FileExt )
-        //        {
-        //            LoadSSB( dusgrp, itqueue->toString() );
-        //        }
-        //        else if( fext == filetypes::SSS_FileExt )
-        //        {
-        //            clog << "Found an extra dus.sss file!! Not supposed to happen!!\n";
-        //            assert(false);
-        //        }
-        //        else
-        //        {
-        //            clog << "Found dus component with unexpected file extension! " <<itqueue->getFileName() <<"\n";
-        //            assert(false);
-        //        }
-        //        fqueue.erase(itqueue);
-        //    }
-        //}
-        //out_scrset.Components().push_back(std::move(dusgrp));
-
-        //If we do, parse the dusXX.ssb files too.
-    }
-
-    void GameScriptsHandler::LoadLoneSSS( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
-    {
-        auto itfoundlsd = std::find_if( fqueue.begin(), fqueue.end(), [&](const Poco::Path & entry)->bool
-        {
-            return utils::CompareStrIgnoreCase(entry.getExtension(),  filetypes::SSS_FileExt );
-        });
-        if( itfoundlsd != fqueue.end() )
-        {
-            clog << "\n\tParsing lone sss files..";
-            ScriptGroup lonesss( itfoundlsd->getBaseName(), eScriptGroupType::UNK_loneSSS );
-            LoadSSData( lonesss, itfoundlsd->toString() );
-            out_scrset.Components().push_back( std::move(lonesss) );
-            clog <<"\n";
-        }
-    }
-
-    void GameScriptsHandler::LoadAUGrp( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset, std::deque<Poco::Path>::iterator itfound )
-    {
-        Poco::Path  curfile     = *itfound;
-        string      curbasename = curfile.getBaseName();
-        ScriptGroup ugrp( curbasename, eScriptGroupType::UNK_u );
-        fqueue.erase(itfound);
-
-        clog << "\n\tFound " <<curbasename <<" u prefixed script data file..\n";
-
-        //Load the uLXX.sss file first.
-        LoadSSData( ugrp, curfile.toString() );
-
-        //Then the matching uLXXYY.ssb files.
-        LoadNumberedSSBForPrefix( fqueue, curfile.getBaseName(), ugrp );
-
-        //Add the group to the list
-        out_scrset.Components().push_back( std::move(ugrp) );
-    }
-
-    void GameScriptsHandler::LoadGrpU( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
-    {
-        static auto lambdafindu = []( const Poco::Path & ap )->bool
-        {
-            if( utils::CompareStrIgnoreCase(ap.getExtension(), filetypes::SSS_FileExt) ) //Check if we got the right extension
-            {
-                string fname = ap.getBaseName();
-                if( (fname.size() == ScriptNameLen_U ) &&                 //Check if the length is even valid
-                    std::isalpha( fname[1], std::locale::classic() ) &&   //Check if it has a letter after the u prefix
-                    std::isdigit( fname[2], std::locale::classic() ) && 
-                    std::isdigit( fname[3], std::locale::classic() ))     //Check if it ends with 2 digits
-                {
-                    return (fname.front() == ScriptPrefix_u.front()); //Check if the filename contains the prefix at the beginning of it
-                }
-            }
-            return false;
-        };
-
-        //Find if we have some uLXX.sss files first.
-        auto itfound = fqueue.end();
-
-        do
-        {
-            itfound = std::find_if( fqueue.begin(), fqueue.end(), lambdafindu ); 
-
-            if( itfound != fqueue.end() )
-                LoadAUGrp( fqueue, out_scrset, itfound );
-
-        }while( itfound != fqueue.end() );
+        string basename( std::move(datafpath.getBaseName()));
+        ScriptGroup grp( basename, eScriptGroupType::UNK_sub );
+        LoadSSData( grp, datafpath.toString() );
+        LoadNumberedSSBForPrefix( fqueue, basename, grp );
+        out_scrset.Components().push_back(std::move(grp));
     }
 
     void GameScriptsHandler::LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
@@ -594,7 +385,10 @@ namespace pmd2
             string fname;
             fname.reserve(8);
             for( const char & c : afile )
-                fname.push_back( std::tolower( c, std::locale::classic() ) );
+            {
+                if( c != 0 ) //Ignore the terminating 0
+                    fname.push_back( std::tolower( c, std::locale::classic() ) );
+            }
 
             Poco::Path ssbpath(curdir);
             Poco::Path ssapath(curdir);
@@ -606,20 +400,21 @@ namespace pmd2
             {
                 return (ssbpath.toString() == path.toString());
             } );
+
+            if( itfoundssb != fqueue.end() )
+                fqueue.erase(itfoundssb);
+            else
+                clog<< "GameScriptsHandler::LoadGrpLSDContent(): Expected SSB file named" << ssbpath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
+
             auto itfoundssa = std::find_if( fqueue.begin(), fqueue.end(), [&ssapath]( const Poco::Path & path )->bool
             {
                 return (ssapath.toString() == path.toString());
             } );
 
-            if( itfoundssb != fqueue.end() )
-                fqueue.erase(itfoundssb);
-            else
-                throw std::runtime_error("GameScriptsHandler::LoadGrpLSDContent(): Expected SSB file named" + ssbpath.toString() + ", but couldn't find it..");
-
             if( itfoundssa != fqueue.end() )
                 fqueue.erase(itfoundssa);
             else
-                throw std::runtime_error("GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" + ssapath.toString() + ", but couldn't find it..");
+                clog<<"GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" << ssapath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
 
             //#3 - Handle the files
             ScriptGroup scrpair( string( std::begin(afile), std::end(afile) ), eScriptGroupType::UNK_fromlsd );
@@ -633,7 +428,7 @@ namespace pmd2
     }
 
 
-    void GameScriptsHandler::LoadDirectory(const std::string & path)
+    ScriptSet GameScriptsHandler::LoadDirectory(const std::string & path)
     {
         using namespace Poco;
         Path curdir(path);
@@ -646,10 +441,11 @@ namespace pmd2
         DirectoryIterator  itdirend;
         deque<Path>        processqueue;
         ScriptSet          curset(curdir.getBaseName());
+        
 
         while( itdir != itdirend )
         {
-            if(itdir->isFile() && !itdir->isHidden())
+            if(itdir->isFile() && !itdir->isHidden() && std::regex_match( itdir->path(), MatchScriptFileTypes ) )
                 processqueue.push_back(itdir.path());
             ++itdir;
         }
@@ -689,10 +485,7 @@ namespace pmd2
         //#3 Check for enter.sse/enterXX.ssb
         LoadGrpEnter( processqueue, curset );
 
-        //#4 Check for dus.sss/dusXX.ssb
-        LoadGrpDus(processqueue, curset);
-
-        //#5 Load script files from LSD
+        //#4 Load script files from LSD
         if( !curset.LSDTable().empty() )
         {
             clog <<"\n\tLoading LSD references..";
@@ -700,17 +493,17 @@ namespace pmd2
             clog <<"\n";
         }
 
-        //#6 Load 'u' prefixed files
-        LoadGrpU( processqueue, curset );
+        //#5 Load the SSS subs
+        auto lambdafindsss = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSS_FileExt;};
+        auto itcur         = processqueue.begin();
+        while( (itcur = std::find_if( processqueue.begin(), processqueue.end(), lambdafindsss)) != processqueue.end() )
+        {
+            Poco::Path p = *itcur;
+            processqueue.erase(itcur); //Delete here, because we invalidate the iterator in the LoadSub method
+            LoadSub(p, processqueue, curset);
+        }
 
-        //#7 Load lone sss files.
-        LoadLoneSSS(processqueue, curset);
-
-        //#8 - Add the set to the list
-        m_parent.m_sets.emplace( std::make_pair( curdir.getBaseName(), std::move(curset) ) );
-
-
-        //#9 - List files remaining in the queue
+        //#8 - List files remaining in the queue
         if( !processqueue.empty() )
         {
             clog <<"\n\t" <<processqueue.size() <<" files were ignored:\n";
@@ -723,15 +516,66 @@ namespace pmd2
         }
 
         clog <<"\n";
-
+        return std::move(curset);
     }
 
-    void GameScriptsHandler::Import( const std::string & dir )
+    void GameScriptsHandler::WriteDirectory(const ScriptSet & set, const std::string & path)
     {
+        //Create it first if needed
+        Poco::File tgtdir(path);
+        if( !tgtdir.exists() )
+            tgtdir.createDirectory();
+        else if( tgtdir.exists() && !tgtdir.isDirectory() )
+            throw std::runtime_error("GameScriptsHandler::WriteDirectory(): Output dir exist already as a file! Can't overwrite with a directory!");
+
+        //Write LSD table if needed
+        Poco::Path lsdpath(path);
+        string     lsdname = set.Name();
+
+        //Make lsd name lower case
+        std::transform( lsdname.begin(), lsdname.end(), lsdname.begin(), std::bind( std::tolower<string::value_type>, placeholders::_1, std::ref(locale::classic()) ) );
+        lsdpath.append( lsdname );
+
+        WriteLSD(set, lsdpath.toString());
+
+        //Write all our content
+        WriteGroups(set, path);
     }
 
-    void GameScriptsHandler::Export( const std::string & dir )
+
+    void GameScriptsHandler::WriteLSD(const ScriptSet & set, const std::string & fpath)
     {
+        if( ! set.LSDTable().empty() )
+        {
+            if( utils::LibWide().isLogOn() )
+                clog<<"\tWriting LSD file...\n";
+            filetypes::WriteLSD( set.LSDTable(), fpath );
+        }
+    }
+
+    void GameScriptsHandler::WriteGroups(const ScriptSet & set, const std::string & dirpath)
+    {
+        if( utils::LibWide().isLogOn() )
+            clog << "\tWriting groups to " <<dirpath <<"\n";
+        for( const auto & grp : set ) 
+        {
+            if( utils::LibWide().isLogOn() )
+                clog << "\t\tWriting " <<grp.Identifier() <<"...";
+
+            //Write data file
+            if( grp.Data() )
+            {
+                filetypes::WriteScriptData( Poco::Path(dirpath).setFileName(grp.Data()->Name()).setExtension(ScriptDataTypeToFileExtension(grp.Data()->Type())).toString(),
+                                            *grp.Data() );
+            }
+
+            //Write SSBs
+            for( const auto & seq : grp.Sequences() )
+                filetypes::WriteScript(Poco::Path(dirpath).setFileName(seq.first).setExtension(filetypes::SSB_FileExt).toString(), seq.second);
+            
+            if( utils::LibWide().isLogOn() )
+                clog <<"\n";
+        }
     }
 
 
@@ -740,40 +584,82 @@ namespace pmd2
 //  GameScripts
 //==============================================================================
 
-
-    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver )
-        :m_scriptdir(scrdir), m_scrRegion(greg), m_gameVersion(gver), m_pHandler(new GameScriptsHandler(*this))
+    ScrSetLoader::ScrSetLoader(GameScripts & parent, const std::string & filepath )
+        :m_parent(parent), m_path(filepath)
     {}
 
-    GameScripts::~GameScripts()
+    ScriptSet ScrSetLoader::operator()()
     {
+        return std::move( m_parent.m_pHandler->LoadDirectory(m_path) );
     }
+
+    void ScrSetLoader::operator()(const ScriptSet & set)const
+    {
+        m_parent.m_pHandler->WriteDirectory(set, m_path);
+    }
+
+    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver )const
+        :m_scriptdir(scrdir), m_scrRegion(greg), m_gameVersion(gver), m_pHandler(new GameScriptsHandler(*this)), m_common(DirNameScriptCommon)
+    {
+        Load();
+    }
+
+    GameScripts::~GameScripts()
+    {}
 
     //File IO
-    void GameScripts::Load ()
+    void GameScripts::Load()
     {
-        m_pHandler->Load();
+        //Build directory index
+        Poco::DirectoryIterator itdir(m_scriptdir);
+        Poco::DirectoryIterator itdirend;
+
+        for( ; itdir != itdirend; ++itdir )
+        {
+            string basename = std::move( itdir.path().getBaseName() );
+            if( basename == DirNameScriptCommon )
+                m_common = std::move( m_pHandler->LoadDirectory(itdir->path()) );
+            else
+                m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, itdir->path())) );
+        }
     }
 
-    void GameScripts::Write()
+    ScriptSet GameScripts::LoadScriptSet(const std::string & setname)
     {
-        m_pHandler->Write();
+        Poco::File dir( Poco::Path(m_scriptdir).append(setname) );
+        if( dir.exists() && dir.isDirectory() )
+            return std::move( m_pHandler->LoadDirectory(dir.path()) );
+        else
+            throw std::runtime_error("GameScripts::LoadScriptSet(): "+setname+" doesn't exists.");
+        return ScriptSet("");
     }
 
-    void GameScripts::Import(const std::string & dir)
+    void GameScripts::WriteScriptSet(const ScriptSet & set)
     {
-    }
-    
-    void GameScripts::Export(const std::string & dir)
-    {
-    }
-
-    ScriptSet * GameScripts::AccessScriptSet(const std::string & setname)
-    {
-        return nullptr;
+        const string tgtdir = Poco::Path(m_scriptdir).append(set.Name()).toString();
+        if( set.Name() != DirNameScriptCommon )
+            m_setsindex.insert_or_assign(set.Name(), std::forward<ScrSetLoader>(ScrSetLoader(*this, tgtdir)) ); //Add to index if doesn't exists
+        m_pHandler->WriteDirectory(set, tgtdir);
     }
 
-    //Access
+    const ScriptSet & GameScripts::GetCommonSet() const
+    {
+        return m_common;
+    }
+
+    ScriptSet & GameScripts::GetCommonSet()
+    {
+        return m_common;
+    }
+
+    inline GameScripts::iterator       GameScripts::begin()      {return m_setsindex.begin();}
+    inline GameScripts::const_iterator GameScripts::begin()const {return m_setsindex.begin();}
+
+    inline GameScripts::iterator       GameScripts::end()      {return m_setsindex.end();}
+    inline GameScripts::const_iterator GameScripts::end()const {return m_setsindex.end();}
+
+    inline size_t GameScripts::size()const {return m_setsindex.size();}
+    inline bool   GameScripts::empty()const {return m_setsindex.empty();}
 
 
 };

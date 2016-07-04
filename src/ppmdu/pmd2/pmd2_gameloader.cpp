@@ -191,7 +191,6 @@ namespace pmd2
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
             m_scripts.reset( new GameScripts( scriptdir.str(), GetGameRegion(), GetGameVersion() ) );
-            m_scripts->Load();
         }
         return m_scripts.get();
     }
@@ -297,19 +296,20 @@ namespace pmd2
 
     void GameDataLoader::WriteScripts()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+        //NOTHING to do here
+        //if(!m_bAnalyzed)
+        //    AnalyseGame();
 
-        if( m_nodata )
-            return;
+        //if( m_nodata )
+        //    return;
 
-        if( !m_scripts )
-        {
-            clog <<"<!>- GameDataLoader::WriteScripts(): Nothing to write!\n";
-            return;
-        }
+        //if( !m_scripts )
+        //{
+        //    clog <<"<!>- GameDataLoader::WriteScripts(): Nothing to write!\n";
+        //    return;
+        //}
 
-        m_scripts->Write();
+        // m_scripts->Write();
     }
 
     void GameDataLoader::WriteGraphics()

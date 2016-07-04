@@ -2,6 +2,7 @@
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -166,9 +167,9 @@ namespace filetypes
         void ParseCode()
         {
             if( m_scrversion == eOpCodeVersion::EoS ) 
-                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoS>());
+                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoS>(), OpCodeNumberPicker<eOpCodeVersion::EoS>());
             else if( m_scrversion == eOpCodeVersion::EoTD )
-                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoTD>());
+                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoTD>(), OpCodeNumberPicker<eOpCodeVersion::EoTD>() );
             else
             {
                 clog << "\n<!>- SSB_Parser::ParseCode() : INVALID SCRIPT VERSION!!\n";
@@ -176,8 +177,8 @@ namespace filetypes
             }
         }
 
-        template<typename _InstFinder>
-            void ParseCodeWithOpCodeFinder(_InstFinder & opcodefinder)
+        template<typename _InstFinder, typename _InstNumber>
+            void ParseCodeWithOpCodeFinder(_InstFinder & opcodefinder, _InstNumber & opcodenumber)
         {
             //Iterate through all group and grab their instructions.
             for( size_t cntgrp = 0; cntgrp < m_dathdr.nbgrps; ++cntgrp )
@@ -191,7 +192,8 @@ namespace filetypes
 
                 grp.instructions = std::move( ParseInstructionSequence( absgrpbeg, 
                                                                         absgrpend,
-                                                                        opcodefinder ) );
+                                                                        opcodefinder,
+                                                                        opcodenumber ) );
                 grp.type         = m_grps[cntgrp].type;
                 grp.unk2         = m_grps[cntgrp].unk2;
                 m_out.Groups().push_back( std::move(grp) );
@@ -199,8 +201,8 @@ namespace filetypes
         }
 
 
-        template<typename _InstFinder>
-            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, size_t endoffset, _InstFinder & opcodefinder )
+        template<typename _InstFinder, typename _InstNumber>
+            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, size_t endoffset, _InstFinder & opcodefinder, _InstNumber & opcodenumber )
         {
             deque<ScriptInstruction> sequence;
             m_cur = m_beg;
@@ -213,9 +215,10 @@ namespace filetypes
             {
                 uint16_t curop = utils::ReadIntFromBytes<uint16_t>( m_cur, itendseq );
 
-                if( curop != NullOpCode )
+                //if( curop != NullOpCode )
+                if( curop < opcodenumber() )
                 {
-                    auto opcodedata = opcodefinder(curop);
+                    auto opcodedata = opcodefinder(curop); //THis should never happen though..
                     
                     if( opcodedata == nullptr )
                     {
@@ -226,25 +229,34 @@ namespace filetypes
                     }
 
                     ScriptInstruction inst;
+                    inst.isdata = false;
                     inst.opcode = curop;
-                    
+
                     if( opcodedata->nbparams >= 0 )
                     {
                         const uint16_t nbparams = static_cast<uint16_t>(opcodedata->nbparams);
                         for( size_t cntparam = 0; cntparam < nbparams; ++cntparam )
-                            inst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(m_cur, m_end) );
-                        sequence.push_back(std::move(inst));
+                            inst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(m_cur, itendseq) );
+                        foffset += nbparams * ScriptWordLen;
                     }
                     else
                     {
-                        cerr << "\n<!>- Found instruction with -1 parameter number in this script!\n";
-                        clog << "\n<!>- Found instruction with -1 parameter number in this script!\n";
-                        assert(false);
+                        clog << "\n<!>- Found instruction with -1 parameter number in this script! Offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
                     }
-
+                    sequence.push_back(std::move(inst));
                 }
                 else
-                    break;
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog<<"0x" <<hex <<uppercase <<foffset  <<" - Got data word 0x" <<curop <<" \n" <<nouppercase <<dec;
+
+                    //The instruction is actually a data word
+                    ScriptInstruction inst;
+                    inst.isdata = true;
+                    inst.opcode = curop;
+                    sequence.push_back(std::move(inst));
+                }
+                foffset += ScriptWordLen;
             }
 
             return std::move(sequence);
@@ -256,7 +268,7 @@ namespace filetypes
             const size_t strlutlen = (m_nbstrs * 2); // In the file, the offset for each constants in the constant table includes the 
                                                      // length of the string lookup table(string pointers). Here, to compensate
                                                      // we subtract the length of the string LUT from each pointer read.
-            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings( m_constoffset, m_constoffset, m_nbconsts, strlutlen ));
+            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings<ScriptedSequence::consttbl_t>( m_constoffset, m_constoffset, m_nbconsts, strlutlen ));
         }
 
         void ParseStrings()
@@ -264,10 +276,11 @@ namespace filetypes
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringblockbeg;
             size_t begoffset      = ( m_nbconsts != 0 )? m_constoffset : m_stringblockbeg;
-           
+
             for( size_t i = 0; i < m_stringblksSizes.size(); ++i )
             {
-                m_out.StrTbl(i) = std::move(ParseOffsetTblAndStrings( strparseoffset, begoffset, m_nbstrs ));
+                m_out.InsertStrLanguage( static_cast<eGameLanguages>(i), std::move(ParseOffsetTblAndStrings<ScriptedSequence::strtbl_t>( strparseoffset, begoffset, m_nbstrs )) );
+                //m_out.StrTbl( static_cast<eGameLanguages>(i) ) = ;
                 strparseoffset += m_stringblksSizes[i]; //Add the size of the last block, so we have the offset of the next table
             }
         }
@@ -276,9 +289,10 @@ namespace filetypes
             relptroff == The position in the file against which the offsets in the table are added to.
             offsetdiff == this value will be subtracted from every ptr read in the table.
         */
-        std::deque<std::string> ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
+        template<class _ContainerT>
+            _ContainerT ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
         {
-            std::deque<std::string> strings;
+            _ContainerT strings;
             //Parse regular strings here
             initer itoreltblbeg = m_beg;
             std::advance( itoreltblbeg, relptroff);
@@ -319,7 +333,7 @@ namespace filetypes
         vector<group_entry> m_grps;
 
         eOpCodeVersion       m_scrversion; 
-        eGameRegion        m_scrRegion;
+        eGameRegion          m_scrRegion;
     };
 
 //=======================================================================================

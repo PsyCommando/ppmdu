@@ -9,7 +9,6 @@ namespace pmd2
 {
     const std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
     {
-        "INVALID",
         "EoS",
         "EoT",
         "EoD",
@@ -18,11 +17,20 @@ namespace pmd2
 
     const std::array<std::string,static_cast<size_t>(eGameRegion::NBRegions)> GameRegionNames =
     {
-        "INVALID",
         "Japan",
         "NorthAmerica",
         "Europe",
     };
+
+    const std::array<std::string, static_cast<size_t>(eGameLanguages::NbLang)> GameLanguagesNames=
+    {{
+        "English",
+        "Japanese",
+        "French",
+        "German",
+        "Italian",
+        "Spanish",
+    }};
 
     /*
         Directories present in all versions of PMD2

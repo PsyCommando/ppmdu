@@ -44,7 +44,7 @@ namespace pmd2
                 eGameLanguages glang       = StrToGameLang(basename);
                 const auto   * langdetails =  m_conf.GetLanguageFilesDB().GetByLanguage( glang );
 
-                if( glang == eGameLanguages::invalid || !langdetails )
+                if( glang == eGameLanguages::Invalid || !langdetails )
                 {
                     clog <<"<!>- GameText::ImportText(): Ignoring unexpected language file \"" <<afile <<"\"\n";
                     continue;

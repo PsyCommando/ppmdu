@@ -751,8 +751,7 @@ namespace statsutil
 
             Poco::Path scriptdir(frompath);
             scriptdir.append(DefExportScriptDirName);
-            pgamescripts->Import( scriptdir.toString() );
-            pgamescripts->Write();
+            pgamescripts->ImportXML( scriptdir.toString() ); //Writing is done automatically
         }
 
         //Load game stats for the other elements as needed
@@ -833,7 +832,7 @@ namespace statsutil
 
             const string targetdir = Poco::Path(outpath).append(DefExportScriptDirName).toString();
             CreateDirIfDoesntExist(targetdir);
-            pgamescripts->Export(targetdir);
+            pgamescripts->ExportXML(targetdir);
         }
 
         //Load game stats for the other elements as needed

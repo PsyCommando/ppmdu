@@ -9,6 +9,7 @@ Description: Contains data on script opcodes.
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <initializer_list>
 
 namespace pmd2
 {
@@ -21,6 +22,7 @@ namespace pmd2
     {
         EoS,
         EoTD,
+        Invalid,
     };
     const size_t   ScriptWordLen = sizeof(uint16_t);    //Len of a word in the scripts. Since its a commonly used unit
     const uint16_t NullOpCode    = 0;                   //The Null opcode is the same across all versions of the opcodes!
@@ -806,6 +808,11 @@ namespace pmd2
         return FindOpCodeInfo_EoTD( static_cast<uint16_t>(opcode) );
     }
 
+    inline size_t GetNbOpCodes_EoTD()
+    {
+        return OpCodesInfoListEoTD.size();
+    }
+
     /*************************************************************************************
         IntToOpCodeEoTD
             Turns an integer to a a opcode for EoTD
@@ -858,6 +865,11 @@ namespace pmd2
         return FindOpCodeInfo_EoS( static_cast<uint16_t>(opcode) );
     }
 
+    inline size_t GetNbOpCodes_EoS()
+    {
+        return OpCodesInfoListEoS.size();
+    }
+
     /*************************************************************************************
         IntToOpCodeEoS
             Turns an integer to a a opcode for EoS
@@ -870,40 +882,6 @@ namespace pmd2
             return eScriptOpCodesEoS::INVALID;
     }
 
-
-
-//
-//
-//
-    //template<typename _OpCodeType>
-    //    class FindOpcodeInfo
-    //{
-    //    struct eostype{};
-    //    struct eotdtype{};
-
-    //public:
-    //    static const bool IsEoS = std::is_same<_OpCodeType,eScriptOpCodesEoS>::value;
-
-    //    typedef typename std::conditional<IsEoS, eostype, eotdtype>::type IsEoS_t;
-    //    typedef typename const std::conditional<
-    //                                        IsEoS, 
-    //                                                                                            OpCodeInfoEoS, 
-    //                                                                                            OpCodeInfoEoTD>::type * opcodedata_t;
-
-    //    //EoS
-    //    template<typename _OpCodeTypeS = _OpCodeType/*, typename _IsEoSTy = IsEoS_t, class = std::enable_if<IsEoS,void>::type*/>
-    //        std::enable_if_t<std::is_same<_OpCodeTypeS,eScriptOpCodesEoS>::value,opcodedata_t>  operator()( uint16_t code/*, typename std::enable_if<IsEoS,eostype>::type = eostype()*/ )
-    //    {
-    //        return FindOpCodeInfo_EoS(code);
-    //    }
-
-    //    //EoTD
-    //    template<typename _OpCodeTypeS = _OpCodeType/*, typename _IsEoSTy = IsEoS_t, class = std::enable_if<!IsEoS,void>::type*/>
-    //        std::enable_if_t<!std::is_same<_OpCodeTypeS,eScriptOpCodesEoS>::value,opcodedata_t> operator()( uint16_t code/*, typename std::enable_if<!IsEoS,eostype>::type = eotdtype()*/ )
-    //    {
-    //        return FindOpCodeInfo_EoTD(code);
-    //    }
-    //};
 //=====================================================================================
 //  Utilities
 //=====================================================================================
@@ -929,6 +907,46 @@ namespace pmd2
     };
 
 
+    /*
+        OpCodeNumberPicker
+            Get the appriopriate total number of instructions for a given game version
+    */
+    template<eOpCodeVersion>
+        struct OpCodeNumberPicker;
+
+    template<>
+        struct OpCodeNumberPicker<eOpCodeVersion::EoS>
+    {
+        inline size_t operator()()const { return GetNbOpCodes_EoS(); }
+    };
+
+    template<>
+        struct OpCodeNumberPicker<eOpCodeVersion::EoTD>
+    {
+        inline size_t operator()()const { return GetNbOpCodes_EoTD(); }
+    };
+
+
+    /*
+        IsOpCodeData
+            Whether the uint16 read is actually a data word, and not a opcode.
+    */
+    bool IsOpCodeData( uint16_t code, eGameVersion vers )
+    {
+        if( vers == eGameVersion::EoS )
+        {
+            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoS>()()) )
+                return true;
+        }
+        else if( vers == eGameVersion::EoT || vers == eGameVersion::EoD )
+        {
+            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoTD>()()) )
+                return true;
+        }
+        else
+            throw std::runtime_error("IsOpCodeData(): Invalid game version specified!");
+        return false;
+    }
 
 };
 

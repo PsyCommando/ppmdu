@@ -344,7 +344,7 @@ namespace pmd2 { namespace stats
             for( auto & curnode : strnode.children() )
             {
                 eGameLanguages glang = StrToGameLang(curnode.name());
-                if( glang != eGameLanguages::invalid )
+                if( glang != eGameLanguages::Invalid )
                 {
                     //Parse multi-language strings
                     ReadLangStrings(curnode, glang, itemID);
