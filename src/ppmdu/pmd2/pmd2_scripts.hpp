@@ -57,7 +57,7 @@ namespace pmd2
     /*
         MatchingRegexes
     */
-    const std::regex ResrourceNameRegEx        ("([a-z]\d\d){1,2}([a-z])?(\d\d)\b"); //For things that are named "m01a01a.something" The second letter + digit pair is optional and the letter at the end is too.
+    const std::regex ResrourceNameRegEx        ("([a-z]\\d\\d){1,2}([a-z])?(\\d\\d)\\b"); //For things that are named "m01a01a.something" The second letter + digit pair is optional and the letter at the end is too.
 
     //const std::regex ScriptRegExNameSSA        ("(.*)\\."s  + SSA_FileExt);
     //const std::regex ScriptRegExNameSSS        ("(.*)\\."s  + SSS_FileExt);
@@ -388,6 +388,9 @@ namespace pmd2
     public:
         friend class GameScriptsHandler;
         friend class ScrSetLoader;
+        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest);
+        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs );
+
         typedef std::unordered_map<std::string,ScrSetLoader> evindex_t;
         typedef evindex_t::iterator                          iterator;
         typedef evindex_t::const_iterator                    const_iterator;
@@ -401,6 +404,12 @@ namespace pmd2
         //void Write(); //Writes all script sets that were modified.
         void ImportXML(const std::string & dir);
         void ExportXML(const std::string & dir);
+
+        std::unordered_map<std::string,ScriptSet> LoadAll();
+        void                                      WriteAll( const std::unordered_map<std::string,ScriptSet> & stuff );
+
+        eGameRegion  Region()const;
+        eGameVersion Version()const;
 
         //Access
         void      WriteScriptSet( const ScriptSet   & set ); //Add new script set or overwrite existing
@@ -438,18 +447,44 @@ namespace pmd2
     {
     public:
         ScrSetLoader(GameScripts & parent, const std::string & filepath );
+
+        ScrSetLoader( ScrSetLoader && mv )
+            :m_parent(mv.m_parent), m_path(std::move(mv.m_path))
+        {}
+
+        ScrSetLoader( const ScrSetLoader & cp )
+            :m_parent(cp.m_parent), m_path(cp.m_path)
+        {}
+
+        ScrSetLoader & operator=( const ScrSetLoader & cp )
+        {
+            m_path   = cp.m_path;
+            m_parent = cp.m_parent;
+            return *this;
+        }
+
+        ScrSetLoader & operator=( ScrSetLoader && mv )
+        {
+            m_path   = std::move(mv.m_path);
+            m_parent = mv.m_parent;
+            return *this;
+        }
+
         ScriptSet operator()()const;
         void      operator()(const ScriptSet & set)const;
 
     private:
         std::string   m_path;
-        GameScripts & m_parent;
+        GameScripts * m_parent;
     };
 
 
 //
 //  Import/Export
 //
+
+    //void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest);
+    //void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs );
 
     void      ScriptSetToXML( const ScriptSet   & set,    eGameRegion greg,       eGameVersion gver, const std::string & destdir );
     ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );

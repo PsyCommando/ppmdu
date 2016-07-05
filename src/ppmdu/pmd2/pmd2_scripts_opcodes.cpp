@@ -740,4 +740,21 @@ namespace pmd2
     } };
 
 
+    bool IsOpCodeData(uint16_t code, eGameVersion vers)
+    {
+        if( vers == eGameVersion::EoS )
+        {
+            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoS>()()) )
+                return true;
+        }
+        else if( vers == eGameVersion::EoT || vers == eGameVersion::EoD )
+        {
+            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoTD>()()) )
+                return true;
+        }
+        else
+            throw std::runtime_error("IsOpCodeData(): Invalid game version specified!");
+        return false;
+    }
+
 };

@@ -77,6 +77,7 @@ namespace pmd2
     GameStats::GameStats( const std::string & pmd2rootdir, eGameVersion gvers, eGameRegion gloc, std::shared_ptr<GameText> && gtext )
         :m_gameStrings(gtext), m_romrootdir(pmd2rootdir), m_gameVersion(gvers), m_gameRegion(gloc)
     {
+        m_dataFolder = Poco::Path(m_romrootdir).append(GameDataDir).toString();
     }
 
     void GameStats::setRomRootDir( const std::string & path )

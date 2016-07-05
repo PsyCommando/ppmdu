@@ -6,6 +6,7 @@ pmd2_scripts_opcodes.hpp
 psycommando@gmail.com
 Description: Contains data on script opcodes.
 */
+#include <ppmdu/pmd2/pmd2.hpp>
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -931,22 +932,7 @@ namespace pmd2
         IsOpCodeData
             Whether the uint16 read is actually a data word, and not a opcode.
     */
-    bool IsOpCodeData( uint16_t code, eGameVersion vers )
-    {
-        if( vers == eGameVersion::EoS )
-        {
-            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoS>()()) )
-                return true;
-        }
-        else if( vers == eGameVersion::EoT || vers == eGameVersion::EoD )
-        {
-            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoTD>()()) )
-                return true;
-        }
-        else
-            throw std::runtime_error("IsOpCodeData(): Invalid game version specified!");
-        return false;
-    }
+    bool IsOpCodeData( uint16_t code, eGameVersion vers );
 
 };
 

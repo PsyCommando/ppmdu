@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <utils/utility.hpp>
-#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/pugixml_utils.hpp>
 #include <utils/library_wide.hpp>
@@ -57,17 +56,20 @@ namespace pmd2
         const string ATTR_GroupParam2   = "unk2";
 
 
-        const string NODE_Instruction   = "Instruction";
+        const string NODE_Instruction   = "Instruction"s;
         const string NODE_Data          = "Data";               ///For data words
+
+        const string ATTR_Param         = "param";
 
         const array<string, 6> ATTR_Params =
         {
-        "param1",
-        "param2",
-        "param3",
-        "param4",
-        "param5",
-        "param6",
+            "param1",
+            "param2",
+            "param3",
+            "param4",
+            "param5",
+            "param6",
+
         };
 
     };
@@ -89,6 +91,8 @@ namespace pmd2
 
         ScriptedSequence operator()(xml_node & seqn)
         {
+            assert(false);
+            return ScriptedSequence();
         }
 
     private:
@@ -112,6 +116,8 @@ namespace pmd2
 
         ScriptEntityData operator()(xml_node & seqn)
         {
+            assert(false);
+            return ScriptEntityData();
         }
 
     private:
@@ -394,11 +400,13 @@ namespace pmd2
                 AppendAttribute( xinstr, ATTR_Name, opcodename );
                 for( size_t cntparam= 0; cntparam < intr.parameters.size(); ++cntparam )
                 {
-                    if( cntparam > ATTR_Params.size() )
-                        assert(false); //#REMOVEME: Just for testing something
+                    //if( cntparam > ATTR_Params.size() )
+                      //  assert(false); //#REMOVEME: Just for testing something
 
                     //#TODO: we could probably make this a bit more sophisticated later on 
-                    AppendAttribute( xinstr, ATTR_Params[cntparam], intr.parameters[cntparam] );
+                    stringstream sstrpname;
+                    sstrpname <<ATTR_Param <<cntparam;
+                    AppendAttribute( xinstr, sstrpname.str(), intr.parameters[cntparam] );
                 }
             }
             else
@@ -454,7 +462,7 @@ namespace pmd2
         {
             using namespace scriptXML;
             stringstream sstrfname;
-            sstrfname << utils::TryAppendSlash(destdir) <<m_scrset.Name();
+            sstrfname << utils::TryAppendSlash(destdir) <<m_scrset.Name() <<".xml";
             xml_document doc;
             xml_node     xroot = doc.append_child( ROOT_ScripDir.c_str() );
 
@@ -463,6 +471,9 @@ namespace pmd2
 
             //Write stuff
             WriteLSDTable(xroot);
+
+            for( const auto & entry : m_scrset.Components() )
+                WriteGrp(xroot,entry);
 
             //Write doc
             if( ! doc.save_file( sstrfname.str().c_str() ) )
@@ -520,34 +531,35 @@ namespace pmd2
 //  GameScripts
 //==============================================================================
 
-    void GameScripts::ImportXML(const std::string & dir)
+    void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest)
     {
-        decltype(m_scrRegion)   tempregion;
-        decltype(m_gameVersion) tempversion;
+        decltype(out_dest.Region())   tempregion;
+        decltype(out_dest.Version()) tempversion;
 
         //Grab our version and region from the 
-        m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) );
+        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) );
 
-        if( tempregion != m_scrRegion || tempversion != m_gameVersion )
+        if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
 
-        for( const auto entry : *this )
+        //
+        for( const auto entry : out_dest.m_setsindex )
         {
-            m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) );
+            entry.second( std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) ) );
 
-            if( tempregion != m_scrRegion || tempversion != m_gameVersion )
-                throw std::runtime_error("GameScripts::ImportXML(): Event " +  + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+            if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
+                throw std::runtime_error("GameScripts::ImportXML(): Event " + entry.first + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
     }
 
-    void GameScripts::ExportXML(const std::string & dir)
+    void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs )
     {
         //Export COMMON first
-        GameScriptsXMLWriter(m_common, m_scrRegion, m_gameVersion ).Write(dir);
+        GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
 
         //Export everything else
-        for( const auto & entry : *this )
-            GameScriptsXMLWriter( entry.second(), m_scrRegion, m_gameVersion ).Write(dir);
+        for( const auto & entry : gs.m_setsindex )
+            GameScriptsXMLWriter( entry.second(), gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
     }
 
     void ScriptSetToXML( const ScriptSet & set, eGameRegion gloc, eGameVersion gver, const std::string & destdir )

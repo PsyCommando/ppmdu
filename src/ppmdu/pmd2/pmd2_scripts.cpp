@@ -274,7 +274,7 @@ namespace pmd2
     void GameScriptsHandler::LoadSSData(ScriptGroup& tgtgrp, const std::string & fpath)
     {
         string basename = Poco::Path(fpath).getBaseName();
-        tgtgrp.SetData( new ScriptEntityData(filetypes::ParseScriptData(fpath)) );
+        tgtgrp.SetData( std::forward<ScriptEntityData>(filetypes::ParseScriptData(fpath)) );
     }
 
 
@@ -585,20 +585,20 @@ namespace pmd2
 //==============================================================================
 
     ScrSetLoader::ScrSetLoader(GameScripts & parent, const std::string & filepath )
-        :m_parent(parent), m_path(filepath)
+        :m_parent( std::addressof(parent) ), m_path(filepath)
     {}
 
-    ScriptSet ScrSetLoader::operator()()
+    ScriptSet ScrSetLoader::operator()()const
     {
-        return std::move( m_parent.m_pHandler->LoadDirectory(m_path) );
+        return std::move( m_parent->m_pHandler->LoadDirectory(m_path) );
     }
 
     void ScrSetLoader::operator()(const ScriptSet & set)const
     {
-        m_parent.m_pHandler->WriteDirectory(set, m_path);
+        m_parent->m_pHandler->WriteDirectory(set, m_path);
     }
 
-    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver )const
+    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver)
         :m_scriptdir(scrdir), m_scrRegion(greg), m_gameVersion(gver), m_pHandler(new GameScriptsHandler(*this)), m_common(DirNameScriptCommon)
     {
         Load();
@@ -624,6 +624,34 @@ namespace pmd2
         }
     }
 
+    void GameScripts::ImportXML(const std::string & dir)
+    {
+        ImportXMLGameScripts(dir,*this);
+    }
+
+    void GameScripts::ExportXML(const std::string & dir)
+    {
+        ExportGameScriptsXML(dir,*this);
+    }
+
+    std::unordered_map<std::string, ScriptSet> GameScripts::LoadAll()
+    {
+        std::unordered_map<std::string, ScriptSet> out;
+
+        for( const auto & entry : m_setsindex )
+            out.emplace( entry.first, std::forward<ScriptSet>(entry.second()) );
+
+        return std::move(out);
+    }
+
+    void GameScripts::WriteAll(const std::unordered_map<std::string, ScriptSet>& stuff)
+    {
+        WriteScriptSet(m_common);
+
+        for( const auto & entry : stuff )
+            m_setsindex.at(entry.first)(entry.second);
+    }
+
     ScriptSet GameScripts::LoadScriptSet(const std::string & setname)
     {
         Poco::File dir( Poco::Path(m_scriptdir).append(setname) );
@@ -632,6 +660,16 @@ namespace pmd2
         else
             throw std::runtime_error("GameScripts::LoadScriptSet(): "+setname+" doesn't exists.");
         return ScriptSet("");
+    }
+
+    eGameRegion GameScripts::Region() const
+    {
+        return m_scrRegion;
+    }
+
+    eGameVersion GameScripts::Version() const
+    {
+        return m_gameVersion;
     }
 
     void GameScripts::WriteScriptSet(const ScriptSet & set)
