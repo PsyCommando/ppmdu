@@ -76,27 +76,26 @@ namespace filetypes
             for( auto & entry : curpoke.statsgrowth )
             {
                 //Read Exp
-                ReadVal( entry.first, itread );
+                itread = utils::ReadIntFromBytes( entry.first,      itread, data.end() );
                 //Read stats
-                ReadVal( entry.second.HP, itread );
-                ReadVal( entry.second.Atk, itread );
-                ReadVal( entry.second.SpA, itread );
-                ReadVal( entry.second.Def, itread );
-                ReadVal( entry.second.SpD, itread );
+                itread = utils::ReadIntFromBytes( entry.second.HP,  itread, data.end() );
+                itread = utils::ReadIntFromBytes( entry.second.Atk, itread, data.end() );
+                itread = utils::ReadIntFromBytes( entry.second.SpA, itread, data.end() );
+                itread = utils::ReadIntFromBytes( entry.second.Def, itread, data.end() );
+                itread = utils::ReadIntFromBytes( entry.second.SpD, itread, data.end() );
                 std::advance( itread, sizeof(uint16_t) ); //Skip ending null bytes
             }
 
             ++m_itcurpoke;
         }
 
-        template<class T>
-            inline void ReadVal( T & val, vector<uint8_t>::const_iterator & itat )
-        {
-            val = utils::ReadIntFromBytes<T>( itat, m_rawdata.end() );
-        }
+        //template<class T>
+        //    inline void ReadVal( T & val, vector<uint8_t>::const_iterator & itat )
+        //{
+        //    val = utils::ReadIntFromBytes<T>( itat, m_rawdata.end() );
+        //}
 
         const std::vector<uint8_t>      & m_rawdata;
-        //vector<PokeStatsGrowth>           m_pkmngrowth;
         vector<PokeStatsGrowth>::iterator m_itcurpoke;
     };
 

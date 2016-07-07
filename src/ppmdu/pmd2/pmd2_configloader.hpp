@@ -5,7 +5,7 @@ pmd2_configloader.hpp
 Description: Loads on demand certain values from the config file!
 */
 #include <ppmdu/pmd2/pmd2.hpp>
-#include <ppmdu/pmd2/pmd2_langconf.hpp>
+//#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -34,28 +34,6 @@ namespace pmd2
     };
     extern const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames;
 
-
-    //enum struct eStringBlocks : unsigned int
-    //{
-    //    PkmnNames = 0,
-    //    PkmnCats,
-    //    MvNames,
-    //    MvDesc,
-    //    ItemNames,
-    //    ItemDescS,
-    //    ItemDescL,
-    //    AbilityNames,
-    //    AbilityDesc,
-    //    TypeNames,
-    //    PortraitNames,
-
-    //    //Add new string types above!
-    //    NBEntries,
-    //    Invalid,
-    //};
-    //extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
-
-
     enum struct eGameConstants :unsigned int
     {
         NbPossibleHeros= 0,
@@ -67,6 +45,67 @@ namespace pmd2
         Invalid,
     };
     extern const std::array<std::string, static_cast<uint32_t>(eGameConstants::NbEntries)> GameConstantNames;
+
+    /*******************************************************************************
+        eStringBlocks
+        Enum for associating the values of the StrBlocksNames array below.
+
+        **NEED TO KEEP THIS IN SYNC WITH StrBlocksNames**
+    *******************************************************************************/
+    enum struct eStringBlocks : unsigned int
+    {
+        PkmnNames = 0,
+        PkmnCats,
+        MvNames,
+        MvDesc,
+        ItemNames,
+        ItemDescS,
+        ItemDescL,
+        AbilityNames,
+        AbilityDesc,
+        TypeNames,
+        PortraitNames,
+
+        //Add new string types above!
+        NBEntries,
+        Invalid,
+    };
+
+    extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
+
+//
+//
+//
+    inline eStringBlocks StrToStringBlock( const std::string & blkname )
+    {
+        for( size_t i = 0; i < StringBlocksNames.size(); ++i )
+        {
+            if( blkname == StringBlocksNames[i] )
+                return static_cast<eStringBlocks>(i);
+        }
+        return eStringBlocks::Invalid;
+    }
+
+
+    inline eBinaryLocations StrToBinaryLocation( const std::string & locname )
+    {
+        for( size_t i = 0; i < BinaryLocationNames.size(); ++i )
+        {
+            if( locname == BinaryLocationNames[i] )
+                return static_cast<eBinaryLocations>(i);
+        }
+        return eBinaryLocations::Invalid;
+    }
+
+    inline eGameConstants StrToGameConstant( const std::string & constname )
+    {
+        for( size_t i = 0; i < GameConstantNames.size(); ++i )
+        {
+            if( constname == GameConstantNames[i] )
+                return static_cast<eGameConstants>(i);
+        }
+        return eGameConstants::Invalid;
+    }
 
 //========================================================================================
 //
@@ -89,63 +128,124 @@ namespace pmd2
         uint32_t    end;
     };
 
-//
+
+    /*
+        Boundaries for strings
+    */
+    struct strbounds_t
+    {
+        uint32_t beg;
+        uint32_t end;
+    };
+
+//==================================================================================
+//   StringsCatalog
+//==================================================================================
+    /*
+        Contains the list of the offsets of all the string blocks that could be found.
+    */
+    class StringsCatalog
+    {
+    public:
+        typedef std::unordered_map<eStringBlocks,strbounds_t> blkcnt_t;
+        typedef blkcnt_t::iterator                            iterator;
+        typedef blkcnt_t::const_iterator                      const_iterator;
+
+        StringsCatalog(){}
+
+        StringsCatalog( std::string && strfname, std::string && locstr, eGameLanguages lang, blkcnt_t && blocks )
+            :m_localeStr(std::move(locstr)), m_strfname(std::move(strfname)), m_lang(lang), m_offsets(std::move(blocks))
+        {}
+
+        StringsCatalog( StringsCatalog && mv )
+        {
+            this->operator=(std::forward<StringsCatalog>(mv));
+        }
+
+        StringsCatalog( const StringsCatalog & cp )
+        {
+            this->operator=(cp);
+        }
+
+        const StringsCatalog & operator=( StringsCatalog && mv )
+        {
+            this->m_localeStr = std::move(mv.m_localeStr);
+            this->m_offsets   = std::move(mv.m_offsets);
+            this->m_strfname  = std::move(mv.m_strfname);
+            this->m_lang      = std::move(mv.m_lang);
+            return *this;
+        }
+
+        const StringsCatalog & operator=( const StringsCatalog & cp )
+        {
+            this->m_localeStr = cp.m_localeStr;
+            this->m_offsets   = cp.m_offsets;
+            this->m_strfname  = cp.m_strfname;
+            this->m_lang      = cp.m_lang;
+            return *this;
+        }
+
+        //Accessor
+        inline const std::string & GetLocaleString()const                         { return m_localeStr; }
+        inline void                SetLocaleString( const std::string & locstr )  { m_localeStr = locstr; }
+
+        inline const std::string & GetStrFName()const                           { return m_strfname; }
+        inline void                SetStrFName( const std::string & strfname )  { m_strfname = strfname; }
+
+        inline eGameLanguages      GetLanguage()const                           { return m_lang; }
+        inline void                SetLanguage( eGameLanguages lang )           { m_lang = lang; }
+
+        void AddStringBlock ( eStringBlocks blkty, uint32_t beg, uint32_t end )    { m_offsets.emplace( std::make_pair( blkty, strbounds_t{beg,end} ) ); }
+        void AddStringBlocks( blkcnt_t && blocks )                              { m_offsets = std::move(blocks); }
+
+        inline const strbounds_t & operator[]( eStringBlocks blkty )const
+        {
+            auto found = m_offsets.find( blkty );
+            if( found == m_offsets.end() )
+                throw std::out_of_range("StringCatalog::operator[](): Unknown string block!");
+            return found->second;
+        }
+
+        inline const strbounds_t & operator[]( size_t blkindex )const
+        {
+            if( blkindex >= static_cast<unsigned int>(eStringBlocks::NBEntries) )
+                throw std::out_of_range("StringCatalog::operator[](): String block index out of range!");
+            return operator[]( static_cast<eStringBlocks>(blkindex) );
+        }
+
+
+        inline iterator find(eStringBlocks blk)
+        {
+            return m_offsets.find(blk);
+        }
+
+        inline const_iterator find(eStringBlocks blk)const
+        {
+            return m_offsets.find(blk);
+        }
+
+        inline bool   empty()const { return m_offsets.empty(); }
+        inline size_t size ()const { return m_offsets.size();  }
+        inline iterator begin() {return m_offsets.begin();}
+        inline const_iterator begin()const {return m_offsets.begin();}
+        inline iterator end() {return m_offsets.end();}
+        inline const_iterator end()const {return m_offsets.end();}
+
+    private:
+        blkcnt_t        m_offsets;
+        std::string     m_localeStr;
+        std::string     m_strfname;
+        eGameLanguages  m_lang;
+    };
+
+//========================================================================================
 //  GameStrings
-//
+//========================================================================================
+    /*
+    */
     class LanguageFilesDB
     {
     public:
-        //struct strbounds
-        //{
-        //    uint16_t beg;
-        //    uint16_t end;
-        //};
-
-        /************************************************************************************
-            StringBlocks
-                Represent a single language/text_*.str file.
-        ************************************************************************************/
-        //class StringBlocks
-        //{
-        //public:
-        //    typedef std::unordered_map<eStringBlocks, strbounds_t>  blkcnt_t;
-        //    typedef blkcnt_t::iterator                              iterator;
-        //    typedef blkcnt_t::const_iterator                        const_iterator;
-
-        //    StringBlocks( std::string && strfname, std::string && strloc, eGameLanguages lang, blkcnt_t && blocks )
-        //        :m_strfname(std::forward<std::string>(strfname)),
-        //         m_strlocale(std::forward<std::string>(strloc)),
-        //         m_lang(lang),
-        //         m_blocks(std::forward<blkcnt_t>(blocks))
-        //    {}
-
-        //    const StringBlocks & operator=( StringBlocks && mv )
-        //    {
-        //        this->m_blocks    = std::move(mv.m_blocks);
-        //        this->m_strfname  = std::move(mv.m_strfname);
-        //        this->m_strlocale = std::move(mv.m_strlocale);
-        //        return *this;
-        //    }
-
-        //    StringBlocks( StringBlocks && mv )
-        //    {
-        //        this->operator=(std::move(mv));
-        //    }
-
-        //    inline const_iterator GetStrBlock(eStringBlocks blk)const {return m_blocks.find(blk);}
-
-        //    inline const std::string & GetLocaleStr()const  {return m_strlocale;}
-        //    inline const std::string & GetStrFName()const   {return m_strfname;}
-        //    inline const eGameLanguages GetLanguage()const {return m_lang;}
-
-        //private:
-        //    blkcnt_t        m_blocks;
-        //    std::string     m_strfname;
-        //    std::string     m_strlocale;
-        //    eGameLanguages  m_lang;
-        //};
-
-
         typedef std::string                                 gameid_t;      // <-
         typedef std::string                                 strfname_t;    // <- Made those to make it a bit more intuitive
         typedef std::string                                 blockname_t;   // <-
@@ -249,45 +349,6 @@ namespace pmd2
         bincnt_t            m_binoffsets;
         LanguageFilesDB     m_langdb;
     };
-
-//
-//  ConfigInstance
-//
-    /*
-        Helper for making a single instance of the config loader available to what uses it accross the program.
-    */
-    //class ConfigInstance
-    //{
-    //public:
-    //    static ConfigInstance & Instance()
-    //    {
-    //        return s_instance;
-    //    }
-
-    //    inline ConfigLoader * CreateLoader( uint16_t arm9off14, const std::string & configfile = DefConfigFileName )
-    //    {
-    //        m_ploader.reset(new ConfigLoader( arm9off14, configfile ));
-    //    }
-
-    //    inline std::weak_ptr<ConfigLoader> GetLoaderWeakptr()
-    //    {
-    //        return m_ploader;
-    //    }
-
-    //    inline ConfigLoader* GetLoader()
-    //    {
-    //        return m_ploader.get();
-    //    }
-
-    //    inline bool WasInitialised()const
-    //    {
-    //        return m_ploader != nullptr;
-    //    }
-
-    //private:
-    //    std::shared_ptr<ConfigLoader> m_ploader;
-    //    static ConfigInstance         s_instance;
-    //};
 
 };
 

@@ -141,6 +141,7 @@ namespace pmd2
         eGameLanguages  m_lang;
     };
 
+#if 0
 //==================================================================================
 //  GameLanguageLoader
 //==================================================================================
@@ -210,7 +211,7 @@ namespace pmd2
         std::vector<glang_t> m_langData;
         eGameVersion         m_gameVersion;
     };
-
+#endif
 };
 
 #endif

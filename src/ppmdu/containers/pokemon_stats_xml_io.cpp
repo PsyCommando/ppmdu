@@ -180,13 +180,9 @@ namespace pmd2 {namespace stats
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntpkmn )
         {
             const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn )) )
+            if( !m_bNoStrings && (pfstr = m_pgametext->GetDefaultLanguage().GetStringIfBlockExists( eStringBlocks::PkmnNames, cntpkmn )) )
             {
-                //const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn );
-                //if( pfstr )
-                    out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
-                //else
-                //    out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<".xml";
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
             }
             else
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<".xml";
@@ -274,11 +270,11 @@ namespace pmd2 {namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                const string * pname = alang.second.GetStringInBlock(eStringBlocks::PkmnNames,pkindex);
+                const string * pname = alang.second.GetStringIfBlockExists(eStringBlocks::PkmnNames,pkindex);
                 if( pname )
                     WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
                 //Write Category
-                const string * pcat = alang.second.GetStringInBlock(eStringBlocks::PkmnCats,pkindex);
+                const string * pcat = alang.second.GetStringIfBlockExists(eStringBlocks::PkmnCats,pkindex);
                 if( pcat )
                     WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pcat, "\\0" ) ); //remove ending \0
             }
@@ -712,8 +708,8 @@ namespace pmd2 {namespace stats
 
         void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t cntpkmn )
         {
-            StringAccessor * plangstr = m_pgametext->GetStrings(lang);
-            if( !plangstr )
+            auto langstr = m_pgametext->GetStrings(lang);
+            if( langstr == m_pgametext->end() )
             {
                 clog<<"<!>- PokemonDB_XMLParser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
                 return;
@@ -726,13 +722,19 @@ namespace pmd2 {namespace stats
                 {
                     string pkname = curnode.child_value();
                     pkname += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn )) = pkname;
+                    string * pstr = langstr->second.GetStringIfBlockExists( eStringBlocks::PkmnNames, cntpkmn );
+                    if(!pstr)
+                        throw std::runtime_error("PokemonDB_XMLParser::ReadLangStrings(): Couldn't access the pokemon name string block!");
+                    *(pstr) = pkname;
                 }
                 else if( curnode.name() == PROP_Category )
                 {
                     string pkcat = curnode.child_value();
                     pkcat += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::PkmnCats, cntpkmn )) = pkcat;
+                    string * pstr = langstr->second.GetStringIfBlockExists( eStringBlocks::PkmnCats, cntpkmn );
+                    if(!pstr)
+                        throw std::runtime_error("PokemonDB_XMLParser::ReadLangStrings(): Couldn't access the pokemon category name string block!");
+                    *(pstr) = pkcat;
                 }
             }
         }

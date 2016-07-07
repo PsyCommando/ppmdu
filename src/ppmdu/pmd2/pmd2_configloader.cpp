@@ -1,6 +1,7 @@
 #include "pmd2_configloader.hpp"
 #include <utils/pugixml_utils.hpp>
 #include <utils/parse_utils.hpp>
+#include <utils/library_wide.hpp>
 #include <iostream>
 #include <functional>
 using namespace std;
@@ -22,8 +23,6 @@ namespace pmd2
         "Portrait Names",
     };
 
-
-
     const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames=
     {
         "Entities",           
@@ -44,38 +43,6 @@ namespace pmd2
         "NbUniqueEntities",
         "NbTotalEntities",
     };
-
-
-    eStringBlocks FindStrBlock( const std::string & blkname )
-    {
-        for( size_t i = 0; i < StringBlocksNames.size(); ++i )
-        {
-            if( blkname == StringBlocksNames[i] )
-                return static_cast<eStringBlocks>(i);
-        }
-        return eStringBlocks::Invalid;
-    }
-
-
-    eBinaryLocations FindBinaryLocation( const std::string & locname )
-    {
-        for( size_t i = 0; i < BinaryLocationNames.size(); ++i )
-        {
-            if( locname == BinaryLocationNames[i] )
-                return static_cast<eBinaryLocations>(i);
-        }
-        return eBinaryLocations::Invalid;
-    }
-
-    eGameConstants FindGameConstantName( const std::string & constname )
-    {
-        for( size_t i = 0; i < GameConstantNames.size(); ++i )
-        {
-            if( constname == GameConstantNames[i] )
-                return static_cast<eGameConstants>(i);
-        }
-        return eGameConstants::Invalid;
-    }
 
 
     namespace ConfigXML
@@ -297,7 +264,7 @@ namespace pmd2
             {
                 xml_attribute id  = gamev.attribute(ATTR_ID.c_str());
                 xml_attribute id2 = gamev.attribute(ATTR_ID2.c_str());
-                if( id.value() == m_curversion.id || id2.value() == m_curversion.id )
+                if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
                 {
                     for( auto lang : gamev.children(NODE_Language.c_str()) )
                     {
@@ -312,20 +279,24 @@ namespace pmd2
                                                       std::string(langname.value()) + "\" in config file!!");
                         }
 
-                        dest.emplace( fname.value(), std::move(ParseALang(lang, fname.value(), loc.value(), elang )) );
+                        dest.emplace( fname.value(), std::move(ParseStringBlocks(lang, fname.value(), loc.value(), elang )) );
                     }
                 }
             }
             return std::move(dest);
         }
 
-        LanguageFilesDB::blocks_t ParseALang( pugi::xml_node langnode, std::string && fname, std::string && locale, eGameLanguages lang )
+        LanguageFilesDB::blocks_t ParseStringBlocks( pugi::xml_node    parentn, 
+                                                    std::string     && fname, 
+                                                    std::string     && locale, 
+                                                    eGameLanguages     lang )
         {
             using namespace ConfigXML;
             using namespace pugi;
             LanguageFilesDB::blocks_t::blkcnt_t dest;
 
-            for( auto strblk : langnode )
+            //Parse all blocks for this language
+            for( auto strblk : parentn )
             {
                 string      blkn;
                 strbounds_t bnd;
@@ -338,12 +309,35 @@ namespace pmd2
                     else if( att.name() == ATTR_End )
                         bnd.end = att.as_uint();
                 }
-                eStringBlocks strblock = FindStrBlock(blkn);
+                eStringBlocks strblock = StrToStringBlock(blkn);
 
                 if( strblock != eStringBlocks::Invalid )
                     dest.emplace( strblock, std::move(bnd) );
             }
             
+            if( dest.size() != static_cast<size_t>(eStringBlocks::NBEntries) )
+            {
+                stringstream sstr;
+                sstr <<"ConfigXMLParser::ParseALang(): The ";
+                for( size_t i = 0; i < static_cast<size_t>(eStringBlocks::NBEntries); ++i )
+                {
+                    if( dest.find( static_cast<eStringBlocks>(i) ) == dest.end() )
+                    {
+                        if( i != 0 )
+                            sstr << ",";
+                        sstr << StringBlocksNames[i];
+                    }
+                }
+                if( (static_cast<size_t>(eStringBlocks::NBEntries) - dest.size()) > 1 )
+                    sstr << " string blocks for the language file " <<fname <<", for " <<m_curversion.id <<" are missing from the configuration file!";
+                else
+                    sstr << " string block for the language file " <<fname  <<", for " <<m_curversion.id <<" is missing from the configuration file!";
+                
+                if(utils::LibWide().isLogOn())
+                    clog << sstr.str();
+                cout << sstr.str();
+            }
+
             return std::move(LanguageFilesDB::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
         }
 
@@ -380,7 +374,7 @@ namespace pmd2
                         else if( att.name() == ATTR_End )
                             bifo.end = att.as_uint();
                     }
-                    dest.emplace( FindBinaryLocation(blkname), std::move(bifo) );
+                    dest.emplace( StrToBinaryLocation(blkname), std::move(bifo) );
                 }
             }
 
@@ -405,7 +399,7 @@ namespace pmd2
                     {
                         xml_attribute xid  = value.attribute(ATTR_ID.c_str());
                         xml_attribute xval = value.attribute(ATTR_Val.c_str());
-                        eGameConstants gconst = FindGameConstantName(xid.value());
+                        eGameConstants gconst = StrToGameConstant(xid.value());
                         if( gconst != eGameConstants::Invalid )
                             dest.emplace( gconst, std::move(std::string(xval.value())) );
                         else

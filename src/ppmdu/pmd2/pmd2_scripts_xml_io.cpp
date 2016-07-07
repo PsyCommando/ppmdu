@@ -4,6 +4,7 @@
 #include <deque>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/pugixml_utils.hpp>
@@ -361,7 +362,12 @@ namespace pmd2
         inline void WriteData(xml_node & parentn, const pmd2::ScriptInstruction & intr)
         {
             using namespace scriptXML;
-            AppendAttribute( AppendChildNode(parentn, NODE_Instruction), ATTR_Value, intr.opcode );
+            xml_node        datan = AppendChildNode(parentn, NODE_Data);
+            xml_attribute   dval  = datan.append_attribute(ATTR_Value.c_str());
+            stringstream    sstr;
+            sstr <<"0x" <<hex <<uppercase <<intr.opcode;
+            string str = sstr.str();    //Just in case the string gets deleted out of scope when we pass the c_str..
+            dval.set_value( str.c_str() );
         }
 
         //template<eGameVersion _VERS>
@@ -485,8 +491,8 @@ namespace pmd2
         void WriteGrp( xml_node & parentn, const ScriptGroup & grp )
         {
             using namespace scriptXML;
-            xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
             WriteCommentNode(parentn, grp.Identifier() );
+            xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
 
             AppendAttribute( xgroup, ATTR_GrpName, grp.Identifier() );
 
@@ -531,35 +537,62 @@ namespace pmd2
 //  GameScripts
 //==============================================================================
 
-    void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest)
+    void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress )
     {
         decltype(out_dest.Region())   tempregion;
         decltype(out_dest.Version()) tempversion;
 
         //Grab our version and region from the 
-        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) );
+        if(bprintprogress)
+            cout<<"\t- Parsing COMON.xml..\n";
+
+        stringstream commonfilename;
+        commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
+        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(commonfilename.str()) );
 
         if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
 
+        if(bprintprogress)
+        {
+            cout<<"\t!- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
+                <<"\", and version \"" <<GetGameVersionName(out_dest.m_gameVersion)<<"!\n";
+        }
+
         //
         for( const auto entry : out_dest.m_setsindex )
         {
-            entry.second( std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(dir) ) );
+            stringstream currentfname;
+            currentfname << utils::TryAppendSlash(dir) <<entry.first <<".xml";
+
+            if(bprintprogress)
+                cout<<"\r\t- Parsing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
+
+            entry.second( std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(currentfname.str()) ) );
 
             if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + entry.first + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
+        if(bprintprogress)
+            cout<<"\n";
     }
 
-    void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs )
+    void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bprintprogress )
     {
         //Export COMMON first
+        if(bprintprogress)
+            cout<<"\t- Writing COMMOM.xml..";
         GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
 
         //Export everything else
         for( const auto & entry : gs.m_setsindex )
+        {
+            if(bprintprogress)
+                cout<<"\r\t- Writing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
             GameScriptsXMLWriter( entry.second(), gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
+        }
+        if(bprintprogress)
+            cout<<"\n";
     }
 
     void ScriptSetToXML( const ScriptSet & set, eGameRegion gloc, eGameVersion gver, const std::string & destdir )

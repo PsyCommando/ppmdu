@@ -15,7 +15,8 @@ namespace utils
 // LWData
 //=========================================================================
     lwData::lwData()
-        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u )), m_LoggingOn(false)
+        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u )), m_LoggingOn(false),
+        m_displayProgress(true)
     {
     }
 

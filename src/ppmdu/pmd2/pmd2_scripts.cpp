@@ -225,25 +225,13 @@ namespace pmd2
 
     private:
         void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-
-        //void LoadGrpDus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        //void LoadGrpHus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        //void LoadGrpMus       ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        //void LoadLoneSSS      ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        //void LoadGrpU         ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-
         void LoadSub          ( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
         void LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-
-
         void LoadLSD   ( ScriptSet   & curset, const std::string & fpath );
         void LoadSSB   ( ScriptGroup & tgtgrp, const std::string & fpath );
         void LoadSSData( ScriptGroup & tgtgrp, const std::string & fpath );
-
-        //void LoadAUGrp( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset, std::deque<Poco::Path>::iterator itfound);
         void LoadScrDataAndMatchedNumberedSSBs( const std::string & prefix, const std::string & fext, eScriptGroupType grpty, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset  );
         void LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptGroup & tgtgrp );
-
 
         void WriteLSD   ( const ScriptSet & curset, const std::string & fpath );
         void WriteGroups( const ScriptSet & curset, const std::string & dirpath );
@@ -287,18 +275,6 @@ namespace pmd2
             itfound = std::find_if( fqueue.begin(), fqueue.end(), [&]( const Poco::Path & ap )->bool
             {
                 return isNumberedSSB( prefix, ap.getFileName() );
-                //if( utils::CompareStrIgnoreCase(ap.getExtension(), filetypes::SSB_FileExt) ) //Check if we got the right extension
-                //{
-                //    string fname = ap.getBaseName();
-                //    if( (fname.size() == prefix.size() + 2) &&                              //Check if the length is even valid
-                //        std::isdigit( fname[prefix.size()],   std::locale::classic() ) && 
-                //        std::isdigit( fname[prefix.size()+1], std::locale::classic() ))     //Check if it ends with 2 digits
-                //    {
-                //        auto   itfoundprfx = std::search( fname.begin(), fname.end(), prefix.begin(), prefix.end() );
-                //        return (itfoundprfx == fname.begin()); //Check if the filename contains the prefix at the beginning of it
-                //    }
-                //}
-                //return false;
             } ); 
 
             if( itfound != fqueue.end() )

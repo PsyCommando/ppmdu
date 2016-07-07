@@ -14,6 +14,7 @@
 #include <Poco/File.h>
 #include <Poco/Path.h>
 #include <cassert>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 
 using namespace std;
 using namespace pugi;
@@ -141,14 +142,15 @@ namespace pmd2 { namespace stats
 
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntitem )
         {
-            const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::ItemNames, cntitem )) )
+            const std::string * pstr = nullptr;
+            if( !m_bNoStrings && (pstr = m_pgametext->GetDefaultLanguage().GetStringIfBlockExists(eStringBlocks::ItemNames, cntitem)) )
             {
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntitem <<"_" 
-                          <<PrepareItemFName(*pfstr, m_pgametext->begin()->first) <<".xml";
+                          <<PrepareItemFName(*pstr, m_pgametext->begin()->first) <<".xml";
             }
             else
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntitem <<".xml";
+                
 
             return out_fname;
         }
@@ -206,11 +208,11 @@ namespace pmd2 { namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                WriteStringNode( langnode, PROP_Name,      alang.second.GetStringInBlock(eStringBlocks::ItemNames, cntitem) );
+                WriteStringNode( langnode, PROP_Name,      alang.second.GetStringIfBlockExists(eStringBlocks::ItemNames, cntitem) );
                 //Write Description
-                WriteStringNode( langnode, PROP_ShortDesc, alang.second.GetStringInBlock(eStringBlocks::ItemDescS, cntitem) );
+                WriteStringNode( langnode, PROP_ShortDesc, alang.second.GetStringIfBlockExists(eStringBlocks::ItemDescS, cntitem) );
                 //Write Description
-                WriteStringNode( langnode, PROP_LongDesc,  alang.second.GetStringInBlock(eStringBlocks::ItemDescL, cntitem) );
+                WriteStringNode( langnode, PROP_LongDesc,  alang.second.GetStringIfBlockExists(eStringBlocks::ItemDescL, cntitem) );
             }
         }
 
@@ -360,8 +362,8 @@ namespace pmd2 { namespace stats
 
         void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t itemID )
         {
-            StringAccessor * plangstr = m_pgametext->GetStrings(lang);
-            if( !plangstr )
+            auto langstr = m_pgametext->GetStrings(lang);
+            if( langstr == m_pgametext->end() )
             {
                 clog<<"<!>- ItemXMLParser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
                 return;
@@ -374,19 +376,28 @@ namespace pmd2 { namespace stats
                 {
                     string itemname = curnode.child_value();
                     itemname += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::ItemNames, itemID )) = itemname;
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemNames, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item names string block!");
+                    *(pstr) = itemname;
                 }
                 else if( curnode.name() == PROP_ShortDesc )
                 {
                     string itemdescsh = curnode.child_value();
                     itemdescsh += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::ItemDescS, itemID )) = itemdescsh;
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemDescS, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item short description string block!");
+                    *(pstr) = itemdescsh;
                 }
                 else if( curnode.name() == PROP_LongDesc )
                 {
                     string itemdescl = curnode.child_value();
                     itemdescl += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::ItemDescL, itemID )) = itemdescl;
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemDescL, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item long description string block!");
+                    *(pstr) = itemdescl;
                 }
             }
         }

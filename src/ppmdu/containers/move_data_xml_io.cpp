@@ -112,7 +112,7 @@ namespace pmd2 { namespace stats
         stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntmv )
         {
             const string * pfstr = nullptr;
-            if( !m_bNoStrings && (pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::MvNames, cntmv )) )
+            if( !m_bNoStrings && (pfstr = m_pgametext->GetDefaultLanguage().GetStringIfBlockExists( eStringBlocks::MvNames, cntmv )) )
             {
                 out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntmv <<"_" 
                           <<PrepareMvNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
@@ -204,11 +204,11 @@ namespace pmd2 { namespace stats
             {
                 xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
                 //Write Name
-                const string * pname = alang.second.GetStringInBlock(eStringBlocks::MvNames,cntmv);
+                const string * pname = alang.second.GetStringIfBlockExists(eStringBlocks::MvNames,cntmv);
                 if( pname )
                     WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
                 //Write Description
-                const string * pdesc = alang.second.GetStringInBlock(eStringBlocks::MvDesc,cntmv);
+                const string * pdesc = alang.second.GetStringIfBlockExists(eStringBlocks::MvDesc,cntmv);
                 if( pdesc )
                     WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pdesc, "\\0" ) ); //remove ending \0
             }
@@ -468,8 +468,8 @@ namespace pmd2 { namespace stats
         void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t moveid )
         {
             using namespace movesXML;
-            StringAccessor * plangstr = m_pgametext->GetStrings(lang);
-            if( !plangstr )
+            auto langstr = m_pgametext->GetStrings(lang);
+            if( langstr == m_pgametext->end() )
             {
                 clog<<"<!>- MoveDB_XML_Parser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
                 return;
@@ -481,13 +481,19 @@ namespace pmd2 { namespace stats
                 {
                     string name = curnode.child_value();
                     name += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::MvNames, moveid )) = name;
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::MvNames, moveid);
+                    if(!pstr)
+                        throw std::runtime_error("MoveDB_XML_Parser::ReadLangStrings(): Couldn't access the move name string block!");
+                    *(pstr) = name;
                 }
                 else if( curnode.name() == PROP_Desc )
                 {
                     string desc = curnode.child_value();
                     desc += "\\0"; //put back the \0
-                    *(plangstr->GetStringInBlock( eStringBlocks::MvDesc, moveid )) = desc;
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::MvDesc, moveid);
+                    if(!pstr)
+                        throw std::runtime_error("MoveDB_XML_Parser::ReadLangStrings(): Couldn't access the move description string block!");
+                    *(pstr) = desc;
                 }
             }
         }

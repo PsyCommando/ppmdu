@@ -388,8 +388,8 @@ namespace pmd2
     public:
         friend class GameScriptsHandler;
         friend class ScrSetLoader;
-        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest);
-        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs );
+        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress = true);
+        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bprintprogress = true );
 
         typedef std::unordered_map<std::string,ScrSetLoader> evindex_t;
         typedef evindex_t::iterator                          iterator;

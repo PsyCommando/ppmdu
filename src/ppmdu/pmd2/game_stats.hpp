@@ -12,7 +12,7 @@ All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/pmd2/pmd2_langconf.hpp>
+//#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <ppmdu/containers/item_data.hpp>
 #include <ppmdu/containers/move_data.hpp>

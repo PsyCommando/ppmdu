@@ -12,6 +12,8 @@ Description:
            And name it "SharedArguments".
            Then, individual application can implement their own wrapper over that that
            just parses the relevant data for the duration of the execution.
+
+           Though, having some basic shared arguments might help. Like log on, and display progress?
 */
 #include <ppmdu/basetypes.hpp>
 #include <locale>
@@ -35,13 +37,17 @@ namespace utils
         bool isVerboseOn()const;
 
         //Nb threads to use at most
-        void setNbThreadsToUse( unsigned int nbthreads );
+        void         setNbThreadsToUse( unsigned int nbthreads );
         unsigned int getNbThreadsToUse()const;
 
         inline void isLogOn( bool state ){ m_LoggingOn = state; }
         inline bool isLogOn()const       { return m_LoggingOn;  }
 
+        inline bool ShouldDisplayProgress()const     {return m_displayProgress;}
+        inline void ShouldDisplayProgress(bool bdisp){ m_displayProgress = bdisp; }
+
     private:
+        bool         m_displayProgress;
         bool         m_verboseOn;
         bool         m_LoggingOn;
         unsigned int m_nbThreads;

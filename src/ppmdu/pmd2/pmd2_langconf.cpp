@@ -47,26 +47,27 @@ namespace pmd2
     static const string DefMoveData1ExportDir = "move_data1";
     static const string DefMoveData2ExportDir = "move_data2";
 
-    const array<string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StrBlocksNames = 
-    {
-        "Pokemon Names",
-        "Pokemon Categories",
+    //const array<string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StrBlocksNames = 
+    //{
+    //    "Pokemon Names",
+    //    "Pokemon Categories",
 
-        "Move Names",
-        "Move Descriptions",
+    //    "Move Names",
+    //    "Move Descriptions",
 
-        "Item Names",
-        "Item Short Descriptions",
-        "Item Long Descriptions",
+    //    "Item Names",
+    //    "Item Short Descriptions",
+    //    "Item Long Descriptions",
 
-        "Ability Names",
-        "Ability Descriptions",
+    //    "Ability Names",
+    //    "Ability Descriptions",
 
-        "Type Names",
+    //    "Type Names",
 
-        "Portrait Names",
-    };
+    //    "Portrait Names",
+    //};
 
+#if 0
     /************************************************************************************
         GameLangXMLParser
             Parse the gamelang.xml file that contains the proper offsets for all strings
@@ -360,5 +361,5 @@ namespace pmd2
         }
         return nullptr;
     }
-
+#endif
 };

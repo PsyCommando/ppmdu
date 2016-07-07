@@ -1992,12 +1992,12 @@ namespace gfx_util
         pmd2::GameText     gt( m_inputPath, conf );
         gt.Load();
 
-        pmd2::GameText::langstr_t * strass = gt.GetStrings();
-        if( !strass )
+        auto itstrass = gt.GetStrings();
+        if( itstrass == gt.end() )
             throw std::runtime_error("DUCK");
         
-        auto boundsnames = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
-        auto boundsportr = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PortraitNames);
+        auto boundsnames = itstrass->second.GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
+        auto boundsportr = itstrass->second.GetBoundsStringsBlock(pmd2::eStringBlocks::PortraitNames);
 
         vector<string> resfacenames;
         vector<string> rawfacenames;
@@ -2082,12 +2082,12 @@ namespace gfx_util
         pmd2::GameText     gt  ( m_inputPath,       conf );
         gt.Load();
 
-        pmd2::GameText::langstr_t * strass = gt.GetStrings();
+        auto itstrass = gt.GetStrings();
 
-        if( !strass )
+        if( itstrass == gt.end() )
             throw std::runtime_error("DUCK");
 
-        auto strnamebounds = strass->GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
+        auto strnamebounds = itstrass->second.GetBoundsStringsBlock(pmd2::eStringBlocks::PkmnNames);
 
         if( strnamebounds.first == strnamebounds.second )
             throw std::runtime_error("DUCK");

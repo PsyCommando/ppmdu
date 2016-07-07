@@ -757,6 +757,8 @@ namespace statsutil
         //Load game stats for the other elements as needed
         if( m_hndlPkmn || m_hndlMoves || m_hndlItems || bhandleall )
         {
+            cout <<"\nLoading Game Data..\n"
+                 <<"---------------------------------\n";
            pgamestats = gloader.LoadStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game stats!");
@@ -838,6 +840,8 @@ namespace statsutil
         //Load game stats for the other elements as needed
         if( m_hndlPkmn || m_hndlMoves || m_hndlItems || bhandleall )
         {
+            cout <<"\nLoading Game Data..\n"
+                 <<"---------------------------------\n";
            pgamestats = gloader.LoadStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game stats!");

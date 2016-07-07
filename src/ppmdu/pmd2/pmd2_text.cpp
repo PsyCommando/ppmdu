@@ -12,6 +12,10 @@ using namespace std;
 namespace pmd2
 {
 
+
+//
+//
+//
     void GameText::Load()
     {
         stringstream Dirname;
