@@ -101,7 +101,7 @@ namespace filetypes
             uint16_t scriptdatalen = 0;
             uint16_t constdatalen  = 0;
 
-            if( m_scrRegion == eGameRegion::NorthAmerica )
+            if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
             {
                 ssb_header hdr;
                 m_hdrlen = ssb_header::LEN;
@@ -128,11 +128,6 @@ namespace filetypes
                 m_stringblksSizes.push_back( hdr.strgerlen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.stritalen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strspalen * ScriptWordLen );
-            }
-            else if( m_scrRegion == eGameRegion::Japan )
-            {
-                cout<<"SSB_Parser::ParseHeader(): Japanese handling not implemented yet!\n";
-                assert(false);
             }
             else
             {

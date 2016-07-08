@@ -53,11 +53,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
@@ -301,11 +296,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
@@ -569,7 +559,6 @@
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\animres.xml" />
-    <Xml Include="..\resources\gamelang.xml" />
     <Xml Include="..\resources\pmd2data.xml" />
     <Xml Include="..\resources\template_chranims.xml" />
     <Xml Include="..\resources\template_exchranims.xml" />

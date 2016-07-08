@@ -70,8 +70,8 @@
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
-copy "$(SolutionDir)resources\gamelang.xml" "$(OutDir)gamelang.xml"
-copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
+copy "$(SolutionDir)resources\pmd2data.xml" "$(OutDir)pmd2data.xml"
+copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -96,8 +96,8 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
       <Command>copy "$(SolutionDir)readmes\$(ProjectName).txt" "$(OutDir)$(ProjectName).txt"
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
-copy "$(SolutionDir)resources\gamelang.xml" "$(OutDir)gamelang.xml"
-copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
+copy "$(SolutionDir)resources\pmd2data.xml" "$(OutDir)pmd2data.xml"
+copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -116,10 +116,6 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
@@ -222,10 +218,6 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
@@ -324,13 +316,6 @@ copy "$(SolutionDir)resources\gamelang.xml" "$(SolutionDir)workdir\gamelang.xml"
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />
     <Text Include="statsutil_commandlines_testing.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\resources\gamelang.xml">
-      <SubType>Designer</SubType>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
-      <DeploymentContent>true</DeploymentContent>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\pmd2data.xml">

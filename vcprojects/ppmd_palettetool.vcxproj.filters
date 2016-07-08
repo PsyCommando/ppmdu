@@ -220,6 +220,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_palettetool.txt" />
+    <Text Include="..\readmes\ppmd_palettetool.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

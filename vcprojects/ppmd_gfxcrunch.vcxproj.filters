@@ -216,9 +216,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
@@ -374,9 +371,6 @@
     <ClCompile Include="..\src\types\content_type_analyser.cpp">
       <Filter>Source Files\typesupport</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
@@ -436,9 +430,6 @@
     <Text Include="GfxCrunch_TestingCommandlines.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="..\resources\gamelang.xml">
-      <Filter>Resource Files</Filter>
-    </Xml>
     <Xml Include="..\resources\template_exchranims.xml">
       <Filter>Resource Files</Filter>
     </Xml>
