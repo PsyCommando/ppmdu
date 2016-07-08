@@ -2,6 +2,7 @@
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
 #include <iostream>
 #include <sstream>
 
@@ -78,8 +79,8 @@ namespace filetypes
     public:
         typedef _Init                           initer;
 
-        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameLocale scrloc )
-            :m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrlocale(scrloc)
+        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc )
+            :m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrRegion(scrloc)
         {}
 
         ScriptedSequence Parse()
@@ -89,6 +90,7 @@ namespace filetypes
             ParseGroups   ();
             ParseCode     ();
             ParseConstants();
+            ParseStrings  ();
             return std::move(m_out);
         }
 
@@ -97,19 +99,21 @@ namespace filetypes
         void ParseHeader()
         {
             uint16_t scriptdatalen = 0;
+            uint16_t constdatalen  = 0;
 
-            if( m_scrlocale == eGameLocale::NorthAmerica )
+            if( m_scrRegion == eGameRegion::NorthAmerica )
             {
                 ssb_header hdr;
                 m_hdrlen = ssb_header::LEN;
                 m_cur = hdr.ReadFromContainer( m_cur, m_end );
 
-                m_nbconsts    = hdr.nbconst;
-                m_nbstrs      = hdr.nbstrs;
-                scriptdatalen = hdr.scriptdatlen;
+                m_nbconsts     = hdr.nbconst;
+                m_nbstrs       = hdr.nbstrs;
+                scriptdatalen  = hdr.scriptdatlen;
+                constdatalen   = hdr.consttbllen;
                 m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
             }
-            else if( m_scrlocale == eGameLocale::Europe )
+            else if( m_scrRegion == eGameRegion::Europe )
             {
                 ssb_header_pal hdr;
                 m_hdrlen = ssb_header_pal::LEN;
@@ -118,20 +122,20 @@ namespace filetypes
                 m_nbconsts    = hdr.nbconst;
                 m_nbstrs      = hdr.nbstrs;
                 scriptdatalen = hdr.scriptdatlen;
+                constdatalen  = hdr.consttbllen;
                 m_stringblksSizes.push_back( hdr.strenglen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strfrelen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strgerlen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.stritalen * ScriptWordLen );
                 m_stringblksSizes.push_back( hdr.strspalen * ScriptWordLen );
             }
-            else if( m_scrlocale == eGameLocale::Japan )
+            else if( m_scrRegion == eGameRegion::Japan )
             {
-                cout<<"SSB_Parser::ParseHeader(): Japanese handling not implemented yet!\n";
-                assert(false);
+                throw std::runtime_error("SSBParser::ParseHeader(): Japanese ssb header not yet supported. Aborting script parsing!");
             }
             else
             {
-                cout<<"SSB_Parser::ParseHeader(): Unknown script locale!!\n";
+                cout<<"SSB_Parser::ParseHeader(): Unknown script region!!\n";
                 assert(false);
             }
 
@@ -144,7 +148,7 @@ namespace filetypes
             m_datalen        = (m_dathdr.datalen * ScriptWordLen);
             m_constoffset    = m_hdrlen + m_datalen;         //Group table is included into the datalen
             //m_codeoffset    = header_t::LEN + ssb_data_hdr::LEN + (m_dathdr.nbgrps * group_entry::LEN);
-            m_stringblockbeg = m_hdrlen + (scriptdatalen * ScriptWordLen);
+            m_stringblockbeg = m_hdrlen + (scriptdatalen * ScriptWordLen) + (constdatalen*2);
         }
 
         void ParseGroups()
@@ -162,9 +166,9 @@ namespace filetypes
         void ParseCode()
         {
             if( m_scrversion == eOpCodeVersion::EoS ) 
-                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoS>());
+                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoS>(), OpCodeNumberPicker<eOpCodeVersion::EoS>());
             else if( m_scrversion == eOpCodeVersion::EoTD )
-                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoTD>());
+                ParseCodeWithOpCodeFinder(OpCodeFinderPicker<eOpCodeVersion::EoTD>(), OpCodeNumberPicker<eOpCodeVersion::EoTD>() );
             else
             {
                 clog << "\n<!>- SSB_Parser::ParseCode() : INVALID SCRIPT VERSION!!\n";
@@ -172,14 +176,23 @@ namespace filetypes
             }
         }
 
-        template<typename _InstFinder>
-            void ParseCodeWithOpCodeFinder(_InstFinder & opcodefinder)
+        template<typename _InstFinder, typename _InstNumber>
+            void ParseCodeWithOpCodeFinder(_InstFinder & opcodefinder, _InstNumber & opcodenumber)
         {
             //Iterate through all group and grab their instructions.
             for( size_t cntgrp = 0; cntgrp < m_dathdr.nbgrps; ++cntgrp )
             {
                 ScriptInstrGrp grp;
-                grp.instructions = std::move( ParseInstructionSequence( (m_grps[cntgrp].begoffset * ScriptWordLen) + m_hdrlen, opcodefinder ) );
+                size_t absgrpbeg = (m_grps[cntgrp].begoffset * ScriptWordLen) + m_hdrlen;
+                size_t absgrpend = ((cntgrp +1) < m_dathdr.nbgrps)?
+                                    (m_grps[cntgrp+1].begoffset * ScriptWordLen) + m_hdrlen :   //If we have another group after, this is the end
+                                    m_datalen + m_hdrlen;                                       //If we have no group after, end of script data is end
+
+
+                grp.instructions = std::move( ParseInstructionSequence( absgrpbeg, 
+                                                                        absgrpend,
+                                                                        opcodefinder,
+                                                                        opcodenumber ) );
                 grp.type         = m_grps[cntgrp].type;
                 grp.unk2         = m_grps[cntgrp].unk2;
                 m_out.Groups().push_back( std::move(grp) );
@@ -187,21 +200,24 @@ namespace filetypes
         }
 
 
-        template<typename _InstFinder>
-            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, _InstFinder & opcodefinder )
+        template<typename _InstFinder, typename _InstNumber>
+            deque<ScriptInstruction> ParseInstructionSequence( size_t foffset, size_t endoffset, _InstFinder & opcodefinder, _InstNumber & opcodenumber )
         {
             deque<ScriptInstruction> sequence;
             m_cur = m_beg;
             std::advance( m_cur, foffset ); 
+            auto itendseq= m_beg;
+            std::advance( itendseq, endoffset);
 
 
-            while( m_cur != m_end )
+            while( m_cur != itendseq )
             {
-                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( m_cur, m_end );
+                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( m_cur, itendseq );
 
-                if( curop != NullOpCode )
+                //if( curop != NullOpCode )
+                if( curop < opcodenumber() )
                 {
-                    auto opcodedata = opcodefinder(curop);
+                    auto opcodedata = opcodefinder(curop); //THis should never happen though..
                     
                     if( opcodedata == nullptr )
                     {
@@ -212,59 +228,84 @@ namespace filetypes
                     }
 
                     ScriptInstruction inst;
+                    inst.isdata = false;
                     inst.opcode = curop;
-                    
+
                     if( opcodedata->nbparams >= 0 )
                     {
                         const uint16_t nbparams = static_cast<uint16_t>(opcodedata->nbparams);
                         for( size_t cntparam = 0; cntparam < nbparams; ++cntparam )
-                            inst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(m_cur, m_end) );
-                        sequence.push_back(std::move(inst));
+                            inst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(m_cur, itendseq) );
+                        foffset += nbparams * ScriptWordLen;
                     }
                     else
                     {
-                        cerr << "\n<!>- Found instruction with -1 parameter number in this script!\n";
-                        clog << "\n<!>- Found instruction with -1 parameter number in this script!\n";
-                        assert(false);
+                        clog << "\n<!>- Found instruction with -1 parameter number in this script! Offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
                     }
-
+                    sequence.push_back(std::move(inst));
                 }
                 else
-                    break;
+                {
+                    if( utils::LibWide().isLogOn() )
+                        clog<<"0x" <<hex <<uppercase <<foffset  <<" - Got data word 0x" <<curop <<" \n" <<nouppercase <<dec;
+
+                    //The instruction is actually a data word
+                    ScriptInstruction inst;
+                    inst.isdata = true;
+                    inst.opcode = curop;
+                    sequence.push_back(std::move(inst));
+                }
+                foffset += ScriptWordLen;
             }
 
+            return std::move(sequence);
         }
 
 
         void ParseConstants()
         {
-            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings( m_constoffset,  m_nbconsts ));
+            const size_t strlutlen = (m_nbstrs * 2); // In the file, the offset for each constants in the constant table includes the 
+                                                     // length of the string lookup table(string pointers). Here, to compensate
+                                                     // we subtract the length of the string LUT from each pointer read.
+            m_out.ConstTbl() = std::move(ParseOffsetTblAndStrings<ScriptedSequence::consttbl_t>( m_constoffset, m_constoffset, m_nbconsts, strlutlen ));
         }
 
         void ParseStrings()
         {
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringblockbeg;
+            size_t begoffset      = ( m_nbconsts != 0 )? m_constoffset : m_stringblockbeg;
+
             for( size_t i = 0; i < m_stringblksSizes.size(); ++i )
             {
-                m_out.StrTbl(i) = std::move(ParseOffsetTblAndStrings( strparseoffset, m_nbstrs ));
+                m_out.InsertStrLanguage( static_cast<eGameLanguages>(i), std::move(ParseOffsetTblAndStrings<ScriptedSequence::strtbl_t>( strparseoffset, begoffset, m_nbstrs )) );
+                //m_out.StrTbl( static_cast<eGameLanguages>(i) ) = ;
                 strparseoffset += m_stringblksSizes[i]; //Add the size of the last block, so we have the offset of the next table
             }
         }
 
-        std::deque<std::string> ParseOffsetTblAndStrings( size_t foffset, uint16_t nbtoparse )
+        /*
+            relptroff == The position in the file against which the offsets in the table are added to.
+            offsetdiff == this value will be subtracted from every ptr read in the table.
+        */
+        template<class _ContainerT>
+            _ContainerT ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
         {
-            std::deque<std::string> strings;
+            _ContainerT strings;
             //Parse regular strings here
-            initer itstrtbl = m_beg;
-            std::advance( itstrtbl, foffset );
-            initer itcurtable = itstrtbl;
+            initer itoreltblbeg = m_beg;
+            std::advance( itoreltblbeg, relptroff);
+            //initer itstrtbl = m_beg;
+            //std::advance( itstrtbl, foffset );
+            initer itluttable = m_beg;
+            std::advance(itluttable, foffset);
+            
 
             //Parse string table
-            for( size_t cntstr = 0; cntstr < nbtoparse && itcurtable != m_end; ++cntstr )
+            for( size_t cntstr = 0; cntstr < nbtoparse && itluttable != m_end; ++cntstr )
             {
-                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itcurtable, m_end ); //Offset is in bytes this time!
-                initer   itstr     = itstrtbl;
+                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itluttable, m_end ) - offsetdiff; //Offset is in bytes this time!
+                initer   itstr     = itoreltblbeg;
                 std::advance(itstr,stroffset);
                 strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
             }
@@ -291,7 +332,7 @@ namespace filetypes
         vector<group_entry> m_grps;
 
         eOpCodeVersion       m_scrversion; 
-        eGameLocale        m_scrlocale;
+        eGameRegion          m_scrRegion;
     };
 
 //=======================================================================================
@@ -304,14 +345,14 @@ namespace filetypes
     /*
         ParseScript
     */
-    pmd2::ScriptedSequence ParseScript(const std::string & scriptfile, eGameLocale gloc, eGameVersion gvers)
+    pmd2::ScriptedSequence ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = eOpCodeVersion::EoS;
 
         if( gvers == eGameVersion::EoS )
             opvers = eOpCodeVersion::EoS;
-        else if( gvers == eGameVersion::EoTEoD )
+        else if( gvers == eGameVersion::EoT || gvers == eGameVersion::EoD )
             opvers = eOpCodeVersion::EoTD;
         else
             throw std::runtime_error("ParseScript(): Wrong game version!!");

@@ -25,7 +25,7 @@ namespace filetypes
 
         pmd2::ScriptEntityData Parse()
         {
-            cerr << "SSDataParser not implemented!\n";
+            //cerr << "SSDataParser not implemented!\n";
             return pmd2::ScriptEntityData();
         }
 

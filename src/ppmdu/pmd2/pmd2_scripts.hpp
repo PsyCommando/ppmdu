@@ -10,9 +10,12 @@ Description: This code is used to load/index the game scripts.
 #include <cstdint>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <deque>
 #include <memory>
+#include <regex>
+
 
 namespace pmd2
 {
@@ -21,20 +24,26 @@ namespace pmd2
     **********************************************************************************/
     //Unique Files
     const std::string ScriptNames_enter    = "enter.sse";       //enter.sse
-    const std::string ScriptNames_dus      = "dus.sss";         //dus.sss           //!#TODO: change this. We found hus.sss and mus.sss exist too
+    //const std::string ScriptNames_dus      = "dus.sss";         //dus.sss           //!#TODO: change this. We found hus.sss and mus.sss exist too
     const std::string ScriptNames_unionall = "unionall.ssb";    //unionall.ssb
+    const std::string DirNameScriptCommon  = "COMMON";
 
     //Name lens
     const size_t      ScriptNameLen_U      = 4;             //The full length of a u prefixed file may not exceed 4!
+    const size_t      ScriptDigitLen       = 2;
 
     //Script Only Prefixes
+    const std::string ScriptPrefix_unionall= "unionall";
     const std::string ScriptPrefix_enter   = "enter";
     const std::string ScriptPrefix_dus     = "dus";
+    const std::string ScriptPrefix_hus     = "hus";
+    const std::string ScriptPrefix_mus     = "mus";
     const std::string ScriptPrefix_u       = "u";
 
     //Common Prefixes
     const std::string ScriptPrefix_A = ResourcePrefix_A;
     const std::string ScriptPrefix_B = ResourcePrefix_B;
+    const std::string ScriptPrefix_C = ResourcePrefix_C;
     const std::string ScriptPrefix_D = ResourcePrefix_D;   //Dungeon
     const std::string ScriptPrefix_G = ResourcePrefix_G;   //Guild
     const std::string ScriptPrefix_H = ResourcePrefix_H;   //Home?
@@ -45,6 +54,31 @@ namespace pmd2
     const std::string ScriptPrefix_T = ResourcePrefix_T;   //Town
     const std::string ScriptPrefix_V = ResourcePrefix_V;   //Visual?
 
+    /*
+        MatchingRegexes
+    */
+    const std::regex ResrourceNameRegEx        ("([a-z]\\d\\d){1,2}([a-z])?(\\d\\d)\\b"); //For things that are named "m01a01a.something" The second letter + digit pair is optional and the letter at the end is too.
+
+    //const std::regex ScriptRegExNameSSA        ("(.*)\\."s  + SSA_FileExt);
+    //const std::regex ScriptRegExNameSSS        ("(.*)\\."s  + SSS_FileExt);
+    //const std::regex ScriptRegExNameEnterSSE   ("enter\\."s + SSE_FileExt);
+    //const std::regex ScriptRegExNameLSD        ("(.*)\\."s  + LSD_FileExt);
+    extern const std::regex MatchScriptFileTypes; //Matches all ssa,ssb,sss, and lsd files
+
+    extern const std::string ScriptRegExNameNumSSBSuff; //Regex to suffix to the basename to get the pattern for the numbered SSBs
+    //const std::regex ScriptRegExNameNumberedSSB("(.*)"s + ScriptRegExNameNumSSBSuff ); //matches the whole filename, and split matches into 3 convenient groups basename, ssbid, fileextension
+
+
+    /*
+        isNumberedSSB
+            -subname  : base name. Aka the name of the data file tied to this. "m01a02" for example.
+            -filename : the filename to verify. "m01a0201.ssb" for example.
+    */ 
+    inline bool isNumberedSSB( std::string subname, const std::string & filename )
+    {
+        return std::regex_match(filename, std::regex(subname.append(ScriptRegExNameNumSSBSuff) ) );
+    }
+
     /**********************************************************************************
         Script Type
     **********************************************************************************/
@@ -53,64 +87,34 @@ namespace pmd2
         INVALID,
         UNK_unionall,   //Scripts not in a LSD, found under the "COMMON" directory. Has no other component. 
         UNK_enter,      //Scripts not in a LSD, all components labelled "enter", possibly with a 2 digit numbers suffixed. 
-        UNK_dus,        //Scripts not in a LSD, all components labelled "dus", possibly with a 2 digit numbers suffixed. 
-        UNK_u,          //Scripts not in a LSD, but has u prefixed before another prefix(s,m,n,etc), and one or two 2 digit numbers. 
+        //UNK_dus,        //Scripts not in a LSD, all components labelled "dus", possibly with a 2 digit numbers suffixed. 
+        //UNK_hus,        //Scripts not in a LSD, all components labelled "hus", possibly with a 2 digit numbers suffixed. 
+        //UNK_mus,        //Scripts not in a LSD, all components labelled "mus", possibly with a 2 digit numbers suffixed. 
+        //UNK_u,          //Scripts not in a LSD, but has u prefixed before another prefix(s,m,n,etc), and one or two 2 digit numbers. 
         UNK_fromlsd,    //Script group whose name is in the LSD (Aka regular scripts)
-        UNK_loneSSS,    //A lone SSS script data file
+        //UNK_loneSSS,    //A lone SSS script data file
+        UNK_sub,         //Scripts not in a LSD, file extension of data file is SSS, may have matched numbered ssb.
         NbTypes,
     };
+
+    enum struct eScrDataTy
+    {
+        SSE,
+        SSS,
+        SSA,
+        NbTypes,
+        Invalid,
+    };
+
+    extern const std::array<std::string, static_cast<size_t>(eScrDataTy::NbTypes)> ScriptDataTypeStrings;
+
+    const std::string & ScriptDataTypeToFileExtension( eScrDataTy scrdatty );
+    const std::string & ScriptDataTypeToStr( eScrDataTy scrdatty );
+    eScrDataTy          StrToScriptDataType( const std::string & scrdatstr );
 
 //==========================================================================================================
 //  Script Data Containers
 //==========================================================================================================
-
-
-    /*
-    */
-    //struct [[nodiscard]] ScriptIdentifier
-    //{
-    //    enum struct ePrefixes : char
-    //    {
-    //        //ResourceIDs
-    //        A = 'a',
-    //        B = 'b',
-    //        D = 'd',
-    //        G = 'g',
-    //        H = 'h',
-    //        M = 'm',
-    //        N = 'n',
-    //        P = 'p',
-    //        S = 's',
-    //        T = 't',
-    //        V = 'v',
-
-    //        none,
-    //        NbPrefixes,
-    //    };
-
-
-    //    struct IdToken
-    //    {
-    //        ePrefixes pf;
-    //        uint8_t   digit;
-    //        bool      bhasdigit;
-    //        bool      bhasprefix;
-    //    };
-
-    //    //union IdComponent
-    //    //{
-    //    //    ePrefixes prfx;
-    //    //    uint8_t   number;
-    //    //    uint16_t  b15hasnbb14hasprfx; //Byte 15 idicates whether is has a number, Byte 14 indicates
-    //    //};
-
-    //    static ScriptIdentifier ParseScriptIdentifier( const std::string & scrid );
-
-    //    eScriptGroupType    type;
-    //    std::deque<IdToken> tokens;
-    //    std::string         name;
-    //};
-
 
     /***********************************************************************************************
         ScriptInstruction
@@ -118,8 +122,9 @@ namespace pmd2
     ***********************************************************************************************/
     struct ScriptInstruction
     {
-        uint16_t             opcode;
-        std::deque<uint16_t> parameters;
+        uint16_t             opcode;            //Either the opcode, or a data word, depending on whether its isdata or not
+        std::deque<uint16_t> parameters;        //The parameters for the instruction
+        bool                 isdata;            //Whether the instruction is actually a data word
     };
 
     /***********************************************************************************************
@@ -155,18 +160,11 @@ namespace pmd2
     class ScriptedSequence
     {
     public:
-        enum struct eStrLang : size_t
-        {
-            english = 0,
-            french  = 1,
-            german  = 2,
-            italian = 3,
-            spanish = 4,
-            NbLang,
-        };
-        static const size_t NbLang = static_cast<size_t>(eStrLang::NbLang);
-        typedef std::deque<std::string>      strtbl_t;
-        typedef std::array<strtbl_t, NbLang> strtblset_t;
+        static const size_t                  NbLang = static_cast<size_t>(eGameLanguages::NbLang);
+        typedef std::vector<std::string>      strtbl_t;
+        typedef std::vector<std::string>      consttbl_t;
+        typedef std::deque<ScriptInstrGrp>   grptbl_t;
+        typedef std::unordered_map<eGameLanguages, strtbl_t> strtblset_t;
 
         ScriptedSequence(){}
         ScriptedSequence(const std::string & name, const std::string & origfname)
@@ -184,31 +182,29 @@ namespace pmd2
         inline void                               SetFileName( const std::string & fname )  { m_originalfname = fname; }
 
         //!#TODO: Encapsulate those later.      
-        inline std::deque<ScriptInstrGrp>       & Groups()         { return m_groups; }
-        inline const std::deque<ScriptInstrGrp> & Groups() const   { return m_groups; }
+        inline grptbl_t                         & Groups()         { return m_groups; }
+        inline const grptbl_t                   & Groups() const   { return m_groups; }
 
         //Returns the set of all strings for all languages
         inline strtblset_t                      & StrTblSet()         { return m_strtable; }
         inline const strtblset_t                & StrTblSet() const   { return m_strtable; }
 
+        void               InsertStrLanguage( eGameLanguages lang, strtbl_t && strings );
         //Returns all strings for a specific language
-        inline strtbl_t                         & StrTbl( eStrLang lang )      { return m_strtable[static_cast<size_t>(lang)]; }
-        inline strtbl_t                         & StrTbl( size_t   lang )      { return m_strtable[lang]; }
-        inline const strtbl_t                   & StrTbl( eStrLang lang )const { return m_strtable[static_cast<size_t>(lang)]; }
-        inline const strtbl_t                   & StrTbl( size_t   lang )const { return m_strtable[lang]; }
+        inline strtbl_t                         * StrTbl( eGameLanguages lang ); //     { return m_strtable[static_cast<size_t>(lang)]; }
+        //inline strtbl_t                         & StrTbl( size_t   lang )      { return m_strtable[lang]; }
+        inline const strtbl_t                   * StrTbl( eGameLanguages lang )const;// { return m_strtable[static_cast<size_t>(lang)]; }
+        //inline const strtbl_t                   & StrTbl( size_t   lang )const { return m_strtable[lang]; }
 
-        inline std::deque<std::string>          & ConstTbl()       { return m_contants; }
-        inline const std::deque<std::string>    & ConstTbl() const { return m_contants; }
-
-
+        inline consttbl_t          & ConstTbl()       { return m_contants; }
+        inline const consttbl_t    & ConstTbl() const { return m_contants; }
 
     private:
-        std::string                         m_name;
-        std::string                         m_originalfname;
-
-        std::deque<ScriptInstrGrp>          m_groups;
-        strtblset_t                         m_strtable; //Multiple deques for all languages
-        std::deque<std::string>             m_contants;
+        std::string m_name;
+        std::string m_originalfname;
+        grptbl_t    m_groups;
+        strtblset_t m_strtable; //Multiple deques for all languages
+        consttbl_t  m_contants;
     };
 
     /***********************************************************************************************
@@ -218,13 +214,7 @@ namespace pmd2
     class ScriptEntityData
     {
     public:
-        enum struct eScrDataTy
-        {
-            SSS,
-            SSE,
-            SSA,
-            Invalid,
-        };
+
 
         ScriptEntityData()
         {}
@@ -233,7 +223,13 @@ namespace pmd2
             :m_name(name), m_originalfname(origfname), m_datatype(datatype)
         {}
 
+        inline const std::string & Name()const                      {return m_name;}
+        inline void                Name(const std::string & name)   {m_name = name;}
 
+        inline const std::string & FileName()const                      {return m_originalfname;}
+        inline void                FileName(const std::string & name)   {m_originalfname = name;}
+
+        inline eScrDataTy Type()const{return m_datatype;}
 
     private:
         std::string m_name;
@@ -254,7 +250,7 @@ namespace pmd2
         typedef seqtbl_t::const_iterator               const_seqtbl_iter_t;
         typedef seqtbl_t::iterator                     seqtbl_iter_t;
 
-        ScriptGroup(const std::string & id, eScriptGroupType ty)
+        ScriptGroup(const std::string & id, eScriptGroupType ty = eScriptGroupType::INVALID)
             :m_indentifier(id), m_type(ty)
         {}
 
@@ -269,7 +265,8 @@ namespace pmd2
             :m_indentifier(std::move(other.m_indentifier)), m_type(other.m_type)
         {
             m_sequences = std::move( other.m_sequences );
-            m_data      = std::move(other.m_data);
+            m_data.reset(other.m_data.release());
+            other.m_data = nullptr;
         }
 
         ScriptGroup& operator=( const ScriptGroup & other)
@@ -288,7 +285,8 @@ namespace pmd2
             m_indentifier   = std::move(other.m_indentifier); 
             m_type          = other.m_type;
             m_sequences     = std::move( other.m_sequences );
-            m_data          = std::move(other.m_data);
+            m_data.reset(other.m_data.release());
+            other.m_data = nullptr;
             return *this;
         }
 
@@ -298,7 +296,10 @@ namespace pmd2
         //TEMP
         inline ScriptEntityData       * Data()            {return m_data.get();}
         inline const ScriptEntityData * Data()const       {return m_data.get();}
-        inline void                     SetData( ScriptEntityData* data ) {m_data.reset(data);}
+        inline void                     SetData( ScriptEntityData && data ) 
+        {
+            m_data.reset( new ScriptEntityData(std::forward<ScriptEntityData>(data)));
+        }
 
         inline seqtbl_t               & Sequences()       {return m_sequences;}
         inline const seqtbl_t         & Sequences()const  {return m_sequences;}
@@ -386,24 +387,108 @@ namespace pmd2
     {
     public:
         friend class GameScriptsHandler;
+        friend class ScrSetLoader;
+        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress = true);
+        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bprintprogress = true );
+
+        typedef std::unordered_map<std::string,ScrSetLoader> evindex_t;
+        typedef evindex_t::iterator                          iterator;
+        typedef evindex_t::const_iterator                    const_iterator;
+
         //scrdir : the directory of the game we want to load from/write to.
-        GameScripts(const std::string & scrdir, eGameLocale loc, eGameVersion gver );
+        GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver );
         ~GameScripts();
 
         //File IO
-        void Load (); //Indexes all scripts. The actual sets are loaded on demand.
-        void Write(); //Writes all script sets that were modified.
+        void Load(); //Indexes all scripts in the src dir. The actual sets are loaded on demand.
+        //void Write(); //Writes all script sets that were modified.
+        void ImportXML(const std::string & dir);
+        void ExportXML(const std::string & dir);
+
+        std::unordered_map<std::string,ScriptSet> LoadAll();
+        void                                      WriteAll( const std::unordered_map<std::string,ScriptSet> & stuff );
+
+        eGameRegion  Region()const;
+        eGameVersion Version()const;
 
         //Access
-        ScriptSet * AccessScriptSet( const std::string & setname );
+        void      WriteScriptSet( const ScriptSet   & set ); //Add new script set or overwrite existing
+
+        //Get the COMMON set. It has its own method, because its unique.
+        const ScriptSet & GetCommonSet()const;
+        ScriptSet       & GetCommonSet();
+
+        //Method to get access on the list of all found event directories + their helper loader, besides "COMMON".
+        inline iterator       begin();
+        inline const_iterator begin()const;
+
+        inline iterator       end();
+        inline const_iterator end()const;
+
+        inline size_t size()const;
+        inline bool   empty()const;
 
     private:
-        std::string                         m_scriptdir;
-        std::map<std::string,ScriptSet>     m_sets;
-        eGameLocale                         m_scrloc;
-        eGameVersion                        m_gameversion;
-        std::unique_ptr<GameScriptsHandler> m_pHandler;
+        ScriptSet LoadScriptSet ( const std::string & setname );
+
+        std::string                                  m_scriptdir;
+        ScriptSet                                    m_common;                   //Common script set with unionall.ssb, its always loaded
+        evindex_t                                    m_setsindex;                //All sets known to exist
+        eGameRegion                                  m_scrRegion;
+        eGameVersion                                 m_gameVersion;
+        std::unique_ptr<GameScriptsHandler>          m_pHandler;
     };
+
+    /*
+        ScrSetLoader
+            Helper class used to load known existing directories from the list of indexed directories.
+    */
+    class ScrSetLoader
+    {
+    public:
+        ScrSetLoader(GameScripts & parent, const std::string & filepath );
+
+        ScrSetLoader( ScrSetLoader && mv )
+            :m_parent(mv.m_parent), m_path(std::move(mv.m_path))
+        {}
+
+        ScrSetLoader( const ScrSetLoader & cp )
+            :m_parent(cp.m_parent), m_path(cp.m_path)
+        {}
+
+        ScrSetLoader & operator=( const ScrSetLoader & cp )
+        {
+            m_path   = cp.m_path;
+            m_parent = cp.m_parent;
+            return *this;
+        }
+
+        ScrSetLoader & operator=( ScrSetLoader && mv )
+        {
+            m_path   = std::move(mv.m_path);
+            m_parent = mv.m_parent;
+            return *this;
+        }
+
+        ScriptSet operator()()const;
+        void      operator()(const ScriptSet & set)const;
+
+    private:
+        std::string   m_path;
+        GameScripts * m_parent;
+    };
+
+
+//
+//  Import/Export
+//
+
+    //void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest);
+    //void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs );
+
+    void      ScriptSetToXML( const ScriptSet   & set,    eGameRegion greg,       eGameVersion gver, const std::string & destdir );
+    ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
+
 };
 
 #endif

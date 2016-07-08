@@ -82,6 +82,7 @@ namespace gfx_util
         bool ParseOptionPkPortraits     ( const std::vector<std::string> & optdata );
         bool ParseOptionPkSprites       ( const std::vector<std::string> & optdata );
         bool ParseOptionPropSprites     ( const std::vector<std::string> & optdata );
+        bool ParseOptionConfig          ( const std::vector<std::string> & optdata );
 
 
         //Execution
@@ -173,6 +174,7 @@ namespace gfx_util
 
         std::string                    m_inputPath;      //This is the input path that was parsed 
         std::string                    m_outputPath;     //This is the output path that was parsed
+        std::string                    m_pmd2cfg;        //PMD2 config data path
 
         utils::io::eSUPPORT_IMG_IO     m_PrefOutFormat;   //The image format to use when exporting
 

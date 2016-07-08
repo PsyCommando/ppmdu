@@ -99,9 +99,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\cmdline_util.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
@@ -156,9 +153,6 @@
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp">
       <Filter>Source Files\ppmdu\file formats\scripts</Filter>
     </ClCompile>
@@ -204,11 +198,23 @@
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
       <Filter>Source Files\ppmdu\file formats\ItemData</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\ppmdu\basetypes.hpp">
-      <Filter>Header Files\ppmdu</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
@@ -305,9 +311,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
@@ -356,6 +359,12 @@
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
       <Filter>Header Files\ppmdu\file formats\ItemData</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gamedataio.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt">
@@ -364,8 +373,8 @@
     <Text Include="statsutil_commandlines_testing.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\resources\gamelang.xml">
+    <Xml Include="..\resources\pmd2data.xml">
       <Filter>Resource Files</Filter>
-    </None>
+    </Xml>
   </ItemGroup>
 </Project>

@@ -9,10 +9,28 @@ namespace pmd2
 {
     const std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
     {
-        "",
         "EoS",
-        "EoTD",
+        "EoT",
+        "EoD",
+        //"EoTD",
     };
+
+    const std::array<std::string,static_cast<size_t>(eGameRegion::NBRegions)> GameRegionNames =
+    {
+        "Japan",
+        "NorthAmerica",
+        "Europe",
+    };
+
+    const std::array<std::string, static_cast<size_t>(eGameLanguages::NbLang)> GameLanguagesNames=
+    {{
+        "English",
+        "Japanese",
+        "French",
+        "German",
+        "Italian",
+        "Spanish",
+    }};
 
     /*
         Directories present in all versions of PMD2
@@ -66,21 +84,21 @@ namespace pmd2
         }
 
         if( cntmatches == NbMatchesEoTD )
-            return eGameVersion::EoTEoD;
+            return eGameVersion::EoT;
         else if( cntmatches == NbMatchesEoS )
             return eGameVersion::EoS;
         else if( cntmatches > NbMatchesEoTD )
         {
             clog << "AnalyzeDirForPMD2Dirs(): Directory contains some, but not all Explorers of Sky directories! Handling as Explorers of Time/Darkness.\n";
-            return eGameVersion::EoTEoD;
+            return eGameVersion::EoT;
         }
         else
             return eGameVersion::Invalid;
     }
 
-    std::pair<eGameVersion, eGameLocale> DetermineGameVersionAndLocale(const std::string & pathfilesysroot)
+    std::pair<eGameVersion, eGameRegion> DetermineGameVersionAndLocale(const std::string & pathfilesysroot)
     {
-        std::pair<eGameVersion, eGameLocale> resultpair;
+        std::pair<eGameVersion, eGameRegion> resultpair;
 
         //Determine version
         std::stringstream                    sstr;
@@ -94,7 +112,7 @@ namespace pmd2
         if(utils::pathExists(pathbalancedir) )
         {
             if( utils::isFile(pathmonstermnd) )
-                resultpair.first = eGameVersion::EoTEoD;
+                resultpair.first = eGameVersion::EoT;
             else 
                 resultpair.first = eGameVersion::EoS;
         }
@@ -151,20 +169,20 @@ namespace pmd2
         }
 
         if( bhasEnglish && !bhaseurolang )
-            resultpair.second = eGameLocale::NorthAmerica;
+            resultpair.second = eGameRegion::NorthAmerica;
         else if( bhaseurolang )
-            resultpair.second = eGameLocale::Europe;
+            resultpair.second = eGameRegion::Europe;
         else if (bhasJapanese)
-            resultpair.second = eGameLocale::Japan;
+            resultpair.second = eGameRegion::Japan;
         else
-            resultpair.second = eGameLocale::Invalid;
+            resultpair.second = eGameRegion::Invalid;
         
         return std::move(resultpair);
     }
 
-    const std::string & GetGameVersionName( eGameVersion gv )
-    {
-        return GameVersionNames[static_cast<size_t>(gv)];
-    }
+    //const std::string & GetGameVersionName( eGameVersion gv )
+    //{
+    //    return GameVersionNames[static_cast<size_t>(gv)];
+    //}
 
 };

@@ -29,55 +29,62 @@ namespace pmd2
 //======================================================================================
 //  ARM9_Loader
 //======================================================================================
-    class ARM9_Loader_Internal;
-    class ARM9_Loader
-    {
-    public:
+    //class ARM9_Loader_Internal;
+    //class ARM9_Loader
+    //{
+    //public:
 
-        ARM9_Loader();
+    //    ARM9_Loader();
+    //    ARM9_Loader( ARM9_Loader && mv );
+    //    ~ARM9_Loader();
 
-        //File IO
-        void LoadBinary ( const std::string & fpath );
-        void WriteBinary( const std::string & fpath );
+    //    ARM9_Loader& operator=( ARM9_Loader && mv );
 
-        //Raw access
-        void    Write( size_t offset, uint8_t byte );
-        uint8_t Read ( size_t offset )const;
+    //    //File IO
+    //    void LoadBinary ( const std::string & fpath );
+    //    void WriteBinary( const std::string & fpath );
 
-        //Check to see if there were any changes to the internal state done
-        bool WasModified()const;
+    //    //Raw access
+    //    void    Write( size_t offset, uint8_t byte );
+    //    uint8_t Read ( size_t offset )const;
 
-        //!#TODO: Add something like a flyweight to handle the game specifics 
+    //    //Check to see if there were any changes to the internal state done
+    //    bool WasModified()const;
 
-    private:
-        std::unique_ptr<ARM9_Loader_Internal> m_pinternal;
-    };
+    //    //!#TODO: Add something like a flyweight to handle the game specifics 
+
+    //private:
+    //    std::unique_ptr<ARM9_Loader_Internal> m_pinternal;
+    //};
 
 //======================================================================================
 //  ARM_Overlay_Loader
 //======================================================================================
-    class ARM_Overlay_Loader_Internal;
-    class ARM_Overlay_Loader
-    {
-    public:
-        ARM_Overlay_Loader();
+    //class ARM_Overlay_Loader_Internal;
+    //class ARM_Overlay_Loader
+    //{
+    //public:
+    //    ARM_Overlay_Loader();
+    //    ARM_Overlay_Loader( ARM_Overlay_Loader && mv );
+    //    ~ARM_Overlay_Loader();
+    //    ARM_Overlay_Loader& operator=(ARM_Overlay_Loader&& mv);
 
-        //File IO
-        void LoadBinary ( const std::string & fpath );
-        void WriteBinary( const std::string & fpath );
+    //    //File IO
+    //    void LoadBinary ( const std::string & fpath );
+    //    void WriteBinary( const std::string & fpath );
 
-        //Raw access
-        void    Write( size_t offset, uint8_t byte );
-        uint8_t Read ( size_t offset )const;
+    //    //Raw access
+    //    void    Write( size_t offset, uint8_t byte );
+    //    uint8_t Read ( size_t offset )const;
 
-        //Check to see if there were any changes to the internal state done
-        bool WasModified()const;
+    //    //Check to see if there were any changes to the internal state done
+    //    bool WasModified()const;
 
-        //!#TODO: Add something like a flyweight to handle the game specifics 
+    //    //!#TODO: Add something like a flyweight to handle the game specifics 
 
-    private:
-        std::unique_ptr<ARM_Overlay_Loader_Internal> m_pinternal;
-    };
+    //private:
+    //    std::unique_ptr<ARM_Overlay_Loader_Internal> m_pinternal;
+    //};
 
 //======================================================================================
 //  ASM_Data_Loader
@@ -91,6 +98,8 @@ namespace pmd2
     {
     public:
         ASM_Data_Loader( const std::string & romrootdir );
+        ASM_Data_Loader( ASM_Data_Loader && mv );
+        ASM_Data_Loader & operator=( ASM_Data_Loader && mv );
 
         /*
             LoadData
@@ -109,12 +118,14 @@ namespace pmd2
         /*
             EditFunctions
         */
-        ARM9_Loader        & GetARM9()                      { return m_arm9l; }
-        ARM_Overlay_Loader & GetOverlay( size_t overlaynb ) { return m_armovrlayl.at(overlaynb); }
+        //ARM9_Loader        & GetARM9()                      { return m_arm9l; }
+        //ARM_Overlay_Loader & GetOverlay( size_t overlaynb ) { return m_armovrlayl.at(overlaynb); }
+
+
 
     private:
-        ARM9_Loader                      m_arm9l;
-        std::vector<ARM_Overlay_Loader>  m_armovrlayl;
+        //ARM9_Loader                      m_arm9l;
+        //std::vector<ARM_Overlay_Loader>  m_armovrlayl;
     };
 
 

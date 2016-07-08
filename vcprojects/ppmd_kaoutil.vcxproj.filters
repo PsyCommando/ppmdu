@@ -279,8 +279,14 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_kaoutil.txt" />
-    <Text Include="..\resources\facenames.txt" />
-    <Text Include="..\resources\pokenames.txt" />
+    <Text Include="..\resources\facenames.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\resources\pokenames.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="..\readmes\ppmd_kaoutil.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

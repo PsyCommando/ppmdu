@@ -94,28 +94,28 @@ namespace pmd2
         typedef StarterPKmList starterdata_t;
 
 
-        PMD2_ASM_Manip( ASM_Data_Loader & datload );
+        PMD2_ASM_Manip( ASM_Data_Loader && datload, eGameVersion gv, eGameRegion gr );
 
         //Fetch or replace the list of starter pokemon
         starterdata_t FetchStartersTable();
         void          ReplaceStartersTable(const starterdata_t & newstart);
 
         //Detect version, and locale from arm9.bin
-        
-        eGameLocale  GetLocale ()const { return m_glocale; }
-        eGameVersion GetVersion()const { return m_gversion; }
+        //
+        //eGameRegion  GetLocale ()const { return m_glocale; }
+        //eGameVersion GetVersion()const { return m_gversion; }
 
         //FileIO
         void Load();
         void Write();
 
     private:
-        void AnalyzeVersionInfo();
+
 
     private:
-        ASM_Data_Loader & m_datload;
+        ASM_Data_Loader   m_datload;
         eGameVersion      m_gversion;
-        eGameLocale       m_glocale;
+        eGameRegion       m_gregion;
     };
 
 //======================================================================================

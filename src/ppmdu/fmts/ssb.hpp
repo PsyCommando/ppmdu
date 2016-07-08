@@ -150,7 +150,7 @@ namespace filetypes
     /***********************************************************************************
         ParseScript
     ***********************************************************************************/
-    pmd2::ScriptedSequence ParseScript( const std::string & scriptfile, pmd2::eGameLocale gloc, pmd2::eGameVersion gvers );
+    pmd2::ScriptedSequence ParseScript( const std::string & scriptfile, pmd2::eGameRegion gloc, pmd2::eGameVersion gvers );
     //pmd2::ScriptedSequence ParseScriptEoS    (const std::string & scriptfile);
     //pmd2::ScriptedSequence ParseScriptEoSPal (const std::string & scriptfile);
     //pmd2::ScriptedSequence ParseScriptEoTD   (const std::string & scriptfile);

@@ -23,7 +23,7 @@ namespace utils
             -bFilenameOnly : If set to true, returns only the filename, 
                              not the complete path!
     ************************************************************************/
-    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly = false );
+    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly = false, bool noslashaftdir = false );
 
     /************************************************************************
         DoCreateDirectory
