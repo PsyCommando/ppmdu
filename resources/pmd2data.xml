@@ -79,7 +79,10 @@
   <StringIndexData>
     <!--Explorers of Sky, North America-->
     <Game id="EoS_NA">
-      <Language filename="text_e.str" name="English" locale="en-US">
+      <Languages>
+        <Language filename="text_e.str" name="English" locale="en-US" />
+      </Languages>
+      <StringBlocks>
         <StringBlock name="Item Names"                beg="6773"  end="8173"/>
         <StringBlock name="Move Names"                beg="8173"  end="8734"/>
         <StringBlock name="Pokemon Names"             beg="8734"  end="9334"/>
@@ -94,12 +97,15 @@
         <StringBlock name="Ability Descriptions"      beg="13913" end="14037"/>
         
         <StringBlock name="Portrait Names"            beg="16076" end="16108"/>
-      </Language>
+      </StringBlocks>
     </Game>
     
     <!--Explorers of Time and Darkness, North America-->
     <Game id="EoT_NA" id2="EoD_NA">
-      <Language filename="text_e.str" name="English" locale="en-US">
+      <Languages>
+        <Language filename="text_e.str" name="English" locale="en-US" />
+      </Languages>
+      <StringBlocks>
         <StringBlock name="Item Names"                beg="4927"  end="5927"/>
         <StringBlock name="Move Names"                beg="5927"  end="6488"/>
         <StringBlock name="Pokemon Names"             beg="6488"  end="7088"/>
@@ -114,39 +120,70 @@
         <StringBlock name="Ability Descriptions"      beg="10856" end="10980"/>
         
         <StringBlock name="Portrait Names"            beg="12401" end="12433"/>
-      </Language>
+      </StringBlocks>
     </Game>
     
     <!--Explorers of Sky, Japan-->
     <Game id="EoS_JP">
-      <Language filename="text_j.str" name="Japanese" locale=".932">
+      <Languages>
+        <Language filename="text_j.str" name="Japanese" locale=".932" />
+      </Languages>
+      <StringBlocks>
         <!--#TODO-->
-      </Language>
+        <StringBlock name="Portrait Names"            beg="5465" end="5497"/>
+        <StringBlock name="Pokemon Names"             beg="5519"  end="6119"/>
+      </StringBlocks>
     </Game>
     
     <!--Explorers of Time and Darkness, Japan-->
     <Game id="EoT_JP" id2="EoD_JP">
-      <Language filename="text_j.str" name="Japanese" locale=".932">
+      <Languages>
+        <Language filename="text_j.str" name="Japanese" locale=".932" />
+      </Languages>
+      <StringBlocks>
         <!--#TODO-->
-      </Language>
+      </StringBlocks>
     </Game>
     
     <!--Explorers of Sky, Europe-->
     <Game id="EoS_EU">
-      <Language filename="text_e.str" name="English"  locale="en-US"><!--#TODO--></Language>
-      <Language filename="text_f.str" name="French"   locale="fr-FR"><!--#TODO--></Language>
-      <Language filename="text_g.str" name="German"   locale="de-DE"><!--#TODO--></Language>
-      <Language filename="text_i.str" name="Italian"  locale="it-IT"><!--#TODO--></Language>
-      <Language filename="text_s.str" name="Spanish"  locale="es-ES"><!--#TODO--></Language>
+      <Languages>
+        <Language filename="text_e.str" name="English"  locale="en-US" />
+        <Language filename="text_f.str" name="French"   locale="fr-FR" />
+        <Language filename="text_g.str" name="German"   locale="de-DE" />
+        <Language filename="text_i.str" name="Italian"  locale="it-IT" />
+        <Language filename="text_s.str" name="Spanish"  locale="es-ES" />
+      </Languages>
+      <StringBlocks>
+        <StringBlock name="Item Names"                beg="6775"  end="8175"/>
+        <StringBlock name="Move Names"                beg="8175"  end="8736"/>
+        <StringBlock name="Pokemon Names"             beg="8736"  end="9336"/>
+        <StringBlock name="Pokemon Categories"        beg="9336"  end="9936"/>
+        
+        <StringBlock name="Move Descriptions"         beg="10147" end="10706"/>
+        <StringBlock name="Item Long Descriptions"    beg="10706" end="12106"/>
+        <StringBlock name="Item Short Descriptions"   beg="12106" end="13506"/>
+        
+        <StringBlock name="Type Names"                beg="13772" end="13991"/>
+        <StringBlock name="Ability Names"             beg="13791" end="13915"/>
+        <StringBlock name="Ability Descriptions"      beg="13915" end="14039"/>
+        
+        <StringBlock name="Portrait Names"            beg="16078" end="16110"/>
+      </StringBlocks>
     </Game>
     
     <!--Explorers of Time and Darkness, Europe-->
     <Game id="EoT_EU" id2="EoD_EU">
-      <Language filename="text_e.str" name="English"  locale="en-US"><!--#TODO--></Language>
-      <Language filename="text_f.str" name="French"   locale="fr-FR"><!--#TODO--></Language>
-      <Language filename="text_g.str" name="German"   locale="de-DE"><!--#TODO--></Language>
-      <Language filename="text_i.str" name="Italian"  locale="it-IT"><!--#TODO--></Language>
-      <Language filename="text_s.str" name="Spanish"  locale="es-ES"><!--#TODO--></Language>
+      <Languages>
+        <Language filename="text_e.str" name="English"  locale="en-US" />
+        <Language filename="text_f.str" name="French"   locale="fr-FR" />
+        <Language filename="text_g.str" name="German"   locale="de-DE" />
+        <Language filename="text_i.str" name="Italian"  locale="it-IT" />
+        <Language filename="text_s.str" name="Spanish"  locale="es-ES" />
+      </Languages>
+      <StringBlocks>
+        <!--#TODO-->
+      </StringBlocks>
     </Game>
     
   </StringIndexData>

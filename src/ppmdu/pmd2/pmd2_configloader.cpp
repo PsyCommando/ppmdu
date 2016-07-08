@@ -57,7 +57,9 @@ namespace pmd2
         const string NODE_Block     = "Block";
         const string NODE_StrIndex  = "StringIndexData";
         const string NODE_Language  = "Language";
+        const string NODE_Languages = "Languages";
         const string NODE_StrBlk    = "StringBlock";
+        const string NODE_StrBlks   = "StringBlocks";
         const string NODE_Value     = "Value";
 
         const string ATTR_ID        = "id";
@@ -252,51 +254,11 @@ namespace pmd2
             return false;
         }
 
-        LanguageFilesDB::strfiles_t ParseLanguages()
+        LanguageFilesDB::blocks_t::blkcnt_t ParseStringBlocks( pugi::xml_node & parentn )
         {
             using namespace ConfigXML;
-            using namespace pugi;
-            LanguageFilesDB::strfiles_t dest;
-
-            xml_node gamevernode = m_doc.child(ROOT_PMD2.c_str()).child(NODE_StrIndex.c_str());
-
-            for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
-            {
-                xml_attribute id  = gamev.attribute(ATTR_ID.c_str());
-                xml_attribute id2 = gamev.attribute(ATTR_ID2.c_str());
-                if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
-                {
-                    for( auto lang : gamev.children(NODE_Language.c_str()) )
-                    {
-                        xml_attribute fname    = lang.attribute(ATTR_FName.c_str());
-                        xml_attribute langname = lang.attribute(ATTR_Name.c_str());
-                        xml_attribute loc      = lang.attribute(ATTR_Loc.c_str());
-                        eGameLanguages elang   = StrToGameLang(langname.value());
-                        
-                        if(elang >= eGameLanguages::NbLang )
-                        {
-                            throw std::runtime_error("ConfigXMLParser::ParseLang(): Unexpected language string \"" + 
-                                                      std::string(langname.value()) + "\" in config file!!");
-                        }
-
-                        dest.emplace( fname.value(), std::move(ParseStringBlocks(lang, fname.value(), loc.value(), elang )) );
-                    }
-                }
-            }
-            return std::move(dest);
-        }
-
-        LanguageFilesDB::blocks_t ParseStringBlocks( pugi::xml_node    parentn, 
-                                                    std::string     && fname, 
-                                                    std::string     && locale, 
-                                                    eGameLanguages     lang )
-        {
-            using namespace ConfigXML;
-            using namespace pugi;
-            LanguageFilesDB::blocks_t::blkcnt_t dest;
-
-            //Parse all blocks for this language
-            for( auto strblk : parentn )
+            LanguageFilesDB::blocks_t::blkcnt_t stringblocks;
+            for( auto strblk : parentn.child(NODE_StrBlks.c_str()).children(NODE_StrBlk.c_str()) )
             {
                 string      blkn;
                 strbounds_t bnd;
@@ -312,34 +274,131 @@ namespace pmd2
                 eStringBlocks strblock = StrToStringBlock(blkn);
 
                 if( strblock != eStringBlocks::Invalid )
-                    dest.emplace( strblock, std::move(bnd) );
+                    stringblocks.emplace( strblock, std::move(bnd) );
+                else
+                    clog <<"Ignored invalid string block \"" <<blkn <<"\".\n";
             }
-            
-            if( dest.size() != static_cast<size_t>(eStringBlocks::NBEntries) )
+
+            if( stringblocks.size() != static_cast<size_t>(eStringBlocks::NBEntries) )
             {
                 stringstream sstr;
                 sstr <<"ConfigXMLParser::ParseALang(): The ";
                 for( size_t i = 0; i < static_cast<size_t>(eStringBlocks::NBEntries); ++i )
                 {
-                    if( dest.find( static_cast<eStringBlocks>(i) ) == dest.end() )
+                    if( stringblocks.find( static_cast<eStringBlocks>(i) ) == stringblocks.end() )
                     {
                         if( i != 0 )
                             sstr << ",";
                         sstr << StringBlocksNames[i];
                     }
                 }
-                if( (static_cast<size_t>(eStringBlocks::NBEntries) - dest.size()) > 1 )
-                    sstr << " string blocks for the language file " <<fname <<", for " <<m_curversion.id <<" are missing from the configuration file!";
+                if( (static_cast<size_t>(eStringBlocks::NBEntries) - stringblocks.size()) > 1 )
+                    sstr << " string blocks for " <<m_curversion.id <<" are missing from the configuration file!";
                 else
-                    sstr << " string block for the language file " <<fname  <<", for " <<m_curversion.id <<" is missing from the configuration file!";
+                    sstr << " string block for " <<m_curversion.id <<" is missing from the configuration file!";
                 
                 if(utils::LibWide().isLogOn())
                     clog << sstr.str();
                 cout << sstr.str();
             }
-
-            return std::move(LanguageFilesDB::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
+            return std::move(stringblocks);
         }
+
+        void ParseLanguageList( pugi::xml_node                       & gamev, 
+                                LanguageFilesDB::blocks_t::blkcnt_t  & blocks, 
+                                LanguageFilesDB::strfiles_t          & dest )
+        {
+            using namespace ConfigXML;
+            using namespace pugi;
+
+            for( auto lang : gamev.child(NODE_Languages.c_str()).children(NODE_Language.c_str()) )
+            {
+                xml_attribute fname    = lang.attribute(ATTR_FName.c_str());
+                xml_attribute langname = lang.attribute(ATTR_Name.c_str());
+                xml_attribute loc      = lang.attribute(ATTR_Loc.c_str());
+                eGameLanguages elang   = StrToGameLang(langname.value());
+                        
+                if(elang >= eGameLanguages::NbLang )
+                {
+                    throw std::runtime_error("ConfigXMLParser::ParseLang(): Unexpected language string \"" + 
+                                                std::string(langname.value()) + "\" in config file!!");
+                }
+
+                dest.emplace( fname.value(), std::move(LanguageFilesDB::blocks_t(fname.value(), loc.value(), elang, blocks )) );
+            }
+        }
+
+        LanguageFilesDB::strfiles_t ParseLanguages()
+        {
+            using namespace ConfigXML;
+            using namespace pugi;
+            LanguageFilesDB::strfiles_t dest;
+            xml_node                    gamevernode = m_doc.child(ROOT_PMD2.c_str()).child(NODE_StrIndex.c_str());
+
+            for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
+            {
+                xml_attribute id   = gamev.attribute(ATTR_ID.c_str());
+                xml_attribute id2  = gamev.attribute(ATTR_ID2.c_str());
+                if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
+                    ParseLanguageList(gamev,ParseStringBlocks(gamev),dest);
+            }
+            return std::move(dest);
+        }
+
+        //LanguageFilesDB::blocks_t ParseStringBlocks( pugi::xml_node    parentn, 
+        //                                            std::string     && fname, 
+        //                                            std::string     && locale, 
+        //                                            eGameLanguages     lang )
+        //{
+        //    using namespace ConfigXML;
+        //    using namespace pugi;
+        //    LanguageFilesDB::blocks_t::blkcnt_t dest;
+
+        //    //Parse all blocks for this language
+        //    for( auto strblk : parentn )
+        //    {
+        //        string      blkn;
+        //        strbounds_t bnd;
+        //        for( auto att : strblk.attributes() )
+        //        {
+        //            if( att.name() == ATTR_Name )
+        //                blkn = att.value();
+        //            else if( att.name() == ATTR_Beg )
+        //                bnd.beg = att.as_uint();
+        //            else if( att.name() == ATTR_End )
+        //                bnd.end = att.as_uint();
+        //        }
+        //        eStringBlocks strblock = StrToStringBlock(blkn);
+
+        //        if( strblock != eStringBlocks::Invalid )
+        //            dest.emplace( strblock, std::move(bnd) );
+        //    }
+        //    
+        //    if( dest.size() != static_cast<size_t>(eStringBlocks::NBEntries) )
+        //    {
+        //        stringstream sstr;
+        //        sstr <<"ConfigXMLParser::ParseALang(): The ";
+        //        for( size_t i = 0; i < static_cast<size_t>(eStringBlocks::NBEntries); ++i )
+        //        {
+        //            if( dest.find( static_cast<eStringBlocks>(i) ) == dest.end() )
+        //            {
+        //                if( i != 0 )
+        //                    sstr << ",";
+        //                sstr << StringBlocksNames[i];
+        //            }
+        //        }
+        //        if( (static_cast<size_t>(eStringBlocks::NBEntries) - dest.size()) > 1 )
+        //            sstr << " string blocks for the language file " <<fname <<", for " <<m_curversion.id <<" are missing from the configuration file!";
+        //        else
+        //            sstr << " string block for the language file " <<fname  <<", for " <<m_curversion.id <<" is missing from the configuration file!";
+        //        
+        //        if(utils::LibWide().isLogOn())
+        //            clog << sstr.str();
+        //        cout << sstr.str();
+        //    }
+
+        //    return std::move(LanguageFilesDB::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
+        //}
 
 
         ConfigLoader::bincnt_t ParseBinaries()

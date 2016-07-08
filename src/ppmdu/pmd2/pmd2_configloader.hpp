@@ -157,6 +157,10 @@ namespace pmd2
             :m_localeStr(std::move(locstr)), m_strfname(std::move(strfname)), m_lang(lang), m_offsets(std::move(blocks))
         {}
 
+        StringsCatalog( std::string strfname, std::string locstr, eGameLanguages lang, blkcnt_t blocks )
+            :m_localeStr(std::move(locstr)), m_strfname(std::move(strfname)), m_lang(lang), m_offsets(std::move(blocks))
+        {}
+
         StringsCatalog( StringsCatalog && mv )
         {
             this->operator=(std::forward<StringsCatalog>(mv));
