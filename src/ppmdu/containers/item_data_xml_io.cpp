@@ -311,17 +311,6 @@ namespace pmd2 { namespace stats
         ItemsDB _ParseAllItems( const vector<string> filelst )
         {
             using namespace itemxml;
-
-            //Check if we
-            xml_document     doccheck;
-            xml_parse_result loadres = doccheck.load_file(filelst.front().c_str());
-            if( ! loadres )
-            {
-                stringstream sstr;
-                sstr <<"Can't load XML document \"" <<filelst.front() <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
-                throw std::runtime_error(sstr.str());
-            }
-
             ItemsDB resitems;
 
             resitems.resize(filelst.size());
@@ -331,6 +320,12 @@ namespace pmd2 { namespace stats
             {
                 xml_document     doc;
                 xml_parse_result loadres = doc.load_file( item.c_str() );
+                if( ! loadres )
+                {
+                    stringstream sstr;
+                    sstr <<"Can't load XML document \"" <<filelst.front() <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+                    throw std::runtime_error(sstr.str());
+                }
 
                 _ParseItem( doc.first_child(), *ititem, item );
 
@@ -407,9 +402,9 @@ namespace pmd2 { namespace stats
             using namespace itemxml;
             //Check the game version of the data
             xml_attribute gv = itemnode.attribute( ATTR_GameVer.c_str() );
-            const string  gvs= gv.as_string(); 
+            const string  gvs= gv.value(); 
 
-            if( !gvs.empty() ) //If the attribute exists
+            if( gv ) //If the attribute exists
             {
                 if( gvs == ATTR_GameVerEoS )
                 {

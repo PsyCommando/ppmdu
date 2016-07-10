@@ -15,7 +15,10 @@ Description: This code is used to load/index the game scripts.
 #include <deque>
 #include <memory>
 #include <regex>
-
+#include <mutex>
+/*
+    !!Need to come up with something to handle offsets for jump instructions, or anything else referring to a file offset!!
+*/
 
 namespace pmd2
 {
@@ -167,6 +170,11 @@ namespace pmd2
         typedef std::unordered_map<eGameLanguages, strtbl_t> strtblset_t;
 
         ScriptedSequence(){}
+        ScriptedSequence(const std::string & name)
+            :m_name(name)
+        {}
+
+        //!#REMOVEME: original filename is pretty much useless!
         ScriptedSequence(const std::string & name, const std::string & origfname)
             :m_name(name), m_originalfname(origfname)
         {}
@@ -189,7 +197,7 @@ namespace pmd2
         inline strtblset_t                      & StrTblSet()         { return m_strtable; }
         inline const strtblset_t                & StrTblSet() const   { return m_strtable; }
 
-        void               InsertStrLanguage( eGameLanguages lang, strtbl_t && strings );
+        void                                      InsertStrLanguage( eGameLanguages lang, strtbl_t && strings );
         //Returns all strings for a specific language
         inline strtbl_t                         * StrTbl( eGameLanguages lang ); //     { return m_strtable[static_cast<size_t>(lang)]; }
         //inline strtbl_t                         & StrTbl( size_t   lang )      { return m_strtable[lang]; }
@@ -214,8 +222,6 @@ namespace pmd2
     class ScriptEntityData
     {
     public:
-
-
         ScriptEntityData()
         {}
 
@@ -437,6 +443,7 @@ namespace pmd2
         eGameRegion                                  m_scrRegion;
         eGameVersion                                 m_gameVersion;
         std::unique_ptr<GameScriptsHandler>          m_pHandler;
+        std::mutex                                   m_mutex;
     };
 
     /*

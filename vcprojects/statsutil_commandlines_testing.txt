@@ -1,3 +1,6 @@
 -e "ExplorersOfSkyOriginal" "ExplorersOfSky" -str
 -e "EoSJapan" "EoSJapanOut" -str
 -e -romroot "EoSRomRoot" "EoSOut" -script
+
+-e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log
+-i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log -scr

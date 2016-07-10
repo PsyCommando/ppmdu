@@ -9,6 +9,9 @@
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/pugixml_utils.hpp>
 #include <utils/library_wide.hpp>
+#include <utils/multiple_task_handler.hpp>
+#include <atomic>
+#include <thread>
 using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
@@ -20,49 +23,49 @@ namespace pmd2
 //==============================================================================
     namespace scriptXML
     {
-        const string ROOT_ScripDir      = "Event";      
-        const string ATTR_GVersion      = "gameversion"; 
-        const string ATTR_GRegion       = "gameregion";
-        const string ATTR_DirName       = "eventname";           //Event name/filename with no extension
-        const string ATTR_Name          = "name";
+        const string ROOT_ScripDir      = "Event"s;      
+        const string ATTR_GVersion      = "gameversion"s; 
+        const string ATTR_GRegion       = "gameregion"s;
+        const string ATTR_DirName       = "eventname"s;           //Event name/filename with no extension
+        const string ATTR_Name          = "name"s;
 
-        const string NODE_LSDTbl        = "LSDTable";
-        const string NODE_GrpNameRef    = "Ref";            //AKA sub-acting 
+        const string NODE_LSDTbl        = "LSDTable"s;
+        const string NODE_GrpNameRef    = "Ref"s;            //AKA sub-acting 
         const string ATTR_GrpName       = ATTR_Name;        //AKA sub-acting names
 
-        const string NODE_ScriptGroup   = "ScriptGroup";
+        const string NODE_ScriptGroup   = "ScriptGroup"s;
         const string ATTR_ScrGrpName    = ATTR_Name;
         
-        const string NODE_ScriptData    = "ScriptData";
-        const string ATTR_ScriptType    = "type";           // ssa, sse, sss
+        const string NODE_ScriptData    = "ScriptData"s;
+        const string ATTR_ScriptType    = "type"s;           // ssa, sse, sss
         const string ATTR_ScrDatName    = ATTR_Name;
 
-        const string NODE_ScriptSeq     = "ScriptSequence";
+        const string NODE_ScriptSeq     = "ScriptSequence"s;
         const string ATTR_ScrSeqName    = ATTR_Name;
 
-        const string NODE_Constants     = "Constants";
-        const string NODE_Constant      = "Constant";
+        const string NODE_Constants     = "Constants"s;
+        const string NODE_Constant      = "Constant"s;
 
-        const string NODE_Strings       = "Strings";
-        const string NODE_String        = "String";
-        const string ATTR_Value         = "value";
-        const string ATTR_Language      = "language";
+        const string NODE_Strings       = "Strings"s;
+        const string NODE_String        = "String"s;
+        const string ATTR_Value         = "value"s;
+        const string ATTR_Language      = "language"s;
 
-        const string NODE_Code          = "Code";
+        const string NODE_Code          = "Code"s;
 
         //!#TODO: add various group nodes depending on the group type 
 
-        const string NODE_Group         = "Group";
-        const string ATTR_GroupType     = "type";
-        const string ATTR_GroupParam2   = "unk2";
+        const string NODE_Group         = "Group"s;
+        const string ATTR_GroupType     = "type"s;
+        const string ATTR_GroupParam2   = "unk2"s;
 
 
         const string NODE_Instruction   = "Instruction"s;
-        const string NODE_Data          = "Data";               ///For data words
+        const string NODE_Data          = "Data"s;               ///For data words
 
-        const string ATTR_Param         = "param";
+        const string ATTR_Param         = "param"s;
 
-        const array<string, 6> ATTR_Params =
+        const array<string, 9> ATTR_Params =
         {
             "param1",
             "param2",
@@ -70,7 +73,9 @@ namespace pmd2
             "param4",
             "param5",
             "param6",
-
+            "param7",
+            "param8",
+            "param9",
         };
 
     };
@@ -90,17 +95,207 @@ namespace pmd2
             :m_version(version), m_region(region)
         {}
 
-        ScriptedSequence operator()(xml_node & seqn)
+        ScriptedSequence operator()( const xml_node & seqn)
         {
-            assert(false);
-            return ScriptedSequence();
+            using namespace scriptXML;
+            xml_attribute xname = seqn.attribute(ATTR_ScrSeqName.c_str());
+
+            if(!xname)
+            {
+                throw std::runtime_error("SSBParser::operator(): Sequence is missing its \"name\" attribute!!");
+            }
+            m_out = std::move( ScriptedSequence(xname.value()) );
+            xml_node xcode  = seqn.child(NODE_Code.c_str());
+            xml_node xconst = seqn.child(NODE_Constants.c_str());
+
+            ParseCode(xcode);
+            ParseConsts(xconst);
+            for( const auto & strblk : seqn.children(NODE_Strings.c_str()) )
+                ParseStringBlock(strblk);
+            return std::move(m_out);
         }
 
     private:
+        void ParseCode( const xml_node & coden )
+        {
+            using namespace scriptXML;
+            ScriptedSequence::grptbl_t & outtbl = m_out.Groups();
+
+            for( const xml_node & group : coden.children(NODE_Group.c_str()) )
+            {
+                xml_attribute  xtype = group.attribute(ATTR_GroupType.c_str());
+                xml_attribute  xunk2 = group.attribute(ATTR_GroupParam2.c_str());
+                ScriptInstrGrp grpout;
+                if(!xtype)
+                {
+                    stringstream sstrer;
+                    sstrer <<"SSBParser::ParseCode(): Script \"" <<m_out.Name() <<"\", instruction group #" << outtbl.size() 
+                           <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+                grpout.type = xtype.as_uint();
+                grpout.unk2 = xunk2.as_uint();
+
+                for( const xml_node & inst : group )
+                {
+                    ParseInstruction(inst,grpout);
+                }
+                outtbl.push_back(std::move(grpout));
+            }
+        }
+
+        void ParseInstruction( const xml_node & instn, ScriptInstrGrp & outgrp )
+        {
+            using namespace scriptXML;
+            
+            if( instn.name() == NODE_Instruction )
+            {
+                ParseOpCode(instn,outgrp);
+            }
+            else if( instn.name() == NODE_Data)
+            {
+                xml_attribute     xval = instn.attribute(ATTR_Value.c_str());
+                ScriptInstruction outinstr;
+                outinstr.isdata = true;
+                outinstr.opcode = static_cast<uint16_t>(xval.as_uint());
+                outgrp.instructions.push_back(std::move(outinstr));
+            }
+        }
+
+        void ParseOpCode(const xml_node & instn, ScriptInstrGrp & outgrp)
+        {
+            using namespace scriptXML;
+            xml_attribute name = instn.attribute(ATTR_Name.c_str());
+            if(!name)
+            {
+                stringstream sstrer;
+                sstrer <<"SSBParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
+                    <<", in group instruction #" <<outgrp.instructions.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
+                throw std::runtime_error(sstrer.str());
+            }
+            ScriptInstruction outinstr;
+            int nbparamsexpected = 0;
+            outinstr.isdata = false;
+            
+            //#1 - Read opcode
+            if(m_version == eGameVersion::EoS)
+            {
+                const OpCodeFinderPicker<eOpCodeVersion::EoS> finder;
+                const eScriptOpCodesEoS                       op = finder(name.value());
+                if( op != eScriptOpCodesEoS::INVALID )
+                {
+                    outinstr.opcode = static_cast<uint16_t>(op);
+                    const OpCodeInfoEoS * popcode = finder(op);
+                    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
+                    nbparamsexpected = popcode->nbparams;
+                }
+            }
+            else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
+            {
+                const OpCodeFinderPicker<eOpCodeVersion::EoTD> finder;
+                const eScriptOpCodesEoTD                       op = finder(name.value());
+                if( op != eScriptOpCodesEoTD::INVALID )
+                {
+                    outinstr.opcode = static_cast<uint16_t>(op);
+                    const OpCodeInfoEoTD * popcode = finder(op);
+                    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
+                    nbparamsexpected = popcode->nbparams;
+                }
+            }
+            else
+                assert(false); //This shouldn't happen at all!
+
+            //#2 - Read the parameters
+            if( nbparamsexpected > 0 )
+            {
+                size_t cntparam = 0;
+                outinstr.parameters.resize(nbparamsexpected, 0);
+                for( const auto & attr : instn.attributes() )
+                {
+                    string pname = attr.name();
+                    const static regex paramname( ATTR_Param + "(\\d)");
+                    smatch sm;
+
+                    if( regex_match(pname,sm,paramname) && sm.size() == 2 )
+                    {
+                        size_t paramno = 0;
+                        stringstream sstr;
+                        sstr << sm[1].str();
+                        sstr >> paramno;
+
+                        if( paramno < nbparamsexpected )
+                            outinstr.parameters[paramno] = static_cast<uint16_t>(attr.as_uint());
+                        else
+                            clog <<"<!>- SSBParser: Ignored extra parameter \"param" <<paramno <<"\", for instruction number " <<outgrp.size() <<" in group!\n";
+                    }
+                }
+            }
+            outgrp.instructions.push_back(std::move(outinstr));
+        }
+
+        void ParseConsts( const xml_node & constn )
+        {
+            using namespace scriptXML;
+            deque<string> constantsout; //The deque avoids re-allocating a vector constantly
+            for( const auto & conststr : constn.children(NODE_Constant.c_str()) )
+            {
+                xml_attribute xval = conststr.attribute(ATTR_Value.c_str());
+                if(!xval)
+                {
+                    stringstream sstrer;
+                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
+                           <<" is missing its \"" <<ATTR_Value <<"\" attribute!";
+                    throw std::runtime_error( sstrer.str() );
+                }
+                constantsout.push_back(xval.value());
+            }
+            m_out.ConstTbl() = std::move( ScriptedSequence::consttbl_t( constantsout.begin(), constantsout.end() ) );
+        }
+
+
+        void ParseStringBlock( const xml_node & strblkn )
+        {
+            using namespace scriptXML;
+            xml_attribute  xlang = strblkn.attribute(ATTR_Language.c_str());
+            eGameLanguages glang = eGameLanguages::Invalid;
+
+            if( !xlang )
+            {
+                    stringstream sstrer;
+                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                           <<" is missing its \"" <<ATTR_Language <<"\" attribute!";
+                    throw std::runtime_error( sstrer.str() );
+            }
+            if( (glang = StrToGameLang(xlang.value())) == eGameLanguages::Invalid )
+            {
+                    stringstream sstrer;
+                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                           <<" has an invalid value\"" <<xlang.value() <<"\" as its \"" <<ATTR_Language <<"\" attribute value!";
+                    throw std::runtime_error( sstrer.str() );
+            }
+
+            deque<string> langstr; //save on realloc each times on a vector
+            for( const auto & str : strblkn.children(NODE_String.c_str()) )
+            {
+                xml_attribute xval = str.attribute( ATTR_Value.c_str() );
+                if(xval)
+                    langstr.push_back(xval.value());
+                else
+                {
+                    stringstream sstrer;
+                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                           <<", language \"" <<xlang.value() <<"\", string #" <<langstr.size() 
+                           <<", is missing its \"" <<ATTR_Value <<"\" attribute!";
+                    throw std::runtime_error( sstrer.str() );
+                }
+            }
+            m_out.InsertStrLanguage( glang, std::move(ScriptedSequence::strtbl_t( langstr.begin(), langstr.end() )) );
+        }
 
     private:
-        eGameVersion m_version;
-        eGameRegion m_region;
+        ScriptedSequence m_out;
+        eGameVersion     m_version;
+        eGameRegion      m_region;
     };
 
 
@@ -117,7 +312,6 @@ namespace pmd2
 
         ScriptEntityData operator()(xml_node & seqn)
         {
-            assert(false);
             return ScriptEntityData();
         }
 
@@ -156,14 +350,14 @@ namespace pmd2
             xml_node      parentn    = doc.child(ROOT_ScripDir.c_str());
             xml_attribute xversion   = parentn.attribute(ATTR_GVersion.c_str());
             xml_attribute xregion    = parentn.attribute(ATTR_GRegion.c_str());
-            xml_attribute xeventname = parentn.attribute(ATTR_DirName.c_str());
+            //xml_attribute xeventname = parentn.attribute(ATTR_DirName.c_str());
 
             m_out_gver = StrToGameVersion(xversion.value());
-            m_out_reg  = StrToGameRegion(xregion.value());
+            m_out_reg  = StrToGameRegion (xregion.value());
 
-            return ScriptSet( xeventname.value(), 
-                             std::forward<ScriptSet::scriptgrps_t>(ParseGroups(parentn)),
-                             std::forward<ScriptSet::lsdtbl_t>    (ParseLSD   (parentn)));
+            return std::move( ScriptSet( utils::GetBaseNameOnly(file), 
+                             std::move(ParseGroups(parentn)),
+                             std::move(ParseLSD   (parentn))));
         }
 
     private:
@@ -172,9 +366,8 @@ namespace pmd2
         {
             using namespace scriptXML;
             ScriptSet::scriptgrps_t groups;
-            xml_node xgrp = parentn.child(NODE_ScriptGroup.c_str());
 
-            for( auto & grp : xgrp )
+            for( auto & grp : parentn.children(NODE_ScriptGroup.c_str()) )
             {
                 xml_attribute xname = grp.attribute(ATTR_GrpName.c_str());
                 if( !xname )
@@ -189,11 +382,12 @@ namespace pmd2
                 ScriptSet::scriptgrps_t::value_type agroup( xname.value() );
                 for( auto & comp : grp )
                 {
-                    if( grp.name() == NODE_ScriptSeq )
+                    if( comp.name() == NODE_ScriptSeq )
                         HandleSequence( comp, agroup );
-                    else if( grp.name() == NODE_ScriptData )
+                    else if( comp.name() == NODE_ScriptData )
                         HandleData(comp, agroup);
                 }
+                groups.push_back(std::forward<ScriptSet::scriptgrps_t::value_type>(agroup));
             }
 
             return std::move(groups);
@@ -471,7 +665,6 @@ namespace pmd2
             sstrfname << utils::TryAppendSlash(destdir) <<m_scrset.Name() <<".xml";
             xml_document doc;
             xml_node     xroot = doc.append_child( ROOT_ScripDir.c_str() );
-
             AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(m_version) );
             AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(m_region) );
 
@@ -537,14 +730,51 @@ namespace pmd2
 //  GameScripts
 //==============================================================================
 
+    //bool RunImport( const ScrSetLoader * ldr, string && fname, eGameRegion reg, eGameVersion ver )
+    //{
+    //    eGameRegion  tempregion  = eGameRegion::Invalid;
+    //    eGameVersion tempversion = eGameVersion::Invalid;
+    //    (*ldr)( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
+    //    if( tempregion != reg || tempversion != ver )
+    //        throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+    //    return true;
+    //}
+
+    bool RunImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
+    {
+        eGameRegion  tempregion  = eGameRegion::Invalid;
+        eGameVersion tempversion = eGameVersion::Invalid;
+        ldr( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
+        if( tempregion != reg || tempversion != ver )
+            throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+        ++completed;
+        return true;
+    }
+
+    void PrintProgressLoop( atomic<uint32_t> & completed, uint32_t total, atomic<bool> & bDoUpdate )
+    {
+        static const chrono::milliseconds ProgressUpdThWait = chrono::milliseconds(100);
+        while( bDoUpdate )
+        {
+            if( completed.load() <= total )
+            {
+                uint32_t percent = ( (100 * completed.load()) / total );
+                cout << "\r" <<setw(3) <<setfill(' ') <<percent <<"%" <<setw(15) <<setfill(' ') <<" ";
+            }
+            this_thread::sleep_for(ProgressUpdThWait);
+        }
+    }
+
     void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress )
     {
         decltype(out_dest.Region())   tempregion;
         decltype(out_dest.Version()) tempversion;
-
+        atomic_bool                  shouldUpdtProgress = true;
+        future<void>                 updtProgress;
+        atomic<uint32_t>             completed = 0;
         //Grab our version and region from the 
         if(bprintprogress)
-            cout<<"\t- Parsing COMON.xml..\n";
+            cout<<"- Parsing COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
@@ -555,24 +785,59 @@ namespace pmd2
 
         if(bprintprogress)
         {
-            cout<<"\t!- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
+            cout<<"!- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
                 <<"\", and version \"" <<GetGameVersionName(out_dest.m_gameVersion)<<"!\n";
         }
+        //Write out common
+        out_dest.WriteScriptSet(out_dest.m_common);
 
+
+        multitask::CMultiTaskHandler taskhandler;
         //
-        for( const auto entry : out_dest.m_setsindex )
+        for( const auto & entry : out_dest.m_setsindex )
         {
             stringstream currentfname;
             currentfname << utils::TryAppendSlash(dir) <<entry.first <<".xml";
 
-            if(bprintprogress)
-                cout<<"\r\t- Parsing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
+            taskhandler.AddTask( multitask::pktask_t( std::bind( RunImport, std::cref(entry.second), currentfname.str(), out_dest.m_scrRegion, out_dest.m_gameVersion, std::ref(completed) ) ) );
 
-            entry.second( std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(currentfname.str()) ) );
+            /*taskhandler.AddTask( multitask::pktask_t(
+                                 std::bind( RunImport, std::addressof(entry.second), 
+                                               currentfname.str(), 
+                                                                eGameRegion(out_dest.m_scrRegion), 
+                                                                eGameVersion(out_dest.m_gameVersion) ) )  );*/
 
-            if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
-                throw std::runtime_error("GameScripts::ImportXML(): Event " + entry.first + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+            //if(bprintprogress)
+            //    cout<<"\r\t- Parsing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
+
+            //entry.second( std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(currentfname.str()) ) );
+
+            //if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
+            //    throw std::runtime_error("GameScripts::ImportXML(): Event " + entry.first + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
+
+        try
+        {
+            cout<<"Importing..\n";
+            updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), out_dest.m_setsindex.size(), std::ref(shouldUpdtProgress) );
+            taskhandler.Execute();
+            taskhandler.BlockUntilTaskQueueEmpty();
+            taskhandler.StopExecute();
+
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+            cout<<"\r100%"; //Can't be bothered to make another drawing update
+        }
+        catch(...)
+        {
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+            std::rethrow_exception( std::current_exception() );
+        }
+
+
         if(bprintprogress)
             cout<<"\n";
     }

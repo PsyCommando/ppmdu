@@ -5,11 +5,10 @@
 #include <utils/library_wide.hpp>
 #include <iostream>
 #include <sstream>
-
+#include <fstream>
+#include <iomanip>
 using namespace pmd2;
 using namespace std;
-
-
 
 namespace filetypes
 {
@@ -44,10 +43,10 @@ namespace filetypes
         }
     };
 
-//=======================================================================================
-//  SSB Parser
-//=======================================================================================
-
+    /*
+        OpCodeFinderPicker
+            Retrieve opcode info for the correct version of the game.
+    */
     template<eOpCodeVersion>
         struct OpCodeFinderPicker;
 
@@ -70,7 +69,12 @@ namespace filetypes
     };
 
 
+//=======================================================================================
+//  SSB Parser
+//=======================================================================================
     /*
+        SSB_Parser
+            Parse SSB files.
     */
     template<typename _Init>
         class SSB_Parser
@@ -147,7 +151,6 @@ namespace filetypes
             //Compute offsets
             m_datalen        = (m_dathdr.datalen * ScriptWordLen);
             m_constoffset    = m_hdrlen + m_datalen;         //Group table is included into the datalen
-            //m_codeoffset    = header_t::LEN + ssb_data_hdr::LEN + (m_dathdr.nbgrps * group_entry::LEN);
             m_stringblockbeg = m_hdrlen + (scriptdatalen * ScriptWordLen) + (constdatalen*2);
         }
 
@@ -339,6 +342,350 @@ namespace filetypes
 //  SSB Writer
 //=======================================================================================
 
+    class SSBWriterTofile
+    {
+        typedef ostreambuf_iterator<char> outit_t;
+    public:
+        SSBWriterTofile(const pmd2::ScriptedSequence & scrdat, eGameRegion gloc, eOpCodeVersion opver)
+            :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver)
+        {
+            if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::NorthAmerica )
+                m_stringblksSizes.resize(1,0);
+            else if( m_scrRegion == eGameRegion::Europe )
+                m_stringblksSizes.resize(5,0);
+        }
+
+        void Write(const std::string & scriptfile)
+        {
+            m_outf.open(scriptfile, ios::binary | ios::out);
+            if( m_outf.bad() || !m_outf.is_open() )
+                throw std::runtime_error("SSBWriterTofile::Write(): Couldn't open file " + scriptfile);
+
+            m_hdrlen         = 0;
+            m_datalen        = 0; 
+            m_nbstrings      = 0;
+            m_constoffset    = 0;
+            m_constblksize   = 0;
+            m_stringblockbeg = 0;
+
+            if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
+                m_hdrlen = ssb_header::LEN;
+            else if( m_scrRegion == eGameRegion::Europe )
+                m_hdrlen = ssb_header_pal::LEN;
+
+            outit_t oit(m_outf);
+            //#1 - Reserve data header 
+            std::fill_n( oit, m_hdrlen + ssb_data_hdr::LEN, 0 );
+            m_datalen += ssb_data_hdr::LEN; //Add to the total length immediately
+
+            //#2 - Reserve group table
+            std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
+
+            //#3 - Pre-Alloc/pre-calc stuff
+            CalcAndVerifyNbStrings();
+            m_grps.reserve( m_scrdat.Groups().size() );
+
+            //#4 - Write code for each groups, constants, strings
+            WriteCode(oit);
+            WriteConstants(oit);
+            WriteStrings(oit);
+
+            //#5 - Header and group table written last, since the offsets and sizes are calculated as we go.
+            m_outf.seekp(0, ios::beg);
+            outit_t ithdr(m_outf);
+            WriteHeader    (ithdr);
+            WriteGroupTable(ithdr);
+        }
+
+    private:
+
+        //Since we may have several string blocks to deal with, we want to make sure they're all the same size.
+        void CalcAndVerifyNbStrings()
+        {
+            size_t siz = 0;
+            for( auto & cur : m_scrdat.StrTblSet() )
+            {
+                if( siz == 0 )
+                    siz = cur.second.size();
+                else if( cur.second.size() != siz )
+                    throw std::runtime_error("SSBWriterTofile::CalcAndVerifyNbStrings(): Size mismatch in one of the languages' string table!");
+            }
+            m_nbstrings = siz;
+        }
+
+        void WriteHeader( outit_t & itw )
+        {
+#ifdef _DEBUG
+                assert(m_stringblksSizes.size()>= 1);
+#endif // _DEBUG
+            if( m_scrRegion == eGameRegion::NorthAmerica )
+            {
+                ssb_header hdr;
+                hdr.nbconst      = m_scrdat.ConstTbl().size();
+                hdr.nbstrs       = m_nbstrings;
+                hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
+                hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
+                hdr.strtbllen    = TryConvertToScriptLen(m_stringblksSizes.front());
+                hdr.unk1         = 0; //Unk1 seems to be completely useless, so we're putting in random junk
+                itw = hdr.WriteToContainer(itw);
+            }
+            else if( m_scrRegion == eGameRegion::Europe )
+            {
+#ifdef _DEBUG
+                assert(m_stringblksSizes.size()== 5);
+#endif // _DEBUG
+                ssb_header_pal hdr;
+                hdr.nbconst      = m_scrdat.ConstTbl().size();
+                hdr.nbstrs       = m_nbstrings;
+                hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
+                hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
+                if( m_nbstrings != 0 )
+                {
+                    hdr.strenglen = TryConvertToScriptLen(m_stringblksSizes[0]);
+                    hdr.strfrelen = TryConvertToScriptLen(m_stringblksSizes[1]);
+                    hdr.strgerlen = TryConvertToScriptLen(m_stringblksSizes[2]);
+                    hdr.stritalen = TryConvertToScriptLen(m_stringblksSizes[3]);
+                    hdr.strspalen = TryConvertToScriptLen(m_stringblksSizes[4]);
+                }
+                else
+                {
+                    hdr.strenglen = 0;
+                    hdr.strfrelen = 0;
+                    hdr.strgerlen = 0;
+                    hdr.stritalen = 0;
+                    hdr.strspalen = 0;
+                }
+                itw = hdr.WriteToContainer(itw);
+            }
+            else if( m_scrRegion == eGameRegion::Japan )
+            {
+                //The japanese game makes no distinction between strings and constants, and just places everything in the constant slot
+                ssb_header hdr;
+                hdr.nbconst      = m_scrdat.ConstTbl().size() + m_nbstrings;
+                hdr.nbstrs       = 0;
+                hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
+                hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
+                hdr.strtbllen    = 0;
+                hdr.unk1         = 0; //Unk1 seems to be completely useless, so we're putting in random junk
+                itw = hdr.WriteToContainer(itw);
+            }
+
+            ssb_data_hdr dathdr;
+            dathdr.nbgrps  = m_scrdat.Groups().size();
+
+            if( m_constoffset > 0 )
+                dathdr.datalen = TryConvertToScriptLen(m_constoffset - m_hdrlen); //Const offset table isn't counted in this value, so we can't use m_datalen
+            else 
+                dathdr.datalen = TryConvertToScriptLen(m_datalen); //If no const table, we can set this to m_datalen
+            itw = dathdr.WriteToContainer(itw);
+        }
+
+        //Write the table after the data header listing all the instruction groups
+        void WriteGroupTable( outit_t & itw )
+        {
+#ifdef _DEBUG   //!#REMOVEME: For testing
+            assert(!m_grps.empty()); //There is always at least one group!
+#endif
+            for( const auto & entry : m_grps )
+            {
+                itw = entry.WriteToContainer(itw);
+            }
+        }
+
+
+        void WriteCode( outit_t & itw )
+        {
+            for( const auto & grp : m_scrdat.Groups() )
+            {
+                //Add a group entry for the current instruction group
+                group_entry grent;
+                grent.begoffset = TryConvertToScriptLen( (static_cast<uint16_t>(m_outf.tellp()) -  m_hdrlen) );
+                grent.type      = grp.type;
+                grent.unk2      = grp.unk2;
+                m_grps.push_back(grent);
+                m_datalen += group_entry::LEN;
+
+                //Write the content of the group
+                for( const auto & inst : grp )
+                    WriteInstruction(itw,inst);
+            }
+        }
+
+        void WriteInstruction( outit_t & itw, const ScriptInstruction & inst )
+        {
+            itw = utils::WriteIntToBytes( inst.opcode, itw );
+            m_datalen += ScriptWordLen;
+
+            //!#TODO: We might want to add something here to handle references to file offsets used as parameters
+            for( const auto & param : inst.parameters )
+            {
+                itw = utils::WriteIntToBytes( param, itw );
+                m_datalen += ScriptWordLen;
+            }
+        }
+
+        void WriteConstants( outit_t & itw )
+        {
+            if( m_scrdat.ConstTbl().empty() )
+                return;
+            //**The constant pointer table counts as part of the script data, but not the constant strings it points to for some weird reasons!!**
+            //**Also, the offsets in the tables include the length of the string ptr table!**
+            const streampos befconsttbl = m_outf.tellp();
+            m_constoffset = static_cast<size_t>(befconsttbl);   //Save the location where we'll write the constant ptr table at, for the data header
+            
+            const uint16_t  sizcptrtbl     = m_scrdat.ConstTbl().size() * ScriptWordLen;
+            const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
+            m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
+            m_constblksize = WriteTableAndStrings( itw, m_scrdat.ConstTbl(),szstringptrtbl); //The constant strings data is not counted in datalen!
+
+
+
+
+            //
+            //size_t cntconst = 0;
+            //const streampos befconsttbl = m_outf.tellp();
+            //m_constoffset = static_cast<size_t>(befconsttbl);   //Save the location where we'll write the constant ptr table
+
+            ////reserve table, so we can write the offsets as we go
+            //const uint16_t  sizcptrtbl  = m_scrdat.ConstTbl().size() * ScriptWordLen;
+            //std::fill_n( itw, sizcptrtbl, 0 );
+            //m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
+
+            ////Write constant strings
+            //const streampos befconstdata = m_outf.tellp();
+            //for( const auto & constant : m_scrdat.ConstTbl() )
+            //{
+            //    //Write offset in table 
+            //    streampos curpos = m_outf.tellp();
+            //    uint16_t curstroffset = (curpos - befconsttbl) / ScriptWordLen;
+
+            //    m_outf.seekp( static_cast<size_t>(befconsttbl) + (cntconst * ScriptWordLen), ios::beg ); //Seek to the const ptr tbl
+            //    *itw = curstroffset;            //Add offset to table
+            //    m_outf.seekp( curpos, ios::beg ); //Seek back at the position we'll write the string at
+
+            //    //write string
+            //    //!#TODO: Convert escaped characters??
+            //    itw = std::copy( constant.begin(), constant.end(), itw );
+            //    *itw = '\0';
+            //    ++itw;
+            //    ++cntconst;
+            //}
+
+            ////Add some padding bytes if needed (padding is counted in the block's length)
+            //utils::AppendPaddingBytes(itw, m_outf.tellp(), ScriptWordLen);
+
+            ////Calculate the size of the constant strings data
+            //m_constblksize = m_outf.tellp() - befconstdata;
+        }
+
+        /*
+            WriteStrings
+                Write the strings blocks
+        */
+        void WriteStrings( outit_t & itw )
+        {
+            if( m_scrdat.StrTblSet().empty() )
+                return;
+
+            size_t          cntstrblk       = 0;
+            const streampos befstrptrs      = m_outf.tellp();
+            const uint16_t  lengthconstdata = (m_scrdat.ConstTbl().size() * ScriptWordLen) + m_constblksize; //The length of the constant ptr tbl and the constant data!
+            const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
+            m_stringblockbeg = static_cast<size_t>(befstrptrs); //Save the starting position of the string data, for later
+
+            if( !m_scrdat.StrTblSet().empty() && m_scrdat.StrTblSet().size() != m_stringblksSizes.size() )
+            {
+#ifdef _DEBUG
+                assert(false);
+#endif
+                throw std::runtime_error("SSBWriterToFile::WriteStrings(): Mismatch in expected script string blocks to ouput!!");
+            }
+
+            for( const auto & strblk : m_scrdat.StrTblSet() )
+            {
+                //Write each string blocks and save the length of the data into our table for later. 
+                //**String block sizes include the ptr table!**
+                m_stringblksSizes[cntstrblk] = WriteTableAndStrings( itw, strblk.second, lengthconstdata ) + szstringptrtbl; //We need to count the offset table too!!
+                ++cntstrblk;
+            }
+        }
+
+
+        /*
+            WriteTableAndStrings
+                Writes a string block, either the constants' strings or strings' strings
+                Returns the length in bytes of the string data, **not counting the ptr table!**
+        */
+        template<class _CNT_T>
+            size_t WriteTableAndStrings( outit_t      & itw,
+                                         const _CNT_T & container,              //What contains the strings to write(std container needs begin() end() size() and const_iterator)
+                                         size_t         ptrtbloffsebytes = 0 ) //Offset in **bytes** to add to all ptrs in the ptr table
+        {
+            size_t          cntstr     = 0;
+            const streampos befptrs    = m_outf.tellp();
+            const uint16_t  sizcptrtbl = (container.size() * ScriptWordLen);
+            
+            //Reserve pointer table so we can write there as we go
+            std::fill_n( itw, sizcptrtbl, 0 );
+
+            //Write strings
+            const streampos befdata = m_outf.tellp();
+            for( const auto & str : container )
+            {
+                //Write offset in table 
+                streampos curpos = m_outf.tellp();
+
+                m_outf.seekp( static_cast<size_t>(befptrs) + (cntstr * ScriptWordLen), ios::beg ); //Seek to the const ptr tbl
+                itw = utils::WriteIntToBytes<uint16_t>( (ptrtbloffsebytes + (curpos - befptrs)), itw );            //Add offset to table
+                m_outf.seekp( curpos, ios::beg ); //Seek back at the position we'll write the string at
+
+                //write string
+                //!#TODO: Convert escaped characters??
+                itw = std::copy( str.begin(), str.end(), itw );
+                *itw = '\0'; //Append zero
+                ++itw;
+                ++cntstr;
+            }
+            //Add some padding bytes if needed (padding is counted in the block's length)
+            utils::AppendPaddingBytes(itw, m_outf.tellp(), ScriptWordLen);
+
+            //Return the size of the constant strings data
+            return m_outf.tellp() - befdata;
+        }
+
+
+        /*
+            TryConvertToScriptLen
+                This will divide the size/offset in bytes by 2, and validate if the result too big for the 16 bits of a word. 
+                Throws an exception in that case! Otherwise, just returns the value divided by 2
+        */
+        inline uint16_t TryConvertToScriptLen( const streampos & lengthinbytes )
+        {
+            const uint32_t scrlen = lengthinbytes / ScriptWordLen;
+            if( scrlen > std::numeric_limits<uint16_t>::max() )
+                throw std::runtime_error("SSBWriterToFile::TryConvertToScriptLen(): Constant block size exceeds the length of a 16 bits word!!");
+            return static_cast<uint16_t>(scrlen);
+        }
+
+    private:
+        const pmd2::ScriptedSequence & m_scrdat;
+        uint16_t            m_hdrlen; 
+
+        size_t              m_nbstrings;
+        vector<uint16_t>    m_stringblksSizes;     //in bytes //The lenghts of all strings blocks for each languages
+        uint16_t            m_constblksize;        //in bytes //The length of the constant data block
+
+        size_t              m_datalen;             //in bytes //Length of the Data block in bytes
+        size_t              m_constoffset;         //in bytes //Start of the constant block from  start of file
+        size_t              m_stringblockbeg;      //in bytes //Start of strings blocks from  start of file
+        vector<group_entry> m_grps;
+
+        eOpCodeVersion m_opversion; 
+        eGameRegion    m_scrRegion;
+
+        ofstream       m_outf;
+    };
+
 //=======================================================================================
 //  Functions
 //=======================================================================================
@@ -363,9 +710,14 @@ namespace filetypes
     /*
         WriteScript
     */
-    void WriteScript( const std::string & scriptfile, const pmd2::ScriptedSequence & scrdat )
+    void WriteScript( const std::string & scriptfile, const pmd2::ScriptedSequence & scrdat, eGameRegion gloc, eGameVersion gvers )
     {
-        assert(false);
+        eOpCodeVersion opver =  (gvers == eGameVersion::EoS)?
+                                    eOpCodeVersion::EoS :
+                                (gvers == eGameVersion::EoD || gvers == eGameVersion::EoT)?
+                                    eOpCodeVersion::EoTD :
+                                    eOpCodeVersion::Invalid;
+        SSBWriterTofile(scrdat, gloc, opver).Write(scriptfile);
     }
 
 

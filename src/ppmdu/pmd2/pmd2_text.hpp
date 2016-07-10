@@ -13,6 +13,14 @@ pmd2_text.hpp
 
 namespace pmd2
 {
+//
+//
+//
+    std::string EscapeUnprintableCharacters        ( const std::string & src, const std::locale & loc );
+    std::string ReplaceEscapedUnprintableCharacters( const std::string & src, const std::locale & loc );
+
+
+
 //==================================================================================
 //  StringAccessor
 //==================================================================================
@@ -89,7 +97,7 @@ namespace pmd2
         std::string & GetStringInBlock( eStringBlocks blkty, size_t index ) 
         {
             const strbounds_t & bounds = m_cata[blkty];
-            if( (bounds.end - bounds.beg) <= index )
+            if( !IsWithinBounds( blkty, index) )
                 throw std::runtime_error("GameText::StringAccessor::GetStringInBlock(): String index out of bound for block specified!" );
             if( m_strings.size() < bounds.end )
                 throw std::runtime_error("GameText::StringAccessor::GetStringInBlock(): Mismatch between string bounds for block " + StringBlocksNames[static_cast<unsigned int>(blkty)] + ", and offset in string file! The string bounds are outside the text_*.str file that was parsed!" );

@@ -92,7 +92,7 @@ namespace pmd2 { namespace stats
                 throw runtime_error( sstr.str() );
             }
 
-            if( !m_psrc2 )
+            if( m_psrc2 )
                 WriteEoS( destdir );
             else
                 WriteEoTD( destdir );
@@ -584,7 +584,7 @@ namespace pmd2 { namespace stats
                                      MoveDB                             * out_mvdb2,
                                      GameText                           * gtext )
     {
-        MoveDB_XMLParser(out_mvdb1, out_mvdb2, gtext).Parse(srcdir);
+        MoveDB_XMLParser(out_mvdb1, out_mvdb2, gtext).Parse(srcdir, false);
     }
 
 

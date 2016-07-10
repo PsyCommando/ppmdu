@@ -159,8 +159,10 @@ namespace filetypes
     /***********************************************************************************
         WriteScript
     ***********************************************************************************/
-    void                   WriteScript(const std::string & scriptfile, const pmd2::ScriptedSequence & scrdat);
-    void                   WriteScriptPal(const std::string & scriptfile, const pmd2::ScriptedSequence & scrdat);
+    void  WriteScript(const std::string            & scriptfile, 
+                      const pmd2::ScriptedSequence & scrdat, 
+                      pmd2::eGameRegion              gloc, 
+                      pmd2::eGameVersion             gvers);
 };
 
 #endif 

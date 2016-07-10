@@ -726,19 +726,20 @@ namespace statsutil
     {
         bool        bhandleall = !m_hndlStrings && !m_hndlItems && !m_hndlMoves && !m_hndlPkmn && !m_hndlScripts;
         GameStats * pgamestats = nullptr; //Put this here, because several stat import uses it. 
+        GameText  * pgametext  = nullptr;
         
-        if(m_hndlStrings)
+        if(m_hndlStrings || bhandleall)
         {
             cout <<"\nGame Strings\n"
                  <<"---------------------------------\n";
-            GameText * pgametext = gloader.LoadGameText();
+            pgametext = gloader.LoadGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game text!");
 
             Poco::Path textdir(frompath);
             textdir.append(DefExportStrDirName);
             pgametext->ImportText(textdir.toString());
-            pgametext->Write();
+            //We'll write the file at the end, after all modifications are done!
         }
 
         if(m_hndlScripts || bhandleall)
@@ -792,6 +793,13 @@ namespace statsutil
             itemdatadir.append(pmd2::GameStats::DefItemsDir);
             pgamestats->ImportItems(itemdatadir.toString());
             pgamestats->WriteItems();
+        }
+
+        if(m_hndlStrings || bhandleall)
+        {
+            cout <<"\nWriting out GameStrings\n"
+                 <<"---------------------------------\n";
+            pgametext->Write();
         }
 
         return 0;

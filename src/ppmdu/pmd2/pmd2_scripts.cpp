@@ -24,6 +24,7 @@ namespace pmd2
 //==============================================================================
     const std::regex MatchScriptFileTypes( ".*\\.(("s + filetypes::SSS_FileExt + 
                                            ")|("s + filetypes::SSA_FileExt + 
+                                           ")|("s + filetypes::SSE_FileExt + 
                                            ")|("s + filetypes::SSB_FileExt + 
                                            ")|("s + filetypes::LSD_FileExt + "))"s );
 
@@ -303,9 +304,10 @@ namespace pmd2
 
         for( auto itqueue = fqueue.begin(); itqueue != fqueue.end(); ++itqueue )
         {
-            if( itqueue->getBaseName() == prefix )
+            if( itqueue->getExtension() == fext && itqueue->getBaseName() == prefix )
             {
-                itfounddata = itqueue; break;
+                itfounddata = itqueue; 
+                break;
             }
         }
 
@@ -333,12 +335,25 @@ namespace pmd2
         out_scrset.Components().push_back(std::move(grp));
     }
 
-    void GameScriptsHandler::LoadGrpEnter( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    void GameScriptsHandler::LoadGrpEnter(  std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
     {
         if( fqueue.empty() ) 
             return;
 
-        LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptGroupType::UNK_enter, fqueue, out_scrset );
+        auto lambdafindsse = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSE_FileExt && p.getBaseName() == ScriptPrefix_enter;};
+        auto itcur         = fqueue.begin();
+        while( (itcur = std::find_if( fqueue.begin(), fqueue.end(), lambdafindsse)) != fqueue.end() )
+        {
+            Poco::Path p = *itcur;
+            fqueue.erase(itcur); //Delete here, because we invalidate the iterator in the LoadSub method
+
+            string basename( std::move(p.getBaseName()));
+            ScriptGroup grp( basename, eScriptGroupType::UNK_enter );
+            LoadSSData( grp, p.toString() );
+            LoadNumberedSSBForPrefix( fqueue, basename, grp );
+            out_scrset.Components().push_back(std::move(grp));
+        }
+        /*LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptGroupType::UNK_enter, fqueue, out_scrset );*/
     }
 
     void GameScriptsHandler::LoadSub( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
@@ -510,7 +525,7 @@ namespace pmd2
 
         //Make lsd name lower case
         std::transform( lsdname.begin(), lsdname.end(), lsdname.begin(), std::bind( std::tolower<string::value_type>, placeholders::_1, std::ref(locale::classic()) ) );
-        lsdpath.append( lsdname );
+        lsdpath.append(lsdname).makeFile().setExtension(filetypes::LSD_FileExt);
 
         WriteLSD(set, lsdpath.toString());
 
@@ -541,13 +556,18 @@ namespace pmd2
             //Write data file
             if( grp.Data() )
             {
-                filetypes::WriteScriptData( Poco::Path(dirpath).setFileName(grp.Data()->Name()).setExtension(ScriptDataTypeToFileExtension(grp.Data()->Type())).toString(),
+                filetypes::WriteScriptData( Poco::Path(dirpath).append(grp.Data()->Name()).makeFile().setExtension(ScriptDataTypeToFileExtension(grp.Data()->Type())).toString(),
                                             *grp.Data() );
             }
 
             //Write SSBs
             for( const auto & seq : grp.Sequences() )
-                filetypes::WriteScript(Poco::Path(dirpath).setFileName(seq.first).setExtension(filetypes::SSB_FileExt).toString(), seq.second);
+            {
+                filetypes::WriteScript( Poco::Path(dirpath).append(seq.first).makeFile().setExtension(filetypes::SSB_FileExt).toString(), 
+                                        seq.second,
+                                        m_parent.Region(), 
+                                        m_parent.Version() );
+            }
             
             if( utils::LibWide().isLogOn() )
                 clog <<"\n";
@@ -592,11 +612,14 @@ namespace pmd2
 
         for( ; itdir != itdirend; ++itdir )
         {
-            string basename = std::move( itdir.path().getBaseName() );
-            if( basename == DirNameScriptCommon )
-                m_common = std::move( m_pHandler->LoadDirectory(itdir->path()) );
-            else
-                m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, itdir->path())) );
+            if( itdir->isDirectory() )
+            {
+                string basename = std::move( itdir.path().getBaseName() );
+                if( basename == DirNameScriptCommon )
+                    m_common = std::move( m_pHandler->LoadDirectory(itdir->path()) );
+                else
+                    m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, itdir->path())) );
+            }
         }
     }
 
