@@ -368,22 +368,6 @@ namespace statsutil
         return true;
     }
 
-
-    //bool CStatsUtil::ParseOptionGameLang( const std::vector<std::string> & optdata )
-    //{
-    //    if( optdata.size() > 1 )
-    //    {
-    //        if( utils::isFile( optdata[1] ) )
-    //        {
-    //            m_langconf = optdata[1];
-    //            cout << "<!>- Set \"" <<optdata[1]  <<"\" as path to gamelang file!\n";
-    //        }
-    //        else
-    //            throw runtime_error("New path to gamelang file does not exists, or is inaccessible!");
-    //    }
-    //    return true;
-    //}
-
     bool CStatsUtil::ParseOptionConfig( const std::vector<std::string> & optdata )
     {
         if( optdata.size() > 1 )

@@ -88,10 +88,10 @@ namespace pmd2
         SSBParser
             
     *****************************************************************************************/
-    class SSBParser
+    class SSBXMLParser
     {
     public:
-        SSBParser( eGameVersion version, eGameRegion region )
+        SSBXMLParser( eGameVersion version, eGameRegion region )
             :m_version(version), m_region(region)
         {}
 
@@ -102,7 +102,7 @@ namespace pmd2
 
             if(!xname)
             {
-                throw std::runtime_error("SSBParser::operator(): Sequence is missing its \"name\" attribute!!");
+                throw std::runtime_error("SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!");
             }
             m_out = std::move( ScriptedSequence(xname.value()) );
             xml_node xcode  = seqn.child(NODE_Code.c_str());
@@ -129,7 +129,7 @@ namespace pmd2
                 if(!xtype)
                 {
                     stringstream sstrer;
-                    sstrer <<"SSBParser::ParseCode(): Script \"" <<m_out.Name() <<"\", instruction group #" << outtbl.size() 
+                    sstrer <<"SSBXMLParser::ParseCode(): Script \"" <<m_out.Name() <<"\", instruction group #" << outtbl.size() 
                            <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
                     throw std::runtime_error(sstrer.str());
                 }
@@ -162,6 +162,17 @@ namespace pmd2
             }
         }
 
+        template<class _OPCodeFinderT>
+            auto GetOpcodeNum( const char * name, size_t nbparams )->typename _OPCodeFinderT::opcode_t
+        {
+            const _OPCodeFinderT                     finder;
+            const typename _OPCodeFinderT::opcode_t  op = finder(name,nbparams);
+            if( static_cast<uint16_t>(op) != InvalidOpCode )
+                return op;
+            else
+                throw std::runtime_error("SSBXMLParser::GetOpcodeNum(): No matching opcode found!");
+        }
+
         void ParseOpCode(const xml_node & instn, ScriptInstrGrp & outgrp)
         {
             using namespace scriptXML;
@@ -169,68 +180,84 @@ namespace pmd2
             if(!name)
             {
                 stringstream sstrer;
-                sstrer <<"SSBParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
+                sstrer <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
                     <<", in group instruction #" <<outgrp.instructions.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
             ScriptInstruction outinstr;
-            int nbparamsexpected = 0;
             outinstr.isdata = false;
+
+            //#1 - Get parameters
+            for( const auto & param : instn.attributes() )
+            {
+                if( param.name() == ATTR_Param )
+                    outinstr.parameters.push_back( static_cast<uint16_t>(param.as_uint()) );
+            }
+
             
-            //#1 - Read opcode
+            //#2 - Read opcode
             if(m_version == eGameVersion::EoS)
             {
-                const OpCodeFinderPicker<eOpCodeVersion::EoS> finder;
-                const eScriptOpCodesEoS                       op = finder(name.value());
-                if( op != eScriptOpCodesEoS::INVALID )
-                {
-                    outinstr.opcode = static_cast<uint16_t>(op);
-                    const OpCodeInfoEoS * popcode = finder(op);
-                    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
-                    nbparamsexpected = popcode->nbparams;
-                }
+                outinstr.opcode = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoS>>(name.value(),outinstr.parameters.size()) );
+                //const OpCodeFinderPicker<eOpCodeVersion::EoS> finder;
+                //const eScriptOpCodesEoS                       op = finder(name.value());
+                //if( op != eScriptOpCodesEoS::INVALID )
+                //{
+                //    outinstr.opcode = static_cast<uint16_t>(op);
+                //    const OpCodeInfoEoS * popcode = finder(op);
+                //    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
+                //    nbparams = popcode->nbparams;
+                //}
+                //else
+                //{
+                //}
             }
             else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
             {
-                const OpCodeFinderPicker<eOpCodeVersion::EoTD> finder;
-                const eScriptOpCodesEoTD                       op = finder(name.value());
-                if( op != eScriptOpCodesEoTD::INVALID )
-                {
-                    outinstr.opcode = static_cast<uint16_t>(op);
-                    const OpCodeInfoEoTD * popcode = finder(op);
-                    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
-                    nbparamsexpected = popcode->nbparams;
-                }
+                outinstr.opcode = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoTD>>(name.value(),outinstr.parameters.size()) );
+                //const OpCodeFinderPicker<eOpCodeVersion::EoTD> finder;
+                //const eScriptOpCodesEoTD                       op = finder(name.value());
+                //if( op != eScriptOpCodesEoTD::INVALID )
+                //{
+                //    outinstr.opcode = static_cast<uint16_t>(op);
+                //    const OpCodeInfoEoTD * popcode = finder(op);
+                //    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
+                //}
+                //else
+                //{
+                //}
             }
             else
                 assert(false); //This shouldn't happen at all!
 
-            //#2 - Read the parameters
-            if( nbparamsexpected > 0 )
-            {
-                size_t cntparam = 0;
-                outinstr.parameters.resize(nbparamsexpected, 0);
-                for( const auto & attr : instn.attributes() )
-                {
-                    string pname = attr.name();
-                    const static regex paramname( ATTR_Param + "(\\d)");
-                    smatch sm;
-
-                    if( regex_match(pname,sm,paramname) && sm.size() == 2 )
-                    {
-                        size_t paramno = 0;
-                        stringstream sstr;
-                        sstr << sm[1].str();
-                        sstr >> paramno;
-
-                        if( paramno < nbparamsexpected )
-                            outinstr.parameters[paramno] = static_cast<uint16_t>(attr.as_uint());
-                        else
-                            clog <<"<!>- SSBParser: Ignored extra parameter \"param" <<paramno <<"\", for instruction number " <<outgrp.size() <<" in group!\n";
-                    }
-                }
-            }
             outgrp.instructions.push_back(std::move(outinstr));
+
+            ////#2 - Read the parameters
+            //if( nbparamsexpected > 0 )
+            //{
+            //    size_t cntparam = 0;
+            //    outinstr.parameters.resize(nbparamsexpected, 0);
+            //    for( const auto & attr : instn.attributes() )
+            //    {
+            //        string pname = attr.name();
+            //        const static regex paramname( ATTR_Param + "(\\d)");
+            //        smatch sm;
+
+            //        if( regex_match(pname,sm,paramname) && sm.size() == 2 )
+            //        {
+            //            size_t paramno = 0;
+            //            stringstream sstr;
+            //            sstr << sm[1].str();
+            //            sstr >> paramno;
+
+            //            if( paramno < nbparamsexpected )
+            //                outinstr.parameters[paramno] = static_cast<uint16_t>(attr.as_uint());
+            //            else
+            //                clog <<"<!>- SSBParser: Ignored extra parameter \"param" <<paramno <<"\", for instruction number " <<outgrp.size() <<" in group!\n";
+            //        }
+            //    }
+            //}
+            
         }
 
         void ParseConsts( const xml_node & constn )
@@ -243,7 +270,7 @@ namespace pmd2
                 if(!xval)
                 {
                     stringstream sstrer;
-                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
+                    sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
                            <<" is missing its \"" <<ATTR_Value <<"\" attribute!";
                     throw std::runtime_error( sstrer.str() );
                 }
@@ -262,14 +289,14 @@ namespace pmd2
             if( !xlang )
             {
                     stringstream sstrer;
-                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                    sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<" is missing its \"" <<ATTR_Language <<"\" attribute!";
                     throw std::runtime_error( sstrer.str() );
             }
             if( (glang = StrToGameLang(xlang.value())) == eGameLanguages::Invalid )
             {
                     stringstream sstrer;
-                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                    sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<" has an invalid value\"" <<xlang.value() <<"\" as its \"" <<ATTR_Language <<"\" attribute value!";
                     throw std::runtime_error( sstrer.str() );
             }
@@ -283,7 +310,7 @@ namespace pmd2
                 else
                 {
                     stringstream sstrer;
-                    sstrer << "SSBParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
+                    sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<", language \"" <<xlang.value() <<"\", string #" <<langstr.size() 
                            <<", is missing its \"" <<ATTR_Value <<"\" attribute!";
                     throw std::runtime_error( sstrer.str() );
@@ -405,7 +432,8 @@ namespace pmd2
                 if(xnameref)
                 {
                     ScriptSet::lsdtbl_t::value_type val;
-                    std::copy_n(xnameref.value(), val.size(), val.begin());
+                    std::fill(val.begin(), val.end(), 0);
+                    std::copy_n(xnameref.value(), strnlen_s(xnameref.value(), val.size()) , val.begin());
                     table.push_back(val);
                 }
             }
@@ -436,7 +464,7 @@ namespace pmd2
 
             //If we're unionall.ssb, change the type accordingly
             destgrp.Sequences().emplace( std::forward<string>(name), 
-                                         std::forward<ScriptedSequence>( SSBParser(m_out_gver, m_out_reg)(seqn) ) );
+                                         std::forward<ScriptedSequence>( SSBXMLParser(m_out_gver, m_out_reg)(seqn) ) );
         }
 
         /*
@@ -567,14 +595,6 @@ namespace pmd2
         //template<eGameVersion _VERS>
             void WriteInstruction( xml_node & parentn, const pmd2::ScriptInstruction & intr )
         {
-            //typedef typename std::conditional<_VERS == eGameVersion::EoS, 
-            //                                  OpCodeFinderPicker<eOpCodeVersion::EoS>,
-            //                                  typename std::conditional<_VERS == eGameVersion::EoT || _VERS == eGameVersion::EoD,
-            //                                                            OpCodeFinderPicker<eOpCodeVersion::EoTD>,
-            //                                                            OpCodeFinderPicker<eOpCodeVersion::Invalid>,
-            //                                                           >::type
-            //                                 >::type 
-            //                 OpPicker_t;    //This determines at compile time how to get the opcode info
             using namespace scriptXML;
             xml_node        xinstr     = parentn.append_child( NODE_Instruction.c_str() );
             string          opcodename; 
@@ -600,13 +620,8 @@ namespace pmd2
                 AppendAttribute( xinstr, ATTR_Name, opcodename );
                 for( size_t cntparam= 0; cntparam < intr.parameters.size(); ++cntparam )
                 {
-                    //if( cntparam > ATTR_Params.size() )
-                      //  assert(false); //#REMOVEME: Just for testing something
-
-                    //#TODO: we could probably make this a bit more sophisticated later on 
-                    stringstream sstrpname;
-                    sstrpname <<ATTR_Param <<cntparam;
-                    AppendAttribute( xinstr, sstrpname.str(), intr.parameters[cntparam] );
+                    //!#TODO: we could probably make this a bit more sophisticated later on 
+                    AppendAttribute( xinstr, ATTR_Param, intr.parameters[cntparam] );
                 }
             }
             else
@@ -619,6 +634,8 @@ namespace pmd2
         void WriteConstants( xml_node & parentn )
         {
             using namespace scriptXML;
+            if( m_seq.ConstTbl().empty() )
+                return;
             xml_node xconsts = parentn.append_child( NODE_Constants.c_str() );
 
             for( const auto & aconst : m_seq.ConstTbl() )
@@ -631,6 +648,9 @@ namespace pmd2
         void WriteStrings( xml_node & parentn )
         {
             using namespace scriptXML;
+            if( m_seq.StrTblSet().empty() )
+                return;
+
             xml_node xstrings = parentn.append_child( NODE_Strings.c_str() );
 
             for( const auto & alang : m_seq.StrTblSet() )
@@ -707,15 +727,18 @@ namespace pmd2
 
         inline void WriteSSBContent( xml_node & parentn, const ScriptedSequence & seq )
         {
+            using namespace scriptXML;
+            WriteCommentNode(parentn, seq.Name() );
             SSBXMLWriter(seq,  m_version, m_region)(parentn);
         }
 
         inline void WriteSSDataContent( xml_node & parentn, const ScriptEntityData & dat )
         {
             using namespace scriptXML;
-#ifndef _DEBUG
-            assert(false);
-#endif
+            WriteCommentNode(parentn, dat.Name() );
+//#ifndef _DEBUG
+//            assert(false);
+//#endif
         }
 
 
@@ -730,16 +753,6 @@ namespace pmd2
 //  GameScripts
 //==============================================================================
 
-    //bool RunImport( const ScrSetLoader * ldr, string && fname, eGameRegion reg, eGameVersion ver )
-    //{
-    //    eGameRegion  tempregion  = eGameRegion::Invalid;
-    //    eGameVersion tempversion = eGameVersion::Invalid;
-    //    (*ldr)( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
-    //    if( tempregion != reg || tempversion != ver )
-    //        throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
-    //    return true;
-    //}
-
     bool RunImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
     {
         eGameRegion  tempregion  = eGameRegion::Invalid;
@@ -747,6 +760,13 @@ namespace pmd2
         ldr( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
         if( tempregion != reg || tempversion != ver )
             throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+        ++completed;
+        return true;
+    }
+
+    bool RunExport( const ScrSetLoader & entry, const string & dir, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
+    {
+        GameScriptsXMLWriter(entry(), reg, ver).Write(dir);
         ++completed;
         return true;
     }
@@ -849,13 +869,40 @@ namespace pmd2
             cout<<"\t- Writing COMMOM.xml..";
         GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
 
+        atomic_bool                  shouldUpdtProgress = true;
+        future<void>                 updtProgress;
+        atomic<uint32_t>             completed = 0;
+        multitask::CMultiTaskHandler taskhandler;
         //Export everything else
         for( const auto & entry : gs.m_setsindex )
         {
-            if(bprintprogress)
-                cout<<"\r\t- Writing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
-            GameScriptsXMLWriter( entry.second(), gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
+            //if(bprintprogress)
+            //    cout<<"\r\t- Writing " <<setw(14) <<setfill(' ') <<right <<entry.first + ".xml..";
+            //GameScriptsXMLWriter( entry.second(), gs.m_scrRegion, gs.m_gameVersion ).Write(dir);
+            taskhandler.AddTask( multitask::pktask_t( std::bind( RunExport, std::cref(entry.second), std::cref(dir), gs.m_scrRegion, gs.m_gameVersion, std::ref(completed) ) ) );
         }
+
+        try
+        {
+            cout<<"Exporting..\n";
+            updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), gs.m_setsindex.size(), std::ref(shouldUpdtProgress) );
+            taskhandler.Execute();
+            taskhandler.BlockUntilTaskQueueEmpty();
+            taskhandler.StopExecute();
+
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+            cout<<"\r100%"; //Can't be bothered to make another drawing update
+        }
+        catch(...)
+        {
+            shouldUpdtProgress = false;
+            if( updtProgress.valid() )
+                updtProgress.get();
+            std::rethrow_exception( std::current_exception() );
+        }
+
         if(bprintprogress)
             cout<<"\n";
     }

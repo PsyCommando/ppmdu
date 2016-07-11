@@ -3,4 +3,7 @@
 -e -romroot "EoSRomRoot" "EoSOut" -script
 
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log
--i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log -scr
+-i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log 
+-scr
+
+-e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out" "ExplorersOfSkyJP_Stats" -cfg "../resources/pmd2data.xml" -log 

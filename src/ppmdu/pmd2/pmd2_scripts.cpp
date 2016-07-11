@@ -614,11 +614,11 @@ namespace pmd2
         {
             if( itdir->isDirectory() )
             {
-                string basename = std::move( itdir.path().getBaseName() );
+                string basename = std::move( Poco::Path::transcode(itdir.path().getBaseName()) );
                 if( basename == DirNameScriptCommon )
-                    m_common = std::move( m_pHandler->LoadDirectory(itdir->path()) );
+                    m_common = std::move( m_pHandler->LoadDirectory(Poco::Path::transcode(itdir->path())) );
                 else
-                    m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, itdir->path())) );
+                    m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, Poco::Path::transcode(itdir->path()))) );
             }
         }
     }

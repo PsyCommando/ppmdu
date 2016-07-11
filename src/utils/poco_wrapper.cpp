@@ -66,19 +66,18 @@ namespace utils
             if( bFilenameOnly )
             {
                 if( itdir->isFile() )
-                    dircontent.push_back( Poco::Path( itdir->path() ).getFileName() );
+                    dircontent.push_back( Poco::Path::transcode(Poco::Path( itdir->path() ).getFileName()) );
                 else if( itdir->isDirectory() )
                 {
-                    stringstream sstr;
                     if( noslashaftdir )
-                        dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() );
+                        dircontent.push_back( Poco::Path::transcode(Poco::Path( itdir->path() ).makeFile().getFileName()) );
                     else
-                        dircontent.push_back( Poco::Path( itdir->path() ).makeFile().getFileName() + "/" );
+                        dircontent.push_back( Poco::Path::transcode(Poco::Path( itdir->path() ).makeFile().getFileName()) + "/" );
                 }
             }
             else
             {
-                dircontent.push_back( itdir->path() );
+                dircontent.push_back( Poco::Path::transcode(itdir->path()) );
             }
 
             ++itdir;
@@ -93,7 +92,7 @@ namespace utils
     */
     string GetBaseNameOnly( const string & path )
     {
-        return std::move(Poco::Path(path).getBaseName());
+        return std::move(Poco::Path::transcode(Poco::Path(path).getBaseName()));
     }
 
     /*
@@ -102,7 +101,7 @@ namespace utils
     */
     string GetFileExtension( const string & path )
     {
-        return std::move(Poco::Path(path).getExtension());
+        return std::move(Poco::Path::transcode(Poco::Path(path).getExtension()));
     }
 
     /*
@@ -111,6 +110,6 @@ namespace utils
     */
     string GetFilename( const string & path )
     {
-        return std::move(Poco::Path(path).getFileName());
+        return std::move(Poco::Path::transcode(Poco::Path(path).getFileName()));
     }
 };

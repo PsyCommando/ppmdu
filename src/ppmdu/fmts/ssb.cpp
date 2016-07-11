@@ -135,7 +135,16 @@ namespace filetypes
             }
             else if( m_scrRegion == eGameRegion::Japan )
             {
-                throw std::runtime_error("SSBParser::ParseHeader(): Japanese ssb header not yet supported. Aborting script parsing!");
+                ssb_header hdr;
+                m_hdrlen = ssb_header::LEN;
+                m_cur = hdr.ReadFromContainer( m_cur, m_end );
+
+                m_nbconsts     = hdr.nbconst;
+                m_nbstrs       = hdr.nbstrs;
+                scriptdatalen  = hdr.scriptdatlen;
+                constdatalen   = hdr.consttbllen;
+                m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
+                //throw std::runtime_error("SSBParser::ParseHeader(): Japanese ssb header not yet supported. Aborting script parsing!");
             }
             else
             {
@@ -234,18 +243,26 @@ namespace filetypes
                     inst.isdata = false;
                     inst.opcode = curop;
 
-                    if( opcodedata->nbparams >= 0 )
+                    if( opcodedata->nbparams >= 0 && m_cur != itendseq )
                     {
                         const uint16_t nbparams = static_cast<uint16_t>(opcodedata->nbparams);
-                        for( size_t cntparam = 0; cntparam < nbparams; ++cntparam )
+                        size_t cntparam = 0;
+                        for( ; cntparam < nbparams && m_cur != itendseq; ++cntparam )
+                        {
                             inst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(m_cur, itendseq) );
-                        foffset += nbparams * ScriptWordLen;
+                        }
+                        foffset += cntparam * ScriptWordLen;
+
+                        if( cntparam != nbparams )
+                            clog << "\n<!>- Found instruction with not enough bytes left to assemble all its parameters at offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
+                        else
+                            sequence.push_back(std::move(inst));
                     }
                     else
                     {
                         clog << "\n<!>- Found instruction with -1 parameter number in this script! Offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
+                        sequence.push_back(std::move(inst));
                     }
-                    sequence.push_back(std::move(inst));
                 }
                 else
                 {
@@ -267,6 +284,9 @@ namespace filetypes
 
         void ParseConstants()
         {
+            if( !m_nbconsts )
+                return;
+
             const size_t strlutlen = (m_nbstrs * 2); // In the file, the offset for each constants in the constant table includes the 
                                                      // length of the string lookup table(string pointers). Here, to compensate
                                                      // we subtract the length of the string LUT from each pointer read.
@@ -275,6 +295,9 @@ namespace filetypes
 
         void ParseStrings()
         {
+            if( !m_nbstrs )
+                return;
+
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringblockbeg;
             size_t begoffset      = ( m_nbconsts != 0 )? m_constoffset : m_stringblockbeg;
@@ -295,23 +318,26 @@ namespace filetypes
             _ContainerT ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
         {
             _ContainerT strings;
-            //Parse regular strings here
-            initer itoreltblbeg = m_beg;
-            std::advance( itoreltblbeg, relptroff);
-            //initer itstrtbl = m_beg;
-            //std::advance( itstrtbl, foffset );
-            initer itluttable = m_beg;
-            std::advance(itluttable, foffset);
-            
 
-            //Parse string table
-            for( size_t cntstr = 0; cntstr < nbtoparse && itluttable != m_end; ++cntstr )
-            {
-                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itluttable, m_end ) - offsetdiff; //Offset is in bytes this time!
-                initer   itstr     = itoreltblbeg;
-                std::advance(itstr,stroffset);
-                strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
-            }
+                //Parse regular strings here
+                initer itoreltblbeg = m_beg;
+                std::advance( itoreltblbeg, relptroff);
+                //initer itstrtbl = m_beg;
+                //std::advance( itstrtbl, foffset );
+                initer itluttable = m_beg;
+                std::advance(itluttable, foffset);
+            
+                assert( itoreltblbeg != m_end );
+
+                //Parse string table
+                for( size_t cntstr = 0; cntstr < nbtoparse && itluttable != m_end; ++cntstr )
+                {
+                    uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itluttable, m_end ) - offsetdiff; //Offset is in bytes this time!
+                    initer   itstr     = itoreltblbeg;
+                    std::advance(itstr,stroffset);
+                    strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
+                }
+
             return std::move(strings);
         }
 

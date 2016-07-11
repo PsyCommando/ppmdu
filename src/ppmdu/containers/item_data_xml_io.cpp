@@ -293,7 +293,7 @@ namespace pmd2 { namespace stats
                 for( Poco::DirectoryIterator itDir(srcdir); itDir != itDirEnd; ++itDir )
                 {
                     if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
-                        filelst.push_back( (itDir.path().absolute().toString()) );
+                        filelst.push_back( Poco::Path::transcode(itDir.path().absolute().toString()) );
                 }
 
                 return std::move( _ParseAllItems(filelst) );

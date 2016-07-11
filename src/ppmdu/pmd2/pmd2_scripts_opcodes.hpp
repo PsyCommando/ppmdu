@@ -27,6 +27,7 @@ namespace pmd2
     };
     const size_t   ScriptWordLen = sizeof(uint16_t);    //Len of a word in the scripts. Since its a commonly used unit
     const uint16_t NullOpCode    = 0;                   //The Null opcode is the same across all versions of the opcodes!
+    const uint16_t InvalidOpCode = std::numeric_limits<uint16_t>::max();
 
 //==========================================================================================================
 //  EoTD OpCodes
@@ -372,7 +373,7 @@ namespace pmd2
 
         //This should always be last
         NBOpcodes,
-        INVALID = std::numeric_limits<uint16_t>::max(),
+        INVALID = InvalidOpCode,
     };
 
 //==========================================================================================================
@@ -766,7 +767,7 @@ namespace pmd2
 
         //This should always be last
         NBOpcodes,
-        INVALID = std::numeric_limits<uint16_t>::max(),
+        INVALID = InvalidOpCode,
     };
 
 //==========================================================================================================
@@ -809,11 +810,11 @@ namespace pmd2
         return FindOpCodeInfo_EoTD( static_cast<uint16_t>(opcode) );
     }
 
-    inline eScriptOpCodesEoTD FindOpCodeByName_EoTD( const std::string & name )
+    inline eScriptOpCodesEoTD FindOpCodeByName_EoTD( const std::string & name, size_t nbparams )
     {
         for( size_t i = 0; i < OpCodesInfoListEoTD.size(); ++i )
         {
-            if( OpCodesInfoListEoTD[i].name == name )
+            if( OpCodesInfoListEoTD[i].name == name && OpCodesInfoListEoTD[i].nbparams == nbparams )
                 return static_cast<eScriptOpCodesEoTD>(i);
         }
         return eScriptOpCodesEoTD::INVALID;
@@ -876,11 +877,12 @@ namespace pmd2
         return FindOpCodeInfo_EoS( static_cast<uint16_t>(opcode) );
     }
 
-    inline eScriptOpCodesEoS FindOpCodeByName_EoS( const std::string & name )
+    inline eScriptOpCodesEoS FindOpCodeByName_EoS( const std::string & name, size_t nbparams )
     {
         for( size_t i = 0; i < OpCodesInfoListEoS.size(); ++i )
         {
-            if( OpCodesInfoListEoS[i].name == name )
+            const OpCodeInfoEoS & cur = OpCodesInfoListEoS[i];
+            if( cur.name == name && (cur.nbparams == nbparams || (cur.nbparams == -1 && nbparams == 0) ) ) //Treat -1 and 0 params as the same!
                 return static_cast<eScriptOpCodesEoS>(i);
         }
         return eScriptOpCodesEoS::INVALID;
@@ -918,17 +920,21 @@ namespace pmd2
     template<>
         struct OpCodeFinderPicker<eOpCodeVersion::EoS>
     {
-        inline const OpCodeInfoEoS   * operator()( uint16_t opcode )const            { return FindOpCodeInfo_EoS(opcode); }
-        inline const OpCodeInfoEoS   * operator()( eScriptOpCodesEoS opcode )const   { return FindOpCodeInfo_EoS(opcode); }
-        inline const eScriptOpCodesEoS operator()( const std::string & opcode )const { return FindOpCodeByName_EoS(opcode); }
+        typedef eScriptOpCodesEoS opcode_t;
+        typedef OpCodeInfoEoS     opcodeinfo_t;
+        inline const opcodeinfo_t * operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
+        inline const opcodeinfo_t * operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
+        inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoS(opcode,nbparams); }
     };
 
     template<>
         struct OpCodeFinderPicker<eOpCodeVersion::EoTD>
     {
-        inline const OpCodeInfoEoTD   * operator()( uint16_t opcode )const            { return FindOpCodeInfo_EoTD(opcode); }
-        inline const OpCodeInfoEoTD   * operator()( eScriptOpCodesEoTD opcode )const  { return FindOpCodeInfo_EoTD(opcode); }
-        inline const eScriptOpCodesEoTD operator()( const std::string & opcode )const { return FindOpCodeByName_EoTD(opcode); }
+        typedef eScriptOpCodesEoTD opcode_t;
+        typedef OpCodeInfoEoTD     opcodeinfo_t;
+        inline const opcodeinfo_t * operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
+        inline const opcodeinfo_t * operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
+        inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoTD(opcode,nbparams); }
     };
 
 
