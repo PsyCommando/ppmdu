@@ -108,9 +108,29 @@ namespace pugixmlutils
         xml_attribute att = parent.append_attribute(name.c_str());
 #ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(std::to_wstring(value).c_str()) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
 #else
         if( !att.set_value(std::to_string(value).c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
+#endif
+        return std::move(att);
+    }
+
+    template<>
+        inline pugi::xml_attribute AppendAttribute<int16_t>( pugi::xml_node & parent, const pugi::string_t & name, int16_t value ) 
+    {
+        using namespace pugi;
+        xml_attribute att   = parent.append_attribute(name.c_str());
+        int16_t       cvval = 0;
+#ifdef PUGIXML_WCHAR_MODE
+        std::wstringstream ws;
+        ws<<value;
+        if( !att.set_value(ws.str().c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
+#else
+        std::stringstream ss;
+        ss<<value;
+        if( !att.set_value(ss.str().c_str()) )
             throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
 #endif
         return std::move(att);
@@ -124,7 +144,7 @@ namespace pugixmlutils
 
 #ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(value) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
 #else
         if( !att.set_value(value) )
             throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
@@ -142,7 +162,7 @@ namespace pugixmlutils
         if( !att.set_value(value.c_str()) )
         {
             //std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + /*myconv.to_bytes(*/as_utf8(name)/*)*/ );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + /*myconv.to_bytes(*/as_utf8(name.c_str())/*)*/ );
         }
 #else
         if( !att.set_value(value.c_str()) )

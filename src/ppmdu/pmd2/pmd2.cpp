@@ -64,8 +64,8 @@ namespace pmd2
 
     eGameVersion AnalyzeDirForPMD2Dirs( const std::string & pathdir )
     {
-        auto         flist      = utils::ListDirContent_FilesAndDirs( pathdir,false );
-        unsigned int cntmatches = 0;
+        auto                flist         = utils::ListDirContent_FilesAndDirs( pathdir,false );
+        unsigned int        cntmatches    = 0;
         static const size_t NbMatchesEoTD = PMD2BaseDirList.size();
         static const size_t NbMatchesEoS  = PMD2BaseDirList.size() + PMD2EoSExtraDirs.size();
 

@@ -48,13 +48,11 @@ namespace statsutil
         bool ParseOptionForceImport( const std::vector<std::string> & optdata );
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
-        //bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
         bool ParseOptionConfig     ( const std::vector<std::string> & optdata );
-
-
         bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
+        bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();

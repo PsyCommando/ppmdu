@@ -209,6 +209,14 @@ namespace statsutil
         },
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+        //Set nb threads to use
+        {
+            "th",
+            1,
+            "Used to set the maximum number of threads to use for various tasks during execution.",
+            "-th 2",
+            std::bind( &CStatsUtil::ParseOptionThreads, &GetInstance(), placeholders::_1 ),
+        },
         //Turns on logging
         {
             "log",
@@ -405,6 +413,24 @@ namespace statsutil
         }
         return true;
     }
+
+    bool CStatsUtil::ParseOptionThreads( const std::vector<std::string> & optdata )
+    {
+        stringstream sstr;
+        unsigned int nbthreads = 1;
+
+        sstr << optdata[1];
+        sstr >> nbthreads;
+
+        if( nbthreads < thread::hardware_concurrency() )
+            utils::LibWide().setNbThreadsToUse(nbthreads);
+        else 
+            utils::LibWide().setNbThreadsToUse(thread::hardware_concurrency());
+
+        cout << "<!>- Set to use " <<utils::LibWide().getNbThreadsToUse() <<" threads !\n";
+        return true;
+    }
+
 //
 //
 //

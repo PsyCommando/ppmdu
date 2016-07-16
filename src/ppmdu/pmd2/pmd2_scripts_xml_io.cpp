@@ -65,6 +65,14 @@ namespace pmd2
 
         const string ATTR_Param         = "param"s;
 
+
+        //META
+        const string NODE_MetaLabel     = "Label";
+        const string ATTR_LblID         = "id";
+
+
+        //Parameters
+
         const array<string, 9> ATTR_Params =
         {
             "param1",
@@ -109,13 +117,36 @@ namespace pmd2
             xml_node xconst = seqn.child(NODE_Constants.c_str());
 
             ParseCode(xcode);
-            ParseConsts(xconst);
+
+            CheckLabelReferences();
+
+            //ParseConsts(xconst);
             for( const auto & strblk : seqn.children(NODE_Strings.c_str()) )
                 ParseStringBlock(strblk);
+
             return std::move(m_out);
         }
 
     private:
+
+        void CheckLabelReferences()
+        {
+            for( const auto & aconstref : m_labelchecker )
+            {
+                if( !aconstref.second.bexists )
+                {
+                    stringstream sstr;
+                    sstr <<"SSBXMLParser::CheckLabelReferences(): Reference to non-existant label ID " <<aconstref.first <<" found!!";
+#ifdef  _DEBUG
+                    assert(false);
+#endif //  _DEBUG
+
+                    throw std::runtime_error(sstr.str());
+                }
+            }
+        }
+
+
         void ParseCode( const xml_node & coden )
         {
             using namespace scriptXML;
@@ -150,16 +181,37 @@ namespace pmd2
             
             if( instn.name() == NODE_Instruction )
             {
-                ParseOpCode(instn,outgrp);
+                ParseCommand(instn,outgrp);
             }
             else if( instn.name() == NODE_Data)
             {
                 xml_attribute     xval = instn.attribute(ATTR_Value.c_str());
                 ScriptInstruction outinstr;
-                outinstr.isdata = true;
-                outinstr.opcode = static_cast<uint16_t>(xval.as_uint());
+                outinstr.type = eInstructionType::Data;
+                outinstr.value = static_cast<uint16_t>(xval.as_uint());
                 outgrp.instructions.push_back(std::move(outinstr));
             }
+            else if( instn.name() == NODE_MetaLabel )
+            {
+                ParseMetaLabel(instn,outgrp);
+            }
+        }
+
+        void ParseMetaLabel( const xml_node & instn, ScriptInstrGrp & outgrp )
+        {
+            using namespace scriptXML;
+            xml_attribute xid = instn.attribute(ATTR_LblID.c_str());
+
+            if( !xid )
+                throw std::runtime_error("SSBXMLParser::ParseInstruction(): Label with invalid ID found!");
+
+            uint16_t labelid = static_cast<uint16_t>(xid.as_int());
+            m_labelchecker[labelid].bexists = true; //We know this label exists
+
+            ScriptInstruction outinstr;
+            outinstr.type  = eInstructionType::MetaLabel;
+            outinstr.value = static_cast<uint16_t>(xid.as_uint());
+            outgrp.instructions.push_back(std::move(outinstr));
         }
 
         template<class _OPCodeFinderT>
@@ -173,7 +225,7 @@ namespace pmd2
                 throw std::runtime_error("SSBXMLParser::GetOpcodeNum(): No matching opcode found!");
         }
 
-        void ParseOpCode(const xml_node & instn, ScriptInstrGrp & outgrp)
+        void ParseCommand(const xml_node & instn, ScriptInstrGrp & outgrp)
         {
             using namespace scriptXML;
             xml_attribute name = instn.attribute(ATTR_Name.c_str());
@@ -185,98 +237,105 @@ namespace pmd2
                 throw std::runtime_error(sstrer.str());
             }
             ScriptInstruction outinstr;
-            outinstr.isdata = false;
+            outinstr.type = eInstructionType::Command;
+
+            //!#TODO: Handle meta, and differently named parameters!!
+
 
             //#1 - Get parameters
-            for( const auto & param : instn.attributes() )
-            {
-                if( param.name() == ATTR_Param )
-                    outinstr.parameters.push_back( static_cast<uint16_t>(param.as_uint()) );
-            }
+            ParseCommandParameters(instn, outinstr);
+            //for( const auto & param : instn.attributes() )
+            //{
+            //    if( param.name() == ATTR_Param )
+            //        outinstr.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+            //}
 
-            
             //#2 - Read opcode
             if(m_version == eGameVersion::EoS)
-            {
-                outinstr.opcode = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoS>>(name.value(),outinstr.parameters.size()) );
-                //const OpCodeFinderPicker<eOpCodeVersion::EoS> finder;
-                //const eScriptOpCodesEoS                       op = finder(name.value());
-                //if( op != eScriptOpCodesEoS::INVALID )
-                //{
-                //    outinstr.opcode = static_cast<uint16_t>(op);
-                //    const OpCodeInfoEoS * popcode = finder(op);
-                //    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
-                //    nbparams = popcode->nbparams;
-                //}
-                //else
-                //{
-                //}
-            }
+                outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoS>>(name.value(),outinstr.parameters.size()) );
             else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
-            {
-                outinstr.opcode = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoTD>>(name.value(),outinstr.parameters.size()) );
-                //const OpCodeFinderPicker<eOpCodeVersion::EoTD> finder;
-                //const eScriptOpCodesEoTD                       op = finder(name.value());
-                //if( op != eScriptOpCodesEoTD::INVALID )
-                //{
-                //    outinstr.opcode = static_cast<uint16_t>(op);
-                //    const OpCodeInfoEoTD * popcode = finder(op);
-                //    assert(popcode); //This shouldn't happen at all, since we validated that opcode already!
-                //}
-                //else
-                //{
-                //}
-            }
+                outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoTD>>(name.value(),outinstr.parameters.size()) );
             else
                 assert(false); //This shouldn't happen at all!
 
-            outgrp.instructions.push_back(std::move(outinstr));
+            outgrp.instructions.push_back(std::move(outinstr));            
+        }
 
-            ////#2 - Read the parameters
-            //if( nbparamsexpected > 0 )
-            //{
-            //    size_t cntparam = 0;
-            //    outinstr.parameters.resize(nbparamsexpected, 0);
-            //    for( const auto & attr : instn.attributes() )
-            //    {
-            //        string pname = attr.name();
-            //        const static regex paramname( ATTR_Param + "(\\d)");
-            //        smatch sm;
 
-            //        if( regex_match(pname,sm,paramname) && sm.size() == 2 )
-            //        {
-            //            size_t paramno = 0;
-            //            stringstream sstr;
-            //            sstr << sm[1].str();
-            //            sstr >> paramno;
+        void ParseCommandParameters( const xml_node & instn, ScriptInstruction & outinst )
+        {
+            using namespace scriptXML;
+            for( const auto & param : instn.attributes() )
+            {
+                eOpParamTypes pty = eOpParamTypes::Invalid;
+                if( param.name() == ATTR_Param )
+                    outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                else if( (pty = FindOpParamTypesByName(param.name()) ) != eOpParamTypes::Invalid )
+                {
+                    ParseTypedCommandParameterAttribute( param, pty, outinst );
+                }
+                else
+                    throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Invalid parameter found!");
+            }
+        }
 
-            //            if( paramno < nbparamsexpected )
-            //                outinstr.parameters[paramno] = static_cast<uint16_t>(attr.as_uint());
-            //            else
-            //                clog <<"<!>- SSBParser: Ignored extra parameter \"param" <<paramno <<"\", for instruction number " <<outgrp.size() <<" in group!\n";
-            //        }
-            //    }
-            //}
-            
+        void ParseTypedCommandParameterAttribute( const xml_attribute & param, eOpParamTypes pty, ScriptInstruction & outinst )
+        {
+            switch(pty)
+            {
+                case eOpParamTypes::Constant:
+                {
+                    m_constqueue.push_back( param.value() );
+                    break;
+                }
+                case eOpParamTypes::String:
+                {
+                    if( m_region == eGameRegion::Japan )
+                        m_constqueue.push_back( param.value() ); //Japanese version just puts strings in the constant table
+                    else
+                        outinst.parameters.push_back( static_cast<uint16_t>( param.as_uint() ) );
+                    break;
+                }
+                case eOpParamTypes::InstructionOffset:
+                {
+                    //Labels IDs
+                    uint16_t lblid = static_cast<uint16_t>( param.as_uint() );
+                    auto itf = m_labelchecker.find( lblid );
+                    
+                    if( itf != m_labelchecker.end() )
+                        itf->second.nbref += 1;
+                    else
+                        m_labelchecker.emplace( std::make_pair( lblid, labelRefInf{ false, 1 } ) ); //We found a ref to this label, but didn't check it
+
+                    outinst.parameters.push_back( lblid );
+                    break;
+                }
+                default:
+                {
+                    outinst.parameters.push_back( static_cast<uint16_t>( param.as_uint() ) );
+                }
+            }
         }
 
         void ParseConsts( const xml_node & constn )
         {
             using namespace scriptXML;
-            deque<string> constantsout; //The deque avoids re-allocating a vector constantly
-            for( const auto & conststr : constn.children(NODE_Constant.c_str()) )
-            {
-                xml_attribute xval = conststr.attribute(ATTR_Value.c_str());
-                if(!xval)
-                {
-                    stringstream sstrer;
-                    sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
-                           <<" is missing its \"" <<ATTR_Value <<"\" attribute!";
-                    throw std::runtime_error( sstrer.str() );
-                }
-                constantsout.push_back(xval.value());
-            }
-            m_out.ConstTbl() = std::move( ScriptedSequence::consttbl_t( constantsout.begin(), constantsout.end() ) );
+            m_out.ConstTbl() = std::move( ScriptedSequence::consttbl_t( m_constqueue.begin(), m_constqueue.end() ) );
+
+            //deque<string> constantsout; //The deque avoids re-allocating a vector constantly
+            //for( const auto & conststr : constn.children(NODE_Constant.c_str()) )
+            //{
+            //    xml_attribute xval = conststr.attribute(ATTR_Value.c_str());
+            //    if(!xval)
+            //    {
+            //        stringstream sstrer;
+            //        sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
+            //               <<" is missing its \"" <<ATTR_Value <<"\" attribute!";
+            //        throw std::runtime_error( sstrer.str() );
+            //    }
+            //    constantsout.push_back(xval.value());
+            //}
+            //m_out.ConstTbl() = std::move( ScriptedSequence::consttbl_t( constantsout.begin(), constantsout.end() ) );
         }
 
 
@@ -320,6 +379,16 @@ namespace pmd2
         }
 
     private:
+        struct labelRefInf
+        {
+            bool    bexists;
+            size_t  nbref  ;
+        };
+
+
+        unordered_map<uint16_t, labelRefInf> m_labelchecker;
+        deque<string>                        m_constqueue;
+        
         ScriptedSequence m_out;
         eGameVersion     m_version;
         eGameRegion      m_region;
@@ -540,7 +609,7 @@ namespace pmd2
     {
     public:
         SSBXMLWriter( const ScriptedSequence & seq, eGameVersion version, eGameRegion region )
-            :m_seq(seq), m_version(version), m_region(region)
+            :m_seq(seq), m_version(version), m_region(region),m_opinfo( (version == eGameVersion::EoS)? eOpCodeVersion::EoS : eOpCodeVersion::EoTD )
         {}
         
         void operator()( xml_node & parentn )
@@ -569,59 +638,146 @@ namespace pmd2
                 AppendAttribute( xgroup, ATTR_GroupParam2, grp.unk2 );
 
                 for( const auto & instr : grp.instructions )
-                    WriteInstructionOrData(xgroup, instr);
+                    HandleInstruction(xgroup, instr);
             }
         }
 
-        inline void WriteInstructionOrData(xml_node & parentn, const pmd2::ScriptInstruction & intr)
+        inline void HandleInstruction( xml_node & groupn, const pmd2::ScriptInstruction & intr )
         {
-            if( intr.isdata )
-                WriteData(parentn,intr);
-            else
-                WriteInstruction(parentn,intr);
+            switch(intr.type)
+            {
+                case eInstructionType::Data:
+                {
+                    WriteData(groupn,intr);
+                    break;
+                }
+                case eInstructionType::Command:
+                {
+                    WriteInstruction(groupn,intr);
+                    break;
+                }
+                case eInstructionType::MetaLabel:
+                {
+                    WriteMetaLabel(groupn,intr);
+                    break;
+                }
+                case eInstructionType::MetaSwitch:
+                {
+                    WriteMetaSwitch(groupn,intr);
+                    break;
+                }
+                case eInstructionType::MetaAccessor:
+                {
+                    WriteMetaAccessor(groupn,intr);
+                    break;
+                }
+                case eInstructionType::MetaProcSpecRet:
+                {
+                    WriteMetaSpecRet(groupn,intr);
+                    break;
+                }
+                default:
+                {
+                    clog<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
+                }
+            };                
         }
 
-        inline void WriteData(xml_node & parentn, const pmd2::ScriptInstruction & intr)
+        inline void WriteMetaSpecRet(xml_node & groupn, const pmd2::ScriptInstruction & intr)
+        {
+            WriteInstructionWithSubInst(groupn,intr);
+        }
+
+        inline void WriteMetaSwitch(xml_node & groupn, const pmd2::ScriptInstruction & intr)
+        {
+            WriteInstructionWithSubInst(groupn,intr);
+        }
+
+        inline void WriteMetaAccessor(xml_node & groupn, const pmd2::ScriptInstruction & intr)
+        {
+            WriteInstructionWithSubInst<false>(groupn,intr);
+        }
+
+        template<bool _UseInstNameAsNodeName=true>
+            void WriteInstructionWithSubInst(xml_node & groupn, const pmd2::ScriptInstruction & intr)
         {
             using namespace scriptXML;
-            xml_node        datan = AppendChildNode(parentn, NODE_Data);
+            OpCodeInfoWrapper curinf  = m_opinfo(intr.value);
+            if(curinf)
+            {
+                xml_node xparent = AppendChildNode(groupn, curinf.Name() );
+
+                //Write the parent's params
+                for( size_t cntparam= 0; cntparam < intr.parameters.size(); ++cntparam )
+                    WriteInstructionParam(xparent, curinf, intr, cntparam);
+
+                //Write the sub-nodes
+                WriteSubInstructions<_UseInstNameAsNodeName>(xparent, intr);
+            }
+            else
+            {
+                throw std::runtime_error("WriteInstructionWithSubInst(): Unknown opcode!!");
+            }
+        }
+
+        template<bool _UseInstNameAsNodeName>
+            void WriteSubInstructions(xml_node & parentinstn, const pmd2::ScriptInstruction & intr);
+
+        template<>
+            void WriteSubInstructions<true>(xml_node & parentinstn, const pmd2::ScriptInstruction & instr)
+        {
+            using namespace scriptXML;
+            for(const auto & subinst : instr.subinst)
+            {
+                OpCodeInfoWrapper curinf = m_opinfo(subinst.value);
+                xml_node          xcase  = AppendChildNode(parentinstn, curinf.Name());
+                
+                //Write parameters
+                for( size_t cntparam= 0; cntparam < subinst.parameters.size(); ++cntparam )
+                    WriteInstructionParam(xcase, curinf, subinst, cntparam);
+            }
+        }
+
+        template<>
+            void WriteSubInstructions<false>(xml_node & parentinstn, const pmd2::ScriptInstruction & instr)
+        {
+            using namespace scriptXML;
+            for(const auto & subinst : instr.subinst)
+            {
+                WriteInstruction(parentinstn,subinst);
+            }
+        }
+
+        inline void WriteMetaLabel(xml_node & groupn, const pmd2::ScriptInstruction & instr)
+        {
+            using namespace scriptXML;
+            AppendAttribute( AppendChildNode(groupn, NODE_MetaLabel), ATTR_LblID, instr.value );
+        }
+
+        inline void WriteData(xml_node & groupn, const pmd2::ScriptInstruction & instr)
+        {
+            using namespace scriptXML;
+            xml_node        datan = AppendChildNode(groupn, NODE_Data);
             xml_attribute   dval  = datan.append_attribute(ATTR_Value.c_str());
             stringstream    sstr;
-            sstr <<"0x" <<hex <<uppercase <<intr.opcode;
+            sstr <<"0x" <<hex <<uppercase <<instr.value;
             string str = sstr.str();    //Just in case the string gets deleted out of scope when we pass the c_str..
             dval.set_value( str.c_str() );
         }
 
-        //template<eGameVersion _VERS>
-            void WriteInstruction( xml_node & parentn, const pmd2::ScriptInstruction & intr )
+        void WriteInstruction(xml_node & groupn, const pmd2::ScriptInstruction & instr)
         {
             using namespace scriptXML;
-            xml_node        xinstr     = parentn.append_child( NODE_Instruction.c_str() );
-            string          opcodename; 
+            xml_node          xinstr = groupn.append_child( NODE_Instruction.c_str() );
+            OpCodeInfoWrapper opinfo = m_opinfo(instr.value);
 
-            if( m_version == eGameVersion::EoS )
+            if(opinfo)
             {
-                const OpCodeInfoEoS * popcode = OpCodeFinderPicker<eOpCodeVersion::EoS>()(intr.opcode);
-                if( popcode )
-                    opcodename = popcode->name;
-            }
-            else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
-            {
-                const OpCodeInfoEoTD * popcode = OpCodeFinderPicker<eOpCodeVersion::EoTD>()(intr.opcode);
-                if( popcode )
-                    opcodename = popcode->name;
-            }
-            else
-            { cout<<"<!>- SSBXMLWriter::WriteInstruction(): Bad version. This shouldn't happen here!\n"; assert(false);}
+                AppendAttribute( xinstr, ATTR_Name, opinfo.Name() );
 
-
-            if( !opcodename.empty() )
-            {
-                AppendAttribute( xinstr, ATTR_Name, opcodename );
-                for( size_t cntparam= 0; cntparam < intr.parameters.size(); ++cntparam )
+                for( size_t cntparam= 0; cntparam < instr.parameters.size(); ++cntparam )
                 {
-                    //!#TODO: we could probably make this a bit more sophisticated later on 
-                    AppendAttribute( xinstr, ATTR_Param, intr.parameters[cntparam] );
+                    WriteInstructionParam( xinstr, opinfo, instr, cntparam );
                 }
             }
             else
@@ -631,6 +787,116 @@ namespace pmd2
             }
         }
 
+        template<typename _Inst_ty>
+        void WriteInstructionParam( xml_node & instn, const OpCodeInfoWrapper & opinfo, const _Inst_ty & intr, size_t cntparam )
+        {
+            using namespace scriptXML;
+            const string * pname = nullptr;
+
+            //Check for unique parameter names 
+            if( (opinfo.ParamInfo().size() > cntparam) && ( (pname = OpParamTypesToStr( opinfo.ParamInfo()[cntparam].ptype )) != nullptr) )
+            {
+                eOpParamTypes ptype      = opinfo.ParamInfo()[cntparam].ptype;
+                size_t        ptypeindex = static_cast<size_t>(ptype);
+                int16_t       pval       = intr.parameters[cntparam];
+                stringstream  deststr;
+                deststr << *pname;
+
+                if(cntparam > 0)
+                    deststr <<cntparam;
+
+                switch(ptype)
+                {
+                    case eOpParamTypes::Constant:
+                    {
+                        if( isConstIdInRange(pval) )
+                        {
+                            AppendAttribute( instn, deststr.str(), m_seq.ConstTbl()[pval] );
+                            return;
+                        }
+                        else
+                        {
+                            clog << "SSBXMLWriter::WriteInstructionParam(): Constant ID " <<pval <<" out of range!";
+                            //throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): Constant ID out of range!" );
+                        }
+                        break;
+                    }
+                    case eOpParamTypes::String:
+                    {
+                        if( m_region == eGameRegion::Japan && isConstIdInRange(pval) ) //Japan ignores string block completely
+                        {
+                            AppendAttribute( instn, OpParamTypesNames[static_cast<size_t>(eOpParamTypes::Constant)], m_seq.ConstTbl()[pval] );
+                            return;
+                        }
+                        else if( isStringIdInRange(pval) )
+                        {
+                            //We place a string ID, not the string itself, because multiples refs and multi-lingual issues
+                            AppendAttribute( instn, deststr.str(), pval );
+                            for( const auto & lang : m_seq.StrTblSet() )
+                            {
+                                xml_node xlang = AppendChildNode(instn, NODE_String);
+                                AppendAttribute( xlang, ATTR_Language, GetGameLangName(lang.first) );
+                                AppendAttribute( xlang, ATTR_Value,    lang.second.at(pval) );
+                            }
+                            return;
+                        }
+                        else
+                        {
+                            clog << "SSBXMLWriter::WriteInstructionParam(): String ID " <<pval <<" out of range!";
+                            //throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): String ID out of range!" );
+                        }
+                        break;
+                    }
+                    case eOpParamTypes::Unk_ScriptVariable:
+                    {
+                        //!#TODO: Append the name of the script varaible!!
+                        const gamevariableinfo * pinf = FindGameVarInfo(pval);
+                        if( pinf )
+                        {
+                            AppendAttribute( instn, deststr.str(), pinf->str );
+                            return;
+                        }
+                        break;
+                    }
+                    case eOpParamTypes::Unk_FaceType:
+                    {
+                        //!#TODO:
+                    }
+                    case eOpParamTypes::Unk_LivesRef:
+                    {
+                        //!#TODO:
+                    }
+                    default:
+                    {
+                        AppendAttribute( instn, deststr.str(), pval );
+                        return;
+                    }
+                };
+
+            }
+            //!#TODO: we could probably make this a bit more sophisticated later on 
+            if( cntparam < ATTR_Params.size() )
+            {
+                AppendAttribute( instn, ATTR_Params[cntparam], static_cast<int16_t>(intr.parameters[cntparam]) );
+            }
+            else
+            {
+                stringstream  deststr;
+                deststr<<ATTR_Param <<cntparam;
+                AppendAttribute( instn, deststr.str(), static_cast<int16_t>(intr.parameters[cntparam]) );
+            }
+        }
+
+        inline bool isConstIdInRange( uint16_t id )const
+        {
+            return id < m_seq.ConstTbl().size();
+        }
+
+        inline bool isStringIdInRange( uint16_t id )const
+        {
+            return !(m_seq.StrTblSet().empty()) && (id < m_seq.StrTblSet().begin()->second.size());
+        }
+
         void WriteConstants( xml_node & parentn )
         {
             using namespace scriptXML;
@@ -638,8 +904,17 @@ namespace pmd2
                 return;
             xml_node xconsts = parentn.append_child( NODE_Constants.c_str() );
 
+#ifdef _DEBUG
+            size_t cntc = 0;
+#endif
             for( const auto & aconst : m_seq.ConstTbl() )
             {
+#ifdef _DEBUG
+                stringstream sstr;
+                sstr<<"Const #" <<cntc;
+                WriteCommentNode( xconsts, sstr.str() );
+                ++cntc;
+#endif
                 xml_node xcst = xconsts.append_child( NODE_Constant.c_str() );
                 AppendAttribute( xcst, ATTR_Value, aconst );
             }
@@ -650,14 +925,24 @@ namespace pmd2
             using namespace scriptXML;
             if( m_seq.StrTblSet().empty() )
                 return;
-
             xml_node xstrings = parentn.append_child( NODE_Strings.c_str() );
 
             for( const auto & alang : m_seq.StrTblSet() )
             {
                 AppendAttribute( xstrings, ATTR_Language, GetGameLangName(alang.first) );
+#ifdef _DEBUG
+                size_t cnts = 0;
+#endif
                 for( const auto & astring : alang.second )
+                {
+#ifdef _DEBUG
+                    stringstream sstr;
+                    sstr<<"String #" <<cnts;
+                    WriteCommentNode( xstrings, sstr.str() );
+                    ++cnts;
+#endif
                     AppendAttribute( xstrings.append_child( NODE_String.c_str() ), ATTR_Value, astring );
+                }
             }
         }
 
@@ -665,6 +950,7 @@ namespace pmd2
         const ScriptedSequence & m_seq;
         eGameVersion             m_version;
         eGameRegion              m_region;
+        OpCodeClassifier         m_opinfo;
     };
 
     /*****************************************************************************************
@@ -838,7 +1124,7 @@ namespace pmd2
 
         try
         {
-            cout<<"Importing..\n";
+            cout<<"\nImporting..\n";
             updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), out_dest.m_setsindex.size(), std::ref(shouldUpdtProgress) );
             taskhandler.Execute();
             taskhandler.BlockUntilTaskQueueEmpty();
@@ -884,7 +1170,7 @@ namespace pmd2
 
         try
         {
-            cout<<"Exporting..\n";
+            cout<<"\nExporting..\n";
             updtProgress = std::async( std::launch::async, PrintProgressLoop, std::ref(completed), gs.m_setsindex.size(), std::ref(shouldUpdtProgress) );
             taskhandler.Execute();
             taskhandler.BlockUntilTaskQueueEmpty();
@@ -909,7 +1195,10 @@ namespace pmd2
 
     void ScriptSetToXML( const ScriptSet & set, eGameRegion gloc, eGameVersion gver, const std::string & destdir )
     {
-        GameScriptsXMLWriter(set, gloc, gver).Write(destdir);
+        if( gver < eGameVersion::NBGameVers && gloc < eGameRegion::NBRegions )
+            GameScriptsXMLWriter(set, gloc, gver).Write(destdir);
+        else
+            throw std::runtime_error("ScriptSetToXML() : Error, invalid version or region!");
     }
 
     ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_reg, eGameVersion & out_gver )

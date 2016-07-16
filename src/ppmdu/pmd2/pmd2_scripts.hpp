@@ -22,26 +22,30 @@ Description: This code is used to load/index the game scripts.
 
 namespace pmd2
 {
+
+
+
+
     /**********************************************************************************
         Script Naming Constants
     **********************************************************************************/
     //Unique Files
-    const std::string ScriptNames_enter    = "enter.sse";       //enter.sse
+    //const std::string ScriptNames_enter    = "enter.sse";       //enter.sse
     //const std::string ScriptNames_dus      = "dus.sss";         //dus.sss           //!#TODO: change this. We found hus.sss and mus.sss exist too
     const std::string ScriptNames_unionall = "unionall.ssb";    //unionall.ssb
     const std::string DirNameScriptCommon  = "COMMON";
 
     //Name lens
-    const size_t      ScriptNameLen_U      = 4;             //The full length of a u prefixed file may not exceed 4!
-    const size_t      ScriptDigitLen       = 2;
+    //const size_t      ScriptNameLen_U      = 4;             //The full length of a u prefixed file may not exceed 4!
+    //const size_t      ScriptDigitLen       = 2;
 
     //Script Only Prefixes
     const std::string ScriptPrefix_unionall= "unionall";
     const std::string ScriptPrefix_enter   = "enter";
-    const std::string ScriptPrefix_dus     = "dus";
-    const std::string ScriptPrefix_hus     = "hus";
-    const std::string ScriptPrefix_mus     = "mus";
-    const std::string ScriptPrefix_u       = "u";
+    //const std::string ScriptPrefix_dus     = "dus";
+    //const std::string ScriptPrefix_hus     = "hus";
+    //const std::string ScriptPrefix_mus     = "mus";
+    //const std::string ScriptPrefix_u       = "u";
 
     //Common Prefixes
     const std::string ScriptPrefix_A = ResourcePrefix_A;
@@ -119,26 +123,117 @@ namespace pmd2
 //  Script Data Containers
 //==========================================================================================================
 
+    /*
+        eInstructionType
+            Classifies an instruction, to better help determine how to handle it.
+    */
+    enum struct eInstructionType : uint8_t
+    {
+        Command,            //For opcodes
+        Data,               //For data word
+
+        //Meta instructions
+        MetaLabel,          //The opcode jump label
+        MetaSwitch,         //The instruction contains case sub-instructions
+        MetaAccessor,       //The instruction contains a sub-instruction to be applied to what the accessor is accessing
+        MetaProcSpecRet,    //The instruction contains a "case" sub instruction applied on the return value.
+
+        NbTypes,
+        Invalid,
+    };
+
+
     /***********************************************************************************************
         ScriptInstruction
-            Contains a single instruction from a script, from either EoS or EoTD.
+            Represents a single instruction from a script.
+
+            Is also used to represent meta-command which do not exist in the game's script engine, 
+            but are neccessary here to make processing faster. Such as jump labels. 
     ***********************************************************************************************/
-    struct ScriptInstruction
+    struct ScriptBaseInstruction
     {
-        uint16_t             opcode;            //Either the opcode, or a data word, depending on whether its isdata or not
-        std::deque<uint16_t> parameters;        //The parameters for the instruction
-        bool                 isdata;            //Whether the instruction is actually a data word
+        typedef std::deque<uint16_t>          paramcnt_t;
+        uint16_t            value;          //Depends on the value of "type". Can be opcode, data, or ID.
+        paramcnt_t          parameters;     //The parameters for the instruction
+        eInstructionType    type;           //How to handle the instruction
+    };
+    struct ScriptInstruction : public ScriptBaseInstruction
+    {
+        //typedef std::deque<uint16_t>             paramcnt_t;
+        typedef std::deque<ScriptBaseInstruction> subinst_t;
+        //uint16_t            value;          //Depends on the value of "type". Can be opcode, data, or ID.
+        //paramcnt_t          parameters;     //The parameters for the instruction
+        //eInstructionType    type;           //How to handle the instruction
+        subinst_t           subinst;        //Contains sub-instructions linked to this instruction
+
+        ScriptInstruction():ScriptBaseInstruction::ScriptBaseInstruction()
+        {}
+
+        ScriptInstruction(ScriptInstruction && mv)
+        {this->operator=(std::forward<ScriptInstruction>(mv));}
+
+        ScriptInstruction(const ScriptInstruction & cp)
+        {this->operator=(cp);}
+
+        ScriptInstruction(ScriptBaseInstruction && mv)
+        {this->operator=(std::forward<ScriptBaseInstruction>(mv));}
+
+        ScriptInstruction(const ScriptBaseInstruction & cp)
+        {this->operator=(cp);}
+
+        ScriptInstruction & operator=(const ScriptInstruction & cp)
+        {
+            subinst     = cp.subinst;
+            type        = cp.type;
+            parameters  = cp.parameters;
+            value       = cp.value;
+            return *this;
+        }
+
+        ScriptInstruction & operator=(ScriptInstruction && mv)
+        {
+            subinst     = std::move(mv.subinst);
+            type        = mv.type;
+            parameters  = std::move(mv.parameters);
+            value       = mv.value;
+            return *this;
+        }
+
+        ScriptInstruction & operator=(const ScriptBaseInstruction & cp)
+        {
+            type        = cp.type;
+            parameters  = cp.parameters;
+            value       = cp.value;
+            return *this;
+        }
+
+        ScriptInstruction & operator=(ScriptBaseInstruction && mv)
+        {
+            type        = mv.type;
+            parameters  = std::move(mv.parameters);
+            value       = mv.value;
+            return *this;
+        }
+
+        operator ScriptBaseInstruction()const
+        {
+            ScriptBaseInstruction out;
+            out.parameters  = parameters;
+            out.value       = value;
+            out.type        = type;
+            return std::move(out);
+        }
     };
 
     /***********************************************************************************************
         ScriptInstrGrp
             Contains a groupd of instructions.
-
     ***********************************************************************************************/
     struct ScriptInstrGrp
     {
-        typedef std::deque<ScriptInstruction>::iterator       iterator;
-        typedef std::deque<ScriptInstruction>::const_iterator const_iterator;
+        typedef std::deque<ScriptInstruction>   cnt_t;
+        typedef cnt_t::iterator                 iterator;
+        typedef cnt_t::const_iterator           const_iterator;
 
         iterator       begin() { return instructions.begin(); }
         const_iterator begin()const { return instructions.begin(); }
@@ -149,25 +244,24 @@ namespace pmd2
         size_t         size()const { return instructions.size(); }
         bool           empty()const { return instructions.empty(); }
 
-        //std::string    Print()const;
-
-        std::deque<ScriptInstruction> instructions;
-        uint16_t                      type;
-        uint16_t                      unk2;
+        cnt_t    instructions;
+        uint16_t type;
+        uint16_t unk2;
     };
 
     /***********************************************************************************************
         ScriptedSequence
             The content of a SSB file. Script instructions, strings, and constant names.
     ***********************************************************************************************/
+    //!#TODO: Rename to Script
     class ScriptedSequence
     {
     public:
-        static const size_t                  NbLang = static_cast<size_t>(eGameLanguages::NbLang);
-        typedef std::vector<std::string>      strtbl_t;
-        typedef std::vector<std::string>      consttbl_t;
-        typedef std::deque<ScriptInstrGrp>   grptbl_t;
-        typedef std::unordered_map<eGameLanguages, strtbl_t> strtblset_t;
+        static const size_t                                     NbLang = static_cast<size_t>(eGameLanguages::NbLang);
+        typedef std::vector<std::string>                        strtbl_t;
+        typedef std::vector<std::string>                        consttbl_t;
+        typedef std::deque<ScriptInstrGrp>                      grptbl_t;
+        typedef std::unordered_map<eGameLanguages, strtbl_t>    strtblset_t;
 
         ScriptedSequence(){}
         ScriptedSequence(const std::string & name)
@@ -175,9 +269,9 @@ namespace pmd2
         {}
 
         //!#REMOVEME: original filename is pretty much useless!
-        ScriptedSequence(const std::string & name, const std::string & origfname)
-            :m_name(name), m_originalfname(origfname)
-        {}
+        //ScriptedSequence(const std::string & name, const std::string & origfname)
+        //    :m_name(name), m_originalfname(origfname)
+        //{}
 
         ScriptedSequence(const ScriptedSequence & tocopy);
         ScriptedSequence(ScriptedSequence      && tomove);
@@ -185,9 +279,9 @@ namespace pmd2
         ScriptedSequence & operator=( ScriptedSequence       && tomove );
 
         inline const std::string                & Name       ()const                        { return m_name; }
-        inline const std::string                & FileName   ()const                        { return m_originalfname; }
+        //inline const std::string                & FileName   ()const                        { return m_originalfname; }
         inline void                               SetName    ( const std::string & name )   { m_name = name; }
-        inline void                               SetFileName( const std::string & fname )  { m_originalfname = fname; }
+        //inline void                               SetFileName( const std::string & fname )  { m_originalfname = fname; }
 
         //!#TODO: Encapsulate those later.      
         inline grptbl_t                         & Groups()         { return m_groups; }
@@ -209,7 +303,7 @@ namespace pmd2
 
     private:
         std::string m_name;
-        std::string m_originalfname;
+        //std::string m_originalfname;
         grptbl_t    m_groups;
         strtblset_t m_strtable; //Multiple deques for all languages
         consttbl_t  m_contants;
@@ -219,28 +313,27 @@ namespace pmd2
         ScriptEntityData
             Position data contained in SSA, SSS, and SSE files.
     ***********************************************************************************************/
+    //!TODO: Rename to ScriptData.
     class ScriptEntityData
     {
     public:
         ScriptEntityData()
+            /*:m_datatype(eScrDataTy::Invalid)*/
         {}
 
-        ScriptEntityData(const std::string & name, const std::string & origfname, eScrDataTy datatype )
-            :m_name(name), m_originalfname(origfname), m_datatype(datatype)
+        ScriptEntityData(const std::string & name/*, eScrDataTy datatype*/ )
+            :m_name(name)/*, m_datatype(datatype)*/
         {}
 
         inline const std::string & Name()const                      {return m_name;}
         inline void                Name(const std::string & name)   {m_name = name;}
 
-        inline const std::string & FileName()const                      {return m_originalfname;}
-        inline void                FileName(const std::string & name)   {m_originalfname = name;}
-
-        inline eScrDataTy Type()const{return m_datatype;}
+        //inline eScrDataTy Type()const           {return m_datatype;}
+        //inline void       Type(eScrDataTy ty)   {m_datatype = ty;}
 
     private:
         std::string m_name;
-        std::string m_originalfname;
-        eScrDataTy  m_datatype;
+        //eScrDataTy  m_datatype;
     };
 
     /***********************************************************************************************
@@ -248,6 +341,7 @@ namespace pmd2
             A script group is an ensemble of one or no ScriptEntityData, and one or more
             ScriptedSequence, that share a common identifier.
     ***********************************************************************************************/
+    //!#TODO: Should definitely rename this to "ScriptSet" eventually, since that's what it is..
     class ScriptGroup
     {
     public:
@@ -316,7 +410,11 @@ namespace pmd2
         seqtbl_iter_t       SequencesTblEnd()      { return m_sequences.end(); }
 
         eScriptGroupType    Type()const                  { return m_type; }
-        void                Type(eScriptGroupType newty) { m_type = newty; }
+        void                Type(eScriptGroupType newty) { m_type = newty; } 
+
+        //Returns the file extension of the data file for this group if applicable.
+        // otherwise, returns an empty string.
+        const std::string & GetDataFext()const;
 
     private:
         std::string      m_indentifier;
@@ -330,6 +428,7 @@ namespace pmd2
             A scriptset is a group of scripts contained within a single named script folder in the
             PMD2 games.
     ***********************************************************************************************/
+    //!#TODO: Should rename this to LevelScript, or something like that, since there's one per level.
     class ScriptSet
     {
     public:
@@ -364,12 +463,6 @@ namespace pmd2
         inline iterator              end  ()      { return m_components.end(); }
         inline const_iterator        end  ()const { return m_components.end(); }
 
-        //
-        //iterator       FindByIdentifier(const std::string & id);
-        //const_iterator FindByIdentifier(const std::string & id)const;
-
-        //
-
 
     private:
         std::string  m_name;         //The name of the set. Ex: "D01P11A" or "COMMON"
@@ -378,9 +471,9 @@ namespace pmd2
         bool         m_bmodified;    //Whether the content of this set was modified
     };
 
-    //==========================================================================================================
-    //  Script Manager/Loader
-    //==========================================================================================================
+//==========================================================================================================
+//  Script Manager/Loader
+//==========================================================================================================
 
     /***********************************************************************************************
         GameScripts
@@ -446,10 +539,11 @@ namespace pmd2
         std::mutex                                   m_mutex;
     };
 
-    /*
+    /***********************************************************************************************
         ScrSetLoader
-            Helper class used to load known existing directories from the list of indexed directories.
-    */
+            Helper class by the GameScripts class. 
+            Used to load known existing directories from the list of indexed directories.
+    ***********************************************************************************************/
     class ScrSetLoader
     {
     public:
@@ -486,15 +580,36 @@ namespace pmd2
     };
 
 
-//
+//====================================================================================
 //  Import/Export
-//
-
-    //void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest);
-    //void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs );
-
+//====================================================================================
     void      ScriptSetToXML( const ScriptSet   & set,    eGameRegion greg,       eGameVersion gver, const std::string & destdir );
     ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
+
+
+
+//====================================================================================
+//  Test Meta-Operation and etc..
+//====================================================================================
+
+    class ScriptCompiler
+    {
+    public:
+
+    private:
+    };
+
+
+
+    /*
+        Automatically deals with commands fed to it.
+    */
+    class CommandHandler
+    {
+    public:
+        CommandHandler(  );
+    };
+
 
 };
 

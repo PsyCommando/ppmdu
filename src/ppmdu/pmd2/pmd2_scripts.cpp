@@ -84,13 +84,13 @@ namespace pmd2
 
 
     ScriptedSequence::ScriptedSequence(const ScriptedSequence & tocopy)
-        :m_name(tocopy.m_name), m_originalfname(tocopy.m_originalfname),
+        :m_name(tocopy.m_name), /*m_originalfname(tocopy.m_originalfname),*/
          m_groups(tocopy.m_groups), m_strtable(tocopy.m_strtable),
          m_contants(tocopy.m_contants)
     {}
     
     ScriptedSequence::ScriptedSequence(ScriptedSequence      && tomove)
-        :m_name(std::move(tomove.m_name)), m_originalfname(std::move(tomove.m_originalfname)),
+        :m_name(std::move(tomove.m_name)), /*m_originalfname(std::move(tomove.m_originalfname)),*/
          m_groups(std::move(tomove.m_groups)), m_strtable(std::move(tomove.m_strtable)),
          m_contants(std::move(tomove.m_contants))
     {}
@@ -98,7 +98,7 @@ namespace pmd2
     ScriptedSequence & ScriptedSequence::operator=( const ScriptedSequence & tocopy )
     {
         m_name          = tocopy.m_name;
-        m_originalfname = tocopy.m_originalfname;
+        //m_originalfname = tocopy.m_originalfname;
         m_groups        = tocopy.m_groups;
         m_strtable      = tocopy.m_strtable;
         m_contants      = tocopy.m_contants;
@@ -108,7 +108,7 @@ namespace pmd2
     ScriptedSequence & ScriptedSequence::operator=( ScriptedSequence && tomove )
     {
         m_name          = std::move(tomove.m_name);
-        m_originalfname = std::move(tomove.m_originalfname);
+        //m_originalfname = std::move(tomove.m_originalfname);
         m_groups        = std::move(tomove.m_groups);
         m_strtable      = std::move(tomove.m_strtable);
         m_contants      = std::move(tomove.m_contants);
@@ -141,6 +141,29 @@ namespace pmd2
         ScriptedSequence, that share a common identifier.
 ***********************************************************************************************/
 
+    const std::string & ScriptGroup::GetDataFext() const
+    {
+        static const string EMPTYStr;
+        switch(Type())
+        {
+            case eScriptGroupType::UNK_enter:
+            {
+                return filetypes::SSE_FileExt;
+            }
+            case eScriptGroupType::UNK_sub:
+            {
+                return filetypes::SSS_FileExt;
+            }
+            case eScriptGroupType::UNK_fromlsd:
+            {
+                return filetypes::SSA_FileExt;
+            }
+            default:
+            {
+                return EMPTYStr;
+            }
+        };
+    }
 
 //==============================================================================
 //  ScriptSet
@@ -253,7 +276,7 @@ namespace pmd2
     {
         string basename = Poco::Path(fpath).getBaseName();
         auto script = std::move( filetypes::ParseScript(fpath, m_parent.m_scrRegion, m_parent.m_gameVersion) );
-        script.SetFileName(Poco::Path(fpath).getFileName());
+        //script.SetFileName(Poco::Path(fpath).getFileName());
         script.SetName(basename);
         tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
 
@@ -556,7 +579,7 @@ namespace pmd2
             //Write data file
             if( grp.Data() )
             {
-                filetypes::WriteScriptData( Poco::Path(dirpath).append(grp.Data()->Name()).makeFile().setExtension(ScriptDataTypeToFileExtension(grp.Data()->Type())).toString(),
+                filetypes::WriteScriptData( Poco::Path(dirpath).append(grp.Data()->Name()).makeFile().setExtension(grp.GetDataFext()).toString(),
                                             *grp.Data() );
             }
 
@@ -697,6 +720,8 @@ namespace pmd2
 
     inline size_t GameScripts::size()const {return m_setsindex.size();}
     inline bool   GameScripts::empty()const {return m_setsindex.empty();}
+
+
 
 
 };

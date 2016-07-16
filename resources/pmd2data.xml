@@ -47,8 +47,10 @@
     <Game id="EoS_NA">
       <!-- arm9 -->
       <Bin filepath="arm9.bin">
-        <Block name="Entities" beg="0x0A7FF0" end="0x0A9208"/>
-        <Block name="Events"   beg="0x0A5490" end="0x0A68C4"/>
+        <Block name="ScriptVars"        beg="0x9D870"  end="0x9DFA0" />
+        <Block name="ScriptVarsLocals"  beg="0x9CECC"  end="0x9CF0C" />
+        <Block name="Entities"          beg="0x0A7FF0" end="0x0A9208"/>
+        <Block name="Events"            beg="0x0A5490" end="0x0A68C4"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin">
