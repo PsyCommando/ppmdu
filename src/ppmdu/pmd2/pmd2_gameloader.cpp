@@ -59,37 +59,39 @@ namespace pmd2
                 break;
         }
 
+#if 0
         //If we can't find a directory named data, try to find one that contains the typical PMD2 files
-        //if( !bfounddata )
-        //{
-        //    clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
+        if( !bfounddata )
+        {
+            clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
 
-        //    //Found the directory that contains the PMD2 filetree
-        //    auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
-        //    for( const auto & fpath : pathlst )
-        //    {
-        //        if( utils::isFolder(fpath) )
-        //        {
-        //            if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
-        //            {
-        //                size_t lastslashpos = string::npos;
-        //                for( size_t i = 0; i < fpath.size(); ++i )
-        //                {
-        //                    if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
-        //                        lastslashpos = i;
-        //                }
+            //Found the directory that contains the PMD2 filetree
+            auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
+            for( const auto & fpath : pathlst )
+            {
+                if( utils::isFolder(fpath) )
+                {
+                    if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
+                    {
+                        size_t lastslashpos = string::npos;
+                        for( size_t i = 0; i < fpath.size(); ++i )
+                        {
+                            if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
+                                lastslashpos = i;
+                        }
 
-        //                if( lastslashpos != string::npos )
-        //                {
-        //                    clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
-        //                    bfounddata = true;
-        //                    m_datadiroverride = fpath.substr( lastslashpos+1 );
-        //                }
-        //                break;
-        //            }
-        //        }
-        //    }
-        //}
+                        if( lastslashpos != string::npos )
+                        {
+                            clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
+                            bfounddata = true;
+                            m_datadiroverride = fpath.substr( lastslashpos+1 );
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+#endif
 
         //Save the result of our analysis.
         m_nodata     = !bfounddata;

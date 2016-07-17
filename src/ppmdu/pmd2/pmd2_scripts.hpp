@@ -133,7 +133,8 @@ namespace pmd2
         Data,               //For data word
 
         //Meta instructions
-        MetaLabel,          //The opcode jump label
+        MetaLabel,          //A jump label
+        MetaCaseLabel,      //A jump label for a conditional case
         MetaSwitch,         //The instruction contains case sub-instructions
         MetaAccessor,       //The instruction contains a sub-instruction to be applied to what the accessor is accessing
         MetaProcSpecRet,    //The instruction contains a "case" sub instruction applied on the return value.

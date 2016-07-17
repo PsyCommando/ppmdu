@@ -28,10 +28,10 @@
   <!--=======================================================================-->
   <GameConstants>
     <Game version="EoS">
-      <Value id="NbPossibleHeros"    value="21"/>
-      <Value id="NbPossiblePartners" value="32"/>
-      <Value id="NbUniqueEntities"   value="600"/>
-      <Value id="NbTotalEntities"    value="1200"/>
+      <Value id="NbPossibleHeros"       value="21"/>
+      <Value id="NbPossiblePartners"    value="32"/>
+      <Value id="NbUniqueEntities"      value="600"/>
+      <Value id="NbTotalEntities"       value="1200"/>
     </Game>
 
     <Game version="EoT" version2="EoD">
@@ -43,44 +43,114 @@
   <!--Offsets from game binaries, and other details for each game versions-->
   <!--=======================================================================-->
   <Binaries>
+    <!-- **************** -->
+    <!-- Explorers of Sky -->
+    <!-- **************** -->
     
+    <!--NorthAmerica-->
     <Game id="EoS_NA">
       <!-- arm9 -->
-      <Bin filepath="arm9.bin">
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
         <Block name="ScriptVars"        beg="0x9D870"  end="0x9DFA0" />
         <Block name="ScriptVarsLocals"  beg="0x9CECC"  end="0x9CF0C" />
         <Block name="Entities"          beg="0x0A7FF0" end="0x0A9208"/>
         <Block name="Events"            beg="0x0A5490" end="0x0A68C4"/>
       </Bin>
       <!-- overlay_0011 -->
-      <Bin filepath="overlay/overlay_0011.bin">
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
         <Block name="ScriptOpCodes" beg="0x03C3D0" end="0x03CFC8"/>
       </Bin>
       <!-- overlay_0013 -->
-      <Bin filepath="overlay/overlay_0013.bin">
-        <Block name="StartersHeroIds"     beg="0x1F4C" end="0x1F76"/>
-        <Block name="StartersPartnerIds"  beg="0x1F78" end="0x1FB8"/>
+      <Bin filepath="overlay/overlay_0013.bin" loadaddress="0x238A140">
+        <Block name="StartersPartnerIds"  beg="0x1F4C" end="0x1F76"/>
+        <Block name="StartersHeroIds"     beg="0x1F78" end="0x1FB8"/>
         <Block name="StartersStrings"     beg="0x200C" end="0x206C"/>
         <Block name="QuizzQuestionStrs"   beg="0x206C" end="0x20F0"/>
         <Block name="QuizzAnswerStrs"     beg="0x20F0" end="0x224E"/>
       </Bin>
     </Game>
 
+    <!--Europe-->
     <Game id="EoS_EU">
       <!--#TODO-->
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A8890" end="0x0A9AA8"/>
+      </Bin>
       <!-- overlay_0011 -->
-      <Bin filepath="overlay/overlay_0011.bin">
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DCB80">
         <Block name="ScriptOpCodes" beg="0x3C470" end="0x3D068"/>
       </Bin>
     </Game>
 
+    <!--Japan-->
     <Game id="EoS_JP">
-      <!--#TODO-->
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A9430" end="0x0AA650"/>
+      </Bin>
       <!-- overlay_0011 -->
-      <Bin filepath="overlay/overlay_0011.bin">
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DD8E0">
         <Block name="ScriptOpCodes" beg="0x3C294" end="0x3CE8C"/>
       </Bin>
     </Game>
+
+    <!-- ********************* -->
+    <!-- Explorers of Darkness -->
+    <!-- ********************* -->
+    
+    <!--NorthAmerica-->
+    <Game id="EoD_NA">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09F6F4" end="0x0A02A0"/>
+      </Bin>
+    </Game>
+    
+    <!--Europe-->
+    <Game id="EoD_EU">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09ECFC" end="0x09F8A8"/>
+      </Bin>
+    </Game>
+    
+    <!--Japan-->
+    <Game id="EoD_JP">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A0AC8" end="0x0A1674"/>
+      </Bin>
+    </Game>
+    
+    <!-- ***************** -->
+    <!-- Explorers of Time -->
+    <!-- ***************** -->
+    
+    <!--NorthAmerica-->
+    <Game id="EoT_NA">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09F790" end="0x0A033C"/>
+      </Bin>
+    </Game>
+    
+    <!--Europe-->
+    <Game id="EoT_EU">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09ED98" end="0x09F944"/>
+      </Bin>
+    </Game>
+    
+    <!--Japan-->
+    <Game id="EoT_JP">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A0B64" end="0x0A1710"/>
+      </Bin>
+    </Game>
+    
   </Binaries>
 
   <!--=======================================================================-->

@@ -13,9 +13,10 @@ Description: Contains utilities for loading, accessing and editing data containe
 #include <vector>
 #include <deque>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 
 namespace pmd2
 {
@@ -124,8 +125,7 @@ namespace pmd2
 
 
     private:
-        //ARM9_Loader                      m_arm9l;
-        //std::vector<ARM_Overlay_Loader>  m_armovrlayl;
+
     };
 
 

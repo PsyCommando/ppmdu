@@ -4,7 +4,10 @@
 #include <utils/library_wide.hpp>
 #include <iostream>
 #include <functional>
+#include <deque>
 using namespace std;
+using namespace pugi;
+
 
 namespace pmd2
 {
@@ -42,6 +45,9 @@ namespace pmd2
         "NbPossiblePartners",
         "NbUniqueEntities",
         "NbTotalEntities",
+
+        //"Overlay11LoadAddress",
+        //"Overlay13LoadAddress",
     };
 
 
@@ -62,6 +68,8 @@ namespace pmd2
         const string NODE_StrBlks   = "StringBlocks";
         const string NODE_Value     = "Value";
 
+        const string NODE_ExtFile   = "External";   //For external files to load config from
+
         const string ATTR_ID        = "id";
         const string ATTR_ID2       = "id2";
         const string ATTR_GameCode  = "gamecode";
@@ -78,7 +86,7 @@ namespace pmd2
         const string ATTR_Loc       = "locale";
         const string ATTR_FName     = "filename";
         const string ATTR_FPath     = "filepath";
-
+        const string ATTR_LoadAddr  = "loadaddress";
     };
 
 
@@ -180,12 +188,29 @@ namespace pmd2
 
     private:
 
+        inline void ParseAllFields(xml_node & pmd2n)
+        {
+            using namespace ConfigXML;
+            ParseLanguages(pmd2n);
+            ParseBinaries (pmd2n);
+            ParseConstants(pmd2n);
+
+            for( auto & xternal : pmd2n.children(NODE_ExtFile.c_str()) )
+            {
+                xml_attribute xfp = xternal.attribute(ATTR_FPath.c_str());
+                if(xfp)
+                    HandleExtFile(xfp.value());
+            }
+        }
+
         void DoParse(ConfigLoader & target)
         {
-            target.m_langdb      = std::move( LanguageFilesDB(ParseLanguages()) );
-            target.m_binoffsets  = std::move( ParseBinaries() );
-            target.m_constants   = std::move( ParseConstants() ); 
-
+            using namespace ConfigXML;
+            xml_node pmd2node = m_doc.child(ROOT_PMD2.c_str());
+            ParseAllFields(pmd2node);
+            target.m_langdb      = std::move(LanguageFilesDB(std::move(m_lang)));
+            target.m_binblocks   = std::move(m_bin);
+            target.m_constants   = std::move(m_constants); 
             target.m_versioninfo = std::move(m_curversion); //Done in last
         }
 
@@ -328,84 +353,28 @@ namespace pmd2
             }
         }
 
-        LanguageFilesDB::strfiles_t ParseLanguages()
+        void ParseLanguages(xml_node & pmd2n)
         {
             using namespace ConfigXML;
             using namespace pugi;
-            LanguageFilesDB::strfiles_t dest;
-            xml_node                    gamevernode = m_doc.child(ROOT_PMD2.c_str()).child(NODE_StrIndex.c_str());
+            //LanguageFilesDB::strfiles_t dest;
+            xml_node                    gamevernode = pmd2n.child(NODE_StrIndex.c_str());
 
             for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
             {
                 xml_attribute id   = gamev.attribute(ATTR_ID.c_str());
                 xml_attribute id2  = gamev.attribute(ATTR_ID2.c_str());
                 if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
-                    ParseLanguageList(gamev,ParseStringBlocks(gamev),dest);
+                    ParseLanguageList(gamev,ParseStringBlocks(gamev),m_lang);
             }
-            return std::move(dest);
+            //return std::move(dest);
         }
 
-        //LanguageFilesDB::blocks_t ParseStringBlocks( pugi::xml_node    parentn, 
-        //                                            std::string     && fname, 
-        //                                            std::string     && locale, 
-        //                                            eGameLanguages     lang )
-        //{
-        //    using namespace ConfigXML;
-        //    using namespace pugi;
-        //    LanguageFilesDB::blocks_t::blkcnt_t dest;
-
-        //    //Parse all blocks for this language
-        //    for( auto strblk : parentn )
-        //    {
-        //        string      blkn;
-        //        strbounds_t bnd;
-        //        for( auto att : strblk.attributes() )
-        //        {
-        //            if( att.name() == ATTR_Name )
-        //                blkn = att.value();
-        //            else if( att.name() == ATTR_Beg )
-        //                bnd.beg = att.as_uint();
-        //            else if( att.name() == ATTR_End )
-        //                bnd.end = att.as_uint();
-        //        }
-        //        eStringBlocks strblock = StrToStringBlock(blkn);
-
-        //        if( strblock != eStringBlocks::Invalid )
-        //            dest.emplace( strblock, std::move(bnd) );
-        //    }
-        //    
-        //    if( dest.size() != static_cast<size_t>(eStringBlocks::NBEntries) )
-        //    {
-        //        stringstream sstr;
-        //        sstr <<"ConfigXMLParser::ParseALang(): The ";
-        //        for( size_t i = 0; i < static_cast<size_t>(eStringBlocks::NBEntries); ++i )
-        //        {
-        //            if( dest.find( static_cast<eStringBlocks>(i) ) == dest.end() )
-        //            {
-        //                if( i != 0 )
-        //                    sstr << ",";
-        //                sstr << StringBlocksNames[i];
-        //            }
-        //        }
-        //        if( (static_cast<size_t>(eStringBlocks::NBEntries) - dest.size()) > 1 )
-        //            sstr << " string blocks for the language file " <<fname <<", for " <<m_curversion.id <<" are missing from the configuration file!";
-        //        else
-        //            sstr << " string block for the language file " <<fname  <<", for " <<m_curversion.id <<" is missing from the configuration file!";
-        //        
-        //        if(utils::LibWide().isLogOn())
-        //            clog << sstr.str();
-        //        cout << sstr.str();
-        //    }
-
-        //    return std::move(LanguageFilesDB::blocks_t( std::move(fname), std::move(locale), lang, std::move(dest) ) );
-        //}
-
-
-        ConfigLoader::bincnt_t ParseBinaries()
+        void ParseBinaries(xml_node & pmd2n)
         {
             using namespace pugi;
             using namespace ConfigXML;
-            xml_node binnode  = m_doc.child(ROOT_PMD2.c_str()).child(NODE_Binaries.c_str());
+            xml_node binnode  = pmd2n.child(NODE_Binaries.c_str());
             xml_node foundver = binnode.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
 
             if( !foundver )
@@ -413,40 +382,42 @@ namespace pmd2
                 throw std::runtime_error("ConfigXMLParser::ParseBinaries(): Couldn't find binary offsets for game version \"" + 
                                          m_curversion.id + "\"!" );
             }
-            ConfigLoader::bincnt_t dest;
+            //GameBinariesInfo dest;
 
             for( auto curbin : foundver.children(NODE_Bin.c_str()) )
             {
                 xml_attribute xfpath = curbin.attribute(ATTR_FPath.c_str());
+                xml_attribute xlad   = curbin.attribute(ATTR_LoadAddr.c_str());
+                binaryinfo binfo;
+                binfo.loadaddress = xlad.as_uint();
 
                 for( auto curblock : curbin.children(NODE_Block.c_str()) )
                 {
-                    GameBinaryOffsetInfo bifo;
-                    string               blkname;
-                    bifo.fpath = xfpath.value();
+                    binlocation curloc;
+                    string      blkname;
                     for( auto att : curblock.attributes() )
                     {
                         if( att.name() == ATTR_Name )
                             blkname = att.value();
                         else if( att.name() == ATTR_Beg )
-                            bifo.beg = att.as_uint();
+                            curloc.beg = att.as_uint();
                         else if( att.name() == ATTR_End )
-                            bifo.end = att.as_uint();
+                            curloc.end = att.as_uint();
                     }
-                    dest.emplace( StrToBinaryLocation(blkname), std::move(bifo) );
+                    binfo.blocks.emplace( StrToBinaryLocation(blkname), std::move(curloc) );
                 }
+                m_bin.AddBinary( std::string(xfpath.value()), std::move(binfo) );
             }
 
-            return std::move(dest);
+            //return std::move(dest);
         }
 
 
-        ConfigLoader::constcnt_t ParseConstants()
+        void ParseConstants( xml_node & pmd2n )
         {
-            using namespace pugi;
             using namespace ConfigXML;
-            xml_node constnode  = m_doc.child(ROOT_PMD2.c_str()).child(NODE_GConsts.c_str());
-            ConfigLoader::constcnt_t dest;
+            xml_node constnode  = pmd2n.child(NODE_GConsts.c_str());
+            //ConfigLoader::constcnt_t dest;
 
             for( auto ver : constnode.children(NODE_Game.c_str()) )
             {
@@ -460,18 +431,59 @@ namespace pmd2
                         xml_attribute xval = value.attribute(ATTR_Val.c_str());
                         eGameConstants gconst = StrToGameConstant(xid.value());
                         if( gconst != eGameConstants::Invalid )
-                            dest.emplace( gconst, std::move(std::string(xval.value())) );
+                            m_constants.emplace( gconst, std::move(std::string(xval.value())) );
                         else
                             clog << "<!>- Ignored unknown constant " <<xid.value() <<"\n";
                     }
                 }
             }
-            return std::move(dest);
+            //return std::move(dest);
+        }
+
+        void HandleExtFile( const std::string & extfile )
+        {
+            using namespace ConfigXML;
+            //When we hid an external file node, parse it too if possible
+
+            bool bfoundsubdoc=false;
+            for( const auto & entry: m_subdocs )
+            {
+                if( entry == extfile )
+                {
+                    bfoundsubdoc = true;
+                    break;
+                }
+            }
+
+            if( m_doc.path() != extfile && !bfoundsubdoc )
+            {
+                xml_document doc;
+                m_subdocs.push_back(extfile);
+                if( !(doc.load_file(extfile.c_str())) )
+                {
+                    m_subdocs.pop_back();
+                    clog<<"<!>- ConfigXMLParser::HandleExtFile(): Couldn't open sub configuration file \"" <<extfile <<"\"!";
+                    return;
+                }
+                xml_node pmd2node = doc.child(ROOT_PMD2.c_str());
+
+                //Parse the data fields of the sub-file
+                if(pmd2node)
+                    ParseAllFields(pmd2node);
+                m_subdocs.pop_back();
+            }
+            else
+                clog<<"<!>- ConfigXMLParser::HandleExtFile(): External file node with same name as original document encountered! Ignoring to avoid infinite loop..\n";
         }
 
     private:
-        GameVersionInfo      m_curversion;
-        pugi::xml_document   m_doc;
+        GameVersionInfo                 m_curversion;
+        pugi::xml_document              m_doc;
+        std::deque<std::string>         m_subdocs;
+
+        ConfigLoader::constcnt_t        m_constants;
+        LanguageFilesDB::strfiles_t     m_lang;
+        GameBinariesInfo                m_bin;
     };
 
 
@@ -491,12 +503,12 @@ namespace pmd2
 
     int ConfigLoader::GetGameConstantAsInt(eGameConstants gconst) const
     {
-        return utils::parseHexaValToValue<int>( m_constants.at(gconst) );
+        return m_constants.GetConstAsInt<int>(gconst);
     }
 
     unsigned int ConfigLoader::GetGameConstantAsUInt(eGameConstants gconst) const
     {
-        return utils::parseHexaValToValue<unsigned int>( m_constants.at(gconst) );
+        return m_constants.GetConstAsInt<unsigned int>(gconst);
     }
 
     void ConfigLoader::Parse( uint16_t arm9off14 )

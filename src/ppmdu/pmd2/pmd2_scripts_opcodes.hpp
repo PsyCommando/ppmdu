@@ -844,6 +844,7 @@ namespace pmd2
         ScenarioId,             //The id of the current scenario in the scenario table (event table)
         Unk_ProcSpec,           //First parameter of "ProcessSpecial" command, (is a 14bits unsigned integer)
         Unk_FaceType,           //A portrait ID to use in the set face commands
+        Unk_BgmTrack,           //A track ID for a music track to play. Begins at 1.
 
         //Specifics
         Duration,               //A duration in possibly ticks or milliseconds
@@ -872,6 +873,7 @@ namespace pmd2
         "scenario", 
         "procspec",
         "face",
+        "bgm",
 
         "duration",              
         "coordinate",            
@@ -903,11 +905,120 @@ namespace pmd2
     };
 
 
+//==========================================================================================================
 //
-//
-//
+//==========================================================================================================
     const uint16_t ProcessSpecialMaxVal = 0x3E;
 
+//==========================================================================================================
+//  Faces
+//==========================================================================================================
+    const std::array<std::string, 32> FaceNames
+    {{
+        "NORMAL",
+        "HAPPY",
+        "PAIN",
+        "ANGRY",
+        "THINK",
+        "SAD",
+        "WEEP",
+        "SHOUT",
+        "TEARS",
+        "DECIDE",
+        "GLADNESS",
+        "EMOTION",
+        "SURPRISE",
+        "FAINT",
+        "DUMMY_0",
+        "DUMMY_1",
+        "ACTION1",
+        "ACTION2",
+        "ACTION3",
+        "ACTION4",
+        "ACTION5",
+        "ACTION6",
+        "ACTION7",
+        "ACTION8",
+        "ACTION9",
+        "ACTION10",
+        "ACTION11",
+        "ACTION12",
+        "ACTION13",
+        "ACTION14",
+        "ACTION15",
+        "ACTION16",
+    }};
+
+    inline uint16_t FindFaceIDByName( const std::string & facename )
+    {
+        for( size_t i = 0; i < FaceNames.size(); ++i )
+        {
+            const std::string & cur = FaceNames[i];
+            if( cur == facename )
+                return static_cast<uint16_t>(i);
+        }
+        return std::numeric_limits<uint16_t>::max();
+    }
+
+    std::string GetFaceNameByID( uint16_t faceid );
+
+//==========================================================================================================
+//  Lives Entities
+//==========================================================================================================
+    struct livesinfo_EoS
+    {
+        std::string name;
+        uint8_t     type;
+        uint16_t    entid;
+        uint16_t    unk3;
+        uint16_t    unk4;
+    };
+    const size_t NbEntitiesEoS = 386;
+    extern const std::array<livesinfo_EoS,NbEntitiesEoS> LivesEntityDataEntries_EoS;
+
+    inline const livesinfo_EoS * FindLivesInfo_EoS(uint16_t id)
+    {
+        if( id < LivesEntityDataEntries_EoS.size() )
+            return &(LivesEntityDataEntries_EoS[id]);
+        else
+            return nullptr;
+    }
+
+    inline uint16_t FindLivesIdByName_EoS( const std::string & name )
+    {
+        for( size_t i = 0; i < LivesEntityDataEntries_EoS.size(); ++i )
+        {
+            const livesinfo_EoS & cur = LivesEntityDataEntries_EoS[i];
+            if( cur.name == name )
+                return static_cast<uint16_t>(i);
+        }
+        return std::numeric_limits<uint16_t>::max();
+    }
+
+
+    //EoTD
+    typedef livesinfo_EoS livesinfo_EoTD;
+    const size_t NbEntitiesEoTD = 248;
+    extern const std::array<livesinfo_EoTD,NbEntitiesEoTD> LivesEntityDataEntries_EoTD;
+
+    inline const livesinfo_EoTD * FindLivesInfo_EoTD(uint16_t id)
+    {
+        if( id < LivesEntityDataEntries_EoTD.size() )
+            return &(LivesEntityDataEntries_EoTD[id]);
+        else
+            return nullptr;
+    }
+
+    inline uint16_t FindLivesIdByName_EoTD( const std::string & name )
+    {
+        for( size_t i = 0; i < LivesEntityDataEntries_EoTD.size(); ++i )
+        {
+            const livesinfo_EoTD & cur = LivesEntityDataEntries_EoTD[i];
+            if( cur.name == name )
+                return static_cast<uint16_t>(i);
+        }
+        return std::numeric_limits<uint16_t>::max();
+    }
 
 //==========================================================================================================
 //  ScriptEngineVariable
@@ -1271,7 +1382,7 @@ namespace pmd2
             :m_ver(ver)
         {}
 
-        OpCodeInfoWrapper operator()(uint16_t code)
+        OpCodeInfoWrapper Info(uint16_t code)
         {
             if(m_ver == eOpCodeVersion::EoS)
                 return FindOpCodeInfo_EoS(code);
@@ -1284,12 +1395,25 @@ namespace pmd2
             }
         }
 
-        uint16_t operator()(const std::string & instname, size_t nbparams)
+        uint16_t Code(const std::string & instname, size_t nbparams)
         {
             if(m_ver == eOpCodeVersion::EoS)
                 return static_cast<uint16_t>(FindOpCodeByName_EoS(instname,nbparams));
             else if(m_ver == eOpCodeVersion::EoTD)
                 return static_cast<uint16_t>(FindOpCodeByName_EoTD(instname,nbparams));
+            else
+            {
+                assert(false);
+                return 0;
+            }
+        }
+
+        inline size_t GetNbOpcodes()const 
+        {
+            if(m_ver == eOpCodeVersion::EoS)
+                return GetNbOpCodes_EoS();
+            else if(m_ver == eOpCodeVersion::EoTD)
+                return GetNbOpCodes_EoTD();
             else
             {
                 assert(false);

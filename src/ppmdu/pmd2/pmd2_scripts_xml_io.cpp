@@ -69,6 +69,7 @@ namespace pmd2
         //META
         const string NODE_MetaLabel     = "Label";
         const string ATTR_LblID         = "id";
+        const string NODE_MetaCaseLabel = "CaseLabel";
 
 
         //Parameters
@@ -656,6 +657,11 @@ namespace pmd2
                     WriteInstruction(groupn,intr);
                     break;
                 }
+                case eInstructionType::MetaCaseLabel:
+                {
+                    WriteMetaCaseLabel(groupn,intr);
+                    break;
+                }
                 case eInstructionType::MetaLabel:
                 {
                     WriteMetaLabel(groupn,intr);
@@ -702,7 +708,7 @@ namespace pmd2
             void WriteInstructionWithSubInst(xml_node & groupn, const pmd2::ScriptInstruction & intr)
         {
             using namespace scriptXML;
-            OpCodeInfoWrapper curinf  = m_opinfo(intr.value);
+            OpCodeInfoWrapper curinf  = m_opinfo.Info(intr.value);
             if(curinf)
             {
                 xml_node xparent = AppendChildNode(groupn, curinf.Name() );
@@ -729,7 +735,7 @@ namespace pmd2
             using namespace scriptXML;
             for(const auto & subinst : instr.subinst)
             {
-                OpCodeInfoWrapper curinf = m_opinfo(subinst.value);
+                OpCodeInfoWrapper curinf = m_opinfo.Info(subinst.value);
                 xml_node          xcase  = AppendChildNode(parentinstn, curinf.Name());
                 
                 //Write parameters
@@ -754,6 +760,12 @@ namespace pmd2
             AppendAttribute( AppendChildNode(groupn, NODE_MetaLabel), ATTR_LblID, instr.value );
         }
 
+        inline void WriteMetaCaseLabel(xml_node & groupn, const pmd2::ScriptInstruction & instr)
+        {
+            using namespace scriptXML;
+            AppendAttribute( AppendChildNode(groupn, NODE_MetaCaseLabel), ATTR_LblID, instr.value );
+        }
+
         inline void WriteData(xml_node & groupn, const pmd2::ScriptInstruction & instr)
         {
             using namespace scriptXML;
@@ -769,7 +781,7 @@ namespace pmd2
         {
             using namespace scriptXML;
             xml_node          xinstr = groupn.append_child( NODE_Instruction.c_str() );
-            OpCodeInfoWrapper opinfo = m_opinfo(instr.value);
+            OpCodeInfoWrapper opinfo = m_opinfo.Info(instr.value);
 
             if(opinfo)
             {
@@ -861,10 +873,30 @@ namespace pmd2
                     case eOpParamTypes::Unk_FaceType:
                     {
                         //!#TODO:
+                        string facename = GetFaceNameByID(pval);
+                        if(!facename.empty())
+                            AppendAttribute( instn, deststr.str(), facename);
+                        else
+                            break;
+                        return;
                     }
                     case eOpParamTypes::Unk_LivesRef:
                     {
                         //!#TODO:
+                        if( m_version == eGameVersion::EoS )
+                        {
+                            const livesinfo_EoS * pinf = FindLivesInfo_EoS(pval);
+                            if(pinf)
+                                AppendAttribute( instn, deststr.str(), pinf->name );
+                            else
+                                break;
+                        }
+                        else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
+                        {
+                            cout <<"\nNEED TO IMPLEMENT Unk_LivesRef support for EoTD!!!\n";
+                            assert(false);
+                        }
+                        return;
                     }
                     default:
                     {
