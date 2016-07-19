@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Contains data on script opcodes.
 */
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -804,6 +805,9 @@ namespace pmd2
         BranchCmd,              //For Branch commands
         ProcSpec,               //For ProcessSpecial command
 
+        //Other Special
+        EnterAdventure,         //For main_EnterAdventure, since it can have a set of cases applied to its return value.
+
         //Special commands
         Null,                   //Specifically for the Null command
         Lock,                   //Specifically for the Lock command
@@ -845,12 +849,19 @@ namespace pmd2
         Unk_ProcSpec,           //First parameter of "ProcessSpecial" command, (is a 14bits unsigned integer)
         Unk_FaceType,           //A portrait ID to use in the set face commands
         Unk_BgmTrack,           //A track ID for a music track to play. Begins at 1.
+        Unk_CRoutineId,         //An id to an instruction group in unionall.ssb
+        Unk_RoutineId,          //An id to a local instruction group
+        Unk_AnimationID,        //Parameter containing the ID of an animation.
+
+        //
+        Unk_MvSlSpecInt,        //First parameter of the MovePositionOffset, MovePositionMark, SlidePositionMark, Slide2PositionMark, camera_Move2Default
+                                //Third parameter of camera_SetEffect
 
         //Specifics
         Duration,               //A duration in possibly ticks or milliseconds
         Coordinate,             //A coordinate on either X or Y axis
         InstructionOffset,      //An offset within the list of instructions to a specific instruction.
-        CaseJumpOffset,         //Offset to jump to when a switch's case is satisfied. 
+        //CaseJumpOffset,         //Offset to jump to when a switch's case is satisfied. 
 
         NbTypes,
         Invalid,
@@ -866,7 +877,7 @@ namespace pmd2
         "constref",
         "strref",
 
-        "Unk_LivesRef",          
+        "actorid",          
         "Unk_PerformerRef",      
         "Unk_ObjectRef",         
         "svar",    
@@ -874,11 +885,16 @@ namespace pmd2
         "procspec",
         "face",
         "bgm",
+        "commonroutineid",         //An id to an instruction group in unionall.ssb
+        "localroutineid",          //An id to a local instruction group
+        "animid",
+
+        "Unk_EncInt",
 
         "duration",              
         "coordinate",            
-        "label",          //String is label id when importing/exporting from xml
-        "caselbl",
+        "tolabel",          //String is label id when importing/exporting from xml
+        //"jumptolabel",
     }};
 
     inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
@@ -949,6 +965,8 @@ namespace pmd2
         "ACTION16",
     }};
 
+    const uint16_t InvalidFaceID = std::numeric_limits<uint16_t>::max();
+
     inline uint16_t FindFaceIDByName( const std::string & facename )
     {
         for( size_t i = 0; i < FaceNames.size(); ++i )
@@ -957,7 +975,7 @@ namespace pmd2
             if( cur == facename )
                 return static_cast<uint16_t>(i);
         }
-        return std::numeric_limits<uint16_t>::max();
+        return InvalidFaceID;
     }
 
     std::string GetFaceNameByID( uint16_t faceid );
@@ -973,6 +991,10 @@ namespace pmd2
         uint16_t    unk3;
         uint16_t    unk4;
     };
+
+
+    const uint16_t InvalidLivesID = std::numeric_limits<uint16_t>::max();
+
     const size_t NbEntitiesEoS = 386;
     extern const std::array<livesinfo_EoS,NbEntitiesEoS> LivesEntityDataEntries_EoS;
 
@@ -1050,6 +1072,7 @@ namespace pmd2
         uint16_t     unk4;
         std::string  str;
     };
+    const uint16_t InvalidGameVariableID = std::numeric_limits<uint16_t>::max();
 
     const gamevariableinfo * FindGameVarInfo( uint16_t varid );
 
@@ -1100,7 +1123,7 @@ namespace pmd2
             Contains info on every opcodes
     *************************************************************************************/
     extern const std::array<OpCodeInfoEoTD, static_cast<uint16_t>(eScriptOpCodesEoTD::NBOpcodes)>  OpCodesInfoListEoTD;
-    extern const std::array<std::vector<OpParamInfo>,    static_cast<uint16_t>(eScriptOpCodesEoTD::NBOpcodes)>  OpCodeParamInfoListEoTD;
+    //extern const std::array<std::vector<OpParamInfo>,    static_cast<uint16_t>(eScriptOpCodesEoTD::NBOpcodes)>  OpCodeParamInfoListEoTD;
 
     /*************************************************************************************
         FindOpCodeInfo_EoTD
@@ -1188,7 +1211,7 @@ namespace pmd2
             Contains info on every opcodes
     *************************************************************************************/
     extern const std::array<OpCodeInfoEoS, static_cast<uint16_t>(eScriptOpCodesEoS::NBOpcodes)> OpCodesInfoListEoS;
-    extern const std::array<std::vector<OpParamInfo>,   static_cast<uint16_t>(eScriptOpCodesEoS::NBOpcodes)> OpCodeParamInfoListEoS;
+    //extern const std::array<std::vector<OpParamInfo>,   static_cast<uint16_t>(eScriptOpCodesEoS::NBOpcodes)> OpCodeParamInfoListEoS;
     
     /*************************************************************************************
         FindOpCodeInfo_EoS
@@ -1210,13 +1233,22 @@ namespace pmd2
 
     inline eScriptOpCodesEoS FindOpCodeByName_EoS( const std::string & name, size_t nbparams )
     {
+        size_t foundmultiparam = 0;
         for( size_t i = 0; i < OpCodesInfoListEoS.size(); ++i )
         {
-            const OpCodeInfoEoS & cur = OpCodesInfoListEoS[i];
-            if( cur.name == name && (cur.nbparams == nbparams || (cur.nbparams == -1 && nbparams == 0) ) ) //Treat -1 and 0 params as the same!
-                return static_cast<eScriptOpCodesEoS>(i);
+            if( OpCodesInfoListEoS[i].name == name )
+            {
+                if( OpCodesInfoListEoS[i].nbparams == nbparams )
+                    return static_cast<eScriptOpCodesEoS>(i);   //Exact match, return
+                else if( OpCodesInfoListEoS[i].nbparams == -1 )
+                    foundmultiparam = i;                        //Mark any command that matched with -1 parameters for later
+            }
         }
-        return eScriptOpCodesEoS::INVALID;
+        //Return the -1 parameter that matched the name if we didn't find an exact match
+        if( foundmultiparam != 0 )
+            return static_cast<eScriptOpCodesEoS>(foundmultiparam);
+        else
+            return eScriptOpCodesEoS::INVALID;
     }
 
     inline size_t GetNbOpCodes_EoS()
@@ -1311,6 +1343,22 @@ namespace pmd2
         int8_t                           NbParams ()const { return nbparams;}
         const std::vector<OpParamInfo> & ParamInfo()const { return *pparaminfo;}
         eCommandCat                      Category ()const { return category; }
+        eInstructionType                 GetMyInstructionType()const 
+        {
+            switch(Category())
+            {
+                case eCommandCat::EntityAccessor:
+                    return eInstructionType::MetaAccessor;
+                case eCommandCat::Switch:
+                    return eInstructionType::MetaSwitch;
+                case eCommandCat::ProcSpec:
+                    return eInstructionType::MetaProcSpecRet;
+                case eCommandCat::EnterAdventure:
+                    return eInstructionType::MetaReturnCases;
+                default:
+                    return eInstructionType::Command;
+            };
+        }
         operator bool()const {return pname!= nullptr && pparaminfo != nullptr;}
 
         const std::string              * pname;
@@ -1404,9 +1452,10 @@ namespace pmd2
             else
             {
                 assert(false);
-                return 0;
+                return InvalidOpCode;
             }
         }
+
 
         inline size_t GetNbOpcodes()const 
         {

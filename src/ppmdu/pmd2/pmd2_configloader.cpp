@@ -2,9 +2,11 @@
 #include <utils/pugixml_utils.hpp>
 #include <utils/parse_utils.hpp>
 #include <utils/library_wide.hpp>
+#include <utils/poco_wrapper.hpp>
 #include <iostream>
 #include <functional>
 #include <deque>
+#include <regex>
 using namespace std;
 using namespace pugi;
 
@@ -91,64 +93,6 @@ namespace pmd2
 
 
 
-
-
-    //GameVersionsData::GameVersionsData(gvcnt_t && gvinf)
-    //    :BaseGameKeyValData(std::forward<gvcnt_t>(gvinf))
-    //{}
-
-    //GameVersionsData::const_iterator GameVersionsData::GetVersionForArm9Off14(uint16_t arm9off14) const
-    //{
-    //    for( auto it= m_kvdata.begin(); it != m_kvdata.end(); ++it )
-    //    {
-    //        if( it->second.arm9off14 == arm9off14 )
-    //            return it;
-    //    }
-    //    return m_kvdata.end();
-    //}
-
-    //GameVersionsData::const_iterator GameVersionsData::GetVersionForId(const std::string & id) const
-    //{
-    //    return m_kvdata.find(id);
-    //}
-
-//
-//
-//
-    //GameBinaryOffsets::GameBinaryOffsets(gvcnt_t && gvinf)
-    //    :BaseGameKeyValData<GameBinLocCatalog>(), m_kvdata(std::forward<gvcnt_t>(gvinf))
-    //{
-    //    
-    //}
-    //GameBinaryOffsets::const_iterator GameBinaryOffsets::GetOffset(const std::string & gameversionid) const
-    //{
-    //    return m_kvdata.find(gameversionid);
-    //}
-
-//
-//
-//
-    //GameConstantsData::GameConstantsData(gvcnt_t && gvinf)
-    //{
-    //}
-
-    //GameConstantsData::const_iterator GameConstantsData::GetConstant(eGameVersion vers, const std::string & name) const
-    //{
-    //    return const_iterator();
-    //}
-
-//
-//
-//
-    //class ConfigLoaderImpl
-    //{
-    //public:
-    //    ConfigLoaderImpl( const string & file )
-    //    {
-    //    }
-    //};
-
-
 //
 //
 //
@@ -158,6 +102,14 @@ namespace pmd2
         ConfigXMLParser(const std::string & configfile)
         {
             pugi::xml_parse_result result = m_doc.load_file( configfile.c_str() );
+            regex basepathex("(.+.+(?=\\b\\/))(.+\\..+)");
+            smatch sm;
+
+            if(regex_match( configfile, sm, basepathex ) && sm.size() > 2 )
+                m_confbasepath = sm[1].str();
+            else
+                throw std::runtime_error("ConfigXMLParser::ConfigXMLParser(): Couldn't parse config file's base path!");
+
             if( !result )
                 throw std::runtime_error("ConfigXMLParser::ConfigXMLParser(): Couldn't parse configuration file!");
         }
@@ -357,8 +309,7 @@ namespace pmd2
         {
             using namespace ConfigXML;
             using namespace pugi;
-            //LanguageFilesDB::strfiles_t dest;
-            xml_node                    gamevernode = pmd2n.child(NODE_StrIndex.c_str());
+            xml_node gamevernode = pmd2n.child(NODE_StrIndex.c_str());
 
             for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
             {
@@ -367,7 +318,6 @@ namespace pmd2
                 if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
                     ParseLanguageList(gamev,ParseStringBlocks(gamev),m_lang);
             }
-            //return std::move(dest);
         }
 
         void ParseBinaries(xml_node & pmd2n)
@@ -375,14 +325,15 @@ namespace pmd2
             using namespace pugi;
             using namespace ConfigXML;
             xml_node binnode  = pmd2n.child(NODE_Binaries.c_str());
-            xml_node foundver = binnode.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
+            if(!binnode)
+                return;
 
+            xml_node foundver = binnode.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
             if( !foundver )
             {
                 throw std::runtime_error("ConfigXMLParser::ParseBinaries(): Couldn't find binary offsets for game version \"" + 
                                          m_curversion.id + "\"!" );
             }
-            //GameBinariesInfo dest;
 
             for( auto curbin : foundver.children(NODE_Bin.c_str()) )
             {
@@ -408,16 +359,13 @@ namespace pmd2
                 }
                 m_bin.AddBinary( std::string(xfpath.value()), std::move(binfo) );
             }
-
-            //return std::move(dest);
         }
 
 
         void ParseConstants( xml_node & pmd2n )
         {
             using namespace ConfigXML;
-            xml_node constnode  = pmd2n.child(NODE_GConsts.c_str());
-            //ConfigLoader::constcnt_t dest;
+            xml_node constnode = pmd2n.child(NODE_GConsts.c_str());
 
             for( auto ver : constnode.children(NODE_Game.c_str()) )
             {
@@ -437,13 +385,16 @@ namespace pmd2
                     }
                 }
             }
-            //return std::move(dest);
         }
 
-        void HandleExtFile( const std::string & extfile )
+        void HandleExtFile( std::string extfile )
         {
             using namespace ConfigXML;
             //When we hid an external file node, parse it too if possible
+
+            //Make path relative to the config file's base directory!
+            if( utils::pathIsRelative(extfile) )
+                extfile = utils::MakeAbsolutePath(extfile,m_confbasepath);
 
             bool bfoundsubdoc=false;
             for( const auto & entry: m_subdocs )
@@ -484,6 +435,7 @@ namespace pmd2
         ConfigLoader::constcnt_t        m_constants;
         LanguageFilesDB::strfiles_t     m_lang;
         GameBinariesInfo                m_bin;
+        string                          m_confbasepath;
     };
 
 
@@ -525,6 +477,10 @@ namespace pmd2
 //
 //
 //
-    //ConfigInstance ConfigInstance::s_instance;
+    FlexibleConfigData::Entry::Entry(){}
+
+    FlexibleConfigData::Entry::Entry(attrs_t && attr, subentt_t && sub)
+        :rawattributes(std::forward<attrs_t>(attr)),subentries(std::forward<subentt_t>(sub))
+    {}
 
 };

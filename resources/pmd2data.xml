@@ -1,7 +1,32 @@
 ﻿<PMD2>
   <!--=======================================================================-->
+  <!--PPMDU Configuration File-->
+  <!--=======================================================================-->
+  <!--This file is meant to contain all the data that the program uses -->
+  <!--at runtime that could be considered version specific, or that might-->
+  <!--change at one point.-->
+  
+  <!--Layout:-->
+  <!--Its made of the following structure this far : -->
+  <!--<PMD2>-->
+  <!--  <GameEditions />-->
+  <!--  <GameConstants />-->
+  <!--  <Binaries />-->
+  <!--  <StringIndexData />-->
+  <!--</PMD2>-->
+  
+  <!--External File Paths: -->
+  <!--Its also possible to spread the content of those over several external files.-->
+  <!--To indicate to the parser that some data need to be parsed in an external file, -->
+  <!--just add a <External filepath="" /> node to the PMD2 parent document node and set the "filepath" attribute to an -->
+  <!--absolute path to a xml file. -->
+  <!--Or, a path relative to the current configuration file to another xml file.-->
+  <!--External XML files must have opening and closing <PMD2> tags and follow the exact same layout as the main config file-->
+  
+  <!--=======================================================================-->
   <!--List of known Game Editions-->
   <!--=======================================================================-->
+  <!--Details on each of the supported game versions, along with data to help identify them.-->
   <!--id          = A unique name to refer to the game version throughout this file.-->
   <!--gamecode    = The ROM's gamecode corresponding to the game version.-->
   <!--version     = Which of the 3 games in the explorers series is this? Either "EoS", "EoT", or "EoD"-->
@@ -26,6 +51,7 @@
   <!--=======================================================================-->
   <!--GameConstants-->
   <!--=======================================================================-->
+  <!--Version specific constants-->
   <GameConstants>
     <Game version="EoS">
       <Value id="NbPossibleHeros"       value="21"/>
@@ -42,6 +68,7 @@
   <!--=======================================================================-->
   <!--Offsets from game binaries, and other details for each game versions-->
   <!--=======================================================================-->
+  <!--Various blocks in the binaries containing relevant data.-->
   <Binaries>
     <!-- **************** -->
     <!-- Explorers of Sky -->
@@ -156,6 +183,7 @@
   <!--=======================================================================-->
   <!--Game text offsets-->
   <!--=======================================================================-->
+  <!--Various blocks of strings in the string files containing specific strings.-->
   <StringIndexData>
     <!--Explorers of Sky, North America-->
     <Game id="EoS_NA">
@@ -267,5 +295,8 @@
     </Game>
     
   </StringIndexData>
+  
+  <!--Append any external files to parse here!-->
+  <!--<External filepath="text.xml" />-->
 
 </PMD2>

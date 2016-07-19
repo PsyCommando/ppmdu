@@ -138,6 +138,7 @@ namespace pmd2
         MetaSwitch,         //The instruction contains case sub-instructions
         MetaAccessor,       //The instruction contains a sub-instruction to be applied to what the accessor is accessing
         MetaProcSpecRet,    //The instruction contains a "case" sub instruction applied on the return value.
+        MetaReturnCases,    //For instructions that can have a set of cases applied to their return value
 
         NbTypes,
         Invalid,
@@ -157,6 +158,10 @@ namespace pmd2
         uint16_t            value;          //Depends on the value of "type". Can be opcode, data, or ID.
         paramcnt_t          parameters;     //The parameters for the instruction
         eInstructionType    type;           //How to handle the instruction
+
+#ifdef _DEBUG
+        size_t              dbg_origoffset; //Original offset of the instruction in the source file if applicable. For debugging purpose
+#endif
     };
     struct ScriptInstruction : public ScriptBaseInstruction
     {
@@ -188,6 +193,9 @@ namespace pmd2
             type        = cp.type;
             parameters  = cp.parameters;
             value       = cp.value;
+#ifdef _DEBUG
+            dbg_origoffset = cp.dbg_origoffset; 
+#endif
             return *this;
         }
 
@@ -197,6 +205,9 @@ namespace pmd2
             type        = mv.type;
             parameters  = std::move(mv.parameters);
             value       = mv.value;
+#ifdef _DEBUG
+            dbg_origoffset = mv.dbg_origoffset; 
+#endif
             return *this;
         }
 
@@ -205,6 +216,9 @@ namespace pmd2
             type        = cp.type;
             parameters  = cp.parameters;
             value       = cp.value;
+#ifdef _DEBUG
+            dbg_origoffset = cp.dbg_origoffset; 
+#endif
             return *this;
         }
 
@@ -213,6 +227,9 @@ namespace pmd2
             type        = mv.type;
             parameters  = std::move(mv.parameters);
             value       = mv.value;
+#ifdef _DEBUG
+            dbg_origoffset = mv.dbg_origoffset; 
+#endif
             return *this;
         }
 
@@ -222,6 +239,9 @@ namespace pmd2
             out.parameters  = parameters;
             out.value       = value;
             out.type        = type;
+#ifdef _DEBUG
+            out.dbg_origoffset = dbg_origoffset; 
+#endif
             return std::move(out);
         }
     };

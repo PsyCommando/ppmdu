@@ -473,6 +473,48 @@ namespace pmd2
         binfilesinf_t m_info;
     };
 
+//
+//  CustomFormat
+//
+    /*
+        This is for parsing the content of any custom data formats in the config files.
+    */
+    class FlexibleConfigData
+    {
+    public:
+        struct Entry
+        {
+            typedef std::unordered_multimap<std::string, std::string> attrs_t;
+            typedef std::unordered_multimap<std::string, Entry>       subentt_t;
+
+            Entry();
+            Entry(attrs_t && attr, subentt_t && sub);
+            Entry(Entry&&) = default;
+            Entry(const Entry&) = default;
+            Entry & operator=(const Entry&) = default;
+            Entry & operator=(Entry&&) = default;
+
+            inline void AddAttribute( std::string && name, std::string && value ) 
+            { 
+                rawattributes.emplace( std::forward<std::string>(name), std::forward<std::string>(value) ); 
+            }
+
+            inline void AddSubentry( std::string && name, Entry && sub ) 
+            { 
+                subentries.emplace( std::forward<std::string>(name), std::forward<Entry>(sub) ); 
+            }
+
+            attrs_t     rawattributes;
+            subentt_t   subentries;
+        };
+        typedef Entry data_t;
+        
+
+
+
+    private:
+        data_t m_data;
+    };
 
 //========================================================================================
 //  ConfigLoader

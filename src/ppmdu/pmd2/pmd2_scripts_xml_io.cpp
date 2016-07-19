@@ -12,6 +12,7 @@
 #include <utils/multiple_task_handler.hpp>
 #include <atomic>
 #include <thread>
+#include <unordered_set>
 using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
@@ -23,7 +24,7 @@ namespace pmd2
 //==============================================================================
     namespace scriptXML
     {
-        const string ROOT_ScripDir      = "Event"s;      
+        const string ROOT_ScripDir      = "Level"s;      
         const string ATTR_GVersion      = "gameversion"s; 
         const string ATTR_GRegion       = "gameregion"s;
         const string ATTR_DirName       = "eventname"s;           //Event name/filename with no extension
@@ -55,7 +56,8 @@ namespace pmd2
 
         //!#TODO: add various group nodes depending on the group type 
 
-        const string NODE_Group         = "Group"s;
+        const string NODE_Group         = "Routine"s;
+        const string ATTR_GroupID       = "id"s;
         const string ATTR_GroupType     = "type"s;
         const string ATTR_GroupParam2   = "unk2"s;
 
@@ -74,17 +76,18 @@ namespace pmd2
 
         //Parameters
 
-        const array<string, 9> ATTR_Params =
+        const array<string, 10> ATTR_Params =
         {
-            "param1",
-            "param2",
-            "param3",
-            "param4",
-            "param5",
-            "param6",
-            "param7",
-            "param8",
-            "param9",
+            "param",
+            "param_1",
+            "param_2",
+            "param_3",
+            "param_4",
+            "param_5",
+            "param_6",
+            "param_7",
+            "param_8",
+            "param_9",
         };
 
     };
@@ -101,7 +104,7 @@ namespace pmd2
     {
     public:
         SSBXMLParser( eGameVersion version, eGameRegion region )
-            :m_version(version), m_region(region)
+            :m_version(version), m_region(region), m_opinfo(GameVersionToOpCodeVersion(version))
         {}
 
         ScriptedSequence operator()( const xml_node & seqn)
@@ -118,17 +121,26 @@ namespace pmd2
             xml_node xconst = seqn.child(NODE_Constants.c_str());
 
             ParseCode(xcode);
-
             CheckLabelReferences();
 
+            //!#TODO: Need to ensure all opcode dealing with strings have their string reference parameter shiften by the nb of constants in the const table!!
+            IncrementAllStringReferencesParameters();
+
             //ParseConsts(xconst);
-            for( const auto & strblk : seqn.children(NODE_Strings.c_str()) )
-                ParseStringBlock(strblk);
+            //for( const auto & strblk : seqn.children(NODE_Strings.c_str()) )
+            //    ParseStringBlock(strblk);
 
             return std::move(m_out);
         }
 
     private:
+
+        inline void IncrementAllStringReferencesParameters()
+        {
+            const size_t constblocksz = m_constqueue.size();
+            for( const auto & entry : m_stringrefparam )
+                (*entry) += constblocksz;
+        }
 
         void CheckLabelReferences()
         {
@@ -155,6 +167,8 @@ namespace pmd2
 
             for( const xml_node & group : coden.children(NODE_Group.c_str()) )
             {
+                //We ignore the id on load!
+                //!#TODO: Maybe we could use routine ids to refer to routines through the "Call" commands?
                 xml_attribute  xtype = group.attribute(ATTR_GroupType.c_str());
                 xml_attribute  xunk2 = group.attribute(ATTR_GroupParam2.c_str());
                 ScriptInstrGrp grpout;
@@ -165,24 +179,26 @@ namespace pmd2
                            <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
                     throw std::runtime_error(sstrer.str());
                 }
+                
                 grpout.type = xtype.as_uint();
                 grpout.unk2 = xunk2.as_uint();
 
                 for( const xml_node & inst : group )
                 {
-                    ParseInstruction(inst,grpout);
+                    ParseInstruction(inst,grpout.instructions);
                 }
                 outtbl.push_back(std::move(grpout));
             }
         }
 
-        void ParseInstruction( const xml_node & instn, ScriptInstrGrp & outgrp )
+        template<typename _InstContainer>
+            void ParseInstruction( const xml_node & instn, _InstContainer & outcnt )
         {
             using namespace scriptXML;
             
             if( instn.name() == NODE_Instruction )
             {
-                ParseCommand(instn,outgrp);
+                ParseCommand(instn, outcnt);
             }
             else if( instn.name() == NODE_Data)
             {
@@ -190,15 +206,20 @@ namespace pmd2
                 ScriptInstruction outinstr;
                 outinstr.type = eInstructionType::Data;
                 outinstr.value = static_cast<uint16_t>(xval.as_uint());
-                outgrp.instructions.push_back(std::move(outinstr));
+                outcnt.push_back(std::move(outinstr));
             }
             else if( instn.name() == NODE_MetaLabel )
             {
-                ParseMetaLabel(instn,outgrp);
+                ParseMetaLabel(instn, outcnt);
+            }
+            else
+            {
+                TryParseCommandNode(instn, outcnt);
             }
         }
 
-        void ParseMetaLabel( const xml_node & instn, ScriptInstrGrp & outgrp )
+        template<typename _InstContainer>
+            void ParseMetaLabel( const xml_node & instn, _InstContainer & outcnt )
         {
             using namespace scriptXML;
             xml_attribute xid = instn.attribute(ATTR_LblID.c_str());
@@ -212,21 +233,61 @@ namespace pmd2
             ScriptInstruction outinstr;
             outinstr.type  = eInstructionType::MetaLabel;
             outinstr.value = static_cast<uint16_t>(xid.as_uint());
-            outgrp.instructions.push_back(std::move(outinstr));
+            outcnt.push_back(std::move(outinstr));
         }
 
-        template<class _OPCodeFinderT>
-            auto GetOpcodeNum( const char * name, size_t nbparams )->typename _OPCodeFinderT::opcode_t
+
+        /*
+            Cases :
+
+            		<Switch svar="DUNGEON_ENTER">
+						<Case int="24" tolabel_1="121" />
+						<Case int="25" tolabel_1="122" />
+						<Case int="26" tolabel_1="123" />
+					</Switch>
+        */
+        template<typename _InstContainer>
+            void TryParseCommandNode(const xml_node & instn, _InstContainer & outcnt)
         {
-            const _OPCodeFinderT                     finder;
-            const typename _OPCodeFinderT::opcode_t  op = finder(name,nbparams);
-            if( static_cast<uint16_t>(op) != InvalidOpCode )
-                return op;
-            else
-                throw std::runtime_error("SSBXMLParser::GetOpcodeNum(): No matching opcode found!");
+            using namespace scriptXML;
+            const std::string nodename = instn.name();
+            size_t            nbparams = std::distance( instn.attributes().begin(), instn.attributes().end() ) - 1; //Subtract 1 for the name attribute
+            uint16_t          foundop  = m_opinfo.Code( nodename, nbparams );
+
+            if( foundop == InvalidOpCode )
+            {
+                stringstream sstrer;
+                sstrer <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
+                    <<", in group instruction #" <<outcnt.size() <<" Node name doesn't match any known meta instructions or command!!";
+                throw std::runtime_error(sstrer.str());
+            }
+
+            OpCodeInfoWrapper opinfo = m_opinfo.Info(foundop);
+            ScriptInstruction outinstr;
+            outinstr.value = foundop;
+            outinstr.type  = opinfo.GetMyInstructionType();
+
+            //Read parameters
+            ParseCommandParameters(instn, outinstr, opinfo);
+
+            //Parse child instructions, if required
+            if( outinstr.type  != eInstructionType::Command )
+            {
+                ParseSubInstructions(instn, outinstr);
+            }
+            //Insert
+            outcnt.push_back(std::move(outinstr));
         }
 
-        void ParseCommand(const xml_node & instn, ScriptInstrGrp & outgrp)
+        void ParseSubInstructions(const xml_node & parentinstn, ScriptInstruction & dest )
+        {
+            using namespace scriptXML;
+            for( const auto & entry : parentinstn.children(NODE_Instruction.c_str()) )
+                ParseInstruction(entry, dest.subinst);
+        }
+
+        template<typename _InstContainer>
+            void ParseCommand(const xml_node & instn, _InstContainer & outcnt)
         {
             using namespace scriptXML;
             xml_attribute name = instn.attribute(ATTR_Name.c_str());
@@ -234,67 +295,159 @@ namespace pmd2
             {
                 stringstream sstrer;
                 sstrer <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
-                    <<", in group instruction #" <<outgrp.instructions.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
+                    <<", in group instruction #" <<outcnt.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
             ScriptInstruction outinstr;
             outinstr.type = eInstructionType::Command;
 
-            //!#TODO: Handle meta, and differently named parameters!!
-
-
-            //#1 - Get parameters
-            ParseCommandParameters(instn, outinstr);
-            //for( const auto & param : instn.attributes() )
-            //{
-            //    if( param.name() == ATTR_Param )
-            //        outinstr.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
-            //}
+            //Try to count parameters
+            size_t nbparams = std::distance( instn.attributes_begin(), instn.attributes_end() ) - 1; //Subtract the name
+            if( instn.child(NODE_String.c_str()) ) //Look for string nodes, so we can count it as a parameter
+                ++nbparams;
 
             //#2 - Read opcode
-            if(m_version == eGameVersion::EoS)
-                outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoS>>(name.value(),outinstr.parameters.size()) );
-            else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
-                outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoTD>>(name.value(),outinstr.parameters.size()) );
-            else
-                assert(false); //This shouldn't happen at all!
+            outinstr.value = m_opinfo.Code(name.value(), outinstr.parameters.size() );
+            if( outinstr.value == InvalidOpCode )
+                throw std::runtime_error("SSBXMLParser::ParseCommand(): No matching opcode found!");
 
-            outgrp.instructions.push_back(std::move(outinstr));            
+            //!#TODO: Handle meta, and differently named parameters!!
+            //#3 - Get parameters
+           ParseCommandParameters(instn, outinstr, m_opinfo.Info(outinstr.value));
+
+            
+            
+
+            //if(m_version == eGameVersion::EoS)
+            //    outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoS>>(name.value(),outinstr.parameters.size()) );
+            //else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
+            //    outinstr.value = static_cast<uint16_t>( GetOpcodeNum<OpCodeFinderPicker<eOpCodeVersion::EoTD>>(name.value(),outinstr.parameters.size()) );
+            //else
+            //    assert(false); //This shouldn't happen at all!
+
+            outcnt.push_back(std::move(outinstr));            
         }
 
 
-        void ParseCommandParameters( const xml_node & instn, ScriptInstruction & outinst )
+        void ParseCommandParameters( const xml_node & instn, ScriptInstruction & outinst, const OpCodeInfoWrapper & opinfo )
         {
             using namespace scriptXML;
-            for( const auto & param : instn.attributes() )
+
+            xml_attribute_iterator itat    = instn.attributes_begin();
+            xml_attribute_iterator itatend = instn.attributes_end();
+
+            //Skip the name attribute if there's one
+            if( itat->name() == ATTR_Name )
+                ++itat;
+
+            //First we need to get the parameters in order, strings are special
+            for( size_t i = 0; i < opinfo.ParamInfo().size() && itat != itatend; ++i, ++itat )
             {
-                eOpParamTypes pty = eOpParamTypes::Invalid;
-                if( param.name() == ATTR_Param )
-                    outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
-                else if( (pty = FindOpParamTypesByName(param.name()) ) != eOpParamTypes::Invalid )
+                const OpParamInfo & curp = opinfo.ParamInfo()[i];
+                if( m_region != eGameRegion::Japan && curp.ptype == eOpParamTypes::String )
                 {
-                    ParseTypedCommandParameterAttribute( param, pty, outinst );
+                    uint16_t strindex = 0;
+                    for( const auto & strs: instn.children(NODE_String.c_str()) )
+                    {
+                        xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
+                        xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
+
+                        if( xval && xlang )
+                        {
+                            eGameLanguages lang = StrToGameLang(xlang.value());
+
+                            if( lang == eGameLanguages::Invalid )
+                                throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                                
+                            strindex = m_strqueues.at(lang).size();//save the idex it was inserted at
+                            m_strqueues.at(lang).push_back(xval.value());
+                        }
+                    }
+
+                    outinst.parameters.push_back( strindex );
+                    m_stringrefparam.push_back( std::addressof(outinst.parameters.back()) );  //Mark for fixing the string offset later on, since we need the const table size!
                 }
                 else
-                    throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Invalid parameter found!");
+                {
+                    //eOpParamTypes pty   = eOpParamTypes::Invalid;
+                    string        pname = itat->name();
+                    regex         ParamNameCleaner(R"((\b\S+(?=_\d)))");
+                    smatch        matches;
+
+                    //First, clean the name of the parameter of any appended number if needed
+                    if( regex_search( pname, matches, ParamNameCleaner ) && matches.size() > 1 )
+                        pname = matches[1].str();
+
+                    const string * pstrpname = OpParamTypesToStr(curp.ptype);
+                    if( !pstrpname )
+                    {
+                        throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Unexpected parameter!!");
+                    }
+
+                    if( pname == ATTR_Param )
+                        outinst.parameters.push_back( static_cast<uint16_t>(itat->as_int()) );
+                    else if( pname == *pstrpname )
+                    {
+                        ParseTypedCommandParameterAttribute( *itat, instn, curp.ptype, outinst );
+                    }
+                    else
+                        throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Unexpected parameter!!");
+
+
+                    //if( pname == ATTR_Param )
+                    //    outinst.parameters.push_back( static_cast<uint16_t>(itat->as_int()) );
+                    //else if( (pty = FindOpParamTypesByName(pname) ) != eOpParamTypes::Invalid )
+                    //{
+                    //    ParseTypedCommandParameterAttribute( *itat, instn, pty, outinst );
+                    //}
+                    //else
+                    //    throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Invalid parameter found!");
+                }
             }
+
         }
 
-        void ParseTypedCommandParameterAttribute( const xml_attribute & param, eOpParamTypes pty, ScriptInstruction & outinst )
+        void ParseTypedCommandParameterAttribute( const xml_attribute & param, const xml_node & parentinstn, eOpParamTypes pty, ScriptInstruction & outinst )
         {
+            using namespace scriptXML;
             switch(pty)
             {
                 case eOpParamTypes::Constant:
                 {
+                    outinst.parameters.push_back( m_constqueue.size() );
                     m_constqueue.push_back( param.value() );
                     break;
                 }
                 case eOpParamTypes::String:
                 {
                     if( m_region == eGameRegion::Japan )
+                    {
+                        outinst.parameters.push_back( m_constqueue.size() );
                         m_constqueue.push_back( param.value() ); //Japanese version just puts strings in the constant table
-                    else
-                        outinst.parameters.push_back( static_cast<uint16_t>( param.as_uint() ) );
+                    }
+                    //else
+                    //{
+                    //    uint16_t strindex = 0;
+                    //    for( const auto & strs: parentinstn.children(NODE_String.c_str()) )
+                    //    {
+                    //        xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
+                    //        xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
+
+                    //        if( xval && xlang )
+                    //        {
+                    //            eGameLanguages lang = StrToGameLang(xlang.value());
+
+                    //            if( lang == eGameLanguages::Invalid )
+                    //                throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                    //            
+                    //            strindex = m_strqueues.at(lang).size();//save the idex it was inserted at
+                    //            m_strqueues.at(lang).push_back(xval.value());
+                    //        }
+                    //    }
+
+                    //    outinst.parameters.push_back( strindex );
+                    //    m_stringrefparam.push_back( std::addressof(outinst.parameters.back()) );  //Mark for fixing the string offset later on, since we need the const table size!
+                    //}
                     break;
                 }
                 case eOpParamTypes::InstructionOffset:
@@ -310,6 +463,47 @@ namespace pmd2
 
                     outinst.parameters.push_back( lblid );
                     break;
+                }
+                case eOpParamTypes::Unk_FaceType:
+                {
+                    uint16_t faceid = FindFaceIDByName(param.value());
+                    if(faceid != InvalidFaceID)
+                        outinst.parameters.push_back(faceid);
+                    else
+                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                    break;
+                }
+                case eOpParamTypes::Unk_ScriptVariable:
+                {
+                    uint16_t varid = GameVarInfoNameToId(param.value());
+                    if(varid != InvalidGameVariableID )
+                        outinst.parameters.push_back(varid);
+                    else
+                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                    break;
+                }
+                case eOpParamTypes::Unk_LivesRef:
+                {
+                    uint16_t livesid = 0;
+
+                    if( m_version == eGameVersion::EoS )
+                        livesid = FindLivesIdByName_EoS(param.value());
+                    else
+                        livesid = FindLivesIdByName_EoTD(param.value());
+
+                    if(livesid != InvalidLivesID )
+                        outinst.parameters.push_back(livesid);
+                    else
+                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                    break;
+                }
+                case eOpParamTypes::Unk_PerformerRef:
+                {
+                    //!#TODO
+                }
+                case eOpParamTypes::Unk_ObjectRef:
+                {
+                    //!#TODO
                 }
                 default:
                 {
@@ -387,12 +581,17 @@ namespace pmd2
         };
 
 
-        unordered_map<uint16_t, labelRefInf> m_labelchecker;
-        deque<string>                        m_constqueue;
+        unordered_map<uint16_t, labelRefInf>         m_labelchecker;
+        deque<string>                                m_constqueue;
+        unordered_map<eGameLanguages, deque<string>> m_strqueues;
+
+        //A list of parameters containing a string index reference to be incremented after the size of the const table is known!
+        deque<uint16_t *>                            m_stringrefparam;  
         
         ScriptedSequence m_out;
         eGameVersion     m_version;
         eGameRegion      m_region;
+        OpCodeClassifier m_opinfo;
     };
 
 
@@ -610,15 +809,20 @@ namespace pmd2
     {
     public:
         SSBXMLWriter( const ScriptedSequence & seq, eGameVersion version, eGameRegion region )
-            :m_seq(seq), m_version(version), m_region(region),m_opinfo( (version == eGameVersion::EoS)? eOpCodeVersion::EoS : eOpCodeVersion::EoTD )
+            :m_seq(seq), m_version(version), m_region(region),m_opinfo(GameVersionToOpCodeVersion(version))
         {}
         
         void operator()( xml_node & parentn )
         {
             using namespace scriptXML;
-            //WriteCommentNode( parentn, "" );
             xml_node ssbnode = parentn.append_child( NODE_ScriptSeq.c_str() );
             AppendAttribute( ssbnode, ATTR_Name, m_seq.Name() );
+
+            //prepare for counting references to strings
+            if(!m_seq.ConstTbl().size())
+                m_referedconstids.reserve(m_seq.ConstTbl().size());
+            if( (!m_seq.StrTblSet().empty()) && (!m_seq.StrTblSet().begin()->second.empty()) )
+                m_referedstrids.reserve(m_seq.StrTblSet().begin()->second.size());
 
             WriteCode     (ssbnode);
             WriteConstants(ssbnode);
@@ -632,54 +836,73 @@ namespace pmd2
             using namespace scriptXML;
             xml_node xcode = parentn.append_child( NODE_Code.c_str() );
 
+            size_t grpcnt = 0;
             for( const auto & grp : m_seq.Groups() )
             {
+                WriteCommentNode( xcode, "************************" );
+                stringstream sstr;
+                sstr << std::right <<std::setw(15) <<std::setfill(' ') <<"Routine #" <<grpcnt;
+                WriteCommentNode( xcode, sstr.str() );
+                WriteCommentNode( xcode, "************************" );
                 xml_node xgroup = xcode.append_child( NODE_Group.c_str() );
+                AppendAttribute( xgroup, ATTR_GroupID,     grpcnt );
                 AppendAttribute( xgroup, ATTR_GroupType,   grp.type );
                 AppendAttribute( xgroup, ATTR_GroupParam2, grp.unk2 );
 
                 for( const auto & instr : grp.instructions )
                     HandleInstruction(xgroup, instr);
+                ++grpcnt;
             }
         }
 
-        inline void HandleInstruction( xml_node & groupn, const pmd2::ScriptInstruction & intr )
+        inline void HandleInstruction( xml_node & groupn, const pmd2::ScriptInstruction & instr )
         {
-            switch(intr.type)
+            using namespace scriptXML;
+#ifdef _DEBUG
+            stringstream sstr;
+            sstr << "Offset : 0x" <<std::hex <<std::uppercase <<instr.dbg_origoffset;
+            WriteCommentNode( groupn, sstr.str() );
+#endif
+            switch(instr.type)
             {
                 case eInstructionType::Data:
                 {
-                    WriteData(groupn,intr);
+                    WriteData(groupn,instr);
                     break;
                 }
                 case eInstructionType::Command:
                 {
-                    WriteInstruction(groupn,intr);
+                    WriteInstruction(groupn,instr);
                     break;
                 }
                 case eInstructionType::MetaCaseLabel:
-                {
-                    WriteMetaCaseLabel(groupn,intr);
-                    break;
-                }
+                //{
+                //    WriteMetaCaseLabel(groupn,instr);
+                //    break;
+                //}
                 case eInstructionType::MetaLabel:
                 {
-                    WriteMetaLabel(groupn,intr);
+                    WriteMetaLabel(groupn,instr);
                     break;
                 }
                 case eInstructionType::MetaSwitch:
                 {
-                    WriteMetaSwitch(groupn,intr);
+                    WriteMetaSwitch(groupn,instr);
                     break;
                 }
                 case eInstructionType::MetaAccessor:
                 {
-                    WriteMetaAccessor(groupn,intr);
+                    WriteMetaAccessor(groupn,instr);
                     break;
                 }
                 case eInstructionType::MetaProcSpecRet:
                 {
-                    WriteMetaSpecRet(groupn,intr);
+                    WriteMetaSpecRet(groupn,instr);
+                    break;
+                }
+                case eInstructionType::MetaReturnCases:
+                {
+                    WriteMetaReturnCases(groupn,instr);
                     break;
                 }
                 default:
@@ -687,6 +910,11 @@ namespace pmd2
                     clog<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
                 }
             };                
+        }
+
+        inline void WriteMetaReturnCases(xml_node & groupn, const pmd2::ScriptInstruction & intr)
+        {
+            WriteInstructionWithSubInst(groupn,intr);
         }
 
         inline void WriteMetaSpecRet(xml_node & groupn, const pmd2::ScriptInstruction & intr)
@@ -815,7 +1043,7 @@ namespace pmd2
                 deststr << *pname;
 
                 if(cntparam > 0)
-                    deststr <<cntparam;
+                    deststr <<"_" <<cntparam;
 
                 switch(ptype)
                 {
@@ -823,6 +1051,7 @@ namespace pmd2
                     {
                         if( isConstIdInRange(pval) )
                         {
+                            m_referedconstids.insert(pval);
                             AppendAttribute( instn, deststr.str(), m_seq.ConstTbl()[pval] );
                             return;
                         }
@@ -835,20 +1064,25 @@ namespace pmd2
                     }
                     case eOpParamTypes::String:
                     {
+                        const int16_t stroffset = pval - m_seq.ConstTbl().size(); //The string ids in the instructions include the length of the const table if there's one!
                         if( m_region == eGameRegion::Japan && isConstIdInRange(pval) ) //Japan ignores string block completely
                         {
+                            m_referedconstids.insert(pval);
                             AppendAttribute( instn, OpParamTypesNames[static_cast<size_t>(eOpParamTypes::Constant)], m_seq.ConstTbl()[pval] );
                             return;
                         }
-                        else if( isStringIdInRange(pval) )
+                        else if( isStringIdInRange(stroffset) )
                         {
-                            //We place a string ID, not the string itself, because multiples refs and multi-lingual issues
+                            m_referedstrids.insert(stroffset);
+                            //Place the strings for each languages
+#ifdef _DEBUG
                             AppendAttribute( instn, deststr.str(), pval );
+#endif
                             for( const auto & lang : m_seq.StrTblSet() )
                             {
                                 xml_node xlang = AppendChildNode(instn, NODE_String);
                                 AppendAttribute( xlang, ATTR_Language, GetGameLangName(lang.first) );
-                                AppendAttribute( xlang, ATTR_Value,    lang.second.at(pval) );
+                                AppendAttribute( xlang, ATTR_Value,    lang.second.at(stroffset) );
                             }
                             return;
                         }
@@ -877,7 +1111,7 @@ namespace pmd2
                         if(!facename.empty())
                             AppendAttribute( instn, deststr.str(), facename);
                         else
-                            break;
+                            break; //Output as regular nameless param otherwise
                         return;
                     }
                     case eOpParamTypes::Unk_LivesRef:
@@ -932,48 +1166,49 @@ namespace pmd2
         void WriteConstants( xml_node & parentn )
         {
             using namespace scriptXML;
-            if( m_seq.ConstTbl().empty() )
+            if( m_seq.ConstTbl().empty() || 
+               m_seq.ConstTbl().size() == m_referedconstids.size() ) //If all our consts were referenced, don't bother!
                 return;
             xml_node xconsts = parentn.append_child( NODE_Constants.c_str() );
 
-#ifdef _DEBUG
             size_t cntc = 0;
-#endif
             for( const auto & aconst : m_seq.ConstTbl() )
             {
-#ifdef _DEBUG
-                stringstream sstr;
-                sstr<<"Const #" <<cntc;
-                WriteCommentNode( xconsts, sstr.str() );
+                if( m_referedconstids.find(cntc) == m_referedconstids.end() )
+                {
+                    stringstream sstr;
+                    sstr<<"Unreferenced Const ID#" <<cntc;
+                    WriteCommentNode( xconsts, sstr.str() );
+                    xml_node xcst = xconsts.append_child( NODE_Constant.c_str() );
+                    AppendAttribute( xcst, ATTR_Value, aconst );
+                }
                 ++cntc;
-#endif
-                xml_node xcst = xconsts.append_child( NODE_Constant.c_str() );
-                AppendAttribute( xcst, ATTR_Value, aconst );
             }
         }
 
         void WriteStrings( xml_node & parentn )
         {
             using namespace scriptXML;
-            if( m_seq.StrTblSet().empty() )
+            if( m_seq.StrTblSet().empty() || 
+                (m_referedstrids.size() == m_seq.StrTblSet().begin()->second.size()) ) //If all our strings were referenced, don't bother!
                 return;
             xml_node xstrings = parentn.append_child( NODE_Strings.c_str() );
 
             for( const auto & alang : m_seq.StrTblSet() )
             {
                 AppendAttribute( xstrings, ATTR_Language, GetGameLangName(alang.first) );
-#ifdef _DEBUG
+
                 size_t cnts = 0;
-#endif
                 for( const auto & astring : alang.second )
                 {
-#ifdef _DEBUG
-                    stringstream sstr;
-                    sstr<<"String #" <<cnts;
-                    WriteCommentNode( xstrings, sstr.str() );
+                    if( m_referedstrids.find(cnts) == m_referedstrids.end() )
+                    {
+                        stringstream sstr;
+                        sstr<<"Unreferenced String ID#" <<cnts;
+                        WriteCommentNode( xstrings, sstr.str() );
+                        AppendAttribute( xstrings.append_child( NODE_String.c_str() ), ATTR_Value, astring );
+                    }
                     ++cnts;
-#endif
-                    AppendAttribute( xstrings.append_child( NODE_String.c_str() ), ATTR_Value, astring );
                 }
             }
         }
@@ -983,6 +1218,8 @@ namespace pmd2
         eGameVersion             m_version;
         eGameRegion              m_region;
         OpCodeClassifier         m_opinfo;
+        std::unordered_set<size_t>      m_referedstrids;   //String ids that have been referred to by an instruction
+        std::unordered_set<size_t>      m_referedconstids; //constant ids that have been referred to by an instruction
     };
 
     /*****************************************************************************************
@@ -1022,7 +1259,11 @@ namespace pmd2
         void WriteGrp( xml_node & parentn, const ScriptGroup & grp )
         {
             using namespace scriptXML;
-            WriteCommentNode(parentn, grp.Identifier() );
+            WriteCommentNode(parentn, "##########################################" );
+            stringstream sstr;
+            sstr <<std::right <<std::setw(10) <<setfill(' ') <<grp.Identifier() <<" Set";
+            WriteCommentNode(parentn, sstr.str() );
+            WriteCommentNode(parentn, "##########################################" );
             xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
 
             AppendAttribute( xgroup, ATTR_GrpName, grp.Identifier() );
@@ -1046,14 +1287,22 @@ namespace pmd2
         inline void WriteSSBContent( xml_node & parentn, const ScriptedSequence & seq )
         {
             using namespace scriptXML;
-            WriteCommentNode(parentn, seq.Name() );
+            WriteCommentNode(parentn, "++++++++++++++++++++++" );
+            stringstream sstr;
+            sstr <<std::right <<std::setw(10) <<setfill(' ') <<seq.Name() <<" Script";
+            WriteCommentNode(parentn, sstr.str() );
+            WriteCommentNode(parentn, "++++++++++++++++++++++" );
             SSBXMLWriter(seq,  m_version, m_region)(parentn);
         }
 
         inline void WriteSSDataContent( xml_node & parentn, const ScriptEntityData & dat )
         {
             using namespace scriptXML;
-            WriteCommentNode(parentn, dat.Name() );
+            WriteCommentNode(parentn, "======================" );
+            stringstream sstr;
+            sstr <<std::right <<std::setw(10) <<setfill(' ') <<dat.Name() <<" Data";
+            WriteCommentNode(parentn, sstr.str() );
+            WriteCommentNode(parentn, "======================" );
 //#ifndef _DEBUG
 //            assert(false);
 //#endif

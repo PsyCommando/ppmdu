@@ -15,18 +15,19 @@ No crappyrights. All wrongs reversed!
 #include <iostream>
 #include <string>
 #include <locale>
+#include <regex>
 using namespace std;
 
 namespace utils 
 {
-	string GetPathOnly( const string & fullpath )
+	string GetPathOnly( const string & fullpath, const std::string & separator )
 	{
-		return fullpath.substr( 0, fullpath.find_last_of("\\/") );
+		return fullpath.substr( 0, fullpath.find_last_of(separator) );
 	}
 
-	string GetFilenameFromPath( const string & fullpath )
+	string GetFilenameFromPath( const string & fullpath, const std::string & separator )
 	{
-        string::size_type poslastslash = fullpath.find_last_of("\\/");
+        string::size_type poslastslash = fullpath.find_last_of(separator);
         return fullpath.substr( poslastslash + 1, fullpath.size() - poslastslash  );
 	}
 
@@ -34,6 +35,38 @@ namespace utils
 	{
 		return fullpath.substr( 0, fullpath.find_last_of(".") );
 	}
+
+    std::vector<std::string> GetPathComponents(const std::string & path, const std::string & separator )
+    {
+        std::vector<std::string> target;
+        for( size_t cnt = 0; cnt < path.size(); ++cnt )
+        {
+            string::size_type found = path.find_first_of(separator, cnt);
+            if( found != string::npos )
+            {
+                target.push_back( std::move(path.substr(cnt,(found - cnt))) );
+                cnt = found;
+            }
+            else
+            {
+                target.push_back( std::move(path.substr(cnt)) );
+                break;
+            }
+        }
+        return std::move(target);
+    }
+
+    std::string AssemblePath(std::vector<std::string>& components, char separator)
+    {
+        stringstream sstr;
+        for( size_t cntcmp = 0; cntcmp < components.size(); ++cntcmp )
+        {
+            if( cntcmp != 0 )
+                sstr<<separator;
+            sstr<<components[cntcmp];
+        }
+        return std::move(sstr.str());
+    }
 
     /*
         Appends a trailing slash to a path if its not there in the first place !
@@ -69,7 +102,7 @@ namespace utils
 
     /*
         CleanFilename
-            Remove special invalid characters from a filename.
+            Remove unprintable characters from a filename.
     */
     std::string CleanFilename( const std::string & fname, std::locale loc )
     {

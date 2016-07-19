@@ -138,6 +138,7 @@ namespace pmd2
         catch(...)
         {
             //Normally, do something here
+            //Maybe load default config or something?
             std::rethrow_exception( std::current_exception() );
         }
     }

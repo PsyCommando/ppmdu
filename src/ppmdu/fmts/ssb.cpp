@@ -83,30 +83,38 @@ namespace filetypes
 //  Functions for handling parameter values
 //=======================================================================================
 
+    inline int16_t Convert14bTo16b(int16_t val)
+    {
+        return (val >= 0x4000)? (val | 0xFFFF8000) : (val & 0x3FFF);
+    }
+
+    //!#TODO: Double check this!!
+    inline int16_t Convert16bTo14b(int16_t val)
+    {
+        if( (val/val) < 0)
+            return (val & 0x3FFF) | 0x4000;     //If the value was negative, set the negative bit
+        return val & 0x3FFF;
+    }
+
     /*
         PrepareParameterValue
             Fun_022E48AC
             Used on 16 bits words passed to some functions, to turn them into 14 bits words
+            Used for a lot of parameters!!!
+
     */
     int16_t PrepareParameterValue( int32_t R0 )
     {
         int32_t R1 = 0;
         if( (R0 & 0x4000) != 0 )
-        {
-            R1 = 0x8000;
-            R1 = 0 - R1;
-            R1 = R0 | R1;
-        }
+            R1 = R0 | 0xFFFF8000;
         else
-        {
-            R1 = 0x3FFF;
-            R1 = R0 & R1;
-        }
+            R1 = R0 & 0x3FFF;
 
         if( (R0 & 0x8000) != 0 )
         {
             R0 = R1 >> 7;
-            R0 = R1 + static_cast<uint32_t>(static_cast<uint32_t>(R0) >> 0x18u);
+            R0 = R1 + static_cast<uint32_t>(static_cast<uint32_t>(R0) >> 0x18u); //Logical shift right, so handle as unsigned values
             R0 = R0 >> 8;
         }
         else
@@ -124,7 +132,7 @@ namespace filetypes
     {
         int32_t R1 = 0;
         if( (R0 & 0x4000) != 0 )
-            R1 = R0 | (0 - 0x8000);
+            R1 = R0 | 0xFFFF8000;
         else
             R1 = R0 & 0x3FFF;
     
@@ -168,18 +176,6 @@ namespace filetypes
     {
     public:
 
-        //ScriptProcessor( const deque<ScriptInstruction>         & instructions, 
-        //                 const rawgrp_t                         & groups, 
-        //                 const lbltbl_t                         & labellist,
-        //                 const ScriptedSequence::consttbl_t     & constants,
-        //                 const ScriptedSequence::strtblset_t    & strings,
-        //                 size_t                                   datablocklen,
-        //                 eOpCodeVersion                           opver )
-        //    :m_rawinst(instructions), m_groups(groups), m_labels(labellist), 
-        //    m_constants(constants), m_strings(strings),m_curdataoffset(0),m_curgroup(0),
-        //    m_poutgrp(nullptr), m_datablocklen(datablocklen),m_instfinder(opver)
-        //{}
-
         ScriptProcessor( raw_ssb_content && content, eOpCodeVersion opver )
             :m_rawdata(std::forward<raw_ssb_content>(content)), 
              m_rawinst(m_rawdata.rawinstructions), 
@@ -194,6 +190,10 @@ namespace filetypes
              m_instfinder(opver)
         {}
 
+        /*-----------------------------------------------------------------------------
+            operator()
+                Process the data into the the sequence "destseq"
+        -----------------------------------------------------------------------------*/
         void operator()( ScriptedSequence & destseq )
         {
             m_poutgrp           = std::addressof( destseq.Groups() );
@@ -211,11 +211,17 @@ namespace filetypes
                 HandleInstruction( iti, itend );
             }
 
+            PrepareStringsAndConstants();
+
             //Transfer the strings and constants over.
             destseq.ConstTbl()  = std::move(m_rawdata.constantstrings);
             destseq.StrTblSet() = std::move(m_rawdata.strings);
         }
 
+        /*-----------------------------------------------------------------------------
+            operator()
+                Returns the processed script sequence
+        -----------------------------------------------------------------------------*/
         inline ScriptedSequence operator()()
         {
             ScriptedSequence dest;
@@ -224,19 +230,27 @@ namespace filetypes
         }
 
     private:
+
         //Temporary object, never copied or moved!!
         ScriptProcessor(ScriptProcessor&&)                  = delete;
         ScriptProcessor(const ScriptProcessor&)             = delete;
         ScriptProcessor& operator=(ScriptProcessor&&)       = delete;
         ScriptProcessor& operator=(const ScriptProcessor&)  = delete;
 
-        //Helper to access the current group
+        /*-----------------------------------------------------------------------------
+            CurGroup
+                Helper to access the current group
+        -----------------------------------------------------------------------------*/
         inline ScriptInstrGrp & CurGroup()
         {
             return (*m_poutgrp)[m_curgroup];
         }
 
-        //Init destination groups, and make a list of all the end offsets for each groups
+        /*-----------------------------------------------------------------------------
+            PrepareGroups
+                Init destination groups, and make a list of all the end offsets 
+                for each groups
+        -----------------------------------------------------------------------------*/
         void PrepareGroups()
         {
             m_grpends.reserve(m_groups.size());
@@ -252,23 +266,45 @@ namespace filetypes
 
                 //group_bounds bnds;
                 //bnds.datoffbeg = grp.begoffset * ScriptWordLen;
-                size_t endoffset = ((cntgrp +1) < m_groups.size())?
-                                   (m_groups[cntgrp+1].begoffset * ScriptWordLen) :  
-                                   m_datablocklen;
+                size_t endoffset = 0;
+                if( (cntgrp +1) < m_groups.size() )
+                    endoffset = m_groups[cntgrp+1].begoffset * ScriptWordLen;
+                else
+                    endoffset = m_datablocklen;
+
+                //((cntgrp +1) < m_groups.size())?
+                //                   (m_groups[cntgrp+1].begoffset * ScriptWordLen) :  
+                //                   m_datablocklen;
                 m_grpends.push_back(endoffset);
             }
         }
 
+        /*-----------------------------------------------------------------------------
+            PrepareStringsAndConstants
+                This is for escaping unprintable characters in the string data we got.
+        -----------------------------------------------------------------------------*/
+        void PrepareStringsAndConstants()
+        {
+            //!#TODO: Escape strings!!
+        }
+
+        /*-----------------------------------------------------------------------------
+            HandleLabels
+                Check if there's a jump location at the current data offset.
+                If there is, place a label there.
+        -----------------------------------------------------------------------------*/
         inline void HandleLabels()
         {
             auto itf = m_labels.find(m_curdataoffset);
             if( itf != m_labels.end() )
             {
                 ScriptInstruction label;
-
-                if( itf->second.lblty == lbl_t::eLblTy::CaseLbl )
-                    label.type  = eInstructionType::MetaCaseLabel;
-                else
+#ifdef _DEBUG
+                label.dbg_origoffset = m_curdataoffset / ScriptWordLen;;
+#endif
+                //if( itf->second.lblty == lbl_t::eLblTy::CaseLbl )
+                //    label.type  = eInstructionType::MetaCaseLabel;
+                //else
                     label.type  = eInstructionType::MetaLabel;
 
                 label.value = itf->second.lblid;
@@ -277,22 +313,31 @@ namespace filetypes
             }
         }
 
+        /*-----------------------------------------------------------------------------
+            HandleInstruction
+                Handle assembling meta-informations when neccessary.
+                Also increases the data offset counter depending on the
+                processed instruction's size.
+
+                - iti   : Iterator to current instruction.
+                - itend : Iterator to end of list of instruction.
+        -----------------------------------------------------------------------------*/
         template<typename _init>
             void HandleInstruction( _init & iti, _init & itend )
         {
-            ScriptInstruction curinst  = std::move(*iti);
+            ScriptInstruction curinst  = *iti;
             OpCodeInfoWrapper codeinfo = m_instfinder.Info(curinst.value);
-
+#ifdef _DEBUG
+                m_grptblandathdrlen;
+                curinst.dbg_origoffset = m_curdataoffset / ScriptWordLen;
+#endif
             switch(codeinfo.Category())
             {
+                case eCommandCat::EnterAdventure:
                 case eCommandCat::ProcSpec:
-                {
-                    HandleProcessSpecial(iti, itend, curinst);
-                    break;
-                }
                 case eCommandCat::Switch:
                 {
-                    HandleSwitchCommand(iti, itend, curinst);
+                    HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
                     break;
                 }
                 case eCommandCat::EntityAccessor:
@@ -309,20 +354,30 @@ namespace filetypes
             };
         }
 
-        template<typename _init>
-            void HandleProcessSpecial(_init & iti, _init & itend, ScriptInstruction & curinst)
-        {
-            HandleCaseOwningCommand<eInstructionType::MetaProcSpecRet>(iti,itend,curinst);
-        }
+        //template<typename _init>
+        //    void HandleProcessSpecial(_init & iti, _init & itend, ScriptInstruction & curinst)
+        //{
+        //    HandleCaseOwningCommand<eInstructionType::MetaProcSpecRet>(iti,itend,curinst);
+        //}
 
-        template<typename _init>
-            inline void HandleSwitchCommand(_init & iti, _init & itend, ScriptInstruction & curinst)
-        {
-            HandleCaseOwningCommand<eInstructionType::MetaSwitch>(iti,itend,curinst);
-        }
+        //template<typename _init>
+        //    inline void HandleSwitchCommand(_init & iti, _init & itend, ScriptInstruction & curinst)
+        //{
+        //    HandleCaseOwningCommand<eInstructionType::MetaSwitch>(iti,itend,curinst);
+        //}
 
-        template<eInstructionType _MetaType, typename _init>
-            void HandleCaseOwningCommand(_init & iti, _init & itend, ScriptInstruction & curinst)
+        /*-----------------------------------------------------------------------------
+            HandleCaseOwningCommand
+                Handle Meta-Instructions that "owns" a list of case instructions 
+                immediately after itself.
+
+                - &iti     : Reference to iterator to current instruction.
+                - &itend   : Reference to iterator to end of list of instruction.
+                - &curinst : Reference to currently handled instruction.
+                - &curinfo : Reference to information on current instruction.
+        -----------------------------------------------------------------------------*/
+        template<typename _init>
+            void HandleCaseOwningCommand(_init & iti, _init & itend, ScriptInstruction & curinst, const OpCodeInfoWrapper & curinfo )
         {
             ScriptInstruction & outinst = curinst;
             size_t            totalsz = GetInstructionLen(curinst);
@@ -347,12 +402,21 @@ namespace filetypes
             }while( iti != itend && iscase );
                
             if( !(outinst.subinst.empty()) )
-                outinst.type = _MetaType;
+                outinst.type = curinfo.GetMyInstructionType();//_MetaType;
 
             CurGroup().instructions.push_back(std::move(outinst));
             m_curdataoffset += totalsz;
         }
 
+        /*-----------------------------------------------------------------------------
+            HandleAccessor
+                Handle Meta-Instructions that "owns" a single instructions 
+                immediately after itself.
+
+                - &iti     : Reference to iterator to current instruction.
+                - &itend   : Reference to iterator to end of list of instruction.
+                - &curinst : Reference to currently handled instruction.
+        -----------------------------------------------------------------------------*/
         template<typename _init>
             void HandleAccessor(_init & iti, _init & itend, ScriptInstruction & curinst)
         {
@@ -376,6 +440,13 @@ namespace filetypes
             m_curdataoffset += totalsz;
         }
 
+        /*-----------------------------------------------------------------------------
+            HandleAccessor
+                Calculate the length of the specified instruction in bytes as if it
+                was stored as raw bytes in the script file.
+
+                - &inst : Reference to currently handled instruction.
+        -----------------------------------------------------------------------------*/
         inline size_t GetInstructionLen( const ScriptInstruction & inst )
         {
             if( inst.type == eInstructionType::Command || inst.type == eInstructionType::Data )
@@ -384,6 +455,11 @@ namespace filetypes
                 return 0;
         }
 
+        /*-----------------------------------------------------------------------------
+            UpdateCurrentGroup
+                Picks the instruction "group" to place the raw instrutions into,
+                based on the data offset we're currently parsing an instruction at.
+        -----------------------------------------------------------------------------*/
         inline void UpdateCurrentGroup()
         {
             if( m_curdataoffset >= m_grpends[m_curgroup] && m_curgroup < (m_grpends.size()-1) )
@@ -548,7 +624,7 @@ namespace filetypes
             return std::move(rgrps);
         }
 
-        void ParseCommand( size_t                                foffset, 
+        void ParseCommand( size_t                              & foffset, 
                            initer                              & itcur, 
                            initer                              & itendseq, 
                            uint16_t                              curop, 
@@ -558,7 +634,7 @@ namespace filetypes
             inst.type  = eInstructionType::Command;
             inst.value = curop;
 
-            if( codeinfo.NbParams() >= 0 && itcur != itendseq )
+            if( codeinfo.NbParams() >= 0 )
             {
                 const uint16_t nbparams = codeinfo.NbParams();
                 size_t cntparam = 0;
@@ -575,13 +651,15 @@ namespace filetypes
 
                 foffset += cntparam * ScriptWordLen; //!#TODO: Maybe we shouldn't do this here..
             }
-            else if( codeinfo.NbParams() == -1 && itcur != itendseq  )
+            else if( codeinfo.NbParams() == -1  )
             {
+                if(itcur == itendseq)
+                    throw std::runtime_error("SSB_Parser::ParseCommand(): Found an opcode with -1 parameters at the end of the instruction list!!! Can't get parameters!!!");
 #if 1
                 clog << "\n<!>- Found instruction with -1 parameter number in this script! Offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
                 //!#TODO: -1 param instructions use the next 16bits word to indicate the amount of parameters to parse
                 size_t cntparam = 0;
-                size_t nbparams = PrepareParameterValue( utils::ReadIntFromBytes<int16_t>(itcur,m_end) ); //iterator is incremented here
+                size_t nbparams = PrepareParameterValue( utils::ReadIntFromBytes<int16_t>(itcur,itendseq) ); //iterator is incremented here
 
                 for( ; cntparam < nbparams && itcur != itendseq; ++cntparam )
                     HandleParameter(cntparam, inst, codeinfo, itcur, itendseq);
@@ -603,17 +681,31 @@ namespace filetypes
         {
             destinst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(itcur, itendseq) );
 
+//#ifdef _DEBUG
+//            if( destinst.parameters.back() > 0x8000 )
+//            {
+//                clog <<codeinfo.Name() <<" -> Param " <<cntparam << ", value " <<destinst.parameters.back() <<" is bigger than 0x8000\n";
+//            }
+//            else if( destinst.parameters.back() > 0x4000 )
+//            {
+//                clog <<codeinfo.Name() <<" -> Param " <<cntparam << ", value " <<destinst.parameters.back() << " is bigger than 0x4000\n";
+//            }
+//#endif
+
             if( cntparam < codeinfo.ParamInfo().size() )
-                CheckAndMarkJumps(destinst.parameters.back(), codeinfo.ParamInfo()[cntparam].ptype );
+            {
+                eOpParamTypes ptype = codeinfo.ParamInfo()[cntparam].ptype;
+                CheckAndMarkJumps(destinst.parameters.back(), ptype );
+            }
         }
 
         //Also updates the value of the opcode if needed
         inline void CheckAndMarkJumps( uint16_t & pval, eOpParamTypes ptype )
         {
-            if( ptype == eOpParamTypes::InstructionOffset || ptype == eOpParamTypes::CaseJumpOffset)
+            if( ptype == eOpParamTypes::InstructionOffset /*|| ptype == eOpParamTypes::CaseJumpOffset*/)
             {
                 auto empres = m_metalabelpos.emplace( std::make_pair( PrepareParameterValue(pval) * ScriptWordLen, 
-                                                                      lbl_t{ m_lblcnt, (ptype == eOpParamTypes::CaseJumpOffset)? lbl_t::eLblTy::CaseLbl : lbl_t::eLblTy::JumpLbl} ) );
+                                                                      lbl_t{ m_lblcnt, /*(ptype == eOpParamTypes::CaseJumpOffset)? lbl_t::eLblTy::CaseLbl :*/ lbl_t::eLblTy::JumpLbl} ) );
                 pval = m_lblcnt; //set the value to the label's value.
 
                 if( empres.second )//Increment only if there was a new label added!
@@ -705,7 +797,7 @@ namespace filetypes
 
             while( itcollect != itdataend )
             {
-                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( itcollect, m_end );
+                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( itcollect, itdataend );
 
                 if( curop < m_opfinder.GetNbOpcodes() )
                 {
@@ -1201,6 +1293,9 @@ namespace filetypes
 
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
+
+        //if( scriptfile == "EoSRomRoot\\data\\SCRIPT\\D02P31A\\enter00.ssb"s )
+        //    cout <<"lol\n";
 
         return std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc).Parse() );
     }
