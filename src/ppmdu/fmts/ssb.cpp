@@ -572,27 +572,18 @@ namespace filetypes
             m_datahdrgrouplen(0), m_langdat(langdat)
         {}
 
+
+        /*******************************************************************************
+            Parse
+        *******************************************************************************/
         inline Script Parse(bool parseforxml = true)
         {
-            //Script out;
-            ////m_out    = std::move(Script());
-            //m_lblcnt = 0;
-            //ParseHeader();
-            //rawgrp_t grps     = std::move(ParseGroups());
-            //out.ConstTbl()    = std::move(ParseConstants());
-            //out.StrTblSet()   = std::move(ParseStrings());
-            //rawinst_t rawinst = std::move(ParseCode());
-
-            //ScriptProcessor( rawinst, 
-            //                 grps, 
-            //                 m_metalabelpos, 
-            //                 out.ConstTbl(), 
-            //                 out.StrTblSet(), 
-            //                 m_datablocklen, 
-            //                 m_scrversion )(out);
             return std::move(ScriptProcessor(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml));
         }
 
+        /*******************************************************************************
+            ParseToRaw
+        *******************************************************************************/
         raw_ssb_content ParseToRaw()
         {
 #ifdef _DEBUG
@@ -614,6 +605,9 @@ namespace filetypes
 
     private:
 
+        /*******************************************************************************
+            ParseHeader
+        *******************************************************************************/
         void ParseHeader()
         {
             uint16_t scriptdatalen = 0;
@@ -680,6 +674,9 @@ namespace filetypes
 #endif
         }
 
+        /*******************************************************************************
+            ParseGroups
+        *******************************************************************************/
         inline rawgrp_t ParseGroups()
         {
             rawgrp_t rgrps;
@@ -690,94 +687,9 @@ namespace filetypes
             return std::move(rgrps);
         }
 
-        void ParseCommand( size_t                              & foffset, 
-                           initer                              & itcur, 
-                           initer                              & itendseq, 
-                           uint16_t                              curop, 
-                           const OpCodeInfoWrapper             & codeinfo  )
-        {
-            ScriptInstruction inst;
-            inst.type  = eInstructionType::Command;
-            inst.value = curop;
-
-            if( codeinfo.NbParams() >= 0 )
-            {
-                const uint16_t nbparams = codeinfo.NbParams();
-                size_t cntparam = 0;
-                for( ; cntparam < nbparams && itcur != itendseq; ++cntparam )
-                {
-                    HandleParameter(cntparam, inst, codeinfo, itcur, itendseq);
-                }
-
-                //!#TODO: It would be easier if we'd handle this error case in the calling function..
-                if( cntparam != nbparams )
-                    clog << "\n<!>- Found instruction with not enough bytes left to assemble all its parameters at offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
-                else
-                    m_rawinst.push_back(std::move(inst));
-
-                foffset += cntparam * ScriptWordLen; //!#TODO: Maybe we shouldn't do this here..
-            }
-            else if( codeinfo.NbParams() == -1  )
-            {
-                if(itcur == itendseq)
-                    throw std::runtime_error("SSB_Parser::ParseCommand(): Found an opcode with -1 parameters at the end of the instruction list!!! Can't get parameters!!!");
-#if 1
-                clog << "\n<!>- Found instruction with -1 parameter number in this script! Offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
-                //!#TODO: -1 param instructions use the next 16bits word to indicate the amount of parameters to parse
-                size_t cntparam = 0;
-                size_t nbparams = PrepareParameterValue( utils::ReadIntFromBytes<int16_t>(itcur,itendseq) ); //iterator is incremented here
-
-                for( ; cntparam < nbparams && itcur != itendseq; ++cntparam )
-                    HandleParameter(cntparam, inst, codeinfo, itcur, itendseq);
-
-                //!#TODO: It would be easier if we'd handle this error case in the calling function..
-                if( cntparam != nbparams )
-                    clog << "\n<!>- Found -1 instruction with not enough bytes left to assemble all its parameters at offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
-                else
-                    m_rawinst.push_back(std::move(inst));
-
-                foffset += ScriptWordLen + (nbparams * ScriptWordLen);
-#else
-                m_rawinst.push_back(std::move(inst));
-#endif
-            }
-        }
-
-        inline void HandleParameter( size_t cntparam, ScriptInstruction & destinst, const OpCodeInfoWrapper & codeinfo, initer & itcur, initer & itendseq )
-        {
-            destinst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(itcur, itendseq) );
-
-//#ifdef _DEBUG
-//            if( destinst.parameters.back() > 0x8000 )
-//            {
-//                clog <<codeinfo.Name() <<" -> Param " <<cntparam << ", value " <<destinst.parameters.back() <<" is bigger than 0x8000\n";
-//            }
-//            else if( destinst.parameters.back() > 0x4000 )
-//            {
-//                clog <<codeinfo.Name() <<" -> Param " <<cntparam << ", value " <<destinst.parameters.back() << " is bigger than 0x4000\n";
-//            }
-//#endif
-
-            if( cntparam < codeinfo.ParamInfo().size() )
-            {
-                eOpParamTypes ptype = codeinfo.ParamInfo()[cntparam].ptype;
-                CheckAndMarkJumps(destinst.parameters.back(), ptype );
-            }
-        }
-
-        //Also updates the value of the opcode if needed
-        inline void CheckAndMarkJumps( uint16_t & pval, eOpParamTypes ptype )
-        {
-            if( ptype == eOpParamTypes::InstructionOffset )
-            {
-                auto empres = m_metalabelpos.try_emplace( pval * ScriptWordLen, lbl_t{ m_lblcnt, lbl_t::eLblTy::JumpLbl} );
-                
-                pval = empres.first->second.lblid;
-                if( empres.second )//Increment only if there was a new label added!
-                    ++m_lblcnt;
-            }
-        }
-
+        /*******************************************************************************
+            ParseData
+        *******************************************************************************/
         void ParseData( size_t foffset, uint16_t curop )
         {
             if( utils::LibWide().isLogOn() )
@@ -790,6 +702,9 @@ namespace filetypes
             m_rawinst.push_back(std::move(inst));
         }
 
+        /*******************************************************************************
+            ParseConstants
+        *******************************************************************************/
         Script::consttbl_t ParseConstants()
         {
             if( !m_nbconsts )
@@ -801,52 +716,86 @@ namespace filetypes
             return std::move(ParseOffsetTblAndStrings<Script::consttbl_t>( m_constlutbeg, m_constlutbeg, m_nbconsts, strlutlen ));
         }
 
+        /*******************************************************************************
+            SetupLanguageTbl
+        *******************************************************************************/
+        //Setup all the correct languages in the string table
+        inline void SetupLanguageTbl( Script::strtblset_t & out )
+        {
+            for( const auto & lg : m_langdat.Languages())
+                out.emplace( lg.second.GetLanguage(), std::move(Script::strtbl_t()) ); //Make the entry for this language
+        }
+
+        /*******************************************************************************
+            ParseStrings
+        *******************************************************************************/
         Script::strtblset_t ParseStrings()
         {
             if( !m_nbstrs )
                 return Script::strtblset_t();
 
             Script::strtblset_t out;
+            SetupLanguageTbl(out);
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringlutbeg;
             size_t begoffset      = ( m_nbconsts != 0 )? m_constlutbeg : m_stringlutbeg;
 
-            for( size_t i = 0; i < m_stringblksSizes.size(); ++i )
+            size_t cntlang = 0;
+            for( auto & lang : out )
             {
-                out.insert_or_assign( static_cast<eGameLanguages>(i), 
-                                      std::forward<Script::strtbl_t>(
-                                          ParseOffsetTblAndStrings<Script::strtbl_t>( strparseoffset, 
-                                                                                               begoffset, 
-                                                                                               m_nbstrs )) );
-                strparseoffset += m_stringblksSizes[i]; //Add the size of the last block, so we have the offset of the next table
+                lang.second = std::move( ParseOffsetTblAndStrings<Script::strtbl_t>( strparseoffset, 
+                                                                                     begoffset, 
+                                                                                     m_nbstrs ));
+                strparseoffset += m_stringblksSizes[cntlang]; //Add the size of the last block, so we have the offset of the next table
+                ++cntlang;
             }
             return std::move(out);
         }
 
-        /*
-            relptroff == The position in the file against which the offsets in the table are added to.
-            offsetdiff == this value will be subtracted from every ptr read in the table.
-        */
+        /*******************************************************************************
+            ParseOffsetTblAndStrings
+                - lutbeg     : The offset of the beginning of the lookup tables.
+                - ptrbaseoff : The the offset against which we add the offsets from the lookup table.
+                - nbtoparse  : The nb of entries in the lookup table.
+                - offsetdiff : this value will be subtracted from every ptr read in the table. 
+                               Used by the constant table, since, each 16 bits offsets in its LuT include 
+                               the length of the string LuT( nbstrings * 2, even with european games ).
+        *******************************************************************************/
         template<class _ContainerT>
-            _ContainerT ParseOffsetTblAndStrings( size_t foffset, uint16_t relptroff, uint16_t nbtoparse, long offsetdiff=0 )
+            _ContainerT ParseOffsetTblAndStrings( size_t lutbeg, uint16_t ptrbaseoff, uint16_t nbtoparse, long offsetdiff=0 )
         {
             _ContainerT strings;
             //Parse regular strings here
-            initer itoreltblbeg = std::next( m_beg, relptroff ); //std::advance( itoreltblbeg, relptroff);
-            initer itluttable   = std::next( m_beg, foffset );   //std::advance(itluttable, foffset);
+            initer itbaseoffs = std::next( m_beg, ptrbaseoff );
+            initer itlut      = std::next( m_beg, lutbeg );
+            initer itlutend   = std::next( itlut, (nbtoparse * ScriptWordLen) );
             
-            assert( itoreltblbeg != m_end );
+            assert( itbaseoffs != m_end );
 
             //Parse string table
-            for( size_t cntstr = 0; cntstr < nbtoparse && itluttable != m_end; ++cntstr )
+            size_t cntstr = 0;
+            for( ; cntstr < nbtoparse && itlut != itlutend; ++cntstr )
             {
-                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itluttable, m_end ) - offsetdiff; //Offset is in bytes this time!
-                initer   itstr     = std::next( itoreltblbeg, stroffset ); //std::advance(itstr,stroffset);
+                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itlut, itlutend ) - offsetdiff; //Offset is in bytes this time!
+                initer   itstr     = std::next( itbaseoffs, stroffset ); 
                 strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
             }
+
+            if(cntstr != nbtoparse)
+            {
+                utils::DebugAssert(false);
+                stringstream sstrer;
+                sstrer << "SSB_Parser::ParseOffsetTblAndStrings(): Couldn't parse all " <<nbtoparse <<" string(s)! Only parsed " <<cntstr <<" before reaching end of data!!";
+                throw std::runtime_error(sstrer.str());
+            }
+
             return std::move(strings);
         }
 
+        /*******************************************************************************
+            ParseCode
+                
+        *******************************************************************************/
         void ParseCode()
         {
             //Iterate once through the entire code, regardless of groups, list all jump targets, and parse all operations
@@ -874,7 +823,7 @@ namespace filetypes
                         assert(false);
 #endif                  
                         stringstream sstr;
-                        sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute offset  " <<hex <<uppercase <<instdataoffset + instbeg <<"!";
+                        sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute file offset  " <<hex <<uppercase <<instdataoffset + instbeg <<"!";
                         throw std::runtime_error(sstr.str());
                     }
                     ParseCommand( instdataoffset, itcollect, itdataend, curop, opcodedata );
@@ -883,7 +832,85 @@ namespace filetypes
                 {
                     ParseData( instdataoffset, curop );
                 }
-                instdataoffset += ScriptWordLen; //Count instructions and data. Parameters are added by when relevant!
+                instdataoffset += ScriptWordLen; //Count instructions and data. Parameters are added by the called functions as needed
+            }
+        }
+
+        /*******************************************************************************
+            ParseCommand 
+                Read and add command to the rawinstruction table!
+        *******************************************************************************/
+        void ParseCommand( size_t                   & foffset, 
+                           initer                   & itcur, 
+                           initer                   & itendseq, 
+                           uint16_t                   curop, 
+                           const OpCodeInfoWrapper  & codeinfo  )
+        {
+            ScriptInstruction inst;
+            inst.type  = eInstructionType::Command;
+            inst.value = curop;
+            size_t cntparam = 0;
+            size_t nbparams = 0;
+            size_t paramlen = 0;
+
+            if( codeinfo.NbParams() != 0 && itcur == itendseq )
+                throw std::runtime_error("SSB_Parser::ParseCommand(): Not enough data left to parse any parameters!!");
+
+            if( codeinfo.NbParams() > 0 )
+            {
+                nbparams = codeinfo.NbParams();
+                paramlen = cntparam * ScriptWordLen;
+            }
+            else if( codeinfo.NbParams() == -1  )
+            {
+                // -1 param instructions use the next 16bits word to indicate the amount of parameters to parse
+                nbparams = PrepareParameterValue( utils::ReadIntFromBytes<int16_t>(itcur,itendseq) ); //iterator is incremented here
+                paramlen = ScriptWordLen + (nbparams * ScriptWordLen);
+            }
+
+            for( ; cntparam < nbparams && itcur != itendseq; ++cntparam )
+                HandleParameter(cntparam, inst, codeinfo, itcur, itendseq);
+
+            if( cntparam != nbparams )
+            {
+                stringstream sstrer;
+                sstrer <<"\n<!>- Found instruction with not enough bytes left to assemble all its parameters at offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
+                throw std::runtime_error(sstrer.str());
+            }
+            else
+                m_rawinst.push_back(std::move(inst));
+
+            foffset += paramlen;
+        }
+
+        /*******************************************************************************
+        *******************************************************************************/
+        inline void HandleParameter(size_t                    cntparam, 
+                                    ScriptInstruction       & destinst, 
+                                    const OpCodeInfoWrapper & codeinfo, 
+                                    initer                  & itcur, 
+                                    initer                  & itendseq )
+        {
+            destinst.parameters.push_back( utils::ReadIntFromBytes<uint16_t>(itcur, itendseq) );
+            if( cntparam < codeinfo.ParamInfo().size() )
+            {
+                eOpParamTypes ptype = codeinfo.ParamInfo()[cntparam].ptype;
+                CheckAndMarkJumps(destinst.parameters.back(), ptype );
+            }
+        }
+
+        /*******************************************************************************
+        *******************************************************************************/
+        //Also updates the value of the opcode if needed
+        inline void CheckAndMarkJumps( uint16_t & pval, eOpParamTypes ptype )
+        {
+            if( ptype == eOpParamTypes::InstructionOffset )
+            {
+                auto empres = m_metalabelpos.try_emplace( pval * ScriptWordLen, lbl_t{ m_lblcnt, lbl_t::eLblTy::JumpLbl} );
+                
+                pval = empres.first->second.lblid;
+                if( empres.second )//Increment only if there was a new label added!
+                    ++m_lblcnt;
             }
         }
 
@@ -1131,6 +1158,7 @@ namespace filetypes
 
         void Write(const std::string & scriptfile)
         {
+            //!MAKE SURE THE SCRIPT CONTAINS WHAT IT SHOULD HERE!!
             m_outf.open(scriptfile, ios::binary | ios::out);
             if( m_outf.bad() || !m_outf.is_open() )
                 throw std::runtime_error("SSBWriterTofile::Write(): Couldn't open file " + scriptfile);
@@ -1314,36 +1342,17 @@ namespace filetypes
                 itw = utils::WriteIntToBytes( inst.value, itw );
                 m_datalen += ScriptWordLen;
 
-                //!#TODO: We might want to add something here to handle references to file offsets used as parameters
                 size_t cntparams = 0;
                 for( const auto & param : inst.parameters )
                 {
-                    //!#TODO: If parameter is jump address, take the label id and use it on the label table
-
                     OpCodeInfoWrapper codeinf;
                     if( m_opversion == eOpCodeVersion::EoS )
                         codeinf = OpCodeFinderPicker<eOpCodeVersion::EoS>()(inst.value);
                     else if( m_opversion == eOpCodeVersion::EoTD )
                         codeinf = OpCodeFinderPicker<eOpCodeVersion::EoTD>()(inst.value);
 
-                    //if( codeinf && 
-                    //    codeinf.ParamInfo().size() > cntparams && 
-                    //   codeinf.ParamInfo()[cntparams].ptype == eOpParamTypes::InstructionOffset )
-                    //{
-                    //    auto itf = m_labeltbl.find(param);
-                    //    if( itf != m_labeltbl.end() )
-                    //        itw = utils::WriteIntToBytes( itf->second, itw );
-                    //    else
-                    //    {
-                    //        assert(false);
-                    //    }
-                    //}
-                    //else
-                    //{
-                        itw = utils::WriteIntToBytes( param, itw );
-                    //}
+                    itw = utils::WriteIntToBytes( param, itw );
 
-                    
                     m_datalen += ScriptWordLen;
                     ++cntparams;
                 }
@@ -1360,11 +1369,6 @@ namespace filetypes
             }
         }
 
-        //void CheckAndHandleJumpInstructions(outit_t & itw, const ScriptInstruction & inst)
-        //{
-        //    m_labeltbl;
-        //}
-        
 
         void WriteConstants( outit_t & itw )
         {

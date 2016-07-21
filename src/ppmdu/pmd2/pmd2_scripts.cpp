@@ -22,6 +22,7 @@ namespace pmd2
 //==============================================================================
 //  
 //==============================================================================
+    //Used to identify all the files of the script engine
     const std::regex MatchScriptFileTypes( ".*\\.(("s + filetypes::SSS_FileExt + 
                                            ")|("s + filetypes::SSA_FileExt + 
                                            ")|("s + filetypes::SSE_FileExt + 
@@ -270,9 +271,13 @@ namespace pmd2
 
     void GameScriptsHandler::LoadSSB(ScriptSet & tgtgrp, const std::string & fpath )
     {
+        assert(m_parent.m_langdat);
         string basename = Poco::Path(fpath).getBaseName();
-        auto script = std::move( filetypes::ParseScript(fpath, m_parent.m_scrRegion, m_parent.m_gameVersion, *m_parent.m_langdat, m_parent.m_escapexml) );
-        //script.SetFileName(Poco::Path(fpath).getFileName());
+        auto script = std::move( filetypes::ParseScript(fpath, 
+                                                        m_parent.m_scrRegion, 
+                                                        m_parent.m_gameVersion, 
+                                                        *m_parent.m_langdat, 
+                                                        m_parent.m_escapexml) );
         script.SetName(basename);
         tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
 
@@ -643,7 +648,7 @@ namespace pmd2
             {
                 string basename = std::move( Poco::Path::transcode(itdir.path().getBaseName()) );
                 if( basename == DirNameScriptCommon )
-                    ;//m_common = std::move( m_pHandler->LoadDirectory(Poco::Path::transcode(itdir->path()) ) );
+                    m_common = std::move( m_pHandler->LoadDirectory(Poco::Path::transcode(itdir->path()) ) );
                 else
                     m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, Poco::Path::transcode(itdir->path()))) );
             }

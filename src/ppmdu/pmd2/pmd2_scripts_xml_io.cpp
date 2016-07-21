@@ -155,11 +155,9 @@ namespace pmd2
                 if( !aconstref.second.bexists )
                 {
                     stringstream sstr;
-                    sstr <<"SSBXMLParser::CheckLabelReferences(): Reference to non-existant label ID " <<aconstref.first <<" found!!";
-#ifdef  _DEBUG
-                    assert(false);
-#endif //  _DEBUG
-
+                    sstr <<"SSBXMLParser::CheckLabelReferences(): "<<aconstref.second.nbref 
+                         <<" reference(s) to non-existant label ID " <<aconstref.first <<" found!!";
+                    utils::DebugAssert(false);
                     throw std::runtime_error(sstr.str());
                 }
             }
@@ -941,18 +939,25 @@ namespace pmd2
         void operator()( xml_node & parentn )
         {
             using namespace scriptXML;
+            stringstream sstrstats;
+            sstrstats << "File contained " << m_seq.ConstTbl().size() << " constant(s), ";
+            if( !m_seq.StrTblSet().empty() )
+                sstrstats <<m_seq.StrTblSet().begin()->second.size() <<" string(s), ";
+            sstrstats <<m_seq.Groups().size() <<" routine(s).";
+            WriteCommentNode( parentn, sstrstats.str() );
+
             xml_node ssbnode = parentn.append_child( NODE_ScriptSeq.c_str() );
             AppendAttribute( ssbnode, ATTR_Name, m_seq.Name() );
 
             //prepare for counting references to strings
-            if(!m_seq.ConstTbl().size())
+            if(!m_seq.ConstTbl().empty())
                 m_referedconstids.reserve(m_seq.ConstTbl().size());
             if( (!m_seq.StrTblSet().empty()) && (!m_seq.StrTblSet().begin()->second.empty()) )
                 m_referedstrids.reserve(m_seq.StrTblSet().begin()->second.size());
 
-            WriteCode     (ssbnode);
-            WriteConstants(ssbnode);
-            WriteStrings  (ssbnode);
+            WriteCode             (ssbnode);
+            WriteOrphanedConstants(ssbnode);
+            WriteOrphanedStrings  (ssbnode);
         }
 
     private:
@@ -1193,13 +1198,17 @@ namespace pmd2
                         const int16_t stroffset = pval - m_seq.ConstTbl().size(); //The string ids in the instructions include the length of the const table if there's one!
                         if( (pval < m_seq.ConstTbl().size() || m_region == eGameRegion::Japan) && isConstIdInRange(pval) ) //Japan ignores string block completely
                         {
-                            m_referedconstids.insert(pval);
+                            auto res = m_referedconstids.insert(pval);
+                            if( !res.second )
+                                cerr << "\nConstant duplicate reference to CID# " <<pval <<", \"" <<m_seq.ConstTbl()[pval] <<"\"!!\n";
                             AppendAttribute( instn, OpParamTypesNames[static_cast<size_t>(eOpParamTypes::Constant)], m_seq.ConstTbl()[pval] );
                             return;
                         }
                         else if( isStringIdInRange(stroffset) )
                         {
-                            m_referedstrids.insert(stroffset);
+                            auto res = m_referedstrids.insert(stroffset);
+                            if( !res.second )
+                                cerr << "\nString duplicate reference to SID# " <<pval; 
                             //Place the strings for each languages
 #ifdef _DEBUG
                             WriteCommentNode( instn, std::to_string(pval) );
@@ -1209,13 +1218,17 @@ namespace pmd2
                                 xml_node xlang = AppendChildNode(instn, NODE_String);
                                 AppendAttribute( xlang, ATTR_Language, GetGameLangName(lang.first) );
                                 AppendAttribute( xlang, ATTR_Value,    lang.second.at(stroffset) );
+                                if(!res.second)
+                                    cerr <<", \"" <<lang.second.at(stroffset) <<"\" ";
                             }
+                            if(!res.second)
+                                cerr <<"\n";
                             return;
                         }
                         else
                         {
-                            clog << "SSBXMLWriter::WriteInstructionParam(): String ID " <<pval <<" out of range!";
-                            //throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): String ID out of range!" );
+                            utils::DebugAssert(false);
+                            throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): String ID out of range!" );
                         }
                         break;
                     }
@@ -1289,12 +1302,13 @@ namespace pmd2
             return !(m_seq.StrTblSet().empty()) && (id < m_seq.StrTblSet().begin()->second.size());
         }
 
-        void WriteConstants( xml_node & parentn )
+        void WriteOrphanedConstants( xml_node & parentn )
         {
             using namespace scriptXML;
             if( m_seq.ConstTbl().empty() || 
                m_seq.ConstTbl().size() == m_referedconstids.size() ) //If all our consts were referenced, don't bother!
                 return;
+
             xml_node xconsts = parentn.append_child( NODE_Constants.c_str() );
 
             size_t cntc = 0;
@@ -1312,12 +1326,13 @@ namespace pmd2
             }
         }
 
-        void WriteStrings( xml_node & parentn )
+        void WriteOrphanedStrings( xml_node & parentn )
         {
             using namespace scriptXML;
             if( m_seq.StrTblSet().empty() || 
                 (m_referedstrids.size() == m_seq.StrTblSet().begin()->second.size()) ) //If all our strings were referenced, don't bother!
                 return;
+
             xml_node xstrings = parentn.append_child( NODE_Strings.c_str() );
 
             for( const auto & alang : m_seq.StrTblSet() )
@@ -1455,9 +1470,12 @@ namespace pmd2
     */
     bool RunLevelXMLImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
     {
+#ifdef _DEBUG
 if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
     cout<<"lol";
-
+#else
+        assert(false);
+#endif
 
         eGameRegion  tempregion  = eGameRegion::Invalid;
         eGameVersion tempversion = eGameVersion::Invalid;
@@ -1481,6 +1499,9 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
     }
 
     /*
+        PrintProgressLoop
+            To be run on a separate thread. Displays a percentage of "completed" on "total".
+            Stops looping when "bDoUpdate" is false.
     */
     void PrintProgressLoop( atomic<uint32_t> & completed, uint32_t total, atomic<bool> & bDoUpdate )
     {
@@ -1496,6 +1517,8 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         }
     }
 
+    /*
+    */
     void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress )
     {
         if(out_dest.m_setsindex.empty())
@@ -1580,6 +1603,10 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             cout<<"\n";
     }
 
+    /*
+        ExportGameScriptsXML
+            
+    */
     void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bautoescapexml, bool bprintprogress )
     {
         //Export COMMON first
@@ -1636,6 +1663,8 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             cout<<"\n";
     }
 
+    /*
+    */
     void ScriptSetToXML( const LevelScript & set, eGameRegion gloc, eGameVersion gver, bool bautoescapexml, const std::string & destdir )
     {
         if( gver < eGameVersion::NBGameVers && gloc < eGameRegion::NBRegions )
@@ -1644,6 +1673,8 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             throw std::runtime_error("ScriptSetToXML() : Error, invalid version or region!");
     }
 
+    /*
+    */
     LevelScript XMLToScriptSet( const std::string & srcdir, eGameRegion & out_reg, eGameVersion & out_gver )
     {
         return std::move( GameScriptsXMLParser(out_reg, out_gver).Parse(srcdir) );
