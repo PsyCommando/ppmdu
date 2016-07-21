@@ -1,7 +1,7 @@
 ===================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - StatsUtil  ==
 ===================================================
-Version	   : 0.22
+Version	   : 0.23 (WIP)
 Released   : 2015/03/29
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -24,6 +24,19 @@ Changelog:
     * Fixed game string import.
 -0.22(2016/06/18):
     * Fixed bad SIR0 padding.
+-
+0.23(----/--/--):
+    * Added XML configuration file system, to handle most game versions specific data.
+    * Added ability to XML conf file to refer to append external configuration files by using a <External filename="" /> node.
+    * Added Script decompiler + recompiler. Everything is human readable XML.
+    * Remade entirely how parameters are processed at the command line, because of the new features requiring extra details.
+    * Added game detection. The ROM root directory specified at the commmand line is analysed to accurately determine the version.
+    * Improved PMD2 characterset support. Whenever extended multi-byte characters are used in any other locale than
+       Japanese, they're turned into an escaped sequence of characters. That means all multi-bytes characters beginning with 
+       a 0x81 to 0x84 byte. 0x81 0xF4 for example is used for the little music note in other locale than Japanese. While 
+       in the Japanese locale,  most hiragana and katakana characters are multi-byte combination of 0x81 to 0x84 followed
+       by another byte. That's how Shift-JIS encoding works.
+    *
 
 ----------------------------------------------------------------------------------------------------
 License info:

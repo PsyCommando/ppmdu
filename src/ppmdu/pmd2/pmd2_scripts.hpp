@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: This code is used to load/index the game scripts.
 */
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 #include <cstdint>
 #include <string>
 #include <map>
@@ -89,7 +90,7 @@ namespace pmd2
     /**********************************************************************************
         Script Type
     **********************************************************************************/
-    enum struct eScriptGroupType 
+    enum struct eScriptSetType 
     {
         INVALID,
         UNK_unionall,   //Scripts not in a LSD, found under the "COMMON" directory. Has no other component. 
@@ -271,11 +272,11 @@ namespace pmd2
     };
 
     /***********************************************************************************************
-        ScriptedSequence
+        Script
             The content of a SSB file. Script instructions, strings, and constant names.
     ***********************************************************************************************/
     //!#TODO: Rename to Script
-    class ScriptedSequence
+    class Script
     {
     public:
         static const size_t                                     NbLang = static_cast<size_t>(eGameLanguages::NbLang);
@@ -284,20 +285,20 @@ namespace pmd2
         typedef std::deque<ScriptInstrGrp>                      grptbl_t;
         typedef std::unordered_map<eGameLanguages, strtbl_t>    strtblset_t;
 
-        ScriptedSequence(){}
-        ScriptedSequence(const std::string & name)
+        Script(){}
+        Script(const std::string & name)
             :m_name(name)
         {}
 
         //!#REMOVEME: original filename is pretty much useless!
-        //ScriptedSequence(const std::string & name, const std::string & origfname)
+        //Script(const std::string & name, const std::string & origfname)
         //    :m_name(name), m_originalfname(origfname)
         //{}
 
-        ScriptedSequence(const ScriptedSequence & tocopy);
-        ScriptedSequence(ScriptedSequence      && tomove);
-        ScriptedSequence & operator=( const ScriptedSequence & tocopy );
-        ScriptedSequence & operator=( ScriptedSequence       && tomove );
+        Script(const Script & tocopy);
+        Script(Script      && tomove);
+        Script & operator=( const Script & tocopy );
+        Script & operator=( Script       && tomove );
 
         inline const std::string                & Name       ()const                        { return m_name; }
         //inline const std::string                & FileName   ()const                        { return m_originalfname; }
@@ -331,18 +332,18 @@ namespace pmd2
     };
 
     /***********************************************************************************************
-        ScriptEntityData
+        ScriptData
             Position data contained in SSA, SSS, and SSE files.
     ***********************************************************************************************/
     //!TODO: Rename to ScriptData.
-    class ScriptEntityData
+    class ScriptData
     {
     public:
-        ScriptEntityData()
+        ScriptData()
             /*:m_datatype(eScrDataTy::Invalid)*/
         {}
 
-        ScriptEntityData(const std::string & name/*, eScrDataTy datatype*/ )
+        ScriptData(const std::string & name/*, eScrDataTy datatype*/ )
             :m_name(name)/*, m_datatype(datatype)*/
         {}
 
@@ -358,31 +359,31 @@ namespace pmd2
     };
 
     /***********************************************************************************************
-        ScriptGroup
-            A script group is an ensemble of one or no ScriptEntityData, and one or more
-            ScriptedSequence, that share a common identifier.
+        ScriptSet
+            A script set is an ensemble of one or no ScriptData, and one or more
+            Script, that share a common identifier.
     ***********************************************************************************************/
     //!#TODO: Should definitely rename this to "ScriptSet" eventually, since that's what it is..
-    class ScriptGroup
+    class ScriptSet
     {
     public:
-        typedef std::unique_ptr<ScriptEntityData>      dataptr_t;
-        typedef std::map<std::string,ScriptedSequence> seqtbl_t;
+        typedef std::unique_ptr<ScriptData>      dataptr_t;
+        typedef std::map<std::string,Script> seqtbl_t;
         typedef seqtbl_t::const_iterator               const_seqtbl_iter_t;
         typedef seqtbl_t::iterator                     seqtbl_iter_t;
 
-        ScriptGroup(const std::string & id, eScriptGroupType ty = eScriptGroupType::INVALID)
+        ScriptSet(const std::string & id, eScriptSetType ty = eScriptSetType::INVALID)
             :m_indentifier(id), m_type(ty)
         {}
 
-        ScriptGroup( const ScriptGroup & other)
+        ScriptSet( const ScriptSet & other)
             :m_indentifier(other.m_indentifier), m_type(other.m_type), m_sequences(other.m_sequences)
         {
             if( other.m_data != nullptr )
-                m_data.reset( new ScriptEntityData(*(other.m_data.get())) );
+                m_data.reset( new ScriptData(*(other.m_data.get())) );
         }
 
-        ScriptGroup( ScriptGroup && other)
+        ScriptSet( ScriptSet && other)
             :m_indentifier(std::move(other.m_indentifier)), m_type(other.m_type)
         {
             m_sequences = std::move( other.m_sequences );
@@ -390,18 +391,18 @@ namespace pmd2
             other.m_data = nullptr;
         }
 
-        ScriptGroup& operator=( const ScriptGroup & other)
+        ScriptSet& operator=( const ScriptSet & other)
         {
             m_indentifier   = other.m_indentifier;
             m_type          = other.m_type; 
             m_sequences     = other.m_sequences;
 
             if( other.m_data != nullptr )
-                m_data.reset( new ScriptEntityData(*(other.m_data.get())) );
+                m_data.reset( new ScriptData(*(other.m_data.get())) );
             return *this;
         }
 
-        ScriptGroup& operator=( ScriptGroup && other)
+        ScriptSet& operator=( ScriptSet && other)
         {
             m_indentifier   = std::move(other.m_indentifier); 
             m_type          = other.m_type;
@@ -415,11 +416,11 @@ namespace pmd2
         inline const std::string & Identifier()const { return m_indentifier; }
         
         //TEMP
-        inline ScriptEntityData       * Data()            {return m_data.get();}
-        inline const ScriptEntityData * Data()const       {return m_data.get();}
-        inline void                     SetData( ScriptEntityData && data ) 
+        inline ScriptData       * Data()            {return m_data.get();}
+        inline const ScriptData * Data()const       {return m_data.get();}
+        inline void                     SetData( ScriptData && data ) 
         {
-            m_data.reset( new ScriptEntityData(std::forward<ScriptEntityData>(data)));
+            m_data.reset( new ScriptData(std::forward<ScriptData>(data)));
         }
 
         inline seqtbl_t               & Sequences()       {return m_sequences;}
@@ -430,42 +431,42 @@ namespace pmd2
         const_seqtbl_iter_t SequencesTblEnd()const { return m_sequences.end(); }
         seqtbl_iter_t       SequencesTblEnd()      { return m_sequences.end(); }
 
-        eScriptGroupType    Type()const                  { return m_type; }
-        void                Type(eScriptGroupType newty) { m_type = newty; } 
+        eScriptSetType      Type()const                  { return m_type; }
+        void                Type(eScriptSetType newty) { m_type = newty; } 
 
         //Returns the file extension of the data file for this group if applicable.
         // otherwise, returns an empty string.
         const std::string & GetDataFext()const;
 
     private:
-        std::string      m_indentifier;
-        dataptr_t        m_data;          //Contains SSA, SSS, or SSE files. There can be 0 or more.
-        seqtbl_t         m_sequences;     //Contains SSB data.
-        eScriptGroupType m_type;
+        std::string     m_indentifier;
+        dataptr_t       m_data;          //Contains SSA, SSS, or SSE files. There can be 0 or more.
+        seqtbl_t        m_sequences;     //Contains SSB data.
+        eScriptSetType  m_type;
     };
 
     /***********************************************************************************************
-        ScriptSet
-            A scriptset is a group of scripts contained within a single named script folder in the
-            PMD2 games.
+        LevelScript
+            A group of scripts contained within a single named script folder in the
+            PMD2 games. Each of those are tied to a specific level.
     ***********************************************************************************************/
     //!#TODO: Should rename this to LevelScript, or something like that, since there's one per level.
-    class ScriptSet
+    class LevelScript
     {
     public:
         typedef std::array<char,8>           lsdtblentry_t;
         typedef std::deque<lsdtblentry_t>    lsdtbl_t;
-        typedef std::deque<ScriptGroup>      scriptgrps_t;
+        typedef std::deque<ScriptSet>        scriptgrps_t;
         typedef scriptgrps_t::iterator       iterator;
         typedef scriptgrps_t::const_iterator const_iterator;
 
         //Constructors
-        ScriptSet            (const std::string & name);
-        ScriptSet            (const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl );
-        ScriptSet            (const ScriptSet   & other);
-        ScriptSet & operator=(const ScriptSet   & other);
-        ScriptSet            (ScriptSet        && other);
-        ScriptSet & operator=(ScriptSet        && other);
+        LevelScript            (const std::string & name);
+        LevelScript            (const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl );
+        LevelScript            (const LevelScript   & other);
+        LevelScript & operator=(const LevelScript   & other);
+        LevelScript            (LevelScript        && other);
+        LevelScript & operator=(LevelScript        && other);
 
         //Accessors
         inline void                  Name(const std::string & name)   { m_name = name; }
@@ -509,14 +510,15 @@ namespace pmd2
         friend class GameScriptsHandler;
         friend class ScrSetLoader;
         friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress = true);
-        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bprintprogress = true );
+        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bautoescapexml, bool bprintprogress = true );
 
         typedef std::unordered_map<std::string,ScrSetLoader> evindex_t;
         typedef evindex_t::iterator                          iterator;
         typedef evindex_t::const_iterator                    const_iterator;
 
         //scrdir : the directory of the game we want to load from/write to.
-        GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver );
+        //GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver, const LanguageFilesDB & langdat );
+        GameScripts(const std::string & scrdir, const ConfigLoader & conf, bool bescapexml = false );
         ~GameScripts();
 
         //File IO
@@ -525,18 +527,18 @@ namespace pmd2
         void ImportXML(const std::string & dir);
         void ExportXML(const std::string & dir);
 
-        std::unordered_map<std::string,ScriptSet> LoadAll();
-        void                                      WriteAll( const std::unordered_map<std::string,ScriptSet> & stuff );
+        std::unordered_map<std::string,LevelScript> LoadAll();
+        void                                      WriteAll( const std::unordered_map<std::string,LevelScript> & stuff );
 
-        eGameRegion  Region()const;
+        eGameRegion  Region ()const;
         eGameVersion Version()const;
 
         //Access
-        void      WriteScriptSet( const ScriptSet   & set ); //Add new script set or overwrite existing
+        void      WriteScriptSet( const LevelScript   & set ); //Add new script set or overwrite existing
 
-        //Get the COMMON set. It has its own method, because its unique.
-        const ScriptSet & GetCommonSet()const;
-        ScriptSet       & GetCommonSet();
+        //Get the COMMON script set, aka "unionall.ssb". It has its own method, because its unique.
+        const LevelScript & GetCommonSet()const;
+        LevelScript       & GetCommonSet();
 
         //Method to get access on the list of all found event directories + their helper loader, besides "COMMON".
         inline iterator       begin();
@@ -549,15 +551,17 @@ namespace pmd2
         inline bool   empty()const;
 
     private:
-        ScriptSet LoadScriptSet ( const std::string & setname );
+        LevelScript LoadScriptSet ( const std::string & setname );
 
         std::string                                  m_scriptdir;
-        ScriptSet                                    m_common;                   //Common script set with unionall.ssb, its always loaded
+        LevelScript                                    m_common;                   //Common script set with unionall.ssb, its always loaded
         evindex_t                                    m_setsindex;                //All sets known to exist
         eGameRegion                                  m_scrRegion;
         eGameVersion                                 m_gameVersion;
         std::unique_ptr<GameScriptsHandler>          m_pHandler;
         std::mutex                                   m_mutex;
+        const LanguageFilesDB                      * m_langdat;
+        bool                                         m_escapexml;
     };
 
     /***********************************************************************************************
@@ -592,8 +596,8 @@ namespace pmd2
             return *this;
         }
 
-        ScriptSet operator()()const;
-        void      operator()(const ScriptSet & set)const;
+        LevelScript operator()()const;
+        void      operator()(const LevelScript & set)const;
 
     private:
         std::string   m_path;
@@ -604,32 +608,15 @@ namespace pmd2
 //====================================================================================
 //  Import/Export
 //====================================================================================
-    void      ScriptSetToXML( const ScriptSet   & set,    eGameRegion greg,       eGameVersion gver, const std::string & destdir );
-    ScriptSet XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
+    //bautoescapexml : if set to true, pugixml will escape any reserved/special characters.
+    void      ScriptSetToXML( const LevelScript   & set,    eGameRegion greg,       eGameVersion gver, bool bautoescapexml, const std::string & destdir );
+    LevelScript XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
 
 
 
 //====================================================================================
 //  Test Meta-Operation and etc..
 //====================================================================================
-
-    class ScriptCompiler
-    {
-    public:
-
-    private:
-    };
-
-
-
-    /*
-        Automatically deals with commands fed to it.
-    */
-    class CommandHandler
-    {
-    public:
-        CommandHandler(  );
-    };
 
 
 };

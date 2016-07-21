@@ -76,66 +76,22 @@ namespace pmd2
         return eScrDataTy::Invalid;
     }
 
-
-//    ScriptInstruction::ScriptInstruction()//:ScriptBaseInstruction::ScriptBaseInstruction()
-//    {}
-//
-//    ScriptInstruction::ScriptInstruction(ScriptInstruction && mv)
-//    {this->operator=(std::forward<ScriptInstruction>(mv));}
-//
-//    ScriptInstruction::ScriptInstruction(const ScriptInstruction & cp)
-//    {this->operator=(cp);}
-//
-//    ScriptInstruction::ScriptInstruction(ScriptBaseInstruction && mv)
-//    {this->operator=(std::forward<ScriptBaseInstruction>(mv));}
-//
-//    ScriptInstruction::ScriptInstruction(const ScriptBaseInstruction & cp)
-//    {this->operator=(cp);}
-//
-//    ScriptInstruction & ScriptInstruction::operator=(const ScriptInstruction & cp)
-//    {
-//        subinst     = cp.subinst;
-//        type        = cp.type;
-//        parameters  = cp.parameters;
-//        value       = cp.value;
-//#ifdef _DEBUG
-//        dbg_origoffset = cp.dbg_origoffset;
-//#endif
-//        return *this;
-//    }
-//
-//    ScriptInstruction & ScriptInstruction::operator=(ScriptInstruction && mv)
-//    {
-//        subinst     = std::move(mv.subinst);
-//        type        = mv.type;
-//        parameters  = std::move(mv.parameters);
-//        value       = mv.value;
-//#ifdef _DEBUG
-//        dbg_origoffset = mv.dbg_origoffset;
-//#endif
-//        return *this;
-//    }
-
-
 //==============================================================================
-//  ScriptedSequence
+//  Script
 //==============================================================================
-
-
-
-    ScriptedSequence::ScriptedSequence(const ScriptedSequence & tocopy)
+    Script::Script(const Script & tocopy)
         :m_name(tocopy.m_name), /*m_originalfname(tocopy.m_originalfname),*/
          m_groups(tocopy.m_groups), m_strtable(tocopy.m_strtable),
          m_contants(tocopy.m_contants)
     {}
     
-    ScriptedSequence::ScriptedSequence(ScriptedSequence      && tomove)
+    Script::Script(Script      && tomove)
         :m_name(std::move(tomove.m_name)), /*m_originalfname(std::move(tomove.m_originalfname)),*/
          m_groups(std::move(tomove.m_groups)), m_strtable(std::move(tomove.m_strtable)),
          m_contants(std::move(tomove.m_contants))
     {}
 
-    ScriptedSequence & ScriptedSequence::operator=( const ScriptedSequence & tocopy )
+    Script & Script::operator=( const Script & tocopy )
     {
         m_name          = tocopy.m_name;
         //m_originalfname = tocopy.m_originalfname;
@@ -145,7 +101,7 @@ namespace pmd2
         return *this;
     }
 
-    ScriptedSequence & ScriptedSequence::operator=( ScriptedSequence && tomove )
+    Script & Script::operator=( Script && tomove )
     {
         m_name          = std::move(tomove.m_name);
         //m_originalfname = std::move(tomove.m_originalfname);
@@ -155,12 +111,12 @@ namespace pmd2
         return *this;
     }
 
-    void ScriptedSequence::InsertStrLanguage(eGameLanguages lang, strtbl_t && strings)
+    void Script::InsertStrLanguage(eGameLanguages lang, strtbl_t && strings)
     {
         m_strtable.insert_or_assign( lang, std::forward<strtbl_t>(strings) );
     }
 
-    inline ScriptedSequence::strtbl_t * ScriptedSequence::StrTbl(eGameLanguages lang)
+    inline Script::strtbl_t * Script::StrTbl(eGameLanguages lang)
     {
         auto itfound = m_strtable.find(lang);
 
@@ -170,31 +126,31 @@ namespace pmd2
             return nullptr;
     }
 
-    inline const ScriptedSequence::strtbl_t * ScriptedSequence::StrTbl(eGameLanguages lang) const
+    inline const Script::strtbl_t * Script::StrTbl(eGameLanguages lang) const
     {
-        return const_cast<ScriptedSequence*>(this)->StrTbl(lang);
+        return const_cast<Script*>(this)->StrTbl(lang);
     }
 
 /***********************************************************************************************
-    ScriptGroup
-        A script group is an ensemble of one or more ScriptEntityData, and one or more
-        ScriptedSequence, that share a common identifier.
+    ScriptSet
+        A script group is an ensemble of one or more ScriptData, and one or more
+        Script, that share a common identifier.
 ***********************************************************************************************/
 
-    const std::string & ScriptGroup::GetDataFext() const
+    const std::string & ScriptSet::GetDataFext() const
     {
         static const string EMPTYStr;
         switch(Type())
         {
-            case eScriptGroupType::UNK_enter:
+            case eScriptSetType::UNK_enter:
             {
                 return filetypes::SSE_FileExt;
             }
-            case eScriptGroupType::UNK_sub:
+            case eScriptSetType::UNK_sub:
             {
                 return filetypes::SSS_FileExt;
             }
-            case eScriptGroupType::UNK_fromlsd:
+            case eScriptSetType::UNK_fromlsd:
             {
                 return filetypes::SSA_FileExt;
             }
@@ -206,21 +162,21 @@ namespace pmd2
     }
 
 //==============================================================================
-//  ScriptSet
+//  LevelScript
 //==============================================================================
-    ScriptSet::ScriptSet(const std::string & name)
+    LevelScript::LevelScript(const std::string & name)
         :m_name(name), m_bmodified(false)
     {}
 
-    ScriptSet::ScriptSet(const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl)
+    LevelScript::LevelScript(const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl)
         :m_name(name), m_lsdentries(std::move(lsdtbl)), m_components(std::move(comp)), m_bmodified(false)
     {}
 
-    ScriptSet::ScriptSet(const ScriptSet & other)
+    LevelScript::LevelScript(const LevelScript & other)
         :m_name(other.m_name), m_components(other.m_components), m_lsdentries(other.m_lsdentries), m_bmodified(other.m_bmodified)
     {}
 
-    ScriptSet & ScriptSet::operator=(const ScriptSet & other)
+    LevelScript & LevelScript::operator=(const LevelScript & other)
     {
         m_name          = other.m_name;
         m_components    = other.m_components; 
@@ -229,7 +185,7 @@ namespace pmd2
         return *this;
     }
 
-    ScriptSet::ScriptSet(ScriptSet && other)
+    LevelScript::LevelScript(LevelScript && other)
     {
         m_name          = std::move(other.m_name);
         m_components    = std::move(other.m_components); 
@@ -237,7 +193,7 @@ namespace pmd2
         m_bmodified     = other.m_bmodified;
     }
 
-    ScriptSet & ScriptSet::operator=(ScriptSet && other)
+    LevelScript & LevelScript::operator=(LevelScript && other)
     {
         m_name          = std::move(other.m_name);
         m_components    = std::move(other.m_components); 
@@ -255,14 +211,14 @@ namespace pmd2
     {
     public:
 
-        typedef std::unordered_map<std::string,ScriptSet> settbl_t;
+        typedef std::unordered_map<std::string,LevelScript> settbl_t;
 
         GameScriptsHandler( GameScripts & parent )
             :m_parent(parent)
         {}
 
         //IO
-        settbl_t Load()
+        settbl_t Load(bool escapeasxml = false)
         {
             using namespace utils;
             auto filelist = ListDirContent_FilesAndDirs( m_parent.m_scriptdir, false, true );
@@ -271,7 +227,7 @@ namespace pmd2
             for( const auto & dir : filelist )
             {
                 if( isFolder(dir) )
-                    dest.emplace( std::forward<string>(utils::GetBaseNameOnly(dir)), std::forward<ScriptSet>(LoadDirectory(dir)) );
+                    dest.emplace( std::forward<string>(utils::GetBaseNameOnly(dir)), std::forward<LevelScript>(LoadDirectory(dir)) );
             }
             return std::move(dest);
         }
@@ -284,21 +240,21 @@ namespace pmd2
         }
 
         //Load and write a single "Event"
-        ScriptSet LoadDirectory (const std::string & path);
-        void      WriteDirectory(const ScriptSet   & set, const std::string & path );
+        LevelScript LoadDirectory (const std::string & path);
+        void      WriteDirectory(const LevelScript   & set, const std::string & path );
 
     private:
-        void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadSub          ( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset );
-        void LoadLSD   ( ScriptSet   & curset, const std::string & fpath );
-        void LoadSSB   ( ScriptGroup & tgtgrp, const std::string & fpath );
-        void LoadSSData( ScriptGroup & tgtgrp, const std::string & fpath );
-        void LoadScrDataAndMatchedNumberedSSBs( const std::string & prefix, const std::string & fext, eScriptGroupType grpty, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset  );
-        void LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptGroup & tgtgrp );
+        void LoadGrpEnter     ( std::deque<Poco::Path> & fqueue, LevelScript & out_scrset );
+        void LoadSub          ( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset );
+        void LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset );
+        void LoadLSD   ( LevelScript   & curset, const std::string & fpath );
+        void LoadSSB   ( ScriptSet & tgtgrp, const std::string & fpath );
+        void LoadSSData( ScriptSet & tgtgrp, const std::string & fpath );
+        void LoadScrDataAndMatchedNumberedSSBs( const std::string & prefix, const std::string & fext, eScriptSetType grpty, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset  );
+        void LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptSet & tgtgrp );
 
-        void WriteLSD   ( const ScriptSet & curset, const std::string & fpath );
-        void WriteGroups( const ScriptSet & curset, const std::string & dirpath );
+        void WriteLSD   ( const LevelScript & curset, const std::string & fpath );
+        void WriteGroups( const LevelScript & curset, const std::string & dirpath );
 
     private:
         GameScripts & m_parent;
@@ -307,15 +263,15 @@ namespace pmd2
 // GameScriptsHandler implementation!
 //==============================================================================
 
-    void GameScriptsHandler::LoadLSD( ScriptSet & curset, const std::string & fpath)
+    void GameScriptsHandler::LoadLSD( LevelScript & curset, const std::string & fpath)
     {
         curset.LSDTable() = filetypes::ParseLSD(fpath);
     }
 
-    void GameScriptsHandler::LoadSSB(ScriptGroup & tgtgrp, const std::string & fpath)
+    void GameScriptsHandler::LoadSSB(ScriptSet & tgtgrp, const std::string & fpath )
     {
         string basename = Poco::Path(fpath).getBaseName();
-        auto script = std::move( filetypes::ParseScript(fpath, m_parent.m_scrRegion, m_parent.m_gameVersion) );
+        auto script = std::move( filetypes::ParseScript(fpath, m_parent.m_scrRegion, m_parent.m_gameVersion, *m_parent.m_langdat, m_parent.m_escapexml) );
         //script.SetFileName(Poco::Path(fpath).getFileName());
         script.SetName(basename);
         tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
@@ -323,14 +279,14 @@ namespace pmd2
     }
 
 
-    void GameScriptsHandler::LoadSSData(ScriptGroup& tgtgrp, const std::string & fpath)
+    void GameScriptsHandler::LoadSSData(ScriptSet& tgtgrp, const std::string & fpath)
     {
         string basename = Poco::Path(fpath).getBaseName();
-        tgtgrp.SetData( std::forward<ScriptEntityData>(filetypes::ParseScriptData(fpath)) );
+        tgtgrp.SetData( std::forward<ScriptData>(filetypes::ParseScriptData(fpath)) );
     }
 
 
-    void GameScriptsHandler::LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptGroup & tgtgrp )
+    void GameScriptsHandler::LoadNumberedSSBForPrefix( std::deque<Poco::Path> & fqueue, const std::string & prefix, ScriptSet & tgtgrp )
     {
         auto itfound = fqueue.end();
 
@@ -358,9 +314,9 @@ namespace pmd2
 
     void GameScriptsHandler::LoadScrDataAndMatchedNumberedSSBs( const std::string      & prefix, 
                                                                 const std::string      & fext, 
-                                                                eScriptGroupType         grpty, 
+                                                                eScriptSetType         grpty, 
                                                                 std::deque<Poco::Path> & fqueue,
-                                                                ScriptSet              & out_scrset )
+                                                                LevelScript              & out_scrset )
     {
         auto itfounddata = fqueue.end();
         //#1 - Find if we have a data file!
@@ -387,7 +343,7 @@ namespace pmd2
         }
 
         //#3 - Otherwise keep going and load the data first ###
-        ScriptGroup grp( prefix, grpty );
+        ScriptSet grp( prefix, grpty );
         LoadSSData( grp, itfounddata->toString() );
         fqueue.erase(itfounddata); //Remove it from the queue so we don't process it again
 
@@ -398,7 +354,7 @@ namespace pmd2
         out_scrset.Components().push_back(std::move(grp));
     }
 
-    void GameScriptsHandler::LoadGrpEnter(  std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    void GameScriptsHandler::LoadGrpEnter(  std::deque<Poco::Path> & fqueue, LevelScript & out_scrset )
     {
         if( fqueue.empty() ) 
             return;
@@ -411,24 +367,24 @@ namespace pmd2
             fqueue.erase(itcur); //Delete here, because we invalidate the iterator in the LoadSub method
 
             string basename( std::move(p.getBaseName()));
-            ScriptGroup grp( basename, eScriptGroupType::UNK_enter );
+            ScriptSet grp( basename, eScriptSetType::UNK_enter );
             LoadSSData( grp, p.toString() );
             LoadNumberedSSBForPrefix( fqueue, basename, grp );
             out_scrset.Components().push_back(std::move(grp));
         }
-        /*LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptGroupType::UNK_enter, fqueue, out_scrset );*/
+        /*LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptSetType::UNK_enter, fqueue, out_scrset );*/
     }
 
-    void GameScriptsHandler::LoadSub( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    void GameScriptsHandler::LoadSub( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset )
     {
         string basename( std::move(datafpath.getBaseName()));
-        ScriptGroup grp( basename, eScriptGroupType::UNK_sub );
+        ScriptSet grp( basename, eScriptSetType::UNK_sub );
         LoadSSData( grp, datafpath.toString() );
         LoadNumberedSSBForPrefix( fqueue, basename, grp );
         out_scrset.Components().push_back(std::move(grp));
     }
 
-    void GameScriptsHandler::LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, ScriptSet & out_scrset )
+    void GameScriptsHandler::LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset )
     {
 
         //Load files by name in the lsd table!
@@ -471,7 +427,7 @@ namespace pmd2
                 clog<<"GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" << ssapath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
 
             //#3 - Handle the files
-            ScriptGroup scrpair( string( std::begin(afile), std::end(afile) ), eScriptGroupType::UNK_fromlsd );
+            ScriptSet scrpair( string( std::begin(afile), std::end(afile) ), eScriptSetType::UNK_fromlsd );
             LoadSSB   ( scrpair, ssbpath.toString() );
             LoadSSData( scrpair, ssapath.toString() );
 
@@ -482,8 +438,9 @@ namespace pmd2
     }
 
 
-    ScriptSet GameScriptsHandler::LoadDirectory(const std::string & path)
+    LevelScript GameScriptsHandler::LoadDirectory(const std::string & path)
     {
+        //m_escapeasxml = escapeasxml;
         using namespace Poco;
         Path curdir(path);
 
@@ -494,7 +451,7 @@ namespace pmd2
         DirectoryIterator  itdir(curdir);
         DirectoryIterator  itdirend;
         deque<Path>        processqueue;
-        ScriptSet          curset(curdir.getBaseName());
+        LevelScript          curset(curdir.getBaseName());
         
 
         while( itdir != itdirend )
@@ -513,7 +470,7 @@ namespace pmd2
             if( itfoundunion != processqueue.end() )
             {
                 clog << "\n\tParsing unionall.ssb..";
-                ScriptGroup unionall( "unionall", eScriptGroupType::UNK_unionall );
+                ScriptSet unionall( "unionall", eScriptSetType::UNK_unionall );
                 LoadSSB( unionall, itfoundunion->toString() );
                 curset.Components().push_back( std::move(unionall) );
                 processqueue.erase(itfoundunion);
@@ -573,7 +530,7 @@ namespace pmd2
         return std::move(curset);
     }
 
-    void GameScriptsHandler::WriteDirectory(const ScriptSet & set, const std::string & path)
+    void GameScriptsHandler::WriteDirectory(const LevelScript & set, const std::string & path)
     {
         //Create it first if needed
         Poco::File tgtdir(path);
@@ -597,7 +554,7 @@ namespace pmd2
     }
 
 
-    void GameScriptsHandler::WriteLSD(const ScriptSet & set, const std::string & fpath)
+    void GameScriptsHandler::WriteLSD(const LevelScript & set, const std::string & fpath)
     {
         if( ! set.LSDTable().empty() )
         {
@@ -607,7 +564,7 @@ namespace pmd2
         }
     }
 
-    void GameScriptsHandler::WriteGroups(const ScriptSet & set, const std::string & dirpath)
+    void GameScriptsHandler::WriteGroups(const LevelScript & set, const std::string & dirpath)
     {
         if( utils::LibWide().isLogOn() )
             clog << "\tWriting groups to " <<dirpath <<"\n";
@@ -629,7 +586,8 @@ namespace pmd2
                 filetypes::WriteScript( Poco::Path(dirpath).append(seq.first).makeFile().setExtension(filetypes::SSB_FileExt).toString(), 
                                         seq.second,
                                         m_parent.Region(), 
-                                        m_parent.Version() );
+                                        m_parent.Version(),
+                                        *(m_parent.m_langdat) );
             }
             
             if( utils::LibWide().isLogOn() )
@@ -647,18 +605,24 @@ namespace pmd2
         :m_parent( std::addressof(parent) ), m_path(filepath)
     {}
 
-    ScriptSet ScrSetLoader::operator()()const
+    LevelScript ScrSetLoader::operator()()const
     {
         return std::move( m_parent->m_pHandler->LoadDirectory(m_path) );
     }
 
-    void ScrSetLoader::operator()(const ScriptSet & set)const
+    void ScrSetLoader::operator()(const LevelScript & set)const
     {
         m_parent->m_pHandler->WriteDirectory(set, m_path);
     }
 
-    GameScripts::GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver)
-        :m_scriptdir(scrdir), m_scrRegion(greg), m_gameVersion(gver), m_pHandler(new GameScriptsHandler(*this)), m_common(DirNameScriptCommon)
+    GameScripts::GameScripts(const std::string & scrdir, const ConfigLoader & gconf, bool bescapexml)
+        :m_scriptdir(scrdir), 
+         m_scrRegion(gconf.GetGameVersion().region), 
+         m_gameVersion(gconf.GetGameVersion().version),
+         m_pHandler(new GameScriptsHandler(*this)), 
+         m_common(DirNameScriptCommon),
+         m_langdat(std::addressof(gconf.GetLanguageFilesDB())),
+         m_escapexml(bescapexml)
     {
         Load();
     }
@@ -679,7 +643,7 @@ namespace pmd2
             {
                 string basename = std::move( Poco::Path::transcode(itdir.path().getBaseName()) );
                 if( basename == DirNameScriptCommon )
-                    m_common = std::move( m_pHandler->LoadDirectory(Poco::Path::transcode(itdir->path())) );
+                    ;//m_common = std::move( m_pHandler->LoadDirectory(Poco::Path::transcode(itdir->path()) ) );
                 else
                     m_setsindex.emplace( std::forward<string>(basename), std::forward<ScrSetLoader>(ScrSetLoader(*this, Poco::Path::transcode(itdir->path()))) );
             }
@@ -693,20 +657,20 @@ namespace pmd2
 
     void GameScripts::ExportXML(const std::string & dir)
     {
-        ExportGameScriptsXML(dir,*this);
+        ExportGameScriptsXML(dir,*this, !m_escapexml); //We don't want pugixml to escape characters if we already did!!
     }
 
-    std::unordered_map<std::string, ScriptSet> GameScripts::LoadAll()
+    std::unordered_map<std::string, LevelScript> GameScripts::LoadAll()
     {
-        std::unordered_map<std::string, ScriptSet> out;
+        std::unordered_map<std::string, LevelScript> out;
 
         for( const auto & entry : m_setsindex )
-            out.emplace( entry.first, std::forward<ScriptSet>(entry.second()) );
+            out.emplace( entry.first, std::forward<LevelScript>(entry.second()) );
 
         return std::move(out);
     }
 
-    void GameScripts::WriteAll(const std::unordered_map<std::string, ScriptSet>& stuff)
+    void GameScripts::WriteAll(const std::unordered_map<std::string, LevelScript>& stuff)
     {
         WriteScriptSet(m_common);
 
@@ -714,14 +678,14 @@ namespace pmd2
             m_setsindex.at(entry.first)(entry.second);
     }
 
-    ScriptSet GameScripts::LoadScriptSet(const std::string & setname)
+    LevelScript GameScripts::LoadScriptSet(const std::string & setname)
     {
         Poco::File dir( Poco::Path(m_scriptdir).append(setname) );
         if( dir.exists() && dir.isDirectory() )
             return std::move( m_pHandler->LoadDirectory(dir.path()) );
         else
             throw std::runtime_error("GameScripts::LoadScriptSet(): "+setname+" doesn't exists.");
-        return ScriptSet("");
+        return LevelScript("");
     }
 
     eGameRegion GameScripts::Region() const
@@ -734,7 +698,7 @@ namespace pmd2
         return m_gameVersion;
     }
 
-    void GameScripts::WriteScriptSet(const ScriptSet & set)
+    void GameScripts::WriteScriptSet(const LevelScript & set)
     {
         const string tgtdir = Poco::Path(m_scriptdir).append(set.Name()).toString();
         if( set.Name() != DirNameScriptCommon )
@@ -742,12 +706,12 @@ namespace pmd2
         m_pHandler->WriteDirectory(set, tgtdir);
     }
 
-    const ScriptSet & GameScripts::GetCommonSet() const
+    const LevelScript & GameScripts::GetCommonSet() const
     {
         return m_common;
     }
 
-    ScriptSet & GameScripts::GetCommonSet()
+    LevelScript & GameScripts::GetCommonSet()
     {
         return m_common;
     }

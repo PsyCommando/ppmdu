@@ -23,10 +23,10 @@ namespace filetypes
         {}
 
 
-        pmd2::ScriptEntityData Parse()
+        pmd2::ScriptData Parse()
         {
             //cerr << "SSDataParser not implemented!\n";
-            return pmd2::ScriptEntityData();
+            return pmd2::ScriptData();
         }
 
     private:
@@ -44,19 +44,19 @@ namespace filetypes
         initer_t                m_itcur;
         initer_t                m_itend;
         std::string             m_origfname;
-        pmd2::ScriptEntityData  m_out;
+        pmd2::ScriptData  m_out;
     };
 
 //=======================================================================================
 //  Functions
 //=======================================================================================
-    pmd2::ScriptEntityData ParseScriptData( const std::string & fpath )
+    pmd2::ScriptData ParseScriptData( const std::string & fpath )
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(fpath)) );
         return std::move( SSDataParser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), utils::GetFilename(fpath) ).Parse() );
     }
 
-    void WriteScriptData( const std::string & fpath, const pmd2::ScriptEntityData & scrdat )
+    void WriteScriptData( const std::string & fpath, const pmd2::ScriptData & scrdat )
     {
     }
 

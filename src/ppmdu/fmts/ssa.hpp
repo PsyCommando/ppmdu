@@ -72,8 +72,8 @@ namespace filetypes
 //=======================================================================================
     /*
     */
-    pmd2::ScriptEntityData ParseScriptData( const std::string & fpath );
-    void                   WriteScriptData( const std::string & fpath, const pmd2::ScriptEntityData & scrdat );
+    pmd2::ScriptData ParseScriptData( const std::string & fpath );
+    void             WriteScriptData( const std::string & fpath, const pmd2::ScriptData & scrdat );
 };
 
 #endif

@@ -15,9 +15,8 @@ namespace pmd2
 {
 //
 //
-//
-    std::string EscapeUnprintableCharacters        ( const std::string & src, const std::locale & loc );
-    std::string ReplaceEscapedUnprintableCharacters( const std::string & src, const std::locale & loc );
+//(const std::string & src, eGameLanguages glang, const std::locale & loc)
+
 
 
 

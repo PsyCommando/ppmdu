@@ -782,9 +782,11 @@ namespace pmd2
             Used to determine how to interpret a command.
             These are independant of the version.
     */
+    //!When adding category, don't forget to edit the OpCodeInfoWrapper::GetMyCategory() function to reflect the changes!!
     enum struct eCommandCat : uint16_t
     {
         SingleOp = 0,           //Simple command, default
+        OpWithReturnVal,        //A single op that returns a value and may have a set of cases appended to it
 
         Switch,                 //This marks the start of a conditional structure
         Case,                   //This marks a case in a previous conditional structure
@@ -1348,15 +1350,26 @@ namespace pmd2
             switch(Category())
             {
                 case eCommandCat::EntityAccessor:
+                {
                     return eInstructionType::MetaAccessor;
+                }
                 case eCommandCat::Switch:
+                {
                     return eInstructionType::MetaSwitch;
+                }
                 case eCommandCat::ProcSpec:
+                {
                     return eInstructionType::MetaProcSpecRet;
+                }
+                case eCommandCat::OpWithReturnVal:
                 case eCommandCat::EnterAdventure:
+                {
                     return eInstructionType::MetaReturnCases;
+                }
                 default:
+                {
                     return eInstructionType::Command;
+                }
             };
         }
         operator bool()const {return pname!= nullptr && pparaminfo != nullptr;}

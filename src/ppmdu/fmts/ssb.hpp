@@ -12,6 +12,7 @@ Description:
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 
 namespace filetypes
 {
@@ -113,36 +114,6 @@ namespace filetypes
         }
     };
 
-
-    /***********************************************************************************
-        ssb_data_hdr
-            Header of the data block of a script.
-    ***********************************************************************************/
-    struct ssb_data_hdr
-    {
-        static const size_t LEN     = 4; //bytes
-        uint16_t            datalen = 0;   //Lenght of the data block
-        uint16_t            nbgrps  = 0;   //Nb of groups in the data block
-
-        template<class _outit>
-            _outit WriteToContainer(_outit itwriteto)const
-        {
-            itwriteto = utils::WriteIntToBytes(datalen,      itwriteto);
-            itwriteto = utils::WriteIntToBytes(nbgrps,       itwriteto);
-            return itwriteto;
-        }
-
-        //
-        template<class _init>
-            _init ReadFromContainer(_init itReadfrom, _init itpastend)
-        {
-            itReadfrom = utils::ReadIntFromBytes(datalen, itReadfrom, itpastend );
-            itReadfrom = utils::ReadIntFromBytes(nbgrps,  itReadfrom, itpastend );
-            return itReadfrom;
-        }
-    };
-
-
 //=======================================================================================
 //  Functions
 //=======================================================================================
@@ -150,19 +121,20 @@ namespace filetypes
     /***********************************************************************************
         ParseScript
     ***********************************************************************************/
-    pmd2::ScriptedSequence ParseScript( const std::string & scriptfile, pmd2::eGameRegion gloc, pmd2::eGameVersion gvers );
-    //pmd2::ScriptedSequence ParseScriptEoS    (const std::string & scriptfile);
-    //pmd2::ScriptedSequence ParseScriptEoSPal (const std::string & scriptfile);
-    //pmd2::ScriptedSequence ParseScriptEoTD   (const std::string & scriptfile);
-    //pmd2::ScriptedSequence ParseScriptEoTDPal(const std::string & scriptfile);
+    pmd2::Script ParseScript( const std::string           & scriptfile, 
+                              pmd2::eGameRegion             gloc, 
+                              pmd2::eGameVersion            gvers, 
+                              const pmd2::LanguageFilesDB & langdat,
+                              bool                          escapeforxml ); //Whether to use xml escape sequence(&quot; for example) instead of C ones(\n)
 
     /***********************************************************************************
         WriteScript
     ***********************************************************************************/
     void  WriteScript(const std::string            & scriptfile, 
-                      const pmd2::ScriptedSequence & scrdat, 
+                      const pmd2::Script           & scrdat, 
                       pmd2::eGameRegion              gloc, 
-                      pmd2::eGameVersion             gvers);
+                      pmd2::eGameVersion             gvers,
+                      const pmd2::LanguageFilesDB  & langdata );
 };
 
 #endif 

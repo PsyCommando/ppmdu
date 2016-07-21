@@ -181,7 +181,7 @@ namespace pmd2
         return m_text.get();
     }
 
-    GameScripts * GameDataLoader::LoadScripts()
+    GameScripts * GameDataLoader::LoadScripts(bool escapeasxml)
     {
         if(!m_bAnalyzed)
             AnalyseGame();
@@ -193,7 +193,12 @@ namespace pmd2
         {
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
-            m_scripts.reset( new GameScripts( scriptdir.str(), GetGameRegion(), GetGameVersion() ) );
+            //m_scripts.reset( new GameScripts( scriptdir.str(), 
+            //                                  GetGameRegion(), 
+            //                                  GetGameVersion(), 
+            //                                  GetConfig()->GetLanguageFilesDB() ) );
+            m_scripts.reset( new GameScripts( scriptdir.str(), 
+                                              *GetConfig(), escapeasxml ) );
         }
         return m_scripts.get();
     }
@@ -403,7 +408,8 @@ namespace pmd2
 
     const ConfigLoader * GameDataLoader::GetConfig() const
     {
-        return nullptr;
+        //!#TODO: It would be nice to make use of weak_ptr here, as it was intended!!
+        return m_conf.get();
     }
 
 };

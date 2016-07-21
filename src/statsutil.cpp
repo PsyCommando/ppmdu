@@ -128,18 +128,18 @@ namespace statsutil
         },
         //pokemon stats only
         {
-            "pk",
+            "pokemon",
             0,
             "Specifying this will import or export only Pokemon data!",
-            "-pk",
+            "-pokemon",
             std::bind( &CStatsUtil::ParseOptionPk, &GetInstance(), placeholders::_1 ),
         },
         //Move data only
         {
-            "mv",
+            "moves",
             0,
             "Specifying this will import or export only move data!",
-            "-mv",
+            "-moves",
             std::bind( &CStatsUtil::ParseOptionMvD, &GetInstance(), placeholders::_1 ),
         },
         //Items data only
@@ -152,18 +152,18 @@ namespace statsutil
         },
         //Game Strings only
         {
-            "str",
+            "text",
             0,
             "Specifying this will import or export only the game strings specified!",
-            "-str",
+            "-text",
             std::bind( &CStatsUtil::ParseOptionStrings, &GetInstance(), placeholders::_1 ),
         },
         //Game Scripts only
         {
-            "scr",
+            "scripts",
             0,
             "Specifying this will import or export only the game scripts!",
-            "-scr",
+            "-scripts",
             std::bind( &CStatsUtil::ParseOptionScripts, &GetInstance(), placeholders::_1 ),
         },
 
@@ -193,6 +193,17 @@ namespace statsutil
             "Set a non-default path to the pmd2data.xml file.",
             "-cfg \"path/to/pmd2/config/data/file\"",
             std::bind( &CStatsUtil::ParseOptionConfig, &GetInstance(), placeholders::_1 ),
+        },
+
+        //Set path to PMD2 Config file
+        {
+            "xmlesc",
+            0,
+            "If present, this makes the program use XML/HTML escape sequences, instead of C ones. "
+            "AKA &#x0A; instead of \\n for example. "
+            "This is mainly interesting for dealing with a XML parser that requires standard XML escape chars!",
+            "-xmlesc",
+            std::bind( &CStatsUtil::ParseOptionEscapeAsXML, &GetInstance(), placeholders::_1 ),
         },
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -264,6 +275,7 @@ namespace statsutil
         m_flocalestr      = "";
         m_shouldlog       = false;
         m_hndlScripts     = false;
+        m_escxml          = false;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -429,6 +441,11 @@ namespace statsutil
 
         cout << "<!>- Set to use " <<utils::LibWide().getNbThreadsToUse() <<" threads !\n";
         return true;
+    }
+
+    bool CStatsUtil::ParseOptionEscapeAsXML( const std::vector<std::string> & optdata )
+    {
+        return m_escxml = true;
     }
 
 //
@@ -846,7 +863,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts();
+            GameScripts * pgamescripts = gloader.LoadScripts(m_escxml);
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 

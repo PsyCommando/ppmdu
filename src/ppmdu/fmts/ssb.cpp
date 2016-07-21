@@ -1,6 +1,7 @@
 #include "ssb.hpp"
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 #include <utils/utility.hpp>
 #include <utils/library_wide.hpp>
 #include <iostream>
@@ -15,10 +16,10 @@ namespace filetypes
 //=======================================================================================
 //  Structs
 //=======================================================================================
-    /*
+    /***********************************************************************************
         group_entry
             Script instruction group entry
-    */
+    ***********************************************************************************/
     struct group_entry
     {
         static const size_t LEN = 3 * sizeof(uint16_t);
@@ -46,19 +47,52 @@ namespace filetypes
         }
     };
 
-    /*
+    /***********************************************************************************
         group_bounds
             Helper to contain the bounds of a group
-    */
+    ***********************************************************************************/
     struct group_bounds
     {
         size_t datoffbeg;
         size_t datoffend; //One past the end of the group
     };
 
+    /***********************************************************************************
+        ssb_data_hdr
+            Header of the data block of a script.
+    ***********************************************************************************/
+    struct ssb_data_hdr
+    {
+        static const size_t LEN     = 4; //bytes
+        uint16_t            datalen = 0;   //Lenght of the data block
+        uint16_t            nbgrps  = 0;   //Nb of groups in the data block
+
+        template<class _outit>
+            _outit WriteToContainer(_outit itwriteto)const
+        {
+            itwriteto = utils::WriteIntToBytes(datalen,      itwriteto);
+            itwriteto = utils::WriteIntToBytes(nbgrps,       itwriteto);
+            return itwriteto;
+        }
+
+        //
+        template<class _init>
+            _init ReadFromContainer(_init itReadfrom, _init itpastend)
+        {
+            itReadfrom = utils::ReadIntFromBytes(datalen, itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes(nbgrps,  itReadfrom, itpastend );
+            return itReadfrom;
+        }
+    };
+
 //=======================================================================================
 //  Typedefs
 //=======================================================================================
+
+    /***********************************************************************************
+        lblinfo
+            Info on a label's position and the kind of reference
+    ***********************************************************************************/
     struct lblinfo
     {
         uint16_t lblid;
@@ -154,8 +188,8 @@ namespace filetypes
     */
     struct raw_ssb_content
     {
-        ScriptedSequence::consttbl_t  constantstrings;
-        ScriptedSequence::strtblset_t strings;
+        Script::consttbl_t  constantstrings;
+        Script::strtblset_t strings;
         lbltbl_t                      jumpoffsets;
         rawgrp_t                      rawgroups;
         rawinst_t                     rawinstructions;
@@ -176,7 +210,7 @@ namespace filetypes
     {
     public:
 
-        ScriptProcessor( raw_ssb_content && content, eOpCodeVersion opver )
+        ScriptProcessor( raw_ssb_content && content, eOpCodeVersion opver, const LanguageFilesDB & langs )
             :m_rawdata(std::forward<raw_ssb_content>(content)), 
              m_rawinst(m_rawdata.rawinstructions), 
              m_groups(m_rawdata.rawgroups), 
@@ -187,15 +221,18 @@ namespace filetypes
              m_curdataoffset(0),
              m_curgroup(0),
              m_poutgrp(nullptr), 
-             m_instfinder(opver)
+             m_instfinder(opver),
+             m_langs(langs),
+             m_escapeforxml(true)
         {}
 
         /*-----------------------------------------------------------------------------
             operator()
                 Process the data into the the sequence "destseq"
         -----------------------------------------------------------------------------*/
-        void operator()( ScriptedSequence & destseq )
+        void operator()( Script & destseq, bool escapeforxml = true )
         {
+            m_escapeforxml      = escapeforxml;
             m_poutgrp           = std::addressof( destseq.Groups() );
             m_grptblandathdrlen = ssb_data_hdr::LEN + (group_entry::LEN * m_groups.size());
             m_curgroup          = 0;
@@ -222,10 +259,10 @@ namespace filetypes
             operator()
                 Returns the processed script sequence
         -----------------------------------------------------------------------------*/
-        inline ScriptedSequence operator()()
+        inline Script operator()(bool escapeforxml = true)
         {
-            ScriptedSequence dest;
-            operator()(dest);
+            Script dest;
+            operator()(dest,escapeforxml);
             return std::move(dest);
         }
 
@@ -285,7 +322,34 @@ namespace filetypes
         -----------------------------------------------------------------------------*/
         void PrepareStringsAndConstants()
         {
-            //!#TODO: Escape strings!!
+            //Escape the characters in the constants only in the japanese version!
+            eGameLanguages alang = m_langs.Languages().begin()->second.GetLanguage();
+            if( alang == eGameLanguages::japanese )
+            {
+                for( auto & conststr : m_rawdata.constantstrings )
+                {
+                    //Constants are special in the japanese game. They're handled as regular text, so we shouldn't escape anything Shift-JIS
+                    conststr = std::move(ProcessString(conststr, alang));
+                }
+            }
+            
+            //Escape the text in the strings
+            for( auto & lang : m_rawdata.strings )
+            {
+                assert( !lang.second.empty() );
+                const StringsCatalog * pcata = m_langs.GetByLanguage(lang.first);
+                assert(pcata);
+                std::locale curloc(pcata->GetLocaleString());
+                for( auto & str : lang.second )
+                {
+                    str = (std::move(ProcessString(str, lang.first, curloc)));
+                }
+            }
+        }
+
+        std::string ProcessString( const std::string & str, eGameLanguages lang, const std::locale & loc = std::locale::classic() )
+        {
+            return std::move( EscapeUnprintableCharacters(str, lang != eGameLanguages::japanese, m_escapeforxml, loc) );
         }
 
         /*-----------------------------------------------------------------------------
@@ -333,6 +397,7 @@ namespace filetypes
 #endif
             switch(codeinfo.Category())
             {
+                case eCommandCat::OpWithReturnVal:
                 case eCommandCat::EnterAdventure:
                 case eCommandCat::ProcSpec:
                 case eCommandCat::Switch:
@@ -449,10 +514,9 @@ namespace filetypes
         -----------------------------------------------------------------------------*/
         inline size_t GetInstructionLen( const ScriptInstruction & inst )
         {
-            if( inst.type == eInstructionType::Command || inst.type == eInstructionType::Data )
-                return ScriptWordLen + (inst.parameters.size() * ScriptWordLen);
-            else
+            if( inst.type == eInstructionType::MetaLabel )
                 return 0;
+            return ScriptWordLen + (inst.parameters.size() * ScriptWordLen);
         }
 
         /*-----------------------------------------------------------------------------
@@ -472,18 +536,20 @@ namespace filetypes
 
     private:
         raw_ssb_content                       m_rawdata;
+        const LanguageFilesDB               & m_langs;
         deque<ScriptInstruction>            & m_rawinst;
         const rawgrp_t                      & m_groups;
         const lbltbl_t                      & m_labels;
-        const ScriptedSequence::consttbl_t  & m_constants;
-        const ScriptedSequence::strtblset_t & m_strings;
-        ScriptedSequence::grptbl_t          * m_poutgrp;
+        const Script::consttbl_t  & m_constants;
+        const Script::strtblset_t & m_strings;
+        Script::grptbl_t          * m_poutgrp;
         size_t                                m_curgroup;           //Group we currently output into
         size_t                                m_curdataoffset;      //Offset in bytes within the Data chunk
         vector<size_t>                        m_grpends;            //The offset within the data chunk where each groups ends
         size_t                                m_datablocklen;       //Length of the data block in bytes
         OpCodeClassifier                      m_instfinder;
         size_t                                m_grptblandathdrlen;  //The offset the instructions begins at. Important for locating group starts, and jump labels
+        bool                                  m_escapeforxml;
     };
 
 //=======================================================================================
@@ -500,16 +566,16 @@ namespace filetypes
         typedef _Init                    initer;
         typedef deque<ScriptInstruction> instcnt_t;
 
-        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc )
+        SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc, const LanguageFilesDB & langdat )
             :m_opfinder(scrver), m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrRegion(scrloc), m_lblcnt(0), 
              m_nbgroups(0), m_nbconsts(0), m_nbstrs(0),m_hdrlen(0),m_datablocklen(0), m_constlutbeg(0), m_stringlutbeg(0),
-            m_datahdrgrouplen(0)
+            m_datahdrgrouplen(0), m_langdat(langdat)
         {}
 
-        inline ScriptedSequence Parse()
+        inline Script Parse(bool parseforxml = true)
         {
-            //ScriptedSequence out;
-            ////m_out    = std::move(ScriptedSequence());
+            //Script out;
+            ////m_out    = std::move(Script());
             //m_lblcnt = 0;
             //ParseHeader();
             //rawgrp_t grps     = std::move(ParseGroups());
@@ -524,7 +590,7 @@ namespace filetypes
             //                 out.StrTblSet(), 
             //                 m_datablocklen, 
             //                 m_scrversion )(out);
-            return std::move(ScriptProcessor(std::move(ParseToRaw()), m_scrversion)());
+            return std::move(ScriptProcessor(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml));
         }
 
         raw_ssb_content ParseToRaw()
@@ -702,12 +768,11 @@ namespace filetypes
         //Also updates the value of the opcode if needed
         inline void CheckAndMarkJumps( uint16_t & pval, eOpParamTypes ptype )
         {
-            if( ptype == eOpParamTypes::InstructionOffset /*|| ptype == eOpParamTypes::CaseJumpOffset*/)
+            if( ptype == eOpParamTypes::InstructionOffset )
             {
-                auto empres = m_metalabelpos.emplace( std::make_pair( PrepareParameterValue(pval) * ScriptWordLen, 
-                                                                      lbl_t{ m_lblcnt, /*(ptype == eOpParamTypes::CaseJumpOffset)? lbl_t::eLblTy::CaseLbl :*/ lbl_t::eLblTy::JumpLbl} ) );
-                pval = m_lblcnt; //set the value to the label's value.
-
+                auto empres = m_metalabelpos.try_emplace( pval * ScriptWordLen, lbl_t{ m_lblcnt, lbl_t::eLblTy::JumpLbl} );
+                
+                pval = empres.first->second.lblid;
                 if( empres.second )//Increment only if there was a new label added!
                     ++m_lblcnt;
             }
@@ -725,23 +790,23 @@ namespace filetypes
             m_rawinst.push_back(std::move(inst));
         }
 
-        ScriptedSequence::consttbl_t ParseConstants()
+        Script::consttbl_t ParseConstants()
         {
             if( !m_nbconsts )
-                return ScriptedSequence::consttbl_t();
+                return Script::consttbl_t();
 
             const size_t strlutlen = (m_nbstrs * ScriptWordLen); // In the file, the offset for each constants in the constant table includes the 
                                                                  // length of the string lookup table(string pointers). Here, to compensate
                                                                  // we subtract the length of the string LUT from each pointer read.
-            return std::move(ParseOffsetTblAndStrings<ScriptedSequence::consttbl_t>( m_constlutbeg, m_constlutbeg, m_nbconsts, strlutlen ));
+            return std::move(ParseOffsetTblAndStrings<Script::consttbl_t>( m_constlutbeg, m_constlutbeg, m_nbconsts, strlutlen ));
         }
 
-        ScriptedSequence::strtblset_t ParseStrings()
+        Script::strtblset_t ParseStrings()
         {
             if( !m_nbstrs )
-                return ScriptedSequence::strtblset_t();
+                return Script::strtblset_t();
 
-            ScriptedSequence::strtblset_t out;
+            Script::strtblset_t out;
             //Parse the strings for any languages we have
             size_t strparseoffset = m_stringlutbeg;
             size_t begoffset      = ( m_nbconsts != 0 )? m_constlutbeg : m_stringlutbeg;
@@ -749,8 +814,8 @@ namespace filetypes
             for( size_t i = 0; i < m_stringblksSizes.size(); ++i )
             {
                 out.insert_or_assign( static_cast<eGameLanguages>(i), 
-                                      std::forward<ScriptedSequence::strtbl_t>(
-                                          ParseOffsetTblAndStrings<ScriptedSequence::strtbl_t>( strparseoffset, 
+                                      std::forward<Script::strtbl_t>(
+                                          ParseOffsetTblAndStrings<Script::strtbl_t>( strparseoffset, 
                                                                                                begoffset, 
                                                                                                m_nbstrs )) );
                 strparseoffset += m_stringblksSizes[i]; //Add the size of the last block, so we have the offset of the next table
@@ -830,7 +895,7 @@ namespace filetypes
         initer              m_end;
 
         //TargetOutput
-        //ScriptedSequence    m_out;
+        //Script    m_out;
         eOpCodeVersion      m_scrversion; 
         eGameRegion         m_scrRegion;
 
@@ -862,8 +927,190 @@ namespace filetypes
         //Instructions
         instcnt_t           m_rawinst; //Instructions are parsed into this linear container
         OpCodeClassifier    m_opfinder;
+        const LanguageFilesDB & m_langdat;
     };
 
+
+//=======================================================================================
+//  ScriptCompiler
+//=======================================================================================
+
+    class ScriptCompiler
+    {
+    public:
+        ScriptCompiler( const Script & source, /*eGameRegion greg,*/ eOpCodeVersion opver, const LanguageFilesDB & langs )
+            :m_src(source), /*m_region(greg),*/ m_opversion(opver), m_opinfo(opver), m_langs(langs)
+        {}
+
+        raw_ssb_content Compile()
+        {
+            ProcessInstructions();
+            UpdateAllReferences();
+            ProcessStringsAndConsts();
+            return std::move(m_out);
+        }
+
+    private:
+        inline size_t CalcInstructionLen( const ScriptInstruction & instr )
+        {
+            return ScriptWordLen + (instr.parameters.size() * ScriptWordLen);
+        }
+
+        size_t CalcInstructionLen_WithSubInst( const ScriptInstruction & instr )
+        {
+            size_t len = CalcInstructionLen(instr);
+            for( const auto & sub : instr.subinst )
+                len += CalcInstructionLen_WithSubInst(sub);
+            return len;
+        }
+
+    private:
+        void ProcessInstructions()
+        {
+            //Get all labels, and compute their offsets
+            size_t curdataoffset = ssb_data_hdr::LEN + (m_src.Groups().size() * group_entry::LEN);
+            m_out.rawgroups.reserve(m_src.Groups().size());
+
+            //Build group table as we go
+            //Turn meta-instructions back into simple instructions
+            for( const auto & grp : m_src.Groups() )
+            {
+                HandleGroup(grp, curdataoffset);
+            }
+        }
+
+        void HandleGroup( const ScriptInstrGrp & grp, size_t & curoffset )
+        {
+            group_entry curgrp;
+            curgrp.type      = grp.type;
+            curgrp.unk2      = grp.unk2;
+            curgrp.begoffset = curoffset / ScriptWordLen;
+
+            for( const auto & instr : grp )
+            {
+                HandleInstruction(instr, curoffset);
+            }
+            m_out.rawgroups.push_back(std::move(curgrp));
+        }
+
+        template<typename _InstrType>
+            void HandleSubInstructions(const _InstrType & instr, size_t & curoffset );
+
+        template<>
+            void HandleSubInstructions<ScriptBaseInstruction>(const ScriptBaseInstruction & , size_t &  )
+        {
+                //do nothing
+        }
+
+        template<>
+            void HandleSubInstructions<ScriptInstruction>(const ScriptInstruction & instr, size_t & curoffset )
+        {
+            for( const auto & subinst : instr.subinst )
+            {
+                HandleInstruction(subinst, curoffset);
+            }
+        }
+
+        template<typename _InstrType>
+            void HandleInstruction( const _InstrType & instr, size_t & curoffset )
+        {
+            switch(instr.type)
+            {
+                case eInstructionType::MetaCaseLabel:
+                case eInstructionType::MetaLabel:
+                {
+                    m_labeloffsets.emplace( instr.value, curoffset );
+                    break;
+                }
+                case eInstructionType::MetaAccessor:
+                case eInstructionType::MetaProcSpecRet:
+                case eInstructionType::MetaReturnCases:
+                case eInstructionType::MetaSwitch:
+                {
+                    ScriptInstruction outinst;
+                    outinst.value       = instr.value;
+                    outinst.type        = eInstructionType::Command;
+                    outinst.parameters  = instr.parameters; 
+                    curoffset+= CalcInstructionLen(outinst);
+                    m_out.rawinstructions.push_back(std::move(outinst));
+                    
+                    //Write sub-instructions
+                    HandleSubInstructions(instr,curoffset);
+                    break;
+                }
+                case eInstructionType::Data:
+                case eInstructionType::Command:
+                default:
+                {
+                    m_out.rawinstructions.push_back(instr);
+                    curoffset+= CalcInstructionLen(instr);
+                }
+            }
+        }
+
+        void UpdateAllReferences()
+        {
+            //Replace references to label into references to offsets
+            for( auto instr : m_out.rawinstructions )
+            {
+                if( instr.parameters.empty() )
+                    continue;
+
+                OpCodeInfoWrapper opinfo = m_opinfo.Info(instr.value);
+                assert(opinfo);
+                for( size_t ip = 0; ip < instr.parameters.size(); ++ip )
+                {
+                    if( ip < opinfo.ParamInfo().size() && 
+                        opinfo.ParamInfo()[ip].ptype == eOpParamTypes::InstructionOffset )
+                    {
+                        instr.parameters[ip] = m_labeloffsets.at(instr.parameters[ip]) / ScriptWordLen; //Swap labelid for offset
+                    }
+                }
+
+            }
+        }
+
+        void ProcessStringsAndConsts()
+        {
+            m_out.constantstrings.reserve(m_src.ConstTbl().size());
+            //Un-Escape the characters in the strings and constants
+            for( const auto & conststr : m_src.ConstTbl() )
+            {
+                m_out.constantstrings.push_back(std::move(ProcessString(conststr)));
+            }
+
+            for( const auto & lang : m_src.StrTblSet() )
+            {
+                assert( !lang.second.empty() );
+                vector<string> curstrs;
+                curstrs.reserve(lang.second.size());
+                for( const auto & str : lang.second )
+                {
+                    const StringsCatalog * pcata = m_langs.GetByLanguage(lang.first);
+                    if(pcata)
+                        curstrs.push_back(std::move(ProcessString(str, pcata->GetLocaleString())));
+                }
+                m_out.strings.emplace( lang.first, std::forward<vector<string>>(curstrs));
+            }
+        }
+
+        inline std::string ProcessString(const std::string & str, const std::string & locstr = "" )
+        {
+            return ReplaceEscapedCharacters(str, std::locale(locstr));
+        }
+
+    private:
+        const Script                & m_src;
+        const LanguageFilesDB                 & m_langs;
+        eGameRegion                             m_region;
+        eOpCodeVersion                          m_opversion;
+        OpCodeClassifier                        m_opinfo;
+        
+        //State
+        raw_ssb_content                         m_out;
+        std::unordered_map<uint16_t, uint16_t>  m_labeloffsets; //Offsets of each labels
+        
+    };
 
 //=======================================================================================
 //  SSB Writer
@@ -873,10 +1120,10 @@ namespace filetypes
     {
         typedef ostreambuf_iterator<char> outit_t;
     public:
-        SSBWriterTofile(const pmd2::ScriptedSequence & scrdat, eGameRegion gloc, eOpCodeVersion opver)
-            :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver)
+        SSBWriterTofile(const pmd2::Script & scrdat, eGameRegion gloc, eOpCodeVersion opver, const LanguageFilesDB & langdat)
+            :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver), m_langdat(langdat)
         {
-            if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::NorthAmerica )
+            if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
                 m_stringblksSizes.resize(1,0);
             else if( m_scrRegion == eGameRegion::Europe )
                 m_stringblksSizes.resize(5,0);
@@ -895,6 +1142,8 @@ namespace filetypes
             m_constblksize   = 0;
             m_stringblockbeg = 0;
 
+            m_compiledsrc = std::move( ScriptCompiler(m_scrdat, m_opversion, m_langdat ).Compile() );
+
             if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
                 m_hdrlen = ssb_header::LEN;
             else if( m_scrRegion == eGameRegion::Europe )
@@ -906,12 +1155,12 @@ namespace filetypes
             m_datalen += ssb_data_hdr::LEN; //Add to the total length immediately
 
             //#2 - Reserve group table
-            std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
+            //std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
 
             //#3 - Pre-Alloc/pre-calc stuff
             CalcAndVerifyNbStrings();
             m_grps.reserve( m_scrdat.Groups().size() );
-            BuildLabelConversionTable();
+            //BuildLabelConversionTable();
 
             //#4 - Write code for each groups, constants, strings
             WriteCode(oit);
@@ -931,7 +1180,7 @@ namespace filetypes
         void CalcAndVerifyNbStrings()
         {
             size_t siz = 0;
-            for( auto & cur : m_scrdat.StrTblSet() )
+            for( auto & cur : m_compiledsrc.strings )
             {
                 if( siz == 0 )
                     siz = cur.second.size();
@@ -941,23 +1190,23 @@ namespace filetypes
             m_nbstrings = siz;
         }
 
-        void BuildLabelConversionTable()
-        {
-            size_t curdataoffset = 0;
+        //void BuildLabelConversionTable()
+        //{
+        //    size_t curdataoffset = 0;
 
-            for( const auto & grp : m_scrdat.Groups() )
-            {
-                for( const auto & inst : grp )
-                {
-                    if( inst.type == eInstructionType::Command || inst.type == eInstructionType::Data )
-                        curdataoffset += ScriptWordLen + (ScriptWordLen * inst.parameters.size()); //Just count those
-                    else if( inst.type == eInstructionType::MetaLabel )
-                    {
-                        m_labeltbl.emplace( std::make_pair( inst.value, curdataoffset / ScriptWordLen  ) );
-                    }
-                }
-            }
-        }
+        //    for( const auto & grp : m_scrdat.Groups() )
+        //    {
+        //        for( const auto & inst : grp )
+        //        {
+        //            if( inst.type == eInstructionType::Command || inst.type == eInstructionType::Data )
+        //                curdataoffset += ScriptWordLen + (ScriptWordLen * inst.parameters.size()); //Just count those
+        //            else if( inst.type == eInstructionType::MetaLabel )
+        //            {
+        //                m_labeltbl.emplace( std::make_pair( inst.value, curdataoffset / ScriptWordLen  ) );
+        //            }
+        //        }
+        //    }
+        //}
 
         void WriteHeader( outit_t & itw )
         {
@@ -967,7 +1216,7 @@ namespace filetypes
             if( m_scrRegion == eGameRegion::NorthAmerica )
             {
                 ssb_header hdr;
-                hdr.nbconst      = m_scrdat.ConstTbl().size();
+                hdr.nbconst      = m_compiledsrc.constantstrings.size();
                 hdr.nbstrs       = m_nbstrings;
                 hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
                 hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
@@ -981,7 +1230,7 @@ namespace filetypes
                 assert(m_stringblksSizes.size()== 5);
 #endif // _DEBUG
                 ssb_header_pal hdr;
-                hdr.nbconst      = m_scrdat.ConstTbl().size();
+                hdr.nbconst      = m_compiledsrc.constantstrings.size();
                 hdr.nbstrs       = m_nbstrings;
                 hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
                 hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
@@ -1007,7 +1256,7 @@ namespace filetypes
             {
                 //The japanese game makes no distinction between strings and constants, and just places everything in the constant slot
                 ssb_header hdr;
-                hdr.nbconst      = m_scrdat.ConstTbl().size() + m_nbstrings;
+                hdr.nbconst      = m_compiledsrc.constantstrings.size() + m_nbstrings;
                 hdr.nbstrs       = 0;
                 hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
                 hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
@@ -1017,7 +1266,7 @@ namespace filetypes
             }
 
             ssb_data_hdr dathdr;
-            dathdr.nbgrps  = m_scrdat.Groups().size();
+            dathdr.nbgrps  = m_compiledsrc.rawgroups.size();
 
             if( m_constoffset > 0 )
                 dathdr.datalen = TryConvertToScriptLen(m_constoffset - m_hdrlen); //Const offset table isn't counted in this value, so we can't use m_datalen
@@ -1030,9 +1279,9 @@ namespace filetypes
         void WriteGroupTable( outit_t & itw )
         {
 #ifdef _DEBUG   //!#REMOVEME: For testing
-            assert(!m_grps.empty()); //There is always at least one group!
+            assert(!m_compiledsrc.rawgroups.empty()); //There is always at least one group!
 #endif
-            for( const auto & entry : m_grps )
+            for( const auto & entry : m_compiledsrc.rawgroups )
             {
                 itw = entry.WriteToContainer(itw);
             }
@@ -1041,20 +1290,21 @@ namespace filetypes
 
         void WriteCode( outit_t & itw )
         {
-            for( const auto & grp : m_scrdat.Groups() )
-            {
+
+            //for( const auto & grp : m_scrdat.Groups() )
+            //{
                 //Add a group entry for the current instruction group
-                group_entry grent;
-                grent.begoffset = TryConvertToScriptLen( (static_cast<uint16_t>(m_outf.tellp()) -  m_hdrlen) );
-                grent.type      = grp.type;
-                grent.unk2      = grp.unk2;
-                m_grps.push_back(grent);
-                m_datalen += group_entry::LEN;
+                //group_entry grent;
+                //grent.begoffset = TryConvertToScriptLen( (static_cast<uint16_t>(m_outf.tellp()) -  m_hdrlen) );
+                //grent.type      = grp.type;
+                //grent.unk2      = grp.unk2;
+                //m_grps.push_back(grent);
+                //m_datalen += group_entry::LEN;
 
                 //Write the content of the group
-                for( const auto & inst : grp )
+                for( const auto & inst : /*grp*/ m_compiledsrc.rawinstructions )
                     WriteInstruction(itw,inst);
-            }
+            //}
         }
 
         void WriteInstruction( outit_t & itw, const ScriptInstruction & inst )
@@ -1076,22 +1326,22 @@ namespace filetypes
                     else if( m_opversion == eOpCodeVersion::EoTD )
                         codeinf = OpCodeFinderPicker<eOpCodeVersion::EoTD>()(inst.value);
 
-                    if( codeinf && 
-                        codeinf.ParamInfo().size() > cntparams && 
-                       codeinf.ParamInfo()[cntparams].ptype == eOpParamTypes::InstructionOffset )
-                    {
-                        auto itf = m_labeltbl.find(param);
-                        if( itf != m_labeltbl.end() )
-                            itw = utils::WriteIntToBytes( itf->second, itw );
-                        else
-                        {
-                            assert(false);
-                        }
-                    }
-                    else
-                    {
+                    //if( codeinf && 
+                    //    codeinf.ParamInfo().size() > cntparams && 
+                    //   codeinf.ParamInfo()[cntparams].ptype == eOpParamTypes::InstructionOffset )
+                    //{
+                    //    auto itf = m_labeltbl.find(param);
+                    //    if( itf != m_labeltbl.end() )
+                    //        itw = utils::WriteIntToBytes( itf->second, itw );
+                    //    else
+                    //    {
+                    //        assert(false);
+                    //    }
+                    //}
+                    //else
+                    //{
                         itw = utils::WriteIntToBytes( param, itw );
-                    }
+                    //}
 
                     
                     m_datalen += ScriptWordLen;
@@ -1105,29 +1355,30 @@ namespace filetypes
             }
             else
             {
+                assert(false);
                 //Handle META
             }
         }
 
-        void CheckAndHandleJumpInstructions(outit_t & itw, const ScriptInstruction & inst)
-        {
-            m_labeltbl;
-        }
+        //void CheckAndHandleJumpInstructions(outit_t & itw, const ScriptInstruction & inst)
+        //{
+        //    m_labeltbl;
+        //}
         
 
         void WriteConstants( outit_t & itw )
         {
-            if( m_scrdat.ConstTbl().empty() )
+            if( m_compiledsrc.constantstrings.empty() )
                 return;
             //**The constant pointer table counts as part of the script data, but not the constant strings it points to for some weird reasons!!**
             //**Also, the offsets in the tables include the length of the string ptr table!**
             const streampos befconsttbl = m_outf.tellp();
             m_constoffset = static_cast<size_t>(befconsttbl);   //Save the location where we'll write the constant ptr table at, for the data header
             
-            const uint16_t  sizcptrtbl     = m_scrdat.ConstTbl().size() * ScriptWordLen;
+            const uint16_t  sizcptrtbl     = m_compiledsrc.constantstrings.size() * ScriptWordLen;
             const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
             m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
-            m_constblksize = WriteTableAndStrings( itw, m_scrdat.ConstTbl(),szstringptrtbl); //The constant strings data is not counted in datalen!
+            m_constblksize = WriteTableAndStrings( itw, m_compiledsrc.constantstrings, szstringptrtbl); //The constant strings data is not counted in datalen!
 
 
 
@@ -1175,16 +1426,16 @@ namespace filetypes
         */
         void WriteStrings( outit_t & itw )
         {
-            if( m_scrdat.StrTblSet().empty() )
+            if( m_compiledsrc.strings.empty() )
                 return;
 
             size_t          cntstrblk       = 0;
             const streampos befstrptrs      = m_outf.tellp();
-            const uint16_t  lengthconstdata = (m_scrdat.ConstTbl().size() * ScriptWordLen) + m_constblksize; //The length of the constant ptr tbl and the constant data!
+            const uint16_t  lengthconstdata = (m_compiledsrc.constantstrings.size() * ScriptWordLen) + m_constblksize; //The length of the constant ptr tbl and the constant data!
             const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
             m_stringblockbeg = static_cast<size_t>(befstrptrs); //Save the starting position of the string data, for later
 
-            if( !m_scrdat.StrTblSet().empty() && m_scrdat.StrTblSet().size() != m_stringblksSizes.size() )
+            if( !m_compiledsrc.strings.empty() && m_compiledsrc.strings.size() != m_stringblksSizes.size() )
             {
 #ifdef _DEBUG
                 assert(false);
@@ -1192,7 +1443,7 @@ namespace filetypes
                 throw std::runtime_error("SSBWriterToFile::WriteStrings(): Mismatch in expected script string blocks to ouput!!");
             }
 
-            for( const auto & strblk : m_scrdat.StrTblSet() )
+            for( const auto & strblk : m_compiledsrc.strings )
             {
                 //Write each string blocks and save the length of the data into our table for later. 
                 //**String block sizes include the ptr table!**
@@ -1259,7 +1510,7 @@ namespace filetypes
         }
 
     private:
-        const pmd2::ScriptedSequence & m_scrdat;
+        const pmd2::Script & m_scrdat;
         uint16_t            m_hdrlen; 
 
         size_t              m_nbstrings;
@@ -1277,6 +1528,8 @@ namespace filetypes
         eGameRegion    m_scrRegion;
 
         ofstream       m_outf;
+        raw_ssb_content m_compiledsrc;      //Source of the compiled data
+        const LanguageFilesDB & m_langdat;
     };
 
 //=======================================================================================
@@ -1286,7 +1539,7 @@ namespace filetypes
     /*
         ParseScript
     */
-    pmd2::ScriptedSequence ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
+    pmd2::Script ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers, const LanguageFilesDB & langdat, bool escapeforxml )
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
@@ -1297,24 +1550,24 @@ namespace filetypes
         //if( scriptfile == "EoSRomRoot\\data\\SCRIPT\\D02P31A\\enter00.ssb"s )
         //    cout <<"lol\n";
 
-        return std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc).Parse() );
+        return std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc, langdat).Parse(escapeforxml) );
     }
 
     /*
         WriteScript
     */
-    void WriteScript( const std::string & scriptfile, const pmd2::ScriptedSequence & scrdat, eGameRegion gloc, eGameVersion gvers )
+    void WriteScript( const std::string & scriptfile, const pmd2::Script & scrdat, eGameRegion gloc, eGameVersion gvers, const LanguageFilesDB & langdata )
     {
         eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
 
-        SSBWriterTofile(scrdat, gloc, opvers).Write(scriptfile);
+        SSBWriterTofile(scrdat, gloc, opvers, langdata).Write(scriptfile);
     }
 
 
     //
-    //ScriptedSequence::strtblset_t LoadSBStrings(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
+    //Script::strtblset_t LoadSBStrings(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
     //{
     //    vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
     //    eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
@@ -1326,7 +1579,7 @@ namespace filetypes
     //}
 
     ////
-    //ScriptedSequence::consttbl_t LoadSBConstants(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
+    //Script::consttbl_t LoadSBConstants(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers)
     //{
     //    vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
     //    eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);

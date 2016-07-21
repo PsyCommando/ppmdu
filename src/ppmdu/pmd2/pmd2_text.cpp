@@ -13,7 +13,6 @@ using namespace std;
 namespace pmd2
 {
 
-
 //
 //
 //
@@ -29,7 +28,7 @@ namespace pmd2
             const StringsCatalog * pcata = m_conf.GetLanguageFilesDB().GetByTextFName( utils::GetFilename(afile) );
             if( pcata )
             {
-                langstr_t mylang( std::move(filetypes::ParseTextStrFile(afile)),
+                langstr_t mylang( std::move(filetypes::ParseTextStrFile(afile, m_conf.GetGameVersion().region)),
                                   std::move( StringsCatalog(*pcata) ) );
 
                 m_languages.emplace( pcata->GetLanguage(), 
@@ -84,82 +83,10 @@ namespace pmd2
         {
             stringstream fname;
             fname << utils::TryAppendSlash(m_pmd2fsdir) << DirName_MESSAGE <<"/" << alang.second.GetTextFName();
-            filetypes::WriteTextStrFile( fname.str(), alang.second.Strings() );
+            filetypes::WriteTextStrFile( fname.str(), alang.second.Strings(), m_conf.GetGameVersion().region );
         }
     }
 
-    std::string EscapeUnprintableCharacters(const std::string & src, const std::locale & loc)
-    {
-        std::string out;
-        out.reserve(src.size() * 2);
-        for( const char c : src )
-        {
-            if( c == 0 )
-            {
-                out.push_back('\\');
-                out.push_back('0');
-            }
-            else if( c == 10 )
-            {
-                out.push_back('\\');
-                out.push_back('n');
-            }
-            else
-                out.push_back(c);
-        }
-        out.shrink_to_fit();
-        return std::move(out);
-    }
 
-    std::string & ReplaceEscapedUnprintableCharacters(std::string & src, const std::locale & loc)
-    {
-        //regex       escapeseq("\\\\{1}([a-zA-Z0-9]+\\b)");
-        //smatch      sm;
-        //std::string outstr;
-        //outstr.reserve(src.size());
-
-        //for( auto itc = src.begin(); itc != src.end();  )
-        //{
-
-        //}
-
-
-        //if( regex_match(src, sm, escapeseq) )
-        //{
-
-
-
-
-        //    for( const auto & match : sm )
-        //    {
-        //        string escapedval = match.str();
-        //        if( escapedval.size() > 0 )
-        //        {
-        //            if( escapedval.front() == 'n' )
-        //                outstr.push_back(10);
-        //            else if( escapedval.front() == '0' )
-        //                outstr.push_back(0);
-        //            else
-        //                clog<<"unsuported escape sequence " <<escapedval <<"!\n";
-        //        }
-        //        else if( escapedval.size() > 1 && escapedval.find('x') != string::npos )
-        //        {
-        //            stringstream num;
-        //            num <<"0" << escapedval;
-        //            uint16_t val = 0;
-        //            num >> hex >> val;
-        //            outstr.push_back(static_cast<char>(val));
-        //        }
-        //        else
-        //        {}
-
-        //    }
-        //    outstr.shrink_to_fit();
-        //    src = outstr;
-        //}
-        assert(false);
-        
-        return src;
-    }
 
 };
