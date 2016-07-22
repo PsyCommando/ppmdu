@@ -463,9 +463,11 @@ namespace pmd2
     std::string ReplaceEscapedCharacters(const std::string & src, const std::locale & loc )
     {
         static const regex   MatchEscCharRegex ("(\\\\(.)([0-9a-fA-F]{2})?)");  //This matches all escaped characters, including the leading backslash
-        stringstream         deststr;
         std::sregex_iterator ithex(src.begin(), src.end(), MatchEscCharRegex);
         std::sregex_iterator end;
+        if( ithex == end )
+            return src;
+        stringstream         deststr;
         deststr.imbue(loc);
 
         while (ithex != end) 

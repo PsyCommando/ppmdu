@@ -19,6 +19,18 @@ using namespace pugixmlutils;
 
 namespace pmd2
 {
+    /*
+        ToWord
+            Checked cast of a 32 bits integer into a 16 bits integer.
+    */
+    inline uint16_t ToWord( size_t val )
+    {
+        if( val > std::numeric_limits<uint16_t>::max() )
+                throw std::overflow_error("ToWord(): Value is larger than a 16bits integer!!");
+        return static_cast<uint16_t>(val);
+    }
+
+
 //==============================================================================
 //  Constants
 //==============================================================================
@@ -118,7 +130,7 @@ namespace pmd2
             }
             m_out = std::move( Script(xname.value()) );
             xml_node xcode  = seqn.child(NODE_Code.c_str());
-            xml_node xconst = seqn.child(NODE_Constants.c_str());
+            //xml_node xconst = seqn.child(NODE_Constants.c_str());
 
             ParseCode(xcode);
             CheckLabelReferences();
@@ -141,13 +153,21 @@ namespace pmd2
 
     private:
 
+
+
+        /*****************************************************************************************
+        *****************************************************************************************/
         inline void IncrementAllStringReferencesParameters()
         {
             const size_t constblocksz = m_constqueue.size();
             for( const auto & entry : m_stringrefparam )
-                (*entry) += constblocksz;
+            {
+                (*entry) += ToWord(constblocksz);
+            }
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         void CheckLabelReferences()
         {
             for( const auto & aconstref : m_labelchecker )
@@ -157,13 +177,17 @@ namespace pmd2
                     stringstream sstr;
                     sstr <<"SSBXMLParser::CheckLabelReferences(): "<<aconstref.second.nbref 
                          <<" reference(s) to non-existant label ID " <<aconstref.first <<" found!!";
-                    utils::DebugAssert(false);
+#ifdef _DEBUG
+                    assert(false);
+#endif
                     throw std::runtime_error(sstr.str());
                 }
             }
         }
 
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         void ParseCode( const xml_node & coden )
         {
             using namespace scriptXML;
@@ -184,8 +208,8 @@ namespace pmd2
                     throw std::runtime_error(sstrer.str());
                 }
                 
-                grpout.type = xtype.as_uint();
-                grpout.unk2 = xunk2.as_uint();
+                grpout.type = ToWord(xtype.as_uint());
+                grpout.unk2 = ToWord(xunk2.as_uint());
 
                 for( const xml_node & inst : group )
                 {
@@ -195,6 +219,8 @@ namespace pmd2
             }
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         template<typename _InstContainer>
             void ParseInstruction( const xml_node & instn, _InstContainer & outcnt )
         {
@@ -222,6 +248,8 @@ namespace pmd2
             //}
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         template<typename _InstContainer>
             void ParseMetaLabel( const xml_node & instn, _InstContainer & outcnt )
         {
@@ -231,7 +259,7 @@ namespace pmd2
             if( !xid )
                 throw std::runtime_error("SSBXMLParser::ParseInstruction(): Label with invalid ID found!");
 
-            uint16_t labelid = static_cast<uint16_t>(xid.as_int());
+            uint16_t labelid = ToWord(xid.as_int());
             m_labelchecker[labelid].bexists = true; //We know this label exists
 
             ScriptInstruction outinstr;
@@ -241,7 +269,7 @@ namespace pmd2
         }
 
 
-        /*
+        /*****************************************************************************************
             Cases :
 
             		<Switch svar="DUNGEON_ENTER">
@@ -249,15 +277,20 @@ namespace pmd2
 						<Case int="25" tolabel_1="122" />
 						<Case int="26" tolabel_1="123" />
 					</Switch>
-        */
+        *****************************************************************************************/
         template<typename _InstContainer>
             void TryParseCommandNode(const xml_node & instn, _InstContainer & outcnt)
         {
             using namespace scriptXML;
-            const std::string nodename = instn.name();
-            size_t            nbparams = std::distance( instn.attributes().begin(), instn.attributes().end() );
-            uint16_t          foundop  = m_opinfo.Code( nodename, nbparams );
+            xml_attribute_iterator  itat     = instn.attributes_begin();
+            xml_attribute_iterator  itatend  = instn.attributes_end();
+            const std::string       nodename = instn.name();
+            size_t                  nbparams = std::distance( itat, itatend );
 
+            if( instn.child(NODE_String.c_str()) )
+                ++nbparams; //If we got a string, add it to the parameter count!
+
+            uint16_t foundop  = m_opinfo.Code( nodename, nbparams );
             if( foundop == InvalidOpCode )
             {
                 stringstream sstrer;
@@ -272,7 +305,8 @@ namespace pmd2
             outinstr.type  = opinfo.GetMyInstructionType();
 
             //Read parameters
-            ParseCommandParameters(instn, outinstr, opinfo);
+            //ParseCommandParameters(instn, outinstr, opinfo);
+            DecideHowParseParams( instn, itat, itatend, nbparams, opinfo, instn.child(NODE_String.c_str()), outinstr, outcnt );
 
             //Parse child instructions, if required
             if( outinstr.type  != eInstructionType::Command )
@@ -282,60 +316,308 @@ namespace pmd2
             //Insert
             outcnt.push_back(std::move(outinstr));
         }
-
+        
+        /*****************************************************************************************
+        *****************************************************************************************/
         void ParseSubInstructions(const xml_node & parentinstn, ScriptInstruction & dest )
         {
             using namespace scriptXML;
-            for( const auto & entry : parentinstn.children(NODE_Instruction.c_str()) )
+            for( const auto & entry : parentinstn.children() )
                 ParseInstruction(entry, dest.subinst);
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         template<typename _InstContainer>
             void ParseCommand(const xml_node & instn, _InstContainer & outcnt)
         {
             using namespace scriptXML;
             xml_attribute name = instn.attribute(ATTR_Name.c_str());
+            string        instname;
             if(!name)
             {
+                //!#TODO: Merge the other method for parsing parameters with sub-instructions with this one!!
                 stringstream sstrer;
                 sstrer <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
                     <<", in group instruction #" <<outcnt.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
+            else
+                instname = name.value();
+
+            
             ScriptInstruction outinstr;
             outinstr.type = eInstructionType::Command;
 
-            //Try to count parameters
-            size_t nbparams = std::distance( instn.attributes_begin(), instn.attributes_end() ) - 1; //Subtract the name
+            //#1 - Try to count parameters
+            bool                    hasstrings  = false;
+            xml_attribute_iterator  itat        = instn.attributes_begin();
+            xml_attribute_iterator  itatend     = instn.attributes_end();
+            size_t                  nbparams    = 0;
+
+            if( itat != itatend  && name /*&& strcmp(itat->name(), ATTR_Name.c_str()) == 0*/ )
+                ++itat; //Skip name attribute
+
+            nbparams = std::distance( itat, itatend );
+
             if( instn.child(NODE_String.c_str()) ) //Look for string nodes, so we can count it as a parameter
+            {
+                hasstrings = true;
                 ++nbparams;
+            }
 
             //#2 - Read opcode
-            outinstr.value = m_opinfo.Code(name.value(), nbparams );
+            outinstr.value = m_opinfo.Code(instname, nbparams );
             if( outinstr.value == InvalidOpCode )
                 throw std::runtime_error("SSBXMLParser::ParseCommand(): No matching opcode found!");
 
+            //#3 - Parse parameters
             OpCodeInfoWrapper oinf = m_opinfo.Info(outinstr.value);
+            if(nbparams != 0)
+                DecideHowParseParams( instn, itat, itatend, nbparams, oinf, hasstrings,outinstr, outcnt );
 
-            //!#TODO: Handle meta, and differently named parameters!!
-            //#3 - Get parameters
-           ParseCommandParameters(instn, outinstr, oinf);
+            //!#TODO: Merge the other method for parsing parameters with sub-instructions with this one!!
 
             outcnt.push_back(std::move(outinstr));            
         }
 
 
-        inline string & CleanAttributeName( string & name )
+        /*****************************************************************************************
+            DecideHowParseParams
+                Depending on the data will pick the best method to parse the parameters 
+                for a given instruction.
+        *****************************************************************************************/
+        template<typename _InstContainer>
+            void DecideHowParseParams( const xml_node         & instn,
+                                       xml_attribute_iterator & itat, 
+                                       xml_attribute_iterator & itatend, 
+                                       size_t                   nbparams, 
+                                       const OpCodeInfoWrapper & oinf,
+                                       bool                     hasstrings,
+                                       ScriptInstruction      & outinstr,
+                                       _InstContainer         & outcnt )
         {
+            using namespace scriptXML;
+            //!#TODO: Handle meta, and differently named parameters!!
+            if(nbparams == 0)
+            {
+                return;
+            }
+            else if( nbparams >= oinf.NbParams() )
+            {
+                //We should have enough parameters to parse!
+                if( oinf.ParamInfo().size() == oinf.NbParams() )
+                {
+                    if( ParseDefinedParameters( instn, itat, itatend, oinf, hasstrings, outinstr ) != oinf.NbParams() )
+                    {
+                        assert(false); //should never happen!!
+                    }
+                }
+                else if( oinf.ParamInfo().size() < oinf.NbParams() &&   //If not all parameters were defined
+                        nbparams >= oinf.NbParams() )                   //AND if the nb of param attributes is larger or equal to the ammount expected.
+                {
+                    //Handle when **not** all parameters are defined
+                    //We do not handle string nodes in this case!
+                    if( ParsePartiallyDefinedParameters(instn, itat, itatend, oinf, hasstrings, outinstr) != oinf.NbParams() )
+                    {
+#ifdef _DEBUG
+                        assert(false);
+#endif
+                        //Error, lacks required parameters!!
+                        stringstream sstrer;
+                        sstrer <<"SSBXMLParser::ParseCommand(): Command \"" <<instn.path() <<"\" had less parameters specified than expected!!";
+                        throw std::runtime_error(sstrer.str()); //Error!!
+                    }
+                }
+            }
+            else if( oinf.NbParams() == -1 && itat != itatend )
+            {
+                //Special case
+                ParseRawParameters(itat, itatend, oinf, outinstr);
+            }
+            else if( nbparams < oinf.NbParams() || itat == itatend )
+            {
+#ifdef _DEBUG
+                        assert(false);
+#endif
+                //Error, lacks required parameters!!
+                stringstream sstrer;
+                sstrer <<"SSBXMLParser::ParseCommand(): Command \"" <<instn.path() <<"\" had less parameters specified than expected!!";
+                throw std::runtime_error(sstrer.str()); //Error!!
+            }
+
+        }
+
+
+        /*****************************************************************************************
+            ParseRawParameters
+                Parses any parameters named "param", and push them into the
+                parameter list of the function!
+        *****************************************************************************************/
+        size_t ParseRawParameters(  xml_attribute_iterator & itat, 
+                                    xml_attribute_iterator & itatend,
+                                    const OpCodeInfoWrapper& oinf,
+                                    ScriptInstruction      & outinstr,
+                                    size_t                   begat = 0 )
+        {
+            using namespace scriptXML;
+
+            size_t nbtoparse = 0;
+            if(oinf.NbParams() != -1)
+                nbtoparse = oinf.NbParams();
+            else 
+                nbtoparse = std::distance( itat, itatend );
+
+            for( ;begat < nbtoparse && itat != itatend; ++itat )
+            {
+                const string attrname = CleanAttributeName(itat->name());
+                if( attrname == ATTR_Param )
+                {
+                    outinstr.parameters.push_back( ToWord(itat->as_uint()) );
+                    ++begat;
+                }
+            }
+            return begat;
+        }
+
+        /*****************************************************************************************
+            ParsePartiallyDefinedParameters
+                Handles the case when not all parameters have a defined type.
+
+                **#TODO: Will eventually be phased out!!**
+        *****************************************************************************************/
+        size_t ParsePartiallyDefinedParameters( const xml_node         & instn, 
+                                                xml_attribute_iterator & itat, 
+                                                xml_attribute_iterator & itatend,
+                                                const OpCodeInfoWrapper& oinf,
+                                                bool                     hasstrings,     //Whether has string subnodes or not
+                                                ScriptInstruction      & outinstr )
+        {
+            using namespace scriptXML;
+            size_t nbparamparsed = ParseDefinedParameters(instn, itat, itatend, oinf, hasstrings, outinstr);
+
+            //handle any remaining parameters
+            return ParseRawParameters( itat, itatend, oinf, outinstr, nbparamparsed );
+        }
+
+        /*****************************************************************************************
+            ParseDefinedParameters
+                Will parse all defined parameters until hitting the end of the attribute list, 
+                or the defined param list!
+                Returns the nb of parameters parsed.
+        *****************************************************************************************/
+        size_t ParseDefinedParameters( const xml_node         & instn, 
+                                       xml_attribute_iterator & itat, 
+                                       xml_attribute_iterator & itatend,
+                                       const OpCodeInfoWrapper& oinf,
+                                       bool                     hasstrings,     //Whether has string subnodes or not
+                                       ScriptInstruction      & outinstr ) 
+        {
+            using namespace scriptXML;
+            size_t nbparamread = 0;
+            //Handle when **all** parameters are defined
+            for( const auto & pinf : oinf.ParamInfo() )
+            {
+                if( itat != itatend )   
+                {
+                    //**When we still have parameters attributes to parse**
+                    const string  attrname      = CleanAttributeName(itat->name());
+                    eOpParamTypes attrparamtype = FindOpParamTypesByName(attrname);
+                    if( pinf.ptype == attrparamtype )
+                    {
+                        ParseTypedCommandParameterAttribute(*itat, instn, attrparamtype, outinstr );
+                    }
+                    else if( pinf.ptype == eOpParamTypes::String ) //Strings will never match 
+                    {
+                        if( attrparamtype == eOpParamTypes::Constant && itat != itatend )
+                        {
+                            //Special case for constants and strings, since they can be replaced by one another
+                            HandleAConstref( *itat, outinstr );
+                        }
+                        else if(hasstrings)
+                        {
+                            //If we have strings nodes parse them
+                            HandleStringNodes( instn, outinstr );
+                            ++nbparamread;  //Increment and skip incrementing the iterator!!
+                            continue;       //Don't increment itat, since we're not even using the current parameter attribute !!
+                        }
+                        else
+                            throw std::runtime_error("SSBXMLParser::ParseDefinedParameters(): Expected String node or constref, but neither were found! " + instn.path() );
+                    }
+                    else
+                        throw std::runtime_error("SSBXMLParser::ParseDefinedParameters(): Unexpected instruction! " + instn.path() );
+                }
+                else if( pinf.ptype == eOpParamTypes::String ) 
+                {
+                    //**If we don't have attributes left to parse, but are looking for strings**
+                    //This is the only valid case where we'd have no more attributes to parse!
+                    if(hasstrings)
+                    {
+                        //If we have strings nodes parse them
+                        HandleStringNodes( instn, outinstr );
+                        ++nbparamread;  //Increment and skip incrementing the iterator!!
+                        
+                    }
+                    else
+                        throw std::runtime_error("SSBXMLParser::ParseDefinedParameters(): Expected String node, but none were found! " + instn.path() );
+                    break; //Break immediatetly, since, we don't have any attributes left!!
+                }
+                else //if( itat == itatend )
+                {
+                    break; //After we looked for possible strings nodes, we can break safely!
+                }
+                ++nbparamread;
+                ++itat;
+            }
+
+            return nbparamread;
+        }
+
+        /*****************************************************************************************
+            HandleStringNodes
+        *****************************************************************************************/
+        void HandleStringNodes(const xml_node & instn, ScriptInstruction & outinstr)
+        {
+            using namespace scriptXML;
+            //If we got subnodes containing strings!
+            for( const auto & strs: instn.children(NODE_String.c_str()) )
+            {
+                xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
+                xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
+
+                if( xval && xlang )
+                {
+                    eGameLanguages lang = StrToGameLang(xlang.value());
+
+                    if( lang == eGameLanguages::Invalid )
+                        throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                                
+                    m_strqueues[lang].push_back(xval.value());
+                    outinstr.parameters.push_back( ToWord(m_strqueues[lang].size() - 1) );//save the idex it was inserted at
+                }
+            }
+        }
+
+
+        /*****************************************************************************************
+            CleanAttributeName
+        *****************************************************************************************/
+        inline string CleanAttributeName( const pugi::char_t * cname )
+        {
+            string name(cname);
             static const regex ParamNameCleaner(R"((\b\S+(?=_\d)))");
             smatch             matches;
             //First, clean the name of the parameter of any appended number if needed
             if( regex_search( name, matches, ParamNameCleaner ) && matches.size() > 1 )
                 name = matches[1].str();
-            return name;
+            return std::move(name);
         }
 
 
+        /*****************************************************************************************
+            ParseCommandParameters
+        *****************************************************************************************/
+#if 0
         void ParseCommandParameters( const xml_node & instn, ScriptInstruction & outinst, const OpCodeInfoWrapper & opinfo )
         {
             using namespace scriptXML;
@@ -530,7 +812,22 @@ namespace pmd2
             //}
 
         }
+#endif
 
+
+
+        /*****************************************************************************************
+            HandleAConstref
+        *****************************************************************************************/
+        inline void HandleAConstref(const xml_attribute & param, ScriptInstruction & outinst )
+        {
+            outinst.parameters.push_back( ToWord(m_constqueue.size()) );
+            m_constqueue.push_back( param.value() );
+        }
+
+        /*****************************************************************************************
+            ParseTypedCommandParameterAttribute
+        *****************************************************************************************/
         void ParseTypedCommandParameterAttribute( const xml_attribute & param, const xml_node & parentinstn, eOpParamTypes pty, ScriptInstruction & outinst )
         {
             using namespace scriptXML;
@@ -538,46 +835,21 @@ namespace pmd2
             {
                 case eOpParamTypes::Constant:
                 {
-                    outinst.parameters.push_back( m_constqueue.size() );
-                    m_constqueue.push_back( param.value() );
+                    HandleAConstref( param, outinst );
                     break;
                 }
                 case eOpParamTypes::String:
                 {
                     if( m_region == eGameRegion::Japan )
                     {
-                        outinst.parameters.push_back( m_constqueue.size() );
-                        m_constqueue.push_back( param.value() ); //Japanese version just puts strings in the constant table
+                        HandleAConstref( param, outinst );
                     }
-                    //else
-                    //{
-                    //    uint16_t strindex = 0;
-                    //    for( const auto & strs: parentinstn.children(NODE_String.c_str()) )
-                    //    {
-                    //        xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
-                    //        xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
-
-                    //        if( xval && xlang )
-                    //        {
-                    //            eGameLanguages lang = StrToGameLang(xlang.value());
-
-                    //            if( lang == eGameLanguages::Invalid )
-                    //                throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
-                    //            
-                    //            strindex = m_strqueues.at(lang).size();//save the idex it was inserted at
-                    //            m_strqueues.at(lang).push_back(xval.value());
-                    //        }
-                    //    }
-
-                    //    outinst.parameters.push_back( strindex );
-                    //    m_stringrefparam.push_back( std::addressof(outinst.parameters.back()) );  //Mark for fixing the string offset later on, since we need the const table size!
-                    //}
                     break;
                 }
                 case eOpParamTypes::InstructionOffset:
                 {
                     //Labels IDs
-                    uint16_t lblid = static_cast<uint16_t>( param.as_uint() );
+                    uint16_t lblid = ToWord( param.as_uint() );
                     auto itf = m_labelchecker.find( lblid );
                     
                     if( itf != m_labelchecker.end() )
@@ -594,7 +866,7 @@ namespace pmd2
                     if(faceid != InvalidFaceID)
                         outinst.parameters.push_back(faceid);
                     else
-                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                        outinst.parameters.push_back( ToWord(param.as_int()) );
                     break;
                 }
                 case eOpParamTypes::Unk_ScriptVariable:
@@ -603,7 +875,7 @@ namespace pmd2
                     if(varid != InvalidGameVariableID )
                         outinst.parameters.push_back(varid);
                     else
-                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                        outinst.parameters.push_back( ToWord(param.as_int()) );
                     break;
                 }
                 case eOpParamTypes::Unk_LivesRef:
@@ -618,7 +890,7 @@ namespace pmd2
                     if(livesid != InvalidLivesID )
                         outinst.parameters.push_back(livesid);
                     else
-                        outinst.parameters.push_back( static_cast<uint16_t>(param.as_int()) );
+                        outinst.parameters.push_back( ToWord(param.as_int()) );
                     break;
                 }
                 case eOpParamTypes::Unk_PerformerRef:
@@ -631,11 +903,13 @@ namespace pmd2
                 }
                 default:
                 {
-                    outinst.parameters.push_back( static_cast<uint16_t>( param.as_uint() ) );
+                    outinst.parameters.push_back( ToWord( param.as_uint() ) );
                 }
             }
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
         void ParseConsts( const xml_node & constn )
         {
             using namespace scriptXML;
@@ -657,7 +931,8 @@ namespace pmd2
             //m_out.ConstTbl() = std::move( Script::consttbl_t( constantsout.begin(), constantsout.end() ) );
         }
 
-
+        /*****************************************************************************************
+        *****************************************************************************************/
         void ParseStringBlock( const xml_node & strblkn )
         {
             using namespace scriptXML;
@@ -712,7 +987,7 @@ namespace pmd2
         //A list of parameters containing a string index reference to be incremented after the size of the const table is known!
         deque<uint16_t *>                            m_stringrefparam;  
         
-        Script m_out;
+        Script           m_out;
         eGameVersion     m_version;
         eGameRegion      m_region;
         OpCodeClassifier m_opinfo;
@@ -738,8 +1013,8 @@ namespace pmd2
     private:
 
     private:
-        eGameVersion m_version;
-        eGameRegion m_region;
+        eGameVersion    m_version;
+        eGameRegion     m_region;
     };
 
     /*****************************************************************************************
@@ -996,11 +1271,11 @@ namespace pmd2
 #endif
             switch(instr.type)
             {
-                case eInstructionType::Data:
-                {
-                    WriteData(groupn,instr);
-                    break;
-                }
+                //case eInstructionType::Data:
+                //{
+                //    WriteData(groupn,instr);
+                //    break;
+                //}
                 case eInstructionType::Command:
                 {
                     WriteInstruction(groupn,instr);
@@ -1125,16 +1400,16 @@ namespace pmd2
             AppendAttribute( AppendChildNode(groupn, NODE_MetaCaseLabel), ATTR_LblID, instr.value );
         }
 
-        inline void WriteData(xml_node & groupn, const pmd2::ScriptInstruction & instr)
-        {
-            using namespace scriptXML;
-            xml_node        datan = AppendChildNode(groupn, NODE_Data);
-            xml_attribute   dval  = datan.append_attribute(ATTR_Value.c_str());
-            stringstream    sstr;
-            sstr <<"0x" <<hex <<uppercase <<instr.value;
-            string str = sstr.str();    //Just in case the string gets deleted out of scope when we pass the c_str..
-            dval.set_value( str.c_str() );
-        }
+        //inline void WriteData(xml_node & groupn, const pmd2::ScriptInstruction & instr)
+        //{
+        //    using namespace scriptXML;
+        //    xml_node        datan = AppendChildNode(groupn, NODE_Data);
+        //    xml_attribute   dval  = datan.append_attribute(ATTR_Value.c_str());
+        //    stringstream    sstr;
+        //    sstr <<"0x" <<hex <<uppercase <<instr.value;
+        //    string str = sstr.str();    //Just in case the string gets deleted out of scope when we pass the c_str..
+        //    dval.set_value( str.c_str() );
+        //}
 
         void WriteInstruction(xml_node & groupn, const pmd2::ScriptInstruction & instr)
         {
@@ -1165,7 +1440,7 @@ namespace pmd2
             const string * pname = nullptr;
 
             //Check for unique parameter names 
-            if( (opinfo.ParamInfo().size() > cntparam) && ( (pname = OpParamTypesToStr( opinfo.ParamInfo()[cntparam].ptype )) != nullptr) )
+            if( ( cntparam < opinfo.ParamInfo().size() ) && ( (pname = OpParamTypesToStr( opinfo.ParamInfo()[cntparam].ptype )) != nullptr) )
             {
                 eOpParamTypes ptype      = opinfo.ParamInfo()[cntparam].ptype;
                 size_t        ptypeindex = static_cast<size_t>(ptype);
@@ -1227,7 +1502,7 @@ namespace pmd2
                         }
                         else
                         {
-                            utils::DebugAssert(false);
+                            assert(false);
                             throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): String ID out of range!" );
                         }
                         break;
@@ -1245,7 +1520,6 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_FaceType:
                     {
-                        //!#TODO:
                         string facename = GetFaceNameByID(pval);
                         if(!facename.empty())
                             AppendAttribute( instn, deststr.str(), facename);
@@ -1255,7 +1529,6 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_LivesRef:
                     {
-                        //!#TODO:
                         if( m_version == eGameVersion::EoS )
                         {
                             const livesinfo_EoS * pinf = FindLivesInfo_EoS(pval);
@@ -1271,37 +1544,59 @@ namespace pmd2
                         }
                         return;
                     }
+                    case eOpParamTypes::Boolean:   //!#TODO
+                    {
+                        AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
+                        return;
+                    }
+                    case eOpParamTypes::InstructionOffset: //This is actually converted to a label id by the program
+                    {
+                        AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
+                        return;
+                    }
+                    case eOpParamTypes::BitsFlag:   //!#TODO
                     default:
                     {
-                        AppendAttribute( instn, deststr.str(), pval );
+                        stringstream sstrp;
+                        sstrp <<"0x" <<hex <<uppercase <<pval; 
+                        AppendAttribute( instn, deststr.str(), sstrp.str() );
                         return;
                     }
                 };
 
             }
+
             //!#TODO: we could probably make this a bit more sophisticated later on 
+            stringstream sstrval;
+            sstrval <<"0x" <<hex <<uppercase <<static_cast<int16_t>(intr.parameters[cntparam]);
             if( cntparam < ATTR_Params.size() )
             {
-                AppendAttribute( instn, ATTR_Params[cntparam], static_cast<int16_t>(intr.parameters[cntparam]) );
+                AppendAttribute( instn, ATTR_Params[cntparam], sstrval.str() );
             }
             else
             {
                 stringstream  deststr;
                 deststr<<ATTR_Param <<cntparam;
-                AppendAttribute( instn, deststr.str(), static_cast<int16_t>(intr.parameters[cntparam]) );
+                AppendAttribute( instn, deststr.str(), sstrval.str() );
             }
         }
 
+        /*
+        */
         inline bool isConstIdInRange( uint16_t id )const
         {
             return id < m_seq.ConstTbl().size();
         }
 
+        /*
+        */
         inline bool isStringIdInRange( uint16_t id )const
         {
             return !(m_seq.StrTblSet().empty()) && (id < m_seq.StrTblSet().begin()->second.size());
         }
 
+        /*
+        */
         void WriteOrphanedConstants( xml_node & parentn )
         {
             using namespace scriptXML;
@@ -1326,6 +1621,8 @@ namespace pmd2
             }
         }
 
+        /*
+        */
         void WriteOrphanedStrings( xml_node & parentn )
         {
             using namespace scriptXML;

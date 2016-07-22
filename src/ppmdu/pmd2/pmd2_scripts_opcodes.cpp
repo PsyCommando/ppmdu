@@ -525,7 +525,7 @@ namespace pmd2
         { "message_SetFaceOnly",                    3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LivesRef}, {eOpParamTypes::Unk_FaceType}, {eOpParamTypes::UNK_Placeholder} } },
         { "message_SetFacePosition",                1, -1, 0, 0, eCommandCat::SingleOp      },
         { "message_SetWaitMode",                    2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "message_SpecialTalk",                    1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
+        { "message_SpecialTalk",                    1, -1, 0, 0, eCommandCat::SingleOp,         /*{ {eOpParamTypes::String} } */},
         { "message_SwitchMenu",                     2, -1, 0, 0, eCommandCat::Switch,       },
         { "message_SwitchMenu2",                    3, -1, 0, 0, eCommandCat::Switch,       },
         { "message_SwitchMonologue",                1, -1, 0, 0, eCommandCat::Switch,           { {eOpParamTypes::Unk_ScriptVariable} } },

@@ -516,7 +516,11 @@ namespace filetypes
         {
             if( inst.type == eInstructionType::MetaLabel )
                 return 0;
-            return ScriptWordLen + (inst.parameters.size() * ScriptWordLen);
+
+            if(m_instfinder.Info(inst.value).NbParams() == -1)
+                return ScriptWordLen + (inst.parameters.size() * ScriptWordLen) + ScriptWordLen; //Add one word for the nb of parameters!
+            else
+                return ScriptWordLen + (inst.parameters.size() * ScriptWordLen);
         }
 
         /*-----------------------------------------------------------------------------
@@ -783,7 +787,7 @@ namespace filetypes
 
             if(cntstr != nbtoparse)
             {
-                utils::DebugAssert(false);
+                assert(false);
                 stringstream sstrer;
                 sstrer << "SSB_Parser::ParseOffsetTblAndStrings(): Couldn't parse all " <<nbtoparse <<" string(s)! Only parsed " <<cntstr <<" before reaching end of data!!";
                 throw std::runtime_error(sstrer.str());
@@ -1183,7 +1187,7 @@ namespace filetypes
             m_datalen += ssb_data_hdr::LEN; //Add to the total length immediately
 
             //#2 - Reserve group table
-            //std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
+            std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
 
             //#3 - Pre-Alloc/pre-calc stuff
             CalcAndVerifyNbStrings();
@@ -1191,9 +1195,9 @@ namespace filetypes
             //BuildLabelConversionTable();
 
             //#4 - Write code for each groups, constants, strings
-            WriteCode(oit);
-            WriteConstants(oit);
-            WriteStrings(oit);
+            WriteCode();
+            WriteConstants();
+            WriteStrings();
 
             //#5 - Header and group table written last, since the offsets and sizes are calculated as we go.
             m_outf.seekp(0, ios::beg);
@@ -1316,7 +1320,7 @@ namespace filetypes
         }
 
 
-        void WriteCode( outit_t & itw )
+        void WriteCode()
         {
 
             //for( const auto & grp : m_scrdat.Groups() )
@@ -1329,9 +1333,11 @@ namespace filetypes
                 //m_grps.push_back(grent);
                 //m_datalen += group_entry::LEN;
 
+               
+
                 //Write the content of the group
                 for( const auto & inst : /*grp*/ m_compiledsrc.rawinstructions )
-                    WriteInstruction(itw,inst);
+                    WriteInstruction(ostreambuf_iterator<char>(m_outf), inst);
             //}
         }
 
@@ -1370,7 +1376,7 @@ namespace filetypes
         }
 
 
-        void WriteConstants( outit_t & itw )
+        void WriteConstants()
         {
             if( m_compiledsrc.constantstrings.empty() )
                 return;
@@ -1382,7 +1388,7 @@ namespace filetypes
             const uint16_t  sizcptrtbl     = m_compiledsrc.constantstrings.size() * ScriptWordLen;
             const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
             m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
-            m_constblksize = WriteTableAndStrings( itw, m_compiledsrc.constantstrings, szstringptrtbl); //The constant strings data is not counted in datalen!
+            m_constblksize = WriteTableAndStrings( m_compiledsrc.constantstrings, szstringptrtbl); //The constant strings data is not counted in datalen!
 
 
 
@@ -1428,7 +1434,7 @@ namespace filetypes
             WriteStrings
                 Write the strings blocks
         */
-        void WriteStrings( outit_t & itw )
+        void WriteStrings()
         {
             if( m_compiledsrc.strings.empty() )
                 return;
@@ -1451,7 +1457,7 @@ namespace filetypes
             {
                 //Write each string blocks and save the length of the data into our table for later. 
                 //**String block sizes include the ptr table!**
-                m_stringblksSizes[cntstrblk] = WriteTableAndStrings( itw, strblk.second, lengthconstdata ) + szstringptrtbl; //We need to count the offset table too!!
+                m_stringblksSizes[cntstrblk] = WriteTableAndStrings( strblk.second, lengthconstdata ) + szstringptrtbl; //We need to count the offset table too!!
                 ++cntstrblk;
             }
         }
@@ -1463,7 +1469,7 @@ namespace filetypes
                 Returns the length in bytes of the string data, **not counting the ptr table!**
         */
         template<class _CNT_T>
-            size_t WriteTableAndStrings( outit_t      & itw,
+            size_t WriteTableAndStrings(
                                          const _CNT_T & container,              //What contains the strings to write(std container needs begin() end() size() and const_iterator)
                                          size_t         ptrtbloffsebytes = 0 ) //Offset in **bytes** to add to all ptrs in the ptr table
         {
@@ -1472,7 +1478,7 @@ namespace filetypes
             const uint16_t  sizcptrtbl = (container.size() * ScriptWordLen);
             
             //Reserve pointer table so we can write there as we go
-            std::fill_n( itw, sizcptrtbl, 0 );
+            std::fill_n( ostreambuf_iterator<char>(m_outf), sizcptrtbl, 0 );
 
             //Write strings
             const streampos befdata = m_outf.tellp();
@@ -1482,18 +1488,16 @@ namespace filetypes
                 streampos curpos = m_outf.tellp();
 
                 m_outf.seekp( static_cast<size_t>(befptrs) + (cntstr * ScriptWordLen), ios::beg ); //Seek to the const ptr tbl
-                itw = utils::WriteIntToBytes<uint16_t>( (ptrtbloffsebytes + (curpos - befptrs)), itw );            //Add offset to table
+                utils::WriteIntToBytes<uint16_t>( (ptrtbloffsebytes + (curpos - befptrs)), ostreambuf_iterator<char>(m_outf) );            //Add offset to table
                 m_outf.seekp( curpos, ios::beg ); //Seek back at the position we'll write the string at
 
                 //write string
-                //!#TODO: Convert escaped characters??
-                itw = std::copy( str.begin(), str.end(), itw );
-                *itw = '\0'; //Append zero
-                ++itw;
+                std::copy( str.begin(), str.end(), ostreambuf_iterator<char>(m_outf) );
+                m_outf.put('\0'); //Append zero
                 ++cntstr;
             }
             //Add some padding bytes if needed (padding is counted in the block's length)
-            utils::AppendPaddingBytes(itw, m_outf.tellp(), ScriptWordLen);
+            utils::AppendPaddingBytes(ostreambuf_iterator<char>(m_outf), m_outf.tellp(), ScriptWordLen);
 
             //Return the size of the constant strings data
             return m_outf.tellp() - befdata;

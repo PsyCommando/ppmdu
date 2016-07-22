@@ -203,18 +203,6 @@ namespace utils
             return val;
     }
 
-
-    /************************************************************************************
-        DebugAssert
-            Helper function that assert an expression only when debugging.
-    ************************************************************************************/
-    inline void DebugAssert( bool expression )
-    {
-#ifdef _DEBUG || DEBUG
-        assert(expression);
-#endif
-    }
-
     /************************************************************************************
         PortablePause
             Use this to make a pause for user input that will work on any OS.
