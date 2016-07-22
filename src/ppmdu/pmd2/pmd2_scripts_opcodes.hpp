@@ -1262,6 +1262,7 @@ namespace pmd2
 //  Utilities
 //=====================================================================================
 
+
     /*************************************************************************************
         OpCodeInfoWrapper
             Wrapper to abstract parameter info between versions of the game.
@@ -1431,6 +1432,11 @@ namespace pmd2
             :m_ver(ver)
         {}
 
+        /*
+            Info
+                Return info on the specified instruction, wrapped in a OpCodeInfoWrapper.
+                If it doesn't find any info, the state of the OpCodeInfoWrapper, will be invalid!
+        */
         OpCodeInfoWrapper Info(uint16_t code)
         {
             if(m_ver == eOpCodeVersion::EoS)
@@ -1444,6 +1450,13 @@ namespace pmd2
             }
         }
 
+        /*
+            Code
+                For a number of parameters, and a given instruction name, 
+                return the corresponding code/instruction id.
+                Returns "InvalidOpCode" if the instruction can't
+                be found!
+        */
         uint16_t Code(const std::string & instname, size_t nbparams)
         {
             if(m_ver == eOpCodeVersion::EoS)
@@ -1457,7 +1470,27 @@ namespace pmd2
             }
         }
 
+        /*************************************************************************************
+            CalcInstructionLen
+                Calculate the length of an instruction as raw bytes.
+                Returns 0 if the command's instruction id is invalid!
+        *************************************************************************************/
+        inline size_t CalcInstructionLen( const ScriptInstruction & instr)
+        {
+            OpCodeInfoWrapper oinfo = Info(instr.value);
+            if(!oinfo)
+                return 0;
 
+            if( oinfo.NbParams() == -1 )
+                return ScriptWordLen + (instr.parameters.size() * ScriptWordLen) + ScriptWordLen; // -1 instructions have an extra word for the nb of instructions!
+            else
+                return ScriptWordLen + (instr.parameters.size() * ScriptWordLen);
+        }
+
+        /*
+            GetNbOpcodes
+                Returns the nb of total instructions for the current game version!
+        */
         inline size_t GetNbOpcodes()const 
         {
             if(m_ver == eOpCodeVersion::EoS)
@@ -1490,6 +1523,9 @@ namespace pmd2
         else 
             return eOpCodeVersion::Invalid;
     }
+
+
+
 };
 
 #endif

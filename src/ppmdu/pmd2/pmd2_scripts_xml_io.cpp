@@ -128,26 +128,19 @@ namespace pmd2
             {
                 throw std::runtime_error("SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!");
             }
-            m_out = std::move( Script(xname.value()) );
-            xml_node xcode  = seqn.child(NODE_Code.c_str());
-            //xml_node xconst = seqn.child(NODE_Constants.c_str());
+            xml_node xcode = seqn.child(NODE_Code.c_str());
 
+            m_out = std::move( Script(xname.value()) );
             ParseCode(xcode);
             CheckLabelReferences();
+            IncrementAllStringReferencesParameters(); //Increment all strings values by the nb of entries in the const table.
 
-            //!#TODO: Need to ensure all opcode dealing with strings have their string reference parameter shiften by the nb of constants in the const table!!
-            IncrementAllStringReferencesParameters();
-
+            //Move strings
             m_out.ConstTbl() = std::move( Script::consttbl_t( m_constqueue.begin(), m_constqueue.end() ) );
-
             for( auto & aq : m_strqueues )
             {
                 m_out.StrTblSet().emplace( aq.first, std::move(Script::strtbl_t(aq.second.begin(), aq.second.end())) );
             }
-            //ParseConsts(xconst);
-            //for( const auto & strblk : seqn.children(NODE_Strings.c_str()) )
-            //    ParseStringBlock(strblk);
-
             return std::move(m_out);
         }
 
@@ -156,6 +149,10 @@ namespace pmd2
 
 
         /*****************************************************************************************
+            IncrementAllStringReferencesParameters
+                This increments the value of every single parameters referring to a string id
+                we collected so far. It adds the nb of constants to the index, just as the 
+                ssb format expects!
         *****************************************************************************************/
         inline void IncrementAllStringReferencesParameters()
         {
@@ -167,6 +164,8 @@ namespace pmd2
         }
 
         /*****************************************************************************************
+            CheckLabelReferences 
+                Checks to see if any instruction refers to a non-existing label.
         *****************************************************************************************/
         void CheckLabelReferences()
         {
@@ -305,7 +304,6 @@ namespace pmd2
             outinstr.type  = opinfo.GetMyInstructionType();
 
             //Read parameters
-            //ParseCommandParameters(instn, outinstr, opinfo);
             DecideHowParseParams( instn, itat, itatend, nbparams, opinfo, instn.child(NODE_String.c_str()), outinstr, outcnt );
 
             //Parse child instructions, if required
@@ -579,22 +577,30 @@ namespace pmd2
         void HandleStringNodes(const xml_node & instn, ScriptInstruction & outinstr)
         {
             using namespace scriptXML;
-            //If we got subnodes containing strings!
-            for( const auto & strs: instn.children(NODE_String.c_str()) )
+            auto subn = instn.children(NODE_String.c_str());
+
+            if( subn.begin() != subn.end() )
             {
-                xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
-                xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
-
-                if( xval && xlang )
+                uint16_t strindex = ToWord(m_stringrefparam.size());
+                //If we got subnodes containing strings!
+                for( const auto & strs: subn)
                 {
-                    eGameLanguages lang = StrToGameLang(xlang.value());
+                    xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
+                    xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
 
-                    if( lang == eGameLanguages::Invalid )
-                        throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
-                                
-                    m_strqueues[lang].push_back(xval.value());
-                    outinstr.parameters.push_back( ToWord(m_strqueues[lang].size() - 1) );//save the idex it was inserted at
+                    if( xval && xlang )
+                    {
+                        eGameLanguages lang = StrToGameLang(xlang.value());
+
+                        if( lang == eGameLanguages::Invalid )
+                            throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                        m_strqueues[lang].push_back(xval.value());
+                    }
                 }
+
+                //Add to the list of parameter only once per string, not per language!!!
+                outinstr.parameters.push_back( strindex );//save the idex it was inserted at
+                m_stringrefparam.push_back( std::addressof(outinstr.parameters.back()) ); //Then add this parameter value to the list of strings id to increment by the constant tbl len later on!
             }
         }
 
@@ -986,11 +992,12 @@ namespace pmd2
 
         //A list of parameters containing a string index reference to be incremented after the size of the const table is known!
         deque<uint16_t *>                            m_stringrefparam;  
-        
+
         Script           m_out;
         eGameVersion     m_version;
         eGameRegion      m_region;
         OpCodeClassifier m_opinfo;
+
     };
 
 

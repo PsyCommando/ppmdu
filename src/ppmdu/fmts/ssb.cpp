@@ -982,18 +982,21 @@ namespace filetypes
         }
 
     private:
-        inline size_t CalcInstructionLen( const ScriptInstruction & instr )
-        {
-            return ScriptWordLen + (instr.parameters.size() * ScriptWordLen);
-        }
+        //inline size_t CalcInstructionLen( const ScriptInstruction & instr )
+        //{
+        //    if( m_opinfo.Info(instr.value).NbParams() == -1 )
+        //        return ScriptWordLen + (instr.parameters.size() * ScriptWordLen) + ScriptWordLen; // -1 instructions have an extra word for the nb of instructions!
+        //    else
+        //        return ScriptWordLen + (instr.parameters.size() * ScriptWordLen);
+        //}
 
-        size_t CalcInstructionLen_WithSubInst( const ScriptInstruction & instr )
-        {
-            size_t len = CalcInstructionLen(instr);
-            for( const auto & sub : instr.subinst )
-                len += CalcInstructionLen_WithSubInst(sub);
-            return len;
-        }
+        //size_t CalcInstructionLen_WithSubInst( const ScriptInstruction & instr )
+        //{
+        //    size_t len = m_opinfo.CalcInstructionLen(instr);
+        //    for( const auto & sub : instr.subinst )
+        //        len += CalcInstructionLen_WithSubInst(sub);
+        //    return len;
+        //}
 
     private:
         void ProcessInstructions()
@@ -1062,7 +1065,7 @@ namespace filetypes
                     outinst.value       = instr.value;
                     outinst.type        = eInstructionType::Command;
                     outinst.parameters  = instr.parameters; 
-                    curoffset+= CalcInstructionLen(outinst);
+                    curoffset+= m_opinfo.CalcInstructionLen(outinst);
                     m_out.rawinstructions.push_back(std::move(outinst));
                     
                     //Write sub-instructions
@@ -1074,7 +1077,7 @@ namespace filetypes
                 default:
                 {
                     m_out.rawinstructions.push_back(instr);
-                    curoffset+= CalcInstructionLen(instr);
+                    curoffset+= m_opinfo.CalcInstructionLen(instr);
                 }
             }
         }
@@ -1082,7 +1085,7 @@ namespace filetypes
         void UpdateAllReferences()
         {
             //Replace references to label into references to offsets
-            for( auto instr : m_out.rawinstructions )
+            for( auto & instr : m_out.rawinstructions )
             {
                 if( instr.parameters.empty() )
                     continue;
@@ -1152,7 +1155,7 @@ namespace filetypes
         typedef ostreambuf_iterator<char> outit_t;
     public:
         SSBWriterTofile(const pmd2::Script & scrdat, eGameRegion gloc, eOpCodeVersion opver, const LanguageFilesDB & langdat)
-            :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver), m_langdat(langdat)
+            :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver), m_langdat(langdat), m_opinfo(opver)
         {
             if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
                 m_stringblksSizes.resize(1,0);
@@ -1346,34 +1349,31 @@ namespace filetypes
         {
             if( inst.type == eInstructionType::Command  )
             {
+                OpCodeInfoWrapper codeinf = m_opinfo.Info(inst.value);
                 itw = utils::WriteIntToBytes( inst.value, itw );
                 m_datalen += ScriptWordLen;
 
-                size_t cntparams = 0;
+                //If we're a -1 instruction, append the nb of instructions!!
+                if( codeinf.NbParams() == -1 )
+                {
+                    itw = utils::WriteIntToBytes( static_cast<uint16_t>(inst.parameters.size()), itw );
+                    m_datalen += ScriptWordLen;
+                }
+
+                //Append the paramters
                 for( const auto & param : inst.parameters )
                 {
-                    OpCodeInfoWrapper codeinf;
-                    if( m_opversion == eOpCodeVersion::EoS )
-                        codeinf = OpCodeFinderPicker<eOpCodeVersion::EoS>()(inst.value);
-                    else if( m_opversion == eOpCodeVersion::EoTD )
-                        codeinf = OpCodeFinderPicker<eOpCodeVersion::EoTD>()(inst.value);
-
                     itw = utils::WriteIntToBytes( param, itw );
-
                     m_datalen += ScriptWordLen;
-                    ++cntparams;
                 }
             }
-            else if( inst.type == eInstructionType::Data )
-            {
-                itw = utils::WriteIntToBytes( inst.value, itw );
-                m_datalen += ScriptWordLen;
-            }
+            //else if( inst.type == eInstructionType::Data )
+            //{
+            //    itw = utils::WriteIntToBytes( inst.value, itw );
+            //    m_datalen += ScriptWordLen;
+            //}
             else
-            {
-                assert(false);
-                //Handle META
-            }
+                assert(false); //!#TODO: Error handling!!
         }
 
 
@@ -1539,6 +1539,7 @@ namespace filetypes
         ofstream       m_outf;
         raw_ssb_content m_compiledsrc;      //Source of the compiled data
         const LanguageFilesDB & m_langdat;
+        OpCodeClassifier m_opinfo;
     };
 
 //=======================================================================================
