@@ -483,6 +483,7 @@ namespace pmd2
                 {
                     if( !MatchHexEscapeChar(curmatch, deststr) ) //Find if it matches a hex byte
                     {
+                        //!#TODO: CRASHED HERE BECAUSE OF "\nbe" !!!
                         throw std::runtime_error("ReplaceEscapedUnprintableCharacters(): Encountered unknown escape sequence \""s + curmatch +"\" !!");
                     }
                 }

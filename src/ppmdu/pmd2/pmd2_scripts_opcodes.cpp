@@ -1314,17 +1314,21 @@ namespace pmd2
     {
         if( faceid < FaceNames.size() )
         {
-            if( (faceid % 2) != 0 )
-            {
-                std::stringstream sstr;
-                sstr<<FaceNames[faceid]<<"_FLIP";
-                return FaceNames[faceid];
-            }
-            else
+            //if( (faceid % 2) != 0 )
+            //{
+            //    std::stringstream sstr;
+            //    sstr<<FaceNames[faceid]<<"_FLIP";
+            //    return FaceNames[faceid];
+            //}
+            //else
                 return FaceNames[faceid];
         }
+        //else if( static_cast<int16_t>(faceid) == NullFaceID )
+        //{
+        //    return NullFaceName;
+        //}
         
-        return "";
+        return NullFaceName;
     }
 
 

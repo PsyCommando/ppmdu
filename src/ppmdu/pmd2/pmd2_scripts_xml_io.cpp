@@ -863,10 +863,10 @@ namespace pmd2
                 case eOpParamTypes::Unk_FaceType:
                 {
                     uint16_t faceid = FindFaceIDByName(param.value());
-                    if(faceid != InvalidFaceID)
+                    //if(faceid != InvalidFaceID)
                         outinst.parameters.push_back(faceid);
-                    else
-                        outinst.parameters.push_back( ToWord(param.as_int()) );
+                    //else
+                    //    outinst.parameters.push_back( ToWord(param.as_int()) );
                     break;
                 }
                 case eOpParamTypes::Unk_ScriptVariable:

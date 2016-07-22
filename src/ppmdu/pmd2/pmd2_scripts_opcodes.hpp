@@ -931,7 +931,7 @@ namespace pmd2
 //==========================================================================================================
 //  Faces
 //==========================================================================================================
-    const std::array<std::string, 32> FaceNames
+    const std::array<std::string, 16> FaceNames
     {{
         "NORMAL",
         "HAPPY",
@@ -949,33 +949,21 @@ namespace pmd2
         "FAINT",
         "DUMMY_0",
         "DUMMY_1",
-        "ACTION1",
-        "ACTION2",
-        "ACTION3",
-        "ACTION4",
-        "ACTION5",
-        "ACTION6",
-        "ACTION7",
-        "ACTION8",
-        "ACTION9",
-        "ACTION10",
-        "ACTION11",
-        "ACTION12",
-        "ACTION13",
-        "ACTION14",
-        "ACTION15",
-        "ACTION16",
     }};
 
-    const uint16_t InvalidFaceID = std::numeric_limits<uint16_t>::max();
+    const int16_t       InvalidFaceID   = std::numeric_limits<int16_t>::max();
+    const std::string   NullFaceName    = "NULL"; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
+    const int16_t       NullFaceID      = InvalidFaceID; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
 
-    inline uint16_t FindFaceIDByName( const std::string & facename )
+    inline int16_t FindFaceIDByName( const std::string & facename )
     {
+        if( facename == NullFaceName )
+            return NullFaceID;
         for( size_t i = 0; i < FaceNames.size(); ++i )
         {
             const std::string & cur = FaceNames[i];
             if( cur == facename )
-                return static_cast<uint16_t>(i);
+                return static_cast<int16_t>(i);
         }
         return InvalidFaceID;
     }
