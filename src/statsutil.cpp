@@ -730,17 +730,22 @@ namespace statsutil
             //    }
             //};
         }
-        catch(Poco::Exception & e )
+        catch( const Poco::Exception & e )
         {
             cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
             if( utils::LibWide().isLogOn() )
                 clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
         }
-        catch( exception &e )
+        catch( const exception &e )
         {
-            cerr <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
+            cerr <<"\n<!>- Exception caught! :\n";
+            stringstream strex;
+            utils::PrintNestedExceptions( strex, e );
+            const string exceptstr = strex.str();
+
+            cerr <<exceptstr;
             if( utils::LibWide().isLogOn() )
-                clog <<"\n" << "<!>- Exception - " <<e.what() <<"\n" <<"\n";
+                clog <<exceptstr;
         }
         return returnval;
     }

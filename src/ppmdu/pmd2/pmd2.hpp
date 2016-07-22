@@ -13,6 +13,9 @@ Description:
 
 namespace pmd2
 {
+    class exBasePPMDUException                : public std::runtime_error  { public: using std::runtime_error::runtime_error;  };
+    class exMalformedEscapedCharacterSequence : public exBasePPMDUException{ public: using exBasePPMDUException::exBasePPMDUException; };
+
 //======================================================================================
 //  Constants
 //======================================================================================

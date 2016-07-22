@@ -1824,8 +1824,9 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         decltype(out_dest.Region())   tempregion;
         decltype(out_dest.Version()) tempversion;
         atomic_bool                  shouldUpdtProgress = true;
-        future<void>                 updtProgress;
+        //future<void>                 updtProgress;
         atomic<uint32_t>             completed = 0;
+        thread                       updatethread;
         //Grab our version and region from the 
         if(bprintprogress)
             cout<<"- Parsing COMON.xml..\n";
@@ -1870,28 +1871,38 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         {
             if(bprintprogress)
             {
+                assert(!out_dest.m_setsindex.empty());
                 cout<<"\nImporting..\n";
-                updtProgress = std::async( std::launch::async, 
-                                           PrintProgressLoop, 
-                                           std::ref(completed), 
-                                           out_dest.m_setsindex.size(), 
-                                           std::ref(shouldUpdtProgress) );
+                updatethread = std::thread( PrintProgressLoop, 
+                                            std::ref(completed), 
+                                            out_dest.m_setsindex.size(), 
+                                            std::ref(shouldUpdtProgress) );
+                updatethread.detach();
+                //updtProgress = std::async( std::launch::async, 
+                //                           PrintProgressLoop, 
+                //                           std::ref(completed), 
+                //                           out_dest.m_setsindex.size(), 
+                //                           std::ref(shouldUpdtProgress) );
             }
             taskhandler.Execute();
             taskhandler.BlockUntilTaskQueueEmpty();
             taskhandler.StopExecute();
 
             shouldUpdtProgress = false;
-            if( updtProgress.valid() )
-                updtProgress.get();
+            //if( updtProgress.valid() )
+            //    updtProgress.get();
+            if(updatethread.joinable())
+                updatethread.join();
             if(bprintprogress)
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
         }
         catch(...)
         {
             shouldUpdtProgress = false;
-            if( updtProgress.valid() )
-                updtProgress.get();
+            //if( updtProgress.valid() )
+            //    updtProgress.get();
+            if(updatethread.joinable())
+                updatethread.join();
             std::rethrow_exception( std::current_exception() );
         }
 

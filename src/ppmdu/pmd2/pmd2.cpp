@@ -405,13 +405,34 @@ namespace pmd2
 //  Escaped Character Parsing
 //======================================================================================
     /*
+        FindCommonEscapeChar
+            Lookup in the table for common escape sequences for a single char!
     */
-    inline bool MatchCommonEscapeChar( const string & str, std::stringstream & out )
+    inline bool FindCommonEscapeChar(const string & str, std::stringstream & out)
     {
         auto itcom = CommonEscapeCharactersToRaw.find(str);
         if( itcom != CommonEscapeCharactersToRaw.end() )
         {
             out<<itcom->second; //Append the character directly then
+            return true;
+        }
+        return false;
+    }
+
+
+    /*
+        MatchCommonEscapeChar
+            Check if at least the beginning of a string of arbitrary length matches
+            a common escape character. Any excess characters will be appended
+            to the "out" string stream after the escaped value only if it matched!
+    */
+    inline bool MatchCommonEscapeChar( const string & str, std::stringstream & out )
+    {
+        if( str.size() == 2 )
+            return FindCommonEscapeChar(str, out);
+        else if( str.size() > 2 && FindCommonEscapeChar(str.substr(0,2), out) )
+        {
+            out << str.substr(2);
             return true;
         }
         return false;
@@ -438,6 +459,10 @@ namespace pmd2
                 out <<static_cast<char>(val);
                 return true;
             }
+            else
+            {
+                throw exMalformedEscapedCharacterSequence("MatchHexEscapeChar(): The sequence for a hex byte didn't match the expected format of \\xhh!");
+            }
         }
         else if( (foundx = escexpr.find_first_of('U')) != string::npos && (foundx+1) < escexpr.size() )
         {
@@ -453,6 +478,10 @@ namespace pmd2
                 out <<static_cast<char>(val>>8);    //Highest last, since the game seems to use something close to UTF1?
                 return true;
             }
+            else
+            {
+                throw exMalformedEscapedCharacterSequence("MatchHexEscapeChar(): The sequence for a hex byte didn't match the expected format of \\Uhhhh!");
+            }
         }
         return false;
     }
@@ -467,35 +496,45 @@ namespace pmd2
         std::sregex_iterator end;
         if( ithex == end )
             return src;
-        stringstream         deststr;
-        deststr.imbue(loc);
-
-        while (ithex != end) 
+        
+        try
         {
-            std::smatch match = *ithex;
-            if( match.size() > 1 )
+            stringstream deststr;
+            deststr.imbue(loc);
+
+            while (ithex != end) 
             {
-                //AppendPrefix
-                deststr<<match.prefix();
-                //Find if we match a common escape char
-                const string curmatch = match.str();
-                if( !MatchCommonEscapeChar(curmatch, deststr) )
+                std::smatch match = *ithex;
+                if( match.size() > 1 )
                 {
-                    if( !MatchHexEscapeChar(curmatch, deststr) ) //Find if it matches a hex byte
+                    //AppendPrefix
+                    deststr<<match.prefix();
+                    //Find if we match a common escape char
+                    const string curmatch = match.str();
+                    if( !MatchCommonEscapeChar(curmatch, deststr) )
                     {
-                        //!#TODO: CRASHED HERE BECAUSE OF "\nbe" !!!
-                        throw std::runtime_error("ReplaceEscapedUnprintableCharacters(): Encountered unknown escape sequence \""s + curmatch +"\" !!");
+                        if( !MatchHexEscapeChar(curmatch, deststr) ) //Find if it matches a hex byte
+                        {
+                            //!#TODO: CRASHED HERE BECAUSE OF "\nbe" !!!
+                            throw std::runtime_error("ReplaceEscapedUnprintableCharacters(): Encountered unknown escape sequence \""s + curmatch +"\" !!");
+                        }
                     }
                 }
-            }
-            ithex++;
+                ithex++;
 
-            //On the last match, append the suffix!
-            if(ithex == end && match.size() > 1 ) 
-                deststr <<match.suffix();
-        } 
+                //On the last match, append the suffix!
+                if(ithex == end && match.size() > 1 ) 
+                    deststr <<match.suffix();
+            } 
 
-        return std::move(deststr.str());
+            return std::move(deststr.str());
+        }
+        catch( const exMalformedEscapedCharacterSequence & e )
+        {
+            stringstream ss;
+            ss <<" Caught while parsing string \"" <<src <<"\".";
+            std::throw_with_nested( std::runtime_error(ss.str()) );
+        }
     }
 
 };

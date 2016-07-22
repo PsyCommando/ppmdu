@@ -209,6 +209,36 @@ namespace utils
     ************************************************************************************/
     void PortablePause();
 
+
+    /*
+        PrintNestedExceptions
+            Simple recursive function to print nested exception.
+    */
+    inline void PrintNestedExceptions( std::ostream & output, const std::exception & e, unsigned int level = 0 )
+    {
+        if( level == 0 )
+            output <<std::string(level,' ') <<"Exception: " << e.what() <<"\n";
+        else
+            output <<std::string(level,' ') <<"(" <<level  <<") : " << e.what() <<"\n";
+        try
+        {
+            std::rethrow_if_nested(e);
+        }
+        catch(const std::exception & e)
+        {
+            PrintNestedExceptions(output, e, level + 1);
+        }
+        catch(...){}
+    }
+
+    /*
+    */
+    //template<typename _ExceptTy>
+    //    inline void RethrowWithNested( _ExceptTy && e )
+    //{
+    //    std::throw_with_nested(std::forward<_ExceptTy>(e));
+    //}
+
 };
 
 

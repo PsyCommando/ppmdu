@@ -1192,6 +1192,7 @@ namespace filetypes
             //#3 - Pre-Alloc/pre-calc stuff
             CalcAndVerifyNbStrings();
             m_grps.reserve( m_scrdat.Groups().size() );
+            m_datalen += m_scrdat.Groups().size() * group_entry::LEN; //Add the group entries length!!
             //BuildLabelConversionTable();
 
             //#4 - Write code for each groups, constants, strings

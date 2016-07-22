@@ -36,7 +36,9 @@ Changelog:
        a 0x81 to 0x84 byte. 0x81 0xF4 for example is used for the little music note in other locale than Japanese. While 
        in the Japanese locale,  most hiragana and katakana characters are multi-byte combination of 0x81 to 0x84 followed
        by another byte. That's how Shift-JIS encoding works.
-    *
+    * The game strings parser now supports unicode and hexadecimal byte escape sequences: \Uhhhh, \xhh, in addition to the 
+        already supported \n, \0.
+    * The script strings parser supports the same escape characters!
 
 ----------------------------------------------------------------------------------------------------
 License info:
