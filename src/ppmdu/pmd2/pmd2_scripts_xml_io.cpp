@@ -73,6 +73,8 @@ namespace pmd2
         const string ATTR_GroupType     = "type"s;
         const string ATTR_GroupParam2   = "unk2"s;
 
+        const string NODE_RoutineAlias  = "AliasPrevRoutine";       //For multiple groups refering to the same memory offset!
+
 
         const string NODE_Instruction   = "Instruction"s;
         const string NODE_Data          = "Data"s;               ///For data words
@@ -192,29 +194,36 @@ namespace pmd2
             using namespace scriptXML;
             Script::grptbl_t & outtbl = m_out.Groups();
 
-            for( const xml_node & group : coden.children(NODE_Group.c_str()) )
+            for( const xml_node & group : coden.children() )
             {
-                //We ignore the id on load!
-                //!#TODO: Maybe we could use routine ids to refer to routines through the "Call" commands?
-                xml_attribute  xtype = group.attribute(ATTR_GroupType.c_str());
-                xml_attribute  xunk2 = group.attribute(ATTR_GroupParam2.c_str());
-                ScriptInstrGrp grpout;
-                if(!xtype)
+                bool isalias = false;
+                if( NODE_Group.compare(group.name()) == 0 || (isalias = (NODE_RoutineAlias.compare(group.name()) == 0)) )
                 {
-                    stringstream sstrer;
-                    sstrer <<"SSBXMLParser::ParseCode(): Script \"" <<m_out.Name() <<"\", instruction group #" << outtbl.size() 
-                           <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
-                    throw std::runtime_error(sstrer.str());
-                }
+                    //We ignore the id on load!
+                    //!#TODO: Maybe we could use routine ids to refer to routines through the "Call" commands?
+                    xml_attribute  xtype = group.attribute(ATTR_GroupType.c_str());
+                    xml_attribute  xunk2 = group.attribute(ATTR_GroupParam2.c_str());
+                    ScriptInstrGrp grpout;
+                    if(!xtype)
+                    {
+                        stringstream sstrer;
+                        sstrer <<"SSBXMLParser::ParseCode(): Script \"" <<m_out.Name() <<"\", instruction group #" << outtbl.size() 
+                               <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
+                        throw std::runtime_error(sstrer.str());
+                    }
                 
-                grpout.type = ToWord(xtype.as_uint());
-                grpout.unk2 = ToWord(xunk2.as_uint());
+                    grpout.type     = ToWord(xtype.as_uint());
+                    grpout.unk2     = ToWord(xunk2.as_uint());
+                    grpout.isalias  = isalias;
 
-                for( const xml_node & inst : group )
-                {
-                    ParseInstruction(inst,grpout.instructions);
+                    if( !isalias )
+                    {
+                        for( const xml_node & inst : group )
+                            ParseInstruction(inst,grpout.instructions);
+                    }
+
+                    outtbl.push_back(std::move(grpout));
                 }
-                outtbl.push_back(std::move(grpout));
             }
         }
 
@@ -256,7 +265,7 @@ namespace pmd2
             xml_attribute xid = instn.attribute(ATTR_LblID.c_str());
 
             if( !xid )
-                throw std::runtime_error("SSBXMLParser::ParseInstruction(): Label with invalid ID found!");
+                throw std::runtime_error("SSBXMLParser::ParseInstruction(): Label with invalid ID found! " + instn.path());
 
             uint16_t labelid = ToWord(xid.as_int());
             m_labelchecker[labelid].bexists = true; //We know this label exists
@@ -618,209 +627,6 @@ namespace pmd2
                 name = matches[1].str();
             return std::move(name);
         }
-
-
-        /*****************************************************************************************
-            ParseCommandParameters
-        *****************************************************************************************/
-#if 0
-        void ParseCommandParameters( const xml_node & instn, ScriptInstruction & outinst, const OpCodeInfoWrapper & opinfo )
-        {
-            using namespace scriptXML;
-
-            xml_attribute_iterator itat    = instn.attributes_begin();
-            xml_attribute_iterator itatend = instn.attributes_end();
-
-            ////Skip the name attribute if there's one
-            //if( itat != itatend && itat->name() == ATTR_Name )
-            //    ++itat;
-            //outinst.parameters.reserve(opinfo.NbParams());
-
-            //Check all param infos for strings
-            size_t   slotstring         = 0;     //The parameter slot the string index should be placed into!
-            uint16_t strindex           = 0;     //The index of the string in the string queue
-            bool     hasstring          = false; //Whether we found a string subnode
-            bool     shouldhaveastring  = false; //Whether there was a string to parse or not
-            for( ; slotstring < opinfo.ParamInfo().size(); ++slotstring )
-            {
-                if( opinfo.ParamInfo()[slotstring].ptype == eOpParamTypes::String )
-                {
-                    shouldhaveastring = true;
-                    if( instn.first_child() )
-                    {
-                        //If we got subnodes containing strings!
-                        for( const auto & strs: instn.children(NODE_String.c_str()) )
-                        {
-                            xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
-                            xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
-
-                            if( xval && xlang )
-                            {
-                            
-                                eGameLanguages lang = StrToGameLang(xlang.value());
-
-                                if( lang == eGameLanguages::Invalid )
-                                    throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
-                                
-                                hasstring = true;
-                                m_strqueues[lang].push_back(xval.value());
-                                strindex = m_strqueues[lang].size() - 1;//save the idex it was inserted at
-                            }
-                        }
-                    }
-                    //outinst.parameters[slotstring] = strindex;
-                    //m_stringrefparam.push_back( std::addressof(outinst.parameters[slotstring]) );  //Mark for fixing the string offset later on, since we need the const table size!
-                }
-            }
-
-            size_t cntpinfo = 0;
-            for( ; cntpinfo < opinfo.NbParams(); )
-            {
-                if( itat != itatend && itat->name() == ATTR_Name)
-                {
-                    ++itat;
-                    continue;
-                }
-
-                if( cntpinfo < opinfo.ParamInfo().size() )
-                {
-                    const OpParamInfo & curp = opinfo.ParamInfo()[cntpinfo]; //Parameter INFO
-                    if( curp.ptype == eOpParamTypes::String )
-                    {
-                        if(hasstring)
-                        {
-                            outinst.parameters.push_back(strindex);
-                            m_stringrefparam.push_back( std::addressof(outinst.parameters.back()) );  //Mark for fixing the string offset later on, since we need the const table size!
-                        }
-                        else if(itat != itatend)
-                        {
-                            string pname = itat->name();
-                            CleanAttributeName(pname);
-                            eOpParamTypes ptype = FindOpParamTypesByName(pname);
-
-                            if(ptype == eOpParamTypes::Constant)
-                            {
-                                ParseTypedCommandParameterAttribute( *itat, instn, eOpParamTypes::Constant, outinst );
-                                ++itat;
-                            }
-                            else
-                                assert(false);
-                        }
-                    }
-                    else if( itat != itatend )
-                    {
-                        string        pname = itat->name(); 
-                        CleanAttributeName(pname);
-                        eOpParamTypes ptype = FindOpParamTypesByName(pname);
-
-                        if( ptype == curp.ptype )
-                            ParseTypedCommandParameterAttribute( *itat, instn, curp.ptype, outinst );
-                        else if( pname == ATTR_Param )
-                            outinst.parameters.push_back(static_cast<uint16_t>(itat->as_int()));
-                        else
-                            assert(false);
-                        ++itat;
-                    }
-                    else
-                    {
-                        assert(false);
-                        throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Unexpected parameter!!");
-                    }
-                }
-                else if( itat != itatend )
-                {
-                    string        pname = itat->name(); 
-                    CleanAttributeName(pname);
-
-                    if( pname == ATTR_Param )
-                    {
-                        outinst.parameters.push_back(static_cast<uint16_t>(itat->as_int()));
-                        ++itat;
-                    }
-                    else
-                    {
-                        assert(false);
-                    }
-                }
-                
-                ++cntpinfo;
-            }
-
-
-            
-
-
-
-
-            //First we need to get the parameters in order, strings are special
-            //for( size_t i = 0; i < opinfo.ParamInfo().size(); ++i )
-            //{
-            //    const OpParamInfo & curp = opinfo.ParamInfo()[i]; //Parameter INFO
-            //    if( curp.ptype == eOpParamTypes::String )
-            //    {
-            //        auto     subnodes = instn.children(NODE_String.c_str());
-            //        uint16_t strindex = 0;
-            //        if( itat != itatend && subnodes.begin() == subnodes.end() ) 
-            //        {
-            //            //If we don't have substrings, we assume its a constant ref!
-            //            string pname = itat->name();
-            //            CleanAttributeName(pname);
-            //            if( pname == OpParamTypesNames.at(static_cast<size_t>(eOpParamTypes::Constant)) )
-            //                ParseTypedCommandParameterAttribute( *itat, instn, eOpParamTypes::Constant, outinst ); //If we get a constant when we expected a string, handle it as a constants!!
-            //            else //This means its clearly a bad parameter
-            //                throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unexpected parameter/attribute type "s + itat->name() + " !");
-            //            ++itat;
-            //        }
-            //        else if( subnodes.begin() != subnodes.end() )
-            //        {
-            //            //If we got subnodes containing strings!
-            //            for( const auto & strs: subnodes )
-            //            {
-            //                xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
-            //                xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
-
-            //                if( xval && xlang )
-            //                {
-            //                    eGameLanguages lang = StrToGameLang(xlang.value());
-
-            //                    if( lang == eGameLanguages::Invalid )
-            //                        throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
-            //                    
-            //                    
-            //                    m_strqueues[lang].push_back(xval.value());
-            //                    strindex = m_strqueues[lang].size() - 1;//save the idex it was inserted at
-            //                }
-            //            }
-
-            //            outinst.parameters.push_back( strindex );
-            //            m_stringrefparam.push_back( std::addressof(outinst.parameters.back()) );  //Mark for fixing the string offset later on, since we need the const table size!
-            //        }
-            //        else
-            //            clog<<"<!>- Something is very wrong with the string parameter!!\n";
-            //    }
-            //    else
-            //    {
-            //        string pname = itat->name();
-            //        CleanAttributeName(pname);
-
-            //        const string * pstrpname = OpParamTypesToStr(curp.ptype);
-            //        if( !pstrpname )
-            //            throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Unexpected parameter!!");
-
-            //        if( pname == ATTR_Param )
-            //            outinst.parameters.push_back( static_cast<uint16_t>(itat->as_int()) );
-            //        else if( pname == *pstrpname )
-            //            ParseTypedCommandParameterAttribute( *itat, instn, curp.ptype, outinst );
-            //        else
-            //            throw std::runtime_error("SSBXMLParser::ParseCommandParameters(): Unexpected parameter!!");
-            //        ++itat;
-            //    }
-            //}
-
-        }
-#endif
-
-
 
         /*****************************************************************************************
             HandleAConstref
@@ -1225,7 +1031,13 @@ namespace pmd2
             sstrstats << "File contained " << m_seq.ConstTbl().size() << " constant(s), ";
             if( !m_seq.StrTblSet().empty() )
                 sstrstats <<m_seq.StrTblSet().begin()->second.size() <<" string(s), ";
-            sstrstats <<m_seq.Groups().size() <<" routine(s).";
+            else
+                sstrstats <<"0 string(s), ";
+            sstrstats <<m_seq.Groups().size() <<" routine(s),";
+            size_t nbaliases = 0;
+            for( const auto & grpa : m_seq.Groups() )
+                if(grpa.IsAliasOfPrevGroup()) ++nbaliases;
+            sstrstats <<" of which " <<nbaliases <<" are aliases to their previous routine." ;
             WriteCommentNode( parentn, sstrstats.str() );
 
             xml_node ssbnode = parentn.append_child( NODE_ScriptSeq.c_str() );
@@ -1257,13 +1069,20 @@ namespace pmd2
                 sstr << std::right <<std::setw(15) <<std::setfill(' ') <<"Routine #" <<grpcnt;
                 WriteCommentNode( xcode, sstr.str() );
                 WriteCommentNode( xcode, "************************" );
-                xml_node xgroup = xcode.append_child( NODE_Group.c_str() );
+                xml_node xgroup;
+                if( grp.IsAliasOfPrevGroup() )
+                    xgroup = xcode.append_child( NODE_RoutineAlias.c_str() );
+                else
+                    xgroup = xcode.append_child( NODE_Group.c_str() );
                 AppendAttribute( xgroup, ATTR_GroupID,     grpcnt );
                 AppendAttribute( xgroup, ATTR_GroupType,   grp.type );
                 AppendAttribute( xgroup, ATTR_GroupParam2, grp.unk2 );
 
-                for( const auto & instr : grp.instructions )
-                    HandleInstruction(xgroup, instr);
+                if( !grp.IsAliasOfPrevGroup() )
+                {
+                    for( const auto & instr : grp.instructions )
+                        HandleInstruction(xgroup, instr);
+                }
                 ++grpcnt;
             }
         }

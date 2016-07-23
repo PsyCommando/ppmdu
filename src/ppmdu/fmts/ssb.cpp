@@ -283,6 +283,22 @@ namespace filetypes
             return (*m_poutgrp)[m_curgroup];
         }
 
+
+        /*
+            GetNextRealRoutineBeg
+                Returns the next group/routine that's not an alias of the last!
+        */
+        inline uint16_t GetNextRealRoutineBeg( size_t cntgrp, uint16_t curbeg )
+        {
+            for( ; cntgrp < m_groups.size(); ++cntgrp )
+            {
+                uint16_t beg = m_groups[cntgrp].begoffset;
+                if( curbeg < beg )
+                    return beg; //Return the next non-alias routine
+            }
+            return static_cast<uint16_t>(m_datablocklen / ScriptWordLen);
+        }
+
         /*-----------------------------------------------------------------------------
             PrepareGroups
                 Init destination groups, and make a list of all the end offsets 
@@ -292,27 +308,28 @@ namespace filetypes
         {
             m_grpends.reserve(m_groups.size());
 
-            size_t cntgrp = 0;
+            size_t   cntgrp     = 0;
+            uint16_t lastgrpbeg = 0;
+            uint16_t lastgrpend = 0;
             for( ; cntgrp <  m_groups.size(); ++cntgrp )
             {
                 const auto & grp = m_groups[cntgrp];
                 ScriptInstrGrp igrp;
                 igrp.type = grp.type;
                 igrp.unk2 = grp.unk2;
-                m_poutgrp->push_back(std::move(igrp));
 
-                //group_bounds bnds;
-                //bnds.datoffbeg = grp.begoffset * ScriptWordLen;
-                size_t endoffset = 0;
-                if( (cntgrp +1) < m_groups.size() )
-                    endoffset = m_groups[cntgrp+1].begoffset * ScriptWordLen;
+                if(lastgrpbeg == grp.begoffset )
+                {
+                    igrp.isalias = true;
+                }
                 else
-                    endoffset = m_datablocklen;
-
-                //((cntgrp +1) < m_groups.size())?
-                //                   (m_groups[cntgrp+1].begoffset * ScriptWordLen) :  
-                //                   m_datablocklen;
-                m_grpends.push_back(endoffset);
+                {
+                    igrp.isalias = false;
+                    lastgrpbeg = grp.begoffset;
+                    lastgrpend = GetNextRealRoutineBeg( cntgrp, grp.begoffset );
+                }
+                m_poutgrp->push_back(std::move(igrp));
+                m_grpends.push_back(lastgrpend * ScriptWordLen);
             }
         }
 
@@ -533,6 +550,9 @@ namespace filetypes
             if( m_curdataoffset >= m_grpends[m_curgroup] && m_curgroup < (m_grpends.size()-1) )
             {
                 ++m_curgroup;
+                //Increment a bit more if we have alias groups
+                while( (*m_poutgrp)[m_curgroup].IsAliasOfPrevGroup() && m_curgroup < m_poutgrp->size() ) 
+                    ++m_curgroup;
             }
             else if( m_curgroup >= m_grpends.size() )
                 clog <<"ScriptProcessor::UpdateCurrentGroup() : Instruction is out of expected bounds!\n";
@@ -544,9 +564,9 @@ namespace filetypes
         deque<ScriptInstruction>            & m_rawinst;
         const rawgrp_t                      & m_groups;
         const lbltbl_t                      & m_labels;
-        const Script::consttbl_t  & m_constants;
-        const Script::strtblset_t & m_strings;
-        Script::grptbl_t          * m_poutgrp;
+        const Script::consttbl_t            & m_constants;
+        const Script::strtblset_t           & m_strings;
+        Script::grptbl_t                    * m_poutgrp;
         size_t                                m_curgroup;           //Group we currently output into
         size_t                                m_curdataoffset;      //Offset in bytes within the Data chunk
         vector<size_t>                        m_grpends;            //The offset within the data chunk where each groups ends
@@ -687,7 +707,9 @@ namespace filetypes
             rgrps.resize(m_nbgroups);
             //Grab all groups
             for( size_t cntgrp = 0; cntgrp < m_nbgroups; ++cntgrp )
+            {
                 m_cur = rgrps[cntgrp].ReadFromContainer( m_cur, m_end );
+            }
             return std::move(rgrps);
         }
 
@@ -1007,23 +1029,30 @@ namespace filetypes
 
             //Build group table as we go
             //Turn meta-instructions back into simple instructions
+            uint16_t lastgrpbegoffset = 0;
             for( const auto & grp : m_src.Groups() )
             {
-                HandleGroup(grp, curdataoffset);
+                HandleGroup(grp, curdataoffset, lastgrpbegoffset);
             }
         }
 
-        void HandleGroup( const ScriptInstrGrp & grp, size_t & curoffset )
+        void HandleGroup( const ScriptInstrGrp & grp, size_t & curoffset, uint16_t & lastgrpbeg )
         {
             group_entry curgrp;
             curgrp.type      = grp.type;
             curgrp.unk2      = grp.unk2;
-            curgrp.begoffset = curoffset / ScriptWordLen;
 
-            for( const auto & instr : grp )
+            if( grp.IsAliasOfPrevGroup() )
+                curgrp.begoffset = lastgrpbeg;
+            else
             {
-                HandleInstruction(instr, curoffset);
+                curgrp.begoffset = curoffset / ScriptWordLen;
+                for( const auto & instr : grp )
+                {
+                    HandleInstruction(instr, curoffset);
+                }
             }
+            lastgrpbeg = curgrp.begoffset;
             m_out.rawgroups.push_back(std::move(curgrp));
         }
 
@@ -1097,7 +1126,7 @@ namespace filetypes
                     if( ip < opinfo.ParamInfo().size() && 
                         opinfo.ParamInfo()[ip].ptype == eOpParamTypes::InstructionOffset )
                     {
-                        instr.parameters[ip] = m_labeloffsets.at(instr.parameters[ip]) / ScriptWordLen; //Swap labelid for offset
+                        instr.parameters[ip] = m_labeloffsets.at(instr.parameters[ip]) / static_cast<uint16_t>(ScriptWordLen); //Swap labelid for offset
                     }
                 }
 
@@ -1326,23 +1355,9 @@ namespace filetypes
 
         void WriteCode()
         {
-
-            //for( const auto & grp : m_scrdat.Groups() )
-            //{
-                //Add a group entry for the current instruction group
-                //group_entry grent;
-                //grent.begoffset = TryConvertToScriptLen( (static_cast<uint16_t>(m_outf.tellp()) -  m_hdrlen) );
-                //grent.type      = grp.type;
-                //grent.unk2      = grp.unk2;
-                //m_grps.push_back(grent);
-                //m_datalen += group_entry::LEN;
-
-               
-
-                //Write the content of the group
-                for( const auto & inst : /*grp*/ m_compiledsrc.rawinstructions )
-                    WriteInstruction(ostreambuf_iterator<char>(m_outf), inst);
-            //}
+            //Write the content of the group
+            for( const auto & inst : m_compiledsrc.rawinstructions )
+                WriteInstruction(ostreambuf_iterator<char>(m_outf), inst);
         }
 
         void WriteInstruction( outit_t & itw, const ScriptInstruction & inst )

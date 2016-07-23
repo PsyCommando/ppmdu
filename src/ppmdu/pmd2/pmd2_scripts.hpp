@@ -257,15 +257,18 @@ namespace pmd2
         typedef cnt_t::iterator                 iterator;
         typedef cnt_t::const_iterator           const_iterator;
 
-        iterator       begin() { return instructions.begin(); }
-        const_iterator begin()const { return instructions.begin(); }
+        inline iterator       begin() { return instructions.begin(); }
+        inline const_iterator begin()const { return instructions.begin(); }
 
-        iterator       end() { return instructions.end(); }
-        const_iterator end()const { return instructions.end(); }
+        inline iterator       end() { return instructions.end(); }
+        inline const_iterator end()const { return instructions.end(); }
 
-        size_t         size()const { return instructions.size(); }
-        bool           empty()const { return instructions.empty(); }
+        inline size_t         size()const { return instructions.size(); }
+        inline bool           empty()const { return instructions.empty(); }
 
+        inline bool           IsAliasOfPrevGroup()const { return isalias; }
+
+        bool     isalias;       //Whether this group refers to the same instructions as the previous one.
         cnt_t    instructions;
         uint16_t type;
         uint16_t unk2;
