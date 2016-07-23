@@ -8,7 +8,6 @@ Description: A bunch of utilities for dealing with palettes, and color data for 
 
 #TODO: rename this ! It kinda grew to be a little different than its initial purpose !!
 */
-//#include <ppmdu/basetypes.hpp>
 #include <vector>
 #include <array>
 #include <cstdint>

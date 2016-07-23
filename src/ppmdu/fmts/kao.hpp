@@ -12,7 +12,6 @@ It should be noted that .kao files are headerless.
 A big thanks to Zhorken for reversing most of the format!
 https://github.com/Zhorken
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>

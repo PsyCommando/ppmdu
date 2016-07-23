@@ -462,8 +462,8 @@ namespace ppx_extract
     //Decompress all our input files !
     void DecompressAll( pxextract_params & params )//const vector<Poco::Path> & inputpaths, vector<Poco::Path> & outputpaths, bool blogenabled )
     {
-        if( params.isLogEnabled )
-            compression::CleanExistingCompressionLogs(); //Do a little clean up
+        //if( params.isLogEnabled )
+        //    compression::CleanExistingCompressionLogs(); //Do a little clean up
 
         if( !params.isQuiet )
         {

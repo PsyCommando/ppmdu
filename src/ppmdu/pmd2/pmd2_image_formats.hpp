@@ -9,7 +9,6 @@ Description: A bunch of utilities for dealing with the image formats
              Mainly misc stuff that applies to a lot of different 
              things.
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <utils/utility.hpp>
 #include <array>

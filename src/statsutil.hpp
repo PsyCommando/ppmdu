@@ -1,7 +1,6 @@
 #ifndef STATS_UTIL_HPP
 #define STATS_UTIL_HPP
 #include <utils/cmdline_util.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/pmd2/pmd2_gameloader.hpp>
 

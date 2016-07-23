@@ -9,7 +9,6 @@ Description: Utilites for handling the RLE compression used on sprites in PMD2.
 #TODO: put the sprite RLE stuff in here !
 
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <utils/utility.hpp>
 

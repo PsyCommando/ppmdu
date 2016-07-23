@@ -9,7 +9,6 @@ Description: Tools for handling PKDPX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-//#include <ppmdu/basetypes.hpp>
 #include <vector>
 #include <cstdint>
 #include <types/content_type_analyser.hpp>

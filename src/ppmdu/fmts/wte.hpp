@@ -8,7 +8,6 @@ Description: Utilities for handling the WTE file format from the PMD2 games.
              The WTE format is SIR0-wrapped !
 */
 #include <types/content_type_analyser.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 
 namespace filetypes 

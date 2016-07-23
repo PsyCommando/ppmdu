@@ -8,7 +8,6 @@ Description:
     Implementation of the pack file command line utility.
     This util packs and extract pack files.
 */
-#include <ppmdu/basetypes.hpp>
 
 namespace ppmd_packfileutil
 {

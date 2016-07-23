@@ -1,27 +1,30 @@
 #ifndef PX_COMPRESSION_CPP
 #define PX_COMPRESSION_CPP
 #include <ppmdu/fmts/px_compression.hpp>
-#include <ppmdu/basetypes.hpp>
-#include <thread>
+//!#FIXME: LOTS of probably useless includes here!!!
+#include <iterator>
+#include <cstdint>
+#include <algorithm>
+
+//#include <thread>
 #include <future>
 #include <atomic>
 #include <vector>
 #include <deque>
-#include <algorithm>
-#include <cstdint>
+
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <exception>
+//#include <exception>
 #include <sstream>
 #include <cassert>
-#include <climits>
+//#include <climits>
 #include <string>
-#include <map>
+//#include <map>
 #include <numeric>
 #include <Poco/File.h>
 #include <utils/utility.hpp>
-//#include <ppmdu/containers/tiled_image.hpp>
 using namespace std;
 using namespace utils;
 
@@ -1538,19 +1541,19 @@ namespace compression
     /*********************************************************************************
         CleanExistingCompressionLogs
     *********************************************************************************/
-    void CleanExistingCompressionLogs()
-    {
-        Poco::File logfileComp( PX_COMPRESSION_LOGFILE_NAME ), 
-                   logfileDecomp( PX_DECOMPRESSION_LOGFILE_NAME );
+    //void CleanExistingCompressionLogs()
+    //{
+    //    Poco::File logfileComp( PX_COMPRESSION_LOGFILE_NAME ), 
+    //               logfileDecomp( PX_DECOMPRESSION_LOGFILE_NAME );
 
-        if( logfileComp.exists() )
-            logfileComp.remove();
+    //    if( logfileComp.exists() )
+    //        logfileComp.remove();
 
-        if( logfileDecomp.exists() )
-            logfileDecomp.remove();
+    //    if( logfileDecomp.exists() )
+    //        logfileDecomp.remove();
 
-        cout<<"Cleaned log files!\n";
-    }
+    //    cout<<"Cleaned log files!\n";
+    //}
 
 };
 #endif

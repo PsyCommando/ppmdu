@@ -8,7 +8,6 @@ Description:  Code specific to the ppx_extractor PX decompression utility!
               Just call the main function in the function "main()" and let
               it all handle the rest!
 */
-#include <ppmdu/basetypes.hpp>
 
 namespace ppx_extract
 {

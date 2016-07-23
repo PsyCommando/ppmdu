@@ -7,7 +7,6 @@ psycommando@gmail.com
 Description: A little utility to export a color palette from a bmp or png image to a 
 text file, or a riff palette.
 */
-#include <ppmdu/basetypes.hpp>
 #include <ext_fmts/supported_io.hpp>
 #include <utils/cmdline_util.hpp>
 #include <string>

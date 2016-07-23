@@ -6,7 +6,6 @@ pkao_util.hpp
 psycommando@gmail.com
 Description: Function for running the kaomado utility command line tool!
 */
-#include <ppmdu/basetypes.hpp>
 
 namespace pkao_util
 {

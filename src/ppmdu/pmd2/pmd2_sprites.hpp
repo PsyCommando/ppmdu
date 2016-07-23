@@ -17,7 +17,6 @@ No crappyrights. All wrong reversed!
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <utility>
 

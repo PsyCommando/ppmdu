@@ -13,7 +13,6 @@
 #include <ppmdu/fmts/pkdpx.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
 #include <utils/utility.hpp>
-//#include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <utils/utility.hpp>
 #include <utils/library_wide.hpp>
 #include <Poco/Path.h>

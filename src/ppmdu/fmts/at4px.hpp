@@ -9,7 +9,6 @@ Description: stuff for handling and building AT4PX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-//#include <ppmdu/basetypes.hpp>
 #include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>

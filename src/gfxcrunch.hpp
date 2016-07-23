@@ -6,7 +6,6 @@ gfxcrunch.hpp
 psycommando@gmail.com
 Description: Main code for the Sprite utility !
 */
-#include <ppmdu/basetypes.hpp>
 #include <ext_fmts/supported_io.hpp>
 #include <utils/cmdline_util.hpp>
 #include <atomic>

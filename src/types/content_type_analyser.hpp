@@ -12,8 +12,6 @@ All wrongs reversed, no crappyrights :P
 */
 #include <vector>
 #include <types/contentid_generator.hpp>
-//#include <ppmdu/basetypes.hpp>
-//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <memory>
 
 namespace filetypes

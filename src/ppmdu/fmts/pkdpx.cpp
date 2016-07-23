@@ -1,9 +1,8 @@
 #include "pkdpx.hpp"
+#include <iterator>
 #include <ppmdu/fmts/px_compression.hpp>
-//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
 #include <cassert>
 using namespace std;

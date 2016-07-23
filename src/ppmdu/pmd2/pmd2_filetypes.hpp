@@ -16,7 +16,6 @@ All wrongs reversed, no crappyrights :P
 #include <string>
 #include <vector>
 #include <ppmdu/pmd2/pmd2.hpp>
-//#include <ppmdu/basetypes.hpp>
 #include <utils/handymath.hpp>
 #include <types/content_type_analyser.hpp>
 

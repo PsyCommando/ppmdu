@@ -18,7 +18,6 @@ All wrongs reversed, no crappyrights :P
 #include <vector>
 #include <memory>
 #include <array>
-//#include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
 #include <types/content_type_analyser.hpp>
 

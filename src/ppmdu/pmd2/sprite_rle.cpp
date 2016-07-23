@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <iostream>
 #include <utils\utility.hpp>
-#include <ppmdu\basetypes.hpp>
 using namespace std;
 
 

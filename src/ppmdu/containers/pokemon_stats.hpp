@@ -7,7 +7,6 @@ psycommando@gmail.com
 Description: 
     Generic storage classes for containing the pokemon data, and abstracting the lower-level storage format used by the game!
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_text.hpp>
 #include <utils/utility.hpp>
 #include <array>

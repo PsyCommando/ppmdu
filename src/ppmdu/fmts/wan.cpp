@@ -1,7 +1,6 @@
 #include "wan.hpp"
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/containers/index_iterator.hpp>
