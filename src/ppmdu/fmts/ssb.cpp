@@ -1572,10 +1572,9 @@ namespace filetypes
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
 
-        //if( scriptfile == "EoSRomRoot\\data\\SCRIPT\\D02P31A\\enter00.ssb"s )
-        //    cout <<"lol\n";
-
-        return std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc, langdat).Parse(escapeforxml) );
+        Script tmpscr = std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc, langdat).Parse(escapeforxml) );
+        tmpscr.SetName( utils::GetBaseNameOnly(scriptfile) );
+        return std::move(tmpscr);
     }
 
     /*

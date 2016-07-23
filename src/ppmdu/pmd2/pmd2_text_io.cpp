@@ -49,7 +49,7 @@ namespace pmd2
                     clog <<"<!>- GameText::ImportText(): Ignoring unexpected language file \"" <<afile <<"\"\n";
                     continue;
                 }
-
+                clog <<"<*>- Reading file : " << afile <<"\n";
                 std::vector<string> strs = utils::io::ReadTextFileLineByLine( afile, std::locale(langdetails->GetLocaleString()) );
                 m_languages.insert_or_assign( glang, 
                                                 std::move(StringAccessor( std::move(strs), 

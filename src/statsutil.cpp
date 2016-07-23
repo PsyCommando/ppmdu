@@ -2,6 +2,7 @@
 #include <utils/utility.hpp>
 #include <utils/cmdline_util.hpp>
 #include <ppmdu/pmd2/pmd2_gameloader.hpp>
+#include <types/content_type_analyser.hpp>
 //#include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/fmts/waza_p.hpp>
 #include <ppmdu/fmts/text_str.hpp>
@@ -21,10 +22,53 @@ using namespace ::utils::io;
 using namespace ::pmd2::stats;
 using namespace ::pmd2;
 
+//!#REMOVEME: Better encapsulate this 
+#include <ppmdu/fmts/ssb.hpp>
+//#include <pugixml.hpp>
+//#include <ppmdu/pmd2/pmd2_scripts.hpp>
+//class XMLScriptDoAnalyser
+//{
+//public:
+//    struct rnodedat_t
+//    {
+//        std::string                                     rootname;
+//        std::vector<std::pair<std::string,std::string>> attr;
+//    };
+//
+//
+//    XMLDocAnalyser( const std::string & fpath )
+//        :m_fpath(fpath)
+//    {
+//    }
+//
+//    const rnodedat_t & GetRootNodeData()const
+//    {
+//    }
+//
+//private:
+//    void ParseFirstNode()
+//    {
+//        pugi::xml_document doc;
+//        if( doc.load_file(m_fpath.c_str()) )
+//        {
+//            pugi::xml_node xroot = doc.child( pmd2::ScriptXMLRoot_SingleScript.c_str() );
+//            if(xroot)
+//            {
+//                m_data.rootname = xroot.name();
+//                for(  )
+//            }
+//        }
+//    }
+//
+//private:
+//    rnodedat_t  m_data;
+//    std::string m_fpath;
+//};
+
 
 namespace statsutil
 {
-    static const string TXTPAL_Filext = "txt";
+    const string XML_FExt = "xml";
 
 //=================================================================================================
 //  CStatsUtil
@@ -35,7 +79,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.22";
+    const string CStatsUtil::Version             = "0.23";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
@@ -264,7 +308,7 @@ namespace statsutil
         :CommandLineUtility()
     {
         m_operationMode   = eOpMode::Invalid;
-        m_force           = eOpForce::Export; //Default to export
+        m_force           = eOpForce::None;
         m_forcedLocale    = false;
         m_hndlStrings     = false;
         m_hndlItems       = false;
@@ -276,6 +320,8 @@ namespace statsutil
         m_shouldlog       = false;
         m_hndlScripts     = false;
         m_escxml          = false;
+        m_region          = eGameRegion::NorthAmerica;
+        m_version         = eGameVersion::EoS;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -512,7 +558,32 @@ namespace statsutil
 
         //!#TODO: Handle drag and drop
         cerr <<"#TODO: Fix file handling and detection!\n";
-        assert(false);
+        //assert(false);
+
+        if( infile.exists() )
+        {
+            if(infile.isFile())
+            {
+                const string pathext = inpath.getExtension();
+                
+                if( pathext == "ssb" )
+                {
+                    m_operationMode = eOpMode::ExportSingleScript;
+                }
+                else if( pathext == XML_FExt && m_hndlScripts )
+                {
+                    m_operationMode = eOpMode::ImportSingleScript;
+                }
+                
+            }
+            else if( infile.isDirectory() )
+            {
+            }
+            else
+                throw runtime_error("Cannot determine the desired operation!");
+        }
+        else 
+            throw runtime_error("The input path does not exists!");
     }
 #else
     {
@@ -639,7 +710,25 @@ namespace statsutil
             else
             {
                 //!Handle drag and drop!
-                assert(false);
+                //assert(false);
+
+
+                switch(m_operationMode)
+                {
+                    case eOpMode::ExportSingleScript:
+                    {
+                        cout<<"Exporting script!\n";
+                        returnval = DoExportSingleScript();
+                        break;
+                    }
+                    case eOpMode::ImportSingleScript:
+                    {
+                        cout<<"Importing script!\n";
+                        returnval = DoImportSingleScript();
+                        break;
+                    }
+
+                };
             }
 
             ////OLD 
@@ -763,7 +852,9 @@ namespace statsutil
         if(m_hndlStrings || bhandleall)
         {
             cout <<"\nGame Strings\n"
-                 <<"---------------------------------\n";
+                 <<"---------------------------------\n"
+                 <<"Reading..\n";
+
             pgametext = gloader.LoadGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game text!");
@@ -772,6 +863,7 @@ namespace statsutil
             textdir.append(DefExportStrDirName);
             pgametext->ImportText(textdir.toString());
             //We'll write the file at the end, after all modifications are done!
+            cout <<"done!\n";
         }
 
         if(m_hndlScripts || bhandleall)
@@ -830,8 +922,10 @@ namespace statsutil
         if(m_hndlStrings || bhandleall)
         {
             cout <<"\nWriting out GameStrings\n"
-                 <<"---------------------------------\n";
+                 <<"---------------------------------\n"
+                 <<"Writing...\n";
             pgametext->Write();
+            cout <<"done!\n";
         }
 
         return 0;
@@ -854,14 +948,17 @@ namespace statsutil
         if(m_hndlStrings || bhandleall)
         {
             cout <<"\nGame Strings\n"
-                 <<"---------------------------------\n";
+                 <<"---------------------------------\n"
+                 <<"Reading...";
             GameText * pgametext = gloader.LoadGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game text!");
 
+            cout <<"Writing...\n";
             const string targetdir = Poco::Path(outpath).append(DefExportStrDirName).toString();
             CreateDirIfDoesntExist(targetdir);
             pgametext->ExportText(targetdir);
+            cout <<"done!\n";
         }
 
         if(m_hndlScripts || bhandleall)
@@ -920,7 +1017,59 @@ namespace statsutil
         return 0;
     }
 
+    int CStatsUtil::DoExportSingleScript()
+    {
+        Poco::Path inpath(m_firstparam);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.absolute().makeParent();
+        }
+        else
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
+        }
 
+        //Test output path
+        ConfigLoader cfgloader( m_version, m_region, m_pmd2cfg );
+        CreateDirIfDoesntExist(outpath);
+
+        eGameRegion  reg = m_region;
+        eGameVersion ver = m_version;
+        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), false), 
+                     reg, 
+                     ver, 
+                     false, 
+                     outpath.toString() );
+        return 0;
+    }
+
+    int CStatsUtil::DoImportSingleScript()
+    {
+        Poco::Path inpath(m_firstparam);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.absolute().makeParent().append(inpath.getBaseName()).setExtension(::filetypes::SSB_FileExt);
+        }
+        else
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+        }
+
+        //Test output path
+        ConfigLoader cfgloader( m_version, m_region, m_pmd2cfg );
+
+        eGameRegion  reg = m_region;
+        eGameVersion ver = m_version;
+        ::filetypes::WriteScript( outpath.toString(), XMLToScript( inpath.toString(), reg, ver ),
+                                 m_region, 
+                                 m_version, 
+                                 cfgloader.GetLanguageFilesDB() ); 
+        return 0;
+    }
 
 
 #if 0

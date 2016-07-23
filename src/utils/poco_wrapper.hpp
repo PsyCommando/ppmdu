@@ -64,6 +64,8 @@ namespace utils
     ************************************************************************/
     std::string getCWD();
 
+    std::string GetPathOnly(const std::string & path);
+
     /************************************************************************
         GetBaseNameOnly
             The basename is the the last dir in the path, or the name of the 

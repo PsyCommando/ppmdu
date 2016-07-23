@@ -17,13 +17,13 @@ Description: This code is used to load/index the game scripts.
 #include <memory>
 #include <regex>
 #include <mutex>
-/*
-    !!Need to come up with something to handle offsets for jump instructions, or anything else referring to a file offset!!
-*/
 
 namespace pmd2
 {
-
+    const std::string ScriptXMLRoot_SingleScript = "SingleScript"; 
+    const std::string ScriptXMLRoot_Level        = "Level"; 
+    const std::string ScriptXMLRoot_AtrGVersion  = "gameversion"; 
+    const std::string ScriptXMLRoot_AtrGRegion   = "gameregion";
 
 
 
@@ -553,6 +553,8 @@ namespace pmd2
         inline size_t size()const;
         inline bool   empty()const;
 
+        inline const std::string & GetScriptDir()const{return m_scriptdir;}
+
     private:
         LevelScript LoadScriptSet ( const std::string & setname );
 
@@ -615,7 +617,8 @@ namespace pmd2
     void      ScriptSetToXML( const LevelScript   & set,    eGameRegion greg,       eGameVersion gver, bool bautoescapexml, const std::string & destdir );
     LevelScript XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
 
-
+    void ScriptToXML( const Script & scr, eGameRegion greg, eGameVersion gver, bool bautoescapexml, const std::string & destdir );
+    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver );
 
 //====================================================================================
 //  Test Meta-Operation and etc..

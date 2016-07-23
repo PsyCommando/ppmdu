@@ -5,6 +5,7 @@
 #include <ppmdu/pmd2/game_stats.hpp>
 #include <ppmdu/pmd2/pmd2_gameloader.hpp>
 
+
 namespace statsutil
 {
     class CStatsUtil : public utils::cmdl::CommandLineUtility
@@ -76,6 +77,8 @@ namespace statsutil
         int DoExportGameStringsFromFile(); //For exporting the game strings from the text_*.str file directly
         int DoExportGameScripts();
         int DoImportGameScripts();
+        int DoExportSingleScript();
+        int DoImportSingleScript();
 
         int DoImportAll();
         int DoExportAll();
@@ -132,6 +135,10 @@ namespace statsutil
 
             ImportGameScripts,
             ExportGameScripts,
+            
+            //New
+            ImportSingleScript,
+            ExportSingleScript,
 
             ImportAll,
             ExportAll,
@@ -155,7 +162,10 @@ namespace statsutil
         bool        m_hndlScripts;    //If we handle only Scripts
         eOpForce    m_force;          // 
         bool        m_shouldlog;      
-        bool        m_escxml;         //Force escape sequences to be standard XML instead of C.
+        bool        m_escxml;         //Force escape sequences to be standard XML instead of C
+        
+        pmd2::eGameRegion  m_region;
+        pmd2::eGameVersion m_version;
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
         //eOutFormat  m_outputFormat;   //

@@ -105,6 +105,11 @@ namespace utils
         return std::move(Poco::Path::transcode(Poco::Path(path).getBaseName()));
     }
 
+    std::string GetPathOnly(const std::string & path)
+    {
+        return std::move( Poco::Path::transcode(Poco::Path(path).makeParent().toString()) );
+    }
+
     /*
         GetFileExtension
             Return the file extension only.

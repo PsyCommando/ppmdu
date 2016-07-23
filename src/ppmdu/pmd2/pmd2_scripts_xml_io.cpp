@@ -10,9 +10,13 @@
 #include <utils/pugixml_utils.hpp>
 #include <utils/library_wide.hpp>
 #include <utils/multiple_task_handler.hpp>
+#include <ppmdu/fmts/ssb.hpp>
 #include <atomic>
 #include <thread>
 #include <unordered_set>
+#include <Poco/DirectoryIterator.h>
+#include <Poco/Path.h>
+#include <Poco/File.h>
 using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
@@ -36,9 +40,10 @@ namespace pmd2
 //==============================================================================
     namespace scriptXML
     {
-        const string ROOT_ScripDir      = "Level"s;      
-        const string ATTR_GVersion      = "gameversion"s; 
-        const string ATTR_GRegion       = "gameregion"s;
+        const string ROOT_SingleScript  = ScriptXMLRoot_SingleScript; 
+        const string ROOT_ScripDir      = ScriptXMLRoot_Level;      
+        const string ATTR_GVersion      = ScriptXMLRoot_AtrGVersion; 
+        const string ATTR_GRegion       = ScriptXMLRoot_AtrGRegion;
         const string ATTR_DirName       = "eventname"s;           //Event name/filename with no extension
         const string ATTR_Name          = "name"s;
 
@@ -1655,7 +1660,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         thread                       updatethread;
         //Grab our version and region from the 
         if(bprintprogress)
-            cout<<"- Parsing COMON.xml..\n";
+            cout<<"<*>-Compiling COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
@@ -1666,31 +1671,52 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
         if(bprintprogress)
         {
-            cout<<"!- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
+            cout<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
                 <<"\", and version \"" <<GetGameVersionName(out_dest.m_gameVersion)<<"!\n";
         }
         //Write out common
         out_dest.WriteScriptSet(out_dest.m_common);
 
-
+        //!#TODO: this is a really dumb  way to do this!! We'd probably want to handle source XML files, instead of looking at the
+        //!       script files we have right now!!
         //Prepare import of everything else!
         multitask::CMultiTaskHandler taskhandler;
-        for( const auto & entry : out_dest.m_setsindex )
-        {
-            stringstream currentfname;
-            currentfname << utils::TryAppendSlash(dir) <<entry.first <<".xml";
-            const string fname = currentfname.str();
+        //for( const auto & entry : out_dest.m_setsindex )
+        //{
+        //    stringstream currentfname;
+        //    currentfname << utils::TryAppendSlash(dir) <<entry.first <<".xml";
+        //    const string fname = currentfname.str();
 
-            //If a xml file in the import directory matches one of the level in the target game, load it. Otherwise ignore it!
-            if( utils::isFile(fname) )
+        //    //If a xml file in the import directory matches one of the level in the target game, load it. Otherwise ignore it!
+        //    if( utils::isFile(fname) )
+        //    {
+        //        taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
+        //                                                             std::cref(entry.second), 
+        //                                                             fname, 
+        //                                                             out_dest.m_scrRegion, 
+        //                                                             out_dest.m_gameVersion, 
+        //                                                             std::ref(completed) ) ) );
+        //    }
+        //}
+        Poco::DirectoryIterator dirit(dir);
+        Poco::DirectoryIterator dirend;
+        deque<ScrSetLoader> loaders;
+        while( dirit != dirend )
+        {
+            if( dirit->isFile() && dirit.path().getExtension() == "xml" )
             {
+
+                Poco::Path destination(out_dest.GetScriptDir());
+                destination.append(dirit.path().getBaseName());
+                loaders.push_back( ScrSetLoader(out_dest, destination.toString()) );
                 taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
-                                                                     std::cref(entry.second), 
-                                                                     fname, 
+                                                                     std::cref(loaders.back()), 
+                                                                     dirit->path(), 
                                                                      out_dest.m_scrRegion, 
                                                                      out_dest.m_gameVersion, 
                                                                      std::ref(completed) ) ) );
             }
+            ++dirit;
         }
 
         try
@@ -1698,7 +1724,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             if(bprintprogress)
             {
                 assert(!out_dest.m_setsindex.empty());
-                cout<<"\nImporting..\n";
+                cout<<"\nCompiling Scripts..\n";
                 updatethread = std::thread( PrintProgressLoop, 
                                             std::ref(completed), 
                                             out_dest.m_setsindex.size(), 
@@ -1813,5 +1839,61 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
     {
         return std::move( GameScriptsXMLParser(out_reg, out_gver).Parse(srcdir) );
     }
+
+    /*
+    */
+    void ScriptToXML( const Script & scr, eGameRegion greg, eGameVersion gver, bool bautoescapexml, const std::string & destdir )
+    {
+        using namespace scriptXML;
+        stringstream sstrfname;
+        sstrfname << utils::TryAppendSlash(destdir) <<scr.Name() <<".xml";
+        xml_document doc;
+        xml_node     xroot = doc.append_child( ROOT_SingleScript.c_str() );
+        AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(gver) );
+        AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(greg) );
+
+        SSBXMLWriter(scr, gver, greg)(xroot);
+
+        //Write stuff
+        const unsigned int flag = (bautoescapexml)? pugi::format_default  : 
+                                    pugi::format_indent | pugi::format_no_escapes;
+        //Write doc
+        if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
+            throw std::runtime_error("GameScriptsXMLWriter::Write(): Can't write xml file " + sstrfname.str());
+    }
+
+    /*
+    */
+    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver )
+    {
+        using namespace scriptXML;
+        xml_document     doc;
+        xml_parse_result loadres = doc.load_file(srcfile.c_str());
+
+        if( ! loadres )
+        {
+            stringstream sstr;
+            sstr <<"XMLToScript():Can't load XML document \"" 
+                 <<srcfile <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+            throw std::runtime_error(sstr.str());
+        }
+
+        xml_node      parentn    = doc.child(ROOT_SingleScript.c_str());
+        xml_attribute xversion   = parentn.attribute(ATTR_GVersion.c_str());
+        xml_attribute xregion    = parentn.attribute(ATTR_GRegion.c_str());
+        xml_node      seqn       = parentn.child(NODE_ScriptSeq.c_str());
+
+        out_gver = StrToGameVersion(xversion.value());
+        out_greg = StrToGameRegion (xregion.value());
+
+        if(seqn)
+            return std::move( SSBXMLParser(out_gver, out_greg)(seqn) );
+        else
+        {
+            throw std::runtime_error("XMLToScript(): Couldn't find the \""+NODE_ScriptSeq+"\" node!!");
+            return std::move( Script() );
+        }
+    }
+
 
 };

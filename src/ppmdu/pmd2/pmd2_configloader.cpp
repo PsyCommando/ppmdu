@@ -101,14 +101,17 @@ namespace pmd2
     public:
         ConfigXMLParser(const std::string & configfile)
         {
-            pugi::xml_parse_result result = m_doc.load_file( configfile.c_str() );
-            regex basepathex("(.+.+(?=\\b\\/))(.+\\..+)");
-            smatch sm;
+            string confpath = utils::MakeAbsolutePath(configfile);
+            pugi::xml_parse_result result = m_doc.load_file( confpath.c_str() );
+            //regex basepathex("(.+.+(?=\\b\\/))(.+\\..+)");
+            //smatch sm;
+            m_confbasepath = std::move( utils::GetPathOnly( confpath ) );
 
-            if(regex_match( configfile, sm, basepathex ) && sm.size() > 2 )
-                m_confbasepath = sm[1].str();
-            else
-                throw std::runtime_error("ConfigXMLParser::ConfigXMLParser(): Couldn't parse config file's base path!");
+
+            //if(regex_match( configfile, sm, basepathex ) && sm.size() > 2 )
+                //m_confbasepath = sm[1].str();
+            //else
+            //    throw std::runtime_error("ConfigXMLParser::ConfigXMLParser(): Couldn't parse config file's base path!");
 
             if( !result )
                 throw std::runtime_error("ConfigXMLParser::ConfigXMLParser(): Couldn't parse configuration file!");
@@ -170,7 +173,7 @@ namespace pmd2
         {
             using namespace pugi;
             using namespace ConfigXML;
-            auto lambdafind = [version, region]( xml_node curnode )->bool
+            auto lambdafind = [&]( xml_node curnode )->bool
             {
                 xml_attribute reg = curnode.attribute(ATTR_Region.c_str());
                 xml_attribute ver = curnode.attribute(ATTR_Version.c_str());
@@ -449,6 +452,7 @@ namespace pmd2
     }
 
     ConfigLoader::ConfigLoader(eGameVersion version, eGameRegion region, const std::string & configfile)
+        :m_conffile(configfile)
     {
         Parse(version,region);
     }

@@ -111,7 +111,8 @@ namespace pmd2 { namespace filetypes
                     len = (m_ptrTable[i+1] - m_ptrTable[i]);
 
                 //char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
-                string curstr( reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]) );
+                auto itcurstr = m_filedata.begin() + m_ptrTable[i];
+                string curstr( itcurstr, itcurstr + len);
                 curstr.push_back('\0');
                 
 #ifndef PMD2_STRINGS_NO_LOCALE
