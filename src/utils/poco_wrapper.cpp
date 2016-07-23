@@ -49,6 +49,16 @@ namespace utils
         return Poco::File(inputpath).exists();
     }
 
+    bool pathIsAbsolute(const std::string & inputpath)
+    {
+        return Poco::Path(inputpath).isAbsolute();
+    }
+
+    bool pathIsRelative(const std::string & inputpath)
+    {
+        return Poco::Path(inputpath).isRelative();
+    }
+
     std::string getCWD()
     {
         return Poco::Path::current();
@@ -111,5 +121,22 @@ namespace utils
     string GetFilename( const string & path )
     {
         return std::move(Poco::Path::transcode(Poco::Path(path).getFileName()));
+    }
+
+    /*
+    */
+    std::string MakeAbsolutePath(const std::string & relp, const std::string & absbasep)
+    {
+        Poco::Path relative(relp);
+        if( relative.isAbsolute() )
+            return relp;
+        return std::move(relative.makeAbsolute(absbasep).toString());
+    }
+    std::string MakeAbsolutePath(const std::string & relp)
+    {
+        Poco::Path relative(relp);
+        if( relative.isAbsolute() )
+            return relp;
+        return std::move(relative.makeAbsolute().toString());
     }
 };

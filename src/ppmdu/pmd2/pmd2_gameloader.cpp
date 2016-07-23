@@ -59,37 +59,39 @@ namespace pmd2
                 break;
         }
 
+#if 0
         //If we can't find a directory named data, try to find one that contains the typical PMD2 files
-        //if( !bfounddata )
-        //{
-        //    clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
+        if( !bfounddata )
+        {
+            clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
 
-        //    //Found the directory that contains the PMD2 filetree
-        //    auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
-        //    for( const auto & fpath : pathlst )
-        //    {
-        //        if( utils::isFolder(fpath) )
-        //        {
-        //            if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
-        //            {
-        //                size_t lastslashpos = string::npos;
-        //                for( size_t i = 0; i < fpath.size(); ++i )
-        //                {
-        //                    if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
-        //                        lastslashpos = i;
-        //                }
+            //Found the directory that contains the PMD2 filetree
+            auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
+            for( const auto & fpath : pathlst )
+            {
+                if( utils::isFolder(fpath) )
+                {
+                    if( pmd2::AnalyzeDirForPMD2Dirs(fpath) != pmd2::eGameVersion::Invalid )
+                    {
+                        size_t lastslashpos = string::npos;
+                        for( size_t i = 0; i < fpath.size(); ++i )
+                        {
+                            if( (i != (fpath.size()-1)) && fpath[i] == '/' || fpath[i] == '\\'  )
+                                lastslashpos = i;
+                        }
 
-        //                if( lastslashpos != string::npos )
-        //                {
-        //                    clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
-        //                    bfounddata = true;
-        //                    m_datadiroverride = fpath.substr( lastslashpos+1 );
-        //                }
-        //                break;
-        //            }
-        //        }
-        //    }
-        //}
+                        if( lastslashpos != string::npos )
+                        {
+                            clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
+                            bfounddata = true;
+                            m_datadiroverride = fpath.substr( lastslashpos+1 );
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+#endif
 
         //Save the result of our analysis.
         m_nodata     = !bfounddata;
@@ -136,6 +138,7 @@ namespace pmd2
         catch(...)
         {
             //Normally, do something here
+            //Maybe load default config or something?
             std::rethrow_exception( std::current_exception() );
         }
     }
@@ -178,7 +181,7 @@ namespace pmd2
         return m_text.get();
     }
 
-    GameScripts * GameDataLoader::LoadScripts()
+    GameScripts * GameDataLoader::LoadScripts(bool escapeasxml)
     {
         if(!m_bAnalyzed)
             AnalyseGame();
@@ -190,7 +193,12 @@ namespace pmd2
         {
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
-            m_scripts.reset( new GameScripts( scriptdir.str(), GetGameRegion(), GetGameVersion() ) );
+            //m_scripts.reset( new GameScripts( scriptdir.str(), 
+            //                                  GetGameRegion(), 
+            //                                  GetGameVersion(), 
+            //                                  GetConfig()->GetLanguageFilesDB() ) );
+            m_scripts.reset( new GameScripts( scriptdir.str(), 
+                                              *GetConfig(), escapeasxml ) );
         }
         return m_scripts.get();
     }
@@ -400,7 +408,8 @@ namespace pmd2
 
     const ConfigLoader * GameDataLoader::GetConfig() const
     {
-        return nullptr;
+        //!#TODO: It would be nice to make use of weak_ptr here, as it was intended!!
+        return m_conf.get();
     }
 
 };

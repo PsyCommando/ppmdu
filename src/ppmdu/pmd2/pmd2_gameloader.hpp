@@ -51,7 +51,7 @@ namespace pmd2
         void Load();
 
         GameText         * LoadGameText();
-        GameScripts      * LoadScripts();
+        GameScripts      * LoadScripts(bool escapeasxml = false);
         GameGraphics     * LoadGraphics();
         GameStats        * LoadStats();
         GameAudio        * LoadAudio();

@@ -5,19 +5,27 @@ pmd2_configloader.hpp
 Description: Loads on demand certain values from the config file!
 */
 #include <ppmdu/pmd2/pmd2.hpp>
-//#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <map>
 #include <unordered_map>
 #include <string>
 #include <vector>
 #include <memory>
 #include <tuple>
-
+#include <sstream>
+#include <iomanip>
 
 namespace pmd2
 {
     const std::string DefConfigFileName = "pmd2data.xml";
 
+//========================================================================================
+//  Entries in the configuration file
+//========================================================================================
+
+    /*******************************************************************************
+        eBinaryLocations
+            Possible binary locations supported by the program.
+    *******************************************************************************/
     enum struct eBinaryLocations : unsigned int
     {
         Invalid = 0,        
@@ -34,6 +42,10 @@ namespace pmd2
     };
     extern const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames;
 
+    /*******************************************************************************
+        eGameConstants
+            List of constants the program can import from the data xml file.
+    *******************************************************************************/
     enum struct eGameConstants :unsigned int
     {
         NbPossibleHeros= 0,
@@ -70,12 +82,16 @@ namespace pmd2
         NBEntries,
         Invalid,
     };
-
     extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
 
-//
-//
-//
+//========================================================================================
+//  Parsing utilities
+//========================================================================================
+
+    /*******************************************************************************
+        StrToStringBlock
+            Gets the string block's enum value from a string containing its name.
+    *******************************************************************************/
     inline eStringBlocks StrToStringBlock( const std::string & blkname )
     {
         for( size_t i = 0; i < StringBlocksNames.size(); ++i )
@@ -86,7 +102,10 @@ namespace pmd2
         return eStringBlocks::Invalid;
     }
 
-
+    /*******************************************************************************
+        StrToBinaryLocation
+            Gets the binary block's enum value from a string containing its name.
+    *******************************************************************************/
     inline eBinaryLocations StrToBinaryLocation( const std::string & locname )
     {
         for( size_t i = 0; i < BinaryLocationNames.size(); ++i )
@@ -97,6 +116,10 @@ namespace pmd2
         return eBinaryLocations::Invalid;
     }
 
+    /*******************************************************************************
+        StrToGameConstant
+        Gets the constant's enum value from a string containing its name.
+    *******************************************************************************/
     inline eGameConstants StrToGameConstant( const std::string & constname )
     {
         for( size_t i = 0; i < GameConstantNames.size(); ++i )
@@ -108,8 +131,13 @@ namespace pmd2
     }
 
 //========================================================================================
-//
+//  Structs
 //========================================================================================
+
+    /*******************************************************************************
+        GameVersionInfo
+            Details about a game's version as stored in the data xml file.
+    *******************************************************************************/
     struct GameVersionInfo
     {
         std::string     id;
@@ -121,17 +149,22 @@ namespace pmd2
         bool            issupported;
     };
 
-    struct GameBinaryOffsetInfo
-    {
-        std::string fpath;  //The path to the file containing the data
-        uint32_t    beg;
-        uint32_t    end;
-    };
+    /*******************************************************************************
+        GameBinaryOffsetInfo
+            Offsets in the binaries, and their name.
+    *******************************************************************************/
+    //struct GameBinaryOffsetInfo
+    //{
+    //    std::string fpath;  //The path to the file containing the data
+    //    uint32_t    beg;
+    //    uint32_t    end;
+    //};
 
 
-    /*
-        Boundaries for strings
-    */
+    /*******************************************************************************
+        strbounds_t
+            Boundaries for string blocks in the text files.
+    *******************************************************************************/
     struct strbounds_t
     {
         uint32_t beg;
@@ -141,9 +174,12 @@ namespace pmd2
 //==================================================================================
 //   StringsCatalog
 //==================================================================================
-    /*
-        Contains the list of the offsets of all the string blocks that could be found.
-    */
+
+    /*******************************************************************************
+        StringsCatalog
+            Contains the list of the offsets of all the string 
+            blocks that could be found.
+    *******************************************************************************/
     class StringsCatalog
     {
     public:
@@ -245,8 +281,11 @@ namespace pmd2
 //========================================================================================
 //  GameStrings
 //========================================================================================
-    /*
-    */
+
+    /*******************************************************************************
+        LanguageFilesDB
+            Contains the string catalogs for several languages.
+    *******************************************************************************/
     class LanguageFilesDB
     {
     public:
@@ -305,6 +344,177 @@ namespace pmd2
         strfiles_t m_strindex;
     };
 
+//========================================================================================
+//  GameConstants
+//========================================================================================
+
+    /*
+            Wrap access to constants, and to binary locations.
+    */
+    class GameConstants
+    {
+    public:
+        typedef std::unordered_map<eGameConstants,  std::string> constcnt_t;
+
+        GameConstants()
+        {}
+
+        //**This expects "consts" to have all elements in "eGameConstants", with at least an empty string**
+        GameConstants( constcnt_t && consts )
+            :m_constants(std::forward<constcnt_t>(consts))
+        {}
+
+        inline void SetConstants( constcnt_t && consts )
+        {
+            m_constants = std::move(consts);
+        }
+
+        inline const std::string & GetConstAsString(eGameConstants cnst)const { return m_constants.at(cnst); }
+        
+        template<typename _IntegerTy>
+            _IntegerTy GetConstAsInt(eGameConstants cnst)const
+        {
+            static_assert( std::is_integral<_IntegerTy>::value, "GameConstants::GetConstAsInt(): _IntegerTy is not an integer!!" );
+            _IntegerTy val = 0;
+            std::stringstream sstr;
+            sstr << GetConstAsString(cnst);
+            sstr >> val;
+            return val;
+        }
+
+        bool GetConstAsBool(eGameConstants cnst)const
+        {
+            using namespace std;
+            bool val = false;
+            std::stringstream sstr;
+            sstr <<std::boolalpha <<GetConstAsString(cnst); 
+            sstr >> val;
+            return val;
+        }
+
+    private:
+        constcnt_t m_constants;
+    };
+
+//========================================================================================
+//  GameBinariesInfo
+//========================================================================================
+    struct binlocation
+    {
+        size_t beg;
+        size_t end;
+    };
+    struct binaryinfo
+    {
+        typedef std::unordered_map<eBinaryLocations,binlocation> binoffsets_t;
+        uint32_t     loadaddress;   //The binary's load address in memory
+        binoffsets_t blocks;        //The blocks in the binary
+    };
+
+    //Used to retrieve info via eBinaryLocations
+    struct binarylocatioinfo
+    {
+        std::string fpath;
+        binlocation location;
+        uint32_t    loadaddress;
+
+        /*
+            Returns whether the entry is valid or not
+        */
+        operator bool()const
+        {
+            return !fpath.empty();
+        }
+    };
+
+    /************************************************************************************ 
+        GameBinariesInfo
+            Contains info on where interesting data is stored in the stock binaries.
+    ************************************************************************************/
+    class GameBinariesInfo
+    {
+    public:
+        typedef std::unordered_map<std::string, binaryinfo> binfilesinf_t;
+
+        inline void AddBinary( std::string && binpath, binaryinfo && binfo )
+        {
+            m_info.emplace( std::make_pair( std::forward<std::string>(binpath), std::forward<binaryinfo>(binfo) ) );
+        }
+
+        const binaryinfo * FindInfo(const std::string & binpath)const
+        {
+            auto itf = m_info.find(binpath);
+            if( itf != m_info.end() )
+            {
+                return std::addressof(itf->second);
+            }
+            else
+                return nullptr;
+        }
+
+        binarylocatioinfo FindInfoByLocation(eBinaryLocations location)const
+        {
+            binarylocatioinfo inf;
+            for( const auto & entry : m_info )
+            {
+                auto itf = entry.second.blocks.find(location);
+                if( itf != entry.second.blocks.end() )
+                {
+                    inf.fpath       = entry.first;
+                    inf.loadaddress = entry.second.loadaddress;
+                    inf.location    = itf->second;
+                    break;
+                }
+            }
+            return std::move(inf);
+        }
+
+    private:
+        binfilesinf_t m_info;
+    };
+
+//
+//  CustomFormat
+//
+    /*
+        This is for parsing the content of any custom data formats in the config files.
+    */
+    class FlexibleConfigData
+    {
+    public:
+        struct Entry
+        {
+            typedef std::unordered_multimap<std::string, std::string> attrs_t;
+            typedef std::unordered_multimap<std::string, Entry>       subentt_t;
+
+            Entry();
+            Entry(attrs_t && attr, subentt_t && sub);
+            Entry(Entry&&) = default;
+            Entry(const Entry&) = default;
+            Entry & operator=(const Entry&) = default;
+            Entry & operator=(Entry&&) = default;
+
+            inline void AddAttribute( std::string && name, std::string && value ) 
+            { 
+                rawattributes.emplace( std::forward<std::string>(name), std::forward<std::string>(value) ); 
+            }
+
+            inline void AddSubentry( std::string && name, Entry && sub ) 
+            { 
+                subentries.emplace( std::forward<std::string>(name), std::forward<Entry>(sub) ); 
+            }
+
+            attrs_t     rawattributes;
+            subentt_t   subentries;
+        };
+        typedef Entry data_t;
+        
+
+
+
+    private:
+        data_t m_data;
+    };
 
 //========================================================================================
 //  ConfigLoader
@@ -317,8 +527,9 @@ namespace pmd2
     class ConfigLoader
     {
         friend class ConfigXMLParser;
-        typedef std::unordered_map<eBinaryLocations,GameBinaryOffsetInfo> bincnt_t;
-        typedef std::unordered_map<eGameConstants,  std::string>          constcnt_t;
+        //typedef std::unordered_map<eBinaryLocations,GameBinaryOffsetInfo> bincnt_t;
+        
+        typedef std::unordered_map<eGameConstants,  std::string> constcnt_t;
     public:
 
         /*
@@ -333,24 +544,27 @@ namespace pmd2
 
         inline const GameVersionInfo & GetGameVersion         ()const {return m_versioninfo;}
         inline const LanguageFilesDB & GetLanguageFilesDB     ()const {return m_langdb;}
-        inline const std::string     & GetGameConstantAsString( eGameConstants gconst )const{return m_constants.at(gconst);}
 
+        inline const std::string     & GetGameConstantAsString( eGameConstants gconst )const {return m_constants.GetConstAsString(gconst);}
+        inline bool                    GetGameConstantAsBool  ( eGameConstants gconst )const {return m_constants.GetConstAsBool(gconst);}
         int                            GetGameConstantAsInt   ( eGameConstants gconst )const;
         unsigned int                   GetGameConstantAsUInt  ( eGameConstants gconst )const;
-        const GameBinaryOffsetInfo   & GetGameBinaryOffset    ( eBinaryLocations loc )const { return m_binoffsets.at(loc); }
+        inline const binarylocatioinfo GetGameBinaryOffset    ( eBinaryLocations loc )const 
+        { 
+            return std::move(m_binblocks.FindInfoByLocation(loc)); 
+        }
 
     private:
         void Parse(uint16_t arm9off14);
         void Parse(eGameVersion version, eGameRegion region);
 
     private:
-        
         std::string         m_conffile;
         uint16_t            m_arm9off14;
 
         GameVersionInfo     m_versioninfo;
-        constcnt_t          m_constants;
-        bincnt_t            m_binoffsets;
+        GameConstants       m_constants;
+        GameBinariesInfo    m_binblocks;
         LanguageFilesDB     m_langdb;
     };
 

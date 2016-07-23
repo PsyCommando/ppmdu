@@ -50,6 +50,14 @@ namespace utils
     ************************************************************************/
     bool pathExists( const std::string & inputpath );
 
+    /*
+    */
+    bool pathIsAbsolute( const std::string & inputpath );
+
+    /*
+    */
+    bool pathIsRelative( const std::string & inputpath );
+
     /************************************************************************
         getCWD
             Return the absolute path to the current working directory!
@@ -74,6 +82,25 @@ namespace utils
             Return the file name and extension only.
     ************************************************************************/
     std::string GetFilename( const std::string & path );
+
+    /*
+    */
+
+
+
+    /*
+        MakeAbsolutePath
+            Make a relative path absolute, relative to a specified absolute path.
+
+            Params:
+                -relp     : Relative directory or file path.
+                -absbasep : Absolute path "relp" is to be made relative to.
+
+            If no absolute path is specified, the path is relative to the
+            current working directory.
+    */
+    std::string MakeAbsolutePath( const std::string & relp, const std::string & absbasep );
+    std::string MakeAbsolutePath( const std::string & relp );
 };
 
 #endif

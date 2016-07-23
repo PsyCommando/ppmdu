@@ -49,9 +49,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -59,7 +63,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;FMT_HEADER_ONLY;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,7 +86,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       <Optimization>Disabled</Optimization>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;FMT_HEADER_ONLY;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
@@ -321,6 +325,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
     <Xml Include="..\resources\pmd2data.xml">
       <SubType>Designer</SubType>
     </Xml>
+    <Xml Include="..\resources\Text.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

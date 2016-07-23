@@ -13,6 +13,9 @@ Description:
 
 namespace pmd2
 {
+    class exBasePPMDUException                : public std::runtime_error  { public: using std::runtime_error::runtime_error;  };
+    class exMalformedEscapedCharacterSequence : public exBasePPMDUException{ public: using exBasePPMDUException::exBasePPMDUException; };
+
 //======================================================================================
 //  Constants
 //======================================================================================
@@ -208,6 +211,14 @@ namespace pmd2
         }
         return eGameRegion::Invalid;
     }
+
+
+//
+//  Strings
+//
+    //escapejis : whether Shift-JIS character sequences should be escaped or not. Should be false for strings from the Japanese version of the game
+    std::string EscapeUnprintableCharacters( const std::string & src, bool escapejis, bool escapeforxml, const std::locale & loc );
+    std::string ReplaceEscapedCharacters   ( const std::string & src, const std::locale & loc );
 
 //======================================================================================
 //  PMD2 Version and Region Detection Utilities

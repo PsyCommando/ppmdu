@@ -136,6 +136,7 @@ namespace pmd2 {namespace stats
         //Returns a pointer to the buffer passed as argument
         inline const char * FastTurnIntToHexCStr( unsigned int value )
         {
+            //!#FIXME: sprintf_s is not portable!!! Better just use stringstreams now..
             sprintf_s( m_convBuff.data(), CBuffSZ, "0x%s", itoa( value, m_secConvbuffer.data(), 16 ) );
             return m_convBuff.data();
         }

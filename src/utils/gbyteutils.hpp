@@ -442,6 +442,44 @@ namespace utils
         return std::move(result);
     }
 
+
+    /************************************************************************************
+        safestrlen
+            Count the length of a string, and has a iterator check
+            to ensure it won't loop into infinity if it can't find a 0.
+    ************************************************************************************/
+    template<typename init_t>
+        inline size_t safestrlen( init_t beg, init_t pastend )
+    {
+        size_t cntchar = 0;
+        for(; beg != pastend && (*beg) != 0; ++cntchar, ++beg );
+
+        if( beg == pastend )
+            throw runtime_error("String went past expected end!");
+
+        return cntchar;
+    }
+
+    /************************************************************************************
+        FetchString
+            Fetchs a null terminated C-String from a file offset.
+    ************************************************************************************/
+    template<typename _init>
+        std::string FetchString( uint32_t fileoffset, _init itfbeg, _init itfend )
+    {
+        auto    itstr = itfbeg;
+        std::advance( itstr,  fileoffset );
+        size_t  strlength = safestrlen(itstr, itfend);
+        string  dest;
+        dest.resize(strlength);
+
+        for( size_t cntchar = 0; cntchar < strlength; ++cntchar, ++itstr )
+            dest[cntchar] = (*itstr);
+
+        return std::move(dest);
+    }
+
+
     /*********************************************************************************************
         CalculateLengthPadding
             Calculates the length of padding required to align an address/length

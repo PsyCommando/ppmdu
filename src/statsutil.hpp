@@ -48,13 +48,12 @@ namespace statsutil
         bool ParseOptionForceImport( const std::vector<std::string> & optdata );
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
-        //bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
         bool ParseOptionConfig     ( const std::vector<std::string> & optdata );
-
-
         bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
+        bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
+        bool ParseOptionEscapeAsXML( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -154,9 +153,9 @@ namespace statsutil
         bool        m_hndlMoves;      //If we handle only moves
         bool        m_hndlPkmn;       //If we handle only Pokemon
         bool        m_hndlScripts;    //If we handle only Scripts
-        eOpForce    m_force;          //Whether 
+        eOpForce    m_force;          // 
         bool        m_shouldlog;      
-
+        bool        m_escxml;         //Force escape sequences to be standard XML instead of C.
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
         //eOutFormat  m_outputFormat;   //

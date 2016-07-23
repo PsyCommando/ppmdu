@@ -1,0 +1,7 @@
+<PMD2>
+  <GameConstants>
+    <Game version="EoS">
+      <Value id="Potato"       value="21"/>
+    </Game>
+  </GameConstants>
+</PMD2>

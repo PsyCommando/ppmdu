@@ -12,10 +12,11 @@ Description: Utilities for editing PMD2 specific data within overlays and the ar
 #include <vector>
 #include <deque>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_asm_data.hpp>
+#include <ppmdu/pmd2/pmd2_configloader.hpp>
 
 namespace pmd2
 {
@@ -55,16 +56,18 @@ namespace pmd2
         struct StarterPkData
         {
             starterentry_t pokemon1;
+            uint16_t       textidpkm1;
             starterentry_t pokemon2;
+            uint16_t       textidpkm2;
         };
 
-        std::map<eStarterNatures,StarterPkData> Entries;
+        std::unordered_map<eStarterNatures,StarterPkData> HeroEntries;
+        std::vector<uint16_t>                             PartnerEntries;
     };
 
 //======================================================================================
-//  Event Lookup Table Manip
+//  Event Lookup Table
 //======================================================================================
-    const uint32_t OffsetEventIdLookupFunction_EoS = 0x2064FFC;
 
     /************************************************************************************
         EventEntry_EoS
@@ -72,11 +75,27 @@ namespace pmd2
     ************************************************************************************/
     struct EventEntry_EoS
     {
-        static const size_t SIZE = 12; 
+        static const size_t LEN = 12; 
         uint32_t ptrstring = 0;
         uint32_t unk1;
         int16_t  unk2;
         int16_t  unk3;
+    };
+
+//======================================================================================
+//  Entity Lookup Table
+//======================================================================================
+    /*
+        EntityDataEntry
+            Single entry in the level list
+    */
+    struct EntityDataEntry
+    {
+        int16_t     type;
+        int16_t     entityid;
+        std::string name;
+        uint16_t    unk3;
+        uint16_t    unk4;
     };
 
 //======================================================================================
@@ -88,13 +107,14 @@ namespace pmd2
             This is a layer above the lower level loaders above. It allows to
             modify things more abstract than bytes.
     */
+    class PMD2_ASM_Impl;
     class PMD2_ASM_Manip
     {
     public:
         typedef StarterPKmList starterdata_t;
 
-
-        PMD2_ASM_Manip( ASM_Data_Loader && datload, eGameVersion gv, eGameRegion gr );
+        PMD2_ASM_Manip( const std::string & romroot, const GameBinariesInfo & info, eGameVersion gv, eGameRegion gr );
+        ~PMD2_ASM_Manip();
 
         //Fetch or replace the list of starter pokemon
         starterdata_t FetchStartersTable();
@@ -110,12 +130,7 @@ namespace pmd2
         void Write();
 
     private:
-
-
-    private:
-        ASM_Data_Loader   m_datload;
-        eGameVersion      m_gversion;
-        eGameRegion       m_gregion;
+        std::unique_ptr<PMD2_ASM_Impl> m_pimpl;
     };
 
 //======================================================================================
