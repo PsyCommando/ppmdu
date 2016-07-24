@@ -5,23 +5,16 @@
 #include <iterator>
 #include <cstdint>
 #include <algorithm>
-
-//#include <thread>
 #include <future>
 #include <atomic>
 #include <vector>
 #include <deque>
-
-
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-//#include <exception>
 #include <sstream>
 #include <cassert>
-//#include <climits>
 #include <string>
-//#include <map>
 #include <numeric>
 #include <Poco/File.h>
 #include <utils/utility.hpp>

@@ -219,6 +219,7 @@ namespace pmd2
     //escapejis : whether Shift-JIS character sequences should be escaped or not. Should be false for strings from the Japanese version of the game
     std::string EscapeUnprintableCharacters( const std::string & src, bool escapejis, bool escapeforxml, const std::locale & loc );
     std::string ReplaceEscapedCharacters   ( const std::string & src, const std::locale & loc );
+    std::string & ReplaceEscapedSequenceTest( std::string & str );
 
 //======================================================================================
 //  PMD2 Version and Region Detection Utilities

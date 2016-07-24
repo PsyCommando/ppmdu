@@ -647,7 +647,7 @@ namespace filetypes
                 m_nbstrs       = hdr.nbstrs;
                 scriptdatalen  = hdr.scriptdatlen;
                 constdatalen   = hdr.consttbllen;
-                m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::english, hdr.strtbllen * ScriptWordLen) );
             }
             else if( m_scrRegion == eGameRegion::Europe )
             {
@@ -659,11 +659,11 @@ namespace filetypes
                 m_nbstrs      = hdr.nbstrs;
                 scriptdatalen = hdr.scriptdatlen;
                 constdatalen  = hdr.consttbllen;
-                m_stringblksSizes.push_back( hdr.strenglen * ScriptWordLen );
-                m_stringblksSizes.push_back( hdr.strfrelen * ScriptWordLen );
-                m_stringblksSizes.push_back( hdr.strgerlen * ScriptWordLen );
-                m_stringblksSizes.push_back( hdr.stritalen * ScriptWordLen );
-                m_stringblksSizes.push_back( hdr.strspalen * ScriptWordLen );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::english, hdr.strenglen * ScriptWordLen) );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::french,  hdr.strfrelen * ScriptWordLen) );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::german,  hdr.strgerlen * ScriptWordLen) );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::italian, hdr.stritalen * ScriptWordLen) );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::spanish, hdr.strspalen * ScriptWordLen) );
             }
             else if( m_scrRegion == eGameRegion::Japan )
             {
@@ -675,7 +675,7 @@ namespace filetypes
                 m_nbstrs       = hdr.nbstrs;
                 scriptdatalen  = hdr.scriptdatlen;
                 constdatalen   = hdr.consttbllen;
-                m_stringblksSizes.push_back( hdr.strtbllen * ScriptWordLen );
+                m_stringblksSizes.push_back( make_pair( eGameLanguages::japanese, hdr.strtbllen * ScriptWordLen) );
             }
             else
             {
@@ -748,8 +748,8 @@ namespace filetypes
         //Setup all the correct languages in the string table
         inline void SetupLanguageTbl( Script::strtblset_t & out )
         {
-            for( const auto & lg : m_langdat.Languages())
-                out.emplace( lg.second.GetLanguage(), std::move(Script::strtbl_t()) ); //Make the entry for this language
+            for( const auto & lg : m_stringblksSizes )
+                out.emplace( lg.first, std::move(Script::strtbl_t()) ); //Make the entry for this language
         }
 
         /*******************************************************************************
@@ -767,12 +767,14 @@ namespace filetypes
             size_t begoffset      = ( m_nbconsts != 0 )? m_constlutbeg : m_stringlutbeg;
 
             size_t cntlang = 0;
-            for( auto & lang : out )
+            //for( auto & lang : out )
+            for( auto &block : m_stringblksSizes )
             {
-                lang.second = std::move( ParseOffsetTblAndStrings<Script::strtbl_t>( strparseoffset, 
+                out[block.first] = std::move( ParseOffsetTblAndStrings<Script::strtbl_t>( strparseoffset, 
                                                                                      begoffset, 
                                                                                      m_nbstrs ));
-                strparseoffset += m_stringblksSizes[cntlang]; //Add the size of the last block, so we have the offset of the next table
+                strparseoffset += block.second; //Add the size of the last block, so we have the offset of the next table
+                begoffset      += block.second;
                 ++cntlang;
             }
             return std::move(out);
@@ -788,7 +790,7 @@ namespace filetypes
                                the length of the string LuT( nbstrings * 2, even with european games ).
         *******************************************************************************/
         template<class _ContainerT>
-            _ContainerT ParseOffsetTblAndStrings( size_t lutbeg, uint16_t ptrbaseoff, uint16_t nbtoparse, long offsetdiff=0 )
+            _ContainerT ParseOffsetTblAndStrings( size_t lutbeg, size_t ptrbaseoff, uint16_t nbtoparse, long offsetdiff=0 )
         {
             _ContainerT strings;
             //Parse regular strings here
@@ -802,7 +804,7 @@ namespace filetypes
             size_t cntstr = 0;
             for( ; cntstr < nbtoparse && itlut != itlutend; ++cntstr )
             {
-                uint16_t stroffset = utils::ReadIntFromBytes<uint16_t>( itlut, itlutend ) - offsetdiff; //Offset is in bytes this time!
+                size_t   stroffset = utils::ReadIntFromBytes<uint16_t>( itlut, itlutend ) - offsetdiff; //Offset is in bytes this time!
                 initer   itstr     = std::next( itbaseoffs, stroffset ); 
                 strings.push_back( std::move(utils::ReadCStrFromBytes( itstr, m_end )) );
             }
@@ -959,8 +961,8 @@ namespace filetypes
         size_t              m_instblocklen;         //in bytes //Length of the Instructions block only
         size_t              m_constlutbeg;          //in bytes //Start of the lookup table for the constant strings ptrs
         size_t              m_stringlutbeg;         //in bytes //Start of strings lookup table for the strings
-        vector<uint16_t>    m_stringblksSizes;      //in bytes //The lenghts of all strings blocks for each languages
-
+        vector<pair<eGameLanguages,size_t>> m_stringblksSizes;      //in bytes //The lenghts of all strings blocks for each languages
+        
 #ifdef _DEBUG
         size_t              m_inputsz;              //in bytes //The size of the input container
 #endif
@@ -1157,17 +1159,18 @@ namespace filetypes
             }
         }
 
-        inline std::string ProcessString(const std::string & str, const std::string & locstr = "" )
+        inline std::string ProcessString(std::string str, const std::string & locstr = "" )
         {
-            return ReplaceEscapedCharacters(str, std::locale(locstr));
+            ReplaceEscapedSequenceTest(str);
+            return  std::move(str);
         }
 
     private:
-        const Script                & m_src;
-        const LanguageFilesDB                 & m_langs;
-        eGameRegion                             m_region;
-        eOpCodeVersion                          m_opversion;
-        OpCodeClassifier                        m_opinfo;
+        const Script            & m_src;
+        const LanguageFilesDB   & m_langs;
+        eGameRegion               m_region;
+        eOpCodeVersion            m_opversion;
+        OpCodeClassifier          m_opinfo;
         
         //State
         raw_ssb_content                         m_out;
@@ -1568,6 +1571,9 @@ namespace filetypes
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
+
+        //if( scriptfile == "C:\\Users\\Guill\\Pokemon\\RomHacks\\PMDES\\OtherPMDGames\\PMD_EoS_Euro\\data\\SCRIPT\\G01P09A\\enter04.ssb" )
+        //    cout<<"lol";
 
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");

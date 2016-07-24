@@ -615,7 +615,7 @@ namespace pmd2
         return std::move( m_parent->m_pHandler->LoadDirectory(m_path) );
     }
 
-    void ScrSetLoader::operator()(const LevelScript & set)const
+    void ScrSetLoader::operator()(const LevelScript & set)const 
     {
         m_parent->m_pHandler->WriteDirectory(set, m_path);
     }

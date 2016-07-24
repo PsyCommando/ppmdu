@@ -856,7 +856,7 @@ namespace pmd2
             {
                 stringstream sstr;
                 sstr <<"GameScriptsXMLParser::Parse():Can't load XML document \"" 
-                     <<file <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+                     <<file <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\" at file offset " <<loadres.offset;
                 throw std::runtime_error(sstr.str());
             }
 
@@ -1518,8 +1518,9 @@ namespace pmd2
             for( const auto & entry : m_scrset.Components() )
                 WriteGrp(xroot,entry);
 
-            const unsigned int flag = (bautoescape)? pugi::format_default  : 
+            const unsigned int flag = (bautoescape)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
+            //const xml_encoding enc  = (m_region != eGameRegion::Japan)? encoding_latin1 : encoding_utf8;
             //Write doc
             if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
                 throw std::runtime_error("GameScriptsXMLWriter::Write(): Can't write xml file " + sstrfname.str());
@@ -1596,7 +1597,8 @@ namespace pmd2
             Helper for importing script data from XML.
             Is used in packaged tasks to be handled by the thread pool.
     */
-    bool RunLevelXMLImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
+    //bool RunLevelXMLImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
+    bool RunLevelXMLImport( GameScripts & gs, string fname, string dest, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
     {
 #ifdef _DEBUG
 if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
@@ -1607,7 +1609,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
         eGameRegion  tempregion  = eGameRegion::Invalid;
         eGameVersion tempversion = eGameVersion::Invalid;
-        ldr( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
+        gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
         if( tempregion != reg || tempversion != ver )
             throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         ++completed;
@@ -1700,7 +1702,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         //}
         Poco::DirectoryIterator dirit(dir);
         Poco::DirectoryIterator dirend;
-        deque<ScrSetLoader> loaders;
+        //deque<ScrSetLoader> loaders;
         while( dirit != dirend )
         {
             if( dirit->isFile() && dirit.path().getExtension() == "xml" )
@@ -1708,10 +1710,11 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
                 Poco::Path destination(out_dest.GetScriptDir());
                 destination.append(dirit.path().getBaseName());
-                loaders.push_back( ScrSetLoader(out_dest, destination.toString()) );
+                //loaders.push_back( ScrSetLoader(out_dest, destination.toString()) );
                 taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
-                                                                     std::cref(loaders.back()), 
+                                                                     std::ref(out_dest), 
                                                                      dirit->path(), 
+                                                                     destination.toString(),
                                                                      out_dest.m_scrRegion, 
                                                                      out_dest.m_gameVersion, 
                                                                      std::ref(completed) ) ) );
@@ -1747,6 +1750,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
                 updatethread.join();
             if(bprintprogress)
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
+
         }
         catch(...)
         {

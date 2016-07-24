@@ -8,4 +8,8 @@
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../resources/pmd2data.xml" -log  -scripts
 -scripts -text
 
--e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out" "ExplorersOfSkyJP_Stats" -cfg "../resources/pmd2data.xml" -log 
+-e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out" "ExplorersOfSkyJP_Stats" -cfg "../resources/pmd2data.xml" -log -scripts -text
+
+
+-e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\PMD_EoS_Euro" "ExplorersOfSkyEU_Stats" -cfg "../resources/pmd2data.xml" -log  -scripts -text
+-i -romroot "C:\Users\Guill\Desktop\Workdir\eos_euro" "ExplorersOfSkyEU_Stats" -cfg "../resources/pmd2data.xml" -log  -scripts -text

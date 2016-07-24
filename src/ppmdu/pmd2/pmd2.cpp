@@ -5,25 +5,33 @@
 #include <iostream>
 #include <unordered_map>
 #include <regex>
+#include <iterator>
+#include <algorithm>
 using namespace std;
 
 namespace pmd2
 {
-    const std::unordered_map<std::string, std::string> CommonEscapeCharactersToRaw
+    const std::unordered_map<std::string, char> CommonEscapeCharactersToRaw
     {{
-        { "\\n",  "\n"  }, //End of line
-        { "\\t",  "   " }, //Replace tabs with 3 spaces
-        { "\\'",  "\'"  }, //Single quote
-        { "\\\"", "\""  }, //Double quote
-        { "\\\\", "\\"  }, //Backslash
-        { "\\0",  "\0"  }, //Ending 0
+        { "\\n",  '\n'  }, //End of line
+        { "\\'",  '\''  }, //Single quote
+        { "\\\"", '\"'  }, //Double quote
+        { "\\\\", '\\'  }, //Backslash
+        { "\\0",  '\0'  }, //Ending 0
+    }};
+
+    const std::unordered_map<char, char> CommonEscapeCharactersToRaw_NoLeadBackSlash
+    {{
+        { 'n',  '\n'  }, //End of line
+        { '\\', '\\'  }, //Backslash
+        { '0',  '\0'  }, //Ending 0
     }};
 
     const std::unordered_map<char, std::string> CharactersToCommonEscapeCharacters
     {{
         { '\n', "\\n"  }, //End of line
-        //{ '\'', "\\'"  }, //Single quote
-        //{ '\"', "\\\"" }, //Double quote
+       // { '\'', "\\'"  }, //Single quote
+        //{ '\"', "\\x22" }, //Double quote
         { '\\', "\\\\" }, //Backslash
         { '\0', "\\0"  }, //Ending 0
     }};
@@ -98,6 +106,10 @@ namespace pmd2
         DirName_TABLEDAT,   //EoS Only
     };
 
+
+    /*
+        AnalyzeDirForPMD2Dirs
+    */
     eGameVersion AnalyzeDirForPMD2Dirs( const std::string & pathdir )
     {
         auto                flist         = utils::ListDirContent_FilesAndDirs( pathdir,false );
@@ -132,6 +144,9 @@ namespace pmd2
             return eGameVersion::Invalid;
     }
 
+    /*
+        DetermineGameVersionAndLocale
+    */
     std::pair<eGameVersion, eGameRegion> DetermineGameVersionAndLocale(const std::string & pathfilesysroot)
     {
         std::pair<eGameVersion, eGameRegion> resultpair;
@@ -216,10 +231,6 @@ namespace pmd2
         return std::move(resultpair);
     }
 
-    //const std::string & GetGameVersionName( eGameVersion gv )
-    //{
-    //    return GameVersionNames[static_cast<size_t>(gv)];
-    //}
 
 //======================================================================================
 //  Character Escaping
@@ -288,11 +299,13 @@ namespace pmd2
         {
             stringstream sstr;
             sstr <<"\\x" <<hex <<uppercase <<(0x00FF & static_cast<uint16_t>(c));
-            out.append(std::move(sstr.str()));
+            //out.append(std::move(sstr.str()));
+            const string str = sstr.str();
+            std::copy( str.begin(), str.end(), back_inserter(out) );
         }
     }
 
-    template<bool _EscapeXML = false>
+    template<>
         inline void EscapeCharacter<true>(char c, std::string & out)
     {
         //auto itf = CharactersToCommonEscapeCharactersXML.find(c);
@@ -302,7 +315,9 @@ namespace pmd2
         {
             stringstream sstr;
             sstr <<"&#x" <<hex <<uppercase <<(0x00FF & static_cast<uint16_t>(c)) <<";";
-            out.append(std::move(sstr.str()));
+            //out.append(std::move(sstr.str()));
+            const string str = sstr.str();
+            std::copy( str.begin(), str.end(), back_inserter(out) );
         }
     }
 
@@ -331,7 +346,7 @@ namespace pmd2
         auto itf = CharactersToCommonEscapeCharactersXML.find(c);
         if( itf != CharactersToCommonEscapeCharactersXML.end() )
         {
-            out.append(itf->second);
+            std::copy( itf->second.begin(), itf->second.end(), std::back_inserter(out) );
             return true;
         }
         return false;
@@ -343,7 +358,8 @@ namespace pmd2
         auto itf = CharactersToCommonEscapeCharacters.find(c);
         if( itf != CharactersToCommonEscapeCharacters.end() )
         {
-            out.append(itf->second);
+            std::copy( itf->second.begin(), itf->second.end(), std::back_inserter(out) );
+            //out.append(itf->second);
             return true;
         }
         return false;
@@ -354,6 +370,9 @@ namespace pmd2
     static const unsigned char ShiftJIS_Marker     = 0x81;   //Those bytes are the bytes prefixed to Shift-JIS characters used in PMD2.
     static const unsigned char ShiftJIS_MarkerLast = 0x84;
 
+    //! #TODO: Use something a lot simpler!! Regex are too slow for this.
+    /*
+    */
     template<bool _EscapeForXML>
         void HandleCharacters( const std::string & src, std::string & out, bool escapejis, const std::locale & loc )
     {
@@ -367,7 +386,8 @@ namespace pmd2
                 {
                     if(!escapejis)
                     {
-                        out.append(itc, itc+2 ); //We just parse the characters as-is
+                        std::copy( itc, itc+2, std::back_inserter(out) );
+                        //out.append(itc, itc+2 ); //We just parse the 2 bytes characters as-is
                         ++itc;
                     }
                     else
@@ -387,8 +407,71 @@ namespace pmd2
 
     /*
     */
+    template<bool _EscapeJIS>
+        std::string & EscapeUnprintableCharactersTest(std::string & src);
+
+
+    template<>
+        std::string & EscapeUnprintableCharactersTest<true>(std::string & src)
+    {
+        for( size_t i = 0; i < src.size(); )
+        {
+            unsigned char c = src[i];
+            if( c >= ShiftJIS_Marker && c <= ShiftJIS_MarkerLast && (i+1) < src.size() )
+            {
+                stringstream ss;
+                ss<<"\\x" <<hex <<uppercase <<setw(2) <<setfill('0') <<(static_cast<uint16_t>(c)        & 0x00FF);
+                ss<<"\\x" <<hex <<uppercase <<setw(2) <<setfill('0') <<(static_cast<uint16_t>(src[i+1]) & 0x00FF);
+                const string str = ss.str();
+                src.replace( i, 2, str );
+                i +=str.size(); //Increment the counter appropriately
+            }
+            else
+            {
+                auto itf = CharactersToCommonEscapeCharacters.find(c);
+                if( itf != CharactersToCommonEscapeCharacters.end() )
+                {
+                    src.replace(i, 1, itf->second );
+                    i+= itf->second.size();
+                }
+                else
+                    ++i;
+            }
+        }
+        return src;
+    }
+
+    template<>
+        std::string & EscapeUnprintableCharactersTest<false>(std::string & src)
+    {
+        for( size_t i = 0; i < src.size();  )
+        {
+            unsigned char c = src[i];
+            auto itf = CharactersToCommonEscapeCharacters.find(c);
+            if( itf != CharactersToCommonEscapeCharacters.end() )
+            {
+                src.replace(i, 1, itf->second );
+                i+= itf->second.size();
+            }
+            else
+                ++i;
+        }
+        return src;
+    }
+
+
+    /*
+    */
     std::string EscapeUnprintableCharacters(const std::string & src, bool escapejis, bool escapeforxml, const std::locale & loc)
     {
+#if 1
+        std::string out = src;
+        if( escapejis )
+            EscapeUnprintableCharactersTest<true>(out);
+        else
+            EscapeUnprintableCharactersTest<false>(out);
+        return std::move(out);
+#else
         std::string out;
         out.reserve(src.size() * 2);
         if(escapeforxml)
@@ -397,6 +480,7 @@ namespace pmd2
             HandleCharacters<false>(src, out, escapejis, loc);
         out.shrink_to_fit();
         return std::move(out);
+#endif
     }
 
 
@@ -408,12 +492,12 @@ namespace pmd2
         FindCommonEscapeChar
             Lookup in the table for common escape sequences for a single char!
     */
-    inline bool FindCommonEscapeChar(const string & str, std::stringstream & out)
+    inline bool FindCommonEscapeChar(const string & str, std::string & out)
     {
         auto itcom = CommonEscapeCharactersToRaw.find(str);
         if( itcom != CommonEscapeCharactersToRaw.end() )
         {
-            out<<itcom->second; //Append the character directly then
+            out.push_back(itcom->second); //Append the character directly then
             return true;
         }
         return false;
@@ -426,13 +510,14 @@ namespace pmd2
             a common escape character. Any excess characters will be appended
             to the "out" string stream after the escaped value only if it matched!
     */
-    inline bool MatchCommonEscapeChar( const string & str, std::stringstream & out )
+    inline bool MatchCommonEscapeChar( const string & str, std::string & out )
     {
         if( str.size() == 2 )
             return FindCommonEscapeChar(str, out);
         else if( str.size() > 2 && FindCommonEscapeChar(str.substr(0,2), out) )
         {
-            out << str.substr(2);
+            std::copy( str.begin(), str.begin() + 2, std::back_inserter(out) );
+            //out.append(str.substr(2));
             return true;
         }
         return false;
@@ -440,7 +525,7 @@ namespace pmd2
 
     /*
     */
-    inline bool MatchHexEscapeChar( const string & escexpr, std::stringstream & out )
+    inline bool MatchHexEscapeChar( const string & escexpr, std::string & out )
     {
         static const regex MatchHexByteRegex     ("([0-9a-fA-F]{2})"); //Hex byte specifier
         static const regex MatchUnicodeByteRegex ("([0-9a-fA-F]{4})"); //Unicode specifier
@@ -456,7 +541,7 @@ namespace pmd2
                 uint16_t val = 0;
                 sstr <<hex <<"0x" <<hexmatch.str(); //Get the digits only
                 sstr >>val;
-                out <<static_cast<char>(val);
+                out+=static_cast<char>(val);
                 return true;
             }
             else
@@ -474,8 +559,8 @@ namespace pmd2
                 uint16_t val = 0;
                 sstr <<hex <<"0x" <<unicodematch.str(); //Get the digits only
                 sstr >>val;
-                out <<static_cast<char>(val);       //Lowest byte first
-                out <<static_cast<char>(val>>8);    //Highest last, since the game seems to use something close to UTF1?
+                out+=static_cast<char>(val);       //Lowest byte first
+                out+=static_cast<char>(val>>8);    //Highest last, since the game seems to use something close to UTF1?
                 return true;
             }
             else
@@ -499,8 +584,7 @@ namespace pmd2
         
         try
         {
-            stringstream deststr;
-            deststr.imbue(loc);
+            string deststr;
 
             while (ithex != end) 
             {
@@ -508,14 +592,13 @@ namespace pmd2
                 if( match.size() > 1 )
                 {
                     //AppendPrefix
-                    deststr<<match.prefix();
+                    deststr.append(match.prefix());
                     //Find if we match a common escape char
                     const string curmatch = match.str();
                     if( !MatchCommonEscapeChar(curmatch, deststr) )
                     {
                         if( !MatchHexEscapeChar(curmatch, deststr) ) //Find if it matches a hex byte
                         {
-                            //!#TODO: CRASHED HERE BECAUSE OF "\nbe" !!!
                             throw std::runtime_error("ReplaceEscapedUnprintableCharacters(): Encountered unknown escape sequence \""s + curmatch +"\" !!");
                         }
                     }
@@ -524,10 +607,10 @@ namespace pmd2
 
                 //On the last match, append the suffix!
                 if(ithex == end && match.size() > 1 ) 
-                    deststr <<match.suffix();
+                    deststr.append(match.suffix());
             } 
 
-            return std::move(deststr.str());
+            return std::move(deststr);
         }
         catch( const exMalformedEscapedCharacterSequence & e )
         {
@@ -536,5 +619,53 @@ namespace pmd2
             std::throw_with_nested( std::runtime_error(ss.str()) );
         }
     }
+
+    string & ReplaceEscapedSequenceTest( string & str )
+    {
+        size_t fpos= string::npos;
+        do
+        {
+            fpos = str.find( '\\' );
+            if(fpos != string::npos &&  (fpos+1) < str.size() )
+            {
+                auto itfound = CommonEscapeCharactersToRaw_NoLeadBackSlash.find( str[(fpos+1)] );
+                if( itfound != CommonEscapeCharactersToRaw_NoLeadBackSlash.end() )
+                {
+                    str.replace( fpos, 2, 1,  itfound->second );
+                }
+                else if( str[(fpos+1)] == 'x' && (fpos+3) < str.size() )
+                {
+                    stringstream sstr;
+                    uint16_t val;
+                    sstr <<hex <<'0';
+                    for( size_t i = fpos+1; i < fpos+4; ++i )
+                        sstr<<str[i];
+
+                    sstr >> val;
+                    str.replace( fpos, 4, 1,  static_cast<char>(val) );
+                }
+                else if( str[(fpos+1)] == 'U' && (fpos+5) < str.size() )
+                {
+                    stringstream sstr;
+                    uint16_t val;
+                    sstr <<hex <<"0x";
+                    for( size_t i = fpos+2; i < fpos+6; ++i )
+                        sstr<<str[i];
+
+                    sstr >> val;
+                    str.replace( fpos, 6, 1,  static_cast<char>(val) );
+                    if( (val >> 8) != 0 )
+                        str.insert(fpos+1, 1, static_cast<char>((val >> 8)) );
+                }
+                else
+                {
+                    throw std::runtime_error("ReplaceEscapedSequenceTest() : Unknonw escape sequence!! " + str.substr(fpos));
+                }
+            }
+        }
+        while(fpos != string::npos);
+        return str;
+    }
+
 
 };

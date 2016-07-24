@@ -20,9 +20,9 @@ namespace pmd2 { namespace filetypes
 //
 //  Constants 
 //
-    static const string        SpecialCharSequ_MusicNote = "\129\244"; //~'music note'
-    static const unsigned char SpecialChar_CtrlChar      = 129u;
-    static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
+    //static const string        SpecialCharSequ_MusicNote = "\129\244"; //~'music note'
+    //static const unsigned char SpecialChar_CtrlChar      = 129u;
+    //static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
 
 //============================================================================================
 //  Loader
@@ -63,11 +63,9 @@ namespace pmd2 { namespace filetypes
             catch( exception & e )
             {
                 stringstream sstr;
-                sstr << "ERROR: While parsing file \"" << m_strFilePath <<"\". Cannot load the game's text strings file! : "
+                sstr << "Error while parsing file \"" << m_strFilePath <<"\". Cannot load the game's text strings file! : "
                      << e.what();
-                string strerror = sstr.str();
-                clog << strerror <<"\n";
-                throw runtime_error(strerror);
+                throw_with_nested(runtime_error(sstr.str()));
             }
 
             return std::move(m_txtstr);
@@ -113,62 +111,9 @@ namespace pmd2 { namespace filetypes
                 //char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
                 auto itcurstr = m_filedata.begin() + m_ptrTable[i];
                 string curstr( itcurstr, itcurstr + len);
-                curstr.push_back('\0');
-                
-#ifndef PMD2_STRINGS_NO_LOCALE
-                stringstream out;
-                out.imbue(m_locale);
+                //curstr.push_back('\0');
 
-                //Copy string 
-                bool blastWasCtrlChar = false;               //Whether the last character was the \129 control char!
-                for( unsigned int cntc = 0; cntc < len; ++cntc )
-                {
-                    char c = ptrstr[cntc];
-                    if( std::isprint( c, m_locale) && !blastWasCtrlChar )    //Check if we need to replace the character with an escaped char
-                        out << c;
-                    else
-                    {
-                        switch(c)
-                        {
-                            case '\n':
-                            {
-                                out << "\\n";
-                                break;
-                            }
-                            //Check for the last character for the music note symbol, and make sure its replaced with an escape sequence
-                            case SpecialChar_MusicNoteEnd: 
-                            default:
-                            {
-                                //If non alpha-numeric, write as an escaped value!
-                                uint8_t thebyte = *(m_filedata.data() + (m_ptrTable[i]+cntc));
-                                out <<'\\' << static_cast<unsigned short>( thebyte );
-                            }
-                        };
-                    }
-                    blastWasCtrlChar = (c == SpecialChar_CtrlChar);
-                }
-
-                m_txtstr[i] = out.str();
-#else
-                //auto strbackins = std::back_inserter( m_txtstr[i] );
                 m_txtstr[i] = std::move( EscapeUnprintableCharacters( curstr, m_escapejis, false, m_locale ) );
-                //for( unsigned int cntc = 0; cntc < len; ++cntc )
-                //{
-                //    char c = ptrstr[cntc];
-                //    if( c == '\n' )
-                //    {
-                //        (*strbackins) = '\\';
-                //        (*strbackins) = 'n';
-                //    }
-                //    else if( c == '\0' )
-                //    {
-                //        (*strbackins) = '\\';
-                //        (*strbackins) = '0';
-                //    }
-                //    else
-                //        (*strbackins) = c;
-                //}
-#endif
                 ++i;
             }
             clog<<" Done!\n";
@@ -305,13 +250,13 @@ namespace pmd2 { namespace filetypes
             for( unsigned int cntstr = 0; cntstr < m_txtstr.size();  )
             {
                 const auto & str = m_txtstr[cntstr];
-                utils::WriteIntToBytes( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
+                utils::WriteIntToBytes<uint32_t>( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
                 m_ptrTblWriteAt += PTR_LEN;
 
                 //
-                string processed;
+                //string processed;
                 //auto         itprocessedbackins = back_inserter( processed );
-                processed.reserve(str.size());
+                //processed.reserve(str.size());
                 //for( unsigned int i = 0; i < str.size();  )
                 //{
                 //    char c = str[i];
@@ -326,7 +271,9 @@ namespace pmd2 { namespace filetypes
                 //        ++i;
                 //    }
                 //}
-                processed = std::move( ReplaceEscapedCharacters( str, m_locale ) );
+                //processed = std::move( ReplaceEscapedCharacters( str, m_locale ) );
+                string processed = str; 
+                ReplaceEscapedSequenceTest(processed);
 
                 std::copy( processed.begin(), processed.end(), itbackins );
                 ++cntstr;
