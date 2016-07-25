@@ -15,6 +15,9 @@ Description: Contains data on script opcodes.
 #include <cassert>
 //#include <initializer_list>
 
+//! #TODO: Replace most of the data access functions in here with a single interface for retrieving
+//!        that information seamlessly, whether the info comes from the rom, a c++ table, or XML data!
+
 namespace pmd2
 {
     /*
@@ -854,6 +857,8 @@ namespace pmd2
         Unk_CRoutineId,         //An id to an instruction group in unionall.ssb
         Unk_RoutineId,          //An id to a local instruction group
         Unk_AnimationID,        //Parameter containing the ID of an animation.
+        Unk_FacePosMode,        //Value from the Face position enum, 24 possible positions
+        Unk_LevelId,            //ID of the level in the level entry table!
 
         //
         Unk_MvSlSpecInt,        //First parameter of the MovePositionOffset, MovePositionMark, SlidePositionMark, Slide2PositionMark, camera_Move2Default
@@ -861,9 +866,9 @@ namespace pmd2
 
         //Specifics
         Duration,               //A duration in possibly ticks or milliseconds
-        Coordinate,             //A coordinate on either X or Y axis
+        CoordinateX,             //A coordinate on X axis
+        CoordinateY,             //A coordinate on Y axis
         InstructionOffset,      //An offset within the list of instructions to a specific instruction.
-        //CaseJumpOffset,         //Offset to jump to when a switch's case is satisfied. 
 
         NbTypes,
         Invalid,
@@ -890,11 +895,14 @@ namespace pmd2
         "commonroutineid",         //An id to an instruction group in unionall.ssb
         "localroutineid",          //An id to a local instruction group
         "animid",
+        "mode",                     //
+        "levelid",                  //
 
         "Unk_EncInt",
 
         "duration",              
-        "coordinate",            
+        "x",            
+        "y",
         "tolabel",          //String is label id when importing/exporting from xml
         //"jumptolabel",
     }};
@@ -922,16 +930,189 @@ namespace pmd2
         eOpParamTypes ptype;
     };
 
+//==========================================================================================================
+//  LevelEntryInfo
+//==========================================================================================================
+    struct LevelEntryInfo_EoS
+    {
+        std::string name;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t mapid;
+        int16_t unk4;
+    };
+
+    uint16_t                   FindLevelEntryInfo_EoS( const std::string & name );
+    const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id );
+
+    /*
+        LevelEntryInfoWrap
+            Same as its version dependant siblings. Except it contains data that both have!
+    */
+    struct LevelEntryInfoWrap
+    {
+        std::string name;
+        int16_t     mapid;
+
+        LevelEntryInfoWrap()
+            :mapid(0)
+        {}
+
+        LevelEntryInfoWrap(const LevelEntryInfoWrap & cp)   {this->operator=(cp);}
+        LevelEntryInfoWrap & operator=( const LevelEntryInfoWrap & cp )
+        {
+            name  = cp.name;
+            mapid = cp.mapid;
+            return *this;
+        }
+
+        LevelEntryInfoWrap( const LevelEntryInfo_EoS & cp ) { this->operator=(cp); }
+        LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS & cp )
+        {
+            name  = cp.name;
+            mapid = cp.mapid;
+            return *this;
+        }
+
+        operator bool()
+        {
+            return !name.empty();
+        }
+    };
+
+    /*
+        LevelEntryInfoWrapper
+            Abstracts access to level entry data!
+    */
+    class LevelEntryInfoWrapper
+    {
+    public:
+
+        LevelEntryInfoWrapper(eGameVersion ver)
+            :m_ver(ver)
+        {}
+
+        uint16_t            FindLevelInfoEntryByName(const std::string & name)const;
+        LevelEntryInfoWrap  GetLevelInfoEntry       (uint16_t id)const;
+        const std::string * GetLevelInfoEntryName   (uint16_t id)const;
+        uint16_t            GetNbLevelInfoEntries   ()const;
+
+        static uint16_t InvalidLevelInfoID() { return std::numeric_limits<uint16_t>::max(); }
+
+    private:
+        eGameVersion m_ver;
+    };
 
 //==========================================================================================================
-//
+//  ProcessSpecial
 //==========================================================================================================
     const uint16_t ProcessSpecialMaxVal = 0x3E;
 
 //==========================================================================================================
+//  Face Position
+//==========================================================================================================
+
+    enum struct eFaceModes: uint16_t
+    {
+        Standard            = 0,    //Standard
+        
+        //Coordinates
+        AbsCoordStandard    = 1,    //Absolute Coordinates Standard
+        AbsCoordLeft        = 2,    //Absolute Coordinates Left
+        AbsCoordRight       = 3,    //Absolute Coordinates Right
+
+        //Bottom
+        Bottom_C_FaceR      = 4,    //Bottom Center Right-Facing
+        Bottom_L_FaceInw    = 5,    //Bottom Left Inner-Facing (inwards?)
+        Bottom_R_FaceInw    = 6,    //Bottom Right Inner-Facing (inwards?)
+
+        Bottom_L_Center     = 7,    //Bottom Left Center
+        Bottom_R_Center     = 8,    //Bottom Right Center
+        Bottom_C_FaceL      = 9,    //Bottom Center Left-Facing
+
+        Bottom_L_FaceOutw   = 10,   //Bottom Left Outer-Facing
+        Bottom_R_FaceOutw   = 11,   //Bottom Right Outer-Facing
+        Bottom_LC_FaceOutw  = 12,   //Bottom Left-Center Outer-Facing
+        Bottom_RC_FaceOutw  = 13,   //Bottom Right-Center Outer-Facing
+
+        //Top
+        Top_C_FaceR         = 14,   //Top Center (Right-Facing)
+        Top_L_FaceInw       = 15,   //Top Left Inner-Facing
+        Top_R_FaceInw       = 16,   //Top Right Inner-Facing (inwards?)
+
+        Top_L_Center        = 17,   //Top Left Center
+        Top_R_Center        = 18,   //Top Right Center
+        Top_C_FaceL         = 19,   //Top Center Left-Facing
+
+        Top_L_FaceOutw      = 20,   //Top Left-Center Right-Facing
+        Top_RC_FaceR        = 21,   //Top Right-Center Right-Facing
+        Top_LC_FaceOutw     = 22,   //Top Left-Center Outer-Facing
+        Top_RC_FaceOutw     = 23,   //Top Right-Center Outer-Facing
+
+        NbModes,
+        Invalid = std::numeric_limits<int16_t>::max(),
+    };
+
+    const std::array<std::string, static_cast<size_t>(eFaceModes::NbModes)> FacePosModeNames
+    {{
+        "Standard",
+
+        //Coordinates
+        "AbsCoord",
+        "AbsCoordLeft",
+        "AbsCoordRight",
+
+        //Bottom
+        "Bottom_C_FaceR",
+        "Bottom_L_FaceInw",
+        "Bottom_R_FaceInw",
+
+        "Bottom_L_Center",  
+        "Bottom_R_Center",    
+        "Bottom_C_FaceL",     
+
+        "Bottom_L_FaceOutw",  
+        "Bottom_R_FaceOutw",
+        "Bottom_LC_FaceOutw",
+        "Bottom_RC_FaceOutw",
+
+        //Top
+        "Top_C_FaceR",
+        "Top_L_FaceInw",
+        "Top_R_FaceInw",
+
+        "Top_L_Center",
+        "Top_R_Center",
+        "Top_C_FaceL",
+
+        "Top_L_FaceOutw",
+        "Top_RC_FaceR",
+        "Top_LC_FaceOutw",
+        "Top_RC_FaceOutw",
+    }};
+
+    inline const std::string * FacePosModeToStr( int16_t ty )
+    {
+        if( ty < static_cast<int16_t>(eOpParamTypes::NbTypes) )
+            return std::addressof( FacePosModeNames[static_cast<size_t>(ty)] );
+        else
+            return nullptr;
+    }
+
+    inline int16_t FindFacePosModeByName( const std::string & name )
+    {
+        for( size_t i = 0; i < FacePosModeNames.size(); ++i )
+        {
+            if( FacePosModeNames[i] == name )
+                return static_cast<int16_t>(i);
+        }
+        return static_cast<int16_t>(eFaceModes::Invalid);
+    }
+
+//==========================================================================================================
 //  Faces
 //==========================================================================================================
-    const std::array<std::string, 16> FaceNames
+    const std::array<std::string, 32> FaceNames
     {{
         "NORMAL",
         "HAPPY",
@@ -949,6 +1130,22 @@ namespace pmd2
         "FAINT",
         "DUMMY_0",
         "DUMMY_1",
+        "ACTION1",
+        "ACTION2",
+        "ACTION3",
+        "ACTION4",
+        "ACTION5",
+        "ACTION6",
+        "ACTION7",
+        "ACTION8",
+        "ACTION9",
+        "ACTION10",
+        "ACTION11",
+        "ACTION12",
+        "ACTION13",
+        "ACTION14",
+        "ACTION15",
+        "ACTION16",
     }};
 
     const int16_t       InvalidFaceID   = std::numeric_limits<int16_t>::max();
@@ -968,7 +1165,7 @@ namespace pmd2
         return InvalidFaceID;
     }
 
-    std::string GetFaceNameByID( uint16_t faceid );
+    std::string GetFaceNameByID( int16_t faceid );
 
 //==========================================================================================================
 //  Lives Entities
@@ -1084,36 +1281,18 @@ namespace pmd2
     **************************************************************************************/
     struct OpCodeInfoEoTD
     {
-        std::string         name;
-        int8_t              nbparams;
-        //int8_t              unk1;
-        //int8_t              unk2;
-        //int8_t              unk3;
+        std::string             name;
+        int8_t                  nbparams;
         eCommandCat              cat;       //Category  the instruction fits in
         std::vector<OpParamInfo> paraminfo; //Info on each parameters the opcode takes
         
     };
-    //struct OcodeInfoWrapperEoTD : public BaseOpCodeInfoWrapper
-    //{
-    //    OcodeInfoWrapperEoTD():info(nullptr) {}
-    //    OcodeInfoWrapperEoTD( OpCodeInfoEoTD & inf ):info(std::addressof(inf)){}
-    //    OcodeInfoWrapperEoTD( const OpCodeInfoEoTD * inf ):info(inf){}
-    //    OcodeInfoWrapperEoTD( const OcodeInfoWrapperEoTD & cp ):info(cp.info){}
-    //    OcodeInfoWrapperEoTD& operator=( const OcodeInfoWrapperEoTD & cp ){info=cp.info;}
-
-    //    const std::string              & Name()const      { return info->name; }
-    //    int8_t                           NbParams()const  { return info->nbparams; } 
-    //    const std::vector<OpParamInfo> & ParamInfo()const { return info->paraminfo; }
-    //                                     operator bool()const{ return info!=nullptr; }
-    //    const OpCodeInfoEoTD * info;
-    //};
 
     /*************************************************************************************
         OpCodesInfoListEoTD
             Contains info on every opcodes
     *************************************************************************************/
     extern const std::array<OpCodeInfoEoTD, static_cast<uint16_t>(eScriptOpCodesEoTD::NBOpcodes)>  OpCodesInfoListEoTD;
-    //extern const std::array<std::vector<OpParamInfo>,    static_cast<uint16_t>(eScriptOpCodesEoTD::NBOpcodes)>  OpCodeParamInfoListEoTD;
 
     /*************************************************************************************
         FindOpCodeInfo_EoTD
@@ -1179,30 +1358,13 @@ namespace pmd2
         
     };
 
-    //struct OcodeInfoWrapperEoS : public BaseOpCodeInfoWrapper
-    //{
-    //    //OcodeInfoWrapperEoS():info(nullptr) {}
-    //    //OcodeInfoWrapperEoS( OpCodeInfoEoS & inf ):info(std::addressof(inf)){}
-    //    OcodeInfoWrapperEoS( OpCodeInfoEoS & inf ):info(inf){}
-    //    //OcodeInfoWrapperEoS( const OpCodeInfoEoS * inf ):info(inf){}
-    //    OcodeInfoWrapperEoS( const OcodeInfoWrapperEoS & cp ):info(cp.info){}
-    //    OcodeInfoWrapperEoS& operator=( const OcodeInfoWrapperEoS & cp ){info=cp.info;}
-
-    //    const std::string              & Name()const      { return info.name; }
-    //    int8_t                           NbParams()const  { return info.nbparams; } 
-    //    const std::vector<OpParamInfo> & ParamInfo()const { return info.paraminfo; }
-
-    //    //const OpCodeInfoEoS * info;
-    //    OpCodeInfoEoS info;
-    //};
 
     /*************************************************************************************
         OpCodesInfoListEoS
             Contains info on every opcodes
     *************************************************************************************/
     extern const std::array<OpCodeInfoEoS, static_cast<uint16_t>(eScriptOpCodesEoS::NBOpcodes)> OpCodesInfoListEoS;
-    //extern const std::array<std::vector<OpParamInfo>,   static_cast<uint16_t>(eScriptOpCodesEoS::NBOpcodes)> OpCodeParamInfoListEoS;
-    
+
     /*************************************************************************************
         FindOpCodeInfo_EoS
             Return the opcode info from the opcode info table, for the opcode specified.
@@ -1524,7 +1686,47 @@ namespace pmd2
             return eOpCodeVersion::Invalid;
     }
 
+    /*
+        ScriptParameterValueHandler
+            Helper for parsing parameter values for a given opcode
+    */
+    class ScriptParameterValueHandler
+    {
+    public:
+        ScriptParameterValueHandler(eOpCodeVersion ver)
+            :m_opinf(ver)
+        {}
 
+        uint16_t ConvertToWord( const std::string & val )
+        {
+            //From a raw string, get a
+        }
+
+        std::string ConvertToString( uint16_t value, eOpParamTypes paramty )
+        {
+        }
+
+        inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
+        {
+            if( ty < eOpParamTypes::NbTypes )
+                return std::addressof( OpParamTypesNames[static_cast<size_t>(ty)] );
+            else
+                return nullptr;
+        }
+
+        inline eOpParamTypes FindOpParamTypesByName( const std::string & name )
+        {
+            for( size_t i = 0; i < OpParamTypesNames.size(); ++i )
+            {
+                if( OpParamTypesNames[i] == name )
+                    return static_cast<eOpParamTypes>(i);
+            }
+            return eOpParamTypes::Invalid;
+        }
+
+    private:
+        OpCodeClassifier m_opinf;
+    };
 
 };
 

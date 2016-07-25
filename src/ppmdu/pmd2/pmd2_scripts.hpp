@@ -160,9 +160,9 @@ namespace pmd2
         paramcnt_t          parameters;     //The parameters for the instruction
         eInstructionType    type;           //How to handle the instruction
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
         size_t              dbg_origoffset; //Original offset of the instruction in the source file if applicable. For debugging purpose
-#endif
+//#endif
     };
     struct ScriptInstruction : public ScriptBaseInstruction
     {
@@ -194,9 +194,9 @@ namespace pmd2
             type        = cp.type;
             parameters  = cp.parameters;
             value       = cp.value;
-#ifdef _DEBUG
+//#ifdef _DEBUG
             dbg_origoffset = cp.dbg_origoffset; 
-#endif
+//#endif
             return *this;
         }
 
@@ -206,9 +206,9 @@ namespace pmd2
             type        = mv.type;
             parameters  = std::move(mv.parameters);
             value       = mv.value;
-#ifdef _DEBUG
+//#ifdef _DEBUG
             dbg_origoffset = mv.dbg_origoffset; 
-#endif
+//#endif
             return *this;
         }
 
@@ -217,9 +217,9 @@ namespace pmd2
             type        = cp.type;
             parameters  = cp.parameters;
             value       = cp.value;
-#ifdef _DEBUG
+//#ifdef _DEBUG
             dbg_origoffset = cp.dbg_origoffset; 
-#endif
+//#endif
             return *this;
         }
 
@@ -228,9 +228,9 @@ namespace pmd2
             type        = mv.type;
             parameters  = std::move(mv.parameters);
             value       = mv.value;
-#ifdef _DEBUG
+//#ifdef _DEBUG
             dbg_origoffset = mv.dbg_origoffset; 
-#endif
+//#endif
             return *this;
         }
 
@@ -240,9 +240,9 @@ namespace pmd2
             out.parameters  = parameters;
             out.value       = value;
             out.type        = type;
-#ifdef _DEBUG
+//#ifdef _DEBUG
             out.dbg_origoffset = dbg_origoffset; 
-#endif
+//#endif
             return std::move(out);
         }
     };

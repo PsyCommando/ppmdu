@@ -98,7 +98,7 @@ namespace pmd2
 
     private:
         void AnalyseGame();
-        bool LoadConfig();
+        bool LoadConfigUsingARM9();
 
     private:
         std::shared_ptr<ConfigLoader>        m_conf;

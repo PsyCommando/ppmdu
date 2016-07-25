@@ -6,16 +6,12 @@ using namespace std;
 
 namespace pmd2
 {
-
-
-
 //===========================================================================================
 // GameDataLoader
 //===========================================================================================
 
     GameDataLoader::GameDataLoader( const std::string & romroot, const std::string & gamelangxml )
-        :m_romroot(romroot), /*m_gameregion(eGameRegion::Invalid), m_gameversion(eGameVersion::Invalid),*/ m_configfile(gamelangxml),
-        m_bAnalyzed(false)
+        :m_romroot(romroot), m_configfile(gamelangxml),m_bAnalyzed(false)
     {}
 
     GameDataLoader::~GameDataLoader()
@@ -99,7 +95,7 @@ namespace pmd2
         m_nooverlays = !bfoundoverlay;
         m_bAnalyzed  = true;
 
-        if( m_noarm9 || (!m_noarm9 && !LoadConfig()) )
+        if( m_noarm9 || (!m_noarm9 && !LoadConfigUsingARM9()) )
         {
             //Fallback to old method of finding game version, if we don't have the arm9 handy, or if the arm9 scan didn't work
             stringstream fsroot;
@@ -113,14 +109,15 @@ namespace pmd2
         }
     }
 
-    bool GameDataLoader::LoadConfig()
+    bool GameDataLoader::LoadConfigUsingARM9()
     {
+        stringstream arm9path;
         try 
         {
-            stringstream arm9path;
             uint16_t     arm9off14 = 0;
             arm9path << utils::TryAppendSlash(m_romroot) <<FName_ARM9Bin; 
             ifstream arm9f( arm9path.str(), std::ios::in | std::ios::binary );
+            arm9f.exceptions(ifstream::badbit);
             arm9f.seekg(14);
             utils::ReadIntFromBytes( arm9off14, std::istreambuf_iterator<char>(arm9f.rdbuf()), std::istreambuf_iterator<char>() );
             
@@ -135,11 +132,12 @@ namespace pmd2
                 return false;
             }
         }
-        catch(...)
+        catch(const std::exception&)
         {
-            //Normally, do something here
-            //Maybe load default config or something?
-            std::rethrow_exception( std::current_exception() );
+            stringstream ss;
+            ss << "GameDataLoader::LoadConfigUsingARM9(): Error loading arm9 \"" <<arm9path.str() 
+               <<"\" and or config file \"" <<m_configfile <<"\"!";
+            std::throw_with_nested( std::runtime_error(ss.str()) );
         }
     }
 

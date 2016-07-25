@@ -380,9 +380,9 @@ namespace filetypes
             if( itf != m_labels.end() )
             {
                 ScriptInstruction label;
-#ifdef _DEBUG
+//#ifdef _DEBUG
                 label.dbg_origoffset = m_curdataoffset / ScriptWordLen;;
-#endif
+//#endif
                 //if( itf->second.lblty == lbl_t::eLblTy::CaseLbl )
                 //    label.type  = eInstructionType::MetaCaseLabel;
                 //else
@@ -408,10 +408,9 @@ namespace filetypes
         {
             ScriptInstruction curinst  = *iti;
             OpCodeInfoWrapper codeinfo = m_instfinder.Info(curinst.value);
-#ifdef _DEBUG
-                m_grptblandathdrlen;
+//#ifdef _DEBUG
                 curinst.dbg_origoffset = m_curdataoffset / ScriptWordLen;
-#endif
+//#endif
             switch(codeinfo.Category())
             {
                 case eCommandCat::OpWithReturnVal:
