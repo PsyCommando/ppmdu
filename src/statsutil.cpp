@@ -24,46 +24,6 @@ using namespace ::pmd2;
 
 //!#REMOVEME: Better encapsulate this 
 #include <ppmdu/fmts/ssb.hpp>
-//#include <pugixml.hpp>
-//#include <ppmdu/pmd2/pmd2_scripts.hpp>
-//class XMLScriptDoAnalyser
-//{
-//public:
-//    struct rnodedat_t
-//    {
-//        std::string                                     rootname;
-//        std::vector<std::pair<std::string,std::string>> attr;
-//    };
-//
-//
-//    XMLDocAnalyser( const std::string & fpath )
-//        :m_fpath(fpath)
-//    {
-//    }
-//
-//    const rnodedat_t & GetRootNodeData()const
-//    {
-//    }
-//
-//private:
-//    void ParseFirstNode()
-//    {
-//        pugi::xml_document doc;
-//        if( doc.load_file(m_fpath.c_str()) )
-//        {
-//            pugi::xml_node xroot = doc.child( pmd2::ScriptXMLRoot_SingleScript.c_str() );
-//            if(xroot)
-//            {
-//                m_data.rootname = xroot.name();
-//                for(  )
-//            }
-//        }
-//    }
-//
-//private:
-//    rnodedat_t  m_data;
-//    std::string m_fpath;
-//};
 
 
 namespace statsutil
@@ -1037,10 +997,10 @@ namespace statsutil
 
         eGameRegion  reg = m_region;
         eGameVersion ver = m_version;
-        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), false), 
+        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), false ), 
                      reg, 
-                     ver, 
-                     false, 
+                     ver,
+                     true, 
                      outpath.toString() );
         return 0;
     }

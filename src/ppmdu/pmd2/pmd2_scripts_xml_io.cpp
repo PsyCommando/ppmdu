@@ -1994,7 +1994,8 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         {
             stringstream sstr;
             sstr <<"XMLToScript():Can't load XML document \"" 
-                 <<srcfile <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+                 <<srcfile <<"\"! Pugixml returned an error : \"" << loadres.description() 
+                 <<", at file offset " <<loadres.offset <<"\"";
             throw std::runtime_error(sstr.str());
         }
 
