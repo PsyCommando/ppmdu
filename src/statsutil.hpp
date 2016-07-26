@@ -57,6 +57,8 @@ namespace statsutil
 
         //Execution
         void DetermineOperation();
+        bool DetermineXMLOps( const std::string & filepath );
+
         int  Execute           ();
         int  GatherArgs        ( int argc, const char * argv[] );
 

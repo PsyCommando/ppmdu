@@ -935,15 +935,15 @@ namespace pmd2
         LevelScript Parse( const std::string & file )
         {
             using namespace scriptXML;
-            xml_document     doc;
-            xml_parse_result loadres = doc.load_file(file.c_str());
+            xml_document doc;
 
-            if( ! loadres )
+            try
             {
-                stringstream sstr;
-                sstr <<"GameScriptsXMLParser::Parse():Can't load XML document \"" 
-                     <<file <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\" at file offset " <<loadres.offset;
-                throw std::runtime_error(sstr.str());
+                HandleParsingError( doc.load_file(file.c_str()), file);
+            }
+            catch(const std::exception & e)
+            {
+                throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Pugixml failed loading file!"));
             }
 
             xml_node      parentn    = doc.child(ROOT_ScripDir.c_str());
@@ -1988,15 +1988,13 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
     {
         using namespace scriptXML;
         xml_document     doc;
-        xml_parse_result loadres = doc.load_file(srcfile.c_str());
-
-        if( ! loadres )
+        try
         {
-            stringstream sstr;
-            sstr <<"XMLToScript():Can't load XML document \"" 
-                 <<srcfile <<"\"! Pugixml returned an error : \"" << loadres.description() 
-                 <<", at file offset " <<loadres.offset <<"\"";
-            throw std::runtime_error(sstr.str());
+            HandleParsingError( doc.load_file(srcfile.c_str()), srcfile);
+        }
+        catch(const std::exception & e)
+        {
+            throw_with_nested(std::runtime_error("XMLToScript() : Pugixml failed loading file!"));
         }
 
         xml_node      parentn    = doc.child(ROOT_SingleScript.c_str());

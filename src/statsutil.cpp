@@ -24,6 +24,26 @@ using namespace ::pmd2;
 
 //!#REMOVEME: Better encapsulate this 
 #include <ppmdu/fmts/ssb.hpp>
+#include <pugixml.hpp>
+#include <utils/pugixml_utils.hpp>
+#include <ppmdu/pmd2/pmd2_scripts.hpp>
+
+namespace XMLSniffer
+{
+    inline std::string GetRootNodeFromXML( const std::string & file )
+    {
+        using namespace pugi;
+        xml_document doc;
+        pugixmlutils::HandleParsingError( doc.load_file(file.c_str()), file );
+        return doc.document_element().name();
+    }
+
+    inline bool IsXMLSingleScript(const std::string & rootname)
+    {
+        return (rootname == ScriptXMLRoot_SingleScript);
+    }
+
+};
 
 
 namespace statsutil
@@ -519,32 +539,44 @@ namespace statsutil
         //!#TODO: Handle drag and drop
         cerr <<"#TODO: Fix file handling and detection!\n";
         //assert(false);
-
-        if( infile.exists() )
-        {
-            if(infile.isFile())
-            {
-                const string pathext = inpath.getExtension();
-                
-                if( pathext == "ssb" )
-                {
-                    m_operationMode = eOpMode::ExportSingleScript;
-                }
-                else if( pathext == XML_FExt && m_hndlScripts )
-                {
-                    m_operationMode = eOpMode::ImportSingleScript;
-                }
-                
-            }
-            else if( infile.isDirectory() )
-            {
-            }
-            else
-                throw runtime_error("Cannot determine the desired operation!");
-        }
-        else 
+        if( !infile.exists() )
             throw runtime_error("The input path does not exists!");
+        
+        if(infile.isFile())
+        {
+            const string pathext = inpath.getExtension();
+                
+            if( pathext == ::filetypes::SSB_FileExt )
+                m_operationMode = eOpMode::ExportSingleScript;
+            
+            else if( pathext == XML_FExt && DetermineXMLOps(m_firstparam) )
+                return;
+        }
+        else if( infile.isDirectory() )
+        {
+        }
+        else
+            throw runtime_error("Cannot determine the desired operation!");
+            
     }
+
+    bool CStatsUtil::DetermineXMLOps( const std::string & filepath )
+    {
+        string rootnode = XMLSniffer::GetRootNodeFromXML(filepath);
+
+        if( XMLSniffer::IsXMLSingleScript(rootnode) )
+        {
+            m_operationMode = eOpMode::ImportSingleScript;
+            return true;
+        }
+        //! #TODO:Check for other kind of xml files we could be given!!
+        else
+        {
+            assert(false);
+        }
+        return false;
+    }
+
 #else
     {
         Poco::Path inpath( m_firstparam );
@@ -1002,6 +1034,7 @@ namespace statsutil
                      ver,
                      true, 
                      outpath.toString() );
+        cout<<"\nDone!\n";
         return 0;
     }
 
@@ -1028,6 +1061,7 @@ namespace statsutil
                                  m_region, 
                                  m_version, 
                                  cfgloader.GetLanguageFilesDB() ); 
+        cout<<"\nDone!\n";
         return 0;
     }
 
