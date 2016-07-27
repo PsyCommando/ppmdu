@@ -1342,6 +1342,39 @@ namespace pmd2
         return std::numeric_limits<uint16_t>::max();
     }
 
+//
+//  Menu Types
+//
+    enum struct eMenuTypes : int16_t
+    {
+        JobBoard    = 0x27,
+        OutlawBoard = 0x28,
+
+        NbMenus,
+        Invalid,
+    };
+
+//
+//
+//
+    const uint16_t InvalidCRoutineID = std::numeric_limits<uint16_t>::max();
+
+    struct CommonRoutineInfo_EoS
+    {
+        uint16_t    id;
+        uint16_t    unk1;
+        std::string name;
+    };
+    const CommonRoutineInfo_EoS * FindCommonRoutineInfo_EoS( uint16_t id );
+    uint16_t                      FindCommonRoutineIDByName_EoS(const std::string & name);
+
+    inline uint16_t                      FindCommonRoutineIDByName_EoTD(const std::string & name)
+    {
+        //! IMPLEMENT ME
+        assert(false);
+        return -1;
+    }
+
 //==========================================================================================================
 //  ScriptEngineVariable
 //==========================================================================================================
@@ -1613,6 +1646,7 @@ namespace pmd2
         {
             switch(Category())
             {
+                case eCommandCat::Destroy:
                 case eCommandCat::EntityAccessor:
                 {
                     return eInstructionType::MetaAccessor;
@@ -1803,43 +1837,43 @@ namespace pmd2
         ScriptParameterValueHandler
             Helper for parsing parameter values for a given opcode
     */
-    class ScriptParameterValueHandler
-    {
-    public:
-        ScriptParameterValueHandler(eOpCodeVersion ver)
-            :m_opinf(ver)
-        {}
+    //class ScriptParameterValueHandler
+    //{
+    //public:
+    //    ScriptParameterValueHandler(eOpCodeVersion ver)
+    //        :m_opinf(ver)
+    //    {}
 
-        uint16_t ConvertToWord( const std::string & val )
-        {
-            //From a raw string, get a
-        }
+    //    uint16_t ConvertToWord( const std::string & val )
+    //    {
+    //        //From a raw string, get a
+    //    }
 
-        std::string ConvertToString( uint16_t value, eOpParamTypes paramty )
-        {
-        }
+    //    std::string ConvertToString( uint16_t value, eOpParamTypes paramty )
+    //    {
+    //    }
 
-        inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
-        {
-            if( ty < eOpParamTypes::NbTypes )
-                return std::addressof( OpParamTypesNames[static_cast<size_t>(ty)] );
-            else
-                return nullptr;
-        }
+    //    inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
+    //    {
+    //        if( ty < eOpParamTypes::NbTypes )
+    //            return std::addressof( OpParamTypesNames[static_cast<size_t>(ty)] );
+    //        else
+    //            return nullptr;
+    //    }
 
-        inline eOpParamTypes FindOpParamTypesByName( const std::string & name )
-        {
-            for( size_t i = 0; i < OpParamTypesNames.size(); ++i )
-            {
-                if( OpParamTypesNames[i] == name )
-                    return static_cast<eOpParamTypes>(i);
-            }
-            return eOpParamTypes::Invalid;
-        }
+    //    inline eOpParamTypes FindOpParamTypesByName( const std::string & name )
+    //    {
+    //        for( size_t i = 0; i < OpParamTypesNames.size(); ++i )
+    //        {
+    //            if( OpParamTypesNames[i] == name )
+    //                return static_cast<eOpParamTypes>(i);
+    //        }
+    //        return eOpParamTypes::Invalid;
+    //    }
 
-    private:
-        OpCodeClassifier m_opinf;
-    };
+    //private:
+    //    OpCodeClassifier m_opinf;
+    //};
 
 };
 

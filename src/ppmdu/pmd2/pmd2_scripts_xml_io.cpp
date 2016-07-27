@@ -740,6 +740,27 @@ namespace pmd2
                     outinst.parameters.push_back( lblid );
                     break;
                 }
+                case eOpParamTypes::Unk_CRoutineId:
+                {
+                    uint16_t croutineid = 0;
+
+                    //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
+                    if( m_version == eGameVersion::EoS )
+                        croutineid = FindCommonRoutineIDByName_EoS(param.value());
+                    else
+                        croutineid = FindCommonRoutineIDByName_EoTD(param.value());
+
+                    if(croutineid != InvalidCRoutineID )
+                        outinst.parameters.push_back(croutineid);
+                    else
+                    {
+                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                             <<" : used invalid \"common routine\" id value as a raw integer.\n"; 
+                        outinst.parameters.push_back( ToWord(param.as_int()) );
+                    }
+
+                    break;
+                }
                 case eOpParamTypes::Unk_FaceType:
                 {
                     uint16_t faceid = FindFaceIDByName(param.value());
@@ -765,7 +786,7 @@ namespace pmd2
                 case eOpParamTypes::Unk_LivesRef:
                 {
                     uint16_t livesid = 0;
-
+                    //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
                     if( m_version == eGameVersion::EoS )
                         livesid = FindLivesIdByName_EoS(param.value());
                     else
@@ -960,7 +981,7 @@ namespace pmd2
             {
                 HandleParsingError( doc.load_file(file.c_str()), file);
             }
-            catch(const std::exception & e)
+            catch(const std::exception & )
             {
                 throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Pugixml failed loading file!"));
             }
@@ -1175,21 +1196,48 @@ namespace pmd2
         {
             using namespace scriptXML;
             xml_node xcode = parentn.append_child( NODE_Code.c_str() );
+            const bool isUnionall = m_seq.Name() == ScriptPrefix_unionall;
 
             size_t grpcnt = 0;
+            string nameid;
             for( const auto & grp : m_seq.Groups() )
             {
-                WriteCommentNode( xcode, "************************" );
+                WriteCommentNode( xcode, "*******************************************************" );
                 stringstream sstr;
                 sstr << std::right <<std::setw(15) <<std::setfill(' ') <<"Routine #" <<grpcnt;
+                
+                if( isUnionall )
+                {
+                    nameid = std::string();
+                    if( m_version == eGameVersion::EoS )
+                    {
+                        const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(grpcnt);
+                        if(pinf)
+                        {
+                            nameid = pinf->name;
+                            sstr<<" - " <<nameid;
+                        }
+                    }
+                    else
+                    {
+                        //! FIXME
+                        assert(false);
+                    }
+                }
+                
                 WriteCommentNode( xcode, sstr.str() );
-                WriteCommentNode( xcode, "************************" );
+                WriteCommentNode( xcode, "*******************************************************" );
                 xml_node xgroup;
                 if( grp.IsAliasOfPrevGroup() )
                     xgroup = xcode.append_child( NODE_RoutineAlias.c_str() );
                 else
                     xgroup = xcode.append_child( NODE_Group.c_str() );
-                AppendAttribute( xgroup, ATTR_GroupID,     grpcnt );
+
+                if( isUnionall && !nameid.empty() )
+                    AppendAttribute( xgroup, ATTR_GroupID, nameid );
+                else
+                    AppendAttribute( xgroup, ATTR_GroupID, grpcnt );
+
                 AppendAttribute( xgroup, ATTR_GroupType,   grp.type );
                 AppendAttribute( xgroup, ATTR_GroupParam2, grp.unk2 );
 
@@ -1446,7 +1494,16 @@ namespace pmd2
                     case eOpParamTypes::Unk_CRoutineId:
                     {
                         //! #TODO: Handle common references differently! So we have an actual marker for them.
-                        AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
+                        if( m_version == eGameVersion::EoS )
+                        {
+                            const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(pval);
+                            if(pinf)
+                                AppendAttribute( instn, deststr.str(), pinf->name );
+                            else
+                                AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
+                        }
+                        else
+                            assert(false); //! #TODO: DO SOMETHING ABOUT THIS
                         return;
                     }
                     case eOpParamTypes::InstructionOffset: //This is actually converted to a label id by the program
@@ -1753,7 +1810,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             if( tempregion != reg || tempversion != ver )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
-        catch(const std::exception & e)
+        catch(const std::exception &)
         {
             throw_with_nested(std::runtime_error("RunLevelXMLImport(): Error in file " + fname));
         }
@@ -1772,7 +1829,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         {
             GameScriptsXMLWriter(entry(), reg, ver).Write(dir, autoescape);
         }
-        catch(const std::exception & e)
+        catch(const std::exception & )
         {
             throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error in file " + dir));
         }
@@ -2028,7 +2085,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         {
             HandleParsingError( doc.load_file(srcfile.c_str()), srcfile);
         }
-        catch(const std::exception & e)
+        catch(const std::exception & )
         {
             throw_with_nested(std::runtime_error("XMLToScript() : Pugixml failed loading file!"));
         }
