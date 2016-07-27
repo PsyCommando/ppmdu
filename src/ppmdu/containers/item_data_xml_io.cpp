@@ -64,7 +64,8 @@ namespace pmd2 { namespace stats
         const string CMT_EoTD         = "Pokemon Mystery Dungeon: Explorers of Time/Darkness item data";
         const string CMT_EoTDData     = "Data exclusive to Pokemon Mystery Dungeon: Explorers of Time/Darkness items";
 
-        const string ATTR_GameVer     = "GameVersion";
+        const string ATTR_GameVer     = CommonXMLGameVersionAttrStr;
+        //! #TODO: Remove these and use the common system for fetching the version name strings!!
         const string ATTR_GameVerEoS  = "EoS";
         const string ATTR_GameVerEoTD = "EoTD";
     };

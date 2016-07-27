@@ -1,5 +1,7 @@
 #include "pmd2_scripts_opcodes.hpp"
 #include <sstream>
+#include <iostream>
+#include <iomanip>
 using namespace std;
 
 namespace pmd2
@@ -357,7 +359,7 @@ namespace pmd2
     { {
 //      { Opname,                   nbparams,  unk1, unk2, unk3 }
         { "Null",                                   0, -1, 0, 0, eCommandCat::Null          },
-        { "back_ChangeGround",                      1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "back_ChangeGround",                      1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "back_SetBackEffect",                     1, -1, 0, 0, eCommandCat::SingleOp      },
         { "back_SetBackScrollOffset",               2, -1, 0, 0, eCommandCat::SingleOp      },
         { "back_SetBackScrollSpeed",                2, -1, 0, 0, eCommandCat::SingleOp      },
@@ -365,7 +367,7 @@ namespace pmd2
         { "back_SetBanner2",                        6,  5, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY},  {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::String} } },
         { "back_SetEffect",                         2, -1, 0, 0, eCommandCat::SingleOp      },
         { "back_SetDungeonBanner",                  2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "back_SetGround",                         1, -1, 0, 0, eCommandCat::SingleOp,         /*{ {eOpParamTypes::Unk_LevelId} }*/ },
+        { "back_SetGround",                         1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "back_SetSpecialEpisodeBanner",           2,  1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::String} } },
         { "back_SetSpecialEpisodeBanner2",          2,  1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::String} } },
         { "back_SetSpecialEpisodeBanner3",          2,  1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::String} } },
@@ -379,7 +381,7 @@ namespace pmd2
         { "back2_SetBackScrollSpeed",               2, -1, 0, 0, eCommandCat::SingleOp      },
         { "back2_SetData",                          2, -1, 0, 0, eCommandCat::SingleOp      },
         { "back2_SetEffect",                        2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "back2_SetGround",                        1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "back2_SetGround",                        1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "back2_SetMode",                          1, -1, 0, 0, eCommandCat::SingleOp      },
         { "back2_SetSpecialActing",                 3, -1, 0, 0, eCommandCat::SingleOp      },
         { "back2_SetWeather",                       1, -1, 0, 0, eCommandCat::SingleOp      },
@@ -498,7 +500,7 @@ namespace pmd2
         { "Lock",                                   1, -1, 0, 0, eCommandCat::Lock          },
         { "main_EnterAdventure",                    2, -1, 0, 0, eCommandCat::EnterAdventure},
         { "main_EnterDungeon",                      2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "main_EnterGround",                       2, -1, 0, 0, eCommandCat::SingleOp      },
+        { "main_EnterGround",                       2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "main_EnterGroundMulti",                  3, -1, 0, 0, eCommandCat::SingleOp      },
         { "main_EnterRescueUser",                   1, -1, 0, 0, eCommandCat::OpWithReturnVal},
         { "main_EnterTraining",                     2, -1, 0, 0, eCommandCat::OpWithReturnVal},
@@ -531,44 +533,44 @@ namespace pmd2
         { "message_SwitchMonologue",                1, -1, 0, 0, eCommandCat::Switch,           { {eOpParamTypes::Unk_ScriptVariable} } },
         { "message_SwitchTalk",                     1, -1, 0, 0, eCommandCat::Switch,           { {eOpParamTypes::Unk_ScriptVariable} } },
         { "message_Talk",                           1,  0, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
-        { "Move2Position",                          3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Move2Position",                          3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Move2PositionLives",                     2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Move2PositionMark",                     -1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Move2PositionMark",                     -1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Move2PositionMark",                      5, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Move2PositionOffset",                   -1, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "Move2PositionOffset",                    3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Move2PositionOffset",                    3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } }, //The first value is probably a position marker ID!
         { "Move2PositionOffsetRandom",              3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Move3Position",                          3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Move3Position",                          3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Move3PositionLives",                     2, -1, 0, 0, eCommandCat::SingleOp      },
         { "Move3PositionMark",                     -1, -1, 0, 0, eCommandCat::SingleOp      },
         { "Move3PositionMark",                      5, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Move3PositionOffset",                   -1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Move3PositionOffset",                    3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Move3PositionOffset",                   -1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "Move3PositionOffset",                    3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Move3PositionOffsetRandom",              3, -1, 0, 0, eCommandCat::SingleOp      },
         { "MoveDirection",                          3, -1, 0, 0, eCommandCat::SingleOp      },
         { "MoveHeight",                             2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "MovePosition",                           3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "MovePosition",                           3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "MovePositionLives",                      2, -1, 0, 0, eCommandCat::SingleOp      },
         { "MovePositionLivesTime",                  3, -1, 0, 0, eCommandCat::SingleOp      },
         { "MovePositionMark",                      -1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "MovePositionMark",                       5, -1, 0, 0, eCommandCat::EntAttribute  },
         { "MovePositionMarkTime",                   6, -1, 0, 0, eCommandCat::SingleOp      },
         { "MovePositionOffset",                    -1, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "MovePositionOffset",                     3, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "MovePositionOffset",                     3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } }, //The first value is probably a position marker ID!
         { "MoveSpecial",                            3, -1, 0, 0, eCommandCat::SingleOp      },
         { "MoveTurn",                               3, -1, 0, 0, eCommandCat::SingleOp      },
         { "object",                                 1, -1, 0, 0, eCommandCat::EntityAccessor,   { {eOpParamTypes::Unk_ObjectRef}, } },
         { "PauseEffect",                            1, -1, 0, 0, eCommandCat::SingleOp      },
         { "performer",                              1, -1, 0, 0, eCommandCat::EntityAccessor,   { {eOpParamTypes::Unk_PerformerRef} } },
         { "ProcessSpecial",                         3, -1, 0, 0, eCommandCat::ProcSpec,         { {eOpParamTypes::Unk_ProcSpec}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder} } },
-        { "PursueTurnLives",                        4, -1, 0, 0, eCommandCat::SingleOp      },
-        { "PursueTurnLives2",                       4, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResetAttribute",                         1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResetFunctionAttribute",                 1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResetHitAttribute",                      1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResetOutputAttribute",                   1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResetReplyAttribute",                    1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "ResumeEffect",                           1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "PursueTurnLives",                        4, -1, 0, 0, eCommandCat::EntAttribute, },  //lives
+        { "PursueTurnLives2",                       4, -1, 0, 0, eCommandCat::EntAttribute, },  //lives
+        { "ResetAttribute",                         1, -1, 0, 0, eCommandCat::SingleOp      },  //unused!!
+        { "ResetFunctionAttribute",                 1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "ResetHitAttribute",                      1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "ResetOutputAttribute",                   1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "ResetReplyAttribute",                    1, -1, 0, 0, eCommandCat::SingleOp      },  //unused!!
+        { "ResumeEffect",                           1, -1, 0, 0, eCommandCat::EntAttribute  },  //performer
         { "Return",                                 0, -1, 0, 0, eCommandCat::Return        },
         { "SavePosition",                           1, -1, 0, 0, eCommandCat::SingleOp      },
         { "screen_FadeChange",                      4, -1, 0, 0, eCommandCat::SingleOp      },
@@ -615,9 +617,9 @@ namespace pmd2
         { "SetDirection",                           1, -1, 0, 0, eCommandCat::SingleOp      },
         { "SetDirectionLives",                      2, -1, 0, 0, eCommandCat::SingleOp      },
         { "SetEffect",                              2, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "SetFunctionAttribute",                   1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "SetFunctionAttribute",                   1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SetHeight",                              1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "SetHitAttribute",                        1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "SetHitAttribute",                        1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SetMoveRange",                           6, -1, 0, 0, eCommandCat::SingleOp      },
         { "SetOutputAttribute",                     1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SetPosition",                            2, -1, 0, 0, eCommandCat::SingleOp      },
@@ -646,8 +648,8 @@ namespace pmd2
         { "SlidePosition",                          3, -1, 0, 0, eCommandCat::SingleOp      },
         { "SlidePositionLives",                     2, -1, 0, 0, eCommandCat::SingleOp      },
         { "SlidePositionLivesTime",                 3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "SlidePositionMark",                     -1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "SlidePositionMark",                      5, -1, 0, 0, eCommandCat::SingleOp      },
+        { "SlidePositionMark",                     -1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "SlidePositionMark",                      5, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SlidePositionMarkTime",                  6, -1, 0, 0, eCommandCat::SingleOp      },
         { "SlidePositionOffset",                   -1, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SlidePositionOffset",                    3, -1, 0, 0, eCommandCat::EntAttribute  },
@@ -666,12 +668,12 @@ namespace pmd2
         { "supervision_ExecuteStationSub",          3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant}, {eOpParamTypes::UNK_Placeholder} } },
         { "supervision_ExecuteExport",              1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Constant} } },  
         { "supervision_ExecuteExportSub",           1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Constant} } },   
-        { "supervision_LoadStation",                2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::Constant} } },   
+        { "supervision_LoadStation",                2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant} } },   
         { "supervision_Remove",                     1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_RemoveActing",               1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_RemoveCommon",               1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_SpecialActing",              3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "supervision_Station",                    1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "supervision_Station",                    1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "supervision_StationCommon",              1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_Suspend",                    1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision2_SpecialActing",             3, -1, 0, 0, eCommandCat::SingleOp      },
@@ -690,14 +692,14 @@ namespace pmd2
         { "SwitchVariable",                         3, -1, 0, 0, eCommandCat::Switch        },
         { "Turn2Direction",                         3, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Turn2DirectionLives",                    3, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "Turn2DirectionLives2",                   3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Turn2DirectionLives2",                   3, -1, 0, 0, eCommandCat::SingleOp      }, //Doesn't follow an accessor
         { "Turn2DirectionMark",                     8, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "Turn2DirectionTurn",                     3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Turn3",                                  4, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Turn2DirectionTurn",                     3, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "Turn3",                                  4, -1, 0, 0, eCommandCat::EntAttribute, }, //lives
         { "TurnDirection",                          1, -1, 0, 0, eCommandCat::SingleOp      },
         { "TurnDirectionLives",                     2, -1, 0, 0, eCommandCat::EntAttribute  },
-        { "TurnDirectionLives2",                    2, -1, 0, 0, eCommandCat::SingleOp      },
-        { "TurnDirectionMark",                      5, -1, 0, 0, eCommandCat::SingleOp      },
+        { "TurnDirectionLives2",                    2, -1, 0, 0, eCommandCat::SingleOp      }, //unused
+        { "TurnDirectionMark",                      5, -1, 0, 0, eCommandCat::SingleOp      }, //unused
         { "Unlock",                                 1, -1, 0, 0, eCommandCat::Unlock        },
         { "Wait",                                   1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Duration}, } },
         { "WaitAnimation",                          0, -1, 0, 0, eCommandCat::EntAttribute  },
@@ -1750,6 +1752,9 @@ namespace pmd2
 
     uint16_t FindLevelEntryInfo_EoS( const std::string & name )
     {
+        if( name == NullLevelId )
+            return 0x7FFFu;
+
         for( size_t i = 0; i < LevelList_EoS.size(); ++i )
         {
             const LevelEntryInfo_EoS & cur = LevelList_EoS[i];
@@ -1761,6 +1766,9 @@ namespace pmd2
 
     const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id )
     {
+        if( id >= 0x7FFFu )
+            return &NULL_Level;
+
         if( id < LevelList_EoS.size() )
             return &(LevelList_EoS[id]);
         else
@@ -1780,12 +1788,17 @@ namespace pmd2
 
     const std::string * LevelEntryInfoWrapper::GetLevelInfoEntryName(uint16_t id)const
     {
-        if( id >= GetNbLevelInfoEntries() )
-            return nullptr;
-
         if(m_ver == eGameVersion::EoS)
         {
-            return &(LevelList_EoS[id].name);
+            const LevelEntryInfo_EoS * pent = GetLevelEntryInfo_EoS(id);
+            if(pent)
+                return &(pent->name);
+            else
+            {
+                clog<<"LevelEntryInfoWrapper::GetLevelInfoEntryName(): Non-existant level id " 
+                    <<hex <<uppercase <<id <<dec <<nouppercase <<" !\n";
+                assert(false);
+            }
         }
         else
         {
@@ -1796,13 +1809,8 @@ namespace pmd2
 
     LevelEntryInfoWrap LevelEntryInfoWrapper::GetLevelInfoEntry(uint16_t id)const
     {
-        if( id >= GetNbLevelInfoEntries() )
-            return LevelEntryInfoWrap();
-
         if(m_ver == eGameVersion::EoS)
-        {
-            return LevelList_EoS[id];
-        }
+            return GetLevelEntryInfo_EoS(id);
         else
         {
             assert(false); //! TODO: implement me?

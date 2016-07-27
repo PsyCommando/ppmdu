@@ -20,6 +20,112 @@ Description: Contains data on script opcodes.
 
 namespace pmd2
 {
+//==========================================================================================================
+//  14b signed integer support
+//==========================================================================================================
+    class int14_t
+    {
+    public:
+        // --- Construction ---
+        inline int14_t():val(0){}
+
+        inline int14_t(const int14_t & cp)
+        {this->operator=(cp);}
+
+        inline int14_t & operator=(const int14_t & cp)
+        {val = cp.val;}
+
+        //
+        inline explicit int14_t(uint16_t otherval)
+        {this->operator=(otherval);}
+
+        inline explicit int14_t(int otherval)
+        {this->operator=(otherval);}
+
+        inline int14_t(unsigned int otherval)
+        {this->operator=(otherval);}
+
+        inline int14_t & operator=(uint16_t otherval)
+        {val = Convert16bTo14b(otherval);}
+
+        inline int14_t & operator=(int otherval)
+        {val = Convert16bTo14b(static_cast<unsigned int>(otherval));}
+
+        inline int14_t & operator=(unsigned int otherval)
+        {val = Convert16bTo14b(static_cast<unsigned int>(otherval));}
+
+        // --- Operators ---
+
+        //Logicals
+        inline bool operator! ()const                      { return !val; }
+        inline bool operator==(const int14_t & other)const { return val == other.val; }
+        inline bool operator!=(const int14_t & other)const { return !operator==(other); }
+        inline bool operator< (const int14_t & other)const { return val < other.val; }
+        inline bool operator> (const int14_t & other)const { return val > other.val; }
+        inline bool operator<=(const int14_t & other)const { return !operator>(other); }
+        inline bool operator>=(const int14_t & other)const { return !operator<(other); }
+
+        //Bitwises
+        inline int14_t operator|(const int14_t & other)const { return (val | other.val); }
+        inline int14_t operator&(const int14_t & other)const { return (val & other.val); }
+        inline int14_t operator^(const int14_t & other)const { return (val ^ other.val); }
+        inline int14_t operator~()const                      { return (~val) & Mask14b; }
+
+        inline int14_t & operator|=(const int14_t & other) { return ((*this) = operator|(other)); }
+        inline int14_t & operator&=(const int14_t & other) { return ((*this) = operator&(other)); }
+        inline int14_t & operator^=(const int14_t & other) { return ((*this) = operator^(other)); }
+
+        inline int14_t operator>>(unsigned int shiftamt)const { return (val >> shiftamt) & Mask14b; }
+        inline int14_t operator<<(unsigned int shiftamt)const { return (val << shiftamt) & Mask14b; }
+        inline int14_t & operator>>=(unsigned int shiftamt) {return ((*this) = operator>>(shiftamt) );}
+        inline int14_t & operator<<=(unsigned int shiftamt) {return ((*this) = operator<<(shiftamt) );}
+
+        //Arithmetics
+        inline int14_t operator+(const int14_t & other)const {return (val + other.val) & Mask14b;}
+        inline int14_t operator-(const int14_t & other)const {return (val - other.val) & Mask14b;}
+        inline int14_t operator*(const int14_t & other)const {return (val * other.val) & Mask14b;}
+        inline int14_t operator/(const int14_t & other)const {return (val / other.val) & Mask14b;}
+        inline int14_t operator%(const int14_t & other)const {return (val % other.val) & Mask14b;}
+
+        inline int14_t & operator+=(const int14_t & other) {return ((*this) = operator+(other));}
+        inline int14_t & operator-=(const int14_t & other) {return ((*this) = operator-(other));}
+        inline int14_t & operator*=(const int14_t & other) {return ((*this) = operator*(other));}
+        inline int14_t & operator/=(const int14_t & other) {return ((*this) = operator/(other));}
+        inline int14_t & operator%=(const int14_t & other) {return ((*this) = operator%(other));}
+
+        inline int14_t & operator++()    {return this->operator+=(1);}
+        inline int14_t   operator++(int) { int14_t tmp(*this); operator++(); return tmp;} //post increment
+        inline int14_t & operator--()    {return this->operator-=(1);}
+        inline int14_t   operator--(int) { int14_t tmp(*this); operator++(); return tmp;} //post decrement
+
+        // --- Cast ---
+        inline operator uint16_t()const {return Convert14bTo16b(val);}
+        inline operator int16_t ()const {return Convert14bTo16b(val);}
+
+        // --- Conversion ---
+        static inline int16_t Convert14bTo16b(uint16_t value)
+        {
+            return (value >= 0x4000u)? (value | 0xFFFF8000u) : (value & 0x3FFFu);
+        }
+
+        //!#TODO: Double check this!!
+        static inline uint16_t Convert16bTo14b(uint16_t value)
+        {
+            if(value == 0)
+                return 0;
+            else if( static_cast<int16_t>(value) < 0)
+                return (value & 0x3FFFu) | 0x4000u;     //If the value was negative, set the negative bit
+            return value & 0x3FFFu;
+        }
+
+    private:
+        uint16_t val;
+        static const uint16_t Mask14b = 0x7FFFu;
+    };
+
+//==========================================================================================================
+// OpCodes
+//==========================================================================================================
     /*
         eOpCodeVersion
             The version of the script/opcodes to handle. 
@@ -895,7 +1001,7 @@ namespace pmd2
         "commonroutineid",         //An id to an instruction group in unionall.ssb
         "localroutineid",          //An id to a local instruction group
         "animid",
-        "mode",                     //
+        "facemode",                     //
         "levelid",                  //
 
         "Unk_EncInt",
@@ -942,6 +1048,9 @@ namespace pmd2
         int16_t unk4;
     };
 
+    const std::string               NullLevelId = "NULL"; //For 0x7FFF values (-1)
+    static const LevelEntryInfo_EoS NULL_Level{NullLevelId, -1, -1, -1, -1};
+
     uint16_t                   FindLevelEntryInfo_EoS( const std::string & name );
     const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id );
 
@@ -971,6 +1080,22 @@ namespace pmd2
         {
             name  = cp.name;
             mapid = cp.mapid;
+            return *this;
+        }
+
+        LevelEntryInfoWrap( const LevelEntryInfo_EoS * cp ) { this->operator=(cp); }
+        LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS * cp )
+        {
+            if(cp)
+            {
+                name  = cp->name;
+                mapid = cp->mapid;
+            }
+            else
+            {
+                name  = std::string();
+                mapid = -1;
+            }
             return *this;
         }
 
@@ -1112,7 +1237,7 @@ namespace pmd2
 //==========================================================================================================
 //  Faces
 //==========================================================================================================
-    const std::array<std::string, 32> FaceNames
+    const std::array<std::string, 20> FaceNames
     {{
         "NORMAL",
         "HAPPY",
@@ -1134,18 +1259,6 @@ namespace pmd2
         "ACTION2",
         "ACTION3",
         "ACTION4",
-        "ACTION5",
-        "ACTION6",
-        "ACTION7",
-        "ACTION8",
-        "ACTION9",
-        "ACTION10",
-        "ACTION11",
-        "ACTION12",
-        "ACTION13",
-        "ACTION14",
-        "ACTION15",
-        "ACTION16",
     }};
 
     const int16_t       InvalidFaceID   = std::numeric_limits<int16_t>::max();

@@ -23,6 +23,25 @@ using namespace pugixmlutils;
 
 namespace pmd2
 {
+
+
+    inline uint16_t Convert14bTo16b(uint16_t val)
+    {
+        return (val & 0x4000u)? (val | 0xFFFF8000u) : (val & 0x3FFFu);
+    }
+
+    //!#TODO: Double check this!!
+    inline uint16_t Convert16bTo14b(uint16_t val)
+    {
+        if(val == 0)
+            return 0;
+        else if( static_cast<int16_t>(val) < 0)
+            return (val & 0x3FFFu) | 0x4000u;     //If the value was negative, set the negative bit
+        else
+            return val & 0x3FFFu;
+    }
+
+
     /*
         ToWord
             Checked cast of a 32 bits integer into a 16 bits integer.
@@ -36,7 +55,7 @@ namespace pmd2
 
     inline int16_t ToSWord( long val )
     {
-        if( val <= std::numeric_limits<int16_t>::max() && val >= std::numeric_limits<int16_t>::min() )
+        if( (val & 0xFFFF0000) == 0 )
             return static_cast<int16_t>(val);
         else
             throw std::overflow_error("ToWord(): Value is larger or smaller than a 16bits integer!!");
@@ -53,8 +72,8 @@ namespace pmd2
     {
         const string ROOT_SingleScript  = ScriptXMLRoot_SingleScript; 
         const string ROOT_ScripDir      = ScriptXMLRoot_Level;      
-        const string ATTR_GVersion      = ScriptXMLRoot_AtrGVersion; 
-        const string ATTR_GRegion       = ScriptXMLRoot_AtrGRegion;
+        const string ATTR_GVersion      = CommonXMLGameVersionAttrStr; 
+        const string ATTR_GRegion       = CommonXMLGameRegionAttrStr;
         const string ATTR_DirName       = "eventname"s;           //Event name/filename with no extension
         const string ATTR_Name          = "name"s;
 
@@ -801,7 +820,7 @@ namespace pmd2
                 case eOpParamTypes::CoordinateY:
                 case eOpParamTypes::CoordinateX:
                 {
-                    outinst.parameters.push_back( ToSWord(param.as_int()) );
+                    outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) );
                     break;
                 }
                 default:
@@ -1351,7 +1370,7 @@ namespace pmd2
             {
                 eOpParamTypes ptype      = opinfo.ParamInfo()[cntparam].ptype;
                 size_t        ptypeindex = static_cast<size_t>(ptype);
-                int16_t       pval       = intr.parameters[cntparam];
+                uint16_t      pval       = intr.parameters[cntparam];
                 stringstream  deststr;
                 deststr << *pname;
 
@@ -1372,16 +1391,16 @@ namespace pmd2
                     case eOpParamTypes::CoordinateY:
                     case eOpParamTypes::CoordinateX:
                     {
-                        AppendAttribute( instn, deststr.str(), static_cast<int16_t>(pval) );
+                        int16_t val = static_cast<int16_t>(pval);
+                        assert((val & 0x8000) == 0);
+                        AppendAttribute( instn, deststr.str(), Convert14bTo16b(val) );
                         return;
                     }
                     case eOpParamTypes::Constant:
                     case eOpParamTypes::String:
                     {
-                        if(WriteStringParameter(instn, pval))
-                            return;
-                        else
-                            break;
+                        WriteStringParameter(instn, pval);
+                        return;
                     }
                     case eOpParamTypes::Unk_ScriptVariable:
                     {
@@ -1422,6 +1441,12 @@ namespace pmd2
                             cerr <<"\nNEED TO IMPLEMENT Unk_LivesRef support for EoTD!!!\n";
                             assert(false);
                         }
+                        return;
+                    }
+                    case eOpParamTypes::Unk_CRoutineId:
+                    {
+                        //! #TODO: Handle common references differently! So we have an actual marker for them.
+                        AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         return;
                     }
                     case eOpParamTypes::InstructionOffset: //This is actually converted to a label id by the program
@@ -1465,10 +1490,10 @@ namespace pmd2
                 };
 
             }
-
-            //!#TODO: we could probably make this a bit more sophisticated later on 
+            //When we end up here, we use generic parameter names!! 
+            //! #TODO: Should be phased out once we fully define all parameters!!
             stringstream sstrval;
-            sstrval <<"0x" <<hex <<uppercase <<static_cast<int16_t>(intr.parameters[cntparam]);
+            sstrval <<"0x" <<hex <<uppercase <<intr.parameters[cntparam];
             if( cntparam < ATTR_Params.size() )
             {
                 AppendAttribute( instn, ATTR_Params[cntparam], sstrval.str() );
@@ -1485,10 +1510,9 @@ namespace pmd2
             WriteStringParameter
                 Return whether it was a string to parse or not.
         */
-        bool WriteStringParameter( xml_node & instn, uint16_t pval )
+        void WriteStringParameter( xml_node & instn, uint16_t pval )
         {
             using namespace scriptXML;
-            //const int16_t stroffset = pval - m_seq.ConstTbl().size(); 
             
             //Strings and constants use the same indices. Constants first, then strings 
             if( isConstIdInRange(pval) )
@@ -1497,7 +1521,7 @@ namespace pmd2
                 if( !res.second )
                     cerr << "\nConstant duplicate reference to CID# " <<pval <<", \"" <<m_seq.ConstTbl()[pval] <<"\"!!\n";
                 AppendAttribute( instn, OpParamTypesNames[static_cast<size_t>(eOpParamTypes::Constant)], m_seq.ConstTbl()[pval] );
-                return true;
+                return;
             }
             else if( isStringIdInRange(pval - m_seq.ConstTbl().size()) ) //The string ids in the instructions include the length of the const table if there's one!
             {
@@ -1519,13 +1543,12 @@ namespace pmd2
                 }
                 if(!res.second)
                     cerr <<"\n";
-                return true;
+                return;
             }
             else
             {
                 throw std::runtime_error( "SSBXMLWriter::WriteInstructionParam(): String ID out of range! " + instn.path() );
             }
-            return false;
         }
 
         /*
@@ -1722,12 +1745,18 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 #else
         assert(false);
 #endif
-
-        eGameRegion  tempregion  = eGameRegion::Invalid;
-        eGameVersion tempversion = eGameVersion::Invalid;
-        gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
-        if( tempregion != reg || tempversion != ver )
-            throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+        try
+        {
+            eGameRegion  tempregion  = eGameRegion::Invalid;
+            eGameVersion tempversion = eGameVersion::Invalid;
+            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
+            if( tempregion != reg || tempversion != ver )
+                throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
+        }
+        catch(const std::exception & e)
+        {
+            throw_with_nested(std::runtime_error("RunLevelXMLImport(): Error in file " + fname));
+        }
         ++completed;
         return true;
     }
@@ -1739,7 +1768,14 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
     */
     bool RunLevelXMLExport( const ScrSetLoader & entry, const string & dir, eGameRegion reg, eGameVersion ver, bool autoescape, atomic<uint32_t> & completed )
     {
-        GameScriptsXMLWriter(entry(), reg, ver).Write(dir, autoescape);
+        try
+        {
+            GameScriptsXMLWriter(entry(), reg, ver).Write(dir, autoescape);
+        }
+        catch(const std::exception & e)
+        {
+            throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error in file " + dir));
+        }
         ++completed;
         return true;
     }

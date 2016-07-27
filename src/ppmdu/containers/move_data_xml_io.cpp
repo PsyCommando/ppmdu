@@ -29,7 +29,7 @@ namespace pmd2 { namespace stats
     {
 
         const string ROOT_Move    = "Move";
-        const string ATTR_GameVer = "GameVersion";
+        const string ATTR_GameVer = CommonXMLGameVersionAttrStr;
 
         const string NODE_Strings = "Strings";
         const string PROP_Name    = "Name";
@@ -58,6 +58,7 @@ namespace pmd2 { namespace stats
         const string PROP_MoveID  = "MoveID";
         const string PROP_Unk19   = "Unk19";
 
+        //! TODO: Swap those with the new unifed system for getting the game version
         const char * GameVer_EoS  = "EoS";
         const char * GameVer_EoTD = "EoTEoD";
     };

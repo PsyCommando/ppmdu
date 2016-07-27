@@ -19,6 +19,12 @@ namespace pmd2
 //======================================================================================
 //  Constants
 //======================================================================================
+    /*
+        Common XML strings used to name some attributes and nodes throughout the project!
+    */
+    const std::string CommonXMLGameVersionAttrStr = "gameVersion";
+    const std::string CommonXMLGameRegionAttrStr  = "gameRegion";
+
     /*******************************************************************************
         eGameVersion
             Unique IDs for each versions of the PMD2 games.
@@ -141,7 +147,6 @@ namespace pmd2
         FName_TextItaSufx,
         FName_TextSpaSufx,
     }};
-
 
     /*******************************************************************************
         GameLanguagesNames

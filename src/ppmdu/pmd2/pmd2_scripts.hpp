@@ -22,8 +22,6 @@ namespace pmd2
 {
     const std::string ScriptXMLRoot_SingleScript = "SingleScript"; 
     const std::string ScriptXMLRoot_Level        = "Level"; 
-    const std::string ScriptXMLRoot_AtrGVersion  = "gameversion"; 
-    const std::string ScriptXMLRoot_AtrGRegion   = "gameregion";
 
 
 

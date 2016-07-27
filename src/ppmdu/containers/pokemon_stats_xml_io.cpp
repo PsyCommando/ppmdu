@@ -27,7 +27,7 @@ namespace pmd2 {namespace stats
     namespace pkmnXML
     {
         static const string ROOT_Pkmn     = "Pokemon";
-        static const string ATTR_GameVer  = "GameVersion";
+        static const string ATTR_GameVer  = CommonXMLGameVersionAttrStr;
 
         static const string NODE_GenderEnt= "GenderedEntity";
 
@@ -101,7 +101,7 @@ namespace pmd2 {namespace stats
         static const string PROP_Unk30    = "Unk30";
     };
 
-    //#TODO: Constants with the same values are spread out around the code! Do something about that!
+    //! #TODO: Constants with the same values are spread out around the code! Do something about that!
     static const string GameVersion_EoS  = "EoS";
     static const string GameVersion_EoTD = "EoT/D";
 

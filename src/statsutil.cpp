@@ -30,12 +30,22 @@ using namespace ::pmd2;
 
 namespace XMLSniffer
 {
-    inline std::string GetRootNodeFromXML( const std::string & file )
+    struct RootNodeInfo
+    {
+        std::string                                  name;
+        std::unordered_map<std::string, std::string> attributes;
+    };
+
+    inline RootNodeInfo GetRootNodeFromXML( const std::string & file )
     {
         using namespace pugi;
         xml_document doc;
         pugixmlutils::HandleParsingError( doc.load_file(file.c_str()), file );
-        return doc.document_element().name();
+        RootNodeInfo rinf;
+        rinf.name = doc.document_element().name();
+        for( const auto & attr : doc.document_element().attributes() )
+            rinf.attributes.emplace( attr.name(), attr.value() );
+        return std::move(rinf);
     }
 
     inline bool IsXMLSingleScript(const std::string & rootname)
@@ -562,11 +572,34 @@ namespace statsutil
 
     bool CStatsUtil::DetermineXMLOps( const std::string & filepath )
     {
-        string rootnode = XMLSniffer::GetRootNodeFromXML(filepath);
+        XMLSniffer::RootNodeInfo rootnode = XMLSniffer::GetRootNodeFromXML(filepath);
 
-        if( XMLSniffer::IsXMLSingleScript(rootnode) )
+        if( XMLSniffer::IsXMLSingleScript(rootnode.name) )
         {
             m_operationMode = eOpMode::ImportSingleScript;
+
+            if( rootnode.attributes.size() >= 2 )
+            {
+                cout <<"<!>-XML Script file detected!\n";
+                try
+                {
+                    m_version = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
+                    m_region  = pmd2::StrToGameRegion (rootnode.attributes.at(CommonXMLGameRegionAttrStr));
+                }
+                catch(const std::exception&)
+                {
+                    throw_with_nested(std::logic_error("CStatsUtil::DetermineXMLOps(): Couldn't get the game version and or game region values attributes from document root!!"));
+                }
+                cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(m_version) <<"\n"
+                     <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(m_region)  <<"\n";
+
+                if( m_version == eGameVersion::Invalid )
+                    throw std::invalid_argument("CStatsUtil::DetermineXMLOps(): Game version attribute in script's root node is invalid!");
+                if( m_region == eGameRegion::Invalid )
+                    throw std::invalid_argument("CStatsUtil::DetermineXMLOps(): Game region attribute in script's root node is invalid!");
+            }
+            else
+                cerr<<"\n<!>-Couldn't detect script version from root node!\n";
             return true;
         }
         //! #TODO:Check for other kind of xml files we could be given!!
@@ -709,13 +742,17 @@ namespace statsutil
                 {
                     case eOpMode::ExportSingleScript:
                     {
-                        cout<<"Exporting script!\n";
+                        cout<<"================================================\n"
+                            <<"Exporting script...\n"
+                            <<"================================================\n";
                         returnval = DoExportSingleScript();
                         break;
                     }
                     case eOpMode::ImportSingleScript:
                     {
-                        cout<<"Importing script!\n";
+                        cout <<"================================================\n"
+                             <<"Importing script...\n"
+                             <<"================================================\n";
                         returnval = DoImportSingleScript();
                         break;
                     }
@@ -1508,7 +1545,7 @@ int main( int argc, const char * argv[] )
         CStatsUtil & application = CStatsUtil::GetInstance();
         return application.Main(argc,argv);
     }
-    catch( exception & e )
+    catch( const exception & e )
     {
         cout<< "<!>-ERROR:" <<e.what()<<"\n"
             << "If you get this particular error output, it means an exception got through, and the programmer should be notified!\n";

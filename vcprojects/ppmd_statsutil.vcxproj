@@ -325,6 +325,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
     <Xml Include="..\resources\pmd2data.xml">
       <SubType>Designer</SubType>
     </Xml>
+    <Xml Include="..\resources\pmd2scriptdata.xml" />
     <Xml Include="..\resources\Text.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

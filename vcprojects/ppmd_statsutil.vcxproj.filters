@@ -379,5 +379,8 @@
     <Xml Include="..\resources\Text.xml">
       <Filter>Resource Files</Filter>
     </Xml>
+    <Xml Include="..\resources\pmd2scriptdata.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

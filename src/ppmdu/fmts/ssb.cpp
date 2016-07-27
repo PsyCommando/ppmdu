@@ -199,18 +199,18 @@ namespace filetypes
 
 
 //=======================================================================================
-//  ScriptProcessor
+//  ScriptDecompiler
 //=======================================================================================
     /*
-        ScriptProcessor
+        ScriptDecompiler
             Process script data from a SSB file into a more manageable format
             with several meta-instructions.
     */
-    class ScriptProcessor
+    class ScriptDecompiler
     {
     public:
 
-        ScriptProcessor( raw_ssb_content && content, eOpCodeVersion opver, const LanguageFilesDB & langs )
+        ScriptDecompiler( raw_ssb_content && content, eOpCodeVersion opver, const LanguageFilesDB & langs )
             :m_rawdata(std::forward<raw_ssb_content>(content)), 
              m_rawinst(m_rawdata.rawinstructions), 
              m_groups(m_rawdata.rawgroups), 
@@ -269,10 +269,10 @@ namespace filetypes
     private:
 
         //Temporary object, never copied or moved!!
-        ScriptProcessor(ScriptProcessor&&)                  = delete;
-        ScriptProcessor(const ScriptProcessor&)             = delete;
-        ScriptProcessor& operator=(ScriptProcessor&&)       = delete;
-        ScriptProcessor& operator=(const ScriptProcessor&)  = delete;
+        ScriptDecompiler(ScriptDecompiler&&)                  = delete;
+        ScriptDecompiler(const ScriptDecompiler&)             = delete;
+        ScriptDecompiler& operator=(ScriptDecompiler&&)       = delete;
+        ScriptDecompiler& operator=(const ScriptDecompiler&)  = delete;
 
         /*-----------------------------------------------------------------------------
             CurGroup
@@ -284,10 +284,10 @@ namespace filetypes
         }
 
 
-        /*
+        /*-----------------------------------------------------------------------------
             GetNextRealRoutineBeg
                 Returns the next group/routine that's not an alias of the last!
-        */
+        -----------------------------------------------------------------------------*/
         inline uint16_t GetNextRealRoutineBeg( size_t cntgrp, uint16_t curbeg )
         {
             for( ; cntgrp < m_groups.size(); ++cntgrp )
@@ -364,6 +364,9 @@ namespace filetypes
             }
         }
 
+        /*-----------------------------------------------------------------------------
+            ProcessString
+        -----------------------------------------------------------------------------*/
         std::string ProcessString( const std::string & str, eGameLanguages lang, const std::locale & loc = std::locale::classic() )
         {
             return std::move( EscapeUnprintableCharacters(str, lang != eGameLanguages::japanese, m_escapeforxml, loc) );
@@ -434,18 +437,6 @@ namespace filetypes
                 }
             };
         }
-
-        //template<typename _init>
-        //    void HandleProcessSpecial(_init & iti, _init & itend, ScriptInstruction & curinst)
-        //{
-        //    HandleCaseOwningCommand<eInstructionType::MetaProcSpecRet>(iti,itend,curinst);
-        //}
-
-        //template<typename _init>
-        //    inline void HandleSwitchCommand(_init & iti, _init & itend, ScriptInstruction & curinst)
-        //{
-        //    HandleCaseOwningCommand<eInstructionType::MetaSwitch>(iti,itend,curinst);
-        //}
 
         /*-----------------------------------------------------------------------------
             HandleCaseOwningCommand
@@ -522,7 +513,7 @@ namespace filetypes
         }
 
         /*-----------------------------------------------------------------------------
-            HandleAccessor
+            GetInstructionLen
                 Calculate the length of the specified instruction in bytes as if it
                 was stored as raw bytes in the script file.
 
@@ -554,7 +545,10 @@ namespace filetypes
                     ++m_curgroup;
             }
             else if( m_curgroup >= m_grpends.size() )
-                clog <<"ScriptProcessor::UpdateCurrentGroup() : Instruction is out of expected bounds!\n";
+            {
+                clog <<"ScriptDecompiler::UpdateCurrentGroup() : Instruction is out of expected bounds!\n";
+                assert(false);
+            }
         }
 
     private:
@@ -601,7 +595,7 @@ namespace filetypes
         *******************************************************************************/
         inline Script Parse(bool parseforxml = true)
         {
-            return std::move(ScriptProcessor(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml));
+            return std::move(ScriptDecompiler(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml));
         }
 
         /*******************************************************************************
@@ -717,14 +711,15 @@ namespace filetypes
         *******************************************************************************/
         void ParseData( size_t foffset, uint16_t curop )
         {
-            if( utils::LibWide().isLogOn() )
-                clog<<"0x" <<hex <<uppercase <<foffset  <<" - Got data word 0x" <<curop <<" \n" <<nouppercase <<dec;
-
             //The instruction is actually a data word
-            ScriptInstruction inst;
-            inst.type  = eInstructionType::Data;
-            inst.value = curop;
-            m_rawinst.push_back(std::move(inst));
+            //ScriptInstruction inst;
+            //inst.type  = eInstructionType::Data;
+            //inst.value = curop;
+            //m_rawinst.push_back(std::move(inst));
+            stringstream ss;
+            ss << "Unexpected word/invalid instruction ID (0x" 
+               <<hex <<uppercase <<curop <<") at offset 0x"  <<foffset <<dec <<nouppercase <<".";
+            throw std::runtime_error(ss.str());
         }
 
         /*******************************************************************************
@@ -831,9 +826,9 @@ namespace filetypes
 #ifdef _DEBUG
             assert(m_inputsz >= instend);
 #endif
-            initer       itcollect      = std::next( m_beg, instbeg );   //std::advance( itcollect, instbeg );
-            initer       itdatabeg      = std::next( m_beg, m_hdrlen );  //std::advance( itdatabeg, m_hdrlen );
-            initer       itdataend      = std::next( m_beg, instend );   //std::advance( itdataend, instend );
+            initer       itcollect      = std::next( m_beg, instbeg );
+            initer       itdatabeg      = std::next( m_beg, m_hdrlen );
+            initer       itdataend      = std::next( m_beg, instend );
             size_t       instdataoffset = 0; //Offset relative to the beginning of the data
 
             while( itcollect != itdataend )
@@ -1003,23 +998,6 @@ namespace filetypes
             ProcessStringsAndConsts();
             return std::move(m_out);
         }
-
-    private:
-        //inline size_t CalcInstructionLen( const ScriptInstruction & instr )
-        //{
-        //    if( m_opinfo.Info(instr.value).NbParams() == -1 )
-        //        return ScriptWordLen + (instr.parameters.size() * ScriptWordLen) + ScriptWordLen; // -1 instructions have an extra word for the nb of instructions!
-        //    else
-        //        return ScriptWordLen + (instr.parameters.size() * ScriptWordLen);
-        //}
-
-        //size_t CalcInstructionLen_WithSubInst( const ScriptInstruction & instr )
-        //{
-        //    size_t len = m_opinfo.CalcInstructionLen(instr);
-        //    for( const auto & sub : instr.subinst )
-        //        len += CalcInstructionLen_WithSubInst(sub);
-        //    return len;
-        //}
 
     private:
         void ProcessInstructions()
@@ -1198,7 +1176,7 @@ namespace filetypes
         {
             //!MAKE SURE THE SCRIPT CONTAINS WHAT IT SHOULD HERE!!
             m_outf.open(scriptfile, ios::binary | ios::out);
-            if( m_outf.bad() || !m_outf.is_open() )
+            if( !m_outf )
                 throw std::runtime_error("SSBWriterTofile::Write(): Couldn't open file " + scriptfile);
 
             m_hdrlen         = 0;
