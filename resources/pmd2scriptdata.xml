@@ -1577,7 +1577,7 @@
       <!--**********************************************-->
       <!--Face Names-->
       <!--**********************************************-->
-      <!--There are 20 unique faces, and 20 flipped versions of them. The flipped versions have no names or slot in this!-->
+      <!--There are 20 unique faces" and 20 flipped versions of them. The flipped versions have no names or slot in this!-->
       <FaceNames>
         <Face>NORMAL</Face>
         <Face>HAPPY</Face>
@@ -1634,6 +1634,714 @@
         <Mode>Top_LC_FaceOutw</Mode>
         <Mode>Top_RC_FaceOutw</Mode>
       </FacePositionModes>
+    
+      <!--**********************************************-->
+      <!--Common Routine Info(unionall.ssb routine names)-->
+      <!--**********************************************-->
+      <CommonRoutineInfo>
+        <Routine id="0"   unk1=" 4" name="END_TALK"  />
+        <Routine id="1"   unk1=" 4" name="WAIT_START_FUNC"  />
+        <Routine id="2"   unk1=" 4" name="NORMAL_WAIT_END_TALK"  />
+        <Routine id="3"   unk1=" 4" name="LIVES_REPLY_NORMAL"  />
+        <Routine id="4"   unk1=" 4" name="LIVES_REPLY"  />
+        <Routine id="5"   unk1=" 4" name="OBJECT_REPLY_NORMAL"  />
+        <Routine id="6"   unk1=" 4" name="LIVES_ACTING_NORMAL"  />
+        <Routine id="7"   unk1=" 4" name="ENTER_WAIT_FUNC"  />
+        <Routine id="8"   unk1=" 4" name="TALK_UNIT"  />
+        <Routine id="9"   unk1=" 4" name="TALK_ADVENTURE"  />
+        <Routine id="10"  unk1=" 4" name="TALK_ATTENDANT"  />
+        <Routine id="11"  unk1=" 4" name="TALK_PARTNER_MESSAGE"  />
+        <Routine id="12"  unk1=" 5" name="LIVES_MOVE_NORMAL"  />
+        <Routine id="13"  unk1=" 5" name="LIVES_MOVE_CHANGE"  />
+        <Routine id="14"  unk1=" 5" name="LIVES_MOVE_PARTY"  />
+        <Routine id="15"  unk1=" 5" name="OBJECT_MOVE_NORMAL"  />
+        <Routine id="16"  unk1=" 5" name="OBJECT_MOVE_CHANGE"  />
+        <Routine id="17"  unk1=" 5" name="PERFORMER_MOVE_NORMAL"  />
+        <Routine id="18"  unk1=" 5" name="PERFORMER_MOVE_CHANGE"  />
+        <Routine id="19"  unk1=" 5" name="MOVE_INIT"  />
+        <Routine id="20"  unk1=" 5" name="MOVE_PAUSE"  />
+        <Routine id="21"  unk1=" 5" name="MOVE_STAY"  />
+        <Routine id="22"  unk1=" 5" name="MOVE_SLEEP"  />
+        <Routine id="23"  unk1=" 5" name="MOVE_RANDOM"  />
+        <Routine id="24"  unk1=" 5" name="MOVE_TYPE1"  />
+        <Routine id="25"  unk1=" 5" name="MOVE_TYPE2"  />
+        <Routine id="26"  unk1=" 9" name="WAKEUP_FUNC"  />
+        <Routine id="27"  unk1=" 9" name="WAKEUP_FUNC_SERIES"  />
+        <Routine id="28"  unk1=" 9" name="LOOK_AROUND_FUNC"  />
+        <Routine id="29"  unk1=" 9" name="LOOK_AROUND_FUNC_SERIES"  />
+        <Routine id="30"  unk1=" 9" name="LOOK_AROUND_DOWN_FUNC"  />
+        <Routine id="31"  unk1=" 9" name="LOOK_AROUND_DOWN_FUNC_SERIES"  />
+        <Routine id="32"  unk1=" 9" name="LOOK_AROUND_RIGHT_FUNC"  />
+        <Routine id="33"  unk1=" 9" name="LOOK_AROUND_RIGHT_FUNC_SERIES"  />
+        <Routine id="34"  unk1=" 9" name="LOOK_AROUND_LEFT_FUNC"  />
+        <Routine id="35"  unk1=" 9" name="LOOK_AROUND_LEFT_FUNC_SERIES"  />
+        <Routine id="36"  unk1=" 9" name="JUMP_HAPPY_FUNC"  />
+        <Routine id="37"  unk1=" 9" name="JUMP_HAPPY_FUNC_SERIES"  />
+        <Routine id="38"  unk1=" 9" name="JUMP_SURPRISE_FUNC"  />
+        <Routine id="39"  unk1=" 9" name="JUMP_SURPRISE_FUNC_SERIES"  />
+        <Routine id="40"  unk1=" 9" name="JUMP_ANGRY_FUNC"  />
+        <Routine id="41"  unk1=" 9" name="JUMP_ANGRY_FUNC_SERIES"  />
+        <Routine id="42"  unk1=" 9" name="LOOK_AROUND_FAST_FUNC"  />
+        <Routine id="43"  unk1=" 9" name="LOOK_AROUND_FAST_FUNC_SERIES"  />
+        <Routine id="44"  unk1=" 9" name="HEAD_SHAKE_FUNC"  />
+        <Routine id="45"  unk1=" 9" name="HEAD_SHAKE_FUNC_SERIES"  />
+        <Routine id="46"  unk1=" 9" name="EXPLANATION_FUNC"  />
+        <Routine id="47"  unk1=" 9" name="EXPLANATION_FUNC_SERIES"  />
+        <Routine id="48"  unk1=" 8" name="INIT_SLEEP_FUNC"  />
+        <Routine id="49"  unk1=" 8" name="INIT_SLEEP_FUNC_SERIES"  />
+        <Routine id="50"  unk1=" 8" name="INIT_BASE_FUNC"  />
+        <Routine id="51"  unk1=" 8" name="INIT_BASE_FUNC_SERIES"  />
+        <Routine id="52"  unk1=" 7" name="HANYOU_SAVE_FUNC"  />
+        <Routine id="53"  unk1=" 7" name="NORMAL_MESSAGE"  />
+        <Routine id="54"  unk1=" 7" name="NORMAL_EVENT"  />
+        <Routine id="55"  unk1=" 7" name="NORMAL_CAMERA"  />
+        <Routine id="56"  unk1=" 7" name="EVENT_FORMATION"  />
+        <Routine id="57"  unk1=" 7" name="EVENT_EVOLUTION"  />
+        <Routine id="58"  unk1=" 9" name="EFFECT_MOVE_DIVE"  />
+        <Routine id="59"  unk1=" 9" name="EFFECT_MOVE_WAVE"  />
+        <Routine id="60"  unk1=" 7" name="EVENT_DIVIDE"  />
+        <Routine id="61"  unk1=" 7" name="EVENT_DIVIDE_NEXT"  />
+        <Routine id="62"  unk1=" 7" name="EVENT_DIVIDE_INIT_FUNC"  />
+        <Routine id="63"  unk1=" 7" name="EVENT_DIVIDE_NEXT_DAY_FUNC"  />
+        <Routine id="64"  unk1=" 7" name="EVENT_DIVIDE_NEXT_DAY2_FUNC"  />
+        <Routine id="65"  unk1=" 7" name="EVENT_DIVIDE_FIRST"  />
+        <Routine id="66"  unk1=" 7" name="EVENT_DIVIDE_SECOND"  />
+        <Routine id="67"  unk1=" 7" name="EVENT_DIVIDE_AFTER"  />
+        <Routine id="68"  unk1=" 7" name="EVENT_DIVIDE_RESUME"  />
+        <Routine id="69"  unk1=" 7" name="EVENT_DIVIDE_SPECIAL_EPISODE"  />
+        <Routine id="70"  unk1=" 7" name="DEBUG_SCRIPT"  />
+        <Routine id="71"  unk1=" 7" name="DEBUG_SCENE"  />
+        <Routine id="72"  unk1=" 7" name="DEMO_CANCEL"  />
+        <Routine id="73"  unk1=" 7" name="DEBUG_FLAG_SETTING_BIPPA"  />
+        <Routine id="74"  unk1=" 7" name="DEBUG_FLAG_SETTING_PUPURIN"  />
+        <Routine id="75"  unk1=" 7" name="DEBUG_FLAG_SETTING_FUTURE"  />
+        <Routine id="76"  unk1=" 7" name="DEBUG_FLAG_SETTING_CHARMS"  />
+        <Routine id="77"  unk1=" 7" name="DEBUG_FLAG_SETTING_KIMAWARI"  />
+        <Routine id="78"  unk1="10" name="DEMO_01"  />
+        <Routine id="79"  unk1="10" name="DEMO_02"  />
+        <Routine id="80"  unk1="10" name="DEMO_03"  />
+        <Routine id="81"  unk1="10" name="DEMO_04"  />
+        <Routine id="82"  unk1="10" name="DEMO_05"  />
+        <Routine id="83"  unk1="10" name="DEMO_06"  />
+        <Routine id="84"  unk1="10" name="EVENT_M00A_01"  />
+        <Routine id="85"  unk1="10" name="EVENT_HA_YU_KI"  />
+        <Routine id="86"  unk1="10" name="EVENT_HA_YU_KI_DO"  />
+        <Routine id="87"  unk1="10" name="EVENT_HA_YU_SHU"  />
+        <Routine id="88"  unk1="10" name="EVENT_HA_YU_SHU_DO"  />
+        <Routine id="89"  unk1="10" name="EVENT_HA_CHO"  />
+        <Routine id="90"  unk1="10" name="EVENT_HA_CHO_DO"  />
+        <Routine id="91"  unk1="10" name="EVENT_HA_KI"  />
+        <Routine id="92"  unk1="10" name="EVENT_HA_YU_KIX"  />
+        <Routine id="93"  unk1="10" name="EVENT_HA_YU_KI_DOX"  />
+        <Routine id="94"  unk1="10" name="EVENT_HA_YU_SHUX"  />
+        <Routine id="95"  unk1="10" name="EVENT_HA_YU_SHU_DOX"  />
+        <Routine id="96"  unk1="10" name="EVENT_HA_SAME"  />
+        <Routine id="97"  unk1="10" name="HA_MIHARIBAN"  />
+        <Routine id="98"  unk1="10" name="EVENT_HA_SAMEX"  />
+        <Routine id="99"  unk1="10" name="EVENT_M00_01"  />
+        <Routine id="100" unk1="10" name="EVENT_M00_02"  />
+        <Routine id="101" unk1="10" name="EVENT_M00_03"  />
+        <Routine id="102" unk1="10" name="EVENT_M00_04"  />
+        <Routine id="103" unk1="10" name="EVENT_M00_05"  />
+        <Routine id="104" unk1="10" name="EVENT_M00_06"  />
+        <Routine id="105" unk1="10" name="EVENT_M00_07"  />
+        <Routine id="106" unk1="10" name="EVENT_M00_08"  />
+        <Routine id="107" unk1="10" name="EVENT_M00_09"  />
+        <Routine id="108" unk1="10" name="EVENT_M00_12"  />
+        <Routine id="109" unk1="10" name="EVENT_M00_13"  />
+        <Routine id="110" unk1="10" name="EVENT_M00_14"  />
+        <Routine id="111" unk1="10" name="EVENT_M01_01_02"  />
+        <Routine id="112" unk1="10" name="EVENT_M01_03"  />
+        <Routine id="113" unk1="10" name="EVENT_M01_04"  />
+        <Routine id="114" unk1="10" name="EVENT_M01_05"  />
+        <Routine id="115" unk1="10" name="EVENT_M01_06"  />
+        <Routine id="116" unk1="10" name="EVENT_M01_07_08"  />
+        <Routine id="117" unk1="10" name="EVENT_M02_01_02"  />
+        <Routine id="118" unk1="10" name="EVENT_M02_03_04"  />
+        <Routine id="119" unk1="10" name="EVENT_M02_05_07A"  />
+        <Routine id="120" unk1="10" name="EVENT_M02_07B"  />
+        <Routine id="121" unk1="10" name="EVENT_M02_09_10"  />
+        <Routine id="122" unk1="10" name="EVENT_M03_01B"  />
+        <Routine id="123" unk1="10" name="EVENT_M03_02"  />
+        <Routine id="124" unk1="10" name="EVENT_M03_03"  />
+        <Routine id="125" unk1="10" name="EVENT_M03_04"  />
+        <Routine id="126" unk1="10" name="EVENT_M03_05_06"  />
+        <Routine id="127" unk1="10" name="EVENT_M03_07A"  />
+        <Routine id="128" unk1="10" name="EVENT_M03_07B"  />
+        <Routine id="129" unk1="10" name="EVENT_M03_08"  />
+        <Routine id="130" unk1="10" name="EVENT_M03_10_13"  />
+        <Routine id="131" unk1="10" name="EVENT_M04_01"  />
+        <Routine id="132" unk1="10" name="EVENT_M04_02_03"  />
+        <Routine id="133" unk1="10" name="EVENT_M05_01_02"  />
+        <Routine id="134" unk1="10" name="EVENT_M05_03"  />
+        <Routine id="135" unk1="10" name="EVENT_M05_04"  />
+        <Routine id="136" unk1="10" name="EVENT_M05_05"  />
+        <Routine id="137" unk1="10" name="EVENT_M05_06_09"  />
+        <Routine id="138" unk1="10" name="EVENT_M06_01"  />
+        <Routine id="139" unk1="10" name="EVENT_M06_02"  />
+        <Routine id="140" unk1="10" name="EVENT_M06_03"  />
+        <Routine id="141" unk1="10" name="EVENT_M06_04"  />
+        <Routine id="142" unk1="10" name="EVENT_M06_05"  />
+        <Routine id="143" unk1="10" name="EVENT_M07_01_02"  />
+        <Routine id="144" unk1="10" name="EVENT_M07_03"  />
+        <Routine id="145" unk1="10" name="EVENT_M07_04"  />
+        <Routine id="146" unk1="10" name="EVENT_M07_05"  />
+        <Routine id="147" unk1="10" name="EVENT_M07_06"  />
+        <Routine id="148" unk1="10" name="EVENT_M07_07_12"  />
+        <Routine id="149" unk1="10" name="EVENT_M07_13"  />
+        <Routine id="150" unk1="10" name="EVENT_M07_14"  />
+        <Routine id="151" unk1="10" name="EVENT_M08_01_02"  />
+        <Routine id="152" unk1="10" name="EVENT_M08_03"  />
+        <Routine id="153" unk1="10" name="EVENT_M08_04"  />
+        <Routine id="154" unk1="10" name="EVENT_M08_05_06"  />
+        <Routine id="155" unk1="10" name="EVENT_M08_07"  />
+        <Routine id="156" unk1="10" name="EVENT_M08_08"  />
+        <Routine id="157" unk1="10" name="EVENT_M08_09"  />
+        <Routine id="158" unk1="10" name="EVENT_M08_10"  />
+        <Routine id="159" unk1="10" name="EVENT_M08_11"  />
+        <Routine id="160" unk1="10" name="EVENT_M08_12"  />
+        <Routine id="161" unk1="10" name="EVENT_M08_13"  />
+        <Routine id="162" unk1="10" name="EVENT_M09_01"  />
+        <Routine id="163" unk1="10" name="EVENT_M09_02"  />
+        <Routine id="164" unk1="10" name="EVENT_M09_03"  />
+        <Routine id="165" unk1="10" name="EVENT_M09_04"  />
+        <Routine id="166" unk1="10" name="EVENT_M09_05"  />
+        <Routine id="167" unk1="10" name="EVENT_M09_06_07"  />
+        <Routine id="168" unk1="10" name="EVENT_M10_01"  />
+        <Routine id="169" unk1="10" name="EVENT_M10_02"  />
+        <Routine id="170" unk1="10" name="EVENT_M10_03"  />
+        <Routine id="171" unk1="10" name="EVENT_M10_04"  />
+        <Routine id="172" unk1="10" name="EVENT_M10_05"  />
+        <Routine id="173" unk1="10" name="EVENT_M10_06"  />
+        <Routine id="174" unk1="10" name="EVENT_M10_07"  />
+        <Routine id="175" unk1="10" name="EVENT_M10_08"  />
+        <Routine id="176" unk1="10" name="EVENT_M10_09"  />
+        <Routine id="177" unk1="10" name="EVENT_M10_10"  />
+        <Routine id="178" unk1="10" name="EVENT_M10_11_12"  />
+        <Routine id="179" unk1="10" name="EVENT_M11_01"  />
+        <Routine id="180" unk1="10" name="EVENT_M11_02"  />
+        <Routine id="181" unk1="10" name="EVENT_M11_03"  />
+        <Routine id="182" unk1="10" name="EVENT_M11_04"  />
+        <Routine id="183" unk1="10" name="EVENT_M11_05"  />
+        <Routine id="184" unk1="10" name="EVENT_M11_06_07"  />
+        <Routine id="185" unk1="10" name="EVENT_M12_01"  />
+        <Routine id="186" unk1="10" name="EVENT_M12_02"  />
+        <Routine id="187" unk1="10" name="EVENT_M12_03A"  />
+        <Routine id="188" unk1="10" name="EVENT_M12_03B"  />
+        <Routine id="189" unk1="10" name="EVENT_M12_04"  />
+        <Routine id="190" unk1="10" name="EVENT_M12_05"  />
+        <Routine id="191" unk1="10" name="EVENT_M12_06"  />
+        <Routine id="192" unk1="10" name="EVENT_M12_07"  />
+        <Routine id="193" unk1="10" name="EVENT_M12_08"  />
+        <Routine id="194" unk1="10" name="EVENT_M12_09"  />
+        <Routine id="195" unk1="10" name="EVENT_M12_10_12"  />
+        <Routine id="196" unk1="10" name="EVENT_M13_01"  />
+        <Routine id="197" unk1="10" name="EVENT_M13_02"  />
+        <Routine id="198" unk1="10" name="EVENT_M13_03"  />
+        <Routine id="199" unk1="10" name="EVENT_M13_04"  />
+        <Routine id="200" unk1="10" name="EVENT_M13_05A"  />
+        <Routine id="201" unk1="10" name="EVENT_M13_05B"  />
+        <Routine id="202" unk1="10" name="EVENT_M13_06"  />
+        <Routine id="203" unk1="10" name="EVENT_M13_07"  />
+        <Routine id="204" unk1="10" name="EVENT_M13_08"  />
+        <Routine id="205" unk1="10" name="EVENT_M13_09"  />
+        <Routine id="206" unk1="10" name="EVENT_M14_01"  />
+        <Routine id="207" unk1="10" name="EVENT_M14_02A"  />
+        <Routine id="208" unk1="10" name="EVENT_M14_02B"  />
+        <Routine id="209" unk1="10" name="EVENT_M14_03"  />
+        <Routine id="210" unk1="10" name="EVENT_M14_04"  />
+        <Routine id="211" unk1="10" name="EVENT_M14_05"  />
+        <Routine id="212" unk1="10" name="EVENT_M14_06"  />
+        <Routine id="213" unk1="10" name="EVENT_M14_07"  />
+        <Routine id="214" unk1="10" name="EVENT_M14_08_09"  />
+        <Routine id="215" unk1="10" name="EVENT_M15_01"  />
+        <Routine id="216" unk1="10" name="EVENT_M15_02"  />
+        <Routine id="217" unk1="10" name="EVENT_M15_03"  />
+        <Routine id="218" unk1="10" name="EVENT_M15_04"  />
+        <Routine id="219" unk1="10" name="EVENT_M15_05"  />
+        <Routine id="220" unk1="10" name="EVENT_M15_06"  />
+        <Routine id="221" unk1="10" name="EVENT_M15_07"  />
+        <Routine id="222" unk1="10" name="EVENT_M15_08"  />
+        <Routine id="223" unk1="10" name="EVENT_M15_09"  />
+        <Routine id="224" unk1="10" name="EVENT_M15_10_12"  />
+        <Routine id="225" unk1="10" name="EVENT_M16_01"  />
+        <Routine id="226" unk1="10" name="EVENT_M16_02"  />
+        <Routine id="227" unk1="10" name="EVENT_M16_03"  />
+        <Routine id="228" unk1="10" name="EVENT_M16_04"  />
+        <Routine id="229" unk1="10" name="EVENT_M16_05"  />
+        <Routine id="230" unk1="10" name="EVENT_M16_06_07"  />
+        <Routine id="231" unk1="10" name="EVENT_M17_01"  />
+        <Routine id="232" unk1="10" name="EVENT_M17_02"  />
+        <Routine id="233" unk1="10" name="EVENT_M17_03_05"  />
+        <Routine id="234" unk1="10" name="EVENT_M17_06"  />
+        <Routine id="235" unk1="10" name="EVENT_M17_07"  />
+        <Routine id="236" unk1="10" name="EVENT_M18_01"  />
+        <Routine id="237" unk1="10" name="EVENT_M18_02"  />
+        <Routine id="238" unk1="10" name="EVENT_M18_03"  />
+        <Routine id="239" unk1="10" name="EVENT_M18_04_05"  />
+        <Routine id="240" unk1="10" name="EVENT_M18_06"  />
+        <Routine id="241" unk1="10" name="EVENT_M18_07"  />
+        <Routine id="242" unk1="10" name="EVENT_M18_08"  />
+        <Routine id="243" unk1="10" name="EVENT_M18_09"  />
+        <Routine id="244" unk1="10" name="EVENT_M18_10"  />
+        <Routine id="245" unk1="10" name="EVENT_M18_11"  />
+        <Routine id="246" unk1="10" name="EVENT_M18_12"  />
+        <Routine id="247" unk1="10" name="EVENT_M18_13_14"  />
+        <Routine id="248" unk1="10" name="EVENT_M19_01_02"  />
+        <Routine id="249" unk1="10" name="EVENT_M19_03"  />
+        <Routine id="250" unk1="10" name="EVENT_M19_04"  />
+        <Routine id="251" unk1="10" name="EVENT_M19_05"  />
+        <Routine id="252" unk1="10" name="EVENT_M19_06_07"  />
+        <Routine id="253" unk1="10" name="EVENT_M19_08"  />
+        <Routine id="254" unk1="10" name="EVENT_M19_09"  />
+        <Routine id="255" unk1="10" name="EVENT_M19_10"  />
+        <Routine id="256" unk1="10" name="EVENT_M20_01_04"  />
+        <Routine id="257" unk1="10" name="EVENT_M20_05"  />
+        <Routine id="258" unk1="10" name="EVENT_M20_06"  />
+        <Routine id="259" unk1="10" name="EVENT_M20_07_09"  />
+        <Routine id="260" unk1="10" name="EVENT_M21_01_03"  />
+        <Routine id="261" unk1="10" name="EVENT_M21_04"  />
+        <Routine id="262" unk1="10" name="EVENT_M21_05"  />
+        <Routine id="263" unk1="10" name="EVENT_M21_06"  />
+        <Routine id="264" unk1="10" name="EVENT_M22_01_02"  />
+        <Routine id="265" unk1="10" name="EVENT_M22_03"  />
+        <Routine id="266" unk1="10" name="EVENT_M22_04"  />
+        <Routine id="267" unk1="10" name="EVENT_M22_05"  />
+        <Routine id="268" unk1="10" name="EVENT_M22_06"  />
+        <Routine id="269" unk1="10" name="EVENT_M22_07"  />
+        <Routine id="270" unk1="10" name="EVENT_M22_08"  />
+        <Routine id="271" unk1="10" name="EVENT_M22_09_10"  />
+        <Routine id="272" unk1="10" name="EVENT_M22_11"  />
+        <Routine id="273" unk1="10" name="EVENT_M23_01_02"  />
+        <Routine id="274" unk1="10" name="EVENT_M23_03"  />
+        <Routine id="275" unk1="10" name="EVENT_M23_04A"  />
+        <Routine id="276" unk1="10" name="EVENT_M23_04B"  />
+        <Routine id="277" unk1="10" name="EVENT_M23_05"  />
+        <Routine id="278" unk1="10" name="EVENT_M23_06"  />
+        <Routine id="279" unk1="10" name="EVENT_M23_07"  />
+        <Routine id="280" unk1="10" name="EVENT_M23_08"  />
+        <Routine id="281" unk1="10" name="EVENT_M23_09_10"  />
+        <Routine id="282" unk1="10" name="EVENT_M24_01_03"  />
+        <Routine id="283" unk1="10" name="EVENT_M24_04"  />
+        <Routine id="284" unk1="10" name="EVENT_M24_05"  />
+        <Routine id="285" unk1="10" name="EVENT_M24_06"  />
+        <Routine id="286" unk1="10" name="EVENT_M24_07"  />
+        <Routine id="287" unk1="10" name="EVENT_M24_08"  />
+        <Routine id="288" unk1="10" name="EVENT_M24_09"  />
+        <Routine id="289" unk1="10" name="EVENT_M24_10"  />
+        <Routine id="290" unk1="10" name="EVENT_M24_11"  />
+        <Routine id="291" unk1="10" name="EVENT_M25_01_05"  />
+        <Routine id="292" unk1="10" name="EVENT_M25_06"  />
+        <Routine id="293" unk1="10" name="EVENT_M25_07"  />
+        <Routine id="294" unk1="10" name="EVENT_M25_08"  />
+        <Routine id="295" unk1="10" name="EVENT_M25_09"  />
+        <Routine id="296" unk1="10" name="EVENT_M25_10"  />
+        <Routine id="297" unk1="10" name="EVENT_M25_11"  />
+        <Routine id="298" unk1="10" name="EVENT_M25_12"  />
+        <Routine id="299" unk1="10" name="EVENT_M26_01_08"  />
+        <Routine id="300" unk1="10" name="EVENT_S01_01"  />
+        <Routine id="301" unk1="10" name="EVENT_S01_02"  />
+        <Routine id="302" unk1="10" name="EVENT_S01_03"  />
+        <Routine id="303" unk1="10" name="EVENT_S01_04"  />
+        <Routine id="304" unk1="10" name="EVENT_S01_05"  />
+        <Routine id="305" unk1="10" name="EVENT_S01_06"  />
+        <Routine id="306" unk1="10" name="EVENT_S01_07"  />
+        <Routine id="307" unk1="10" name="EVENT_S01_08"  />
+        <Routine id="308" unk1="10" name="EVENT_S01_09_10"  />
+        <Routine id="309" unk1="10" name="EVENT_S01_12"  />
+        <Routine id="310" unk1="10" name="EVENT_S02_01"  />
+        <Routine id="311" unk1="10" name="EVENT_S02_02"  />
+        <Routine id="312" unk1="10" name="EVENT_S02_03"  />
+        <Routine id="313" unk1="10" name="EVENT_S02_04"  />
+        <Routine id="314" unk1="10" name="EVENT_S02_05"  />
+        <Routine id="315" unk1="10" name="EVENT_S02_06"  />
+        <Routine id="316" unk1="10" name="EVENT_S02_07"  />
+        <Routine id="317" unk1="10" name="EVENT_S02_08"  />
+        <Routine id="318" unk1="10" name="EVENT_S02_09"  />
+        <Routine id="319" unk1="10" name="EVENT_S02_10"  />
+        <Routine id="320" unk1="10" name="EVENT_S03_01"  />
+        <Routine id="321" unk1="10" name="EVENT_S03_02"  />
+        <Routine id="322" unk1="10" name="EVENT_S03_03"  />
+        <Routine id="323" unk1="10" name="EVENT_S03_04"  />
+        <Routine id="324" unk1="10" name="EVENT_S03_05"  />
+        <Routine id="325" unk1="10" name="EVENT_S03_06"  />
+        <Routine id="326" unk1="10" name="EVENT_S03_07"  />
+        <Routine id="327" unk1="10" name="EVENT_S03_08"  />
+        <Routine id="328" unk1="10" name="EVENT_S03_09"  />
+        <Routine id="329" unk1="10" name="EVENT_S03_10"  />
+        <Routine id="330" unk1="10" name="EVENT_S03_11"  />
+        <Routine id="331" unk1="10" name="EVENT_S03_12"  />
+        <Routine id="332" unk1="10" name="EVENT_S03_13"  />
+        <Routine id="333" unk1="10" name="EVENT_S03_14"  />
+        <Routine id="334" unk1="10" name="EVENT_S03_15"  />
+        <Routine id="335" unk1="10" name="EVENT_S03_16"  />
+        <Routine id="336" unk1="10" name="EVENT_S03_17_20"  />
+        <Routine id="337" unk1="10" name="EVENT_S03_18"  />
+        <Routine id="338" unk1="10" name="EVENT_S03_19"  />
+        <Routine id="339" unk1="10" name="EVENT_S04_01"  />
+        <Routine id="340" unk1="10" name="EVENT_S04_02"  />
+        <Routine id="341" unk1="10" name="EVENT_S04_03"  />
+        <Routine id="342" unk1="10" name="EVENT_S04_04"  />
+        <Routine id="343" unk1="10" name="EVENT_S04_05"  />
+        <Routine id="344" unk1="10" name="EVENT_S04_06_07"  />
+        <Routine id="345" unk1="10" name="EVENT_S04_08"  />
+        <Routine id="346" unk1="10" name="EVENT_S04_09"  />
+        <Routine id="347" unk1="10" name="EVENT_S04_10"  />
+        <Routine id="348" unk1="10" name="EVENT_S04_11"  />
+        <Routine id="349" unk1="10" name="EVENT_S04_12"  />
+        <Routine id="350" unk1="10" name="EVENT_S04_13"  />
+        <Routine id="351" unk1="10" name="EVENT_S04_14"  />
+        <Routine id="352" unk1="10" name="EVENT_S04_15"  />
+        <Routine id="353" unk1="10" name="EVENT_S04_16"  />
+        <Routine id="354" unk1="10" name="EVENT_S04_17"  />
+        <Routine id="355" unk1="10" name="EVENT_S04_18"  />
+        <Routine id="356" unk1="10" name="EVENT_S04_19"  />
+        <Routine id="357" unk1="10" name="EVENT_S04_20"  />
+        <Routine id="358" unk1="10" name="EVENT_S04_21"  />
+        <Routine id="359" unk1="10" name="EVENT_S04_22"  />
+        <Routine id="360" unk1="10" name="EVENT_S04_23"  />
+        <Routine id="361" unk1="10" name="EVENT_S04_24"  />
+        <Routine id="362" unk1="10" name="EVENT_S11_01"  />
+        <Routine id="363" unk1="10" name="EVENT_S12_01"  />
+        <Routine id="364" unk1="10" name="EVENT_S12_02"  />
+        <Routine id="365" unk1="10" name="EVENT_S12_03"  />
+        <Routine id="366" unk1="10" name="EVENT_S12_04"  />
+        <Routine id="367" unk1="10" name="EVENT_S12_05"  />
+        <Routine id="368" unk1="10" name="EVENT_S12_06"  />
+        <Routine id="369" unk1="10" name="EVENT_S12_07"  />
+        <Routine id="370" unk1="10" name="EVENT_S12_08"  />
+        <Routine id="371" unk1="10" name="EVENT_S12_09"  />
+        <Routine id="372" unk1="10" name="EVENT_S12_10"  />
+        <Routine id="373" unk1="10" name="EVENT_S12_11"  />
+        <Routine id="374" unk1="10" name="EVENT_S12_12"  />
+        <Routine id="375" unk1="10" name="EVENT_S12_13"  />
+        <Routine id="376" unk1="10" name="EVENT_S12_14"  />
+        <Routine id="377" unk1="10" name="EVENT_S12_15"  />
+        <Routine id="378" unk1="10" name="EVENT_S12_16"  />
+        <Routine id="379" unk1="10" name="EVENT_S12_17"  />
+        <Routine id="380" unk1="10" name="EVENT_S12_18"  />
+        <Routine id="381" unk1="10" name="EVENT_S12_19"  />
+        <Routine id="382" unk1="10" name="EVENT_S12_20"  />
+        <Routine id="383" unk1="10" name="EVENT_S12_21"  />
+        <Routine id="384" unk1="10" name="EVENT_S20_01"  />
+        <Routine id="385" unk1="10" name="EVENT_S20_02"  />
+        <Routine id="386" unk1="10" name="EVENT_S20_03"  />
+        <Routine id="387" unk1="10" name="EVENT_S20_04_05"  />
+        <Routine id="388" unk1="10" name="EVENT_S20_06"  />
+        <Routine id="389" unk1="10" name="EVENT_S20_07_08"  />
+        <Routine id="390" unk1="10" name="EVENT_S20_09"  />
+        <Routine id="391" unk1="10" name="EVENT_S20_10"  />
+        <Routine id="392" unk1="10" name="EVENT_S20_11"  />
+        <Routine id="393" unk1="10" name="EVENT_S21_01"  />
+        <Routine id="394" unk1="10" name="EVENT_S21_02"  />
+        <Routine id="395" unk1="10" name="EVENT_S21_03"  />
+        <Routine id="396" unk1="10" name="EVENT_S21_04_06"  />
+        <Routine id="397" unk1="10" name="EVENT_S21_07"  />
+        <Routine id="398" unk1="10" name="EVENT_S21_08"  />
+        <Routine id="399" unk1="10" name="EVENT_S21_09"  />
+        <Routine id="400" unk1="10" name="EVENT_S21_10"  />
+        <Routine id="401" unk1="10" name="EVENT_S21_11"  />
+        <Routine id="402" unk1="10" name="EVENT_S21_12"  />
+        <Routine id="403" unk1="10" name="EVENT_S21_13"  />
+        <Routine id="404" unk1="10" name="EVENT_S22_01_04"  />
+        <Routine id="405" unk1="10" name="EVENT_S22_05"  />
+        <Routine id="406" unk1="10" name="EVENT_S22_06"  />
+        <Routine id="407" unk1="10" name="EVENT_S22_07"  />
+        <Routine id="408" unk1="10" name="EVENT_S22_08"  />
+        <Routine id="409" unk1="10" name="EVENT_S22_09"  />
+        <Routine id="410" unk1="10" name="EVENT_S22_10"  />
+        <Routine id="411" unk1="10" name="EVENT_S22_11"  />
+        <Routine id="412" unk1="10" name="EVENT_S22_12"  />
+        <Routine id="413" unk1="10" name="EVENT_S22_13"  />
+        <Routine id="414" unk1="10" name="EVENT_S22_14_15"  />
+        <Routine id="415" unk1="10" name="EVENT_S23_01"  />
+        <Routine id="416" unk1="10" name="EVENT_S30_01"  />
+        <Routine id="417" unk1="10" name="EVENT_S30_02"  />
+        <Routine id="418" unk1="10" name="EVENT_S30_03"  />
+        <Routine id="419" unk1="10" name="EVENT_S30_04"  />
+        <Routine id="420" unk1="10" name="EVENT_S30_05"  />
+        <Routine id="421" unk1="10" name="EVENT_S30_06"  />
+        <Routine id="422" unk1="10" name="EVENT_S30_07"  />
+        <Routine id="423" unk1="10" name="EVENT_S31_01"  />
+        <Routine id="424" unk1="10" name="EVENT_S31_02"  />
+        <Routine id="425" unk1="10" name="EVENT_S31_03"  />
+        <Routine id="426" unk1="10" name="EVENT_S31_04"  />
+        <Routine id="427" unk1="10" name="EVENT_S31_05"  />
+        <Routine id="428" unk1="10" name="EVENT_S31_06"  />
+        <Routine id="429" unk1="10" name="EVENT_S31_07"  />
+        <Routine id="430" unk1="10" name="EVENT_S31_08"  />
+        <Routine id="431" unk1="10" name="EVENT_S31_09"  />
+        <Routine id="432" unk1="10" name="EVENT_S31_10"  />
+        <Routine id="433" unk1="10" name="EVENT_S31_11"  />
+        <Routine id="434" unk1="10" name="EVENT_S31_12"  />
+        <Routine id="435" unk1="10" name="EVENT_S31_13"  />
+        <Routine id="436" unk1="10" name="EVENT_S31_14"  />
+        <Routine id="437" unk1="10" name="EVENT_S31_15"  />
+        <Routine id="438" unk1="10" name="EVENT_S31_16"  />
+        <Routine id="439" unk1="10" name="EVENT_S31_17"  />
+        <Routine id="440" unk1="10" name="EVENT_S31_18"  />
+        <Routine id="441" unk1="10" name="EVENT_S31_19"  />
+        <Routine id="442" unk1="10" name="EVENT_S31_20"  />
+        <Routine id="443" unk1="10" name="EVENT_S31_21"  />
+        <Routine id="444" unk1="10" name="EVENT_S31_22"  />
+        <Routine id="445" unk1="10" name="EVENT_S31_23"  />
+        <Routine id="446" unk1="10" name="EVENT_S31_24"  />
+        <Routine id="447" unk1="10" name="EVENT_S31_25"  />
+        <Routine id="448" unk1="10" name="EVENT_S31_26"  />
+        <Routine id="449" unk1="10" name="EVENT_S31_27"  />
+        <Routine id="450" unk1="10" name="EVENT_S31_28"  />
+        <Routine id="451" unk1="10" name="EVENT_S31_29"  />
+        <Routine id="452" unk1="10" name="EVENT_S31_30"  />
+        <Routine id="453" unk1="10" name="EVENT_S31_31"  />
+        <Routine id="454" unk1="10" name="EVENT_S31_32"  />
+        <Routine id="455" unk1="10" name="EVENT_S31_33"  />
+        <Routine id="456" unk1="10" name="EVENT_S31_34"  />
+        <Routine id="457" unk1="10" name="EVENT_S31_35"  />
+        <Routine id="458" unk1="10" name="EVENT_S31_36"  />
+        <Routine id="459" unk1="10" name="EVENT_S31_37"  />
+        <Routine id="460" unk1="10" name="EVENT_S31_38"  />
+        <Routine id="461" unk1="10" name="EVENT_S31_39"  />
+        <Routine id="462" unk1="10" name="EVENT_S31_40"  />
+        <Routine id="463" unk1="10" name="EVENT_S32_01"  />
+        <Routine id="464" unk1="10" name="EVENT_S32_02"  />
+        <Routine id="465" unk1="10" name="EVENT_S32_03"  />
+        <Routine id="466" unk1="10" name="EVENT_S32_04"  />
+        <Routine id="467" unk1="10" name="EVENT_N00_01"  />
+        <Routine id="468" unk1="10" name="EVENT_N01_01"  />
+        <Routine id="469" unk1="10" name="EVENT_N01_02"  />
+        <Routine id="470" unk1="10" name="EVENT_N01_03"  />
+        <Routine id="471" unk1="10" name="EVENT_N01_04"  />
+        <Routine id="472" unk1="10" name="EVENT_N01_05_07"  />
+        <Routine id="473" unk1="10" name="EVENT_N01_08"  />
+        <Routine id="474" unk1="10" name="EVENT_N01_09"  />
+        <Routine id="475" unk1="10" name="EVENT_N01_10YARARETA"  />
+        <Routine id="476" unk1="10" name="EVENT_N01_10CHOUREI"  />
+        <Routine id="477" unk1="10" name="EVENT_N01_14"  />
+        <Routine id="478" unk1="10" name="EVENT_N01_15"  />
+        <Routine id="479" unk1="10" name="EVENT_N01_16"  />
+        <Routine id="480" unk1="10" name="EVENT_N01_17"  />
+        <Routine id="481" unk1="10" name="EVENT_N01_18"  />
+        <Routine id="482" unk1="10" name="EVENT_N01_19"  />
+        <Routine id="483" unk1="10" name="EVENT_N01_19_2"  />
+        <Routine id="484" unk1="10" name="EVENT_N01_20"  />
+        <Routine id="485" unk1="10" name="EVENT_N01_21"  />
+        <Routine id="486" unk1="10" name="EVENT_N01_22"  />
+        <Routine id="487" unk1="10" name="EVENT_N01_23"  />
+        <Routine id="488" unk1="10" name="EVENT_N01_24"  />
+        <Routine id="489" unk1="10" name="EVENT_N01_25"  />
+        <Routine id="490" unk1="10" name="EVENT_N01_27"  />
+        <Routine id="491" unk1="10" name="EVENT_N01_28"  />
+        <Routine id="492" unk1="10" name="EVENT_N01_30"  />
+        <Routine id="493" unk1="10" name="EVENT_N01_31"  />
+        <Routine id="494" unk1="10" name="EVENT_N02_01"  />
+        <Routine id="495" unk1="10" name="EVENT_N02_02"  />
+        <Routine id="496" unk1="10" name="EVENT_N02_03"  />
+        <Routine id="497" unk1="10" name="EVENT_N02_04"  />
+        <Routine id="498" unk1="10" name="EVENT_N02_05"  />
+        <Routine id="499" unk1="10" name="EVENT_N02_06_07"  />
+        <Routine id="500" unk1="10" name="EVENT_N02_08"  />
+        <Routine id="501" unk1="10" name="EVENT_N02_09_10"  />
+        <Routine id="502" unk1="10" name="EVENT_N03_01"  />
+        <Routine id="503" unk1="10" name="EVENT_N03_02"  />
+        <Routine id="504" unk1="10" name="EVENT_N03_03"  />
+        <Routine id="505" unk1="10" name="EVENT_N03_04"  />
+        <Routine id="506" unk1="10" name="EVENT_N03_05"  />
+        <Routine id="507" unk1="10" name="EVENT_N03_06_07"  />
+        <Routine id="508" unk1="10" name="EVENT_N03_08"  />
+        <Routine id="509" unk1="10" name="EVENT_N03_09"  />
+        <Routine id="510" unk1="10" name="EVENT_N03_10"  />
+        <Routine id="511" unk1="10" name="EVENT_N03_11"  />
+        <Routine id="512" unk1="10" name="EVENT_N03_12"  />
+        <Routine id="513" unk1="10" name="EVENT_N03_13"  />
+        <Routine id="514" unk1="10" name="EVENT_N03_14"  />
+        <Routine id="515" unk1="10" name="EVENT_N03_15_16"  />
+        <Routine id="516" unk1="10" name="EVENT_N03_17"  />
+        <Routine id="517" unk1="10" name="EVENT_N03_18"  />
+        <Routine id="518" unk1="10" name="EVENT_N03_19"  />
+        <Routine id="519" unk1="10" name="EVENT_N04_01"  />
+        <Routine id="520" unk1="10" name="EVENT_N04_02"  />
+        <Routine id="521" unk1="10" name="EVENT_N04_03"  />
+        <Routine id="522" unk1="10" name="EVENT_N04_04"  />
+        <Routine id="523" unk1="10" name="EVENT_N04_05"  />
+        <Routine id="524" unk1="10" name="EVENT_N04_06"  />
+        <Routine id="525" unk1="10" name="EVENT_N04_07"  />
+        <Routine id="526" unk1="10" name="EVENT_N04_08"  />
+        <Routine id="527" unk1="10" name="EVENT_N04_09"  />
+        <Routine id="528" unk1="10" name="EVENT_N04_10"  />
+        <Routine id="529" unk1="10" name="EVENT_N04_11"  />
+        <Routine id="530" unk1="10" name="EVENT_N04_12"  />
+        <Routine id="531" unk1="10" name="EVENT_N04_13"  />
+        <Routine id="532" unk1="10" name="EVENT_N04_14"  />
+        <Routine id="533" unk1="10" name="EVENT_N04_15"  />
+        <Routine id="534" unk1="10" name="EVENT_N04_16"  />
+        <Routine id="535" unk1="10" name="EVENT_N04_17"  />
+        <Routine id="536" unk1="10" name="EVENT_N04_18"  />
+        <Routine id="537" unk1="10" name="EVENT_N04_19"  />
+        <Routine id="538" unk1="10" name="EVENT_N04_20"  />
+        <Routine id="539" unk1="10" name="EVENT_N04_21"  />
+        <Routine id="540" unk1="10" name="EVENT_N04_22"  />
+        <Routine id="541" unk1="10" name="EVENT_N04_23"  />
+        <Routine id="542" unk1="10" name="EVENT_N04_24"  />
+        <Routine id="543" unk1="10" name="EVENT_N04_25"  />
+        <Routine id="544" unk1="10" name="EVENT_N04_26"  />
+        <Routine id="545" unk1="10" name="EVENT_N06_01_02"  />
+        <Routine id="546" unk1="10" name="EVENT_N06_03"  />
+        <Routine id="547" unk1="10" name="EVENT_N06_04"  />
+        <Routine id="548" unk1="10" name="EVENT_N06_05_07"  />
+        <Routine id="549" unk1="10" name="EVENT_N06_08"  />
+        <Routine id="550" unk1="10" name="EVENT_N06_09"  />
+        <Routine id="551" unk1="10" name="EVENT_N06_10"  />
+        <Routine id="552" unk1="10" name="EVENT_N06_11"  />
+        <Routine id="553" unk1="10" name="EVENT_N06_12"  />
+        <Routine id="554" unk1="10" name="EVENT_N06_13"  />
+        <Routine id="555" unk1="10" name="EVENT_N06_14"  />
+        <Routine id="556" unk1="10" name="EVENT_N06_15"  />
+        <Routine id="557" unk1="10" name="EVENT_N06_16"  />
+        <Routine id="558" unk1="10" name="EVENT_N06_17"  />
+        <Routine id="559" unk1="10" name="EVENT_N06_18_19"  />
+        <Routine id="560" unk1="10" name="EVENT_N06_20"  />
+        <Routine id="561" unk1="10" name="EVENT_N06_21"  />
+        <Routine id="562" unk1="10" name="EVENT_N06_22"  />
+        <Routine id="563" unk1="10" name="EVENT_N06_23"  />
+        <Routine id="564" unk1="10" name="EVENT_N06_24"  />
+        <Routine id="565" unk1="10" name="EVENT_N06_25"  />
+        <Routine id="566" unk1="10" name="EVENT_N06_26"  />
+        <Routine id="567" unk1="10" name="EVENT_N06_27"  />
+        <Routine id="568" unk1="10" name="EVENT_N06_28"  />
+        <Routine id="569" unk1="10" name="EVENT_N06_29"  />
+        <Routine id="570" unk1="10" name="EVENT_N06_30"  />
+        <Routine id="571" unk1="10" name="EVENT_N06_31"  />
+        <Routine id="572" unk1="10" name="EVENT_N06_32"  />
+        <Routine id="573" unk1="10" name="EVENT_N06_33"  />
+        <Routine id="574" unk1="10" name="EVENT_N06_34"  />
+        <Routine id="575" unk1="10" name="EVENT_N06_35"  />
+        <Routine id="576" unk1="10" name="EVENT_N06_36"  />
+        <Routine id="577" unk1="10" name="EVENT_N06_37"  />
+        <Routine id="578" unk1="10" name="EVENT_N06_38"  />
+        <Routine id="579" unk1="10" name="EVENT_N06_39"  />
+        <Routine id="580" unk1="10" name="EVENT_N08_01_02"  />
+        <Routine id="581" unk1="10" name="EVENT_N08_03"  />
+        <Routine id="582" unk1="10" name="EVENT_N08_04"  />
+        <Routine id="583" unk1="10" name="EVENT_N08_05"  />
+        <Routine id="584" unk1="10" name="EVENT_N08_06"  />
+        <Routine id="585" unk1="10" name="EVENT_N08_07"  />
+        <Routine id="586" unk1="10" name="EVENT_N08_08"  />
+        <Routine id="587" unk1="10" name="EVENT_N08_09"  />
+        <Routine id="588" unk1="10" name="EVENT_N08_10"  />
+        <Routine id="589" unk1="10" name="EVENT_N08_11"  />
+        <Routine id="590" unk1="10" name="EVENT_N08_12"  />
+        <Routine id="591" unk1="10" name="EVENT_N08_13"  />
+        <Routine id="592" unk1="10" name="EVENT_N08_14"  />
+        <Routine id="593" unk1="10" name="EVENT_N08_15"  />
+        <Routine id="594" unk1="10" name="EVENT_N08_16"  />
+        <Routine id="595" unk1="10" name="EVENT_N08_17"  />
+        <Routine id="596" unk1="10" name="EVENT_N08_18"  />
+        <Routine id="597" unk1="10" name="EVENT_N08_19"  />
+        <Routine id="598" unk1="10" name="EVENT_N08_20"  />
+        <Routine id="599" unk1="10" name="EVENT_N08_21"  />
+        <Routine id="600" unk1="10" name="EVENT_N08_22"  />
+        <Routine id="601" unk1="10" name="EVENT_N08_23"  />
+        <Routine id="602" unk1="10" name="EVENT_N08_24"  />
+        <Routine id="603" unk1="10" name="EVENT_N08_25"  />
+        <Routine id="604" unk1="10" name="EVENT_N08_26"  />
+        <Routine id="605" unk1="10" name="EVENT_N08_27"  />
+        <Routine id="606" unk1="10" name="EVENT_N08_28"  />
+        <Routine id="607" unk1="10" name="EVENT_N08_29"  />
+        <Routine id="608" unk1="10" name="EVENT_N08_30"  />
+        <Routine id="609" unk1="10" name="EVENT_N09_01"  />
+        <Routine id="610" unk1="10" name="EVENT_N09_02"  />
+        <Routine id="611" unk1="10" name="EVENT_N09_03"  />
+        <Routine id="612" unk1="10" name="EVENT_N09_04"  />
+        <Routine id="613" unk1="10" name="EVENT_N09_05"  />
+        <Routine id="614" unk1="10" name="EVENT_N09_06"  />
+        <Routine id="615" unk1="10" name="EVENT_N09_07"  />
+        <Routine id="616" unk1="10" name="EVENT_N09_08"  />
+        <Routine id="617" unk1="10" name="EVENT_N09_09"  />
+        <Routine id="618" unk1="10" name="EVENT_N09_10"  />
+        <Routine id="619" unk1="10" name="EVENT_N09_11"  />
+        <Routine id="620" unk1="10" name="EVENT_N09_12"  />
+        <Routine id="621" unk1="10" name="EVENT_N09_13"  />
+        <Routine id="622" unk1="10" name="EVENT_N09_14"  />
+        <Routine id="623" unk1="10" name="EVENT_N09_15"  />
+        <Routine id="624" unk1="10" name="EVENT_N09_16"  />
+        <Routine id="625" unk1="10" name="EVENT_N09_17"  />
+        <Routine id="626" unk1="10" name="EVENT_N09_18"  />
+        <Routine id="627" unk1="10" name="EVENT_N09_19"  />
+        <Routine id="628" unk1="10" name="EVENT_N09_20"  />
+        <Routine id="629" unk1="10" name="EVENT_N09_21"  />
+        <Routine id="630" unk1="10" name="EVENT_N09_22"  />
+        <Routine id="631" unk1="10" name="EVENT_TG01"  />
+        <Routine id="632" unk1="10" name="EVENT_TG02"  />
+        <Routine id="633" unk1="10" name="EVENT_TG03"  />
+        <Routine id="634" unk1="10" name="EVENT_TG04"  />
+        <Routine id="635" unk1="10" name="EVENT_TG05"  />
+        <Routine id="636" unk1="10" name="EVENT_TG06"  />
+        <Routine id="637" unk1="10" name="EVENT_TG07"  />
+        <Routine id="638" unk1="10" name="EVENT_TG08"  />
+        <Routine id="639" unk1="10" name="EVENT_TG09"  />
+        <Routine id="640" unk1="10" name="EVENT_TG10"  />
+        <Routine id="641" unk1="10" name="EVENT_TG11"  />
+        <Routine id="642" unk1="10" name="EVENT_TG12"  />
+        <Routine id="643" unk1="10" name="EVENT_TG13"  />
+        <Routine id="644" unk1="10" name="EVENT_TG14"  />
+        <Routine id="645" unk1="10" name="EVENT_TG15"  />
+        <Routine id="646" unk1="10" name="EVENT_TG16"  />
+        <Routine id="647" unk1="10" name="EVENT_TG17"  />
+        <Routine id="648" unk1="10" name="EVENT_TG18"  />
+        <Routine id="649" unk1="10" name="EVENT_TG19"  />
+        <Routine id="650" unk1="10" name="EVENT_TG20"  />
+        <Routine id="651" unk1="10" name="EVENT_TG21"  />
+        <Routine id="652" unk1="10" name="EVENT_TG22"  />
+        <Routine id="653" unk1="10" name="EVENT_TG23"  />
+        <Routine id="654" unk1="10" name="EVENT_TG24"  />
+        <Routine id="655" unk1="10" name="EVENT_MEND_01"  />
+        <Routine id="656" unk1="10" name="EVENT_MEND_02"  />
+        <Routine id="657" unk1=" 1" name="COMMON_ENTER"  />
+        <Routine id="658" unk1=" 1" name="DEBUG_ENTER"  />
+        <Routine id="659" unk1=" 2" name="GETOUT_NORMAL"  />
+        <Routine id="660" unk1=" 1" name="GOTO_SCENARIO_DUNGEON"  />
+        <Routine id="661" unk1=" 1" name="GOTO_REQUEST_DUNGEON"  />
+        <Routine id="662" unk1=" 1" name="GOTO_TRAINING_DUNGEON"  />
+        <Routine id="663" unk1=" 1" name="GOTO_RESCUE_DUNGEON"  />
+        <Routine id="664" unk1=" 1" name="GOTO_FREE_DUNGEON"  />
+        <Routine id="665" unk1=" 1" name="GOTO_DEBUG_DUNGEON"  />
+        <Routine id="666" unk1=" 1" name="ENTER_SCENARIO_DUNGEON"  />
+        <Routine id="667" unk1=" 1" name="ENTER_REQUEST_DUNGEON"  />
+        <Routine id="668" unk1=" 1" name="ENTER_TRAINING_DUNGEON"  />
+        <Routine id="669" unk1=" 1" name="ENTER_RESCUE_DUNGEON"  />
+        <Routine id="670" unk1=" 1" name="ENTER_FREE_DUNGEON"  />
+        <Routine id="671" unk1=" 1" name="ENTER_DEBUG_DUNGEON"  />
+        <Routine id="672" unk1=" 2" name="GETOUT_SCENARIO_DUNGEON"  />
+        <Routine id="673" unk1=" 2" name="GETOUT_REQUEST_DUNGEON"  />
+        <Routine id="674" unk1=" 2" name="GETOUT_REQUEST_RETURN"  />
+        <Routine id="675" unk1=" 2" name="GETOUT_REQUEST_CONQUEST"  />
+        <Routine id="676" unk1=" 2" name="GETOUT_TRAINING_DUNGEON"  />
+        <Routine id="677" unk1=" 2" name="GETOUT_DEBUG_DUNGEON"  />
+        <Routine id="678" unk1=" 7" name="MOVE_WORLD_MAP"  />
+        <Routine id="679" unk1=" 7" name="EVENT_CONTROL"  />
+        <Routine id="680" unk1=" 7" name="EVENT_WAKEUP"  />
+        <Routine id="681" unk1=" 7" name="EVENT_STATION"  />
+        <Routine id="682" unk1=" 8" name="STATION_CONTROL"  />
+        <Routine id="683" unk1=" 1" name="ENTER_CONTROL"  />
+        <Routine id="684" unk1=" 7" name="SETUP_DEBUG_CAMERA"  />
+        <Routine id="685" unk1=" 5" name="MOVE_DEBUG_CAMERA"  />
+        <Routine id="686" unk1=" 4" name="MESSAGE_CLOSE_WAIT_FUNC"  />
+        <Routine id="687" unk1=" 7" name="EVENT_END_MAPIN"  />
+        <Routine id="688" unk1=" 7" name="EVENT_END_FREE"  />
+        <Routine id="689" unk1=" 7" name="EVENT_END_MAPIN_AE"  />
+        <Routine id="690" unk1=" 7" name="EVENT_END_FREE_AE"  />
+        <Routine id="691" unk1=" 7" name="BOSS_WIPE_FUNC"  />
+        <Routine id="692" unk1=" 7" name="FADE_OUT_ALL_BEFORE"  />
+        <Routine id="693" unk1=" 7" name="FADE_OUT_ALL_AFTER"  />
+        <Routine id="694" unk1=" 7" name="SUBSCREEN_INIT"  />
+        <Routine id="695" unk1=" 7" name="RESCUE_SET"  />
+        <Routine id="696" unk1=" 7" name="RESCUE_DEBUG"  />
+        <Routine id="697" unk1=" 7" name="SORANOITADAKI_FLAGSET"  />
+        <Routine id="698" unk1="10" name="TITLE_TEST"  />
+        <Routine id="699" unk1="10" name="BUBBLE_TEST"  />
+        <Routine id="700" unk1="10" name="MAP_TEST"  />
+      </CommonRoutineInfo>
+  
     </Game>
   
   </ScriptData>
