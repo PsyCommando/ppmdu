@@ -3,8 +3,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\Util\src;$(SolutionDir)lib\poco\Foundation\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>$(SolutionDir)lib_debug;$(LibraryPath)</LibraryPath>

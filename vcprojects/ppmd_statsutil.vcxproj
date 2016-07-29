@@ -49,13 +49,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\whereami\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SolutionDir)lib\whereami\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\poco\Foundation\include;$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\whereami\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\poco\Foundation\src;$(SolutionDir)lib\poco\Util\src;$(SolutionDir)lib\whereami\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,6 +110,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\lib\whereami\src\whereami.c" />
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\mappa.cpp" />
@@ -202,8 +203,10 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\statsutil.cpp" />
+    <ClCompile Include="..\src\utils\whereami_wrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\whereami\src\whereami.h" />
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp" />
@@ -316,6 +319,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\statsutil.hpp" />
+    <ClInclude Include="..\src\utils\whereami_wrapper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_statsutil.txt" />

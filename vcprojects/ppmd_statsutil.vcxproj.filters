@@ -79,6 +79,9 @@
     <Filter Include="Source Files\ppmdu\file formats\PokemonData">
       <UniqueIdentifier>{9a02523b-6496-4baa-a347-3ccc2e4a5ccd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="whereami">
+      <UniqueIdentifier>{fe38f053-9a5e-4e01-9bb2-8d6281413c75}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -212,6 +215,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\whereami\src\whereami.c">
+      <Filter>whereami</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\whereami_wrapper.cpp">
+      <Filter>whereami</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -364,6 +373,12 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\whereami\src\whereami.h">
+      <Filter>whereami</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\whereami_wrapper.hpp">
+      <Filter>whereami</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
