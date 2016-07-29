@@ -553,11 +553,13 @@ namespace pmd2
 
         inline const std::string & GetScriptDir()const{return m_scriptdir;}
 
+        inline const ConfigLoader & GetConfig()const {return m_gconf;}
+
     private:
         LevelScript LoadScriptSet ( const std::string & setname );
 
         std::string                                  m_scriptdir;
-        LevelScript                                    m_common;                   //Common script set with unionall.ssb, its always loaded
+        LevelScript                                  m_common;                   //Common script set with unionall.ssb, its always loaded
         evindex_t                                    m_setsindex;                //All sets known to exist
         eGameRegion                                  m_scrRegion;
         eGameVersion                                 m_gameVersion;
@@ -565,13 +567,16 @@ namespace pmd2
         std::mutex                                   m_mutex;
         const LanguageFilesDB                      * m_langdat;
         bool                                         m_escapexml;
+        const ConfigLoader                         & m_gconf;
     };
+
 
     /***********************************************************************************************
         ScrSetLoader
             Helper class by the GameScripts class. 
             Used to load known existing directories from the list of indexed directories.
     ***********************************************************************************************/
+    //! #TODO: Is this even necessary??
     class ScrSetLoader
     {
     public:
@@ -612,11 +617,25 @@ namespace pmd2
 //  Import/Export
 //====================================================================================
     //bautoescapexml : if set to true, pugixml will escape any reserved/special characters.
-    void      ScriptSetToXML( const LevelScript   & set,    eGameRegion greg,       eGameVersion gver, bool bautoescapexml, const std::string & destdir );
-    LevelScript XMLToScriptSet( const std::string & srcdir, eGameRegion & out_greg, eGameVersion & out_gver );
+    void      ScriptSetToXML( const LevelScript   & set,  
+                              const ConfigLoader  & gconf, 
+                              bool                  bautoescapexml, 
+                              const std::string   & destdir );
 
-    void ScriptToXML( const Script & scr, eGameRegion greg, eGameVersion gver, bool bautoescapexml, const std::string & destdir );
-    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver );
+    LevelScript XMLToScriptSet( const std::string   & srcdir, 
+                                eGameRegion         & out_greg, 
+                                eGameVersion        & out_gver, 
+                                const ConfigLoader  & gconf );
+
+    void ScriptToXML( const Script        & scr, 
+                      const ConfigLoader  & gconf, 
+                      bool                  bautoescapexml, 
+                      const std::string   & destdir );
+
+    Script XMLToScript( const std::string   & srcfile, 
+                        eGameRegion         & out_greg, 
+                        eGameVersion        & out_gver,
+                        const ConfigLoader  & gconf );
 
 //====================================================================================
 //  Test Meta-Operation and etc..

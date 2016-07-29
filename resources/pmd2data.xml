@@ -297,6 +297,6 @@
   </StringIndexData>
   
   <!--Append any external files to parse here!-->
-  <!--<External filepath="text.xml" />-->
+  <External filepath="pmd2scriptdata.xml" />
 
 </PMD2>

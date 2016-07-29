@@ -473,47 +473,161 @@ namespace pmd2
         binfilesinf_t m_info;
     };
 
-//
-//  CustomFormat
-//
-    /*
-        This is for parsing the content of any custom data formats in the config files.
-    */
-    class FlexibleConfigData
+//========================================================================================
+//  GameScriptData
+//========================================================================================
+
+    /************************************************************************************
+        NamedDataEntry
+            This is meant to be used for lists of data entries that must be looked
+            up by either name or index. It contains an unordered map hashed container
+            with the indices to the strings they correspond to in order to 
+            speed up lookup significantly when parsing.
+    ************************************************************************************/
+    template<class _DataEntryTy>
+        class NamedDataEntry
     {
     public:
-        struct Entry
+        typedef _DataEntryTy dataentry_t;
+
+        /*
+            PushEntriesPairs
+                Adds entries to the end of the current list.
+                The entries are expected to be std::pair<std::string,dataentry_t>
+        */
+        template<typename _infwdit>
+            void PushEntriesPairs( _infwdit itbeg, _infwdit itend )
         {
-            typedef std::unordered_multimap<std::string, std::string> attrs_t;
-            typedef std::unordered_multimap<std::string, Entry>       subentt_t;
-
-            Entry();
-            Entry(attrs_t && attr, subentt_t && sub);
-            Entry(Entry&&) = default;
-            Entry(const Entry&) = default;
-            Entry & operator=(const Entry&) = default;
-            Entry & operator=(Entry&&) = default;
-
-            inline void AddAttribute( std::string && name, std::string && value ) 
-            { 
-                rawattributes.emplace( std::forward<std::string>(name), std::forward<std::string>(value) ); 
+            for( ;itbeg != itend; ++itbeg )
+            {
+                m_datastrlut.emplace(itbeg->first, m_data.size() );
+                m_data.push_back(itbeg->second);
             }
+        }
 
-            inline void AddSubentry( std::string && name, Entry && sub ) 
-            { 
-                subentries.emplace( std::forward<std::string>(name), std::forward<Entry>(sub) ); 
-            }
+        /*
+            FindByName
+                Returns nullptr if entry doesn't exists.
+        */
+        inline const dataentry_t * FindByName( const std::string & name )const
+        {
+            auto itf = m_datastrlut.find(name);
+            if( itf != m_datastrlut.end() )
+                return std::addressof(m_data[itf->second]);
+            else
+                return nullptr;
+        }
 
-            attrs_t     rawattributes;
-            subentt_t   subentries;
-        };
-        typedef Entry data_t;
-        
+        /*
+            FindIndexByName
+                Returns std::numeric_limits<size_t>::max() if entry doesn't exists.
+        */
+        inline const size_t FindIndexByName( const std::string & name )const
+        {
+            auto itf = m_datastrlut.find(name);
+            if( itf != m_datastrlut.end() )
+                return itf->second;
+            else
+                return std::numeric_limits<size_t>::max();
+        }
 
+        /*
+            FindByIndex
+                returns nullptr if entry doesn't exists.
+        */
+        inline const dataentry_t * FindByIndex( size_t idx )const
+        {
+            if( idx < m_data.size() )
+                return std::addressof(m_data[idx]);
+            else
+                return nullptr;
+        }
 
+        inline size_t size()const { return m_data.size(); }
 
     private:
-        data_t m_data;
+        std::unordered_map<std::string, size_t> m_datastrlut;
+        std::vector<dataentry_t>                m_data;
+    };
+
+    /*
+        gamevariable_info
+    */
+    struct gamevariable_info
+    {
+        int16_t type;
+        int16_t unk1;
+        int16_t memoffset;
+        int16_t bitshift;
+        int16_t unk3;
+        int16_t unk4;
+        std::string name;
+    };
+
+    /*
+        livesent_info
+    */
+    struct livesent_info
+    {
+        std::string name;
+        int16_t     type;
+        int16_t     entid;
+        int16_t     unk3;
+        int16_t     unk4;
+    };
+
+    /*
+        level_info
+    */
+    struct level_info
+    {
+        std::string name;
+        int16_t     unk1;
+        int16_t     unk2;
+        int16_t     mapid;
+        int16_t     unk4;
+    };
+
+    /*
+        commonroutine_info
+    */
+    struct commonroutine_info
+    {
+        int16_t     id;
+        int16_t     unk1;
+        std::string name;
+    };
+
+    /************************************************************************************
+        GameScriptData
+            Loader/wrapper for XML script data.
+    ************************************************************************************/
+    class GameScriptData
+    {
+        friend class ConfigXMLParser;
+    public:
+        typedef NamedDataEntry<gamevariable_info>   gvar_t;
+        typedef NamedDataEntry<livesent_info>       livesent_t;
+        typedef NamedDataEntry<level_info>          lvlinf_t;
+        typedef NamedDataEntry<commonroutine_info>  commonroutines_t;
+        typedef NamedDataEntry<std::string>         stringlut_t;
+        
+        inline const gvar_t             & GameVariables()const      {return m_gvars;}
+        inline const gvar_t             & ExGameVariables()const    {return m_gvarsex;}
+        inline const livesent_t         & LivesEnt()const           {return m_livesent;}
+        inline const lvlinf_t           & LevelInfo()const          {return m_levels;}
+        inline const commonroutines_t   & CommonRoutineInfo()const  {return m_commonroutines;}
+        inline const stringlut_t        & FaceNames()const          {return m_facenames;}
+        inline const stringlut_t        & FacePosModes()const       {return m_faceposmodes;}
+
+    private:
+        gvar_t              m_gvars;
+        gvar_t              m_gvarsex; //Extended game vars 0x400 range!
+        livesent_t          m_livesent;
+        lvlinf_t            m_levels;
+        commonroutines_t    m_commonroutines;
+        stringlut_t         m_facenames;
+        stringlut_t         m_faceposmodes;
     };
 
 //========================================================================================
@@ -527,20 +641,21 @@ namespace pmd2
     class ConfigLoader
     {
         friend class ConfigXMLParser;
-        //typedef std::unordered_map<eBinaryLocations,GameBinaryOffsetInfo> bincnt_t;
-        
+
         typedef std::unordered_map<eGameConstants,  std::string> constcnt_t;
     public:
 
         /*
             - arm9off14: The short stored at offset 14 in the ARM9 bin
         */
-        ConfigLoader( uint16_t arm9off14, const std::string & configfile = DefConfigFileName );
+        ConfigLoader( uint16_t arm9off14, const std::string & configfile );
 
         /*
             Allows to get a result from the config file knowing only the region and game version!
         */
-        ConfigLoader( eGameVersion version, eGameRegion region, const std::string & configfile = DefConfigFileName );
+        ConfigLoader( eGameVersion version, eGameRegion region, const std::string & configfile );
+
+        void ReloadConfig();
 
         inline const GameVersionInfo & GetGameVersion         ()const {return m_versioninfo;}
         inline const LanguageFilesDB & GetLanguageFilesDB     ()const {return m_langdb;}
@@ -554,6 +669,8 @@ namespace pmd2
             return std::move(m_binblocks.FindInfoByLocation(loc)); 
         }
 
+        inline const GameScriptData & GetGameScriptData()const {return m_gscriptdata;}
+
     private:
         void Parse(uint16_t arm9off14);
         void Parse(eGameVersion version, eGameRegion region);
@@ -566,6 +683,36 @@ namespace pmd2
         GameConstants       m_constants;
         GameBinariesInfo    m_binblocks;
         LanguageFilesDB     m_langdb;
+        GameScriptData      m_gscriptdata;
+    };
+
+
+//
+//  MainPMD2ConfigWrapper
+//
+    /*
+        MainPMD2ConfigWrapper
+            The main instance of the configuration data for all pmd2 classes.
+            Its a singleton that must be initialised at one point. 
+
+            The GameLoader object does it.
+    */
+    class MainPMD2ConfigWrapper
+    {
+    public:
+        static MainPMD2ConfigWrapper& Instance();     //Gets the instance of the wrapper
+        static ConfigLoader         & CfgInstance();  //Gets the configuration loader object
+
+        void InitConfig( uint16_t arm9off14,   const std::string & configfile );
+        void InitConfig( eGameVersion version, eGameRegion region, const std::string & configfile );
+        inline void ReloadConfig();
+
+        inline ConfigLoader       * GetConfig()      {return m_loaderinstance.get();}
+        inline const ConfigLoader * GetConfig()const {return m_loaderinstance.get();}
+
+    private:
+        std::unique_ptr<ConfigLoader> m_loaderinstance;
+        static MainPMD2ConfigWrapper  s_instance;
     };
 
 };

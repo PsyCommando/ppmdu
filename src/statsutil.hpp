@@ -62,6 +62,9 @@ namespace statsutil
         int  Execute           ();
         int  GatherArgs        ( int argc, const char * argv[] );
 
+
+        void SetupCFGPath(const std::string & cfgrelpath); //Process the path to the CFG/data xml file. Should be run after the command line param were parsed!
+
         //Exec methods
         //int ExportPokeStatsGrowth();
         //int ImportPokeStatsGrowth();
@@ -154,6 +157,8 @@ namespace statsutil
         std::string m_pmd2cfg;        //The path to the configuration file!
         std::string m_flocalestr;     //The forced locale string
         std::string m_romrootdir;     //The extracting rom's root directory
+        std::string m_applicationdir; //Directory where the executable is
+
 
         bool        m_forcedLocale;   //Whether the -locale command line option was used at all.
         bool        m_hndlStrings;    //If we need to handle only a game string related OP, this is true!

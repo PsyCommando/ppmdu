@@ -70,10 +70,32 @@ namespace pmd2
         const string NODE_StrBlks   = "StringBlocks";
         const string NODE_Value     = "Value";
 
+        const string NODE_ScriptDat = "ScriptData";
+        const string NODE_GVarTbl   = "GameVariablesTable";
+        const string NODE_GVarExtTbl= "GameVariablesTableExtended";
+        const string NODE_GVar      = "GameVar";
+
+        const string NODE_LivesTbl  = "LivesEntityTable";
+        const string NODE_Entity    = "Entity";
+
+        const string NODE_LevelList = "LevelList";
+        const string NODE_Level     = "Level";
+
+        const string NODE_FaceNames = "FaceNames";
+        const string NODE_Face      = "Face";
+
+        const string NODE_FacePosMo = "FacePositionModes";
+        const string NODE_Mode      = "Mode";
+
+        const string NODE_CRoutineI = "CommonRoutineInfo";
+        const string NODE_Routine   = "Routine";
+
         const string NODE_ExtFile   = "External";   //For external files to load config from
 
         const string ATTR_ID        = "id";
         const string ATTR_ID2       = "id2";
+        const string ATTR_ID3       = "id3";
+
         const string ATTR_GameCode  = "gamecode";
         const string ATTR_Version   = "version";
         const string ATTR_Version2  = "version2";
@@ -89,6 +111,17 @@ namespace pmd2
         const string ATTR_FName     = "filename";
         const string ATTR_FPath     = "filepath";
         const string ATTR_LoadAddr  = "loadaddress";
+
+        const string ATTR_Type      = "type";
+        const string ATTR_Unk1      = "unk1";
+        const string ATTR_Unk2      = "unk2";
+        const string ATTR_Unk3      = "unk3";
+        const string ATTR_Unk4      = "unk4";
+        const string ATTR_MemOffset = "memoffset";
+        const string ATTR_BitShift  = "bitshift";
+        const string ATTR_EntID     = "entid";
+        const string ATTR_MapID     = "mapid";
+
     };
 
 
@@ -143,12 +176,29 @@ namespace pmd2
 
     private:
 
+        bool MatchesCurrentVersionID( xml_attribute_iterator itatbeg, xml_attribute_iterator itatend )
+        {
+            using namespace ConfigXML;
+            for( ; itatbeg != itatend; ++itatbeg )
+            {
+                if( (itatbeg->name() == ATTR_ID ||
+                    itatbeg->name() == ATTR_ID2 ||
+                    itatbeg->name() == ATTR_ID3) &&
+                    itatbeg->value() == m_curversion.id )
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         inline void ParseAllFields(xml_node & pmd2n)
         {
             using namespace ConfigXML;
             ParseLanguages(pmd2n);
             ParseBinaries (pmd2n);
             ParseConstants(pmd2n);
+            ParseGameScriptData(pmd2n);
 
             for( auto & xternal : pmd2n.children(NODE_ExtFile.c_str()) )
             {
@@ -167,6 +217,7 @@ namespace pmd2
             target.m_binblocks   = std::move(m_bin);
             target.m_constants   = std::move(m_constants); 
             target.m_versioninfo = std::move(m_curversion); //Done in last
+            target.m_gscriptdata = std::move(m_gscriptdata);
         }
 
         bool FindGameVersion( eGameVersion version, eGameRegion region )
@@ -390,6 +441,178 @@ namespace pmd2
             }
         }
 
+
+        void ParseGameScriptData(const xml_node & pmd2n )
+        {
+            using namespace ConfigXML;
+            xml_node xscrdat = pmd2n.child(NODE_ScriptDat.c_str());
+
+            //First find one that matches our current version
+            for( const auto & gamenode : xscrdat.children(NODE_Game.c_str()) )
+            {
+                if( !MatchesCurrentVersionID(gamenode.attributes_begin(), gamenode.attributes_end()) )
+                    continue;
+
+                for( const auto & subnode : gamenode )
+                {
+                    if( subnode.name() == NODE_GVarTbl )
+                        ParseGameVars(subnode);
+                    else if( subnode.name() == NODE_GVarExtTbl )
+                        ParseGameVarsExt(subnode);
+                    else if( subnode.name() == NODE_LivesTbl )
+                        ParseLives(subnode);
+                    else if( subnode.name() == NODE_LevelList )
+                        ParseLevels(subnode);
+                    else if( subnode.name() == NODE_FaceNames )
+                        ParseFaceNames(subnode);
+                    else if( subnode.name() == NODE_FacePosMo )
+                        ParseFaceModeNames(subnode);
+                    else if( subnode.name() == NODE_CRoutineI )
+                        ParseCommonRoutines(subnode);
+                }
+            }
+
+        }
+
+        pair<string,gamevariable_info> ParseAGameVarEntry(const xml_node & gvarn )
+        {
+            using namespace ConfigXML;
+            gamevariable_info gvarinf;
+            for( const auto & attr : gvarn.attributes() )
+            {
+                if( attr.name() == ATTR_Name )
+                    gvarinf.name = attr.value();
+                else if( attr.name() == ATTR_Type )
+                    gvarinf.type = static_cast<int16_t>(attr.as_int());
+                else if( attr.name() == ATTR_Unk1 )
+                    gvarinf.unk1 = static_cast<int16_t>(attr.as_int());
+                else if( attr.name() == ATTR_MemOffset )
+                    gvarinf.memoffset = static_cast<int16_t>(attr.as_int());
+                else if( attr.name() == ATTR_BitShift )
+                    gvarinf.bitshift = static_cast<int16_t>(attr.as_int());
+                else if( attr.name() == ATTR_Unk3 )
+                    gvarinf.unk3 = static_cast<int16_t>(attr.as_int());
+                else if( attr.name() == ATTR_Unk4 )
+                    gvarinf.unk4 = static_cast<int16_t>(attr.as_int());
+            }
+            if( gvarinf.name.empty() )
+                throw std::runtime_error("ConfigXMLParser::ParseGameVars(): A game variable entity has no name!!");
+            return make_pair( gvarinf.name, std::move(gvarinf) );
+        }
+
+        void ParseGameVars(const xml_node & gvarn)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,gamevariable_info>> gamevar;
+            for( const auto & gv : gvarn.children(NODE_GVar.c_str()) )
+                gamevar.push_back(std::move(ParseAGameVarEntry(gv)));
+            m_gscriptdata.m_gvars.PushEntriesPairs(gamevar.begin(), gamevar.end());
+        }
+
+        void ParseGameVarsExt(const xml_node & gvarexn)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,gamevariable_info>> gamevarex;
+            for( const auto & gv : gvarexn.children(NODE_GVar.c_str()) )
+                gamevarex.push_back(std::move(ParseAGameVarEntry(gv)));
+            m_gscriptdata.m_gvarsex.PushEntriesPairs(gamevarex.begin(), gamevarex.end());
+        }
+
+        void ParseLives(const xml_node & livesn)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,livesent_info>> lives;
+            for( const auto & livesent : livesn.children(NODE_Entity.c_str()) )
+            {
+                livesent_info lvlinf;
+                for( const auto & attr : livesent.attributes() )
+                {
+                    if( attr.name() == ATTR_Name )
+                        lvlinf.name = attr.value();
+                    else if( attr.name() == ATTR_Type )
+                        lvlinf.type = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_EntID )
+                        lvlinf.entid = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk3 )
+                        lvlinf.unk3 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk4 )
+                        lvlinf.unk4 = static_cast<int16_t>(attr.as_int());
+                }
+                if( lvlinf.name.empty() )
+                    throw std::runtime_error("ConfigXMLParser::ParseLives(): A lives entity has no name!!");
+                lives.push_back(make_pair(lvlinf.name,std::move(lvlinf)));
+            }
+            m_gscriptdata.m_livesent.PushEntriesPairs(lives.begin(), lives.end());
+        }
+
+        void ParseLevels(const xml_node & leveln)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,level_info>> levels;
+            for( const auto & level : leveln.children(NODE_Level.c_str()) )
+            {
+                level_info lvlinf;
+                for( const auto & attr : level.attributes() )
+                {
+                    if( attr.name() == ATTR_Name )
+                        lvlinf.name = attr.value();
+                    else if( attr.name() == ATTR_Unk1 )
+                        lvlinf.unk1 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk2 )
+                        lvlinf.unk2 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_MapID )
+                        lvlinf.mapid = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk4 )
+                        lvlinf.unk4 = static_cast<int16_t>(attr.as_int());
+                }
+                if( lvlinf.name.empty() )
+                    throw std::runtime_error("ConfigXMLParser::ParseLevels(): A level has no name!!");
+                levels.push_back(make_pair(lvlinf.name,std::move(lvlinf)));
+            }
+            m_gscriptdata.m_levels.PushEntriesPairs(levels.begin(), levels.end());
+        }
+
+        void ParseFaceNames(const xml_node & facen)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,string>> facenames;
+            for( const auto & face : facen.children(NODE_Face.c_str()) )
+                facenames.push_back( make_pair(face.text().get(),face.text().get()) );
+            m_gscriptdata.m_facenames.PushEntriesPairs(facenames.begin(), facenames.end());
+        }
+
+        void ParseFaceModeNames(const xml_node & facemodesn)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,string>> facemodes;
+            for( const auto & facem : facemodesn.children(NODE_Mode.c_str()) )
+                facemodes.push_back(make_pair(facem.text().get(), facem.text().get()));
+            m_gscriptdata.m_faceposmodes.PushEntriesPairs(facemodes.begin(), facemodes.end());
+        }
+
+        void ParseCommonRoutines(const xml_node & routinesn)
+        {
+            using namespace ConfigXML;
+            deque<pair<string,commonroutine_info>> routines;
+            for( const auto & routine : routinesn.children(NODE_Routine.c_str()) )
+            {
+                commonroutine_info crinfo;
+                for( const auto & attr : routine.attributes() )
+                {
+                    if( attr.name() == ATTR_ID )
+                        crinfo.id = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk1 )
+                        crinfo.unk1 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Name )
+                        crinfo.name = attr.value();
+                }
+                if( crinfo.name.empty() )
+                    throw std::runtime_error("ConfigXMLParser::ParseCommonRoutines(): A routine has no name!!");
+                routines.push_back(make_pair( crinfo.name, std::move(crinfo)));
+            }
+            m_gscriptdata.m_commonroutines.PushEntriesPairs(routines.begin(), routines.end());
+        }
+
         void HandleExtFile( std::string extfile )
         {
             using namespace ConfigXML;
@@ -439,6 +662,7 @@ namespace pmd2
         LanguageFilesDB::strfiles_t     m_lang;
         GameBinariesInfo                m_bin;
         string                          m_confbasepath;
+        GameScriptData                  m_gscriptdata;
     };
 
 
@@ -455,6 +679,11 @@ namespace pmd2
         :m_conffile(configfile)
     {
         Parse(version,region);
+    }
+
+    void ConfigLoader::ReloadConfig()
+    {
+        Parse(m_versioninfo.version, m_versioninfo.region);
     }
 
     int ConfigLoader::GetGameConstantAsInt(eGameConstants gconst) const
@@ -481,10 +710,37 @@ namespace pmd2
 //
 //
 //
-    FlexibleConfigData::Entry::Entry(){}
+    MainPMD2ConfigWrapper  MainPMD2ConfigWrapper::s_instance;
 
-    FlexibleConfigData::Entry::Entry(attrs_t && attr, subentt_t && sub)
-        :rawattributes(std::forward<attrs_t>(attr)),subentries(std::forward<subentt_t>(sub))
-    {}
+    MainPMD2ConfigWrapper & MainPMD2ConfigWrapper::Instance()
+    {
+        return s_instance;
+    }
+
+    ConfigLoader & MainPMD2ConfigWrapper::CfgInstance()
+    {
+        if(s_instance.m_loaderinstance)
+            return *(s_instance.m_loaderinstance.get());
+        else
+            throw std::logic_error("MainPMD2ConfigWrapper::CfgInstance(): Configuration was not loaded!!");
+    }
+
+    void MainPMD2ConfigWrapper::InitConfig(uint16_t arm9off14, const std::string & configfile)
+    {
+        m_loaderinstance.reset( new ConfigLoader(arm9off14,configfile) );
+    }
+
+    void MainPMD2ConfigWrapper::InitConfig(eGameVersion version, eGameRegion region, const std::string & configfile)
+    {
+        m_loaderinstance.reset( new ConfigLoader(version,region,configfile) );
+    }
+
+    inline void MainPMD2ConfigWrapper::ReloadConfig()
+    {
+        if(m_loaderinstance)
+            m_loaderinstance->ReloadConfig();
+        else
+            throw std::logic_error("MainPMD2ConfigWrapper::ReloadConfig(): Configuration was not loaded!!");
+    }
 
 };

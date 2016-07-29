@@ -85,9 +85,16 @@ namespace utils
     ************************************************************************/
     std::string GetFilename( const std::string & path );
 
-    /*
-    */
+    /************************************************************************
+        GetApplicationDirectory
+            Returns the absolute path to the directory containing the executable.
+            It needs the parameters passed at the command line to work.
 
+            (**WARNING**): This thing is a big, slow hack. 
+            It instantiate a stub Poco::Application overloaded class 
+            and retrieve the path from the instance.
+    ************************************************************************/
+    //std::string GetApplicationDirectory( int argc, char* argv[] );
 
 
     /*

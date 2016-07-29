@@ -21,95 +21,95 @@ Description: Contains data on script opcodes.
 namespace pmd2
 {
 //==========================================================================================================
-//  14b signed integer support
+//  15b signed integer support
 //==========================================================================================================
-    class int14_t
+    class int15_t
     {
     public:
         // --- Construction ---
-        inline int14_t():val(0){}
+        inline int15_t():val(0){}
 
-        inline int14_t(const int14_t & cp)
+        inline int15_t(const int15_t & cp)
         {this->operator=(cp);}
 
-        inline int14_t & operator=(const int14_t & cp)
+        inline int15_t & operator=(const int15_t & cp)
         {val = cp.val;}
 
         //
-        inline explicit int14_t(uint16_t otherval)
+        inline explicit int15_t(uint16_t otherval)
         {this->operator=(otherval);}
 
-        inline explicit int14_t(int otherval)
+        inline explicit int15_t(int otherval)
         {this->operator=(otherval);}
 
-        inline int14_t(unsigned int otherval)
+        inline int15_t(unsigned int otherval)
         {this->operator=(otherval);}
 
-        inline int14_t & operator=(uint16_t otherval)
-        {val = Convert16bTo14b(otherval);}
+        inline int15_t & operator=(uint16_t otherval)
+        {val = Convert16bTo15b(otherval);}
 
-        inline int14_t & operator=(int otherval)
-        {val = Convert16bTo14b(static_cast<unsigned int>(otherval));}
+        inline int15_t & operator=(int otherval)
+        {val = Convert16bTo15b(static_cast<unsigned int>(otherval));}
 
-        inline int14_t & operator=(unsigned int otherval)
-        {val = Convert16bTo14b(static_cast<unsigned int>(otherval));}
+        inline int15_t & operator=(unsigned int otherval)
+        {val = Convert16bTo15b(static_cast<unsigned int>(otherval));}
 
         // --- Operators ---
 
         //Logicals
         inline bool operator! ()const                      { return !val; }
-        inline bool operator==(const int14_t & other)const { return val == other.val; }
-        inline bool operator!=(const int14_t & other)const { return !operator==(other); }
-        inline bool operator< (const int14_t & other)const { return val < other.val; }
-        inline bool operator> (const int14_t & other)const { return val > other.val; }
-        inline bool operator<=(const int14_t & other)const { return !operator>(other); }
-        inline bool operator>=(const int14_t & other)const { return !operator<(other); }
+        inline bool operator==(const int15_t & other)const { return val == other.val; }
+        inline bool operator!=(const int15_t & other)const { return !operator==(other); }
+        inline bool operator< (const int15_t & other)const { return val < other.val; }
+        inline bool operator> (const int15_t & other)const { return val > other.val; }
+        inline bool operator<=(const int15_t & other)const { return !operator>(other); }
+        inline bool operator>=(const int15_t & other)const { return !operator<(other); }
 
         //Bitwises
-        inline int14_t operator|(const int14_t & other)const { return (val | other.val); }
-        inline int14_t operator&(const int14_t & other)const { return (val & other.val); }
-        inline int14_t operator^(const int14_t & other)const { return (val ^ other.val); }
-        inline int14_t operator~()const                      { return (~val) & Mask14b; }
+        inline int15_t operator|(const int15_t & other)const { return (val | other.val); }
+        inline int15_t operator&(const int15_t & other)const { return (val & other.val); }
+        inline int15_t operator^(const int15_t & other)const { return (val ^ other.val); }
+        inline int15_t operator~()const                      { return (~val) & Mask15b; }
 
-        inline int14_t & operator|=(const int14_t & other) { return ((*this) = operator|(other)); }
-        inline int14_t & operator&=(const int14_t & other) { return ((*this) = operator&(other)); }
-        inline int14_t & operator^=(const int14_t & other) { return ((*this) = operator^(other)); }
+        inline int15_t & operator|=(const int15_t & other) { return ((*this) = operator|(other)); }
+        inline int15_t & operator&=(const int15_t & other) { return ((*this) = operator&(other)); }
+        inline int15_t & operator^=(const int15_t & other) { return ((*this) = operator^(other)); }
 
-        inline int14_t operator>>(unsigned int shiftamt)const { return (val >> shiftamt) & Mask14b; }
-        inline int14_t operator<<(unsigned int shiftamt)const { return (val << shiftamt) & Mask14b; }
-        inline int14_t & operator>>=(unsigned int shiftamt) {return ((*this) = operator>>(shiftamt) );}
-        inline int14_t & operator<<=(unsigned int shiftamt) {return ((*this) = operator<<(shiftamt) );}
+        inline int15_t operator>>(unsigned int shiftamt)const { return (val >> shiftamt) & Mask15b; }
+        inline int15_t operator<<(unsigned int shiftamt)const { return (val << shiftamt) & Mask15b; }
+        inline int15_t & operator>>=(unsigned int shiftamt) {return ((*this) = operator>>(shiftamt) );}
+        inline int15_t & operator<<=(unsigned int shiftamt) {return ((*this) = operator<<(shiftamt) );}
 
         //Arithmetics
-        inline int14_t operator+(const int14_t & other)const {return (val + other.val) & Mask14b;}
-        inline int14_t operator-(const int14_t & other)const {return (val - other.val) & Mask14b;}
-        inline int14_t operator*(const int14_t & other)const {return (val * other.val) & Mask14b;}
-        inline int14_t operator/(const int14_t & other)const {return (val / other.val) & Mask14b;}
-        inline int14_t operator%(const int14_t & other)const {return (val % other.val) & Mask14b;}
+        inline int15_t operator+(const int15_t & other)const {return (val + other.val) & Mask15b;}
+        inline int15_t operator-(const int15_t & other)const {return (val - other.val) & Mask15b;}
+        inline int15_t operator*(const int15_t & other)const {return (val * other.val) & Mask15b;}
+        inline int15_t operator/(const int15_t & other)const {return (val / other.val) & Mask15b;}
+        inline int15_t operator%(const int15_t & other)const {return (val % other.val) & Mask15b;}
 
-        inline int14_t & operator+=(const int14_t & other) {return ((*this) = operator+(other));}
-        inline int14_t & operator-=(const int14_t & other) {return ((*this) = operator-(other));}
-        inline int14_t & operator*=(const int14_t & other) {return ((*this) = operator*(other));}
-        inline int14_t & operator/=(const int14_t & other) {return ((*this) = operator/(other));}
-        inline int14_t & operator%=(const int14_t & other) {return ((*this) = operator%(other));}
+        inline int15_t & operator+=(const int15_t & other) {return ((*this) = operator+(other));}
+        inline int15_t & operator-=(const int15_t & other) {return ((*this) = operator-(other));}
+        inline int15_t & operator*=(const int15_t & other) {return ((*this) = operator*(other));}
+        inline int15_t & operator/=(const int15_t & other) {return ((*this) = operator/(other));}
+        inline int15_t & operator%=(const int15_t & other) {return ((*this) = operator%(other));}
 
-        inline int14_t & operator++()    {return this->operator+=(1);}
-        inline int14_t   operator++(int) { int14_t tmp(*this); operator++(); return tmp;} //post increment
-        inline int14_t & operator--()    {return this->operator-=(1);}
-        inline int14_t   operator--(int) { int14_t tmp(*this); operator++(); return tmp;} //post decrement
+        inline int15_t & operator++()    {return this->operator+=(1);}
+        inline int15_t   operator++(int) { int15_t tmp(*this); operator++(); return tmp;} //post increment
+        inline int15_t & operator--()    {return this->operator-=(1);}
+        inline int15_t   operator--(int) { int15_t tmp(*this); operator++(); return tmp;} //post decrement
 
         // --- Cast ---
-        inline operator uint16_t()const {return Convert14bTo16b(val);}
-        inline operator int16_t ()const {return Convert14bTo16b(val);}
+        inline operator uint16_t()const {return Convert15bTo16b(val);}
+        inline operator int16_t ()const {return Convert15bTo16b(val);}
 
         // --- Conversion ---
-        static inline int16_t Convert14bTo16b(uint16_t value)
+        static inline int16_t Convert15bTo16b(uint16_t value)
         {
             return (value >= 0x4000u)? (value | 0xFFFF8000u) : (value & 0x3FFFu);
         }
 
         //!#TODO: Double check this!!
-        static inline uint16_t Convert16bTo14b(uint16_t value)
+        static inline uint16_t Convert16bTo15b(uint16_t value)
         {
             if(value == 0)
                 return 0;
@@ -120,7 +120,7 @@ namespace pmd2
 
     private:
         uint16_t val;
-        static const uint16_t Mask14b = 0x7FFFu;
+        static const uint16_t Mask15b = 0x7FFFu;
     };
 
 //==========================================================================================================
@@ -1039,94 +1039,95 @@ namespace pmd2
 //==========================================================================================================
 //  LevelEntryInfo
 //==========================================================================================================
-    struct LevelEntryInfo_EoS
-    {
-        std::string name;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t mapid;
-        int16_t unk4;
-    };
+    //struct LevelEntryInfo_EoS
+    //{
+    //    std::string name;
+    //    int16_t unk1;
+    //    int16_t unk2;
+    //    int16_t mapid;
+    //    int16_t unk4;
+    //};
 
-    const std::string               NullLevelId = "NULL"; //For 0x7FFF values (-1)
-    static const LevelEntryInfo_EoS NULL_Level{NullLevelId, -1, -1, -1, -1};
+    const int16_t       InvalidLevelID = std::numeric_limits<int16_t>::max();
+    const std::string   NullLevelId    = "NULL"; //For 0x7FFF values (-1)
+    //static const LevelEntryInfo_EoS NULL_Level{NullLevelId, -1, -1, -1, -1};
 
-    uint16_t                   FindLevelEntryInfo_EoS( const std::string & name );
-    const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id );
+    //uint16_t                   FindLevelEntryInfo_EoS( const std::string & name );
+    //const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id );
 
     /*
         LevelEntryInfoWrap
             Same as its version dependant siblings. Except it contains data that both have!
     */
-    struct LevelEntryInfoWrap
-    {
-        std::string name;
-        int16_t     mapid;
+    //struct LevelEntryInfoWrap
+    //{
+    //    std::string name;
+    //    int16_t     mapid;
 
-        LevelEntryInfoWrap()
-            :mapid(0)
-        {}
+    //    LevelEntryInfoWrap()
+    //        :mapid(0)
+    //    {}
 
-        LevelEntryInfoWrap(const LevelEntryInfoWrap & cp)   {this->operator=(cp);}
-        LevelEntryInfoWrap & operator=( const LevelEntryInfoWrap & cp )
-        {
-            name  = cp.name;
-            mapid = cp.mapid;
-            return *this;
-        }
+    //    LevelEntryInfoWrap(const LevelEntryInfoWrap & cp)   {this->operator=(cp);}
+    //    LevelEntryInfoWrap & operator=( const LevelEntryInfoWrap & cp )
+    //    {
+    //        name  = cp.name;
+    //        mapid = cp.mapid;
+    //        return *this;
+    //    }
 
-        LevelEntryInfoWrap( const LevelEntryInfo_EoS & cp ) { this->operator=(cp); }
-        LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS & cp )
-        {
-            name  = cp.name;
-            mapid = cp.mapid;
-            return *this;
-        }
+    //    LevelEntryInfoWrap( const LevelEntryInfo_EoS & cp ) { this->operator=(cp); }
+    //    LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS & cp )
+    //    {
+    //        name  = cp.name;
+    //        mapid = cp.mapid;
+    //        return *this;
+    //    }
 
-        LevelEntryInfoWrap( const LevelEntryInfo_EoS * cp ) { this->operator=(cp); }
-        LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS * cp )
-        {
-            if(cp)
-            {
-                name  = cp->name;
-                mapid = cp->mapid;
-            }
-            else
-            {
-                name  = std::string();
-                mapid = -1;
-            }
-            return *this;
-        }
+    //    LevelEntryInfoWrap( const LevelEntryInfo_EoS * cp ) { this->operator=(cp); }
+    //    LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS * cp )
+    //    {
+    //        if(cp)
+    //        {
+    //            name  = cp->name;
+    //            mapid = cp->mapid;
+    //        }
+    //        else
+    //        {
+    //            name  = std::string();
+    //            mapid = -1;
+    //        }
+    //        return *this;
+    //    }
 
-        operator bool()
-        {
-            return !name.empty();
-        }
-    };
+    //    operator bool()
+    //    {
+    //        return !name.empty();
+    //    }
+    //};
 
     /*
         LevelEntryInfoWrapper
             Abstracts access to level entry data!
     */
-    class LevelEntryInfoWrapper
-    {
-    public:
+    //class LevelEntryInfoWrapper
+    //{
+    //public:
 
-        LevelEntryInfoWrapper(eGameVersion ver)
-            :m_ver(ver)
-        {}
+    //    LevelEntryInfoWrapper(eGameVersion ver)
+    //        :m_ver(ver)
+    //    {}
 
-        uint16_t            FindLevelInfoEntryByName(const std::string & name)const;
-        LevelEntryInfoWrap  GetLevelInfoEntry       (uint16_t id)const;
-        const std::string * GetLevelInfoEntryName   (uint16_t id)const;
-        uint16_t            GetNbLevelInfoEntries   ()const;
+    //    uint16_t            FindLevelInfoEntryByName(const std::string & name)const;
+    //    LevelEntryInfoWrap  GetLevelInfoEntry       (uint16_t id)const;
+    //    const std::string * GetLevelInfoEntryName   (uint16_t id)const;
+    //    uint16_t            GetNbLevelInfoEntries   ()const;
 
-        static uint16_t InvalidLevelInfoID() { return std::numeric_limits<uint16_t>::max(); }
+    //    static uint16_t InvalidLevelInfoID() { return std::numeric_limits<uint16_t>::max(); }
 
-    private:
-        eGameVersion m_ver;
-    };
+    //private:
+    //    eGameVersion m_ver;
+    //};
 
 //==========================================================================================================
 //  ProcessSpecial
@@ -1137,284 +1138,286 @@ namespace pmd2
 //  Face Position
 //==========================================================================================================
 
-    enum struct eFaceModes: uint16_t
-    {
-        Standard            = 0,    //Standard
-        
-        //Coordinates
-        AbsCoordStandard    = 1,    //Absolute Coordinates Standard
-        AbsCoordLeft        = 2,    //Absolute Coordinates Left
-        AbsCoordRight       = 3,    //Absolute Coordinates Right
+    //enum struct eFaceModes: uint16_t
+    //{
+    //    Standard            = 0,    //Standard
+    //    
+    //    //Coordinates
+    //    AbsCoordStandard    = 1,    //Absolute Coordinates Standard
+    //    AbsCoordLeft        = 2,    //Absolute Coordinates Left
+    //    AbsCoordRight       = 3,    //Absolute Coordinates Right
 
-        //Bottom
-        Bottom_C_FaceR      = 4,    //Bottom Center Right-Facing
-        Bottom_L_FaceInw    = 5,    //Bottom Left Inner-Facing (inwards?)
-        Bottom_R_FaceInw    = 6,    //Bottom Right Inner-Facing (inwards?)
+    //    //Bottom
+    //    Bottom_C_FaceR      = 4,    //Bottom Center Right-Facing
+    //    Bottom_L_FaceInw    = 5,    //Bottom Left Inner-Facing (inwards?)
+    //    Bottom_R_FaceInw    = 6,    //Bottom Right Inner-Facing (inwards?)
 
-        Bottom_L_Center     = 7,    //Bottom Left Center
-        Bottom_R_Center     = 8,    //Bottom Right Center
-        Bottom_C_FaceL      = 9,    //Bottom Center Left-Facing
+    //    Bottom_L_Center     = 7,    //Bottom Left Center
+    //    Bottom_R_Center     = 8,    //Bottom Right Center
+    //    Bottom_C_FaceL      = 9,    //Bottom Center Left-Facing
 
-        Bottom_L_FaceOutw   = 10,   //Bottom Left Outer-Facing
-        Bottom_R_FaceOutw   = 11,   //Bottom Right Outer-Facing
-        Bottom_LC_FaceOutw  = 12,   //Bottom Left-Center Outer-Facing
-        Bottom_RC_FaceOutw  = 13,   //Bottom Right-Center Outer-Facing
+    //    Bottom_L_FaceOutw   = 10,   //Bottom Left Outer-Facing
+    //    Bottom_R_FaceOutw   = 11,   //Bottom Right Outer-Facing
+    //    Bottom_LC_FaceOutw  = 12,   //Bottom Left-Center Outer-Facing
+    //    Bottom_RC_FaceOutw  = 13,   //Bottom Right-Center Outer-Facing
 
-        //Top
-        Top_C_FaceR         = 14,   //Top Center (Right-Facing)
-        Top_L_FaceInw       = 15,   //Top Left Inner-Facing
-        Top_R_FaceInw       = 16,   //Top Right Inner-Facing (inwards?)
+    //    //Top
+    //    Top_C_FaceR         = 14,   //Top Center (Right-Facing)
+    //    Top_L_FaceInw       = 15,   //Top Left Inner-Facing
+    //    Top_R_FaceInw       = 16,   //Top Right Inner-Facing (inwards?)
 
-        Top_L_Center        = 17,   //Top Left Center
-        Top_R_Center        = 18,   //Top Right Center
-        Top_C_FaceL         = 19,   //Top Center Left-Facing
+    //    Top_L_Center        = 17,   //Top Left Center
+    //    Top_R_Center        = 18,   //Top Right Center
+    //    Top_C_FaceL         = 19,   //Top Center Left-Facing
 
-        Top_L_FaceOutw      = 20,   //Top Left-Center Right-Facing
-        Top_RC_FaceR        = 21,   //Top Right-Center Right-Facing
-        Top_LC_FaceOutw     = 22,   //Top Left-Center Outer-Facing
-        Top_RC_FaceOutw     = 23,   //Top Right-Center Outer-Facing
+    //    Top_L_FaceOutw      = 20,   //Top Left-Center Right-Facing
+    //    Top_RC_FaceR        = 21,   //Top Right-Center Right-Facing
+    //    Top_LC_FaceOutw     = 22,   //Top Left-Center Outer-Facing
+    //    Top_RC_FaceOutw     = 23,   //Top Right-Center Outer-Facing
 
-        NbModes,
-        Invalid = std::numeric_limits<int16_t>::max(),
-    };
+    //    NbModes,
+    //    Invalid = std::numeric_limits<int16_t>::max(),
+    //};
 
-    const std::array<std::string, static_cast<size_t>(eFaceModes::NbModes)> FacePosModeNames
-    {{
-        "Standard",
+    //const std::array<std::string, static_cast<size_t>(eFaceModes::NbModes)> FacePosModeNames
+    //{{
+    //    "Standard",
 
-        //Coordinates
-        "AbsCoord",
-        "AbsCoordLeft",
-        "AbsCoordRight",
+    //    //Coordinates
+    //    "AbsCoord",
+    //    "AbsCoordLeft",
+    //    "AbsCoordRight",
 
-        //Bottom
-        "Bottom_C_FaceR",
-        "Bottom_L_FaceInw",
-        "Bottom_R_FaceInw",
+    //    //Bottom
+    //    "Bottom_C_FaceR",
+    //    "Bottom_L_FaceInw",
+    //    "Bottom_R_FaceInw",
 
-        "Bottom_L_Center",  
-        "Bottom_R_Center",    
-        "Bottom_C_FaceL",     
+    //    "Bottom_L_Center",  
+    //    "Bottom_R_Center",    
+    //    "Bottom_C_FaceL",     
 
-        "Bottom_L_FaceOutw",  
-        "Bottom_R_FaceOutw",
-        "Bottom_LC_FaceOutw",
-        "Bottom_RC_FaceOutw",
+    //    "Bottom_L_FaceOutw",  
+    //    "Bottom_R_FaceOutw",
+    //    "Bottom_LC_FaceOutw",
+    //    "Bottom_RC_FaceOutw",
 
-        //Top
-        "Top_C_FaceR",
-        "Top_L_FaceInw",
-        "Top_R_FaceInw",
+    //    //Top
+    //    "Top_C_FaceR",
+    //    "Top_L_FaceInw",
+    //    "Top_R_FaceInw",
 
-        "Top_L_Center",
-        "Top_R_Center",
-        "Top_C_FaceL",
+    //    "Top_L_Center",
+    //    "Top_R_Center",
+    //    "Top_C_FaceL",
 
-        "Top_L_FaceOutw",
-        "Top_RC_FaceR",
-        "Top_LC_FaceOutw",
-        "Top_RC_FaceOutw",
-    }};
+    //    "Top_L_FaceOutw",
+    //    "Top_RC_FaceR",
+    //    "Top_LC_FaceOutw",
+    //    "Top_RC_FaceOutw",
+    //}};
 
-    inline const std::string * FacePosModeToStr( int16_t ty )
-    {
-        if( ty < static_cast<int16_t>(eOpParamTypes::NbTypes) )
-            return std::addressof( FacePosModeNames[static_cast<size_t>(ty)] );
-        else
-            return nullptr;
-    }
+    //inline const std::string * FacePosModeToStr( int16_t ty )
+    //{
+    //    if( ty < static_cast<int16_t>(eOpParamTypes::NbTypes) )
+    //        return std::addressof( FacePosModeNames[static_cast<size_t>(ty)] );
+    //    else
+    //        return nullptr;
+    //}
 
-    inline int16_t FindFacePosModeByName( const std::string & name )
-    {
-        for( size_t i = 0; i < FacePosModeNames.size(); ++i )
-        {
-            if( FacePosModeNames[i] == name )
-                return static_cast<int16_t>(i);
-        }
-        return static_cast<int16_t>(eFaceModes::Invalid);
-    }
+    //inline int16_t FindFacePosModeByName( const std::string & name )
+    //{
+    //    for( size_t i = 0; i < FacePosModeNames.size(); ++i )
+    //    {
+    //        if( FacePosModeNames[i] == name )
+    //            return static_cast<int16_t>(i);
+    //    }
+    //    return static_cast<int16_t>(eFaceModes::Invalid);
+    //}
+
+    const int16_t InvalidFaceModeID = std::numeric_limits<int16_t>::max();
 
 //==========================================================================================================
 //  Faces
 //==========================================================================================================
-    const std::array<std::string, 20> FaceNames
-    {{
-        "NORMAL",
-        "HAPPY",
-        "PAIN",
-        "ANGRY",
-        "THINK",
-        "SAD",
-        "WEEP",
-        "SHOUT",
-        "TEARS",
-        "DECIDE",
-        "GLADNESS",
-        "EMOTION",
-        "SURPRISE",
-        "FAINT",
-        "DUMMY_0",
-        "DUMMY_1",
-        "ACTION1",
-        "ACTION2",
-        "ACTION3",
-        "ACTION4",
-    }};
+    //const std::array<std::string, 20> FaceNames
+    //{{
+    //    "NORMAL",
+    //    "HAPPY",
+    //    "PAIN",
+    //    "ANGRY",
+    //    "THINK",
+    //    "SAD",
+    //    "WEEP",
+    //    "SHOUT",
+    //    "TEARS",
+    //    "DECIDE",
+    //    "GLADNESS",
+    //    "EMOTION",
+    //    "SURPRISE",
+    //    "FAINT",
+    //    "DUMMY_0",
+    //    "DUMMY_1",
+    //    "ACTION1",
+    //    "ACTION2",
+    //    "ACTION3",
+    //    "ACTION4",
+    //}};
 
     const int16_t       InvalidFaceID   = std::numeric_limits<int16_t>::max();
     const std::string   NullFaceName    = "NULL"; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
     const int16_t       NullFaceID      = InvalidFaceID; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
 
-    inline int16_t FindFaceIDByName( const std::string & facename )
-    {
-        if( facename == NullFaceName )
-            return NullFaceID;
-        for( size_t i = 0; i < FaceNames.size(); ++i )
-        {
-            const std::string & cur = FaceNames[i];
-            if( cur == facename )
-                return static_cast<int16_t>(i);
-        }
-        return InvalidFaceID;
-    }
+    //inline int16_t FindFaceIDByName( const std::string & facename )
+    //{
+    //    if( facename == NullFaceName )
+    //        return NullFaceID;
+    //    for( size_t i = 0; i < FaceNames.size(); ++i )
+    //    {
+    //        const std::string & cur = FaceNames[i];
+    //        if( cur == facename )
+    //            return static_cast<int16_t>(i);
+    //    }
+    //    return InvalidFaceID;
+    //}
 
-    std::string GetFaceNameByID( int16_t faceid );
+    //std::string GetFaceNameByID( int16_t faceid );
 
 //==========================================================================================================
 //  Lives Entities
 //==========================================================================================================
-    struct livesinfo_EoS
-    {
-        std::string name;
-        uint8_t     type;
-        uint16_t    entid;
-        uint16_t    unk3;
-        uint16_t    unk4;
-    };
+    //struct livesinfo_EoS
+    //{
+    //    std::string name;
+    //    uint8_t     type;
+    //    uint16_t    entid;
+    //    uint16_t    unk3;
+    //    uint16_t    unk4;
+    //};
 
 
-    const uint16_t InvalidLivesID = std::numeric_limits<uint16_t>::max();
+    const int16_t InvalidLivesID = std::numeric_limits<int16_t>::max();
 
-    const size_t NbEntitiesEoS = 386;
-    extern const std::array<livesinfo_EoS,NbEntitiesEoS> LivesEntityDataEntries_EoS;
+    //const size_t NbEntitiesEoS = 386;
+    //extern const std::array<livesinfo_EoS,NbEntitiesEoS> LivesEntityDataEntries_EoS;
 
-    inline const livesinfo_EoS * FindLivesInfo_EoS(uint16_t id)
-    {
-        if( id < LivesEntityDataEntries_EoS.size() )
-            return &(LivesEntityDataEntries_EoS[id]);
-        else
-            return nullptr;
-    }
+    //inline const livesinfo_EoS * FindLivesInfo_EoS(uint16_t id)
+    //{
+    //    if( id < LivesEntityDataEntries_EoS.size() )
+    //        return &(LivesEntityDataEntries_EoS[id]);
+    //    else
+    //        return nullptr;
+    //}
 
-    inline uint16_t FindLivesIdByName_EoS( const std::string & name )
-    {
-        for( size_t i = 0; i < LivesEntityDataEntries_EoS.size(); ++i )
-        {
-            const livesinfo_EoS & cur = LivesEntityDataEntries_EoS[i];
-            if( cur.name == name )
-                return static_cast<uint16_t>(i);
-        }
-        return std::numeric_limits<uint16_t>::max();
-    }
+    //inline uint16_t FindLivesIdByName_EoS( const std::string & name )
+    //{
+    //    for( size_t i = 0; i < LivesEntityDataEntries_EoS.size(); ++i )
+    //    {
+    //        const livesinfo_EoS & cur = LivesEntityDataEntries_EoS[i];
+    //        if( cur.name == name )
+    //            return static_cast<uint16_t>(i);
+    //    }
+    //    return std::numeric_limits<uint16_t>::max();
+    //}
 
 
     //EoTD
-    typedef livesinfo_EoS livesinfo_EoTD;
-    const size_t NbEntitiesEoTD = 248;
-    extern const std::array<livesinfo_EoTD,NbEntitiesEoTD> LivesEntityDataEntries_EoTD;
+    //typedef livesinfo_EoS livesinfo_EoTD;
+    //const size_t NbEntitiesEoTD = 248;
+    //extern const std::array<livesinfo_EoTD,NbEntitiesEoTD> LivesEntityDataEntries_EoTD;
 
-    inline const livesinfo_EoTD * FindLivesInfo_EoTD(uint16_t id)
-    {
-        if( id < LivesEntityDataEntries_EoTD.size() )
-            return &(LivesEntityDataEntries_EoTD[id]);
-        else
-            return nullptr;
-    }
+    //inline const livesinfo_EoTD * FindLivesInfo_EoTD(uint16_t id)
+    //{
+    //    if( id < LivesEntityDataEntries_EoTD.size() )
+    //        return &(LivesEntityDataEntries_EoTD[id]);
+    //    else
+    //        return nullptr;
+    //}
 
-    inline uint16_t FindLivesIdByName_EoTD( const std::string & name )
-    {
-        for( size_t i = 0; i < LivesEntityDataEntries_EoTD.size(); ++i )
-        {
-            const livesinfo_EoTD & cur = LivesEntityDataEntries_EoTD[i];
-            if( cur.name == name )
-                return static_cast<uint16_t>(i);
-        }
-        return std::numeric_limits<uint16_t>::max();
-    }
+    //inline uint16_t FindLivesIdByName_EoTD( const std::string & name )
+    //{
+    //    for( size_t i = 0; i < LivesEntityDataEntries_EoTD.size(); ++i )
+    //    {
+    //        const livesinfo_EoTD & cur = LivesEntityDataEntries_EoTD[i];
+    //        if( cur.name == name )
+    //            return static_cast<uint16_t>(i);
+    //    }
+    //    return std::numeric_limits<uint16_t>::max();
+    //}
 
 //
 //  Menu Types
 //
-    enum struct eMenuTypes : int16_t
-    {
-        JobBoard    = 0x27,
-        OutlawBoard = 0x28,
+    //enum struct eMenuTypes : int16_t
+    //{
+    //    JobBoard    = 0x27,
+    //    OutlawBoard = 0x28,
 
-        NbMenus,
-        Invalid,
-    };
+    //    NbMenus,
+    //    Invalid,
+    //};
 
 //
 //
 //
-    const uint16_t InvalidCRoutineID = std::numeric_limits<uint16_t>::max();
+    const int16_t InvalidCRoutineID = std::numeric_limits<int16_t>::max();
 
-    struct CommonRoutineInfo_EoS
-    {
-        uint16_t    id;
-        uint16_t    unk1;
-        std::string name;
-    };
-    const CommonRoutineInfo_EoS * FindCommonRoutineInfo_EoS( uint16_t id );
-    uint16_t                      FindCommonRoutineIDByName_EoS(const std::string & name);
+    //struct CommonRoutineInfo_EoS
+    //{
+    //    uint16_t    id;
+    //    uint16_t    unk1;
+    //    std::string name;
+    //};
+    //const CommonRoutineInfo_EoS * FindCommonRoutineInfo_EoS( uint16_t id );
+    //uint16_t                      FindCommonRoutineIDByName_EoS(const std::string & name);
 
-    inline uint16_t                      FindCommonRoutineIDByName_EoTD(const std::string & name)
-    {
-        //! IMPLEMENT ME
-        assert(false);
-        return -1;
-    }
+    //inline uint16_t                      FindCommonRoutineIDByName_EoTD(const std::string & name)
+    //{
+    //    //! IMPLEMENT ME
+    //    assert(false);
+    //    return -1;
+    //}
 
 //==========================================================================================================
 //  ScriptEngineVariable
 //==========================================================================================================
-    enum struct eGameVarType : uint16_t
-    {
-        Unk     = 0,
-        Bits    = 1,
-        Bool    = 2,
-        Uint8   = 3,
-        Int8    = 4,
-        Uint16  = 5,
-        Int16   = 6,
-        Uint32  = 7,
-        Int32   = 8,
-        CStr    = 9,
-        
-        NbTypes,
-        Invalid = std::numeric_limits<uint16_t>::max(),
-    };
+    //enum struct eGameVarType : uint16_t
+    //{
+    //    Unk     = 0,
+    //    Bits    = 1,
+    //    Bool    = 2,
+    //    Uint8   = 3,
+    //    Int8    = 4,
+    //    Uint16  = 5,
+    //    Int16   = 6,
+    //    Uint32  = 7,
+    //    Int32   = 8,
+    //    CStr    = 9,
+    //    
+    //    NbTypes,
+    //    Invalid = std::numeric_limits<uint16_t>::max(),
+    //};
 
-    struct gamevariableinfo
-    {
-        int16_t      ty;
-        int16_t      unk1;
-        uint16_t     offset;
-        uint16_t     bitshift;
-        uint16_t     unk3;
-        uint16_t     unk4;
-        std::string  str;
-    };
-    const uint16_t InvalidGameVariableID = std::numeric_limits<uint16_t>::max();
+    //struct gamevariableinfo
+    //{
+    //    int16_t      ty;
+    //    int16_t      unk1;
+    //    uint16_t     offset;
+    //    uint16_t     bitshift;
+    //    uint16_t     unk3;
+    //    uint16_t     unk4;
+    //    std::string  str;
+    //};
+    const int16_t InvalidGameVariableID = std::numeric_limits<int16_t>::max();
 
-    const gamevariableinfo * FindGameVarInfo( uint16_t varid );
+    //const gamevariableinfo * FindGameVarInfo( uint16_t varid );
 
-    //Return uin16_t max if invalid
-    uint16_t     GameVarInfoNameToId     ( const std::string & name );
-    inline eGameVarType GameVarInfoNameToVarType( const std::string & name )
-    {
-        return static_cast<eGameVarType>(GameVarInfoNameToId(name));
-    }
+    ////Return uin16_t max if invalid
+    //uint16_t     GameVarInfoNameToId     ( const std::string & name );
+    //inline eGameVarType GameVarInfoNameToVarType( const std::string & name )
+    //{
+    //    return static_cast<eGameVarType>(GameVarInfoNameToId(name));
+    //}
     
 
 
@@ -1834,46 +1837,130 @@ namespace pmd2
     }
 
     /*
-        ScriptParameterValueHandler
-            Helper for parsing parameter values for a given opcode
     */
-    //class ScriptParameterValueHandler
-    //{
-    //public:
-    //    ScriptParameterValueHandler(eOpCodeVersion ver)
-    //        :m_opinf(ver)
-    //    {}
+    class ParameterReferences
+    {
+    public:
+        ParameterReferences( const ConfigLoader & conf )
+            :m_gconf(conf)
+        {}
 
-    //    uint16_t ConvertToWord( const std::string & val )
-    //    {
-    //        //From a raw string, get a
-    //    }
+        //Face Names
+        const std::string Face( int16_t id )const;
 
-    //    std::string ConvertToString( uint16_t value, eOpParamTypes paramty )
-    //    {
-    //    }
+        inline int16_t Face( const std::string & name )const 
+        {
+            return FindIDByName<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), name, NullFaceName);
+        }
 
-    //    inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
-    //    {
-    //        if( ty < eOpParamTypes::NbTypes )
-    //            return std::addressof( OpParamTypesNames[static_cast<size_t>(ty)] );
-    //        else
-    //            return nullptr;
-    //    }
+        //Face Posistion Modes
+        inline const std::string * FacePosMode( int16_t id )const 
+        {
+            return m_gconf.GetGameScriptData().FacePosModes().FindByIndex(id);
+        }
 
-    //    inline eOpParamTypes FindOpParamTypesByName( const std::string & name )
-    //    {
-    //        for( size_t i = 0; i < OpParamTypesNames.size(); ++i )
-    //        {
-    //            if( OpParamTypesNames[i] == name )
-    //                return static_cast<eOpParamTypes>(i);
-    //        }
-    //        return eOpParamTypes::Invalid;
-    //    }
+        inline int16_t FacePosMode( const std::string & name )const 
+        {
+            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().FacePosModes().FindIndexByName(name));
+        }
 
-    //private:
-    //    OpCodeClassifier m_opinf;
-    //};
+        //Common Routine Info
+        inline const commonroutine_info * CRoutine( int16_t id )const 
+        {
+            return m_gconf.GetGameScriptData().CommonRoutineInfo().FindByIndex(id);
+        }
+
+        inline int16_t CRoutine( const std::string & name )const 
+        {
+            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().CommonRoutineInfo().FindIndexByName(name));
+        }
+
+        //Level Info
+        inline const level_info * LevelInfo( int16_t id )const 
+        {
+            return m_gconf.GetGameScriptData().LevelInfo().FindByIndex(id);
+        }
+
+        inline int16_t LevelInfo( const std::string & name )const 
+        {
+            return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LevelInfo().FindIndexByName(name) );
+        }
+
+        //Lives Info
+        inline const livesent_info * LivesInfo( int16_t id )const 
+        {
+            return m_gconf.GetGameScriptData().LivesEnt().FindByIndex(id);
+        }
+
+        inline int16_t LivesInfo( const std::string & name )const 
+        {
+            return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LivesEnt().FindIndexByName(name) );
+        }
+
+        //GameVar Info
+        inline const gamevariable_info * GameVarInfo( int16_t id )const 
+        {
+            if( id > 0x400 ) //Extended game var starts at 0x400
+                return m_gconf.GetGameScriptData().ExGameVariables().FindByIndex(id);
+            else
+                return m_gconf.GetGameScriptData().GameVariables().FindByIndex(id);
+        }
+
+        inline int16_t GameVarInfo( const std::string & name )const 
+        {
+            size_t ret = m_gconf.GetGameScriptData().GameVariables().FindIndexByName(name);
+
+            if( ret == std::numeric_limits<size_t>::max() )
+            {
+                ret = m_gconf.GetGameScriptData().ExGameVariables().FindIndexByName(name);
+                if(ret != ret == std::numeric_limits<size_t>::max() )
+                    ret += 0x400; //Extended game var starts at 0x400
+            }
+
+            return ConvertInvalidOffsetToInvalidInt16(ret);
+        }
+
+    private:
+        //This check if the value is std::numeric_limits<size_t>::max(), the error value when no index was found,
+        // into the int16 error value used in the script engine.
+        static inline int16_t ConvertInvalidOffsetToInvalidInt16( size_t val )
+        {
+            if( val == std::numeric_limits<size_t>::max() )
+                return std::numeric_limits<int16_t>::max();
+            else
+                return static_cast<int16_t>(val);
+        }
+
+        template<int16_t _INVALIDID, class _EntryTy>
+            inline const std::string & FindByIndex( _EntryTy container, int16_t id, const std::string & invalidstr = "" )const 
+        { 
+            if( id == _INVALIDID )
+                return NullFaceName;
+
+            const std::string * pstr = container.FindByIndex(id);
+            if(pstr)
+                return *pstr;
+            else
+                return NullFaceName;
+        }
+
+
+        template<int16_t _INVALIDID, class _EntryTy>
+            inline int16_t FindIDByName( _EntryTy container, const std::string & name, const std::string & invalidstr = "" )const 
+        { 
+            if( name == invalidstr )
+                return _INVALIDID;
+
+            const size_t id = container.FindIndexByName(name);
+            if(id != std::numeric_limits<size_t>::max())
+                return id;
+            else
+                return _INVALIDID;
+        }
+
+    private:
+        const ConfigLoader & m_gconf;
+    };
 
 };
 

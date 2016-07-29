@@ -627,7 +627,8 @@ namespace pmd2
          m_pHandler(new GameScriptsHandler(*this)), 
          m_common(DirNameScriptCommon),
          m_langdat(std::addressof(gconf.GetLanguageFilesDB())),
-         m_escapexml(bescapexml)
+         m_escapexml(bescapexml),
+         m_gconf(gconf)
     {
         Load();
     }

@@ -141,15 +141,6 @@ namespace pmd2
 
     };
 
-
-    namespace ParserErrors
-    {
-        const string ERROR_Generic                  = "Error";
-        const string ERROR_RefMissingLabel          = "Instruction refers to non-existant label!";
-        const string ERROR_UnknownCmd               = "Unknown instruction!";
-        const string ERROR_RoutineMissingAttribute  = "";
-    };
-
 //==============================================================================
 //  GameScriptsXMLParser
 //==============================================================================
@@ -163,8 +154,9 @@ namespace pmd2
     public:
         /*
         */
-        SSBXMLParser( eGameVersion version, eGameRegion region )
-            :m_version(version), m_region(region), m_opinfo(GameVersionToOpCodeVersion(version)), m_lvlentryinf(version)
+        SSBXMLParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf )
+            :m_version(version), m_region(region), m_opinfo(GameVersionToOpCodeVersion(version)), //m_lvlentryinf(version),
+             m_gconf(conf), m_paraminf(conf)
         {}
 
         /*
@@ -742,13 +734,13 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_CRoutineId:
                 {
-                    uint16_t croutineid = 0;
+                    uint16_t croutineid = m_paraminf.CRoutine(param.value());
 
                     //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
-                    if( m_version == eGameVersion::EoS )
-                        croutineid = FindCommonRoutineIDByName_EoS(param.value());
-                    else
-                        croutineid = FindCommonRoutineIDByName_EoTD(param.value());
+                    //if( m_version == eGameVersion::EoS )
+                    //    croutineid = FindCommonRoutineIDByName_EoS(param.value());
+                    //else
+                    //    croutineid = FindCommonRoutineIDByName_EoTD(param.value());
 
                     if(croutineid != InvalidCRoutineID )
                         outinst.parameters.push_back(croutineid);
@@ -763,7 +755,7 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_FaceType:
                 {
-                    uint16_t faceid = FindFaceIDByName(param.value());
+                    uint16_t faceid = m_paraminf.Face(param.value());
                     //if(faceid != InvalidFaceID)
                         outinst.parameters.push_back(faceid);
                     //else
@@ -772,7 +764,7 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_ScriptVariable:
                 {
-                    uint16_t varid = GameVarInfoNameToId(param.value());
+                    uint16_t varid = m_paraminf.GameVarInfo(param.value());
                     if(varid != InvalidGameVariableID )
                         outinst.parameters.push_back(varid);
                     else
@@ -785,12 +777,12 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_LivesRef:
                 {
-                    uint16_t livesid = 0;
+                    uint16_t livesid = m_paraminf.LivesInfo(param.value());
                     //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
-                    if( m_version == eGameVersion::EoS )
-                        livesid = FindLivesIdByName_EoS(param.value());
-                    else
-                        livesid = FindLivesIdByName_EoTD(param.value());
+                    //if( m_version == eGameVersion::EoS )
+                    //    livesid = FindLivesIdByName_EoS(param.value());
+                    //else
+                    //    livesid = FindLivesIdByName_EoTD(param.value());
 
                     if(livesid != InvalidLivesID )
                         outinst.parameters.push_back(livesid);
@@ -812,8 +804,8 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_LevelId:
                 {
-                    uint16_t lvlid = m_lvlentryinf.FindLevelInfoEntryByName(param.value());
-                    if( lvlid != LevelEntryInfoWrapper::InvalidLevelInfoID() )
+                    uint16_t lvlid = m_paraminf.LevelInfo(param.value());
+                    if( lvlid != InvalidLevelID )
                         outinst.parameters.push_back(lvlid);
                     else
                     {
@@ -825,8 +817,8 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_FacePosMode:
                 {
-                    uint16_t faceposmode = FindFacePosModeByName(param.value());
-                    if( faceposmode != static_cast<int16_t>(eFaceModes::Invalid) )
+                    uint16_t faceposmode = m_paraminf.FacePosMode(param.value());
+                    if( faceposmode != InvalidFaceModeID )
                         outinst.parameters.push_back(faceposmode);
                     else
                     {
@@ -934,7 +926,9 @@ namespace pmd2
         eGameVersion     m_version;
         eGameRegion      m_region;
         OpCodeClassifier m_opinfo;
-        LevelEntryInfoWrapper m_lvlentryinf;
+        //LevelEntryInfoWrapper m_lvlentryinf;
+        ParameterReferences  m_paraminf;
+        const ConfigLoader & m_gconf;
     };
 
 
@@ -945,8 +939,8 @@ namespace pmd2
     class SSDataParser
     {
     public:
-        SSDataParser( eGameVersion version, eGameRegion region )
-            :m_version(version), m_region(region)
+        SSDataParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf )
+            :m_version(version), m_region(region), m_gconf(conf)
         {}
 
         ScriptData operator()(xml_node & seqn)
@@ -959,6 +953,7 @@ namespace pmd2
     private:
         eGameVersion    m_version;
         eGameRegion     m_region;
+        const ConfigLoader & m_gconf;
     };
 
     /*****************************************************************************************
@@ -968,8 +963,8 @@ namespace pmd2
     class GameScriptsXMLParser
     {
     public:
-        GameScriptsXMLParser(eGameRegion & out_reg, eGameVersion & out_gver)
-            :m_out_reg(out_reg), m_out_gver(out_gver)
+        GameScriptsXMLParser(eGameRegion & out_reg, eGameVersion & out_gver, const ConfigLoader & conf)
+            :m_out_reg(out_reg), m_out_gver(out_gver), m_gconf(conf)
         {}
 
         LevelScript Parse( const std::string & file )
@@ -1076,7 +1071,7 @@ namespace pmd2
 
             //If we're unionall.ssb, change the type accordingly
             destgrp.Sequences().emplace( std::forward<string>(name), 
-                                         std::forward<Script>( SSBXMLParser(m_out_gver, m_out_reg)(seqn) ) );
+                                         std::forward<Script>( SSBXMLParser(m_out_gver, m_out_reg, m_gconf)(seqn) ) );
         }
 
         /*
@@ -1131,12 +1126,13 @@ namespace pmd2
             };
 
             //If we're unionall.ssb, change the type accordingly
-            destgrp.SetData( SSDataParser(m_out_gver, m_out_reg)(datan) );
+            destgrp.SetData( SSDataParser(m_out_gver, m_out_reg, m_gconf)(datan) );
         }
 
     private:
-        eGameRegion  & m_out_reg;
-        eGameVersion & m_out_gver;
+        eGameRegion         & m_out_reg;
+        eGameVersion        & m_out_gver;
+        const ConfigLoader  & m_gconf;
     };
 
 
@@ -1151,9 +1147,11 @@ namespace pmd2
     class SSBXMLWriter
     {
     public:
-        SSBXMLWriter( const Script & seq, eGameVersion version, eGameRegion region, bool bprintcmdoffsets = false )
+        SSBXMLWriter( const Script & seq, eGameVersion version, eGameRegion region, const ConfigLoader & conf, bool bprintcmdoffsets = false )
             :m_seq(seq), m_version(version), m_region(region),m_opinfo(GameVersionToOpCodeVersion(version)), 
-             m_lvlinf(version), m_commentoffsets(bprintcmdoffsets)
+            // m_lvlinf(version), 
+            m_paraminf(conf),
+            m_commentoffsets(bprintcmdoffsets), m_gconf(conf)
         {}
         
         void operator()( xml_node & parentn )
@@ -1209,19 +1207,25 @@ namespace pmd2
                 if( isUnionall )
                 {
                     nameid = std::string();
-                    if( m_version == eGameVersion::EoS )
+                    //if( m_version == eGameVersion::EoS )
+                    //{
+                    //    const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(grpcnt);
+                    //    if(pinf)
+                    //    {
+                    //        nameid = pinf->name;
+                    //        sstr<<" - " <<nameid;
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    //! FIXME
+                    //    assert(false);
+                    //}
+                    const auto * pinfo = m_paraminf.CRoutine(grpcnt);
+                    if(pinfo)
                     {
-                        const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(grpcnt);
-                        if(pinf)
-                        {
-                            nameid = pinf->name;
-                            sstr<<" - " <<nameid;
-                        }
-                    }
-                    else
-                    {
-                        //! FIXME
-                        assert(false);
+                        nameid = pinfo->name;
+                        sstr<<" - " <<nameid;
                     }
                 }
                 
@@ -1452,10 +1456,10 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_ScriptVariable:
                     {
-                        const gamevariableinfo * pinf = FindGameVarInfo(pval);
+                        const gamevariable_info * pinf = m_paraminf.GameVarInfo(pval);
                         if(pinf)
                         {
-                            AppendAttribute( instn, deststr.str(), pinf->str );
+                            AppendAttribute( instn, deststr.str(), pinf->name );
                             return;
                         }
                         else
@@ -1467,7 +1471,7 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_FaceType:
                     {
-                        string facename = GetFaceNameByID(pval);
+                        string facename = m_paraminf.Face(pval);
                         if(!facename.empty())
                             AppendAttribute( instn, deststr.str(), facename);
                         else
@@ -1476,34 +1480,20 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_LivesRef:
                     {
-                        if( m_version == eGameVersion::EoS )
-                        {
-                            const livesinfo_EoS * pinf = FindLivesInfo_EoS(pval);
-                            if(pinf)
-                                AppendAttribute( instn, deststr.str(), pinf->name );
-                            else
-                                break;
-                        }
-                        else if( m_version == eGameVersion::EoT || m_version == eGameVersion::EoD )
-                        {
-                            cerr <<"\nNEED TO IMPLEMENT Unk_LivesRef support for EoTD!!!\n";
-                            assert(false);
-                        }
+                        const livesent_info * pinf = m_paraminf.LivesInfo(pval);
+                        if(pinf)
+                            AppendAttribute( instn, deststr.str(), pinf->name );
+                        else
+                            break;
                         return;
                     }
                     case eOpParamTypes::Unk_CRoutineId:
                     {
-                        //! #TODO: Handle common references differently! So we have an actual marker for them.
-                        if( m_version == eGameVersion::EoS )
-                        {
-                            const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(pval);
-                            if(pinf)
-                                AppendAttribute( instn, deststr.str(), pinf->name );
-                            else
-                                AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
-                        }
+                        const commonroutine_info * pinf = m_paraminf.CRoutine(pval);
+                        if(pinf)
+                            AppendAttribute( instn, deststr.str(), pinf->name );
                         else
-                            assert(false); //! #TODO: DO SOMETHING ABOUT THIS
+                            AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         return;
                     }
                     case eOpParamTypes::InstructionOffset: //This is actually converted to a label id by the program
@@ -1513,7 +1503,7 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_FacePosMode:
                     {
-                        const string * pstr = FacePosModeToStr(pval);
+                        const string * pstr = m_paraminf.FacePosMode(pval);
                         if(pstr)
                             AppendAttribute( instn, deststr.str(), *pstr );
                         else
@@ -1525,14 +1515,19 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_LevelId:
                     {
-                        const string * lvlname = m_lvlinf.GetLevelInfoEntryName(pval);
-                        if(lvlname)
-                        {
-                            AppendAttribute( instn, deststr.str(), *lvlname );
-                        }
+                        if( pval == InvalidLevelID )
+                            AppendAttribute( instn, deststr.str(), NullLevelId );
                         else
                         {
-                            assert(false);
+                            const level_info * lvlinf = m_paraminf.LevelInfo(pval);
+                            if(lvlinf)
+                            {
+                                AppendAttribute( instn, deststr.str(), lvlinf->name );
+                            }
+                            else
+                            {
+                                assert(false);
+                            }
                         }
                         return;
                     }
@@ -1683,10 +1678,13 @@ namespace pmd2
         eGameVersion                m_version;
         eGameRegion                 m_region;
         OpCodeClassifier            m_opinfo;
-        LevelEntryInfoWrapper       m_lvlinf;
+        //LevelEntryInfoWrapper       m_lvlinf;
+        ParameterReferences         m_paraminf;
+
         std::unordered_set<size_t>  m_referedstrids;   //String ids that have been referred to by an instruction
         std::unordered_set<size_t>  m_referedconstids; //constant ids that have been referred to by an instruction
         bool                        m_commentoffsets;
+        const ConfigLoader        & m_gconf;
 
     };
 
@@ -1697,8 +1695,8 @@ namespace pmd2
     class GameScriptsXMLWriter
     {
     public:
-        GameScriptsXMLWriter( const LevelScript & set, eGameRegion greg, eGameVersion gver )
-            :m_scrset(set), m_region(greg), m_version(gver)
+        GameScriptsXMLWriter( const LevelScript & set, eGameRegion greg, eGameVersion gver, const ConfigLoader & conf )
+            :m_scrset(set), m_region(greg), m_version(gver), m_gconf(conf)
         {}
 
         void Write(const std::string & destdir, bool bautoescape)
@@ -1762,7 +1760,7 @@ namespace pmd2
             sstr <<std::right <<std::setw(10) <<setfill(' ') <<seq.Name() <<" Script";
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "++++++++++++++++++++++" );
-            SSBXMLWriter(seq,  m_version, m_region)(parentn);
+            SSBXMLWriter(seq,  m_version, m_region, m_gconf)(parentn);
         }
 
         inline void WriteSSDataContent( xml_node & parentn, const ScriptData & dat )
@@ -1780,8 +1778,9 @@ namespace pmd2
 
     private:
         const LevelScript & m_scrset;
-        eGameRegion       m_region;
-        eGameVersion      m_version;
+        eGameRegion         m_region;
+        eGameVersion        m_version;
+        const ConfigLoader& m_gconf;
     };
 
 //==============================================================================
@@ -1794,19 +1793,18 @@ namespace pmd2
             Is used in packaged tasks to be handled by the thread pool.
     */
     //bool RunLevelXMLImport( const ScrSetLoader & ldr, string fname, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
-    bool RunLevelXMLImport( GameScripts & gs, string fname, string dest, eGameRegion reg, eGameVersion ver, atomic<uint32_t> & completed )
+    bool RunLevelXMLImport( GameScripts      & gs, 
+                            string             fname, 
+                            string             dest, 
+                            eGameRegion        reg, 
+                            eGameVersion       ver, 
+                            atomic<uint32_t> & completed )
     {
-#ifdef _DEBUG
-if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
-    cout<<"lol";
-#else
-        assert(false);
-#endif
         try
         {
             eGameRegion  tempregion  = eGameRegion::Invalid;
             eGameVersion tempversion = eGameVersion::Invalid;
-            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion).Parse(fname) ) );
+            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname) ) );
             if( tempregion != reg || tempversion != ver )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
@@ -1823,11 +1821,17 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
             Helper for exporting script data as XML.
             Is used in packaged tasks to be handled by the thread pool.
     */
-    bool RunLevelXMLExport( const ScrSetLoader & entry, const string & dir, eGameRegion reg, eGameVersion ver, bool autoescape, atomic<uint32_t> & completed )
+    bool RunLevelXMLExport( const ScrSetLoader  & entry, 
+                            const string        & dir, 
+                            eGameRegion           reg, 
+                            eGameVersion          ver, 
+                            const ConfigLoader  & gs, 
+                            bool                  autoescape, 
+                            atomic<uint32_t>    & completed )
     {
         try
         {
-            GameScriptsXMLWriter(entry(), reg, ver).Write(dir, autoescape);
+            GameScriptsXMLWriter(entry(), reg, ver, gs).Write(dir, autoescape);
         }
         catch(const std::exception & )
         {
@@ -1866,7 +1870,6 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         decltype(out_dest.Region())   tempregion;
         decltype(out_dest.Version()) tempversion;
         atomic_bool                  shouldUpdtProgress = true;
-        //future<void>                 updtProgress;
         atomic<uint32_t>             completed = 0;
         thread                       updatethread;
         //Grab our version and region from the 
@@ -1875,7 +1878,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
-        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion).Parse(commonfilename.str()) );
+        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str()) );
 
         if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
@@ -1985,7 +1988,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         //Export COMMON first
         if(bprintprogress)
             cout<<"\t- Writing COMMOM.xml..";
-        GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion ).Write(dir, bautoescapexml);
+        GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion, gs.GetConfig() ).Write(dir, bautoescapexml);
 
         atomic_bool                  shouldUpdtProgress = true;
         future<void>                 updtProgress;
@@ -1999,6 +2002,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
                                                                  std::cref(dir), 
                                                                  gs.m_scrRegion, 
                                                                  gs.m_gameVersion, 
+                                                                 std::cref(gs.GetConfig()),
                                                                  bautoescapexml,
                                                                 std::ref(completed) ) ) );
         }
@@ -2038,34 +2042,43 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
     /*
     */
-    void ScriptSetToXML( const LevelScript & set, eGameRegion gloc, eGameVersion gver, bool bautoescapexml, const std::string & destdir )
+    void ScriptSetToXML( const LevelScript  & set, 
+                         const ConfigLoader & gconf, 
+                         bool                 bautoescapexml, 
+                         const std::string  & destdir )
     {
-        if( gver < eGameVersion::NBGameVers && gloc < eGameRegion::NBRegions )
-            GameScriptsXMLWriter(set, gloc, gver).Write(destdir, bautoescapexml);
+        if( gconf.GetGameVersion().version < eGameVersion::NBGameVers && gconf.GetGameVersion().region < eGameRegion::NBRegions )
+            GameScriptsXMLWriter(set, gconf.GetGameVersion().region, gconf.GetGameVersion().version, gconf).Write(destdir, bautoescapexml);
         else
             throw std::runtime_error("ScriptSetToXML() : Error, invalid version or region!");
     }
 
     /*
     */
-    LevelScript XMLToScriptSet( const std::string & srcdir, eGameRegion & out_reg, eGameVersion & out_gver )
+    LevelScript XMLToScriptSet( const std::string   & srcdir, 
+                                eGameRegion         & out_reg, 
+                                eGameVersion        & out_gver, 
+                                const ConfigLoader  & gconf  )
     {
-        return std::move( GameScriptsXMLParser(out_reg, out_gver).Parse(srcdir) );
+        return std::move( GameScriptsXMLParser(out_reg, out_gver, gconf).Parse(srcdir) );
     }
 
     /*
     */
-    void ScriptToXML( const Script & scr, eGameRegion greg, eGameVersion gver, bool bautoescapexml, const std::string & destdir )
+    void ScriptToXML( const Script        & scr, 
+                      const ConfigLoader  & gconf, 
+                      bool                  bautoescapexml, 
+                      const std::string   & destdir )
     {
         using namespace scriptXML;
         stringstream sstrfname;
         sstrfname << utils::TryAppendSlash(destdir) <<scr.Name() <<".xml";
         xml_document doc;
         xml_node     xroot = doc.append_child( ROOT_SingleScript.c_str() );
-        AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(gver) );
-        AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(greg) );
+        AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(gconf.GetGameVersion().version) );
+        AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(gconf.GetGameVersion().region) );
 
-        SSBXMLWriter(scr, gver, greg)(xroot);
+        SSBXMLWriter(scr, gconf.GetGameVersion().version, gconf.GetGameVersion().region, gconf)(xroot);
 
         //Write stuff
         const unsigned int flag = (bautoescapexml)? pugi::format_default  : 
@@ -2077,7 +2090,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
 
     /*
     */
-    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver )
+    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver, const ConfigLoader  & gconf )
     {
         using namespace scriptXML;
         xml_document     doc;
@@ -2099,7 +2112,7 @@ if( fname == "ExplorersOfSky_Stats\\scripts/D00P01.xml")
         out_greg = StrToGameRegion (xregion.value());
 
         if(seqn)
-            return std::move( SSBXMLParser(out_gver, out_greg)(seqn) );
+            return std::move( SSBXMLParser(out_gver, out_greg, gconf)(seqn) );
         else
         {
             throw std::runtime_error("XMLToScript(): Couldn't find the \""+NODE_ScriptSeq+"\" node!!");

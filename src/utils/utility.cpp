@@ -71,11 +71,12 @@ namespace utils
     void PortablePause()
     {
     #ifdef WIN32
-            system("pause");
+            system("PAUSE");
     #else
             char c = 0;
             cout <<"Press any key and enter to continue..";
             cin >> c;
     #endif
     }
+
 };

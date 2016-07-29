@@ -8,6 +8,8 @@
 #include <ppmdu/fmts/text_str.hpp>
 #include <utils/library_wide.hpp>
 //#include <ppmdu/pmd2/pmd2_scripts.hpp>
+#include <utils/poco_wrapper.hpp>
+#include <utils/whereami_wrapper.hpp>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -428,15 +430,20 @@ namespace statsutil
     {
         if( optdata.size() > 1 )
         {
-            if( utils::isFile( optdata[1] ) )
-            {
+            //assert(!m_applicationdir.empty());
+            //Poco::Path cfgpath(m_applicationdir);
+            //cfgpath.resolve(optdata[1]);  //If cfg path is relative, it gets appended. If absolute, it replaces the app dir path!
+
+            //if( utils::isFile(cfgpath.toString()) )
+            //{
                 m_pmd2cfg = optdata[1];
-                cout << "<!>- Set \"" <<optdata[1]  <<"\" as path to pmd2data file!\n";
-            }
-            else
-                throw runtime_error("New path to pmd2data file does not exists, or is inaccessible!");
+                cout << "<!>- Set \"" <<m_pmd2cfg  <<"\" as path to pmd2data file!\n";
+            //}
+            //else
+            //    throw runtime_error("New path to pmd2data file does not exists, or is inaccessible!");
+            return true;
         }
-        return true;
+        return false;
     }
 
     bool CStatsUtil::ParseOptionLog( const std::vector<std::string> & optdata )
@@ -484,6 +491,22 @@ namespace statsutil
         return m_escxml = true;
     }
 
+
+
+    void CStatsUtil::SetupCFGPath(const std::string & cfgrelpath)
+    {
+        assert(!m_applicationdir.empty());
+        Poco::Path cfgpath(m_applicationdir);
+        cfgpath.makeDirectory();
+        cfgpath.resolve(cfgrelpath);  //If cfg path is relative, it gets appended. If absolute, it replaces the app dir path!
+
+        if( utils::isFile(cfgpath.toString()) )
+            m_pmd2cfg = cfgpath.toString();
+        else
+            throw std::logic_error("CStatsUtil::SetupCFGPath(): Path to pmd2data xml file is non-existant! " + cfgpath.toString());
+    }
+
+
 //
 //
 //
@@ -493,12 +516,14 @@ namespace statsutil
         //Parse arguments and options
         try
         {
+//! #TODO: Eventually put the parsing of the program's directory into the cmdlineutil baseclass!
+            m_applicationdir = utils::GetPathExeDirectory();
             if( !SetArguments(argc,argv) )
                 return -3;
-
+            SetupCFGPath(m_pmd2cfg);
             DetermineOperation();
         }
-        catch( Poco::Exception pex )
+        catch( const Poco::Exception & pex )
         {
             stringstream sstr;
             sstr <<"\n<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<"\n" <<endl;
@@ -514,7 +539,7 @@ namespace statsutil
             PrintReadme();
             return pex.code();
         }
-        catch( exception e )
+        catch( const exception & e )
         {
             stringstream sstr;
             sstr <<"\n<!>-Exception: " << e.what() <<"\n" <<endl;
@@ -533,6 +558,8 @@ namespace statsutil
         return returnval;
     }
 
+
+
     void CStatsUtil::DetermineOperation()
 #if 1
     {
@@ -548,7 +575,6 @@ namespace statsutil
 
         //!#TODO: Handle drag and drop
         cerr <<"#TODO: Fix file handling and detection!\n";
-        //assert(false);
         if( !infile.exists() )
             throw runtime_error("The input path does not exists!");
         
@@ -564,6 +590,8 @@ namespace statsutil
         }
         else if( infile.isDirectory() )
         {
+            assert(false);
+            throw std::runtime_error("Directory handling not yet implemented #TODO");
         }
         else
             throw runtime_error("Cannot determine the desired operation!");
@@ -1067,8 +1095,7 @@ namespace statsutil
         eGameRegion  reg = m_region;
         eGameVersion ver = m_version;
         ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), false ), 
-                     reg, 
-                     ver,
+                     cfgloader,
                      true, 
                      outpath.toString() );
         cout<<"\nDone!\n";
@@ -1094,7 +1121,7 @@ namespace statsutil
 
         eGameRegion  reg = m_region;
         eGameVersion ver = m_version;
-        ::filetypes::WriteScript( outpath.toString(), XMLToScript( inpath.toString(), reg, ver ),
+        ::filetypes::WriteScript( outpath.toString(), XMLToScript( inpath.toString(), reg, ver, cfgloader),
                                  m_region, 
                                  m_version, 
                                  cfgloader.GetLanguageFilesDB() ); 
@@ -1459,10 +1486,6 @@ namespace statsutil
         //Execute the utility
         returnval = Execute();
 
-#ifdef _DEBUG
-        utils::PortablePause();
-#endif
-
         return returnval;
     }
 };
@@ -1550,6 +1573,10 @@ int main( int argc, const char * argv[] )
         cout<< "<!>-ERROR:" <<e.what()<<"\n"
             << "If you get this particular error output, it means an exception got through, and the programmer should be notified!\n";
     }
+
+#ifdef _DEBUG
+        utils::PortablePause();
+#endif
 
     return 0;
 }

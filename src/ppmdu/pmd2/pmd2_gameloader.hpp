@@ -44,8 +44,8 @@ namespace pmd2
         const std::string & GetRomRoot()const;
 
         //Return the game version and locale
-        inline eGameRegion   GetGameRegion ()const {return m_conf->GetGameVersion().region; }
-        inline eGameVersion  GetGameVersion()const {return m_conf->GetGameVersion().version;}
+        inline eGameRegion   GetGameRegion ()const {return MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().region; }
+        inline eGameVersion  GetGameVersion()const {return MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().version;}
 
         //Handles Loading the Game Data
         void Load();
@@ -94,14 +94,14 @@ namespace pmd2
         PMD2_ASM_Manip          * GetAsmManip();
         const PMD2_ASM_Manip    * GetAsmManip()const;
 
-        const ConfigLoader      * GetConfig()const;
+        //const ConfigLoader      * GetConfig()const;
 
     private:
         void AnalyseGame();
         bool LoadConfigUsingARM9();
 
     private:
-        std::shared_ptr<ConfigLoader>        m_conf;
+        //std::shared_ptr<ConfigLoader>        m_conf;
         std::shared_ptr<GameText>            m_text;
         std::unique_ptr<GameScripts>         m_scripts;
         std::unique_ptr<GameGraphics>        m_graphics;

@@ -103,7 +103,10 @@ namespace pmd2
             auto result = DetermineGameVersionAndLocale( fsroot.str() );
             
             if( result.first != eGameVersion::Invalid && result.second != eGameRegion::Invalid )
-                m_conf.reset( new ConfigLoader(result.first, result.second, m_configfile) );
+            {
+                MainPMD2ConfigWrapper::Instance().InitConfig(result.first, result.second, m_configfile);
+                //m_conf.reset( new ConfigLoader(result.first, result.second, m_configfile) );
+            }
             else
                 throw std::runtime_error("GameDataLoader::AnalyseGame(): Couldn't determine the version of the pmd2 ROM data!");
         }
@@ -123,7 +126,8 @@ namespace pmd2
             
             if( arm9off14 != 0 )
             {
-                m_conf.reset( new ConfigLoader(arm9off14, m_configfile) );
+                MainPMD2ConfigWrapper::Instance().InitConfig(arm9off14, m_configfile);
+                //m_conf.reset( new ConfigLoader(arm9off14, m_configfile) );
                 return true;
             }
             else
@@ -168,9 +172,9 @@ namespace pmd2
             stringstream gamefsroot;
             gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
 
-            if( m_conf )
+            if( MainPMD2ConfigWrapper::Instance().GetConfig() )
             {
-                m_text.reset( new GameText( gamefsroot.str(), *m_conf ) );
+                m_text.reset( new GameText( gamefsroot.str(), MainPMD2ConfigWrapper::CfgInstance() ) );
                 m_text->Load();
             }
             else
@@ -191,12 +195,7 @@ namespace pmd2
         {
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
-            //m_scripts.reset( new GameScripts( scriptdir.str(), 
-            //                                  GetGameRegion(), 
-            //                                  GetGameVersion(), 
-            //                                  GetConfig()->GetLanguageFilesDB() ) );
-            m_scripts.reset( new GameScripts( scriptdir.str(), 
-                                              *GetConfig(), escapeasxml ) );
+            m_scripts.reset( new GameScripts( scriptdir.str(), MainPMD2ConfigWrapper::CfgInstance(), escapeasxml ) );
         }
         return m_scripts.get();
     }
@@ -404,10 +403,10 @@ namespace pmd2
     PMD2_ASM_Manip          * GameDataLoader::GetAsmManip()                             { return m_asmmanip.get(); }
     const PMD2_ASM_Manip    * GameDataLoader::GetAsmManip() const                       { return m_asmmanip.get(); }
 
-    const ConfigLoader * GameDataLoader::GetConfig() const
-    {
-        //!#TODO: It would be nice to make use of weak_ptr here, as it was intended!!
-        return m_conf.get();
-    }
+    //const ConfigLoader * GameDataLoader::GetConfig() const
+    //{
+    //    //!#TODO: It would be nice to make use of weak_ptr here, as it was intended!!
+    //    return MainPMD2ConfigWrapper.get();
+    //}
 
 };

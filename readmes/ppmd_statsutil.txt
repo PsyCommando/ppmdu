@@ -26,10 +26,11 @@ Changelog:
     * Fixed bad SIR0 padding.
 -
 0.23(----/--/--):
+    <-!!!!!-> Remade entirely how parameters are processed at the command line, because of the new features requiring extra details. <-!!!!->
+
     * Added XML configuration file system, to handle most game versions specific data.
     * Added ability to XML conf file to refer to append external configuration files by using a <External filename="" /> node.
     * Added Script decompiler + recompiler. Everything is human readable XML.
-    * Remade entirely how parameters are processed at the command line, because of the new features requiring extra details.
     * Added game detection. The ROM root directory specified at the commmand line is analysed to accurately determine the version.
     * Improved PMD2 characterset support. Whenever extended multi-byte characters are used in any other locale than
        Japanese, they're turned into an escaped sequence of characters. That means all multi-bytes characters beginning with 
@@ -39,6 +40,9 @@ Changelog:
     * The game strings parser now supports hexadecimal byte escape sequences: \xhh, in addition to the 
         already supported \n, \0.
     * The script strings parser supports the same escape characters!
+    * The configuration files are now loaded relatively to the executable's directory instead of the current working directory.
+    * References to entities, levels, face portraits, common routines, and more are replaced with their debug name! 
+      This should make everything more readable. The values are loaded from the script data XML file.
 
 ----------------------------------------------------------------------------------------------------
 License info:
