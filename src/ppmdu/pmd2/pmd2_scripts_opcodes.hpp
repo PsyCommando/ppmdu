@@ -1920,6 +1920,18 @@ namespace pmd2
             return ConvertInvalidOffsetToInvalidInt16(ret);
         }
 
+        //Object Info
+        inline const object_info * ObjectInfo( int16_t id )const
+        {
+            return m_gconf.GetGameScriptData().ObjectsInfo().FindByIndex(id);
+        }
+
+        inline int16_t ObjectInfo( const std::string & name )const 
+        {
+            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().ObjectsInfo().FindIndexByName(name));
+        }
+
+
     private:
         //This check if the value is std::numeric_limits<size_t>::max(), the error value when no index was found,
         // into the int16 error value used in the script engine.

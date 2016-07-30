@@ -272,6 +272,9 @@ namespace pmd2
         uint16_t unk2;
     };
 
+//==========================================================================================================
+//
+//==========================================================================================================
     /***********************************************************************************************
         Script
             The content of a SSB file. Script instructions, strings, and constant names.
@@ -332,6 +335,76 @@ namespace pmd2
         consttbl_t  m_contants;
     };
 
+//==========================================================================================================
+//  Script Data Structures
+//==========================================================================================================
+
+    struct LivesDataEntry
+    {
+        int16_t unk0;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+        int16_t unk4;
+        int16_t unk5;
+        int16_t unk6;
+    };
+
+    struct ObjectDataEntry
+    {
+        int16_t unk0;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+        int16_t unk4;
+        int16_t unk5;
+        int16_t unk6;
+        int16_t unk7;
+        int16_t unk8;
+    };
+
+    struct PerformerDataEntry
+    {
+        int16_t unk0;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+        int16_t unk4;
+        int16_t unk5;
+        int16_t unk6;
+        int16_t unk7;
+        int16_t unk8;
+        int16_t unk9;
+    };
+
+    struct EventDataEntry
+    {
+        int16_t unk0;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+        int16_t unk4;
+        int16_t unk5;
+        int16_t unk6;
+    };
+
+    struct UnkScriptDataEntry
+    {
+        int16_t unk0;
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+    };
+
+    struct ScriptLayer
+    {
+        std::vector<LivesDataEntry>     lives;
+        std::vector<ObjectDataEntry>    objects;
+        std::vector<PerformerDataEntry> performers;
+        std::vector<EventDataEntry>     events;
+        std::vector<UnkScriptDataEntry> unkentries;
+    };
+
     /***********************************************************************************************
         ScriptData
             Position data contained in SSA, SSS, and SSE files.
@@ -340,6 +413,8 @@ namespace pmd2
     class ScriptData
     {
     public:
+        typedef std::vector<ScriptLayer> layers_t;
+
         ScriptData()
             /*:m_datatype(eScrDataTy::Invalid)*/
         {}
@@ -354,10 +429,18 @@ namespace pmd2
         //inline eScrDataTy Type()const           {return m_datatype;}
         //inline void       Type(eScrDataTy ty)   {m_datatype = ty;}
 
+        inline layers_t       & Layers()      {return m_layers;}
+        inline const layers_t & Layers()const {return m_layers;}
+
     private:
         std::string m_name;
+        layers_t    m_layers;
         //eScrDataTy  m_datatype;
     };
+
+//==========================================================================================================
+//
+//==========================================================================================================
 
     /***********************************************************************************************
         ScriptSet

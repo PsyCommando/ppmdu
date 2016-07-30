@@ -74,21 +74,18 @@ namespace pmd2
         const string NODE_GVarTbl   = "GameVariablesTable";
         const string NODE_GVarExtTbl= "GameVariablesTableExtended";
         const string NODE_GVar      = "GameVar";
-
         const string NODE_LivesTbl  = "LivesEntityTable";
         const string NODE_Entity    = "Entity";
-
         const string NODE_LevelList = "LevelList";
         const string NODE_Level     = "Level";
-
         const string NODE_FaceNames = "FaceNames";
         const string NODE_Face      = "Face";
-
         const string NODE_FacePosMo = "FacePositionModes";
         const string NODE_Mode      = "Mode";
-
         const string NODE_CRoutineI = "CommonRoutineInfo";
         const string NODE_Routine   = "Routine";
+        const string NODE_ObjectLst = "ObjectsList";
+        const string NODE_Object    = "Object";
 
         const string NODE_ExtFile   = "External";   //For external files to load config from
 
@@ -469,6 +466,8 @@ namespace pmd2
                         ParseFaceModeNames(subnode);
                     else if( subnode.name() == NODE_CRoutineI )
                         ParseCommonRoutines(subnode);
+                    else if(subnode.name() == NODE_ObjectLst )
+                        ParseObjects(subnode);
                 }
             }
 
@@ -611,6 +610,33 @@ namespace pmd2
                 routines.push_back(make_pair( crinfo.name, std::move(crinfo)));
             }
             m_gscriptdata.m_commonroutines.PushEntriesPairs(routines.begin(), routines.end());
+        }
+
+        void ParseObjects(const xml_node & objectsn)
+        {
+            using namespace ConfigXML;
+            deque<pair<string,object_info>> objects;
+            for( const auto & obj : objectsn.children(NODE_Object.c_str()) )
+            {
+                object_info curobj;
+                for( const auto & attr : obj.attributes() )
+                {
+                    //if( attr.name() == ATTR_ID ) //The id is a dummy
+                    //    curobj.id = static_cast<int16_t>(attr.as_int());
+                    /*else*/ if( attr.name() == ATTR_Unk1 )
+                        curobj.unk1 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk2 )
+                        curobj.unk2 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Unk3 )
+                        curobj.unk3 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_Name )
+                        curobj.name = attr.value();
+                }
+                if( curobj.name.empty() )
+                    throw std::runtime_error("ConfigXMLParser::ParseObjects(): An object has no name!!");
+                objects.push_back(make_pair( curobj.name, std::move(curobj)));
+            }
+            m_gscriptdata.m_objectsinfo.PushEntriesPairs( objects.begin(), objects.end() );
         }
 
         void HandleExtFile( std::string extfile )

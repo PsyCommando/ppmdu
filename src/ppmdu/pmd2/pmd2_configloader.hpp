@@ -598,6 +598,18 @@ namespace pmd2
         std::string name;
     };
 
+    /*
+        object_info
+    */
+    struct object_info
+    {
+
+        int16_t unk1;
+        int16_t unk2;
+        int16_t unk3;
+        std::string name;
+    };
+
     /************************************************************************************
         GameScriptData
             Loader/wrapper for XML script data.
@@ -611,6 +623,7 @@ namespace pmd2
         typedef NamedDataEntry<level_info>          lvlinf_t;
         typedef NamedDataEntry<commonroutine_info>  commonroutines_t;
         typedef NamedDataEntry<std::string>         stringlut_t;
+        typedef NamedDataEntry<object_info>         objinf_t;
         
         inline const gvar_t             & GameVariables()const      {return m_gvars;}
         inline const gvar_t             & ExGameVariables()const    {return m_gvarsex;}
@@ -619,6 +632,7 @@ namespace pmd2
         inline const commonroutines_t   & CommonRoutineInfo()const  {return m_commonroutines;}
         inline const stringlut_t        & FaceNames()const          {return m_facenames;}
         inline const stringlut_t        & FacePosModes()const       {return m_faceposmodes;}
+        inline const objinf_t           & ObjectsInfo()const        {return m_objectsinfo;}
 
     private:
         gvar_t              m_gvars;
@@ -628,6 +642,7 @@ namespace pmd2
         commonroutines_t    m_commonroutines;
         stringlut_t         m_facenames;
         stringlut_t         m_faceposmodes;
+        objinf_t            m_objectsinfo;
     };
 
 //========================================================================================
