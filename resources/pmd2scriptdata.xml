@@ -1530,7 +1530,7 @@
       <!--**********************************************-->
       <!--Face Names-->
       <!--**********************************************-->
-      <!--There are 20 unique faces" and 20 flipped versions of them. The flipped versions have no names or slot in this!-->
+      <!--There are 20 unique faces" and 20 flipped versions of them. The flipped versions have no names or slot in this list!-->
       <FaceNames>
         <Face>NORMAL</Face>
         <Face>HAPPY</Face>
@@ -1562,8 +1562,8 @@
         <Mode>Standard</Mode>
         <!--Coordinates-->
         <Mode>AbsCoord</Mode>
-        <Mode>AbsCoordLeft</Mode>
-        <Mode>AbsCoordRight</Mode>
+        <Mode>AbsCoordFaceL</Mode>
+        <Mode>AbsCoordFaceR</Mode>
         <!--Bottom-->
         <Mode>Bottom_C_FaceR</Mode>
         <Mode>Bottom_L_FaceInw</Mode>

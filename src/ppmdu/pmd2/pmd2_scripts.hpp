@@ -22,7 +22,8 @@ namespace pmd2
 {
     const std::string ScriptXMLRoot_SingleScript = "SingleScript"; 
     const std::string ScriptXMLRoot_Level        = "Level"; 
-
+    const std::string ScriptDataXMLRoot_SingleDat= "SingleData"; 
+    const size_t      ScriptWordLen              = sizeof(uint16_t);    //Len of a word in the scripts. Since its a commonly used unit
 
 
     /**********************************************************************************
@@ -341,59 +342,79 @@ namespace pmd2
 
     struct LivesDataEntry
     {
-        int16_t unk0;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t unk3;
-        int16_t unk4;
-        int16_t unk5;
-        int16_t unk6;
+        int16_t livesid = 0;
+        int16_t unk1    = 0;
+        int16_t unk2    = 0;
+        int16_t unk3    = 0;
+        int16_t unk4    = 0;
+        int16_t unk5    = 0;
+        int16_t unk6    = 0;
     };
 
     struct ObjectDataEntry
     {
-        int16_t unk0;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t unk3;
-        int16_t unk4;
-        int16_t unk5;
-        int16_t unk6;
-        int16_t unk7;
-        int16_t unk8;
+        int16_t objid= 0;
+        int16_t unk1 = 0;
+        int16_t unk2 = 0;
+        int16_t unk3 = 0;
+        int16_t unk4 = 0;
+        int16_t unk5 = 0;
+        int16_t unk6 = 0;
+        int16_t unk7 = 0;
+        int16_t unk8 = 0;
     };
 
     struct PerformerDataEntry
     {
-        int16_t unk0;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t unk3;
-        int16_t unk4;
-        int16_t unk5;
-        int16_t unk6;
-        int16_t unk7;
-        int16_t unk8;
-        int16_t unk9;
+        int16_t unk0 = 0;
+        int16_t unk1 = 0;
+        int16_t unk2 = 0;
+        int16_t unk3 = 0;
+        int16_t unk4 = 0;
+        int16_t unk5 = 0;
+        int16_t unk6 = 0;
+        int16_t unk7 = 0;
+        int16_t unk8 = 0;
+        int16_t unk9 = 0;
     };
 
     struct EventDataEntry
     {
-        int16_t unk0;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t unk3;
-        int16_t unk4;
-        int16_t unk5;
-        int16_t unk6;
+        int16_t unk0 = 0;
+        int16_t unk1 = 0;
+        int16_t unk2 = 0;
+        int16_t unk3 = 0;
+        int16_t unk4 = 0;
+        int16_t unk5 = 0;
+        int16_t unk6 = 0;
     };
 
-    struct UnkScriptDataEntry
+    //struct UnkScriptDataEntry
+    //{
+    //    int16_t unk0;
+    //    int16_t unk1;
+    //    int16_t unk2;
+    //    int16_t unk3;
+    //};
+
+    struct PosMarkDataEntry
     {
-        int16_t unk0;
-        int16_t unk1;
-        int16_t unk2;
-        int16_t unk3;
+        int16_t unk0 = 0;
+        int16_t unk1 = 0;   
+        int16_t unk2 = 0;   
+        int16_t unk3 = 0;  
+        int16_t unk4 = 0;  
+        int16_t unk5 = 0;  
+        int16_t unk6 = 0;
+        int16_t unk7 = 0;
+    };
+
+    struct UnkTbl1DataEntry
+    {
+        int16_t unk0 = 0;
+        int16_t unk1 = 0;   
+        int16_t unk2 = 0;   
+        int16_t unk3 = 0;  
     };
 
     struct ScriptLayer
@@ -402,7 +423,7 @@ namespace pmd2
         std::vector<ObjectDataEntry>    objects;
         std::vector<PerformerDataEntry> performers;
         std::vector<EventDataEntry>     events;
-        std::vector<UnkScriptDataEntry> unkentries;
+        //std::vector<UnkScriptDataEntry> unkentries;
     };
 
     /***********************************************************************************************
@@ -413,29 +434,39 @@ namespace pmd2
     class ScriptData
     {
     public:
-        typedef std::vector<ScriptLayer> layers_t;
+        typedef std::vector<ScriptLayer>      layers_t;
+        typedef std::vector<PosMarkDataEntry> posmarks_t;
+        typedef std::vector<UnkTbl1DataEntry> unktbl1ents_t;
 
         ScriptData()
-            /*:m_datatype(eScrDataTy::Invalid)*/
+            :m_datatype(eScrDataTy::Invalid)
         {}
 
-        ScriptData(const std::string & name/*, eScrDataTy datatype*/ )
-            :m_name(name)/*, m_datatype(datatype)*/
+        ScriptData(const std::string & name, eScrDataTy datatype )
+            :m_name(name), m_datatype(datatype)
         {}
 
         inline const std::string & Name()const                      {return m_name;}
         inline void                Name(const std::string & name)   {m_name = name;}
 
-        //inline eScrDataTy Type()const           {return m_datatype;}
-        //inline void       Type(eScrDataTy ty)   {m_datatype = ty;}
+        inline eScrDataTy Type()const           {return m_datatype;}
+        inline void       Type(eScrDataTy ty)   {m_datatype = ty;}
 
-        inline layers_t       & Layers()      {return m_layers;}
-        inline const layers_t & Layers()const {return m_layers;}
+        inline layers_t             & Layers()          {return m_layers;}
+        inline const layers_t       & Layers()const     {return m_layers;}
+
+        inline posmarks_t           & PosMarkers()      {return m_posmarkers;}
+        inline const posmarks_t     & PosMarkers()const {return m_posmarkers;}
+
+        inline unktbl1ents_t        & UnkTbl1()         {return m_unktbl1;}
+        inline const unktbl1ents_t  & UnkTbl1()const    {return m_unktbl1;}
 
     private:
-        std::string m_name;
-        layers_t    m_layers;
-        //eScrDataTy  m_datatype;
+        std::string     m_name;
+        layers_t        m_layers;
+        posmarks_t      m_posmarkers;
+        unktbl1ents_t   m_unktbl1;
+        eScrDataTy      m_datatype;
     };
 
 //==========================================================================================================

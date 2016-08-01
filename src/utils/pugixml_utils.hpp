@@ -153,6 +153,22 @@ namespace pugixmlutils
     }
 
     template<>
+        inline pugi::xml_attribute AppendAttribute<pugi::char_t*>( pugi::xml_node & parent, const pugi::string_t & name, pugi::char_t* value )  
+    {
+        using namespace pugi;
+        xml_attribute att = parent.append_attribute(name.c_str());
+
+#ifdef PUGIXML_WCHAR_MODE
+        if( !att.set_value(value) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
+#else
+        if( !att.set_value(value) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
+#endif
+        return std::move(att);
+    }
+
+    template<>
         inline pugi::xml_attribute AppendAttribute<pugi::string_t>( pugi::xml_node & parent, const pugi::string_t & name, pugi::string_t value )  
     {
         using namespace pugi;

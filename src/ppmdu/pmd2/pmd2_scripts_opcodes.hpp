@@ -137,7 +137,7 @@ namespace pmd2
         EoTD,
         Invalid,
     };
-    const size_t   ScriptWordLen = sizeof(uint16_t);    //Len of a word in the scripts. Since its a commonly used unit
+
     const uint16_t NullOpCode    = 0;                   //The Null opcode is the same across all versions of the opcodes!
     const uint16_t InvalidOpCode = std::numeric_limits<uint16_t>::max();
 
@@ -971,6 +971,7 @@ namespace pmd2
                                 //Third parameter of camera_SetEffect
 
         //Specifics
+        Direction,              //A sprite direction 
         Duration,               //A duration in possibly ticks or milliseconds
         CoordinateX,             //A coordinate on X axis
         CoordinateY,             //A coordinate on Y axis
@@ -992,20 +993,21 @@ namespace pmd2
 
         "actorid",          
         "Unk_PerformerRef",      
-        "Unk_ObjectRef",         
+        "objectid",         
         "svar",    
         "scenario", 
         "procspec",
         "face",
         "bgm",
-        "commonroutineid",         //An id to an instruction group in unionall.ssb
-        "localroutineid",          //An id to a local instruction group
+        "croutineid",         //An id to an instruction group in unionall.ssb
+        "lroutineid",          //An id to a local instruction group
         "animid",
         "facemode",                     //
         "levelid",                  //
 
         "Unk_EncInt",
 
+        "direction",
         "duration",              
         "x",            
         "y",
@@ -1965,7 +1967,7 @@ namespace pmd2
 
             const size_t id = container.FindIndexByName(name);
             if(id != std::numeric_limits<size_t>::max())
-                return id;
+                return static_cast<int16_t>(id);
             else
                 return _INVALIDID;
         }

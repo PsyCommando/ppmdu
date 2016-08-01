@@ -84,10 +84,9 @@ namespace pmd2
         const string NODE_ScriptGroup   = "ScriptSet"s;
         const string ATTR_ScrGrpName    = ATTR_Name;
         
-        const string NODE_ScriptData    = "ScriptData"s;
-        const string ATTR_ScriptType    = "type"s;           // ssa, sse, sss
-        const string ATTR_ScrDatName    = ATTR_Name;
-
+        // ----------------------------------------------
+        // Script
+        // ----------------------------------------------
         const string NODE_ScriptSeq     = "ScriptSequence"s;
         const string ATTR_ScrSeqName    = ATTR_Name;
 
@@ -139,6 +138,56 @@ namespace pmd2
             "param_9",
         };
 
+        // ----------------------------------------------
+        // Script Data
+        // ----------------------------------------------
+        const string ROOT_SingleData        = ScriptDataXMLRoot_SingleDat;
+        const string NODE_ScriptData        = "ScriptData"s;
+        const string ATTR_ScriptType        = "type"s;           // ssa, sse, sss
+        const string ATTR_ScrDatName        = ATTR_Name;
+
+        const string NODE_Layers            = "Layers"s;
+        const string NODE_Layer             = "Layer"s;
+        const string ATTR_DummyID           = "dummy_id"s;
+
+        const string NODE_Actors            = "Actors"s;
+        const string NODE_Actor             = "Actor"s;
+
+        const string NODE_Objects           = "Objects"s;
+        const string NODE_Object            = "Object"s;
+
+        const string NODE_Performers        = "Performers"s;
+        const string NODE_Performer         = "Performer"s;
+
+        const string NODE_Events            = "Events"s;
+        const string NODE_Event             = "Event"s;
+
+        const string NODE_UnkTable3         = "UnkTable3"s;
+        const string NODE_UnkTable3Entry    = "Entry"s;
+
+        const string NODE_UnkTable1         = "UnkTable1"s;
+        const string NODE_UnkTable1Entry    = "Entry"s;
+
+        const string NODE_PositionMarkers   = "PositionMarkers"s;
+        const string NODE_Marker            = "Marker"s;
+
+        const string ATTR_XOffset           = "x"s;
+        const string ATTR_YOffset           = "y"s;
+        const string ATTR_Direction         = "direction"s;
+
+        const string ATTR_UnknownPrintf     = "unk_%d"s;
+
+        const string ATTR_Unk0  = "unk0"s;
+        const string ATTR_Unk1  = "unk1"s;
+        const string ATTR_Unk2  = "unk2"s;
+        const string ATTR_Unk3  = "unk3"s;
+        const string ATTR_Unk4  = "unk4"s;
+        const string ATTR_Unk5  = "unk5"s;
+        const string ATTR_Unk6  = "unk6"s;
+        const string ATTR_Unk7  = "unk7"s;
+        const string ATTR_Unk8  = "unk8"s;
+        const string ATTR_Unk9  = "unk9"s;
+        const string ATTR_Unk10 = "unk10"s;
     };
 
 //==============================================================================
@@ -938,22 +987,306 @@ namespace pmd2
     *****************************************************************************************/
     class SSDataParser
     {
+        inline stringstream & PrintErrorPos( stringstream & sstr, const xml_node & errornode )const
+        {
+            sstr <<m_out.Name() <<", file offset : " <<dec <<nouppercase <<errornode.offset_debug() <<" -> ";
+            return sstr;
+        }
+
     public:
-        SSDataParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf )
-            :m_version(version), m_region(region), m_gconf(conf)
+        SSDataParser( const ConfigLoader & conf )
+            :m_gconf(conf), m_paraminf(conf)
         {}
 
-        ScriptData operator()(xml_node & seqn)
+        ScriptData operator()(xml_node & datan)
         {
-            return ScriptData();
+            using namespace scriptXML;
+            xml_attribute xname = datan.attribute(ATTR_ScrDatName.c_str());
+            if(!xname)
+            {
+                stringstream sstrer;
+                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Script data is missing its \"" 
+                                            << ATTR_ScrDatName << "\" attribute!!";
+                throw std::runtime_error(sstrer.str());
+            }
+            xml_attribute xtype = datan.attribute(ATTR_ScriptType.c_str());
+            if(!xtype)
+            {
+                stringstream sstrer;
+                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Script data is missing its \"" 
+                                            << ATTR_ScriptType <<"\" attribute!!";
+                throw std::runtime_error(sstrer.str());
+            }
+
+            eScrDataTy dataty = StrToScriptDataType(xtype.value());
+            if( dataty == eScrDataTy::Invalid )
+            {
+                stringstream sstrer;
+                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Invalid script data type!!";
+                throw std::runtime_error(sstrer.str());
+            }
+
+            //Init output data
+            m_out = std::move( ScriptData(xname.value(), dataty) );
+
+            ParseUnkTable1(datan);
+            ParsePosMarkers(datan);
+            ParseLayers(datan);
+
+            return std::move(m_out);
         }
 
     private:
+        void ParseUnkTable1(xml_node & datan)
+        {
+            using namespace scriptXML;
+            xml_node unktbl1 = datan.child(NODE_UnkTable1.c_str());
+
+            for(const auto & curunk1entry : unktbl1.children(NODE_UnkTable1Entry.c_str()) )
+            {
+                UnkTbl1DataEntry entry;
+                xml_attribute xunk0 = curunk1entry.attribute(ATTR_Unk0.c_str());
+                xml_attribute xunk1 = curunk1entry.attribute(ATTR_Unk1.c_str());
+                xml_attribute xunk2 = curunk1entry.attribute(ATTR_Unk2.c_str());
+                xml_attribute xunk3 = curunk1entry.attribute(ATTR_Unk3.c_str());
+
+                if(xunk0 && xunk1 && xunk2 && xunk3)
+                {
+                    entry.unk0 = ToWord(xunk0.as_uint());
+                    entry.unk1 = ToWord(xunk1.as_uint());
+                    entry.unk2 = ToWord(xunk2.as_uint());
+                    entry.unk3 = ToWord(xunk3.as_uint());
+                    m_out.UnkTbl1().push_back(std::move(entry));
+                }
+                else
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataParser::ParseUnkTable1(): Missing one or more of the 4 attributes for Unk Table 1 entry!";
+                    throw std::runtime_error(sstrer.str());
+                }
+            }
+        }
+
+        void ParsePosMarkers(xml_node & datan)
+        {
+            using namespace scriptXML;
+            xml_node posmarkers = datan.child(NODE_PositionMarkers.c_str());
+
+            for(const auto & marker : posmarkers.children(NODE_Marker.c_str()) )
+            {
+                PosMarkDataEntry entry;
+
+                for( const auto & attr : marker.attributes() )
+                {
+                    if( attr.name() == ATTR_Unk0 )
+                        entry.unk0 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk1 )
+                        entry.unk1 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk2 )
+                        entry.unk2 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk3 )
+                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk4 )
+                        entry.unk4 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk5 )
+                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk6 )
+                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk7 )
+                        entry.unk7 = ToWord(attr.as_uint());
+                }
+
+                m_out.PosMarkers().push_back(std::move(entry));
+            }
+        }
+
+        void ParseLayers(xml_node & datan)
+        {
+            using namespace scriptXML;
+            xml_node    layers = datan.child(NODE_Layers.c_str());
+
+            for( const auto & layer : layers.children(NODE_Layer.c_str()) )
+            {
+                ScriptLayer curlay;
+                ParseActors     (layer.child(NODE_Actors.c_str()),      curlay);
+                ParseObjects    (layer.child(NODE_Objects.c_str()),     curlay);
+                ParsePerformers (layer.child(NODE_Performers.c_str()),  curlay);
+                ParseEvents     (layer.child(NODE_Events.c_str()),      curlay);
+                m_out.Layers().push_back(curlay); //We add even empty layers!!
+            }
+        }
+
+        void ParseActors(xml_node & actorn, ScriptLayer & outlay)
+        {
+            using namespace scriptXML;
+            const string & AttrID = *OpParamTypesToStr(eOpParamTypes::Unk_LivesRef);
+            for( const auto & actor : actorn )
+            {
+                LivesDataEntry entry;
+                xml_attribute xid = actor.attribute(AttrID.c_str());
+                if(!xid)
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,actor) << "SSDataParser::ParseActors(): Missing actor id attribute!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+
+                entry.livesid = m_paraminf.LivesInfo(xid.value());
+                if(entry.livesid == InvalidLivesID)
+                {
+                    cerr << "SSDataParser::ParseActors(), offset: " <<actor.offset_debug() <<": Got Invalid actor id " 
+                         <<entry.livesid <<"! Interpreting as number instead!\n";
+                    entry.livesid = ToSWord(xid.as_int());
+                }
+
+                for( const auto & attr : actor.attributes() )
+                {
+                    if( attr.name() == ATTR_Unk1 )
+                        entry.unk1 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk2 )
+                        entry.unk2 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk3 )
+                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk4 )
+                        entry.unk4 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk5 )
+                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk6 )
+                        entry.unk6 = ToWord(attr.as_uint());
+                }
+                outlay.lives.push_back(std::move(entry));
+            }
+        }
+
+        void ParseObjects(xml_node & objn, ScriptLayer & outlay)
+        {
+            using namespace scriptXML;
+            stringstream   sstr;
+            const string & AttrID = *OpParamTypesToStr(eOpParamTypes::Unk_ObjectRef);
+            for( const auto & object : objn )
+            {
+                ObjectDataEntry entry;
+                xml_attribute xid = object.attribute(AttrID.c_str());
+                if(!xid)
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,object) << "SSDataParser::ParseObjects(): Missing " <<AttrID <<" attribute!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+
+                const string objid = xid.value();
+                size_t       splitpos = string::npos;
+                if( std::isdigit(objid.front(), std::locale::classic() ) )
+                {
+                    uint16_t parsedid=0;
+                    sstr << objid;
+                    sstr >> parsedid;
+                    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
+                }
+                else if( (splitpos = objid.find('_')) != string::npos)
+                {
+                    uint16_t parsedid=0;
+                    sstr << objid.substr(0, splitpos);
+                    sstr >> parsedid;
+                    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
+                }
+                else
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,object) 
+                        << "SSDataParser::ParseObjects(): Object id is missing object number! Can't reliably pinpoint the correct object instance!";
+                    throw std::runtime_error(sstrer.str());
+                }
+
+                for( const auto & attr : object.attributes() )
+                {
+                    if( attr.name() == ATTR_Unk1 )
+                        entry.unk1 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk2 )
+                        entry.unk2 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk3 )
+                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk4 )
+                        entry.unk4 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk5 )
+                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk6 )
+                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk7 )
+                        entry.unk7 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk8 )
+                        entry.unk8 = ToWord(attr.as_uint());
+                }
+                outlay.objects.push_back(std::move(entry));
+            }
+        }
+
+        void ParsePerformers(xml_node & perfn, ScriptLayer & outlay)
+        {
+            using namespace scriptXML;
+
+            for( const auto & performer : perfn )
+            {
+                PerformerDataEntry entry;
+                for( const auto & attr : performer.attributes() )
+                {
+                    if( attr.name() == ATTR_Unk0 )
+                        entry.unk0 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk1 )
+                        entry.unk1 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk2 )
+                        entry.unk2 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk3 )
+                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk4 )
+                        entry.unk4 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk5 )
+                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk6 )
+                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk7 )
+                        entry.unk7 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk8 )
+                        entry.unk8 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk9 )
+                        entry.unk9 = ToWord(attr.as_uint());
+                }
+                outlay.performers.push_back(std::move(entry));
+            }
+        }
+
+        void ParseEvents(xml_node & evn, ScriptLayer & outlay)
+        {
+            using namespace scriptXML;
+
+            for( const auto & aevent : evn )
+            {
+                EventDataEntry entry;
+                for( const auto & attr : aevent.attributes() )
+                {
+                    if( attr.name() == ATTR_Unk0 )
+                        entry.unk0 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk1 )
+                        entry.unk1 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk2 )
+                        entry.unk2 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk3 )
+                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk4 )
+                        entry.unk4 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk5 )
+                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Unk6 )
+                        entry.unk6 = ToWord(attr.as_uint());
+                }
+                outlay.events.push_back(std::move(entry));
+            }
+        }
 
     private:
-        eGameVersion    m_version;
-        eGameRegion     m_region;
         const ConfigLoader & m_gconf;
+        ScriptData           m_out;
+        ParameterReferences  m_paraminf;
     };
 
     /*****************************************************************************************
@@ -1105,17 +1438,17 @@ namespace pmd2
                 case eScrDataTy::SSS:
                 {
                     destgrp.Type(eScriptSetType::UNK_sub);
-                    return;
+                    break;
                 }
                 case eScrDataTy::SSE:
                 {
                     destgrp.Type(eScriptSetType::UNK_enter);
-                    return;
+                    break;
                 }
                 case eScrDataTy::SSA:
                 {
                     destgrp.Type(eScriptSetType::UNK_fromlsd);
-                    return;
+                    break;
                 }
                 default:
                 {
@@ -1125,8 +1458,7 @@ namespace pmd2
                 }
             };
 
-            //If we're unionall.ssb, change the type accordingly
-            destgrp.SetData( SSDataParser(m_out_gver, m_out_reg, m_gconf)(datan) );
+            destgrp.SetData( SSDataParser(m_gconf)(datan) );
         }
 
     private:
@@ -1207,20 +1539,6 @@ namespace pmd2
                 if( isUnionall )
                 {
                     nameid = std::string();
-                    //if( m_version == eGameVersion::EoS )
-                    //{
-                    //    const CommonRoutineInfo_EoS * pinf = FindCommonRoutineInfo_EoS(grpcnt);
-                    //    if(pinf)
-                    //    {
-                    //        nameid = pinf->name;
-                    //        sstr<<" - " <<nameid;
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    //! FIXME
-                    //    assert(false);
-                    //}
                     const auto * pinfo = m_paraminf.CRoutine(grpcnt);
                     if(pinfo)
                     {
@@ -1678,7 +1996,6 @@ namespace pmd2
         eGameVersion                m_version;
         eGameRegion                 m_region;
         OpCodeClassifier            m_opinfo;
-        //LevelEntryInfoWrapper       m_lvlinf;
         ParameterReferences         m_paraminf;
 
         std::unordered_set<size_t>  m_referedstrids;   //String ids that have been referred to by an instruction
@@ -1686,6 +2003,261 @@ namespace pmd2
         bool                        m_commentoffsets;
         const ConfigLoader        & m_gconf;
 
+    };
+
+    /*****************************************************************************************
+        SSDataXMLWriter
+            
+    *****************************************************************************************/
+    class SSDataXMLWriter
+    {
+    public:
+        SSDataXMLWriter(const ScriptData & data, const ConfigLoader & conf)
+            :m_data(data), m_paraminf(conf), m_gconf(conf)
+        {}
+
+        void operator()(xml_node & parentn)
+        {
+            using namespace scriptXML;
+            xml_node xdata = AppendChildNode(parentn, NODE_ScriptData);
+            AppendAttribute( xdata, ATTR_ScrDatName, m_data.Name());
+            AppendAttribute( xdata, ATTR_ScriptType, ScriptDataTypeToStr(m_data.Type()));
+
+            WriteUnkTable1(xdata);
+            WritePositionMarkers(xdata);
+            WriteLayers(xdata);
+        }
+
+    private:
+
+        inline char * MakeHexa( uint16_t value, char * buffer )
+        {
+            std::sprintf(buffer, "0x%X", value);
+            return buffer;
+        }
+
+        void WriteUnkTable1(xml_node & parentn)
+        {
+            using namespace scriptXML;
+            if(m_data.UnkTbl1().empty())
+                return;
+            xml_node       xunktbl1 = AppendChildNode(parentn, NODE_UnkTable1);
+            array<char,32> buf{0};
+
+            for( const auto & unk1ent : m_data.UnkTbl1() )
+            {
+                xml_node xentry = AppendChildNode(xunktbl1, NODE_UnkTable1Entry);
+                AppendAttribute(xentry, ATTR_Unk0, MakeHexa(unk1ent.unk0, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk1, MakeHexa(unk1ent.unk1, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk2, MakeHexa(unk1ent.unk2, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk3, MakeHexa(unk1ent.unk3, buf.data()) );
+            }
+        }
+
+        void WritePositionMarkers(xml_node & parentn)
+        {
+            using namespace scriptXML;
+            if(m_data.PosMarkers().empty())
+                return;
+            xml_node        xposmark = AppendChildNode(parentn, NODE_PositionMarkers);
+            array<char,32>  buf{0};
+
+            for( const auto & marker : m_data.PosMarkers() )
+            {
+                xml_node xentry = AppendChildNode(xposmark, NODE_Marker);
+                AppendAttribute(xentry, ATTR_Unk0, MakeHexa(marker.unk0, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk1, MakeHexa(marker.unk1, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk2, MakeHexa(marker.unk2, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk3, MakeHexa(marker.unk3, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk4, MakeHexa(marker.unk4, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk5, MakeHexa(marker.unk5, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk6, MakeHexa(marker.unk6, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk7, MakeHexa(marker.unk7, buf.data()) );
+            }
+        }
+
+
+        void WriteLayers(xml_node & parentn)
+        {
+            using namespace scriptXML;
+            xml_node xlayers = AppendChildNode(parentn, NODE_Layers);
+
+            size_t cntlayer = 0;
+            for( const auto & layer : m_data.Layers() )
+            {
+                WriteCommentNode( xlayers, "Layer #" + to_string(cntlayer) );
+                xml_node xlayer = AppendChildNode(xlayers, NODE_Layer);
+                WriteLayerActors    (xlayer, layer);
+                WriteLayerObjects   (xlayer, layer);
+                WriteLayerPerformers(xlayer, layer);
+                WriteLayerEvents    (xlayer, layer);
+                //WriteLayerUnkTable3 (xlayer, layer);
+                ++cntlayer;
+            }
+        }
+
+        void WriteLayerActors(xml_node & parentn, const ScriptLayer & layer )
+        {
+            using namespace scriptXML;
+            if(layer.lives.empty())
+                return;
+            WriteCommentNode( parentn, to_string(layer.lives.size()) + " actor(s)" );
+
+            xml_node        xactors     = AppendChildNode( parentn, NODE_Actors );
+            const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_LivesRef);
+            size_t          cntact      = 0;
+            array<char,32>  buf{0};
+
+            for( const auto & actor : layer.lives )
+            {
+                WriteCommentNode( xactors, to_string(cntact) );
+                xml_node              xactor = AppendChildNode( xactors, NODE_Actor );
+                const livesent_info * inf    = m_paraminf.LivesInfo(actor.livesid);
+                assert(inf);
+
+                if(inf)
+                    AppendAttribute(xactor, IDAttrName, inf->name);
+                else
+                    AppendAttribute(xactor, IDAttrName, actor.livesid);
+
+                AppendAttribute(xactor, ATTR_Unk1, MakeHexa(actor.unk1,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk2, MakeHexa(actor.unk2,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk3, MakeHexa(actor.unk3,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk4, MakeHexa(actor.unk4,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk5, MakeHexa(actor.unk5,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk6, MakeHexa(actor.unk6,buf.data()) );
+                ++cntact;
+            }
+        }
+
+        void WriteLayerObjects(xml_node & parentn, const ScriptLayer & layer )
+        {
+            using namespace scriptXML;
+            if(layer.objects.empty())
+                return;
+            WriteCommentNode( parentn, to_string(layer.objects.size()) + " object(s)" );
+
+            xml_node        xobjects    = AppendChildNode( parentn, NODE_Objects );
+            size_t          cnt         = 0;
+            const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_ObjectRef);
+            array<char,32>  buf{0};
+            stringstream    sstr;
+
+            for( const auto & entry : layer.objects )
+            {
+                WriteCommentNode( xobjects, to_string(cnt) );
+                xml_node     xobject = AppendChildNode( xobjects, NODE_Object );
+                const auto * inf = m_paraminf.ObjectInfo(entry.objid);
+                assert(inf);
+
+                if(inf)
+                {
+                    sstr.str(string());
+                    sstr << entry.objid <<"_" <<inf->name;
+                    AppendAttribute(xobject, IDAttrName, sstr.str() );
+                }
+                else
+                    AppendAttribute(xobject, IDAttrName, entry.objid);
+
+                AppendAttribute(xobject, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
+                AppendAttribute(xobject, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
+            }
+        }
+
+        void WriteLayerPerformers(xml_node & parentn, const ScriptLayer & layer )
+        {
+            using namespace scriptXML;
+            if(layer.performers.empty())
+                return;
+            WriteCommentNode( parentn, to_string(layer.performers.size()) + " performer(s)" );
+
+            xml_node        xperfs      = AppendChildNode( parentn, NODE_Performers );
+            size_t          cnt         = 0;
+            const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_PerformerRef);
+            array<char,32>  buf{0};
+
+            for( const auto & entry : layer.performers )
+            {
+                WriteCommentNode( xperfs, to_string(cnt) );
+                xml_node xperf = AppendChildNode( xperfs, NODE_Performer );
+                AppendAttribute(xperf, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk9, MakeHexa(entry.unk9,buf.data()) );
+            }
+        }
+
+        void WriteLayerEvents(xml_node & parentn, const ScriptLayer & layer )
+        {
+            using namespace scriptXML;
+            if(layer.events.empty())
+                return;
+            WriteCommentNode( parentn, to_string(layer.events.size()) + " event(s)" );
+
+            xml_node        xevents     = AppendChildNode( parentn, NODE_Events );
+            size_t          cnt         = 0;
+            const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
+            array<char,32>  buf{0};
+
+            for( const auto & entry : layer.events )
+            {
+                WriteCommentNode( xevents, to_string(cnt) );
+                xml_node     xevent = AppendChildNode( xevents, NODE_Event );
+                const auto * inf = m_paraminf.CRoutine(entry.unk0);
+
+                if(inf)
+                    AppendAttribute(xevent, IDAttrName, inf->name);
+                else
+                    AppendAttribute(xevent, IDAttrName, entry.unk0);
+
+                AppendAttribute(xevent, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+            }
+        }
+
+        //void WriteLayerUnkTable3(xml_node & parentn, const ScriptLayer & layer )
+        //{
+        //    using namespace scriptXML;
+        //    if(layer.unkentries.empty())
+        //        return;
+        //    WriteCommentNode( parentn, to_string(layer.unkentries.size()) + " entrie(s)" );
+
+        //    xml_node        xentries = AppendChildNode( parentn, NODE_UnkTable3 );
+        //    size_t          cnt      = 0;
+        //    array<char,32>  buf{0};
+
+        //    for( const auto & entry : layer.unkentries )
+        //    {
+        //        WriteCommentNode( xentries, to_string(cnt) );
+        //        xml_node xentry = AppendChildNode( xentries, NODE_UnkTable3Entry );
+
+        //        AppendAttribute(xentry, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
+        //        AppendAttribute(xentry, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
+        //        AppendAttribute(xentry, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
+        //        AppendAttribute(xentry, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+        //    }
+        //}
+
+    private:
+        const ScriptData   & m_data;
+        ParameterReferences  m_paraminf;
+        const ConfigLoader & m_gconf;
     };
 
     /*****************************************************************************************
@@ -1713,7 +2285,7 @@ namespace pmd2
             WriteLSDTable(xroot);
 
             for( const auto & entry : m_scrset.Components() )
-                WriteGrp(xroot,entry);
+                WriteSet(xroot,entry);
 
             const unsigned int flag = (bautoescape)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
@@ -1724,22 +2296,22 @@ namespace pmd2
 
     private:
 
-        void WriteGrp( xml_node & parentn, const ScriptSet & grp )
+        void WriteSet( xml_node & parentn, const ScriptSet & set )
         {
             using namespace scriptXML;
             WriteCommentNode(parentn, "##########################################" );
             stringstream sstr;
-            sstr <<std::right <<std::setw(10) <<setfill(' ') <<grp.Identifier() <<" Set";
+            sstr <<std::right <<std::setw(10) <<setfill(' ') <<set.Identifier() <<" Set";
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "##########################################" );
             xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
 
-            AppendAttribute( xgroup, ATTR_GrpName, grp.Identifier() );
+            AppendAttribute( xgroup, ATTR_GrpName, set.Identifier() );
 
-            if( grp.Data() )
-                WriteSSDataContent( xgroup, *grp.Data() );
+            if( set.Data() )
+                WriteSSDataContent( xgroup, *set.Data() );
 
-            for( const auto & seq : grp.Sequences() )
+            for( const auto & seq : set.Sequences() )
                 WriteSSBContent(xgroup, seq.second);
         }
 
@@ -1771,6 +2343,7 @@ namespace pmd2
             sstr <<std::right <<std::setw(10) <<setfill(' ') <<dat.Name() <<" Data";
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "======================" );
+            SSDataXMLWriter(dat, m_gconf)(parentn);
             //! #TODO: DO SOMETHING HERE
         }
 
