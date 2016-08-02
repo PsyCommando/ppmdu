@@ -982,10 +982,10 @@ namespace pmd2
 
 
     /*****************************************************************************************
-        SSDataParser
+        SSDataXMLParser
             
     *****************************************************************************************/
-    class SSDataParser
+    class SSDataXMLParser
     {
         inline stringstream & PrintErrorPos( stringstream & sstr, const xml_node & errornode )const
         {
@@ -994,7 +994,7 @@ namespace pmd2
         }
 
     public:
-        SSDataParser( const ConfigLoader & conf )
+        SSDataXMLParser( const ConfigLoader & conf )
             :m_gconf(conf), m_paraminf(conf)
         {}
 
@@ -1005,7 +1005,7 @@ namespace pmd2
             if(!xname)
             {
                 stringstream sstrer;
-                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Script data is missing its \"" 
+                PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Script data is missing its \"" 
                                             << ATTR_ScrDatName << "\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
@@ -1013,7 +1013,7 @@ namespace pmd2
             if(!xtype)
             {
                 stringstream sstrer;
-                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Script data is missing its \"" 
+                PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Script data is missing its \"" 
                                             << ATTR_ScriptType <<"\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
@@ -1022,7 +1022,7 @@ namespace pmd2
             if( dataty == eScrDataTy::Invalid )
             {
                 stringstream sstrer;
-                PrintErrorPos(sstrer,datan) << "SSDataParser::operator(): Invalid script data type!!";
+                PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Invalid script data type!!";
                 throw std::runtime_error(sstrer.str());
             }
 
@@ -1061,7 +1061,7 @@ namespace pmd2
                 else
                 {
                     stringstream sstrer;
-                    PrintErrorPos(sstrer,curunk1entry) << "SSDataParser::ParseUnkTable1(): Missing one or more of the 4 attributes for Unk Table 1 entry!";
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseUnkTable1(): Missing one or more of the 4 attributes for Unk Table 1 entry!";
                     throw std::runtime_error(sstrer.str());
                 }
             }
@@ -1127,14 +1127,14 @@ namespace pmd2
                 if(!xid)
                 {
                     stringstream sstrer;
-                    PrintErrorPos(sstrer,actor) << "SSDataParser::ParseActors(): Missing actor id attribute!!";
+                    PrintErrorPos(sstrer,actor) << "SSDataXMLParser::ParseActors(): Missing actor id attribute!!";
                     throw std::runtime_error(sstrer.str());
                 }
 
                 entry.livesid = m_paraminf.LivesInfo(xid.value());
                 if(entry.livesid == InvalidLivesID)
                 {
-                    cerr << "SSDataParser::ParseActors(), offset: " <<actor.offset_debug() <<": Got Invalid actor id " 
+                    cerr << "SSDataXMLParser::ParseActors(), offset: " <<actor.offset_debug() <<": Got Invalid actor id " 
                          <<entry.livesid <<"! Interpreting as number instead!\n";
                     entry.livesid = ToSWord(xid.as_int());
                 }
@@ -1170,7 +1170,7 @@ namespace pmd2
                 if(!xid)
                 {
                     stringstream sstrer;
-                    PrintErrorPos(sstrer,object) << "SSDataParser::ParseObjects(): Missing " <<AttrID <<" attribute!!";
+                    PrintErrorPos(sstrer,object) << "SSDataXMLParser::ParseObjects(): Missing " <<AttrID <<" attribute!!";
                     throw std::runtime_error(sstrer.str());
                 }
 
@@ -1181,20 +1181,22 @@ namespace pmd2
                     uint16_t parsedid=0;
                     sstr << objid;
                     sstr >> parsedid;
+                    sstr.str(string());
                     entry.objid = parsedid; //! #FIXME: Verify it or somthing?
                 }
-                else if( (splitpos = objid.find('_')) != string::npos)
-                {
-                    uint16_t parsedid=0;
-                    sstr << objid.substr(0, splitpos);
-                    sstr >> parsedid;
-                    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
-                }
+                //else if( (splitpos = objid.find('_')) != string::npos)
+                //{
+                //    uint16_t parsedid=0;
+                //    sstr << objid.substr(0, splitpos);
+                //    sstr >> parsedid;
+                //    sstr.str(string());
+                //    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
+                //}
                 else
                 {
                     stringstream sstrer;
                     PrintErrorPos(sstrer,object) 
-                        << "SSDataParser::ParseObjects(): Object id is missing object number! Can't reliably pinpoint the correct object instance!";
+                        << "SSDataXMLParser::ParseObjects(): Object id is missing object number! Can't reliably pinpoint the correct object instance!";
                     throw std::runtime_error(sstrer.str());
                 }
 
@@ -1259,14 +1261,31 @@ namespace pmd2
         {
             using namespace scriptXML;
 
+            const string & AttrID = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
+
             for( const auto & aevent : evn )
             {
                 EventDataEntry entry;
+                xml_attribute  xevid = aevent.attribute(AttrID.c_str());
+                if(!xevid)
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+
+                entry.unk0 = m_paraminf.CRoutine(xevid.value());
+                if(entry.unk0 == InvalidCRoutineID)
+                {
+                    cerr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got common routine id " 
+                         <<entry.unk0 <<"! Interpreting as number instead!\n";
+                    entry.unk0 = ToSWord(xevid.as_int());
+                }
+
                 for( const auto & attr : aevent.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk0 )
-                        entry.unk0 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk1 )
+
+                    if( attr.name() == ATTR_Unk1 )
                         entry.unk1 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk2 )
                         entry.unk2 = ToWord(attr.as_uint());
@@ -1458,7 +1477,7 @@ namespace pmd2
                 }
             };
 
-            destgrp.SetData( SSDataParser(m_gconf)(datan) );
+            destgrp.SetData( SSDataXMLParser(m_gconf)(datan) );
         }
 
     private:
@@ -2444,7 +2463,7 @@ namespace pmd2
         decltype(out_dest.Version()) tempversion;
         atomic_bool                  shouldUpdtProgress = true;
         atomic<uint32_t>             completed = 0;
-        thread                       updatethread;
+        future<void>                 updatethread;
         //Grab our version and region from the 
         if(bprintprogress)
             cout<<"<*>-Compiling COMON.xml..\n";
@@ -2464,30 +2483,10 @@ namespace pmd2
         //Write out common
         out_dest.WriteScriptSet(out_dest.m_common);
 
-        //!#TODO: this is a really dumb  way to do this!! We'd probably want to handle source XML files, instead of looking at the
-        //!       script files we have right now!!
         //Prepare import of everything else!
         multitask::CMultiTaskHandler taskhandler;
-        //for( const auto & entry : out_dest.m_setsindex )
-        //{
-        //    stringstream currentfname;
-        //    currentfname << utils::TryAppendSlash(dir) <<entry.first <<".xml";
-        //    const string fname = currentfname.str();
-
-        //    //If a xml file in the import directory matches one of the level in the target game, load it. Otherwise ignore it!
-        //    if( utils::isFile(fname) )
-        //    {
-        //        taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
-        //                                                             std::cref(entry.second), 
-        //                                                             fname, 
-        //                                                             out_dest.m_scrRegion, 
-        //                                                             out_dest.m_gameVersion, 
-        //                                                             std::ref(completed) ) ) );
-        //    }
-        //}
         Poco::DirectoryIterator dirit(dir);
         Poco::DirectoryIterator dirend;
-        //deque<ScrSetLoader> loaders;
         while( dirit != dirend )
         {
             if( dirit->isFile() && dirit.path().getExtension() == "xml" )
@@ -2495,7 +2494,6 @@ namespace pmd2
 
                 Poco::Path destination(out_dest.GetScriptDir());
                 destination.append(dirit.path().getBaseName());
-                //loaders.push_back( ScrSetLoader(out_dest, destination.toString()) );
                 taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
                                                                      std::ref(out_dest), 
                                                                      dirit->path(), 
@@ -2513,11 +2511,12 @@ namespace pmd2
             {
                 assert(!out_dest.m_setsindex.empty());
                 cout<<"\nCompiling Scripts..\n";
-                updatethread = std::thread( PrintProgressLoop, 
-                                            std::ref(completed), 
-                                            out_dest.m_setsindex.size(), 
-                                            std::ref(shouldUpdtProgress) );
-                updatethread.detach();
+                std::packaged_task<void()> task( std::bind(&PrintProgressLoop, 
+                                                           std::ref(completed), 
+                                                           out_dest.m_setsindex.size(), 
+                                                           std::ref(shouldUpdtProgress)) );
+                updatethread = std::move(task.get_future());
+                std::thread(std::move(task)).detach();
                 //updtProgress = std::async( std::launch::async, 
                 //                           PrintProgressLoop, 
                 //                           std::ref(completed), 
@@ -2529,10 +2528,8 @@ namespace pmd2
             taskhandler.StopExecute();
 
             shouldUpdtProgress = false;
-            //if( updtProgress.valid() )
-            //    updtProgress.get();
-            if(updatethread.joinable())
-                updatethread.join();
+            if(updatethread.valid())
+                updatethread.get();
             if(bprintprogress)
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
 
@@ -2540,10 +2537,8 @@ namespace pmd2
         catch(...)
         {
             shouldUpdtProgress = false;
-            //if( updtProgress.valid() )
-            //    updtProgress.get();
-            if(updatethread.joinable())
-                updatethread.join();
+            if(updatethread.valid())
+                updatethread.get();
             std::rethrow_exception( std::current_exception() );
         }
 

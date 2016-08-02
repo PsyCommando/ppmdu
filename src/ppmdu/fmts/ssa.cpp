@@ -902,18 +902,57 @@ namespace filetypes
         }
 
         /*
+        */
+        inline uint16_t GetBlockBeg(LayerEntry::eTableTypes ty)
+        {
+            switch (ty)
+            {
+                case LayerEntry::eTableTypes::Actors:
+                {
+                    return m_hdr.actorsptr;
+                }
+                case LayerEntry::eTableTypes::Events:
+                {
+                    return m_hdr.eventsptr;
+                }
+                case LayerEntry::eTableTypes::Objects:
+                {
+                    return m_hdr.objectsptr;
+                }
+                case LayerEntry::eTableTypes::Performers:
+                {
+                    return m_hdr.performersptr;
+                }
+                case LayerEntry::eTableTypes::Unk3:
+                {
+                    return m_hdr.unk3ptr;
+                }
+                default:
+                    break;
+            }
+            assert(false);
+            throw std::runtime_error("SSDataWriter::GetBlockBeg(): Tried to write an unknown layer??? Program logic error.");
+        }
+
+        /*
             WriteATable
-                Writes for a single layer, the content of one of its table of assigned entries!
+                Writes for a single layer, the content of one of its lists of assigned entries!
+
+                IntermediateTy == The low-level struct that will handle writing the actual data for the entry
+                _TableTy       == The container that contains the processed entries for the entries in the list
         */
         template<class IntermediateTy, class _TableTy>
-            void WriteATable(outit_t & itw, LayerEntry::eTableTypes ty, const _TableTy & table, size_t cntlayer )
+            void WriteATable(outit_t & itw, LayerEntry::eTableTypes ty, const _TableTy & list, size_t cntlayer )
         {
             //**Note**: If no entries, point to the last word of the last entry/datablock!!!
-            auto & target = m_layertbl[cntlayer].tables[static_cast<size_t>(ty)];
-            target.nbentries = table.size();
-            target.offset    = (target.nbentries == 0)? (GetCurFOff() - 1) : GetCurFOff(); //If empty, set pointer 1 word behind
 
-            for(const auto & entry : table)
+            //#1 - Write the offset the specified entries for the current layer begins at, and how many there are.
+            auto & target = m_layertbl[cntlayer].tables[static_cast<size_t>(ty)];
+            target.nbentries = list.size();
+            target.offset    = (target.nbentries == 0)? (GetBlockBeg(ty) - 1) : GetCurFOff(); //If empty, set pointer 1 word behind current block beg!
+
+            //#2 - Then append all entries for the current layer to the current file position
+            for(const auto & entry : list)
                 itw = IntermediateTy(entry).Write(itw); 
         }
 
