@@ -17,6 +17,7 @@ Description:
 */
 #include <locale>
 #include <string>
+#include <unordered_map>
 
 namespace utils
 {
@@ -45,11 +46,31 @@ namespace utils
         inline bool ShouldDisplayProgress()const     {return m_displayProgress;}
         inline void ShouldDisplayProgress(bool bdisp){ m_displayProgress = bdisp; }
 
+        /*
+            Common values between all programs
+        */
+        enum struct eBasicValues
+        {
+            ProgramLogDir,
+            ProgramExeDir,
+            NbValues,
+        };
+
+        //! #TODO: Polish this, and integrate it!!
+        inline std::string       & StringValue(eBasicValues val)      { return m_baseval[val];}
+        inline const std::string & StringValue(eBasicValues val)const { return m_baseval.at(val);}
+
+        inline std::string       & StringValue(const std::string & valname)      { return m_sharedvalues[valname];}
+        inline const std::string & StringValue(const std::string & valname)const { return m_sharedvalues.at(valname);}
+
     private:
         bool         m_displayProgress;
         bool         m_verboseOn;
         bool         m_LoggingOn;
         unsigned int m_nbThreads;
+
+        std::unordered_map<eBasicValues,std::string> m_baseval;
+        std::unordered_map<std::string, std::string> m_sharedvalues;
     };
 
     /***************************************************************

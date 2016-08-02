@@ -304,6 +304,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\utility</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\multithread_logger.hpp" />
     <ClInclude Include="..\src\utils\parse_utils.hpp" />
     <ClInclude Include="..\src\utils\poco_wrapper.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\utility</Filter>
