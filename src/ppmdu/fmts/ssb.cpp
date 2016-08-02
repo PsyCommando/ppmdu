@@ -1266,7 +1266,7 @@ namespace filetypes
                 hdr.scriptdatlen = TryConvertToScriptLen(m_datalen);
                 hdr.consttbllen  = TryConvertToScriptLen(m_constblksize);
                 hdr.strtbllen    = TryConvertToScriptLen(m_stringblksSizes.front());
-                hdr.unk1         = 0; //Unk1 seems to be completely useless, so we're putting in random junk
+                hdr.unk1         = static_cast<uint16_t>(std::ceil(1.5f * m_nbstrings)); //Unk1 is always 1.5 times the nb of strings rounded up!
                 itw = hdr.WriteToContainer(itw);
             }
             else if( m_scrRegion == eGameRegion::Europe )

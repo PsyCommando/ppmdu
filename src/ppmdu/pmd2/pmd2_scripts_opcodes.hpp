@@ -1928,6 +1928,33 @@ namespace pmd2
             return m_gconf.GetGameScriptData().ObjectsInfo().FindByIndex(id);
         }
 
+        std::string MakeObjectNameIDString(int16_t id)const
+        {
+            std::stringstream sstr;
+            const auto * inf = ObjectInfo(id);
+            sstr <<id;
+            if( inf )
+                sstr <<"_" <<inf->name;
+            return sstr.str();
+        }
+
+        int16_t ParseObjectNameIDString(const std::string & name)
+        {
+            std::stringstream sstr;
+            uint16_t     parsedid = 0;
+            if( std::isdigit(name.front(), std::locale::classic() ) )
+            {
+                sstr << name;
+                sstr >> parsedid;
+                //! #FIXME: Verify it or somthing?
+            }
+            else
+            {
+                throw std::runtime_error("ParameterReferences::ParseObjectNameIDString(): Object id " + name + ", is missing object number! Can't reliably pinpoint the correct object instance!");
+            }
+            return parsedid;
+        }
+
         inline int16_t ObjectInfo( const std::string & name )const 
         {
             return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().ObjectsInfo().FindIndexByName(name));
@@ -1969,7 +1996,13 @@ namespace pmd2
             if(id != std::numeric_limits<size_t>::max())
                 return static_cast<int16_t>(id);
             else
-                return _INVALIDID;
+            {
+                std::stringstream sstr;
+                int16_t outval = 0;
+                sstr << name;
+                sstr >> outval;
+                return outval;
+            }
         }
 
     private:

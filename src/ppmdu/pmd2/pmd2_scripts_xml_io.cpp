@@ -805,10 +805,7 @@ namespace pmd2
                 case eOpParamTypes::Unk_FaceType:
                 {
                     uint16_t faceid = m_paraminf.Face(param.value());
-                    //if(faceid != InvalidFaceID)
-                        outinst.parameters.push_back(faceid);
-                    //else
-                    //    outinst.parameters.push_back( ToWord(param.as_int()) );
+                    outinst.parameters.push_back(faceid);
                     break;
                 }
                 case eOpParamTypes::Unk_ScriptVariable:
@@ -846,22 +843,36 @@ namespace pmd2
                 case eOpParamTypes::Unk_PerformerRef:
                 {
                     //!#TODO
+                    outinst.parameters.push_back( ToWord( param.as_uint() ) );
+                    break;
                 }
                 case eOpParamTypes::Unk_ObjectRef:
                 {
-                    //!#TODO
+                    try
+                    {
+                        outinst.parameters.push_back(m_paraminf.ParseObjectNameIDString(param.value())); //! #FIXME: Verify it or somthing?
+                    }
+                    catch( const std::exception & )
+                    {
+                        stringstream sstrer;
+                        PrintErrorPos(sstrer,parentinstn) 
+                            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<param.value() 
+                            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+                        throw_with_nested( std::runtime_error(sstrer.str()) );
+                    }
+                    break;
                 }
                 case eOpParamTypes::Unk_LevelId:
                 {
                     uint16_t lvlid = m_paraminf.LevelInfo(param.value());
-                    if( lvlid != InvalidLevelID )
-                        outinst.parameters.push_back(lvlid);
-                    else
+                    if( lvlid == InvalidLevelID && param.value() != NullLevelId)
                     {
                         clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
                              <<" : invalid level id value, using it as a raw integer.\n"; 
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
+
+                    outinst.parameters.push_back(lvlid);
                     break;
                 }
                 case eOpParamTypes::Unk_FacePosMode:
@@ -1175,29 +1186,17 @@ namespace pmd2
                 }
 
                 const string objid = xid.value();
-                size_t       splitpos = string::npos;
-                if( std::isdigit(objid.front(), std::locale::classic() ) )
+                try
                 {
-                    uint16_t parsedid=0;
-                    sstr << objid;
-                    sstr >> parsedid;
-                    sstr.str(string());
-                    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
+                    entry.objid = m_paraminf.ParseObjectNameIDString(objid); //! #FIXME: Verify it or somthing?
                 }
-                //else if( (splitpos = objid.find('_')) != string::npos)
-                //{
-                //    uint16_t parsedid=0;
-                //    sstr << objid.substr(0, splitpos);
-                //    sstr >> parsedid;
-                //    sstr.str(string());
-                //    entry.objid = parsedid; //! #FIXME: Verify it or somthing?
-                //}
-                else
+                catch( const std::exception & )
                 {
                     stringstream sstrer;
                     PrintErrorPos(sstrer,object) 
-                        << "SSDataXMLParser::ParseObjects(): Object id is missing object number! Can't reliably pinpoint the correct object instance!";
-                    throw std::runtime_error(sstrer.str());
+                        << "SSDataXMLParser::ParseObjects(): Object id " <<objid 
+                        <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+                    throw_with_nested(std::runtime_error(sstrer.str()));
                 }
 
                 for( const auto & attr : object.attributes() )
@@ -1850,6 +1849,11 @@ namespace pmd2
                         }
                         return;
                     }
+                    case eOpParamTypes::Unk_ObjectRef:
+                    {
+                        AppendAttribute(instn, deststr.str(), m_paraminf.MakeObjectNameIDString(pval) );
+                        return;
+                    }
                     case eOpParamTypes::Unk_LevelId:
                     {
                         if( pval == InvalidLevelID )
@@ -1890,7 +1894,7 @@ namespace pmd2
             else
             {
                 stringstream  deststr;
-                deststr<<ATTR_Param <<cntparam;
+                deststr<<ATTR_Param <<"_" <<cntparam;
                 AppendAttribute( instn, deststr.str(), sstrval.str() );
             }
         }
@@ -2160,23 +2164,24 @@ namespace pmd2
             size_t          cnt         = 0;
             const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_ObjectRef);
             array<char,32>  buf{0};
-            stringstream    sstr;
+            //stringstream    sstr;
 
             for( const auto & entry : layer.objects )
             {
                 WriteCommentNode( xobjects, to_string(cnt) );
                 xml_node     xobject = AppendChildNode( xobjects, NODE_Object );
-                const auto * inf = m_paraminf.ObjectInfo(entry.objid);
-                assert(inf);
+                //const auto * inf = m_paraminf.ObjectInfo(entry.objid);
+                //assert(inf);
 
-                if(inf)
-                {
-                    sstr.str(string());
-                    sstr << entry.objid <<"_" <<inf->name;
-                    AppendAttribute(xobject, IDAttrName, sstr.str() );
-                }
-                else
-                    AppendAttribute(xobject, IDAttrName, entry.objid);
+                //if(inf)
+                //{
+                //    sstr.str(string());
+                //    sstr << entry.objid <<"_" <<inf->name;
+                //    AppendAttribute(xobject, IDAttrName, sstr.str() );
+                //}
+                //else
+                //    AppendAttribute(xobject, IDAttrName, entry.objid);
+                AppendAttribute(xobject, IDAttrName, m_paraminf.MakeObjectNameIDString(entry.objid) );
 
                 AppendAttribute(xobject, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );

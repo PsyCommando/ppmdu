@@ -2614,7 +2614,6 @@ namespace pmd2
         std::stringstream sstr;
         sstr << id;
         return std::move(sstr.str());
-        //return FindByIndex<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), id, NullFaceName);
     }
 
 };
