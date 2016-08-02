@@ -43,6 +43,7 @@ Changelog:
     * The configuration files are now loaded relatively to the executable's directory instead of the current working directory.
     * References to entities, levels, face portraits, common routines, and more are replaced with their debug name! 
       This should make everything more readable. The values are loaded from the script data XML file.
+    * Added basic support for importing/exporting script data.
 
 ----------------------------------------------------------------------------------------------------
 License info:
