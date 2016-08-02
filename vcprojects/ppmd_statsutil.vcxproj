@@ -75,7 +75,7 @@
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
 copy "$(SolutionDir)resources\pmd2data.xml" "$(OutDir)pmd2data.xml"
-copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
+copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -101,7 +101,7 @@ copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
 copy "$(SolutionDir)readmes\license.txt" "$(OutDir)license.txt"
 
 copy "$(SolutionDir)resources\pmd2data.xml" "$(OutDir)pmd2data.xml"
-copy "$(SolutionDir)resources\pmd2data.xml" "$(SolutionDir)workdir\pmd2data.xml"
+copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
