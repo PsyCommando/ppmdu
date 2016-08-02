@@ -741,6 +741,7 @@ namespace pmd2
                                 eGameVersion        & out_gver, 
                                 const ConfigLoader  & gconf );
 
+    //Script Single File Export
     void ScriptToXML( const Script        & scr, 
                       const ConfigLoader  & gconf, 
                       bool                  bautoescapexml, 
@@ -750,6 +751,17 @@ namespace pmd2
                         eGameRegion         & out_greg, 
                         eGameVersion        & out_gver,
                         const ConfigLoader  & gconf );
+
+    //Script Data Single File Export
+    void ScriptDataToXML( const ScriptData    & dat, 
+                          const ConfigLoader  & gconf, 
+                          bool                  bautoescapexml, 
+                          const std::string   & destdir );
+
+    ScriptData XMLToScriptData( const std::string   & srcfile, 
+                                eGameRegion         & out_greg, 
+                                eGameVersion        & out_gver, 
+                                const ConfigLoader  & gconf );
 
 //====================================================================================
 //  Test Meta-Operation and etc..

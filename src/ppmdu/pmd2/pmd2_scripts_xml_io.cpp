@@ -2653,7 +2653,7 @@ namespace pmd2
                                     pugi::format_indent | pugi::format_no_escapes;
         //Write doc
         if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
-            throw std::runtime_error("GameScriptsXMLWriter::Write(): Can't write xml file " + sstrfname.str());
+            throw std::runtime_error("ScriptToXML(): Can't write xml file " + sstrfname.str());
     }
 
     /*
@@ -2679,6 +2679,10 @@ namespace pmd2
         out_gver = StrToGameVersion(xversion.value());
         out_greg = StrToGameRegion (xregion.value());
 
+        //! #FIXME: possibly load the right config? Or allow the user of the function to probe the xml first and load the correct config?
+        if( out_gver != gconf.GetGameVersion().version || out_greg != gconf.GetGameVersion().region )
+            throw std::runtime_error("XMLToScript(): The file \""s+srcfile+"\" is not for the version/region the program is set to expect!!");
+
         if(seqn)
             return std::move( SSBXMLParser(out_gver, out_greg, gconf)(seqn) );
         else
@@ -2686,6 +2690,70 @@ namespace pmd2
             throw std::runtime_error("XMLToScript(): Couldn't find the \""+NODE_ScriptSeq+"\" node!!");
             return std::move( Script() );
         }
+    }
+
+
+    /*
+    */
+    void ScriptDataToXML( const ScriptData    & dat, 
+                          const ConfigLoader  & gconf, 
+                          bool                  bautoescapexml, 
+                          const std::string   & destdir )
+    {
+        using namespace scriptXML;
+        stringstream sstrfname;
+        sstrfname << utils::TryAppendSlash(destdir) <<dat.Name() <<".xml";
+        xml_document doc;
+        xml_node     xroot = doc.append_child( ROOT_SingleData.c_str() );
+        AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(gconf.GetGameVersion().version) );
+        AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(gconf.GetGameVersion().region) );
+
+        SSDataXMLWriter(dat, gconf)(xroot);
+
+        //Write stuff
+        const unsigned int flag = (bautoescapexml)? pugi::format_default  : 
+                                    pugi::format_indent | pugi::format_no_escapes;
+        //Write doc
+        if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
+            throw std::runtime_error("ScriptDataToXML(): Can't write xml file " + sstrfname.str());
+    }
+
+    /*
+    */
+    ScriptData XMLToScriptData( const std::string   & srcfile, 
+                                eGameRegion         & out_greg, 
+                                eGameVersion        & out_gver, 
+                                const ConfigLoader  & gconf )
+    {
+        using namespace scriptXML;
+        xml_document doc;
+
+        try
+        {
+            HandleParsingError( doc.load_file(srcfile.c_str()), srcfile);
+        }
+        catch(const std::exception & )
+        {
+            throw_with_nested(std::runtime_error("XMLToScriptData() : Pugixml failed loading file!"));
+        }
+
+        xml_node      parentn    = doc.child(ROOT_SingleData.c_str());
+        xml_attribute xversion   = parentn.attribute(ATTR_GVersion.c_str());
+        xml_attribute xregion    = parentn.attribute(ATTR_GRegion.c_str());
+        xml_node      datan      = parentn.child(NODE_ScriptData.c_str());
+
+        out_gver = StrToGameVersion(xversion.value());
+        out_greg = StrToGameRegion (xregion.value());
+
+        //! #FIXME: possibly load the right config? Or allow the user of the function to probe the xml first and load the correct config?
+        if( out_gver != gconf.GetGameVersion().version || out_greg != gconf.GetGameVersion().region )
+            throw std::runtime_error("XMLToScriptData(): The file \""s+srcfile+"\" is not for the version/region the program is set to expect!!");
+
+        if(datan)
+            return std::move( SSDataXMLParser(gconf)(datan) );
+        else
+            throw std::runtime_error("XMLToScriptData(): Couldn't find the \""+NODE_ScriptData+"\" node!!");
+        return ScriptData();
     }
 
 

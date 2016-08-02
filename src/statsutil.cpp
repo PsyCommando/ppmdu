@@ -26,6 +26,7 @@ using namespace ::pmd2;
 
 //!#REMOVEME: Better encapsulate this 
 #include <ppmdu/fmts/ssb.hpp>
+#include <ppmdu/fmts/ssa.hpp>
 #include <pugixml.hpp>
 #include <utils/pugixml_utils.hpp>
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
@@ -50,9 +51,42 @@ namespace XMLSniffer
         return std::move(rinf);
     }
 
+    void CheckGameVersionAndGameRegion( const RootNodeInfo & rootnode, 
+                                        eGameVersion       & out_ver, 
+                                        eGameRegion        & out_reg )
+    {
+        if( rootnode.attributes.size() >= 2 )
+        {
+            cout <<"<!>-XML Script file detected!\n";
+            try
+            {
+                out_ver = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
+                out_reg  = pmd2::StrToGameRegion (rootnode.attributes.at(CommonXMLGameRegionAttrStr));
+            }
+            catch(const std::exception&)
+            {
+                throw_with_nested(std::logic_error("CheckGameVersionAndGameRegion(): Couldn't get the game version and or game region values attributes from document root!!"));
+            }
+            cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(out_ver) <<"\n"
+                 <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(out_reg)  <<"\n";
+
+            if( out_ver == eGameVersion::Invalid )
+                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game version attribute in root node is invalid!");
+            if( out_reg == eGameRegion::Invalid )
+                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region attribute in root node is invalid!");
+        }
+        else
+            throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region and version attribute in root node are missing!");
+    }
+
     inline bool IsXMLSingleScript(const std::string & rootname)
     {
         return (rootname == ScriptXMLRoot_SingleScript);
+    }
+
+    inline bool IsXMLSingleScriptData(const std::string & rootname)
+    {
+        return (rootname == ScriptDataXMLRoot_SingleDat);
     }
 
 };
@@ -584,7 +618,8 @@ namespace statsutil
                 
             if( pathext == ::filetypes::SSB_FileExt )
                 m_operationMode = eOpMode::ExportSingleScript;
-            
+            else if( pathext == ::filetypes::SSA_FileExt || pathext == ::filetypes::SSS_FileExt || pathext == ::filetypes::SSE_FileExt )
+                m_operationMode = eOpMode::ExportSingleScriptData;
             else if( pathext == XML_FExt && DetermineXMLOps(m_firstparam) )
                 return;
         }
@@ -601,37 +636,13 @@ namespace statsutil
     bool CStatsUtil::DetermineXMLOps( const std::string & filepath )
     {
         XMLSniffer::RootNodeInfo rootnode = XMLSniffer::GetRootNodeFromXML(filepath);
+        XMLSniffer::CheckGameVersionAndGameRegion(rootnode, m_version, m_region);
 
         if( XMLSniffer::IsXMLSingleScript(rootnode.name) )
-        {
             m_operationMode = eOpMode::ImportSingleScript;
-
-            if( rootnode.attributes.size() >= 2 )
-            {
-                cout <<"<!>-XML Script file detected!\n";
-                try
-                {
-                    m_version = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
-                    m_region  = pmd2::StrToGameRegion (rootnode.attributes.at(CommonXMLGameRegionAttrStr));
-                }
-                catch(const std::exception&)
-                {
-                    throw_with_nested(std::logic_error("CStatsUtil::DetermineXMLOps(): Couldn't get the game version and or game region values attributes from document root!!"));
-                }
-                cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(m_version) <<"\n"
-                     <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(m_region)  <<"\n";
-
-                if( m_version == eGameVersion::Invalid )
-                    throw std::invalid_argument("CStatsUtil::DetermineXMLOps(): Game version attribute in script's root node is invalid!");
-                if( m_region == eGameRegion::Invalid )
-                    throw std::invalid_argument("CStatsUtil::DetermineXMLOps(): Game region attribute in script's root node is invalid!");
-            }
-            else
-                cerr<<"\n<!>-Couldn't detect script version from root node!\n";
-            return true;
-        }
-        //! #TODO:Check for other kind of xml files we could be given!!
-        else
+        else if(XMLSniffer::IsXMLSingleScriptData(rootnode.name))
+            m_operationMode = eOpMode::ImportSingleScriptData;
+        else //! #TODO:Check for other kind of xml files we could be given!!
         {
             assert(false);
         }
@@ -782,6 +793,22 @@ namespace statsutil
                              <<"Importing script...\n"
                              <<"================================================\n";
                         returnval = DoImportSingleScript();
+                        break;
+                    }
+                    case eOpMode::ExportSingleScriptData:
+                    {
+                        cout<<"================================================\n"
+                            <<"Exporting script data...\n"
+                            <<"================================================\n";
+                        returnval = DoExportSingleScriptData();
+                        break;
+                    }
+                    case eOpMode::ImportSingleScriptData:
+                    {
+                        cout <<"================================================\n"
+                             <<"Importing script data...\n"
+                             <<"================================================\n";
+                        returnval = DoImportSingleScriptData();
                         break;
                     }
 
@@ -1125,6 +1152,59 @@ namespace statsutil
                                  m_region, 
                                  m_version, 
                                  cfgloader.GetLanguageFilesDB() ); 
+        cout<<"\nDone!\n";
+        return 0;
+    }
+
+
+    int CStatsUtil::DoExportSingleScriptData()
+    {
+        Poco::Path inpath(m_firstparam);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.absolute().makeParent();
+        }
+        else
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
+        }
+
+        //Test output path
+        ConfigLoader cfgloader( m_version, m_region, m_pmd2cfg );
+        CreateDirIfDoesntExist(outpath);
+
+        eGameRegion  reg = m_region;
+        eGameVersion ver = m_version;
+        ScriptDataToXML( ::filetypes::ParseScriptData(inpath.toString()), 
+                         cfgloader,
+                         true, 
+                         outpath.toString() );
+        cout<<"\nDone!\n";
+        return 0;
+    }
+
+    int CStatsUtil::DoImportSingleScriptData()
+    {
+        Poco::Path inpath(m_firstparam);
+        Poco::Path outpath;
+        
+        if( m_outputPath.empty() )
+        {
+            outpath = inpath.absolute().makeParent().append(inpath.getBaseName()).setExtension(::filetypes::SSB_FileExt);
+        }
+        else
+        {
+            outpath = Poco::Path(m_outputPath).makeAbsolute();
+        }
+
+        //Test output path
+        ConfigLoader cfgloader( m_version, m_region, m_pmd2cfg );
+
+        eGameRegion  reg = m_region;
+        eGameVersion ver = m_version;
+        ::filetypes::WriteScriptData( outpath.toString(), XMLToScriptData( inpath.toString(), reg, ver, cfgloader)); 
         cout<<"\nDone!\n";
         return 0;
     }

@@ -81,8 +81,11 @@ namespace statsutil
         int DoExportGameStringsFromFile(); //For exporting the game strings from the text_*.str file directly
         int DoExportGameScripts();
         int DoImportGameScripts();
+
         int DoExportSingleScript();
         int DoImportSingleScript();
+        int DoExportSingleScriptData();
+        int DoImportSingleScriptData();
 
         int DoImportAll();
         int DoExportAll();
@@ -143,6 +146,8 @@ namespace statsutil
             //New
             ImportSingleScript,
             ExportSingleScript,
+            ImportSingleScriptData,
+            ExportSingleScriptData,
 
             ImportAll,
             ExportAll,
