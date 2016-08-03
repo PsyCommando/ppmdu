@@ -562,7 +562,7 @@ namespace pmd2
         { "object",                                 1, -1, 0, 0, eCommandCat::EntityAccessor,   { {eOpParamTypes::Unk_ObjectRef}, } },
         { "PauseEffect",                            1, -1, 0, 0, eCommandCat::SingleOp      },
         { "performer",                              1, -1, 0, 0, eCommandCat::EntityAccessor,   { {eOpParamTypes::Unk_PerformerRef} } },
-        { "ProcessSpecial",                         3, -1, 0, 0, eCommandCat::ProcSpec,         { {eOpParamTypes::Unk_ProcSpec}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder} } },
+        { "ProcessSpecial",                         3, -1, 0, 0, eCommandCat::OpWithReturnVal,  { {eOpParamTypes::Unk_ProcSpec}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder} } },
         { "PursueTurnLives",                        4, -1, 0, 0, eCommandCat::EntAttribute, },  //lives
         { "PursueTurnLives2",                       4, -1, 0, 0, eCommandCat::EntAttribute, },  //lives
         { "ResetAttribute",                         1, -1, 0, 0, eCommandCat::SingleOp      },  //unused!!
