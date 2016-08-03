@@ -119,6 +119,8 @@ namespace pmd2
     const std::string & ScriptDataTypeToStr( eScrDataTy scrdatty );
     eScrDataTy          StrToScriptDataType( const std::string & scrdatstr );
 
+
+
 //==========================================================================================================
 //  Script Data Containers
 //==========================================================================================================
@@ -130,14 +132,16 @@ namespace pmd2
     enum struct eInstructionType : uint8_t
     {
         Command,            //For opcodes
-        Data,               //For data word
+        //Data,               //For data word
 
-        //Meta instructions
+        //Meta Labels
         MetaLabel,          //A jump label
         MetaCaseLabel,      //A jump label for a conditional case
+
+        //Meta instructions
         MetaSwitch,         //The instruction contains case sub-instructions
         MetaAccessor,       //The instruction contains a sub-instruction to be applied to what the accessor is accessing
-        MetaProcSpecRet,    //The instruction contains a "case" sub instruction applied on the return value.
+        //MetaProcSpecRet,    //The instruction contains a "case" sub instruction applied on the return value.
         MetaReturnCases,    //For instructions that can have a set of cases applied to their return value
 
         NbTypes,
@@ -306,13 +310,11 @@ namespace pmd2
         Script & operator=( Script       && tomove );
 
         inline const std::string                & Name       ()const                        { return m_name; }
-        //inline const std::string                & FileName   ()const                        { return m_originalfname; }
         inline void                               SetName    ( const std::string & name )   { m_name = name; }
-        //inline void                               SetFileName( const std::string & fname )  { m_originalfname = fname; }
 
         //!#TODO: Encapsulate those later.      
-        inline grptbl_t                         & Groups()         { return m_groups; }
-        inline const grptbl_t                   & Groups() const   { return m_groups; }
+        inline grptbl_t                         & Routines()         { return m_groups; }
+        inline const grptbl_t                   & Routines() const   { return m_groups; }
 
         //Returns the set of all strings for all languages
         inline strtblset_t                      & StrTblSet()         { return m_strtable; }
@@ -320,17 +322,14 @@ namespace pmd2
 
         void                                      InsertStrLanguage( eGameLanguages lang, strtbl_t && strings );
         //Returns all strings for a specific language
-        inline strtbl_t                         * StrTbl( eGameLanguages lang ); //     { return m_strtable[static_cast<size_t>(lang)]; }
-        //inline strtbl_t                         & StrTbl( size_t   lang )      { return m_strtable[lang]; }
-        inline const strtbl_t                   * StrTbl( eGameLanguages lang )const;// { return m_strtable[static_cast<size_t>(lang)]; }
-        //inline const strtbl_t                   & StrTbl( size_t   lang )const { return m_strtable[lang]; }
+        inline strtbl_t                         * StrTbl( eGameLanguages lang );
+        inline const strtbl_t                   * StrTbl( eGameLanguages lang )const;
 
         inline consttbl_t          & ConstTbl()       { return m_contants; }
         inline const consttbl_t    & ConstTbl() const { return m_contants; }
 
     private:
         std::string m_name;
-        //std::string m_originalfname;
         grptbl_t    m_groups;
         strtblset_t m_strtable; //Multiple deques for all languages
         consttbl_t  m_contants;
@@ -633,14 +632,14 @@ namespace pmd2
 
         //scrdir : the directory of the game we want to load from/write to.
         //GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver, const LanguageFilesDB & langdat );
-        GameScripts(const std::string & scrdir, const ConfigLoader & conf, bool bescapexml = false );
+        GameScripts(const std::string & scrdir, const ConfigLoader & conf, bool bscriptdebug, bool bescapexml = false );
         ~GameScripts();
 
         //File IO
         void Load(); //Indexes all scripts in the src dir. The actual sets are loaded on demand.
         //void Write(); //Writes all script sets that were modified.
         void ImportXML(const std::string & dir);
-        void ExportXML(const std::string & dir);
+        void ExportXML(const std::string & dir); //bscriptdebugon : if true, all debug instruction paths are enabled
 
         std::unordered_map<std::string,LevelScript> LoadAll();
         void                                      WriteAll( const std::unordered_map<std::string,LevelScript> & stuff );
@@ -681,6 +680,7 @@ namespace pmd2
         std::mutex                                   m_mutex;
         const LanguageFilesDB                      * m_langdat;
         bool                                         m_escapexml;
+        bool                                         m_bbscriptdebug;
         const ConfigLoader                         & m_gconf;
     };
 

@@ -19,6 +19,8 @@ using namespace std;
 
 namespace pmd2
 {
+
+
 //==============================================================================
 //  
 //==============================================================================
@@ -76,6 +78,8 @@ namespace pmd2
             if( scrdatstr == ScriptDataTypeStrings[cnt] ) return static_cast<eScrDataTy>(cnt);
         return eScrDataTy::Invalid;
     }
+
+
 
 //==============================================================================
 //  Script
@@ -277,7 +281,8 @@ namespace pmd2
                                                         m_parent.m_scrRegion, 
                                                         m_parent.m_gameVersion, 
                                                         *m_parent.m_langdat, 
-                                                        m_parent.m_escapexml) );
+                                                        m_parent.m_escapexml,
+                                                        m_parent.m_bbscriptdebug) );
         script.SetName(basename);
         tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
 
@@ -620,7 +625,7 @@ namespace pmd2
         m_parent->m_pHandler->WriteDirectory(set, m_path);
     }
 
-    GameScripts::GameScripts(const std::string & scrdir, const ConfigLoader & gconf, bool bescapexml)
+    GameScripts::GameScripts(const std::string & scrdir, const ConfigLoader & gconf,  bool bscriptdebug, bool bescapexml)
         :m_scriptdir(scrdir), 
          m_scrRegion(gconf.GetGameVersion().region), 
          m_gameVersion(gconf.GetGameVersion().version),
@@ -628,7 +633,8 @@ namespace pmd2
          m_common(DirNameScriptCommon),
          m_langdat(std::addressof(gconf.GetLanguageFilesDB())),
          m_escapexml(bescapexml),
-         m_gconf(gconf)
+         m_gconf(gconf),
+         m_bbscriptdebug(bscriptdebug)
     {
         Load();
     }

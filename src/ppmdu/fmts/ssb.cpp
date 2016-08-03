@@ -17,10 +17,10 @@ namespace filetypes
 //  Structs
 //=======================================================================================
     /***********************************************************************************
-        group_entry
+        routine_entry
             Script instruction group entry
     ***********************************************************************************/
-    struct group_entry
+    struct routine_entry
     {
         static const size_t LEN = 3 * sizeof(uint16_t);
         uint16_t begoffset = 0;
@@ -28,7 +28,7 @@ namespace filetypes
         uint16_t unk2      = 0;
 
         template<class _outit>
-            _outit WriteToContainer(_outit itwriteto)const
+            _outit Write(_outit itwriteto)const
         {
             itwriteto = utils::WriteIntToBytes(begoffset,  itwriteto);
             itwriteto = utils::WriteIntToBytes(type,       itwriteto);
@@ -38,7 +38,7 @@ namespace filetypes
 
         //
         template<class _init>
-            _init ReadFromContainer(_init itReadfrom, _init itpastend)
+            _init Read(_init itReadfrom, _init itpastend)
         {
             itReadfrom = utils::ReadIntFromBytes(begoffset, itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes(type,      itReadfrom, itpastend );
@@ -110,7 +110,7 @@ namespace filetypes
     typedef uint32_t                            dataoffset_t;   //Offset in bytes within the "Data" block of the script
     typedef lblinfo                             lbl_t;          //Represents a label
     typedef unordered_map<dataoffset_t, lbl_t>  lbltbl_t;       //Contains the location of all labels
-    typedef vector<group_entry>                 rawgrp_t;       //Raw group entries
+    typedef vector<routine_entry>               rawroutines_t;  //Raw group entries
     typedef deque<ScriptInstruction>            rawinst_t;      //Raw instruction entries
 
 //=======================================================================================
@@ -191,7 +191,7 @@ namespace filetypes
         Script::consttbl_t  constantstrings;
         Script::strtblset_t strings;
         lbltbl_t                      jumpoffsets;
-        rawgrp_t                      rawgroups;
+        rawroutines_t                 rawroutines;
         rawinst_t                     rawinstructions;
         size_t                        datablocklen;         //Length of the datahdr + group table + instructions block
     };
@@ -213,37 +213,39 @@ namespace filetypes
         ScriptDecompiler( raw_ssb_content && content, eOpCodeVersion opver, const LanguageFilesDB & langs )
             :m_rawdata(std::forward<raw_ssb_content>(content)), 
              m_rawinst(m_rawdata.rawinstructions), 
-             m_groups(m_rawdata.rawgroups), 
+             m_routines(m_rawdata.rawroutines), 
              m_labels(m_rawdata.jumpoffsets), 
              m_constants(m_rawdata.constantstrings), 
              m_strings(m_rawdata.strings),
              m_datablocklen(m_rawdata.datablocklen),
              m_curdataoffset(0),
-             m_curgroup(0),
-             m_poutgrp(nullptr), 
+             m_curroutine(0),
+             m_poutroutines(nullptr), 
              m_instfinder(opver),
              m_langs(langs),
-             m_escapeforxml(true)
+             m_escapeforxml(true),
+             m_bscriptdebug(false)
         {}
 
         /*-----------------------------------------------------------------------------
             operator()
                 Process the data into the the sequence "destseq"
         -----------------------------------------------------------------------------*/
-        void operator()( Script & destseq, bool escapeforxml = true )
+        void operator()( Script & destseq, bool escapeforxml = true, bool bscriptdebug = false )
         {
+            m_bscriptdebug      = bscriptdebug;
             m_escapeforxml      = escapeforxml;
-            m_poutgrp           = std::addressof( destseq.Groups() );
-            m_grptblandathdrlen = ssb_data_hdr::LEN + (group_entry::LEN * m_groups.size());
-            m_curgroup          = 0;
+            m_poutroutines      = std::addressof( destseq.Routines() );
+            m_grptblandathdrlen = ssb_data_hdr::LEN + (routine_entry::LEN * m_routines.size());
+            m_curroutine        = 0;
             m_curdataoffset     = m_grptblandathdrlen;
-            PrepareGroups();
+            PrepareRoutines();
 
             //Iterate the raw instructions
             auto itend = m_rawinst.end();
             for( auto iti = m_rawinst.begin(); iti != itend; )
             {
-                UpdateCurrentGroup();
+                UpdateCurrentRoutine();
                 HandleLabels();
                 HandleInstruction( iti, itend );
             }
@@ -259,10 +261,10 @@ namespace filetypes
             operator()
                 Returns the processed script sequence
         -----------------------------------------------------------------------------*/
-        inline Script operator()(bool escapeforxml = true)
+        inline Script operator()(bool escapeforxml, bool bscriptdebug )
         {
             Script dest;
-            operator()(dest,escapeforxml);
+            operator()(dest,escapeforxml, bscriptdebug);
             return std::move(dest);
         }
 
@@ -275,12 +277,12 @@ namespace filetypes
         ScriptDecompiler& operator=(const ScriptDecompiler&)  = delete;
 
         /*-----------------------------------------------------------------------------
-            CurGroup
+            CurRoutine
                 Helper to access the current group
         -----------------------------------------------------------------------------*/
-        inline ScriptInstrGrp & CurGroup()
+        inline ScriptInstrGrp & CurRoutine()
         {
-            return (*m_poutgrp)[m_curgroup];
+            return (*m_poutroutines)[m_curroutine];
         }
 
 
@@ -288,11 +290,11 @@ namespace filetypes
             GetNextRealRoutineBeg
                 Returns the next group/routine that's not an alias of the last!
         -----------------------------------------------------------------------------*/
-        inline uint16_t GetNextRealRoutineBeg( size_t cntgrp, uint16_t curbeg )
+        inline uint16_t GetNextRealRoutineBeg( size_t cntroutine, uint16_t curbeg )
         {
-            for( ; cntgrp < m_groups.size(); ++cntgrp )
+            for( ; cntroutine < m_routines.size(); ++cntroutine )
             {
-                uint16_t beg = m_groups[cntgrp].begoffset;
+                uint16_t beg = m_routines[cntroutine].begoffset;
                 if( curbeg < beg )
                     return beg; //Return the next non-alias routine
             }
@@ -300,36 +302,36 @@ namespace filetypes
         }
 
         /*-----------------------------------------------------------------------------
-            PrepareGroups
+            PrepareRoutines
                 Init destination groups, and make a list of all the end offsets 
                 for each groups
         -----------------------------------------------------------------------------*/
-        void PrepareGroups()
+        void PrepareRoutines()
         {
-            m_grpends.reserve(m_groups.size());
+            m_routineends.reserve(m_routines.size());
 
-            size_t   cntgrp     = 0;
-            uint16_t lastgrpbeg = 0;
-            uint16_t lastgrpend = 0;
-            for( ; cntgrp <  m_groups.size(); ++cntgrp )
+            size_t   cntroutine     = 0;
+            uint16_t lastrtnbeg = 0;
+            uint16_t lastrtnend = 0;
+            for( ; cntroutine <  m_routines.size(); ++cntroutine )
             {
-                const auto & grp = m_groups[cntgrp];
-                ScriptInstrGrp igrp;
-                igrp.type = grp.type;
-                igrp.unk2 = grp.unk2;
+                const auto & rtn = m_routines[cntroutine];
+                ScriptInstrGrp iroutine;
+                iroutine.type = rtn.type;
+                iroutine.unk2 = rtn.unk2;
 
-                if(lastgrpbeg == grp.begoffset )
+                if(lastrtnbeg == rtn.begoffset )
                 {
-                    igrp.isalias = true;
+                    iroutine.isalias = true;
                 }
                 else
                 {
-                    igrp.isalias = false;
-                    lastgrpbeg = grp.begoffset;
-                    lastgrpend = GetNextRealRoutineBeg( cntgrp, grp.begoffset );
+                    iroutine.isalias = false;
+                    lastrtnbeg = rtn.begoffset;
+                    lastrtnend = GetNextRealRoutineBeg( cntroutine, rtn.begoffset );
                 }
-                m_poutgrp->push_back(std::move(igrp));
-                m_grpends.push_back(lastgrpend * ScriptWordLen);
+                m_poutroutines->push_back(std::move(iroutine));
+                m_routineends.push_back(lastrtnend * ScriptWordLen);
             }
         }
 
@@ -383,17 +385,11 @@ namespace filetypes
             if( itf != m_labels.end() )
             {
                 ScriptInstruction label;
-//#ifdef _DEBUG
                 label.dbg_origoffset = m_curdataoffset / ScriptWordLen;;
-//#endif
-                //if( itf->second.lblty == lbl_t::eLblTy::CaseLbl )
-                //    label.type  = eInstructionType::MetaCaseLabel;
-                //else
-                    label.type  = eInstructionType::MetaLabel;
-
+                label.type  = eInstructionType::MetaLabel;
                 label.value = itf->second.lblid;
                 //Insert label
-                CurGroup().instructions.push_back(std::move(label));
+                CurRoutine().instructions.push_back(std::move(label));
             }
         }
 
@@ -411,31 +407,48 @@ namespace filetypes
         {
             ScriptInstruction curinst  = *iti;
             OpCodeInfoWrapper codeinfo = m_instfinder.Info(curinst.value);
-//#ifdef _DEBUG
-                curinst.dbg_origoffset = m_curdataoffset / ScriptWordLen;
-//#endif
-            switch(codeinfo.Category())
+            curinst.dbg_origoffset     = m_curdataoffset / ScriptWordLen;
+
+            if(m_bscriptdebug)
             {
-                case eCommandCat::OpWithReturnVal:
-                case eCommandCat::EnterAdventure:
-                case eCommandCat::ProcSpec:
-                case eCommandCat::Switch:
-                {
-                    HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
-                    break;
-                }
-                case eCommandCat::EntityAccessor:
-                {
-                    HandleAccessor(iti, itend, curinst);
-                    break;
-                }
-                default:
-                {
-                    m_curdataoffset += GetInstructionLen(curinst);
-                    CurGroup().instructions.push_back(std::move(curinst));
-                    ++iti;
-                }
-            };
+                if( m_instfinder.Version() == eOpCodeVersion::EoS && 
+                   curinst.value == static_cast<uint16_t>(eScriptOpCodesEoS::BranchDebug) )
+                    curinst.parameters.front() = (curinst.parameters.front() == 0)? 1 : 0 ; //Invert the boolean
+            }
+
+            if( codeinfo.HasReturnValue() )
+                HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
+            else if( codeinfo.IsEntityAccessor() )
+                HandleAccessor(iti, itend, curinst);
+            else
+            {
+                m_curdataoffset += GetInstructionLen(curinst);
+                CurRoutine().instructions.push_back(std::move(curinst));
+                ++iti;
+            }
+
+            //switch(codeinfo.Category())
+            //{
+            //    case eCommandCat::OpWithReturnVal:
+            //    case eCommandCat::EnterAdventure:
+            //    case eCommandCat::ProcSpec:
+            //    case eCommandCat::Switch:
+            //    {
+            //        HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
+            //        break;
+            //    }
+            //    case eCommandCat::EntityAccessor:
+            //    {
+            //        HandleAccessor(iti, itend, curinst);
+            //        break;
+            //    }
+            //    default:
+            //    {
+            //        m_curdataoffset += GetInstructionLen(curinst);
+            //        CurRoutine().instructions.push_back(std::move(curinst));
+            //        ++iti;
+            //    }
+            //};
         }
 
         /*-----------------------------------------------------------------------------
@@ -463,8 +476,8 @@ namespace filetypes
                 if( iti != itend )
                 {
                     codeinfo = m_instfinder.Info(iti->value);
-                    iscase   = (codeinfo.Category() == eCommandCat::Case || codeinfo.Category() == eCommandCat::Default); 
-                    if(iscase)
+                    //iscase   = (codeinfo.Category() == eCommandCat::Case || codeinfo.Category() == eCommandCat::Default); 
+                    if(codeinfo && (iscase = codeinfo.IsReturnHandler()))
                     {
                         totalsz += GetInstructionLen(*iti);
                         outinst.subinst.push_back(std::move(*iti));
@@ -474,9 +487,9 @@ namespace filetypes
             }while( iti != itend && iscase );
                
             if( !(outinst.subinst.empty()) )
-                outinst.type = curinfo.GetMyInstructionType();//_MetaType;
+                outinst.type = curinfo.GetMyInstructionType();
 
-            CurGroup().instructions.push_back(std::move(outinst));
+            CurRoutine().instructions.push_back(std::move(outinst));
             m_curdataoffset += totalsz;
         }
 
@@ -500,7 +513,7 @@ namespace filetypes
             if( iti != itend )
             {
                 codeinfo = m_instfinder.Info(iti->value);
-                if( codeinfo && codeinfo.Category() == eCommandCat::EntAttribute )
+                if( codeinfo && codeinfo.IsAttribute() )
                 {
                     outinst.type = eInstructionType::MetaAccessor;
                     totalsz += GetInstructionLen(*iti);
@@ -508,7 +521,7 @@ namespace filetypes
                     ++iti;
                 }
             }
-            CurGroup().instructions.push_back(std::move(outinst));
+            CurRoutine().instructions.push_back(std::move(outinst));
             m_curdataoffset += totalsz;
         }
 
@@ -531,22 +544,22 @@ namespace filetypes
         }
 
         /*-----------------------------------------------------------------------------
-            UpdateCurrentGroup
+            UpdateCurrentRoutine
                 Picks the instruction "group" to place the raw instrutions into,
                 based on the data offset we're currently parsing an instruction at.
         -----------------------------------------------------------------------------*/
-        inline void UpdateCurrentGroup()
+        inline void UpdateCurrentRoutine()
         {
-            if( m_curdataoffset >= m_grpends[m_curgroup] && m_curgroup < (m_grpends.size()-1) )
+            if( m_curdataoffset >= m_routineends[m_curroutine] && m_curroutine < (m_routineends.size()-1) )
             {
-                ++m_curgroup;
+                ++m_curroutine;
                 //Increment a bit more if we have alias groups
-                while( (*m_poutgrp)[m_curgroup].IsAliasOfPrevGroup() && m_curgroup < m_poutgrp->size() ) 
-                    ++m_curgroup;
+                while( (*m_poutroutines)[m_curroutine].IsAliasOfPrevGroup() && m_curroutine < m_poutroutines->size() ) 
+                    ++m_curroutine;
             }
-            else if( m_curgroup >= m_grpends.size() )
+            else if( m_curroutine >= m_routineends.size() )
             {
-                clog <<"ScriptDecompiler::UpdateCurrentGroup() : Instruction is out of expected bounds!\n";
+                clog <<"ScriptDecompiler::UpdateCurrentRoutine() : Instruction is out of expected bounds!\n";
                 assert(false);
             }
         }
@@ -555,18 +568,19 @@ namespace filetypes
         raw_ssb_content                       m_rawdata;
         const LanguageFilesDB               & m_langs;
         deque<ScriptInstruction>            & m_rawinst;
-        const rawgrp_t                      & m_groups;
+        const rawroutines_t                 & m_routines;
         const lbltbl_t                      & m_labels;
         const Script::consttbl_t            & m_constants;
         const Script::strtblset_t           & m_strings;
-        Script::grptbl_t                    * m_poutgrp;
-        size_t                                m_curgroup;           //Group we currently output into
+        Script::grptbl_t                    * m_poutroutines;
+        size_t                                m_curroutine;           //Group we currently output into
         size_t                                m_curdataoffset;      //Offset in bytes within the Data chunk
-        vector<size_t>                        m_grpends;            //The offset within the data chunk where each groups ends
+        vector<size_t>                        m_routineends;            //The offset within the data chunk where each groups ends
         size_t                                m_datablocklen;       //Length of the data block in bytes
         OpCodeClassifier                      m_instfinder;
         size_t                                m_grptblandathdrlen;  //The offset the instructions begins at. Important for locating group starts, and jump labels
         bool                                  m_escapeforxml;
+        bool                                  m_bscriptdebug;       //whether we should make it so the debug paths are unlocked by default or not.
     };
 
 //=======================================================================================
@@ -585,7 +599,7 @@ namespace filetypes
 
         SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc, const LanguageFilesDB & langdat )
             :m_opfinder(scrver), m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrRegion(scrloc), m_lblcnt(0), 
-             m_nbgroups(0), m_nbconsts(0), m_nbstrs(0),m_hdrlen(0),m_datablocklen(0), m_constlutbeg(0), m_stringlutbeg(0),
+             m_nbroutines(0), m_nbconsts(0), m_nbstrs(0),m_hdrlen(0),m_datablocklen(0), m_constlutbeg(0), m_stringlutbeg(0),
             m_datahdrgrouplen(0), m_langdat(langdat)
         {}
 
@@ -593,9 +607,9 @@ namespace filetypes
         /*******************************************************************************
             Parse
         *******************************************************************************/
-        inline Script Parse(bool parseforxml = true)
+        inline Script Parse(bool parseforxml = true, bool scriptdebug = false)
         {
-            return std::move(ScriptDecompiler(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml));
+            return std::move(ScriptDecompiler(std::move(ParseToRaw()), m_scrversion, m_langdat)(parseforxml, scriptdebug));
         }
 
         /*******************************************************************************
@@ -609,7 +623,7 @@ namespace filetypes
             raw_ssb_content transit;
             m_lblcnt = 0;
             ParseHeader();
-            transit.rawgroups       = std::move(ParseGroups());
+            transit.rawroutines       = std::move(ParseRoutines());
             transit.constantstrings = std::move(ParseConstants());
             transit.strings         = std::move(ParseStrings());
 
@@ -684,24 +698,24 @@ namespace filetypes
             m_datablocklen      = (dathdr.datalen * ScriptWordLen);
             m_constlutbeg       = m_hdrlen + m_datablocklen;         //Group table is included into the datalen
             m_stringlutbeg      = m_hdrlen + (scriptdatalen * ScriptWordLen) + (constdatalen*2);
-            m_nbgroups          = dathdr.nbgrps;
-            m_datahdrgrouplen   = ssb_data_hdr::LEN + (m_nbgroups * group_entry::LEN);
+            m_nbroutines        = dathdr.nbgrps;
+            m_datahdrgrouplen   = ssb_data_hdr::LEN + (m_nbroutines * routine_entry::LEN);
 #ifdef _DEBUG
             m_instblocklen      = m_datablocklen - m_datahdrgrouplen;
 #endif
         }
 
         /*******************************************************************************
-            ParseGroups
+            ParseRoutines
         *******************************************************************************/
-        inline rawgrp_t ParseGroups()
+        inline rawroutines_t ParseRoutines()
         {
-            rawgrp_t rgrps;
-            rgrps.resize(m_nbgroups);
-            //Grab all groups
-            for( size_t cntgrp = 0; cntgrp < m_nbgroups; ++cntgrp )
+            rawroutines_t rgrps;
+            rgrps.resize(m_nbroutines);
+            //Grab all routines
+            for( size_t cntroutine = 0; cntroutine < m_nbroutines; ++cntroutine )
             {
-                m_cur = rgrps[cntgrp].ReadFromContainer( m_cur, m_end );
+                m_cur = rgrps[cntroutine].Read( m_cur, m_end );
             }
             return std::move(rgrps);
         }
@@ -709,18 +723,13 @@ namespace filetypes
         /*******************************************************************************
             ParseData
         *******************************************************************************/
-        void ParseData( size_t foffset, uint16_t curop )
-        {
-            //The instruction is actually a data word
-            //ScriptInstruction inst;
-            //inst.type  = eInstructionType::Data;
-            //inst.value = curop;
-            //m_rawinst.push_back(std::move(inst));
-            stringstream ss;
-            ss << "Unexpected word/invalid instruction ID (0x" 
-               <<hex <<uppercase <<curop <<") at offset 0x"  <<foffset <<dec <<nouppercase <<".";
-            throw std::runtime_error(ss.str());
-        }
+        //void ParseData( size_t foffset, uint16_t curop )
+        //{
+        //    stringstream ss;
+        //    ss << "Unexpected word/invalid instruction ID (0x" 
+        //       <<hex <<uppercase <<curop <<") at offset 0x"  <<foffset <<dec <<nouppercase <<".";
+        //    throw std::runtime_error(ss.str());
+        //}
 
         /*******************************************************************************
             ParseConstants
@@ -821,7 +830,7 @@ namespace filetypes
         void ParseCode()
         {
             //Iterate once through the entire code, regardless of groups, list all jump targets, and parse all operations
-            const size_t instbeg        = m_hdrlen + ssb_data_hdr::LEN + (m_nbgroups * group_entry::LEN);
+            const size_t instbeg        = m_hdrlen + ssb_data_hdr::LEN + (m_nbroutines * routine_entry::LEN);
             const size_t instend        = m_hdrlen + m_datablocklen;
 #ifdef _DEBUG
             assert(m_inputsz >= instend);
@@ -833,26 +842,17 @@ namespace filetypes
 
             while( itcollect != itdataend )
             {
-                uint16_t curop = utils::ReadIntFromBytes<uint16_t>( itcollect, itdataend );
+                uint16_t          curop      = utils::ReadIntFromBytes<uint16_t>( itcollect, itdataend );
+                OpCodeInfoWrapper opcodedata = m_opfinder.Info(curop);
 
-                if( curop < m_opfinder.GetNbOpcodes() )
-                {
-                    OpCodeInfoWrapper opcodedata = m_opfinder.Info(curop); 
-                    
-                    if( !opcodedata )
-                    {
-#ifdef _DEBUG
-                        assert(false);
-#endif                  
-                        stringstream sstr;
-                        sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute file offset  " <<hex <<uppercase <<instdataoffset + instbeg <<"!";
-                        throw std::runtime_error(sstr.str());
-                    }
+                if( opcodedata )
                     ParseCommand( instdataoffset, itcollect, itdataend, curop, opcodedata );
-                }
                 else
                 {
-                    ParseData( instdataoffset, curop );
+                    assert(false);
+                    stringstream sstr;
+                    sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute file offset  " <<hex <<uppercase <<instdataoffset + instbeg <<"!";
+                    throw std::runtime_error(sstr.str());
                 }
                 instdataoffset += ScriptWordLen; //Count instructions and data. Parameters are added by the called functions as needed
             }
@@ -964,10 +964,10 @@ namespace filetypes
         //Nb of entries
         uint16_t            m_nbstrs;
         uint16_t            m_nbconsts;
-        uint16_t            m_nbgroups; 
+        uint16_t            m_nbroutines; 
 
         //Group data
-        //vector<group_entry>  m_grps;   
+        //vector<routine_entry>  m_grps;   
 
         //Label Assignement
         uint16_t             m_lblcnt;       //Used to assign label ids!
@@ -1003,43 +1003,43 @@ namespace filetypes
         void ProcessInstructions()
         {
             //Get all labels, and compute their offsets
-            size_t curdataoffset = ssb_data_hdr::LEN + (m_src.Groups().size() * group_entry::LEN);
-            m_out.rawgroups.reserve(m_src.Groups().size());
+            size_t curdataoffset = ssb_data_hdr::LEN + (m_src.Routines().size() * routine_entry::LEN);
+            m_out.rawroutines.reserve(m_src.Routines().size());
 
             //Build group table as we go
             //Turn meta-instructions back into simple instructions
             uint16_t lastgrpbegoffset = 0;
-            for( const auto & grp : m_src.Groups() )
+            for( const auto & rtn : m_src.Routines() )
             {
-                HandleGroup(grp, curdataoffset, lastgrpbegoffset);
+                HandleRoutine(rtn, curdataoffset, lastgrpbegoffset);
             }
         }
 
-        void HandleGroup( const ScriptInstrGrp & grp, size_t & curoffset, uint16_t & lastgrpbeg )
+        void HandleRoutine( const ScriptInstrGrp & rtn, size_t & curoffset, uint16_t & lastrtnbeg )
         {
-            group_entry curgrp;
-            curgrp.type      = grp.type;
-            curgrp.unk2      = grp.unk2;
+            routine_entry curgrp;
+            curgrp.type      = rtn.type;
+            curgrp.unk2      = rtn.unk2;
 
-            if( grp.IsAliasOfPrevGroup() )
-                curgrp.begoffset = lastgrpbeg;
+            if( rtn.IsAliasOfPrevGroup() )
+                curgrp.begoffset = lastrtnbeg;
             else
             {
                 curgrp.begoffset = curoffset / ScriptWordLen;
-                for( const auto & instr : grp )
+                for( const auto & instr : rtn )
                 {
                     HandleInstruction(instr, curoffset);
                 }
             }
-            lastgrpbeg = curgrp.begoffset;
-            m_out.rawgroups.push_back(std::move(curgrp));
+            lastrtnbeg = curgrp.begoffset;
+            m_out.rawroutines.push_back(std::move(curgrp));
         }
 
         template<typename _InstrType>
             void HandleSubInstructions(const _InstrType & instr, size_t & curoffset );
 
         template<>
-            void HandleSubInstructions<ScriptBaseInstruction>(const ScriptBaseInstruction & , size_t &  )
+            void HandleSubInstructions<ScriptBaseInstruction>(const ScriptBaseInstruction &, size_t & )
         {
                 //do nothing
         }
@@ -1065,7 +1065,6 @@ namespace filetypes
                     break;
                 }
                 case eInstructionType::MetaAccessor:
-                case eInstructionType::MetaProcSpecRet:
                 case eInstructionType::MetaReturnCases:
                 case eInstructionType::MetaSwitch:
                 {
@@ -1080,7 +1079,6 @@ namespace filetypes
                     HandleSubInstructions(instr,curoffset);
                     break;
                 }
-                case eInstructionType::Data:
                 case eInstructionType::Command:
                 default:
                 {
@@ -1199,12 +1197,12 @@ namespace filetypes
             m_datalen += ssb_data_hdr::LEN; //Add to the total length immediately
 
             //#2 - Reserve group table
-            std::fill_n( oit, m_scrdat.Groups().size() * group_entry::LEN, 0 );
+            std::fill_n( oit, m_scrdat.Routines().size() * routine_entry::LEN, 0 );
 
             //#3 - Pre-Alloc/pre-calc stuff
             CalcAndVerifyNbStrings();
-            m_grps.reserve( m_scrdat.Groups().size() );
-            m_datalen += m_scrdat.Groups().size() * group_entry::LEN; //Add the group entries length!!
+            m_grps.reserve( m_scrdat.Routines().size() );
+            m_datalen += m_scrdat.Routines().size() * routine_entry::LEN; //Add the group entries length!!
             //BuildLabelConversionTable();
 
             //#4 - Write code for each groups, constants, strings
@@ -1239,9 +1237,9 @@ namespace filetypes
         //{
         //    size_t curdataoffset = 0;
 
-        //    for( const auto & grp : m_scrdat.Groups() )
+        //    for( const auto & rtn : m_scrdat.Routines() )
         //    {
-        //        for( const auto & inst : grp )
+        //        for( const auto & inst : rtn )
         //        {
         //            if( inst.type == eInstructionType::Command || inst.type == eInstructionType::Data )
         //                curdataoffset += ScriptWordLen + (ScriptWordLen * inst.parameters.size()); //Just count those
@@ -1311,7 +1309,7 @@ namespace filetypes
             }
 
             ssb_data_hdr dathdr;
-            dathdr.nbgrps  = m_compiledsrc.rawgroups.size();
+            dathdr.nbgrps  = m_compiledsrc.rawroutines.size();
 
             if( m_constoffset > 0 )
                 dathdr.datalen = TryConvertToScriptLen(m_constoffset - m_hdrlen); //Const offset table isn't counted in this value, so we can't use m_datalen
@@ -1324,11 +1322,11 @@ namespace filetypes
         void WriteGroupTable( outit_t & itw )
         {
 #ifdef _DEBUG   //!#REMOVEME: For testing
-            assert(!m_compiledsrc.rawgroups.empty()); //There is always at least one group!
+            assert(!m_compiledsrc.rawroutines.empty()); //There is always at least one group!
 #endif
-            for( const auto & entry : m_compiledsrc.rawgroups )
+            for( const auto & entry : m_compiledsrc.rawroutines )
             {
-                itw = entry.WriteToContainer(itw);
+                itw = entry.Write(itw);
             }
         }
 
@@ -1524,7 +1522,7 @@ namespace filetypes
         size_t              m_datalen;             //in bytes //Length of the Data block in bytes
         size_t              m_constoffset;         //in bytes //Start of the constant block from  start of file
         size_t              m_stringblockbeg;      //in bytes //Start of strings blocks from  start of file
-        vector<group_entry> m_grps;
+        vector<routine_entry> m_grps;
 
         unordered_map<uint16_t,uint16_t> m_labeltbl; //First is label ID, second is label offset in words
 
@@ -1544,18 +1542,15 @@ namespace filetypes
     /*
         ParseScript
     */
-    pmd2::Script ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers, const LanguageFilesDB & langdat, bool escapeforxml )
+    pmd2::Script ParseScript(const std::string & scriptfile, eGameRegion gloc, eGameVersion gvers, const LanguageFilesDB & langdat, bool escapeforxml, bool bscriptdebug )
     {
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
 
-        //if( scriptfile == "C:\\Users\\Guill\\Pokemon\\RomHacks\\PMDES\\OtherPMDGames\\PMD_EoS_Euro\\data\\SCRIPT\\G01P09A\\enter04.ssb" )
-        //    cout<<"lol";
-
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
 
-        Script tmpscr = std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc, langdat).Parse(escapeforxml) );
+        Script tmpscr = std::move( SSB_Parser<vector<uint8_t>::const_iterator>(fdata.begin(), fdata.end(), opvers, gloc, langdat).Parse(escapeforxml, bscriptdebug) );
         tmpscr.SetName( utils::GetBaseNameOnly(scriptfile) );
         return std::move(tmpscr);
     }

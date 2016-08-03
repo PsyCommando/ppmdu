@@ -54,6 +54,7 @@ namespace statsutil
         bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
         bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
         bool ParseOptionEscapeAsXML( const std::vector<std::string> & optdata );
+        bool ParseOptionScriptEnableDebugInstr( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -174,6 +175,7 @@ namespace statsutil
         eOpForce    m_force;          // 
         bool        m_shouldlog;      
         bool        m_escxml;         //Force escape sequences to be standard XML instead of C
+        bool        m_scriptdebug;
         
         pmd2::eGameRegion  m_region;
         pmd2::eGameVersion m_version;

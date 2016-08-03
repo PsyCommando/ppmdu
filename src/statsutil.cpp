@@ -247,14 +247,15 @@ namespace statsutil
             "-locale \"C\"",
             std::bind( &CStatsUtil::ParseOptionLocaleStr, &GetInstance(), placeholders::_1 ),
         },
-        //Specify path to gamelang.xml
-        //{
-        //    "gl",
-        //    1,
-        //    "Set the path to the file to use as the \"gamelang.xml\" file!",
-        //    "-gl \"PathToGameLangFile/gamelang.xml\"",
-        //    std::bind( &CStatsUtil::ParseOptionGameLang, &GetInstance(), placeholders::_1 ),
-        //},
+
+        //Set path to PMD2 Config file
+        {
+            "scriptdebug",
+            0,
+            "When specified, all debug related commands in the scripts are tweaked so they're enabled by default!",
+            "-scriptdebug",
+            std::bind( &CStatsUtil::ParseOptionScriptEnableDebugInstr, &GetInstance(), placeholders::_1 ),
+        },
 
         //Set path to PMD2 Config file
         {
@@ -348,6 +349,7 @@ namespace statsutil
         m_escxml          = false;
         m_region          = eGameRegion::NorthAmerica;
         m_version         = eGameVersion::EoS;
+        m_scriptdebug     = false;
     }
 
     const vector<argumentparsing_t> & CStatsUtil::getArgumentsList   ()const { return Arguments_List;    }
@@ -523,6 +525,12 @@ namespace statsutil
     bool CStatsUtil::ParseOptionEscapeAsXML( const std::vector<std::string> & optdata )
     {
         return m_escxml = true;
+    }
+
+    bool CStatsUtil::ParseOptionScriptEnableDebugInstr(const std::vector<std::string>& optdata)
+    {
+        cout << "<!>- Outputing debug enabled scripts!\n";
+        return m_scriptdebug = true;
     }
 
 
@@ -1049,7 +1057,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(m_escxml);
+            GameScripts * pgamescripts = gloader.LoadScripts(m_escxml, m_scriptdebug);
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 
@@ -1121,7 +1129,7 @@ namespace statsutil
 
         eGameRegion  reg = m_region;
         eGameVersion ver = m_version;
-        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), false ), 
+        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), m_scriptdebug, false ), 
                      cfgloader,
                      true, 
                      outpath.toString() );

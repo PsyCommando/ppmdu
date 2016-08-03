@@ -13,7 +13,7 @@ Description: Contains data on script opcodes.
 #include <string>
 #include <array>
 #include <cassert>
-//#include <initializer_list>
+
 
 //! #TODO: Replace most of the data access functions in here with a single interface for retrieving
 //!        that information seamlessly, whether the info comes from the rom, a c++ table, or XML data!
@@ -123,6 +123,8 @@ namespace pmd2
         static const uint16_t Mask15b = 0x7FFFu;
     };
 
+
+
 //==========================================================================================================
 // OpCodes
 //==========================================================================================================
@@ -138,8 +140,10 @@ namespace pmd2
         Invalid,
     };
 
-    const uint16_t NullOpCode    = 0;                   //The Null opcode is the same across all versions of the opcodes!
-    const uint16_t InvalidOpCode = std::numeric_limits<uint16_t>::max();
+    const uint16_t      NullOpCode          = 0;                   //The Null opcode is the same across all versions of the opcodes!
+    const uint16_t      InvalidOpCode       = std::numeric_limits<uint16_t>::max();
+    const uint16_t      ScriptNullVal       = 0x7FFF;              //The value that represents null in the scripts
+    const std::string   ScriptNullValName   = "NULL";               //The textual representation of the script null value!
 
 //==========================================================================================================
 //  EoTD OpCodes
@@ -965,6 +969,9 @@ namespace pmd2
         Unk_AnimationID,        //Parameter containing the ID of an animation.
         Unk_FacePosMode,        //Value from the Face position enum, 24 possible positions
         Unk_LevelId,            //ID of the level in the level entry table!
+        StationId,              //ID of a layer in script data for a level! Called a "station"
+        MenuID,                 //ID of a menu in the game data
+        ActingLayerID,          //ID of a layer within an ssa file being run.
 
         //
         Unk_MvSlSpecInt,        //First parameter of the MovePositionOffset, MovePositionMark, SlidePositionMark, Slide2PositionMark, camera_Move2Default
@@ -976,6 +983,7 @@ namespace pmd2
         CoordinateX,             //A coordinate on X axis
         CoordinateY,             //A coordinate on Y axis
         InstructionOffset,      //An offset within the list of instructions to a specific instruction.
+        Volume,                 //A sound volume
 
         NbTypes,
         Invalid,
@@ -1004,6 +1012,9 @@ namespace pmd2
         "animid",
         "facemode",                     //
         "levelid",                  //
+        "stationid",
+        "menuid",
+        "layerid",
 
         "Unk_EncInt",
 
@@ -1012,7 +1023,7 @@ namespace pmd2
         "x",            
         "y",
         "tolabel",          //String is label id when importing/exporting from xml
-        //"jumptolabel",
+        "vol",
     }};
 
     inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
@@ -1041,95 +1052,9 @@ namespace pmd2
 //==========================================================================================================
 //  LevelEntryInfo
 //==========================================================================================================
-    //struct LevelEntryInfo_EoS
-    //{
-    //    std::string name;
-    //    int16_t unk1;
-    //    int16_t unk2;
-    //    int16_t mapid;
-    //    int16_t unk4;
-    //};
+    const int16_t       InvalidLevelID = ScriptNullVal;
+    const std::string   NullLevelId    = ScriptNullValName; //For 0x7FFF values (-1)
 
-    const int16_t       InvalidLevelID = std::numeric_limits<int16_t>::max();
-    const std::string   NullLevelId    = "NULL"; //For 0x7FFF values (-1)
-    //static const LevelEntryInfo_EoS NULL_Level{NullLevelId, -1, -1, -1, -1};
-
-    //uint16_t                   FindLevelEntryInfo_EoS( const std::string & name );
-    //const LevelEntryInfo_EoS * GetLevelEntryInfo_EoS( uint16_t id );
-
-    /*
-        LevelEntryInfoWrap
-            Same as its version dependant siblings. Except it contains data that both have!
-    */
-    //struct LevelEntryInfoWrap
-    //{
-    //    std::string name;
-    //    int16_t     mapid;
-
-    //    LevelEntryInfoWrap()
-    //        :mapid(0)
-    //    {}
-
-    //    LevelEntryInfoWrap(const LevelEntryInfoWrap & cp)   {this->operator=(cp);}
-    //    LevelEntryInfoWrap & operator=( const LevelEntryInfoWrap & cp )
-    //    {
-    //        name  = cp.name;
-    //        mapid = cp.mapid;
-    //        return *this;
-    //    }
-
-    //    LevelEntryInfoWrap( const LevelEntryInfo_EoS & cp ) { this->operator=(cp); }
-    //    LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS & cp )
-    //    {
-    //        name  = cp.name;
-    //        mapid = cp.mapid;
-    //        return *this;
-    //    }
-
-    //    LevelEntryInfoWrap( const LevelEntryInfo_EoS * cp ) { this->operator=(cp); }
-    //    LevelEntryInfoWrap & operator=( const LevelEntryInfo_EoS * cp )
-    //    {
-    //        if(cp)
-    //        {
-    //            name  = cp->name;
-    //            mapid = cp->mapid;
-    //        }
-    //        else
-    //        {
-    //            name  = std::string();
-    //            mapid = -1;
-    //        }
-    //        return *this;
-    //    }
-
-    //    operator bool()
-    //    {
-    //        return !name.empty();
-    //    }
-    //};
-
-    /*
-        LevelEntryInfoWrapper
-            Abstracts access to level entry data!
-    */
-    //class LevelEntryInfoWrapper
-    //{
-    //public:
-
-    //    LevelEntryInfoWrapper(eGameVersion ver)
-    //        :m_ver(ver)
-    //    {}
-
-    //    uint16_t            FindLevelInfoEntryByName(const std::string & name)const;
-    //    LevelEntryInfoWrap  GetLevelInfoEntry       (uint16_t id)const;
-    //    const std::string * GetLevelInfoEntryName   (uint16_t id)const;
-    //    uint16_t            GetNbLevelInfoEntries   ()const;
-
-    //    static uint16_t InvalidLevelInfoID() { return std::numeric_limits<uint16_t>::max(); }
-
-    //private:
-    //    eGameVersion m_ver;
-    //};
 
 //==========================================================================================================
 //  ProcessSpecial
@@ -1139,289 +1064,32 @@ namespace pmd2
 //==========================================================================================================
 //  Face Position
 //==========================================================================================================
-
-    //enum struct eFaceModes: uint16_t
-    //{
-    //    Standard            = 0,    //Standard
-    //    
-    //    //Coordinates
-    //    AbsCoordStandard    = 1,    //Absolute Coordinates Standard
-    //    AbsCoordLeft        = 2,    //Absolute Coordinates Left
-    //    AbsCoordRight       = 3,    //Absolute Coordinates Right
-
-    //    //Bottom
-    //    Bottom_C_FaceR      = 4,    //Bottom Center Right-Facing
-    //    Bottom_L_FaceInw    = 5,    //Bottom Left Inner-Facing (inwards?)
-    //    Bottom_R_FaceInw    = 6,    //Bottom Right Inner-Facing (inwards?)
-
-    //    Bottom_L_Center     = 7,    //Bottom Left Center
-    //    Bottom_R_Center     = 8,    //Bottom Right Center
-    //    Bottom_C_FaceL      = 9,    //Bottom Center Left-Facing
-
-    //    Bottom_L_FaceOutw   = 10,   //Bottom Left Outer-Facing
-    //    Bottom_R_FaceOutw   = 11,   //Bottom Right Outer-Facing
-    //    Bottom_LC_FaceOutw  = 12,   //Bottom Left-Center Outer-Facing
-    //    Bottom_RC_FaceOutw  = 13,   //Bottom Right-Center Outer-Facing
-
-    //    //Top
-    //    Top_C_FaceR         = 14,   //Top Center (Right-Facing)
-    //    Top_L_FaceInw       = 15,   //Top Left Inner-Facing
-    //    Top_R_FaceInw       = 16,   //Top Right Inner-Facing (inwards?)
-
-    //    Top_L_Center        = 17,   //Top Left Center
-    //    Top_R_Center        = 18,   //Top Right Center
-    //    Top_C_FaceL         = 19,   //Top Center Left-Facing
-
-    //    Top_L_FaceOutw      = 20,   //Top Left-Center Right-Facing
-    //    Top_RC_FaceR        = 21,   //Top Right-Center Right-Facing
-    //    Top_LC_FaceOutw     = 22,   //Top Left-Center Outer-Facing
-    //    Top_RC_FaceOutw     = 23,   //Top Right-Center Outer-Facing
-
-    //    NbModes,
-    //    Invalid = std::numeric_limits<int16_t>::max(),
-    //};
-
-    //const std::array<std::string, static_cast<size_t>(eFaceModes::NbModes)> FacePosModeNames
-    //{{
-    //    "Standard",
-
-    //    //Coordinates
-    //    "AbsCoord",
-    //    "AbsCoordLeft",
-    //    "AbsCoordRight",
-
-    //    //Bottom
-    //    "Bottom_C_FaceR",
-    //    "Bottom_L_FaceInw",
-    //    "Bottom_R_FaceInw",
-
-    //    "Bottom_L_Center",  
-    //    "Bottom_R_Center",    
-    //    "Bottom_C_FaceL",     
-
-    //    "Bottom_L_FaceOutw",  
-    //    "Bottom_R_FaceOutw",
-    //    "Bottom_LC_FaceOutw",
-    //    "Bottom_RC_FaceOutw",
-
-    //    //Top
-    //    "Top_C_FaceR",
-    //    "Top_L_FaceInw",
-    //    "Top_R_FaceInw",
-
-    //    "Top_L_Center",
-    //    "Top_R_Center",
-    //    "Top_C_FaceL",
-
-    //    "Top_L_FaceOutw",
-    //    "Top_RC_FaceR",
-    //    "Top_LC_FaceOutw",
-    //    "Top_RC_FaceOutw",
-    //}};
-
-    //inline const std::string * FacePosModeToStr( int16_t ty )
-    //{
-    //    if( ty < static_cast<int16_t>(eOpParamTypes::NbTypes) )
-    //        return std::addressof( FacePosModeNames[static_cast<size_t>(ty)] );
-    //    else
-    //        return nullptr;
-    //}
-
-    //inline int16_t FindFacePosModeByName( const std::string & name )
-    //{
-    //    for( size_t i = 0; i < FacePosModeNames.size(); ++i )
-    //    {
-    //        if( FacePosModeNames[i] == name )
-    //            return static_cast<int16_t>(i);
-    //    }
-    //    return static_cast<int16_t>(eFaceModes::Invalid);
-    //}
-
-    const int16_t InvalidFaceModeID = std::numeric_limits<int16_t>::max();
+    const int16_t InvalidFaceModeID = ScriptNullVal;
 
 //==========================================================================================================
 //  Faces
 //==========================================================================================================
-    //const std::array<std::string, 20> FaceNames
-    //{{
-    //    "NORMAL",
-    //    "HAPPY",
-    //    "PAIN",
-    //    "ANGRY",
-    //    "THINK",
-    //    "SAD",
-    //    "WEEP",
-    //    "SHOUT",
-    //    "TEARS",
-    //    "DECIDE",
-    //    "GLADNESS",
-    //    "EMOTION",
-    //    "SURPRISE",
-    //    "FAINT",
-    //    "DUMMY_0",
-    //    "DUMMY_1",
-    //    "ACTION1",
-    //    "ACTION2",
-    //    "ACTION3",
-    //    "ACTION4",
-    //}};
 
-    const int16_t       InvalidFaceID   = std::numeric_limits<int16_t>::max();
-    const std::string   NullFaceName    = "NULL"; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
+    const int16_t       InvalidFaceID   = ScriptNullVal;
+    const std::string   NullFaceName    = ScriptNullValName; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
     const int16_t       NullFaceID      = InvalidFaceID; //It seems like the null(-1) face comes up a lot, so, I made a default value for it!
-
-    //inline int16_t FindFaceIDByName( const std::string & facename )
-    //{
-    //    if( facename == NullFaceName )
-    //        return NullFaceID;
-    //    for( size_t i = 0; i < FaceNames.size(); ++i )
-    //    {
-    //        const std::string & cur = FaceNames[i];
-    //        if( cur == facename )
-    //            return static_cast<int16_t>(i);
-    //    }
-    //    return InvalidFaceID;
-    //}
-
-    //std::string GetFaceNameByID( int16_t faceid );
 
 //==========================================================================================================
 //  Lives Entities
 //==========================================================================================================
-    //struct livesinfo_EoS
-    //{
-    //    std::string name;
-    //    uint8_t     type;
-    //    uint16_t    entid;
-    //    uint16_t    unk3;
-    //    uint16_t    unk4;
-    //};
 
-
-    const int16_t InvalidLivesID = std::numeric_limits<int16_t>::max();
-
-    //const size_t NbEntitiesEoS = 386;
-    //extern const std::array<livesinfo_EoS,NbEntitiesEoS> LivesEntityDataEntries_EoS;
-
-    //inline const livesinfo_EoS * FindLivesInfo_EoS(uint16_t id)
-    //{
-    //    if( id < LivesEntityDataEntries_EoS.size() )
-    //        return &(LivesEntityDataEntries_EoS[id]);
-    //    else
-    //        return nullptr;
-    //}
-
-    //inline uint16_t FindLivesIdByName_EoS( const std::string & name )
-    //{
-    //    for( size_t i = 0; i < LivesEntityDataEntries_EoS.size(); ++i )
-    //    {
-    //        const livesinfo_EoS & cur = LivesEntityDataEntries_EoS[i];
-    //        if( cur.name == name )
-    //            return static_cast<uint16_t>(i);
-    //    }
-    //    return std::numeric_limits<uint16_t>::max();
-    //}
-
-
-    //EoTD
-    //typedef livesinfo_EoS livesinfo_EoTD;
-    //const size_t NbEntitiesEoTD = 248;
-    //extern const std::array<livesinfo_EoTD,NbEntitiesEoTD> LivesEntityDataEntries_EoTD;
-
-    //inline const livesinfo_EoTD * FindLivesInfo_EoTD(uint16_t id)
-    //{
-    //    if( id < LivesEntityDataEntries_EoTD.size() )
-    //        return &(LivesEntityDataEntries_EoTD[id]);
-    //    else
-    //        return nullptr;
-    //}
-
-    //inline uint16_t FindLivesIdByName_EoTD( const std::string & name )
-    //{
-    //    for( size_t i = 0; i < LivesEntityDataEntries_EoTD.size(); ++i )
-    //    {
-    //        const livesinfo_EoTD & cur = LivesEntityDataEntries_EoTD[i];
-    //        if( cur.name == name )
-    //            return static_cast<uint16_t>(i);
-    //    }
-    //    return std::numeric_limits<uint16_t>::max();
-    //}
-
-//
-//  Menu Types
-//
-    //enum struct eMenuTypes : int16_t
-    //{
-    //    JobBoard    = 0x27,
-    //    OutlawBoard = 0x28,
-
-    //    NbMenus,
-    //    Invalid,
-    //};
+    const int16_t InvalidLivesID = ScriptNullVal;
 
 //
 //
 //
-    const int16_t InvalidCRoutineID = std::numeric_limits<int16_t>::max();
-
-    //struct CommonRoutineInfo_EoS
-    //{
-    //    uint16_t    id;
-    //    uint16_t    unk1;
-    //    std::string name;
-    //};
-    //const CommonRoutineInfo_EoS * FindCommonRoutineInfo_EoS( uint16_t id );
-    //uint16_t                      FindCommonRoutineIDByName_EoS(const std::string & name);
-
-    //inline uint16_t                      FindCommonRoutineIDByName_EoTD(const std::string & name)
-    //{
-    //    //! IMPLEMENT ME
-    //    assert(false);
-    //    return -1;
-    //}
+    const int16_t InvalidCRoutineID = ScriptNullVal;
 
 //==========================================================================================================
 //  ScriptEngineVariable
 //==========================================================================================================
-    //enum struct eGameVarType : uint16_t
-    //{
-    //    Unk     = 0,
-    //    Bits    = 1,
-    //    Bool    = 2,
-    //    Uint8   = 3,
-    //    Int8    = 4,
-    //    Uint16  = 5,
-    //    Int16   = 6,
-    //    Uint32  = 7,
-    //    Int32   = 8,
-    //    CStr    = 9,
-    //    
-    //    NbTypes,
-    //    Invalid = std::numeric_limits<uint16_t>::max(),
-    //};
 
-    //struct gamevariableinfo
-    //{
-    //    int16_t      ty;
-    //    int16_t      unk1;
-    //    uint16_t     offset;
-    //    uint16_t     bitshift;
-    //    uint16_t     unk3;
-    //    uint16_t     unk4;
-    //    std::string  str;
-    //};
-    const int16_t InvalidGameVariableID = std::numeric_limits<int16_t>::max();
-
-    //const gamevariableinfo * FindGameVarInfo( uint16_t varid );
-
-    ////Return uin16_t max if invalid
-    //uint16_t     GameVarInfoNameToId     ( const std::string & name );
-    //inline eGameVarType GameVarInfoNameToVarType( const std::string & name )
-    //{
-    //    return static_cast<eGameVarType>(GameVarInfoNameToId(name));
-    //}
-    
-
+    const int16_t InvalidGameVariableID = ScriptNullVal;
 
 //==========================================================================================================
 //  EoTD OpCode Data
@@ -1571,10 +1239,52 @@ namespace pmd2
             return eScriptOpCodesEoS::INVALID;
     }
 
+
+//==========================================================================================================
+//  Routine Types
+//==========================================================================================================
+
+    enum struct eRoutineTy : uint16_t
+    {
+        Standard    = 1,    //Nothing special
+        Unused2     = 2,    //unused
+        ActorFun    = 3,    //For routines an actor executes!
+        ObjectFun   = 4,    //For routines an object executes!
+        PerfFun     = 5,    //For routines a performer executes!
+        Unused6     = 6,    //unused
+        Unused7     = 7,    //unused
+        Unused8     = 8,    //unused
+        CommonSpec  = 9,    //Only for routines in the unionall.ssb file!
+        Invalid     = std::numeric_limits<uint16_t>::max(),
+    };
+
+    /*
+        Returns whether a routines accepts a value as its extra parameter value.
+    */
+    inline bool RoutineHasParameter(uint16_t ty)
+    {
+        return (ty != static_cast<uint16_t>(eRoutineTy::Standard) && 
+                ty != static_cast<uint16_t>(eRoutineTy::CommonSpec));
+    }
+    std::string RoutineTyToStr( uint16_t ty );
+    std::string RoutineTyToStr( eRoutineTy ty );
+    uint16_t    StrToRoutineTyInt( const std::string & str );
+
+    //Get the proper paramter type for a type of routine
+    eOpParamTypes RoutineParameterType( uint16_t ty );
+
 //=====================================================================================
 //  Utilities
 //=====================================================================================
-
+    inline eOpCodeVersion GameVersionToOpCodeVersion( eGameVersion ver )
+    {
+        if( ver == eGameVersion::EoD || ver == eGameVersion::EoT )
+            return eOpCodeVersion::EoTD;
+        else if( ver == eGameVersion::EoS )
+            return eOpCodeVersion::EoS;
+        else 
+            return eOpCodeVersion::Invalid;
+    }
 
     /*************************************************************************************
         OpCodeInfoWrapper
@@ -1651,7 +1361,6 @@ namespace pmd2
         {
             switch(Category())
             {
-                case eCommandCat::Destroy:
                 case eCommandCat::EntityAccessor:
                 {
                     return eInstructionType::MetaAccessor;
@@ -1661,11 +1370,7 @@ namespace pmd2
                     return eInstructionType::MetaSwitch;
                 }
                 case eCommandCat::ProcSpec:
-                {
-                    return eInstructionType::MetaProcSpecRet;
-                }
                 case eCommandCat::OpWithReturnVal:
-                case eCommandCat::EnterAdventure:
                 {
                     return eInstructionType::MetaReturnCases;
                 }
@@ -1675,6 +1380,84 @@ namespace pmd2
                 }
             };
         }
+
+
+        /*
+            IsReturnHandler
+                Whether the instruction handles the return value of a previous instruction,
+                such as a switch, or anything that returns a value.
+                This is mainly for "Case" instructions.
+        */
+        bool IsReturnHandler()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::Hold:
+                case eCommandCat::Default:
+                case eCommandCat::Case:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /*
+            IsAttribute
+                Returns whether the instruction can be used by accessors such as "lives", "object", and "performer"
+        */
+        bool IsAttribute()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::Destroy:
+                case eCommandCat::Hold:             //Hold is special, it works as an attribute too!
+                case eCommandCat::EntAttribute:
+                    return true;
+                case eCommandCat::SingleOp:
+                case eCommandCat::Switch:
+                case eCommandCat::ProcSpec:
+                case eCommandCat::OpWithReturnVal:
+                case eCommandCat::EntityAccessor:
+                default:
+                    return false;
+            }
+        }
+
+        /*
+            IsAccessor
+                Whether this instruction is an accessor, and is meant to pick
+                what the next attribute command will act upon.
+        */
+        bool IsEntityAccessor()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::EntityAccessor:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /*
+            HasReturnValue
+                Whether the instruction returns a value which 
+                can then be used by any following "Case" 
+                instructions.
+        */
+        bool HasReturnValue()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::Switch:
+                case eCommandCat::OpWithReturnVal:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+
         operator bool()const {return pname!= nullptr && pparaminfo != nullptr;}
 
         const std::string              * pname;
@@ -1690,50 +1473,50 @@ namespace pmd2
             Picks the correct OpCode info search function 
             depending on the opcode version.
     *************************************************************************************/
-    template<eOpCodeVersion>
-        struct OpCodeFinderPicker;
+    //template<eOpCodeVersion>
+    //    struct OpCodeFinderPicker;
 
-    template<>
-        struct OpCodeFinderPicker<eOpCodeVersion::EoS>
-    {
-        typedef eScriptOpCodesEoS opcode_t;
-        //typedef OpCodeInfoEoS*     opcodeinfo_t;
-        typedef OpCodeInfoWrapper opcodeinfo_t;
-        inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
-        inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
-        inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoS(opcode,nbparams); }
-    };
+    //template<>
+    //    struct OpCodeFinderPicker<eOpCodeVersion::EoS>
+    //{
+    //    typedef eScriptOpCodesEoS opcode_t;
+    //    //typedef OpCodeInfoEoS*     opcodeinfo_t;
+    //    typedef OpCodeInfoWrapper opcodeinfo_t;
+    //    inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
+    //    inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
+    //    inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoS(opcode,nbparams); }
+    //};
 
-    template<>
-        struct OpCodeFinderPicker<eOpCodeVersion::EoTD>
-    {
-        typedef eScriptOpCodesEoTD opcode_t;
-        //typedef OpCodeInfoEoTD *    opcodeinfo_t;
-        typedef OpCodeInfoWrapper  opcodeinfo_t;
-        inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
-        inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
-        inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoTD(opcode,nbparams); }
-    };
+    //template<>
+    //    struct OpCodeFinderPicker<eOpCodeVersion::EoTD>
+    //{
+    //    typedef eScriptOpCodesEoTD opcode_t;
+    //    //typedef OpCodeInfoEoTD *    opcodeinfo_t;
+    //    typedef OpCodeInfoWrapper  opcodeinfo_t;
+    //    inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
+    //    inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
+    //    inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoTD(opcode,nbparams); }
+    //};
 
 
     /*************************************************************************************
         OpCodeNumberPicker
             Get the appriopriate total number of instructions for a given game version
     *************************************************************************************/
-    template<eOpCodeVersion>
-        struct OpCodeNumberPicker;
+    //template<eOpCodeVersion>
+    //    struct OpCodeNumberPicker;
 
-    template<>
-        struct OpCodeNumberPicker<eOpCodeVersion::EoS>
-    {
-        inline size_t operator()()const { return GetNbOpCodes_EoS(); }
-    };
+    //template<>
+    //    struct OpCodeNumberPicker<eOpCodeVersion::EoS>
+    //{
+    //    inline size_t operator()()const { return GetNbOpCodes_EoS(); }
+    //};
 
-    template<>
-        struct OpCodeNumberPicker<eOpCodeVersion::EoTD>
-    {
-        inline size_t operator()()const { return GetNbOpCodes_EoTD(); }
-    };
+    //template<>
+    //    struct OpCodeNumberPicker<eOpCodeVersion::EoTD>
+    //{
+    //    inline size_t operator()()const { return GetNbOpCodes_EoTD(); }
+    //};
 
 
     /*************************************************************************************
@@ -1745,6 +1528,16 @@ namespace pmd2
         OpCodeClassifier(eOpCodeVersion ver)
             :m_ver(ver)
         {}
+
+        OpCodeClassifier(eGameVersion ver)
+        {
+            if( ver == eGameVersion::EoD || ver == eGameVersion::EoT )
+                m_ver = eOpCodeVersion::EoTD;
+            else if( ver == eGameVersion::EoS )
+                m_ver = eOpCodeVersion::EoS;
+            else 
+                throw std::runtime_error("OpCodeClassifier::OpCodeClassifier(): Got invalid game version!!");
+        }
 
         /*
             Info
@@ -1818,6 +1611,11 @@ namespace pmd2
             }
         }
 
+        inline eOpCodeVersion Version()const
+        {
+            return m_ver;
+        }
+
     private:
         eOpCodeVersion m_ver;
     };
@@ -1826,18 +1624,14 @@ namespace pmd2
         IsOpCodeData
             Whether the uint16 read is actually a data word, and not a opcode.
     *************************************************************************************/
-    bool IsOpCodeData( uint16_t code, eGameVersion vers );
+    //bool IsOpCodeData( uint16_t code, eGameVersion vers );
 
-    inline eOpCodeVersion GameVersionToOpCodeVersion( eGameVersion ver )
-    {
-        if( ver == eGameVersion::EoD || ver == eGameVersion::EoT )
-            return eOpCodeVersion::EoTD;
-        else if( ver == eGameVersion::EoS )
-            return eOpCodeVersion::EoS;
-        else 
-            return eOpCodeVersion::Invalid;
-    }
 
+
+
+//=====================================================================================
+//  Parameter Value Handling
+//=====================================================================================
     /*
     */
     class ParameterReferences
@@ -1852,7 +1646,7 @@ namespace pmd2
 
         inline int16_t Face( const std::string & name )const 
         {
-            return FindIDByName<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), name, NullFaceName);
+            return FindIDByName<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), name);
         }
 
         //Face Posistion Modes
@@ -1863,7 +1657,8 @@ namespace pmd2
 
         inline int16_t FacePosMode( const std::string & name )const 
         {
-            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().FacePosModes().FindIndexByName(name));
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().FacePosModes(), name );
+            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().FacePosModes().FindIndexByName(name));
         }
 
         //Common Routine Info
@@ -1874,7 +1669,8 @@ namespace pmd2
 
         inline int16_t CRoutine( const std::string & name )const 
         {
-            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().CommonRoutineInfo().FindIndexByName(name));
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().CommonRoutineInfo(), name );
+            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().CommonRoutineInfo().FindIndexByName(name));
         }
 
         //Level Info
@@ -1885,7 +1681,8 @@ namespace pmd2
 
         inline int16_t LevelInfo( const std::string & name )const 
         {
-            return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LevelInfo().FindIndexByName(name) );
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LevelInfo(), name );
+            //return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LevelInfo().FindIndexByName(name) );
         }
 
         //Lives Info
@@ -1896,14 +1693,15 @@ namespace pmd2
 
         inline int16_t LivesInfo( const std::string & name )const 
         {
-            return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LivesEnt().FindIndexByName(name) );
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LivesEnt(), name );
+            //return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LivesEnt().FindIndexByName(name) );
         }
 
         //GameVar Info
         inline const gamevariable_info * GameVarInfo( int16_t id )const 
         {
             if( id > 0x400 ) //Extended game var starts at 0x400
-                return m_gconf.GetGameScriptData().ExGameVariables().FindByIndex(id);
+                return m_gconf.GetGameScriptData().ExGameVariables().FindByIndex(id - 0x400);
             else
                 return m_gconf.GetGameScriptData().GameVariables().FindByIndex(id);
         }
@@ -1928,7 +1726,14 @@ namespace pmd2
             return m_gconf.GetGameScriptData().ObjectsInfo().FindByIndex(id);
         }
 
-        std::string MakeObjectNameIDString(int16_t id)const
+        inline int16_t ObjectInfo( const std::string & name )const 
+        {
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().ObjectsInfo(), name );
+            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().ObjectsInfo().FindIndexByName(name));
+        }
+
+
+        std::string ObjectIDToStr(int16_t id)const
         {
             std::stringstream sstr;
             const auto * inf = ObjectInfo(id);
@@ -1938,11 +1743,11 @@ namespace pmd2
             return sstr.str();
         }
 
-        int16_t ParseObjectNameIDString(const std::string & name)
+        int16_t StrToObjectID(const std::string & name)
         {
             std::stringstream sstr;
-            uint16_t     parsedid = 0;
-            if( std::isdigit(name.front(), std::locale::classic() ) )
+            uint16_t          parsedid = 0;
+            if( DoesStringBeginsWithNumber(name) )
             {
                 sstr << name;
                 sstr >> parsedid;
@@ -1955,39 +1760,43 @@ namespace pmd2
             return parsedid;
         }
 
-        inline int16_t ObjectInfo( const std::string & name )const 
+    private:
+
+        inline bool DoesStringBeginsWithNumber(const std::string & str)
         {
-            return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().ObjectsInfo().FindIndexByName(name));
+            return (std::isdigit(str.front(), std::locale::classic() ) || str.front() == '-');
         }
 
-
-    private:
         //This check if the value is std::numeric_limits<size_t>::max(), the error value when no index was found,
         // into the int16 error value used in the script engine.
         static inline int16_t ConvertInvalidOffsetToInvalidInt16( size_t val )
         {
             if( val == std::numeric_limits<size_t>::max() )
-                return std::numeric_limits<int16_t>::max();
+                return ScriptNullVal;
             else
                 return static_cast<int16_t>(val);
         }
 
         template<int16_t _INVALIDID, class _EntryTy>
-            inline const std::string & FindByIndex( _EntryTy container, int16_t id, const std::string & invalidstr = "" )const 
+            inline const std::string FindByIndex( _EntryTy container, int16_t id, const std::string & invalidstr = ScriptNullValName )const 
         { 
             if( id == _INVALIDID )
-                return NullFaceName;
+                return invalidstr;
 
             const std::string * pstr = container.FindByIndex(id);
             if(pstr)
                 return *pstr;
             else
-                return NullFaceName;
+            {
+                std::stringstream sstr;
+                sstr << id;
+                return sstr.str();
+            }
         }
 
 
         template<int16_t _INVALIDID, class _EntryTy>
-            inline int16_t FindIDByName( _EntryTy container, const std::string & name, const std::string & invalidstr = "" )const 
+            inline int16_t FindIDByName( _EntryTy container, const std::string & name, const std::string & invalidstr = ScriptNullValName )const 
         { 
             if( name == invalidstr )
                 return _INVALIDID;
@@ -2008,6 +1817,11 @@ namespace pmd2
     private:
         const ConfigLoader & m_gconf;
     };
+
+
+
+
+
 
 };
 

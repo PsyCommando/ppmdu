@@ -125,7 +125,8 @@ namespace filetypes
                               pmd2::eGameRegion             gloc, 
                               pmd2::eGameVersion            gvers, 
                               const pmd2::LanguageFilesDB & langdat,
-                              bool                          escapeforxml ); //Whether to use xml escape sequence(&quot; for example) instead of C ones(\n)
+                              bool                          escapeforxml, //Whether to use xml escape sequence(&quot; for example) instead of C ones(\n)
+                              bool                          bscriptdebug ); //If true, all debug instructions paths will be toggled on by default!
 
     /***********************************************************************************
         WriteScript

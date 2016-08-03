@@ -51,7 +51,7 @@ namespace pmd2
         { "bgm2_ChangeVolume",                      2, eCommandCat::SingleOp        },
         { "Branch",                                 3, eCommandCat::BranchCmd       },
         { "BranchBit",                              3, eCommandCat::BranchCmd       },
-        { "BranchDebug",                            2, eCommandCat::BranchCmd       },
+        { "BranchDebug",                            2, eCommandCat::BranchCmd,          { {eOpParamTypes::Boolean} } },
         { "BranchEdit",                             2, eCommandCat::BranchCmd       },
         { "BranchExecuteSub",                       2, eCommandCat::BranchCmd       },
         { "BranchPerformance",                      3, eCommandCat::BranchCmd       },
@@ -389,10 +389,10 @@ namespace pmd2
         { "back2_SetWeatherScrollOffset",           2, -1, 0, 0, eCommandCat::SingleOp      },
         { "back2_SetWeatherScrollSpeed",            2, -1, 0, 0, eCommandCat::SingleOp      },
         { "bgm_FadeOut",                            1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Duration} } },
-        { "bgm_Play",                               1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "bgm_PlayFadeIn",                         3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_BgmTrack}, {eOpParamTypes::Duration}, {eOpParamTypes::UNK_Placeholder} } },
+        { "bgm_Play",                               1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_BgmTrack} } },
+        { "bgm_PlayFadeIn",                         3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_BgmTrack}, {eOpParamTypes::Duration}, {eOpParamTypes::Volume} } },
         { "bgm_Stop",                               0, -1, 0, 0, eCommandCat::SingleOp      },
-        { "bgm_ChangeVolume",                       2, -1, 0, 0, eCommandCat::SingleOp      },
+        { "bgm_ChangeVolume",                       2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Duration}, {eOpParamTypes::Volume} } },
         { "bgm2_FadeOut",                           1, -1, 0, 0, eCommandCat::SingleOp      },
         { "bgm2_Play",                              1, -1, 0, 0, eCommandCat::SingleOp      },
         { "bgm2_PlayFadeIn",                        3, -1, 0, 0, eCommandCat::SingleOp      },
@@ -400,7 +400,7 @@ namespace pmd2
         { "bgm2_ChangeVolume",                      2, -1, 0, 0, eCommandCat::SingleOp      },
         { "Branch",                                 3, -1, 1, 0, eCommandCat::BranchCmd,        { {eOpParamTypes::Unk_ScriptVariable}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::InstructionOffset} } },
         { "BranchBit",                              3, -1, 1, 0, eCommandCat::BranchCmd,        { {eOpParamTypes::Unk_ScriptVariable}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::InstructionOffset} } },
-        { "BranchDebug",                            2, -1, 1, 0, eCommandCat::BranchCmd,        { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::InstructionOffset} } },
+        { "BranchDebug",                            2, -1, 1, 0, eCommandCat::BranchCmd,        { {eOpParamTypes::Boolean}, {eOpParamTypes::InstructionOffset} } },
         { "BranchEdit",                             2, -1, 1, 0, eCommandCat::BranchCmd,    },
         { "BranchExecuteSub",                       2, -1, 1, 0, eCommandCat::BranchCmd,    },
         { "BranchPerformance",                      3, -1, 1, 0, eCommandCat::BranchCmd,    },
@@ -483,7 +483,7 @@ namespace pmd2
         { "flag_ResetDungeonResult",                0, -1, 0, 0, eCommandCat::SingleOp      },
         { "flag_ResetScenario",                     1, -1, 0, 0, eCommandCat::SingleOp      },
         { "flag_SetAdventureLog",                   1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "flag_SetDungeonMode",                    2, -1, 0, 0, eCommandCat::SingleOp      },
+        { "flag_SetDungeonMode",                    2, -1, 0, 0, eCommandCat::SingleOp,     },
         { "flag_SetDungeonResult",                  2, -1, 0, 0, eCommandCat::SingleOp      },
         { "flag_SetPerformance",                    2, -1, 0, 0, eCommandCat::SingleOp      },
         { "flag_SetScenario",                       3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_ScriptVariable}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder} } },
@@ -497,8 +497,8 @@ namespace pmd2
         { "JumpCommon",                             1, -1, 0, 0, eCommandCat::JumpCommon,       { {eOpParamTypes::Unk_CRoutineId} } },
         { "lives",                                  1, -1, 0, 0, eCommandCat::EntityAccessor,   { {eOpParamTypes::Unk_LivesRef}, } },
         { "LoadPosition",                           1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Lock",                                   1, -1, 0, 0, eCommandCat::Lock          },
-        { "main_EnterAdventure",                    2, -1, 0, 0, eCommandCat::EnterAdventure},
+        { "Lock",                                   1, -1, 0, 0, eCommandCat::Lock          }, //lock might have to do with freezing animation on a given frame for a duration??
+        { "main_EnterAdventure",                    2, -1, 0, 0, eCommandCat::OpWithReturnVal},
         { "main_EnterDungeon",                      2, -1, 0, 0, eCommandCat::SingleOp      },
         { "main_EnterGround",                       2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
         { "main_EnterGroundMulti",                  3, -1, 0, 0, eCommandCat::SingleOp      },
@@ -515,7 +515,7 @@ namespace pmd2
         { "message_ImitationSound",                 1,  0, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
         { "message_KeyWait",                        0, -1, 0, 0, eCommandCat::SingleOp      },
         { "message_Mail",                           1,  0, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
-        { "message_Menu",                           1, -1, 0, 0, eCommandCat::OpWithReturnVal},
+        { "message_Menu",                           1, -1, 0, 0, eCommandCat::OpWithReturnVal,  { {eOpParamTypes::MenuID} } },
         { "message_Monologue",                      1,  0, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
         { "message_Narration",                      2,  1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::String} } },
         { "message_Notice",                         1,  0, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::String} } },
@@ -548,7 +548,7 @@ namespace pmd2
         { "Move3PositionOffset",                    3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Move3PositionOffsetRandom",              3, -1, 0, 0, eCommandCat::SingleOp      },
         { "MoveDirection",                          3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "MoveHeight",                             2, -1, 0, 0, eCommandCat::SingleOp      },
+        { "MoveHeight",                             2, -1, 0, 0, eCommandCat::EntAttribute  },
         { "MovePosition",                           3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "MovePositionLives",                      2, -1, 0, 0, eCommandCat::SingleOp      },
         { "MovePositionLivesTime",                  3, -1, 0, 0, eCommandCat::SingleOp      },
@@ -629,20 +629,20 @@ namespace pmd2
         { "SetPositionOffset",                      2, -1, 0, 0, eCommandCat::EntAttribute  },
         { "SetPositionOffsetRandom",                2, -1, 0, 0, eCommandCat::SingleOp      },
         { "SetReplyAttribute",                      1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "SetupOutputAttributeAndAnimation",       3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "SetupOutputAttributeAndAnimation",       3, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Slide2Position",                         3, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide2PositionLives",                    2, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide2PositionMark",                    -1, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide2PositionMark",                     5, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Slide2PositionOffset",                  -1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Slide2PositionOffset",                   3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Slide2PositionOffset",                  -1, -1, 0, 0, eCommandCat::EntAttribute  },
+        { "Slide2PositionOffset",                   3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Slide2PositionOffsetRandom",             3, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide3Position",                         3, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide3PositionLives",                    2, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide3PositionMark",                    -1, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide3PositionMark",                     5, -1, 0, 0, eCommandCat::SingleOp      },
         { "Slide3PositionOffset",                  -1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "Slide3PositionOffset",                   3, -1, 0, 0, eCommandCat::SingleOp      },
+        { "Slide3PositionOffset",                   3, -1, 0, 0, eCommandCat::EntAttribute,     { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::CoordinateX}, {eOpParamTypes::CoordinateY} } },
         { "Slide3PositionOffsetRandom",             3, -1, 0, 0, eCommandCat::SingleOp      },
         { "SlideHeight",                            2, -1, 0, 0, eCommandCat::SingleOp      },
         { "SlidePosition",                          3, -1, 0, 0, eCommandCat::SingleOp      },
@@ -656,11 +656,11 @@ namespace pmd2
         { "sound_FadeOut",                          1, -1, 0, 0, eCommandCat::SingleOp      },
         { "sound_Stop",                             0, -1, 0, 0, eCommandCat::SingleOp      },
         { "StopAnimation",                          0, -1, 0, 0, eCommandCat::SingleOp      },
-        { "supervision_Acting",                     1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "supervision_ActingInvisible",            1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "supervision_Acting",                     1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::ActingLayerID} } },
+        { "supervision_ActingInvisible",            1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::ActingLayerID} } },
         { "supervision_ExecuteActing",              3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant}, {eOpParamTypes::UNK_Placeholder} } },
         { "supervision_ExecuteActingSub",           3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant}, {eOpParamTypes::UNK_Placeholder} } },
-        { "supervision_ExecuteCommon",              1, -1, 0, 0, eCommandCat::SingleOp,         },
+        { "supervision_ExecuteCommon",              1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_CRoutineId} } },
         { "supervision_ExecuteEnter",               1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_ExecuteStation",             3, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant}, {eOpParamTypes::UNK_Placeholder} } },
         { "supervision_ExecuteStationCommon",       2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::UNK_Placeholder} } },
@@ -670,11 +670,11 @@ namespace pmd2
         { "supervision_ExecuteExportSub",           1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Constant} } },   
         { "supervision_LoadStation",                2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId}, {eOpParamTypes::Constant} } },   
         { "supervision_Remove",                     1, -1, 0, 0, eCommandCat::SingleOp      },
-        { "supervision_RemoveActing",               1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "supervision_RemoveActing",               1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::ActingLayerID} } },
         { "supervision_RemoveCommon",               1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision_SpecialActing",              3, -1, 0, 0, eCommandCat::SingleOp      },
-        { "supervision_Station",                    1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_LevelId} } },
-        { "supervision_StationCommon",              1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "supervision_Station",                    1, -1, 0, 0, eCommandCat::SingleOp,     },
+        { "supervision_StationCommon",              1, -1, 0, 0, eCommandCat::SingleOp,     },
         { "supervision_Suspend",                    1, -1, 0, 0, eCommandCat::SingleOp      },
         { "supervision2_SpecialActing",             3, -1, 0, 0, eCommandCat::SingleOp      },
         { "Switch",                                 1, -1, 0, 0, eCommandCat::Switch,           { {eOpParamTypes::Unk_ScriptVariable}, } },
@@ -696,7 +696,7 @@ namespace pmd2
         { "Turn2DirectionMark",                     8, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Turn2DirectionTurn",                     3, -1, 0, 0, eCommandCat::EntAttribute  },
         { "Turn3",                                  4, -1, 0, 0, eCommandCat::EntAttribute, }, //lives
-        { "TurnDirection",                          1, -1, 0, 0, eCommandCat::SingleOp      },
+        { "TurnDirection",                          1, -1, 0, 0, eCommandCat::EntAttribute  }, //lives
         { "TurnDirectionLives",                     2, -1, 0, 0, eCommandCat::EntAttribute  },
         { "TurnDirectionLives2",                    2, -1, 0, 0, eCommandCat::SingleOp      }, //unused
         { "TurnDirectionMark",                      5, -1, 0, 0, eCommandCat::SingleOp      }, //unused
@@ -2582,22 +2582,22 @@ namespace pmd2
 //
 //
 
-    bool IsOpCodeData(uint16_t code, eGameVersion vers)
-    {
-        if( vers == eGameVersion::EoS )
-        {
-            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoS>()()) )
-                return true;
-        }
-        else if( vers == eGameVersion::EoT || vers == eGameVersion::EoD )
-        {
-            if( code > (OpCodeNumberPicker<eOpCodeVersion::EoTD>()()) )
-                return true;
-        }
-        else
-            throw std::runtime_error("IsOpCodeData(): Invalid game version specified!");
-        return false;
-    }
+    //bool IsOpCodeData(uint16_t code, eGameVersion vers)
+    //{
+    //    if( vers == eGameVersion::EoS )
+    //    {
+    //        if( code > (OpCodeNumberPicker<eOpCodeVersion::EoS>()()) )
+    //            return true;
+    //    }
+    //    else if( vers == eGameVersion::EoT || vers == eGameVersion::EoD )
+    //    {
+    //        if( code > (OpCodeNumberPicker<eOpCodeVersion::EoTD>()()) )
+    //            return true;
+    //    }
+    //    else
+    //        throw std::runtime_error("IsOpCodeData(): Invalid game version specified!");
+    //    return false;
+    //}
 
     const std::string ParameterReferences::Face(int16_t id) const
     {
@@ -2614,6 +2614,99 @@ namespace pmd2
         std::stringstream sstr;
         sstr << id;
         return std::move(sstr.str());
+    }
+
+//
+//
+//
+    const string RoutineStandard = "Function"s;
+    const string RoutineUnused2  = "FunctionType2"s;
+    const string RoutineActor    = "ActorFunction"s;
+    const string RoutineObj      = "ObjectFunction"s;
+    const string RoutinePerf     = "PerformerFunction"s;
+    const string RoutineUnused6  = "FunctionType6"s;
+    const string RoutineUnused7  = "FunctionType7"s;
+    const string RoutineUnused8  = "FunctionType8"s;
+    const string RoutineCommon   = "CommonRoutine"s;
+    const string RoutineInvalid  = "ERROR"s;
+
+    const std::unordered_map<eRoutineTy, std::string> RoutineTypesNames
+    {{
+        { eRoutineTy::Standard,     RoutineStandard },
+        { eRoutineTy::Unused2,      RoutineUnused2  },
+        { eRoutineTy::ActorFun,     RoutineActor    },
+        { eRoutineTy::ObjectFun,    RoutineObj      },
+        { eRoutineTy::PerfFun,      RoutinePerf     },
+        { eRoutineTy::Unused6,      RoutineUnused6  },
+        { eRoutineTy::Unused7,      RoutineUnused7  },
+        { eRoutineTy::Unused8,      RoutineUnused8  },
+        { eRoutineTy::CommonSpec,   RoutineCommon   },
+        { eRoutineTy::Invalid,      RoutineInvalid  },
+    }};
+
+    const std::unordered_map<std::string, eRoutineTy> RoutineNameToType
+    {{
+        { RoutineStandard,          eRoutineTy::Standard   },
+        { RoutineUnused2,           eRoutineTy::Unused2    },
+        { RoutineActor,             eRoutineTy::ActorFun   },
+        { RoutineObj,               eRoutineTy::ObjectFun  },
+        { RoutinePerf,              eRoutineTy::PerfFun    },
+        { RoutineUnused6,           eRoutineTy::Unused6    },
+        { RoutineUnused7,           eRoutineTy::Unused7    },
+        { RoutineUnused8,           eRoutineTy::Unused8    },
+        { RoutineCommon,            eRoutineTy::CommonSpec },
+        { RoutineInvalid,           eRoutineTy::Invalid    },
+    }};
+
+    std::string RoutineTyToStr( eRoutineTy ty )
+    {
+        return std::move( RoutineTyToStr(static_cast<uint16_t>(ty)) );
+    }
+
+    std::string RoutineTyToStr(uint16_t ty)
+    {
+        auto itf = RoutineTypesNames.find(static_cast<eRoutineTy>(ty));
+        if( itf != RoutineTypesNames.end() )
+            return itf->second;
+        else
+        {
+            stringstream sstr;
+            sstr << ty;
+            return sstr.str();
+        }
+    }
+
+    uint16_t StrToRoutineTyInt(const std::string & str)
+    {
+        auto itf = RoutineNameToType.find(str);
+        if( itf != RoutineNameToType.end() )
+            return static_cast<uint16_t>(itf->second);
+        else
+        {
+            stringstream sstr;
+            uint16_t val = 0;
+            sstr << str;
+            sstr >> val;
+            return val;
+        }
+    }
+
+    eOpParamTypes RoutineParameterType(uint16_t ty)
+    {
+        switch(static_cast<eRoutineTy>(ty))
+        {
+            case eRoutineTy::ActorFun:  
+                return eOpParamTypes::Unk_LivesRef;
+            case eRoutineTy::ObjectFun: 
+                return eOpParamTypes::Unk_ObjectRef;
+            case eRoutineTy::PerfFun:   
+                return eOpParamTypes::Unk_PerformerRef;
+
+            case eRoutineTy::Standard:
+            case eRoutineTy::CommonSpec:
+            default:
+                return eOpParamTypes::UNK_Placeholder;
+        };
     }
 
 };

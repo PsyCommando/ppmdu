@@ -24,8 +24,8 @@ using namespace pugixmlutils;
 namespace pmd2
 {
 
-
-    inline uint16_t Convert14bTo16b(uint16_t val)
+    //Return is signed!!!
+    inline int16_t Convert14bTo16b(uint16_t val)
     {
         return (val & 0x4000u)? (val | 0xFFFF8000u) : (val & 0x3FFFu);
     }
@@ -55,7 +55,8 @@ namespace pmd2
 
     inline int16_t ToSWord( long val )
     {
-        if( (val & 0xFFFF0000) == 0 )
+        if( val <= std::numeric_limits<int16_t>::max() && val >= std::numeric_limits<int16_t>::lowest() )
+        //if( (val & 0xFFFF0000) == 0 )
             return static_cast<int16_t>(val);
         else
             throw std::overflow_error("ToWord(): Value is larger or smaller than a 16bits integer!!");
@@ -102,10 +103,10 @@ namespace pmd2
 
         //!#TODO: add various group nodes depending on the group type 
 
-        const string NODE_Group         = "Routine"s;
-        const string ATTR_GroupID       = "id"s;
-        const string ATTR_GroupType     = "type"s;
-        const string ATTR_GroupParam2   = "unk2"s;
+        const string NODE_Routine       = "Routine"s;
+        const string ATTR_RoutineID     = "_id"s;
+        const string ATTR_RoutineType   = "type"s;
+        const string ATTR_RoutineParam2 = "unk2"s;
 
         const string NODE_RoutineAlias  = "AliasPrevRoutine";       //For multiple groups refering to the same memory offset!
 
@@ -280,42 +281,129 @@ namespace pmd2
             }
         }
 
+        /*****************************************************************************************
+        *****************************************************************************************/
+        void ParseTypedRoutine(const xml_node & routinen, uint16_t routinety, ScriptInstrGrp & grpout, bool isalias)
+        {
+            using namespace scriptXML;
+            eOpParamTypes       ptype   = RoutineParameterType(routinety);
+            const std::string * ppname  = OpParamTypesToStr(ptype);
+            if(!ppname)
+            {
+                stringstream sstrer;
+                PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine has unknown parameter type \"" 
+                                               <<static_cast<uint16_t>(ptype) <<"\"!!";
+                throw std::runtime_error(sstrer.str());
+            }
+
+            xml_attribute attr = routinen.attribute(ppname->c_str());
+            grpout.isalias = isalias;
+            grpout.type    = routinety;
+
+            if(!attr && RoutineHasParameter(routinety) )
+            {
+                //If its an unexpected routine type, we'll have the def argument type
+                attr = routinen.attribute(ATTR_RoutineParam2.c_str());
+                if(!attr)
+                {
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine is missing its expected parameter \"" 
+                                                   <<*ppname <<"\"!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+                ptype = eOpParamTypes::UNK_Placeholder; //We want to handle it as a regular value
+            }
+            else if(!RoutineHasParameter(routinety))
+            {
+                //We don't have a parameter value, standard functions never usually have a parameter, so default it to 0.
+                grpout.unk2 = 0;
+                return;
+            }
+            
+            //! #TODO: this is redundant, better find a smart way to deal with this..
+            switch(ptype)
+            {
+                case eOpParamTypes::Unk_LivesRef:
+                {
+                    uint16_t livesid = m_paraminf.LivesInfo(attr.value());
+                    if(livesid != InvalidLivesID )
+                        grpout.unk2 = livesid;
+                    else
+                    {
+                        clog <<routinen.path() <<", " <<routinen.offset_debug() 
+                                <<" : used invalid \"lives\" id value as a raw integer.\n"; 
+                        grpout.unk2 = ToWord(attr.as_int());
+                    }
+                    break;
+                }
+                case eOpParamTypes::Unk_PerformerRef:
+                {
+                    //!#TODO
+                    grpout.unk2 = ToWord(attr.as_uint());
+                    break;
+                }
+                case eOpParamTypes::Unk_ObjectRef:
+                {
+                    try
+                    {
+                        grpout.unk2 = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
+                    }
+                    catch( const std::exception & )
+                    {
+                        stringstream sstrer;
+                        PrintErrorPos(sstrer,routinen) 
+                            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<attr.value() 
+                            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+                        throw_with_nested( std::runtime_error(sstrer.str()) );
+                    }
+                    break;
+                }
+                case eOpParamTypes::UNK_Placeholder:
+                {
+                    grpout.unk2 = ToWord(attr.as_uint());
+                    break;
+                }
+            };
+        }
 
         /*****************************************************************************************
         *****************************************************************************************/
         void ParseCode( const xml_node & coden )
         {
             using namespace scriptXML;
-            Script::grptbl_t & outtbl = m_out.Groups();
+            Script::grptbl_t & outtbl = m_out.Routines();
 
             for( const xml_node & group : coden.children() )
             {
-                bool isalias = false;
-                if( NODE_Group.compare(group.name()) == 0 || (isalias = (NODE_RoutineAlias.compare(group.name()) == 0)) )
+                uint16_t routinety;
+                bool     isalias = NODE_RoutineAlias == group.name();
+
+                if(isalias)
                 {
-                    //We ignore the id on load!
-                    //!#TODO: Maybe we could use routine ids to refer to routines through the "Call" commands?
-                    xml_attribute  xtype = group.attribute(ATTR_GroupType.c_str());
-                    xml_attribute  xunk2 = group.attribute(ATTR_GroupParam2.c_str());
-                    ScriptInstrGrp grpout;
+                    //If its an alias, the type is held in the type attribute, not the name of the node
+                    xml_attribute xtype = group.attribute(ATTR_RoutineType.c_str());
                     if(!xtype)
                     {
                         stringstream sstrer;
-                        sstrer <<"SSBXMLParser::ParseCode(): Script \"" <<m_out.Name() <<"\", routine #" << outtbl.size() 
-                               <<"doesn't have a \"" <<ATTR_GroupType <<"\" attribute!!";
-                        throw std::runtime_error(sstrer.str());
+                        PrintErrorPos(sstrer,group) 
+                            << "SSBXMLParser::ParseCode(): Routine alias is missing its type!";
+                        throw_with_nested( std::runtime_error(sstrer.str()) );
                     }
-                
-                    grpout.type     = ToWord(xtype.as_uint());
-                    grpout.unk2     = ToWord(xunk2.as_uint());
-                    grpout.isalias  = isalias;
+                    routinety = StrToRoutineTyInt(xtype.value());
+                }
+                else
+                    routinety = StrToRoutineTyInt(group.name());
 
-                    if( !isalias )
+                //Parse the attributes and instructions if the routine is a valid type!
+                if(routinety != 0)
+                {
+                    ScriptInstrGrp grpout;
+                    ParseTypedRoutine(group, routinety, grpout, isalias);
+                    if(!isalias)
                     {
                         for( const xml_node & inst : group )
                             ParseInstruction(inst,grpout.instructions);
                     }
-
                     outtbl.push_back(std::move(grpout));
                 }
             }
@@ -388,7 +476,7 @@ namespace pmd2
             if( foundop == InvalidOpCode )
             {
                 stringstream sstrer;
-                sstrer <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
+                sstrer <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
                     <<", in group instruction #" <<outcnt.size() <<" Node name doesn't match any known meta instructions or command!!";
                 throw std::runtime_error(sstrer.str());
             }
@@ -431,7 +519,7 @@ namespace pmd2
             {
                 //!#TODO: Merge the other method for parsing parameters with sub-instructions with this one!!
                 stringstream sstrer;
-               PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Groups().size() 
+               PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
                     <<", in group instruction #" <<outcnt.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
                 throw std::runtime_error(sstrer.str());
             }
@@ -850,7 +938,7 @@ namespace pmd2
                 {
                     try
                     {
-                        outinst.parameters.push_back(m_paraminf.ParseObjectNameIDString(param.value())); //! #FIXME: Verify it or somthing?
+                        outinst.parameters.push_back(m_paraminf.StrToObjectID(param.value())); //! #FIXME: Verify it or somthing?
                     }
                     catch( const std::exception & )
                     {
@@ -892,6 +980,12 @@ namespace pmd2
                 case eOpParamTypes::Duration:
                 case eOpParamTypes::CoordinateY:
                 case eOpParamTypes::CoordinateX:
+                {
+                    outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) );
+                    break;
+                }
+                case eOpParamTypes::StationId:
+                case eOpParamTypes::ActingLayerID:
                 {
                     outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) );
                     break;
@@ -1188,7 +1282,7 @@ namespace pmd2
                 const string objid = xid.value();
                 try
                 {
-                    entry.objid = m_paraminf.ParseObjectNameIDString(objid); //! #FIXME: Verify it or somthing?
+                    entry.objid = m_paraminf.StrToObjectID(objid); //! #FIXME: Verify it or somthing?
                 }
                 catch( const std::exception & )
                 {
@@ -1341,13 +1435,13 @@ namespace pmd2
             m_out_reg  = StrToGameRegion (xregion.value());
 
             return std::move( LevelScript( utils::GetBaseNameOnly(file), 
-                             std::move(ParseGroups(parentn)),
+                             std::move(ParseRoutines(parentn)),
                              std::move(ParseLSD   (parentn))));
         }
 
     private:
 
-        LevelScript::scriptgrps_t ParseGroups( xml_node & parentn )
+        LevelScript::scriptgrps_t ParseRoutines( xml_node & parentn )
         {
             using namespace scriptXML;
             LevelScript::scriptgrps_t groups;
@@ -1533,11 +1627,88 @@ namespace pmd2
                 sstrstats <<m_seq.StrTblSet().begin()->second.size() <<" string(s), ";
             else
                 sstrstats <<"0 string(s), ";
-            sstrstats <<m_seq.Groups().size() <<" routine(s),";
-            for( const auto & grpa : m_seq.Groups() )
+            sstrstats <<m_seq.Routines().size() <<" routine(s),";
+            for( const auto & grpa : m_seq.Routines() )
                 if(grpa.IsAliasOfPrevGroup()) ++nbaliases;
             sstrstats <<" of which " <<nbaliases <<" are aliases to their previous routine." ;
             WriteCommentNode( parentn, sstrstats.str() );
+        }
+
+        /*
+        */
+        xml_node SetupRoutine(xml_node & parent, const ScriptInstrGrp & cur, size_t routinecnt, bool isUnionall)
+        {
+            using namespace scriptXML;
+            xml_node     xroutine;
+            string       nameid;
+            string       routinetype = RoutineTyToStr(cur.type);
+            stringstream sstr;
+            WriteCommentNode( parent, "*******************************************************" );
+            
+            sstr << std::right <<std::setw(15) <<std::setfill(' ') <<routinetype <<" #" <<routinecnt;
+                
+            if( isUnionall )
+            {
+                const auto * pinfo = m_paraminf.CRoutine(routinecnt);
+                if(pinfo)
+                {
+                    nameid = pinfo->name;
+                    sstr<<" - " <<nameid;
+                }
+            }
+ 
+            WriteCommentNode( parent, sstr.str() );
+            WriteCommentNode( parent, "*******************************************************" );
+
+            if( cur.IsAliasOfPrevGroup() )
+                xroutine = parent.append_child( NODE_RoutineAlias.c_str() );
+            else
+                xroutine = parent.append_child( routinetype.c_str() );
+
+            if( isUnionall && !nameid.empty() )
+                AppendAttribute( xroutine, ATTR_RoutineID, nameid );
+            else
+                AppendAttribute( xroutine, ATTR_RoutineID, routinecnt );
+
+            if( cur.IsAliasOfPrevGroup() )
+                AppendAttribute( xroutine, ATTR_RoutineType, routinetype );
+            
+            //If we don't have a paramter normally, and the parameter is 0, just skip over this and return!
+            if( !RoutineHasParameter(cur.type) && cur.unk2 == 0 )
+                return xroutine;
+            
+            eOpParamTypes  rparamty  = RoutineParameterType(cur.type);
+            const string * paramname = OpParamTypesToStr(rparamty);
+
+            if(paramname)
+            {
+                switch(rparamty)
+                {
+                    case eOpParamTypes::Unk_LivesRef:
+                    {
+                        const livesent_info * pinf = m_paraminf.LivesInfo(cur.unk2);
+                        if(pinf)
+                            AppendAttribute( xroutine, *paramname, pinf->name );
+                        else
+                            AppendAttribute( xroutine, *paramname, cur.unk2 );
+                        break;
+                    }
+                    case eOpParamTypes::Unk_ObjectRef:
+                    {
+                        AppendAttribute(xroutine, *paramname, m_paraminf.ObjectIDToStr(cur.unk2) );
+                        break;
+                    }
+                    case eOpParamTypes::Unk_PerformerRef:
+                    default:
+                    { 
+                        AppendAttribute( xroutine, *paramname, cur.unk2 );
+                    }
+                };
+            }
+            else
+                AppendAttribute( xroutine, ATTR_RoutineParam2, cur.unk2 );
+
+            return xroutine;
         }
 
         void WriteCode( xml_node & parentn )
@@ -1546,47 +1717,18 @@ namespace pmd2
             xml_node xcode = parentn.append_child( NODE_Code.c_str() );
             const bool isUnionall = m_seq.Name() == ScriptPrefix_unionall;
 
-            size_t grpcnt = 0;
-            string nameid;
-            for( const auto & grp : m_seq.Groups() )
+            size_t routinecnt = 0;
+            
+            for( const auto & routine : m_seq.Routines() )
             {
-                WriteCommentNode( xcode, "*******************************************************" );
-                stringstream sstr;
-                sstr << std::right <<std::setw(15) <<std::setfill(' ') <<"Routine #" <<grpcnt;
-                
-                if( isUnionall )
+                xml_node xroutine = SetupRoutine(xcode, routine, routinecnt, isUnionall );
+
+                if( !routine.IsAliasOfPrevGroup() )
                 {
-                    nameid = std::string();
-                    const auto * pinfo = m_paraminf.CRoutine(grpcnt);
-                    if(pinfo)
-                    {
-                        nameid = pinfo->name;
-                        sstr<<" - " <<nameid;
-                    }
+                    for( const auto & instr : routine.instructions )
+                        HandleInstruction(xroutine, instr);
                 }
-                
-                WriteCommentNode( xcode, sstr.str() );
-                WriteCommentNode( xcode, "*******************************************************" );
-                xml_node xgroup;
-                if( grp.IsAliasOfPrevGroup() )
-                    xgroup = xcode.append_child( NODE_RoutineAlias.c_str() );
-                else
-                    xgroup = xcode.append_child( NODE_Group.c_str() );
-
-                if( isUnionall && !nameid.empty() )
-                    AppendAttribute( xgroup, ATTR_GroupID, nameid );
-                else
-                    AppendAttribute( xgroup, ATTR_GroupID, grpcnt );
-
-                AppendAttribute( xgroup, ATTR_GroupType,   grp.type );
-                AppendAttribute( xgroup, ATTR_GroupParam2, grp.unk2 );
-
-                if( !grp.IsAliasOfPrevGroup() )
-                {
-                    for( const auto & instr : grp.instructions )
-                        HandleInstruction(xgroup, instr);
-                }
-                ++grpcnt;
+                ++routinecnt;
             }
         }
 
@@ -1624,11 +1766,11 @@ namespace pmd2
                     WriteMetaAccessor(groupn,instr);
                     break;
                 }
-                case eInstructionType::MetaProcSpecRet:
-                {
-                    WriteMetaSpecRet(groupn,instr);
-                    break;
-                }
+                //case eInstructionType::MetaProcSpecRet:
+                //{
+                //    WriteMetaSpecRet(groupn,instr);
+                //    break;
+                //}
                 case eInstructionType::MetaReturnCases:
                 {
                     WriteMetaReturnCases(groupn,instr);
@@ -1776,6 +1918,7 @@ namespace pmd2
                     //Simple integers
                     case eOpParamTypes::Integer:
                     case eOpParamTypes::Duration:
+                    case eOpParamTypes::Volume:
                     case eOpParamTypes::CoordinateY:
                     case eOpParamTypes::CoordinateX:
                     {
@@ -1851,7 +1994,7 @@ namespace pmd2
                     }
                     case eOpParamTypes::Unk_ObjectRef:
                     {
-                        AppendAttribute(instn, deststr.str(), m_paraminf.MakeObjectNameIDString(pval) );
+                        AppendAttribute(instn, deststr.str(), m_paraminf.ObjectIDToStr(pval) );
                         return;
                     }
                     case eOpParamTypes::Unk_LevelId:
@@ -1870,6 +2013,24 @@ namespace pmd2
                                 assert(false);
                             }
                         }
+                        return;
+                    }
+                    case eOpParamTypes::MenuID:
+                    {
+                        //! #TODO: Handle references!
+                        AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
+                        return;
+                    }
+                    case eOpParamTypes::StationId:
+                    {
+                        //! #TODO: Handle stations a bit better
+                        AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
+                        return;
+                    }
+                    case eOpParamTypes::ActingLayerID:
+                    {
+                        //! #TODO: Handle "acting" layers a bit better
+                        AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
                         return;
                     }
                     case eOpParamTypes::BitsFlag:   //!#TODO
@@ -2067,13 +2228,16 @@ namespace pmd2
             xml_node       xunktbl1 = AppendChildNode(parentn, NODE_UnkTable1);
             array<char,32> buf{0};
 
+            size_t cnt = 0;
             for( const auto & unk1ent : m_data.UnkTbl1() )
             {
+                WriteCommentNode( xunktbl1, to_string(cnt) );
                 xml_node xentry = AppendChildNode(xunktbl1, NODE_UnkTable1Entry);
                 AppendAttribute(xentry, ATTR_Unk0, MakeHexa(unk1ent.unk0, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk1, MakeHexa(unk1ent.unk1, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk2, MakeHexa(unk1ent.unk2, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk3, MakeHexa(unk1ent.unk3, buf.data()) );
+                ++cnt;
             }
         }
 
@@ -2085,8 +2249,10 @@ namespace pmd2
             xml_node        xposmark = AppendChildNode(parentn, NODE_PositionMarkers);
             array<char,32>  buf{0};
 
+            size_t cnt = 0;
             for( const auto & marker : m_data.PosMarkers() )
             {
+                WriteCommentNode( xposmark, to_string(cnt) );
                 xml_node xentry = AppendChildNode(xposmark, NODE_Marker);
                 AppendAttribute(xentry, ATTR_Unk0, MakeHexa(marker.unk0, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk1, MakeHexa(marker.unk1, buf.data()) );
@@ -2096,6 +2262,7 @@ namespace pmd2
                 AppendAttribute(xentry, ATTR_Unk5, MakeHexa(marker.unk5, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk6, MakeHexa(marker.unk6, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk7, MakeHexa(marker.unk7, buf.data()) );
+                ++cnt;
             }
         }
 
@@ -2108,8 +2275,9 @@ namespace pmd2
             size_t cntlayer = 0;
             for( const auto & layer : m_data.Layers() )
             {
-                WriteCommentNode( xlayers, "Layer #" + to_string(cntlayer) );
+                //WriteCommentNode( xlayers, "Layer " + to_string(cntlayer) );
                 xml_node xlayer = AppendChildNode(xlayers, NODE_Layer);
+                AppendAttribute(xlayer, ATTR_DummyID, to_string(cntlayer) );
                 WriteLayerActors    (xlayer, layer);
                 WriteLayerObjects   (xlayer, layer);
                 WriteLayerPerformers(xlayer, layer);
@@ -2124,7 +2292,6 @@ namespace pmd2
             using namespace scriptXML;
             if(layer.lives.empty())
                 return;
-            WriteCommentNode( parentn, to_string(layer.lives.size()) + " actor(s)" );
 
             xml_node        xactors     = AppendChildNode( parentn, NODE_Actors );
             const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_LivesRef);
@@ -2158,7 +2325,7 @@ namespace pmd2
             using namespace scriptXML;
             if(layer.objects.empty())
                 return;
-            WriteCommentNode( parentn, to_string(layer.objects.size()) + " object(s)" );
+            //WriteCommentNode( parentn, to_string(layer.objects.size()) + " object(s)" );
 
             xml_node        xobjects    = AppendChildNode( parentn, NODE_Objects );
             size_t          cnt         = 0;
@@ -2170,19 +2337,8 @@ namespace pmd2
             {
                 WriteCommentNode( xobjects, to_string(cnt) );
                 xml_node     xobject = AppendChildNode( xobjects, NODE_Object );
-                //const auto * inf = m_paraminf.ObjectInfo(entry.objid);
-                //assert(inf);
 
-                //if(inf)
-                //{
-                //    sstr.str(string());
-                //    sstr << entry.objid <<"_" <<inf->name;
-                //    AppendAttribute(xobject, IDAttrName, sstr.str() );
-                //}
-                //else
-                //    AppendAttribute(xobject, IDAttrName, entry.objid);
-                AppendAttribute(xobject, IDAttrName, m_paraminf.MakeObjectNameIDString(entry.objid) );
-
+                AppendAttribute(xobject, IDAttrName, m_paraminf.ObjectIDToStr(entry.objid) );
                 AppendAttribute(xobject, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
@@ -2199,7 +2355,7 @@ namespace pmd2
             using namespace scriptXML;
             if(layer.performers.empty())
                 return;
-            WriteCommentNode( parentn, to_string(layer.performers.size()) + " performer(s)" );
+            //WriteCommentNode( parentn, to_string(layer.performers.size()) + " performer(s)" );
 
             xml_node        xperfs      = AppendChildNode( parentn, NODE_Performers );
             size_t          cnt         = 0;
@@ -2210,6 +2366,15 @@ namespace pmd2
             {
                 WriteCommentNode( xperfs, to_string(cnt) );
                 xml_node xperf = AppendChildNode( xperfs, NODE_Performer );
+
+                //const livesent_info * inf    = m_paraminf.LivesInfo(actor.livesid);
+                //assert(inf);
+
+                //if(inf)
+                //    AppendAttribute(xactor, IDAttrName, inf->name);
+                //else
+                //    AppendAttribute(xactor, IDAttrName, actor.livesid);
+
                 AppendAttribute(xperf, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
                 AppendAttribute(xperf, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
                 AppendAttribute(xperf, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
@@ -2228,7 +2393,7 @@ namespace pmd2
             using namespace scriptXML;
             if(layer.events.empty())
                 return;
-            WriteCommentNode( parentn, to_string(layer.events.size()) + " event(s)" );
+            //WriteCommentNode( parentn, to_string(layer.events.size()) + " event(s)" );
 
             xml_node        xevents     = AppendChildNode( parentn, NODE_Events );
             size_t          cnt         = 0;
@@ -2344,8 +2509,13 @@ namespace pmd2
             using namespace scriptXML;
             xml_node xlsd = AppendChildNode( parentn, NODE_LSDTbl );
 
+            size_t cntlsd = 0;
             for( const auto & entry : m_scrset.LSDTable() )
+            {
+                WriteCommentNode(xlsd, to_string(cntlsd));
                 AppendAttribute( AppendChildNode(xlsd,NODE_GrpNameRef), ATTR_GrpName, string(entry.begin(), entry.end()) );
+                ++cntlsd;
+            }
         }
 
         inline void WriteSSBContent( xml_node & parentn, const Script & seq )
@@ -2364,7 +2534,27 @@ namespace pmd2
             using namespace scriptXML;
             WriteCommentNode(parentn, "======================" );
             stringstream sstr;
-            sstr <<std::right <<std::setw(10) <<setfill(' ') <<dat.Name() <<" Data";
+            sstr <<std::right <<std::setw(10) <<setfill(' '); 
+            switch(dat.Type())
+            {
+                case eScrDataTy::SSA:
+                {
+                    sstr <<dat.Name() <<" \"Acting\"";
+                    break;
+                }
+                case eScrDataTy::SSE:
+                {
+                    sstr <<dat.Name() <<" \"Enter\"";
+                    break;
+                }
+                case eScrDataTy::SSS:
+                {
+                    sstr <<dat.Name() <<" \"Station\"";
+                    break;
+                }
+                default:
+                    sstr <<dat.Name() <<" Data";
+            };
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "======================" );
             SSDataXMLWriter(dat, m_gconf)(parentn);
@@ -2471,7 +2661,7 @@ namespace pmd2
         future<void>                 updatethread;
         //Grab our version and region from the 
         if(bprintprogress)
-            cout<<"<*>-Compiling COMON.xml..\n";
+            cout<<"<*>- Compiling COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
@@ -2515,7 +2705,7 @@ namespace pmd2
             if(bprintprogress)
             {
                 assert(!out_dest.m_setsindex.empty());
-                cout<<"\nCompiling Scripts..\n";
+                cout<<"\n<*>- Compiling Scripts..\n";
                 std::packaged_task<void()> task( std::bind(&PrintProgressLoop, 
                                                            std::ref(completed), 
                                                            out_dest.m_setsindex.size(), 
@@ -2560,7 +2750,7 @@ namespace pmd2
     {
         //Export COMMON first
         if(bprintprogress)
-            cout<<"\t- Writing COMMOM.xml..";
+            cout<<"<*>- Writing COMMOM.xml..";
         GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion, gs.GetConfig() ).Write(dir, bautoescapexml);
 
         atomic_bool                  shouldUpdtProgress = true;
@@ -2577,14 +2767,14 @@ namespace pmd2
                                                                  gs.m_gameVersion, 
                                                                  std::cref(gs.GetConfig()),
                                                                  bautoescapexml,
-                                                                std::ref(completed) ) ) );
+                                                                 std::ref(completed) ) ) );
         }
 
         try
         {
             if(bprintprogress)
             {
-                cout<<"\nExporting..\n";
+                cout<<"\n<*>- Exporting the rest..\n";
                 updtProgress = std::async( std::launch::async, 
                                            PrintProgressLoop, 
                                            std::ref(completed), 
