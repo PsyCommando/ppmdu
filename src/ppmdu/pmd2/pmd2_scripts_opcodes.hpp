@@ -1286,6 +1286,9 @@ namespace pmd2
             return eOpCodeVersion::Invalid;
     }
 
+//=====================================================================================
+//  Instruction Info
+//=====================================================================================
     /*************************************************************************************
         OpCodeInfoWrapper
             Wrapper to abstract parameter info between versions of the game.
@@ -1449,6 +1452,7 @@ namespace pmd2
         {
             switch(Category())
             {
+                case eCommandCat::ProcSpec:
                 case eCommandCat::Switch:
                 case eCommandCat::OpWithReturnVal:
                     return true;
@@ -1465,58 +1469,6 @@ namespace pmd2
         eCommandCat                      category;
         const std::vector<OpParamInfo> * pparaminfo;
     };
-
-
-
-    /*************************************************************************************
-        OpCodeFinderPicker
-            Picks the correct OpCode info search function 
-            depending on the opcode version.
-    *************************************************************************************/
-    //template<eOpCodeVersion>
-    //    struct OpCodeFinderPicker;
-
-    //template<>
-    //    struct OpCodeFinderPicker<eOpCodeVersion::EoS>
-    //{
-    //    typedef eScriptOpCodesEoS opcode_t;
-    //    //typedef OpCodeInfoEoS*     opcodeinfo_t;
-    //    typedef OpCodeInfoWrapper opcodeinfo_t;
-    //    inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
-    //    inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoS(opcode); }
-    //    inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoS(opcode,nbparams); }
-    //};
-
-    //template<>
-    //    struct OpCodeFinderPicker<eOpCodeVersion::EoTD>
-    //{
-    //    typedef eScriptOpCodesEoTD opcode_t;
-    //    //typedef OpCodeInfoEoTD *    opcodeinfo_t;
-    //    typedef OpCodeInfoWrapper  opcodeinfo_t;
-    //    inline const opcodeinfo_t   operator()( uint16_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
-    //    inline const opcodeinfo_t   operator()( opcode_t opcode )const                             { return FindOpCodeInfo_EoTD(opcode); }
-    //    inline const opcode_t       operator()( const std::string & opcode, size_t nbparams )const { return FindOpCodeByName_EoTD(opcode,nbparams); }
-    //};
-
-
-    /*************************************************************************************
-        OpCodeNumberPicker
-            Get the appriopriate total number of instructions for a given game version
-    *************************************************************************************/
-    //template<eOpCodeVersion>
-    //    struct OpCodeNumberPicker;
-
-    //template<>
-    //    struct OpCodeNumberPicker<eOpCodeVersion::EoS>
-    //{
-    //    inline size_t operator()()const { return GetNbOpCodes_EoS(); }
-    //};
-
-    //template<>
-    //    struct OpCodeNumberPicker<eOpCodeVersion::EoTD>
-    //{
-    //    inline size_t operator()()const { return GetNbOpCodes_EoTD(); }
-    //};
 
 
     /*************************************************************************************
@@ -1620,14 +1572,6 @@ namespace pmd2
         eOpCodeVersion m_ver;
     };
 
-    /*************************************************************************************
-        IsOpCodeData
-            Whether the uint16 read is actually a data word, and not a opcode.
-    *************************************************************************************/
-    //bool IsOpCodeData( uint16_t code, eGameVersion vers );
-
-
-
 
 //=====================================================================================
 //  Parameter Value Handling
@@ -1658,7 +1602,6 @@ namespace pmd2
         inline int16_t FacePosMode( const std::string & name )const 
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().FacePosModes(), name );
-            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().FacePosModes().FindIndexByName(name));
         }
 
         //Common Routine Info
@@ -1670,7 +1613,6 @@ namespace pmd2
         inline int16_t CRoutine( const std::string & name )const 
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().CommonRoutineInfo(), name );
-            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().CommonRoutineInfo().FindIndexByName(name));
         }
 
         //Level Info
@@ -1682,7 +1624,6 @@ namespace pmd2
         inline int16_t LevelInfo( const std::string & name )const 
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LevelInfo(), name );
-            //return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LevelInfo().FindIndexByName(name) );
         }
 
         //Lives Info
@@ -1694,7 +1635,6 @@ namespace pmd2
         inline int16_t LivesInfo( const std::string & name )const 
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LivesEnt(), name );
-            //return ConvertInvalidOffsetToInvalidInt16( m_gconf.GetGameScriptData().LivesEnt().FindIndexByName(name) );
         }
 
         //GameVar Info
@@ -1729,7 +1669,6 @@ namespace pmd2
         inline int16_t ObjectInfo( const std::string & name )const 
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().ObjectsInfo(), name );
-            //return ConvertInvalidOffsetToInvalidInt16(m_gconf.GetGameScriptData().ObjectsInfo().FindIndexByName(name));
         }
 
 

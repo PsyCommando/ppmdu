@@ -82,6 +82,12 @@
     <Filter Include="whereami">
       <UniqueIdentifier>{fe38f053-9a5e-4e01-9bb2-8d6281413c75}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Scripts">
+      <UniqueIdentifier>{a7966768-5b9d-4bde-93ea-02d3b8acfa5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats\Scripts">
+      <UniqueIdentifier>{65176b6f-ce98-48fa-b35d-a5486d3d4b66}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -162,9 +168,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
@@ -176,9 +179,6 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp">
       <Filter>Source Files\ppmdu\file formats\scripts</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp">
       <Filter>Source Files\ppmdu\file formats\scripts</Filter>
@@ -221,6 +221,18 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\whereami_wrapper.cpp">
       <Filter>whereami</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\script_content.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -338,9 +350,6 @@
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp">
       <Filter>Header Files\ppmdu\file formats\Scripts</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
@@ -382,6 +391,15 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\multithread_logger.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\script_processing.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\script_content.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

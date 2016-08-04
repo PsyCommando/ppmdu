@@ -283,7 +283,7 @@ namespace pmd2
 
         /*****************************************************************************************
         *****************************************************************************************/
-        void ParseTypedRoutine(const xml_node & routinen, uint16_t routinety, ScriptInstrGrp & grpout, bool isalias)
+        void ParseTypedRoutine(const xml_node & routinen, uint16_t routinety, ScriptRoutine & grpout, bool isalias)
         {
             using namespace scriptXML;
             eOpParamTypes       ptype   = RoutineParameterType(routinety);
@@ -373,31 +373,40 @@ namespace pmd2
             using namespace scriptXML;
             Script::grptbl_t & outtbl = m_out.Routines();
 
+            uint16_t lastroutinetype = 0;
             for( const xml_node & group : coden.children() )
             {
-                uint16_t routinety;
-                bool     isalias = NODE_RoutineAlias == group.name();
+                uint16_t routinety = 0;
+                bool     isalias   = NODE_RoutineAlias == group.name();
 
                 if(isalias)
                 {
-                    //If its an alias, the type is held in the type attribute, not the name of the node
-                    xml_attribute xtype = group.attribute(ATTR_RoutineType.c_str());
-                    if(!xtype)
+                    if(m_out.Routines().empty()) 
                     {
                         stringstream sstrer;
                         PrintErrorPos(sstrer,group) 
-                            << "SSBXMLParser::ParseCode(): Routine alias is missing its type!";
-                        throw_with_nested( std::runtime_error(sstrer.str()) );
+                            << "SSBXMLParser::ParseCode(): The first routine cannot be an alias!";
+                        throw std::runtime_error(sstrer.str());
                     }
-                    routinety = StrToRoutineTyInt(xtype.value());
+                    //If its an alias, the type is held in the type attribute, not the name of the node
+                    //xml_attribute xtype = group.attribute(ATTR_RoutineType.c_str());
+                    //if(!xtype)
+                    //{
+                    //    stringstream sstrer;
+                    //    PrintErrorPos(sstrer,group) 
+                    //        << "SSBXMLParser::ParseCode(): Routine alias is missing its type!";
+                    //    throw std::runtime_error(sstrer.str());
+                    //}
+                    routinety = lastroutinetype;
                 }
                 else
                     routinety = StrToRoutineTyInt(group.name());
+                
 
                 //Parse the attributes and instructions if the routine is a valid type!
                 if(routinety != 0)
                 {
-                    ScriptInstrGrp grpout;
+                    ScriptRoutine grpout;
                     ParseTypedRoutine(group, routinety, grpout, isalias);
                     if(!isalias)
                     {
@@ -406,6 +415,7 @@ namespace pmd2
                     }
                     outtbl.push_back(std::move(grpout));
                 }
+                lastroutinetype = routinety; //Set the type of the last routine
             }
         }
 
@@ -1549,7 +1559,7 @@ namespace pmd2
             {
                 case eScrDataTy::SSS:
                 {
-                    destgrp.Type(eScriptSetType::UNK_sub);
+                    destgrp.Type(eScriptSetType::UNK_station);
                     break;
                 }
                 case eScrDataTy::SSE:
@@ -1559,7 +1569,7 @@ namespace pmd2
                 }
                 case eScrDataTy::SSA:
                 {
-                    destgrp.Type(eScriptSetType::UNK_fromlsd);
+                    destgrp.Type(eScriptSetType::UNK_acting);
                     break;
                 }
                 default:
@@ -1636,7 +1646,7 @@ namespace pmd2
 
         /*
         */
-        xml_node SetupRoutine(xml_node & parent, const ScriptInstrGrp & cur, size_t routinecnt, bool isUnionall)
+        xml_node SetupRoutine(xml_node & parent, const ScriptRoutine & cur, size_t routinecnt, bool isUnionall)
         {
             using namespace scriptXML;
             xml_node     xroutine;
@@ -1670,8 +1680,8 @@ namespace pmd2
             else
                 AppendAttribute( xroutine, ATTR_RoutineID, routinecnt );
 
-            if( cur.IsAliasOfPrevGroup() )
-                AppendAttribute( xroutine, ATTR_RoutineType, routinetype );
+            //if( cur.IsAliasOfPrevGroup() )
+            //    AppendAttribute( xroutine, ATTR_RoutineType, routinetype );
             
             //If we don't have a paramter normally, and the parameter is 0, just skip over this and return!
             if( !RoutineHasParameter(cur.type) && cur.unk2 == 0 )
@@ -1735,14 +1745,12 @@ namespace pmd2
         inline void HandleInstruction( xml_node & groupn, const pmd2::ScriptInstruction & instr )
         {
             using namespace scriptXML;
-//#ifdef _DEBUG
             if(m_commentoffsets)
             {
                 stringstream sstr;
                 sstr << "Offset : 0x" <<std::hex <<std::uppercase <<instr.dbg_origoffset;
                 WriteCommentNode( groupn, sstr.str() );
             }
-//#endif
             switch(instr.type)
             {
                 case eInstructionType::Command:
@@ -1766,11 +1774,6 @@ namespace pmd2
                     WriteMetaAccessor(groupn,instr);
                     break;
                 }
-                //case eInstructionType::MetaProcSpecRet:
-                //{
-                //    WriteMetaSpecRet(groupn,instr);
-                //    break;
-                //}
                 case eInstructionType::MetaReturnCases:
                 {
                     WriteMetaReturnCases(groupn,instr);
@@ -2347,6 +2350,7 @@ namespace pmd2
                 AppendAttribute(xobject, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
+                ++cnt;
             }
         }
 
@@ -2385,6 +2389,7 @@ namespace pmd2
                 AppendAttribute(xperf, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
                 AppendAttribute(xperf, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
                 AppendAttribute(xperf, ATTR_Unk9, MakeHexa(entry.unk9,buf.data()) );
+                ++cnt;
             }
         }
 
@@ -2417,6 +2422,7 @@ namespace pmd2
                 AppendAttribute(xevent, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
                 AppendAttribute(xevent, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
                 AppendAttribute(xevent, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+                ++cnt;
             }
         }
 

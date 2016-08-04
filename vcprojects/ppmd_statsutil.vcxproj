@@ -112,6 +112,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     </ClCompile>
     <ClCompile Include="..\lib\whereami\src\whereami.c" />
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\script_content.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\mappa.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp" />
@@ -130,6 +131,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
@@ -208,6 +210,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
   <ItemGroup>
     <ClInclude Include="..\lib\whereami\src\whereami.h" />
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
+    <ClInclude Include="..\src\ppmdu\containers\script_content.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />
@@ -228,6 +231,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\script_processing.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />

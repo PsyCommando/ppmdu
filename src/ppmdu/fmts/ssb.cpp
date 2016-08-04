@@ -270,7 +270,7 @@ namespace filetypes
 
     private:
 
-        //Temporary object, never copied or moved!!
+        //Temporary scope, never copied or moved!!
         ScriptDecompiler(ScriptDecompiler&&)                  = delete;
         ScriptDecompiler(const ScriptDecompiler&)             = delete;
         ScriptDecompiler& operator=(ScriptDecompiler&&)       = delete;
@@ -278,9 +278,9 @@ namespace filetypes
 
         /*-----------------------------------------------------------------------------
             CurRoutine
-                Helper to access the current group
+                Helper to access the current routine.
         -----------------------------------------------------------------------------*/
-        inline ScriptInstrGrp & CurRoutine()
+        inline ScriptRoutine & CurRoutine()
         {
             return (*m_poutroutines)[m_curroutine];
         }
@@ -288,7 +288,7 @@ namespace filetypes
 
         /*-----------------------------------------------------------------------------
             GetNextRealRoutineBeg
-                Returns the next group/routine that's not an alias of the last!
+                Returns the next routine that's not an alias of the last!
         -----------------------------------------------------------------------------*/
         inline uint16_t GetNextRealRoutineBeg( size_t cntroutine, uint16_t curbeg )
         {
@@ -303,35 +303,34 @@ namespace filetypes
 
         /*-----------------------------------------------------------------------------
             PrepareRoutines
-                Init destination groups, and make a list of all the end offsets 
-                for each groups
+                Init destination routine, and make a list of all the end offsets 
+                for each routine.
         -----------------------------------------------------------------------------*/
         void PrepareRoutines()
         {
             m_routineends.reserve(m_routines.size());
 
-            size_t   cntroutine     = 0;
+            size_t   cntrtn     = 0;
             uint16_t lastrtnbeg = 0;
             uint16_t lastrtnend = 0;
-            for( ; cntroutine <  m_routines.size(); ++cntroutine )
+            for( ; cntrtn <  m_routines.size(); ++cntrtn )
             {
-                const auto & rtn = m_routines[cntroutine];
-                ScriptInstrGrp iroutine;
-                iroutine.type = rtn.type;
-                iroutine.unk2 = rtn.unk2;
+                const auto & crtn = m_routines[cntrtn];
+                ScriptRoutine destrtn;
+                destrtn.type = crtn.type;
+                destrtn.unk2 = crtn.unk2;
 
-                if(lastrtnbeg == rtn.begoffset )
-                {
-                    iroutine.isalias = true;
-                }
+                //If the current routine has the same offset as the last, consider it an alias.
+                if(lastrtnbeg == crtn.begoffset )
+                    destrtn.isalias = true;
                 else
                 {
-                    iroutine.isalias = false;
-                    lastrtnbeg = rtn.begoffset;
-                    lastrtnend = GetNextRealRoutineBeg( cntroutine, rtn.begoffset );
+                    destrtn.isalias = false;
+                    lastrtnbeg = crtn.begoffset;
+                    lastrtnend = GetNextRealRoutineBeg( cntrtn, crtn.begoffset );
                 }
-                m_poutroutines->push_back(std::move(iroutine));
-                m_routineends.push_back(lastrtnend * ScriptWordLen);
+                m_poutroutines->push_back(std::move(destrtn));          //Add our initialized routine to the output
+                m_routineends.push_back(lastrtnend * ScriptWordLen);    //Keep track of the end of each routines.
             }
         }
 
@@ -414,6 +413,9 @@ namespace filetypes
                 if( m_instfinder.Version() == eOpCodeVersion::EoS && 
                    curinst.value == static_cast<uint16_t>(eScriptOpCodesEoS::BranchDebug) )
                     curinst.parameters.front() = (curinst.parameters.front() == 0)? 1 : 0 ; //Invert the boolean
+                else if( m_instfinder.Version() == eOpCodeVersion::EoTD && 
+                   curinst.value == static_cast<uint16_t>(eScriptOpCodesEoTD::BranchDebug) )
+                    curinst.parameters.front() = (curinst.parameters.front() == 0)? 1 : 0 ; //Invert the boolean
             }
 
             if( codeinfo.HasReturnValue() )
@@ -426,29 +428,6 @@ namespace filetypes
                 CurRoutine().instructions.push_back(std::move(curinst));
                 ++iti;
             }
-
-            //switch(codeinfo.Category())
-            //{
-            //    case eCommandCat::OpWithReturnVal:
-            //    case eCommandCat::EnterAdventure:
-            //    case eCommandCat::ProcSpec:
-            //    case eCommandCat::Switch:
-            //    {
-            //        HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
-            //        break;
-            //    }
-            //    case eCommandCat::EntityAccessor:
-            //    {
-            //        HandleAccessor(iti, itend, curinst);
-            //        break;
-            //    }
-            //    default:
-            //    {
-            //        m_curdataoffset += GetInstructionLen(curinst);
-            //        CurRoutine().instructions.push_back(std::move(curinst));
-            //        ++iti;
-            //    }
-            //};
         }
 
         /*-----------------------------------------------------------------------------
@@ -476,7 +455,6 @@ namespace filetypes
                 if( iti != itend )
                 {
                     codeinfo = m_instfinder.Info(iti->value);
-                    //iscase   = (codeinfo.Category() == eCommandCat::Case || codeinfo.Category() == eCommandCat::Default); 
                     if(codeinfo && (iscase = codeinfo.IsReturnHandler()))
                     {
                         totalsz += GetInstructionLen(*iti);
@@ -1015,7 +993,7 @@ namespace filetypes
             }
         }
 
-        void HandleRoutine( const ScriptInstrGrp & rtn, size_t & curoffset, uint16_t & lastrtnbeg )
+        void HandleRoutine( const ScriptRoutine & rtn, size_t & curoffset, uint16_t & lastrtnbeg )
         {
             routine_entry curgrp;
             curgrp.type      = rtn.type;

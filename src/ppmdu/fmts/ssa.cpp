@@ -786,9 +786,9 @@ namespace filetypes
         template<class _entryty, typename _backinsit>
             inline void ParseEntriesList( LayerTableEntry & ent, _backinsit itout )
         {
-            if(ent.nbentries == 0) return;
+            if(ent.nbentries <= 0) return;
             initer_t itentriesbeg = std::next(m_itbeg, ent.offset * ScriptWordLen);
-            for( size_t i = 0; i < ent.nbentries; ++i )
+            for( int16_t i = 0; i < ent.nbentries; ++i )
             {
                 _entryty lv;
                 itentriesbeg = lv.Read(itentriesbeg, m_itend);
