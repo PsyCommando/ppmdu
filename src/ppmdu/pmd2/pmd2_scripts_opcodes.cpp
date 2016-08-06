@@ -461,7 +461,7 @@ namespace pmd2
         { "CaseMenu",                               2,  0, 1, 0, eCommandCat::Case,             { {eOpParamTypes::String},          {eOpParamTypes::InstructionOffset} } },
         { "CaseMenu2",                              2, -1, 1, 0, eCommandCat::Case,         },
         { "CaseScenario",                           3, -1, 1, 0, eCommandCat::Case,             { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::InstructionOffset} } },
-        { "CaseText",                               2,  1, 0, 0, eCommandCat::Case,             { {eOpParamTypes::Integer},         {eOpParamTypes::String} } },
+        { "CaseText",                               2,  1, 0, 0, eCommandCat::CaseNoJump,       { {eOpParamTypes::Integer},         {eOpParamTypes::String} } },
         { "CaseValue",                              3, -1, 1, 0, eCommandCat::Case,             { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::Integer},         {eOpParamTypes::InstructionOffset} } }, //First could be a logical operator? Second the value to compare against, and third jump address
         { "CaseVariable",                           3, -1, 1, 0, eCommandCat::Case,         },
         { "debug_Assert",                           1, -1, 0, 0, eCommandCat::SingleOp,     },

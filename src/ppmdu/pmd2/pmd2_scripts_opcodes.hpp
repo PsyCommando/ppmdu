@@ -903,6 +903,7 @@ namespace pmd2
 
         Switch,                 //This marks the start of a conditional structure
         Case,                   //This marks a case in a previous conditional structure
+        CaseNoJump,             //This marks a case that doesn't triggers a jump if true!
         Default,                //This marks the default case in a conditional structure
 
         //Accessors             
@@ -1391,14 +1392,37 @@ namespace pmd2
                 such as a switch, or anything that returns a value.
                 This is mainly for "Case" instructions.
         */
-        bool IsReturnHandler()const
+        inline bool IsReturnHandler()const
+        {
+            if(IsUnconditonalReturnHandler())
+                return true;
+
+            switch(Category())
+            {
+                case eCommandCat::Default:
+                case eCommandCat::Case:
+                case eCommandCat::CaseNoJump:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /*
+            IsUnconditonalReturnHandler
+                Mainly for the hold comamnd, and any command that simply process a return value
+                but do not perform conditional operation depending on the value.
+                These typically mark the end of a return value handling chain if present at all.
+        */
+        inline bool IsUnconditonalReturnHandler()const
         {
             switch(Category())
             {
+                //! #TESTING!!!!!!
+#if 0
                 case eCommandCat::Hold:
-                case eCommandCat::Default:
-                case eCommandCat::Case:
                     return true;
+#endif
                 default:
                     return false;
             }
@@ -1408,7 +1432,7 @@ namespace pmd2
             IsAttribute
                 Returns whether the instruction can be used by accessors such as "lives", "object", and "performer"
         */
-        bool IsAttribute()const
+        inline bool IsAttribute()const
         {
             switch(Category())
             {
@@ -1416,11 +1440,6 @@ namespace pmd2
                 case eCommandCat::Hold:             //Hold is special, it works as an attribute too!
                 case eCommandCat::EntAttribute:
                     return true;
-                case eCommandCat::SingleOp:
-                case eCommandCat::Switch:
-                case eCommandCat::ProcSpec:
-                case eCommandCat::OpWithReturnVal:
-                case eCommandCat::EntityAccessor:
                 default:
                     return false;
             }
@@ -1431,7 +1450,7 @@ namespace pmd2
                 Whether this instruction is an accessor, and is meant to pick
                 what the next attribute command will act upon.
         */
-        bool IsEntityAccessor()const
+        inline bool IsEntityAccessor()const
         {
             switch(Category())
             {
@@ -1448,13 +1467,52 @@ namespace pmd2
                 can then be used by any following "Case" 
                 instructions.
         */
-        bool HasReturnValue()const
+        inline bool HasReturnValue()const
         {
             switch(Category())
             {
                 case eCommandCat::ProcSpec:
                 case eCommandCat::Switch:
                 case eCommandCat::OpWithReturnVal:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+
+        /*
+            IsSequenceTerminator
+                Whether the instruction stops the linear execution of the code, or 
+                jumps away.
+                Mainly used to determine where a sequence/block of instructions end.
+                For example, an unconditional jump, end, return, all end a sequence.
+        */
+        inline bool IsSequenceTerminator()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::End:
+                case eCommandCat::Jump:
+                case eCommandCat::JumpCommon:
+                case eCommandCat::Return:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /*
+            IsConditionalJump
+                Returns whether the instruction may trigger a jump when
+                the conditions are right.
+        */
+        inline bool IsConditionalJump()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::BranchCmd:
+                case eCommandCat::Case:
                     return true;
                 default:
                     return false;

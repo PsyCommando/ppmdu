@@ -242,12 +242,13 @@ namespace filetypes
             PrepareRoutines();
 
             //Iterate the raw instructions
-            auto itend = m_rawinst.end();
+            auto itend      = m_rawinst.end();
+            auto itlastinst = itend;            //Iterator on the last instruction that was parsed
             for( auto iti = m_rawinst.begin(); iti != itend; )
             {
                 UpdateCurrentRoutine();
                 HandleLabels();
-                HandleInstruction( iti, itend );
+                HandleInstruction( iti, itend, itlastinst );
             }
 
             PrepareStringsAndConstants();
@@ -402,11 +403,16 @@ namespace filetypes
                 - itend : Iterator to end of list of instruction.
         -----------------------------------------------------------------------------*/
         template<typename _init>
-            void HandleInstruction( _init & iti, _init & itend )
+            void HandleInstruction( _init & iti, _init & itend, _init itlastinst )
         {
             ScriptInstruction curinst  = *iti;
             OpCodeInfoWrapper codeinfo = m_instfinder.Info(curinst.value);
+            //OpCodeInfoWrapper lastinfo;
             curinst.dbg_origoffset     = m_curdataoffset / ScriptWordLen;
+
+            //if(itlastinst != itend)
+            //    lastinfo = m_instfinder.Info(itlastinst->value);
+            //itlastinst = iti;
 
             if(m_bscriptdebug)
             {
@@ -418,8 +424,8 @@ namespace filetypes
                     curinst.parameters.front() = (curinst.parameters.front() == 0)? 1 : 0 ; //Invert the boolean
             }
 
-            if( codeinfo.HasReturnValue() )
-                HandleCaseOwningCommand(iti, itend, curinst, codeinfo);
+            if( codeinfo.HasReturnValue() ) //Make sure that, we're not putting several unconditional return handlers one after the other!!
+                HandleCaseOwningCommand(iti, itend, curinst, codeinfo );
             else if( codeinfo.IsEntityAccessor() )
                 HandleAccessor(iti, itend, curinst);
             else
@@ -441,29 +447,39 @@ namespace filetypes
                 - &curinfo : Reference to information on current instruction.
         -----------------------------------------------------------------------------*/
         template<typename _init>
-            void HandleCaseOwningCommand(_init & iti, _init & itend, ScriptInstruction & curinst, const OpCodeInfoWrapper & curinfo )
+            void HandleCaseOwningCommand(_init                      & iti, 
+                                         _init                      & itend, 
+                                         ScriptInstruction          & curinst, 
+                                         const OpCodeInfoWrapper    & curinfo )
         {
             ScriptInstruction & outinst = curinst;
             size_t            totalsz = GetInstructionLen(curinst);
             OpCodeInfoWrapper codeinfo;
+            OpCodeInfoWrapper lastinfo;
             
-            //#1 Grab all "Case" that are right after
-            bool iscase = false;
+            //#1 Grab all return handlers that are right after.
+            bool iscase        = false;     //Whether the current instruction is a return handler.
+            bool islastuncond  = false;     //Whether the previous return handler parsed was not a conditional handler.
             do
             {
                 ++iti;
                 if( iti != itend )
                 {
-                    codeinfo = m_instfinder.Info(iti->value);
-                    if(codeinfo && (iscase = codeinfo.IsReturnHandler()))
+                    codeinfo      = m_instfinder.Info(iti->value);
+                    iscase        = codeinfo && codeinfo.IsReturnHandler();
+                    islastuncond  = lastinfo && lastinfo.IsUnconditonalReturnHandler();
+                    if( iscase && !islastuncond )
                     {
                         totalsz += GetInstructionLen(*iti);
                         outinst.subinst.push_back(std::move(*iti));
                     }
+                    lastinfo = codeinfo;
                 }
 
-            }while( iti != itend && iscase );
-               
+            }while( iti != itend && iscase ); //We iterate until we hit the first non return handler, or the end is reached.
+              
+            //If we have found and appended any child return handlers, set our type to the appropriate
+            // meta-instruction type.
             if( !(outinst.subinst.empty()) )
                 outinst.type = curinfo.GetMyInstructionType();
 
@@ -1135,11 +1151,11 @@ namespace filetypes
 //  SSB Writer
 //=======================================================================================
 
-    class SSBWriterTofile
+    class SSBWriter
     {
         typedef ostreambuf_iterator<char> outit_t;
     public:
-        SSBWriterTofile(const pmd2::Script & scrdat, eGameRegion gloc, eOpCodeVersion opver, const LanguageFilesDB & langdat)
+        SSBWriter(const pmd2::Script & scrdat, eGameRegion gloc, eOpCodeVersion opver, const LanguageFilesDB & langdat)
             :m_scrdat(scrdat), m_scrRegion(gloc), m_opversion(opver), m_langdat(langdat), m_opinfo(opver)
         {
             if( m_scrRegion == eGameRegion::NorthAmerica || m_scrRegion == eGameRegion::Japan )
@@ -1153,7 +1169,7 @@ namespace filetypes
             //!MAKE SURE THE SCRIPT CONTAINS WHAT IT SHOULD HERE!!
             m_outf.open(scriptfile, ios::binary | ios::out);
             if( !m_outf )
-                throw std::runtime_error("SSBWriterTofile::Write(): Couldn't open file " + scriptfile);
+                throw std::runtime_error("SSBWriter::Write(): Couldn't open file " + scriptfile);
 
             m_hdrlen         = 0;
             m_datalen        = 0; 
@@ -1174,25 +1190,24 @@ namespace filetypes
             std::fill_n( oit, m_hdrlen + ssb_data_hdr::LEN, 0 );
             m_datalen += ssb_data_hdr::LEN; //Add to the total length immediately
 
-            //#2 - Reserve group table
+            //#2 - Reserve routine table
             std::fill_n( oit, m_scrdat.Routines().size() * routine_entry::LEN, 0 );
 
             //#3 - Pre-Alloc/pre-calc stuff
             CalcAndVerifyNbStrings();
             m_grps.reserve( m_scrdat.Routines().size() );
-            m_datalen += m_scrdat.Routines().size() * routine_entry::LEN; //Add the group entries length!!
-            //BuildLabelConversionTable();
+            m_datalen += m_scrdat.Routines().size() * routine_entry::LEN; //Add the routine entries length!!
 
             //#4 - Write code for each groups, constants, strings
             WriteCode();
             WriteConstants();
             WriteStrings();
 
-            //#5 - Header and group table written last, since the offsets and sizes are calculated as we go.
+            //#5 - Header and routine table written last, since the offsets and sizes are calculated as we go.
             m_outf.seekp(0, ios::beg);
             outit_t ithdr(m_outf);
-            WriteHeader    (ithdr);
-            WriteGroupTable(ithdr);
+            WriteHeader      (ithdr);
+            WriteRoutineTable(ithdr);
         }
 
     private:
@@ -1206,7 +1221,7 @@ namespace filetypes
                 if( siz == 0 )
                     siz = cur.second.size();
                 else if( cur.second.size() != siz )
-                    throw std::runtime_error("SSBWriterTofile::CalcAndVerifyNbStrings(): Size mismatch in one of the languages' string table!");
+                    throw std::runtime_error("SSBWriter::CalcAndVerifyNbStrings(): Size mismatch in one of the languages' string table!");
             }
             m_nbstrings = siz;
         }
@@ -1297,11 +1312,8 @@ namespace filetypes
         }
 
         //Write the table after the data header listing all the instruction groups
-        void WriteGroupTable( outit_t & itw )
+        inline void WriteRoutineTable( outit_t & itw )
         {
-#ifdef _DEBUG   //!#REMOVEME: For testing
-            assert(!m_compiledsrc.rawroutines.empty()); //There is always at least one group!
-#endif
             for( const auto & entry : m_compiledsrc.rawroutines )
             {
                 itw = entry.Write(itw);
@@ -1309,7 +1321,7 @@ namespace filetypes
         }
 
 
-        void WriteCode()
+        inline void WriteCode()
         {
             //Write the content of the group
             for( const auto & inst : m_compiledsrc.rawinstructions )
@@ -1338,13 +1350,11 @@ namespace filetypes
                     m_datalen += ScriptWordLen;
                 }
             }
-            //else if( inst.type == eInstructionType::Data )
-            //{
-            //    itw = utils::WriteIntToBytes( inst.value, itw );
-            //    m_datalen += ScriptWordLen;
-            //}
             else
+            {
                 assert(false); //!#TODO: Error handling!!
+                throw std::logic_error("SSBWriter::WriteInstruction(): Got an instruction that's not a command!! This is a programming logic error, and should be reported!");
+            }
         }
 
 
@@ -1361,45 +1371,6 @@ namespace filetypes
             const uint16_t  szstringptrtbl = m_nbstrings * ScriptWordLen;
             m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
             m_constblksize = WriteTableAndStrings( m_compiledsrc.constantstrings, szstringptrtbl); //The constant strings data is not counted in datalen!
-
-
-
-
-            //
-            //size_t cntconst = 0;
-            //const streampos befconsttbl = m_outf.tellp();
-            //m_constoffset = static_cast<size_t>(befconsttbl);   //Save the location where we'll write the constant ptr table
-
-            ////reserve table, so we can write the offsets as we go
-            //const uint16_t  sizcptrtbl  = m_scrdat.ConstTbl().size() * ScriptWordLen;
-            //std::fill_n( itw, sizcptrtbl, 0 );
-            //m_datalen += sizcptrtbl;    //Add the length of the table to the scriptdata length value for the header
-
-            ////Write constant strings
-            //const streampos befconstdata = m_outf.tellp();
-            //for( const auto & constant : m_scrdat.ConstTbl() )
-            //{
-            //    //Write offset in table 
-            //    streampos curpos = m_outf.tellp();
-            //    uint16_t curstroffset = (curpos - befconsttbl) / ScriptWordLen;
-
-            //    m_outf.seekp( static_cast<size_t>(befconsttbl) + (cntconst * ScriptWordLen), ios::beg ); //Seek to the const ptr tbl
-            //    *itw = curstroffset;            //Add offset to table
-            //    m_outf.seekp( curpos, ios::beg ); //Seek back at the position we'll write the string at
-
-            //    //write string
-            //    //!#TODO: Convert escaped characters??
-            //    itw = std::copy( constant.begin(), constant.end(), itw );
-            //    *itw = '\0';
-            //    ++itw;
-            //    ++cntconst;
-            //}
-
-            ////Add some padding bytes if needed (padding is counted in the block's length)
-            //utils::AppendPaddingBytes(itw, m_outf.tellp(), ScriptWordLen);
-
-            ////Calculate the size of the constant strings data
-            //m_constblksize = m_outf.tellp() - befconstdata;
         }
 
         /*
@@ -1419,10 +1390,8 @@ namespace filetypes
 
             if( !m_compiledsrc.strings.empty() && m_compiledsrc.strings.size() != m_stringblksSizes.size() )
             {
-#ifdef _DEBUG
                 assert(false);
-#endif
-                throw std::runtime_error("SSBWriterToFile::WriteStrings(): Mismatch in expected script string blocks to ouput!!");
+                throw std::runtime_error("SSBWriter::WriteStrings(): Mismatch in expected script string blocks to ouput!!");
             }
 
             for( const auto & strblk : m_compiledsrc.strings )
@@ -1485,7 +1454,7 @@ namespace filetypes
         {
             const uint32_t scrlen = lengthinbytes / ScriptWordLen;
             if( scrlen > std::numeric_limits<uint16_t>::max() )
-                throw std::runtime_error("SSBWriterToFile::TryConvertToScriptLen(): Constant block size exceeds the length of a 16 bits word!!");
+                throw std::runtime_error("SSBWriter::TryConvertToScriptLen(): Constant block size exceeds the length of a 16 bits word!!");
             return static_cast<uint16_t>(scrlen);
         }
 
@@ -1542,7 +1511,7 @@ namespace filetypes
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
 
-        SSBWriterTofile(scrdat, gloc, opvers, langdata).Write(scriptfile);
+        SSBWriter(scrdat, gloc, opvers, langdata).Write(scriptfile);
     }
 
 

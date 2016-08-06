@@ -270,12 +270,14 @@ namespace pmd2
             {
                 if( !aconstref.second.bexists )
                 {
+                    const string & filename = m_out.Name();
                     stringstream sstr;
-                    sstr <<"SSBXMLParser::CheckLabelReferences(): "<<aconstref.second.nbref 
-                         <<" reference(s) to non-existant label ID " <<aconstref.first <<" found!!";
-#ifdef _DEBUG
+                    sstr <<"SSBXMLParser::CheckLabelReferences(): "<<aconstref.second.referersoffsets.size() 
+                         <<" reference(s) to non-existant label ID " <<aconstref.first <<" found!!\n";
+                    size_t cnt = 0;
+                    for(const auto & ref : aconstref.second.referersoffsets)
+                        sstr <<"\t*Reference " <<cnt++ <<", \"" <<filename <<"\" offset: " <<ref <<"\n";
                     assert(false);
-#endif
                     throw std::runtime_error(sstr.str());
                 }
             }
@@ -425,19 +427,29 @@ namespace pmd2
             void ParseInstruction( const xml_node & instn, _InstContainer & outcnt )
         {
             using namespace scriptXML;
+            //static const unordered_map<std::string, eInstructionType> Ref 
+            //{{
+            //    {NODE_Instruction, eInstructionType::Command},
+            //    {NODE_MetaLabel,   eInstructionType::MetaLabel},
+            //}};
+
+            //auto itf = Ref.find(instn.name());
+            //if( itf != Ref.end() )
+            //{
+            //    if(itf->second == eInstructionType::MetaLabel)
+            //        ParseMetaLabel(instn, outcnt);
+            //    else
+            //        ParseCommand(instn, outcnt);
+            //}
+            //else
+            //    TryParseCommandNode(instn, outcnt);
             
             if( instn.name() == NODE_Instruction )
-            {
                 ParseCommand(instn, outcnt);
-            }
             else if( instn.name() == NODE_MetaLabel )
-            {
                 ParseMetaLabel(instn, outcnt);
-            }
             else
-            {
                 TryParseCommandNode(instn, outcnt);
-            }
         }
 
         /*****************************************************************************************
@@ -486,7 +498,7 @@ namespace pmd2
             if( foundop == InvalidOpCode )
             {
                 stringstream sstrer;
-                sstrer <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
+                PrintErrorPos(sstrer,instn) <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
                     <<", in group instruction #" <<outcnt.size() <<" Node name doesn't match any known meta instructions or command!!";
                 throw std::runtime_error(sstrer.str());
             }
@@ -872,9 +884,10 @@ namespace pmd2
                     auto itf = m_labelchecker.find( lblid );
                     
                     if( itf != m_labelchecker.end() )
-                        itf->second.nbref += 1;
+                        itf->second.referersoffsets.push_back(parentinstn.offset_debug());
+                        //itf->second.nbref += 1;
                     else
-                        m_labelchecker.emplace( std::make_pair( lblid, labelRefInf{ false, 1 } ) ); //We found a ref to this label, but didn't check it
+                        m_labelchecker.emplace( std::make_pair( lblid, labelRefInf{ false, {{parentinstn.offset_debug()}} } ) ); //We found a ref to this label, but didn't check it
 
                     outinst.parameters.push_back( lblid );
                     break;
@@ -1074,8 +1087,8 @@ namespace pmd2
     private:
         struct labelRefInf
         {
-            bool    bexists;
-            size_t  nbref  ;
+            bool                    bexists;            //Whether the label's metainstruction has been found
+            std::deque<ptrdiff_t>   referersoffsets;    //The offset in the xml of the references to this label
         };
 
 
@@ -1892,6 +1905,8 @@ namespace pmd2
             }
         }
 
+        //! #TODO: This will need to be better handled. We only really have strings that need a very special
+        //!         treatment. All other parameters could be easily handled by a dedicated object.
         template<typename _Inst_ty>
             void WriteInstructionParam( xml_node & instn, const OpCodeInfoWrapper & opinfo, const _Inst_ty & intr, size_t cntparam )
         {
@@ -1899,7 +1914,8 @@ namespace pmd2
             const string * pname = nullptr;
 
             //Check for unique parameter names 
-            if( ( cntparam < opinfo.ParamInfo().size() ) && ( (pname = OpParamTypesToStr( opinfo.ParamInfo()[cntparam].ptype )) != nullptr) )
+            if( ( cntparam < opinfo.ParamInfo().size() ) && 
+                ( (pname = OpParamTypesToStr( opinfo.ParamInfo()[cntparam].ptype )) != nullptr) )
             {
                 eOpParamTypes ptype      = opinfo.ParamInfo()[cntparam].ptype;
                 size_t        ptypeindex = static_cast<size_t>(ptype);
@@ -1957,7 +1973,7 @@ namespace pmd2
                         if(!facename.empty())
                             AppendAttribute( instn, deststr.str(), facename);
                         else
-                            break; //Output as regular nameless param otherwise
+                            break; //! #FIXME: Not a good idea. Better just write it as an integer
                         return;
                     }
                     case eOpParamTypes::Unk_LivesRef:
@@ -1966,7 +1982,7 @@ namespace pmd2
                         if(pinf)
                             AppendAttribute( instn, deststr.str(), pinf->name );
                         else
-                            break;
+                            break; //! #FIXME: Not a good idea. Better just write it as an integer
                         return;
                     }
                     case eOpParamTypes::Unk_CRoutineId:
@@ -1990,6 +2006,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), *pstr );
                         else
                         {
+                            //! #TODO: Log this
                             cerr <<"Unknown facemode for instruction!! IMPLEMENT BETTER ERROR HANDLING!\n";
                             AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         }
@@ -2013,7 +2030,11 @@ namespace pmd2
                             }
                             else
                             {
+                                //! #TODO: Log this
                                 assert(false);
+                                stringstream sstrid;
+                                sstrid <<"0x" <<hex <<uppercase <<pval; 
+                                AppendAttribute( instn, deststr.str(),  sstrid.str() );
                             }
                         }
                         return;
@@ -2036,6 +2057,10 @@ namespace pmd2
                         AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
                         return;
                     }
+                    case eOpParamTypes::UNK_Placeholder:
+                    {
+                        break; //Just break and handle as nameless parameters
+                    }
                     case eOpParamTypes::BitsFlag:   //!#TODO
                     default:
                     {
@@ -2057,9 +2082,9 @@ namespace pmd2
             }
             else
             {
-                stringstream  deststr;
-                deststr<<ATTR_Param <<"_" <<cntparam;
-                AppendAttribute( instn, deststr.str(), sstrval.str() );
+                stringstream  paramnamestr;
+                paramnamestr<<ATTR_Param <<"_" <<cntparam;
+                AppendAttribute( instn, paramnamestr.str(), sstrval.str() );
             }
         }
 
