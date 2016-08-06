@@ -953,9 +953,17 @@ namespace statsutil
 
             Poco::Path textdir(frompath);
             textdir.append(DefExportStrDirName);
-            pgametext->ImportText(textdir.toString());
-            //We'll write the file at the end, after all modifications are done!
-            cout <<"done!\n";
+            if( utils::isFolder(textdir.toString()) )
+            {
+                pgametext->ImportText(textdir.toString());
+                //We'll write the file at the end, after all modifications are done!
+                cout <<"done!\n";
+            }
+            else
+            {
+                cout <<"Failed to import game strings.. Subdirectory " <<DefExportStrDirName
+                     <<" is missing from specified input directory.\n Skipping over...\n";
+            }
         }
 
         if(m_hndlScripts || bhandleall)
@@ -968,7 +976,15 @@ namespace statsutil
 
             Poco::Path scriptdir(frompath);
             scriptdir.append(DefExportScriptDirName);
-            pgamescripts->ImportXML( scriptdir.toString() ); //Writing is done automatically
+            if( utils::isFolder(scriptdir.toString()) )
+            {
+                pgamescripts->ImportXML( scriptdir.toString() ); //Writing is done automatically
+            }
+            else
+            {
+                cout <<"Failed to import game scripts.. Subdirectory " <<DefExportScriptDirName
+                     <<" is missing from specified input directory.\n Skipping over...\n";
+            }
         }
 
         //Load game stats for the other elements as needed
@@ -987,8 +1003,16 @@ namespace statsutil
                  <<"---------------------------------\n";
             Poco::Path Pkmndatadir(frompath);
             Pkmndatadir.append(pmd2::GameStats::DefPkmnDir);
-            pgamestats->ImportPkmn(Pkmndatadir.toString());
-            pgamestats->WritePkmn();
+            if( utils::isFolder(Pkmndatadir.toString()) )
+            {
+                pgamestats->ImportPkmn(Pkmndatadir.toString());
+                pgamestats->WritePkmn();
+            }
+            else
+            {
+                cout <<"Failed to import pokemon data.. Subdirectory " <<pmd2::GameStats::DefPkmnDir
+                     <<" is missing from specified input directory.\n Skipping over...\n";
+            }
         }
 
         if(m_hndlMoves || bhandleall)
@@ -997,8 +1021,17 @@ namespace statsutil
                  <<"-----------------------------------\n";
             Poco::Path mvdatadir(frompath);
             mvdatadir.append(pmd2::GameStats::DefMvDir);
-            pgamestats->ImportMoves(mvdatadir.toString());
-            pgamestats->WriteMoves ();
+
+            if( utils::isFolder(mvdatadir.toString()) )
+            {
+                pgamestats->ImportMoves(mvdatadir.toString());
+                pgamestats->WriteMoves ();
+            }
+            else
+            {
+                cout <<"Failed to import pokemon moves.. Subdirectory " <<pmd2::GameStats::DefMvDir
+                     <<" is missing from specified input directory.\n Skipping over...\n";
+            }
         }
 
         if(m_hndlItems || bhandleall)
@@ -1007,8 +1040,17 @@ namespace statsutil
                  <<"-----------------------------------\n";
             Poco::Path itemdatadir(frompath);
             itemdatadir.append(pmd2::GameStats::DefItemsDir);
-            pgamestats->ImportItems(itemdatadir.toString());
-            pgamestats->WriteItems();
+
+            if( utils::isFolder(itemdatadir.toString()) )
+            {
+                pgamestats->ImportItems(itemdatadir.toString());
+                pgamestats->WriteItems();
+            }
+            else
+            {
+                cout <<"Failed to import items data.. Subdirectory "  <<pmd2::GameStats::DefItemsDir
+                     <<" is missing from specified input directory.\n Skipping over...\n";
+            }
         }
 
         if(m_hndlStrings || bhandleall)
