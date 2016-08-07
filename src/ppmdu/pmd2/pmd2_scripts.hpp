@@ -68,6 +68,44 @@ namespace pmd2
     extern const std::regex MatchScriptFileTypes;       //Matches all ssa,ssb,sss, and lsd files
     extern const std::string ScriptRegExNameNumSSBSuff; //Regex to suffix to the basename to get the pattern for the numbered SSBs
 
+//
+//
+//
+    //class ScriptImportExportConfig
+    //{
+    //public:
+    //    ScriptImportExportConfig(bool escapetxt = false, bool bnodeisinst = false)
+    //        :m_bescapepcdata(escapetxt),m_bnodeinst(bnodeisinst)
+    //    {}
+    //    ScriptImportExportConfig(const ScriptImportExportConfig & other)
+    //        :m_bescapepcdata(other.m_bescapepcdata),m_bnodeinst(other.m_bnodeinst)
+    //    {}
+    //    inline ScriptImportExportConfig & operator=(const ScriptImportExportConfig & other)
+    //    { m_bescapepcdata = other.m_bescapepcdata; m_bnodeinst = other.m_bnodeinst; return *this; }
+
+    //    inline ScriptImportExportConfig &   AutoEscText(bool b)   { m_bescapepcdata = b; return *this; }
+    //    inline bool                         AutoEscText()const    {return m_bescapepcdata; }
+    //    inline ScriptImportExportConfig &   NodeIsInstr(bool b)   {m_bnodeinst = b; return *this;}
+    //    inline bool                         NodeIsInstr()const    {return m_bnodeinst; }
+    //private:
+    //    bool m_bescapepcdata;
+    //    bool m_bnodeinst;
+    //};
+
+
+    /*
+        scriptprocoptions
+            Set of options to be passed to script handling functions.
+    */
+    struct scriptprocoptions
+    {
+        bool bescapepcdata;  //Whether we allow the xml writer to escape characters to its discretion.
+        bool bnodeisinst; //Whether the node name should be set to the instruction's name during export
+        bool bmarkoffsets; //Whether the offsets of each instructions should be marked by comments
+        bool bscriptdebug; //Whether the debug_branch instructions should be tweaked to work as if debug mode was on
+    };
+    const scriptprocoptions DefConfigOptions{true, true, false, false};
+
 //==========================================================================================================
 //  Script Manager/Loader
 //==========================================================================================================
@@ -86,26 +124,24 @@ namespace pmd2
     ***********************************************************************************************/
     class GameScripts
     {
-    public:
         friend class GameScriptsHandler;
+    public:
         friend class ScrSetLoader;
-        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress = true);
-        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bautoescapexml, bool bprintprogress = true );
+        friend void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, const scriptprocoptions & options );
+        friend void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, const scriptprocoptions & options );
 
         typedef std::unordered_map<std::string,ScrSetLoader> evindex_t;
         typedef evindex_t::iterator                          iterator;
         typedef evindex_t::const_iterator                    const_iterator;
 
         //scrdir : the directory of the game we want to load from/write to.
-        //GameScripts(const std::string & scrdir, eGameRegion greg, eGameVersion gver, const LanguageFilesDB & langdat );
-        GameScripts(const std::string & scrdir, const ConfigLoader & conf, bool bscriptdebug, bool bescapexml = false );
+        GameScripts(const std::string & scrdir, const ConfigLoader & conf, const scriptprocoptions & options );
         ~GameScripts();
 
         //File IO
         void Load(); //Indexes all scripts in the src dir. The actual sets are loaded on demand.
-        //void Write(); //Writes all script sets that were modified.
         void ImportXML(const std::string & dir);
-        void ExportXML(const std::string & dir); //bscriptdebugon : if true, all debug instruction paths are enabled
+        void ExportXML(const std::string & dir); 
 
         std::unordered_map<std::string,LevelScript> LoadAll();
         void                                      WriteAll( const std::unordered_map<std::string,LevelScript> & stuff );
@@ -114,7 +150,7 @@ namespace pmd2
         eGameVersion Version()const;
 
         //Access
-        void      WriteScriptSet( const LevelScript   & set ); //Add new script set or overwrite existing
+        void      WriteScriptSet( const LevelScript & set ); //Add new script set or overwrite existing
 
         //Get the COMMON script set, aka "unionall.ssb". It has its own method, because its unique.
         const LevelScript & GetCommonSet()const;
@@ -130,23 +166,24 @@ namespace pmd2
         inline size_t size()const;
         inline bool   empty()const;
 
-        inline const std::string & GetScriptDir()const{return m_scriptdir;}
-
-        inline const ConfigLoader & GetConfig()const {return m_gconf;}
+        inline const std::string       & GetScriptDir()const{return m_scriptdir;}
+        inline const ConfigLoader      & GetConfig()const   {return m_gconf;}
+        inline const scriptprocoptions & GetOptions()const  {return m_options;}
 
     private:
         LevelScript LoadScriptSet ( const std::string & setname );
 
         std::string                                  m_scriptdir;
-        LevelScript                                  m_common;                   //Common script set with unionall.ssb, its always loaded
+        LevelScript                                  m_common;           //We probably should make this its own type!!
         evindex_t                                    m_setsindex;                //All sets known to exist
-        eGameRegion                                  m_scrRegion;
-        eGameVersion                                 m_gameVersion;
+        //eGameRegion                                  m_scrRegion;
+        //eGameVersion                                 m_gameVersion;
         std::unique_ptr<GameScriptsHandler>          m_pHandler;
-        std::mutex                                   m_mutex;
-        const LanguageFilesDB                      * m_langdat;
-        bool                                         m_escapexml;
-        bool                                         m_bbscriptdebug;
+        //std::mutex                                   m_mutex;
+        //const LanguageFilesDB                      * m_langdat;
+        scriptprocoptions                            m_options;
+        //bool                                         m_escapexml;
+        //bool                                         m_bbscriptdebug;
         const ConfigLoader                         & m_gconf;
     };
 
@@ -196,11 +233,35 @@ namespace pmd2
 //====================================================================================
 //  Import/Export
 //====================================================================================
+
+    /*
+        ScriptXML
+            Interface for handling conversion to and from XML for script data.
+    */
+    //! #TODO: finish designing this.
+#if 0
+    class ScriptXML
+    {
+    public:
+        ScriptXML( const ConfigLoader & gconf, config & exportcfg );
+
+        void Export( const LevelScript & lvlscript, const std::string & destdir );
+        void Export( const Script      & scr,       const std::string & destdir );
+        void Export( const ScriptData  & dat,       const std::string & destdir );
+
+        LevelScript ImportLevelScript(const std::string & srcfile);
+        Script      ImportScript     (const std::string & srcfile);
+        ScriptData  ImportScriptData (const std::string & srcfile);
+    };
+#endif
+
+
+
     //bautoescapexml : if set to true, pugixml will escape any reserved/special characters.
-    void      ScriptSetToXML( const LevelScript   & set,  
-                              const ConfigLoader  & gconf, 
-                              bool                  bautoescapexml, 
-                              const std::string   & destdir );
+    void      ScriptSetToXML( const LevelScript         & set,  
+                              const ConfigLoader        & gconf, 
+                              const scriptprocoptions   & options, 
+                              const std::string         & destdir );
 
     LevelScript XMLToScriptSet( const std::string   & srcdir, 
                                 eGameRegion         & out_greg, 
@@ -208,10 +269,10 @@ namespace pmd2
                                 const ConfigLoader  & gconf );
 
     //Script Single File Export
-    void ScriptToXML( const Script        & scr, 
-                      const ConfigLoader  & gconf, 
-                      bool                  bautoescapexml, 
-                      const std::string   & destdir );
+    void ScriptToXML( const Script              & scr, 
+                      const ConfigLoader        & gconf, 
+                      const scriptprocoptions   & options, 
+                      const std::string         & destdir );
 
     Script XMLToScript( const std::string   & srcfile, 
                         eGameRegion         & out_greg, 
@@ -219,10 +280,10 @@ namespace pmd2
                         const ConfigLoader  & gconf );
 
     //Script Data Single File Export
-    void ScriptDataToXML( const ScriptData    & dat, 
-                          const ConfigLoader  & gconf, 
-                          bool                  bautoescapexml, 
-                          const std::string   & destdir );
+    void ScriptDataToXML( const ScriptData          & dat, 
+                          const ConfigLoader        & gconf, 
+                          const scriptprocoptions   & options,
+                          const std::string         & destdir );
 
     ScriptData XMLToScriptData( const std::string   & srcfile, 
                                 eGameRegion         & out_greg, 

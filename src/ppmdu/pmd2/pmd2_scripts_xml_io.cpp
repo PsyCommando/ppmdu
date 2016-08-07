@@ -205,8 +205,11 @@ namespace pmd2
         /*
         */
         SSBXMLParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf )
-            :m_version(version), m_region(region), m_opinfo(GameVersionToOpCodeVersion(version)), //m_lvlentryinf(version),
-             m_gconf(conf), m_paraminf(conf)
+            :m_version(version), 
+             m_region(region), 
+             m_opinfo(version),
+             m_gconf(conf), 
+             m_paraminf(conf)
         {}
 
         /*
@@ -218,7 +221,9 @@ namespace pmd2
 
             if(!xname)
             {
-                throw std::runtime_error("SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!");
+                stringstream sstr;
+                PrintErrorPos(sstr, seqn) << "SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!";
+                throw std::runtime_error(sstr.str());
             }
             xml_node xcode = seqn.child(NODE_Code.c_str());
 
@@ -761,7 +766,7 @@ namespace pmd2
                     else
                     {
                         stringstream ss;
-                        PrintErrorPos(ss,instn) <<"SSBXMLParser::ParseDefinedParameters(): Unexpected instruction! "
+                        PrintErrorPos(ss,instn) <<"SSBXMLParser::ParseDefinedParameters(): Unexpected parameter " <<itat->name() <<"\", " <<attrname <<"\"! "
                                                 << instn.path();
                         throw std::runtime_error( ss.str() );
                     }
@@ -839,13 +844,23 @@ namespace pmd2
         inline string CleanAttributeName( const pugi::char_t * cname )
         {
             string name(cname);
-            static const regex ParamNameCleaner(R"((\b\S+(?=_\d)))");
-            smatch             matches;
-            //First, clean the name of the parameter of any appended number if needed
-            if( regex_search( name, matches, ParamNameCleaner ) && matches.size() > 1 )
-                name = matches[1].str();
+            for( size_t i = 0; i < name.size(); ++i )
+            {
+                if( name[i] == '_' && (i + 1 < name.size()) && std::isdigit(name[i+1], locale::classic()) )
+                    return name.substr(0,i);
+            }
             return std::move(name);
         }
+        //{
+        //    string name(cname);
+        //    static const regex ParamNameCleaner(R"((\b\S+(?=_\d)))");
+        //    smatch             matches;
+        //    //First, clean the name of the parameter of any appended number if needed
+        //    if( regex_search( name, matches, ParamNameCleaner ) && matches.size() > 1 )
+        //        name = matches[1].str();
+        //    return std::move(name);
+        //}
+
 
         /*****************************************************************************************
             HandleAConstref
@@ -1614,11 +1629,16 @@ namespace pmd2
     class SSBXMLWriter
     {
     public:
-        SSBXMLWriter( const Script & seq, eGameVersion version, eGameRegion region, const ConfigLoader & conf, bool bprintcmdoffsets = false )
-            :m_seq(seq), m_version(version), m_region(region),m_opinfo(GameVersionToOpCodeVersion(version)), 
+        SSBXMLWriter( const Script & seq, const ConfigLoader & conf, const scriptprocoptions & options )
+            :m_gconf(conf),
+            m_seq(seq), 
+            //m_version(version), 
+            //m_region(region),
+            m_opinfo(conf.GetGameVersion().version), 
             // m_lvlinf(version), 
             m_paraminf(conf),
-            m_commentoffsets(bprintcmdoffsets), m_gconf(conf)
+            m_options(options)
+            //m_commentoffsets(bprintcmdoffsets)
         {}
         
         void operator()( xml_node & parentn )
@@ -1758,7 +1778,7 @@ namespace pmd2
         inline void HandleInstruction( xml_node & groupn, const pmd2::ScriptInstruction & instr )
         {
             using namespace scriptXML;
-            if(m_commentoffsets)
+            if(m_options.bmarkoffsets)
             {
                 stringstream sstr;
                 sstr << "Offset : 0x" <<std::hex <<std::uppercase <<instr.dbg_origoffset;
@@ -1816,7 +1836,10 @@ namespace pmd2
 
         inline void WriteMetaAccessor(xml_node & groupn, const pmd2::ScriptInstruction & intr)
         {
-            WriteInstructionWithSubInst<false>(groupn,intr);
+            if( m_options.bnodeisinst )
+                WriteInstructionWithSubInst<true>(groupn,intr);
+            else
+                WriteInstructionWithSubInst<false>(groupn,intr);
         }
 
         template<bool _UseInstNameAsNodeName=true>
@@ -1886,12 +1909,18 @@ namespace pmd2
         void WriteInstruction(xml_node & groupn, const pmd2::ScriptInstruction & instr)
         {
             using namespace scriptXML;
-            xml_node          xinstr = groupn.append_child( NODE_Instruction.c_str() );
             OpCodeInfoWrapper opinfo = m_opinfo.Info(instr.value);
+            xml_node          xinstr;
 
             if(opinfo)
             {
-                AppendAttribute( xinstr, ATTR_Name, opinfo.Name() );
+                if(m_options.bnodeisinst)
+                    xinstr = groupn.append_child( opinfo.Name().c_str() );
+                else
+                {
+                    xinstr = groupn.append_child( NODE_Instruction.c_str() );
+                    AppendAttribute( xinstr, ATTR_Name, opinfo.Name() );
+                }
 
                 for( size_t cntparam= 0; cntparam < instr.parameters.size(); ++cntparam )
                 {
@@ -2205,15 +2234,16 @@ namespace pmd2
 
     private:
         const Script              & m_seq;
-        eGameVersion                m_version;
-        eGameRegion                 m_region;
+        //eGameVersion                m_version;
+        //eGameRegion                 m_region;
         OpCodeClassifier            m_opinfo;
         ParameterReferences         m_paraminf;
 
         std::unordered_set<size_t>  m_referedstrids;   //String ids that have been referred to by an instruction
         std::unordered_set<size_t>  m_referedconstids; //constant ids that have been referred to by an instruction
-        bool                        m_commentoffsets;
+        //bool                        m_commentoffsets;
         const ConfigLoader        & m_gconf;
+        scriptprocoptions           m_options;
 
     };
 
@@ -2451,29 +2481,6 @@ namespace pmd2
             }
         }
 
-        //void WriteLayerUnkTable3(xml_node & parentn, const ScriptLayer & layer )
-        //{
-        //    using namespace scriptXML;
-        //    if(layer.unkentries.empty())
-        //        return;
-        //    WriteCommentNode( parentn, to_string(layer.unkentries.size()) + " entrie(s)" );
-
-        //    xml_node        xentries = AppendChildNode( parentn, NODE_UnkTable3 );
-        //    size_t          cnt      = 0;
-        //    array<char,32>  buf{0};
-
-        //    for( const auto & entry : layer.unkentries )
-        //    {
-        //        WriteCommentNode( xentries, to_string(cnt) );
-        //        xml_node xentry = AppendChildNode( xentries, NODE_UnkTable3Entry );
-
-        //        AppendAttribute(xentry, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
-        //        AppendAttribute(xentry, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
-        //        AppendAttribute(xentry, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-        //        AppendAttribute(xentry, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-        //    }
-        //}
-
     private:
         const ScriptData   & m_data;
         ParameterReferences  m_paraminf;
@@ -2487,19 +2494,20 @@ namespace pmd2
     class GameScriptsXMLWriter
     {
     public:
-        GameScriptsXMLWriter( const LevelScript & set, eGameRegion greg, eGameVersion gver, const ConfigLoader & conf )
-            :m_scrset(set), m_region(greg), m_version(gver), m_gconf(conf)
+        GameScriptsXMLWriter( const LevelScript & set, const ConfigLoader & conf )
+            :m_scrset(set), m_gconf(conf)
         {}
 
-        void Write(const std::string & destdir, bool bautoescape)
+        void Write(const std::string & destdir, const scriptprocoptions & options )
         {
             using namespace scriptXML;
+            m_options = options;
             stringstream sstrfname;
             sstrfname << utils::TryAppendSlash(destdir) <<m_scrset.Name() <<".xml";
             xml_document doc;
             xml_node     xroot = doc.append_child( ROOT_ScripDir.c_str() );
-            AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(m_version) );
-            AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(m_region) );
+            AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(m_gconf.GetGameVersion().version) );
+            AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(m_gconf.GetGameVersion().region) );
 
             //Write stuff
             WriteLSDTable(xroot);
@@ -2507,7 +2515,7 @@ namespace pmd2
             for( const auto & entry : m_scrset.Components() )
                 WriteSet(xroot,entry);
 
-            const unsigned int flag = (bautoescape)? pugi::format_default  :
+            const unsigned int flag = (m_options.bescapepcdata)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
             //Write doc
             if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
@@ -2557,7 +2565,7 @@ namespace pmd2
             sstr <<std::right <<std::setw(10) <<setfill(' ') <<seq.Name() <<" Script";
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "++++++++++++++++++++++" );
-            SSBXMLWriter(seq,  m_version, m_region, m_gconf)(parentn);
+            SSBXMLWriter(seq,  m_gconf, m_options)(parentn);
         }
 
         inline void WriteSSDataContent( xml_node & parentn, const ScriptData & dat )
@@ -2595,10 +2603,9 @@ namespace pmd2
 
 
     private:
-        const LevelScript & m_scrset;
-        eGameRegion         m_region;
-        eGameVersion        m_version;
-        const ConfigLoader& m_gconf;
+        const LevelScript       & m_scrset;
+        const ConfigLoader      & m_gconf;
+        scriptprocoptions         m_options;
     };
 
 //==============================================================================
@@ -2614,8 +2621,6 @@ namespace pmd2
     bool RunLevelXMLImport( GameScripts      & gs, 
                             string             fname, 
                             string             dest, 
-                            eGameRegion        reg, 
-                            eGameVersion       ver, 
                             atomic<uint32_t> & completed )
     {
         try
@@ -2623,7 +2628,7 @@ namespace pmd2
             eGameRegion  tempregion  = eGameRegion::Invalid;
             eGameVersion tempversion = eGameVersion::Invalid;
             gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname) ) );
-            if( tempregion != reg || tempversion != ver )
+            if( tempregion != gs.Region() || tempversion != gs.Version() )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
         catch(const std::exception &)
@@ -2639,17 +2644,15 @@ namespace pmd2
             Helper for exporting script data as XML.
             Is used in packaged tasks to be handled by the thread pool.
     */
-    bool RunLevelXMLExport( const ScrSetLoader  & entry, 
-                            const string        & dir, 
-                            eGameRegion           reg, 
-                            eGameVersion          ver, 
-                            const ConfigLoader  & gs, 
-                            bool                  autoescape, 
-                            atomic<uint32_t>    & completed )
+    bool RunLevelXMLExport( const ScrSetLoader      & entry, 
+                            const string            & dir, 
+                            const ConfigLoader      & gs, 
+                            const scriptprocoptions & options,
+                            atomic<uint32_t>        & completed )
     {
         try
         {
-            GameScriptsXMLWriter(entry(), reg, ver, gs).Write(dir, autoescape);
+            GameScriptsXMLWriter(entry(), gs).Write(dir, options);
         }
         catch(const std::exception & )
         {
@@ -2680,7 +2683,9 @@ namespace pmd2
 
     /*
     */
-    void ImportXMLGameScripts(const std::string & dir, GameScripts & out_dest, bool bprintprogress )
+    void ImportXMLGameScripts(const std::string & dir, 
+                              GameScripts & out_dest, const 
+                              scriptprocoptions & options )
     {
         if(out_dest.m_setsindex.empty())
             throw std::runtime_error("ImportXMLGameScripts(): No script data to load to!!");
@@ -2691,20 +2696,20 @@ namespace pmd2
         atomic<uint32_t>             completed = 0;
         future<void>                 updatethread;
         //Grab our version and region from the 
-        if(bprintprogress)
+        if(utils::LibWide().ShouldDisplayProgress())
             cout<<"<*>- Compiling COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
         out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str()) );
 
-        if( tempregion != out_dest.m_scrRegion || tempversion != out_dest.m_gameVersion )
+        if( tempregion != out_dest.Region() || tempversion != out_dest.Version() )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
 
-        if(bprintprogress)
+        if(utils::LibWide().ShouldDisplayProgress())
         {
-            cout<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.m_scrRegion) 
-                <<"\", and version \"" <<GetGameVersionName(out_dest.m_gameVersion)<<"!\n";
+            cout<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.Region()) 
+                <<"\", and version \"" <<GetGameVersionName(out_dest.Version())<<"!\n";
         }
         //Write out common
         out_dest.WriteScriptSet(out_dest.m_common);
@@ -2724,8 +2729,6 @@ namespace pmd2
                                                                      std::ref(out_dest), 
                                                                      dirit->path(), 
                                                                      destination.toString(),
-                                                                     out_dest.m_scrRegion, 
-                                                                     out_dest.m_gameVersion, 
                                                                      std::ref(completed) ) ) );
             }
             ++dirit;
@@ -2733,7 +2736,7 @@ namespace pmd2
 
         try
         {
-            if(bprintprogress)
+            if(utils::LibWide().ShouldDisplayProgress())
             {
                 assert(!out_dest.m_setsindex.empty());
                 cout<<"\n<*>- Compiling Scripts..\n";
@@ -2756,7 +2759,7 @@ namespace pmd2
             shouldUpdtProgress = false;
             if(updatethread.valid())
                 updatethread.get();
-            if(bprintprogress)
+            if(utils::LibWide().ShouldDisplayProgress())
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
 
         }
@@ -2769,7 +2772,7 @@ namespace pmd2
         }
 
 
-        if(bprintprogress)
+        if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
     }
 
@@ -2777,12 +2780,14 @@ namespace pmd2
         ExportGameScriptsXML
             
     */
-    void ExportGameScriptsXML(const std::string & dir, const GameScripts & gs, bool bautoescapexml, bool bprintprogress )
+    void ExportGameScriptsXML(const std::string         & dir, 
+                              const GameScripts         & gs, 
+                              const scriptprocoptions   & options )
     {
         //Export COMMON first
-        if(bprintprogress)
+        if(utils::LibWide().ShouldDisplayProgress())
             cout<<"<*>- Writing COMMOM.xml..";
-        GameScriptsXMLWriter(gs.m_common, gs.m_scrRegion, gs.m_gameVersion, gs.GetConfig() ).Write(dir, bautoescapexml);
+        GameScriptsXMLWriter(gs.m_common, gs.GetConfig() ).Write(dir, options);
 
         atomic_bool                  shouldUpdtProgress = true;
         future<void>                 updtProgress;
@@ -2794,16 +2799,14 @@ namespace pmd2
             taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLExport, 
                                                                  std::cref(entry.second), 
                                                                  std::cref(dir), 
-                                                                 gs.m_scrRegion, 
-                                                                 gs.m_gameVersion, 
                                                                  std::cref(gs.GetConfig()),
-                                                                 bautoescapexml,
+                                                                 std::cref(options),
                                                                  std::ref(completed) ) ) );
         }
 
         try
         {
-            if(bprintprogress)
+            if(utils::LibWide().ShouldDisplayProgress())
             {
                 cout<<"\n<*>- Exporting the rest..\n";
                 updtProgress = std::async( std::launch::async, 
@@ -2819,7 +2822,7 @@ namespace pmd2
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
-            if(bprintprogress)
+            if(utils::LibWide().ShouldDisplayProgress())
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
         }
         catch(...)
@@ -2830,19 +2833,19 @@ namespace pmd2
             std::rethrow_exception( std::current_exception() );
         }
 
-        if(bprintprogress)
+        if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
     }
 
     /*
     */
-    void ScriptSetToXML( const LevelScript  & set, 
-                         const ConfigLoader & gconf, 
-                         bool                 bautoescapexml, 
-                         const std::string  & destdir )
+    void ScriptSetToXML( const LevelScript          & set, 
+                         const ConfigLoader         & gconf, 
+                         const scriptprocoptions    & options, 
+                         const std::string          & destdir )
     {
         if( gconf.GetGameVersion().version < eGameVersion::NBGameVers && gconf.GetGameVersion().region < eGameRegion::NBRegions )
-            GameScriptsXMLWriter(set, gconf.GetGameVersion().region, gconf.GetGameVersion().version, gconf).Write(destdir, bautoescapexml);
+            GameScriptsXMLWriter(set, gconf).Write(destdir, options);
         else
             throw std::runtime_error("ScriptSetToXML() : Error, invalid version or region!");
     }
@@ -2861,7 +2864,7 @@ namespace pmd2
     */
     void ScriptToXML( const Script        & scr, 
                       const ConfigLoader  & gconf, 
-                      bool                  bautoescapexml, 
+                      const scriptprocoptions & options,
                       const std::string   & destdir )
     {
         using namespace scriptXML;
@@ -2872,10 +2875,10 @@ namespace pmd2
         AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(gconf.GetGameVersion().version) );
         AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(gconf.GetGameVersion().region) );
 
-        SSBXMLWriter(scr, gconf.GetGameVersion().version, gconf.GetGameVersion().region, gconf)(xroot);
+        SSBXMLWriter(scr, gconf, options)(xroot);
 
         //Write stuff
-        const unsigned int flag = (bautoescapexml)? pugi::format_default  : 
+        const unsigned int flag = (options.bescapepcdata)? pugi::format_default  : 
                                     pugi::format_indent | pugi::format_no_escapes;
         //Write doc
         if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
@@ -2884,7 +2887,10 @@ namespace pmd2
 
     /*
     */
-    Script XMLToScript( const std::string & srcfile, eGameRegion & out_greg, eGameVersion & out_gver, const ConfigLoader  & gconf )
+    Script XMLToScript( const std::string & srcfile, 
+                        eGameRegion & out_greg, 
+                       eGameVersion & out_gver, 
+                       const ConfigLoader  & gconf )
     {
         using namespace scriptXML;
         xml_document     doc;
@@ -2921,10 +2927,10 @@ namespace pmd2
 
     /*
     */
-    void ScriptDataToXML( const ScriptData    & dat, 
-                          const ConfigLoader  & gconf, 
-                          bool                  bautoescapexml, 
-                          const std::string   & destdir )
+    void ScriptDataToXML( const ScriptData          & dat, 
+                          const ConfigLoader        & gconf, 
+                          const scriptprocoptions   & options, 
+                          const std::string         & destdir )
     {
         using namespace scriptXML;
         stringstream sstrfname;
@@ -2937,7 +2943,7 @@ namespace pmd2
         SSDataXMLWriter(dat, gconf)(xroot);
 
         //Write stuff
-        const unsigned int flag = (bautoescapexml)? pugi::format_default  : 
+        const unsigned int flag = (options.bescapepcdata)? pugi::format_default  : 
                                     pugi::format_indent | pugi::format_no_escapes;
         //Write doc
         if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )

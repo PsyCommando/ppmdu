@@ -113,11 +113,11 @@ namespace pmd2
         assert(m_parent.m_langdat);
         string basename = Poco::Path(fpath).getBaseName();
         auto script = std::move( filetypes::ParseScript(fpath, 
-                                                        m_parent.m_scrRegion, 
-                                                        m_parent.m_gameVersion, 
-                                                        *m_parent.m_langdat, 
-                                                        m_parent.m_escapexml,
-                                                        m_parent.m_bbscriptdebug) );
+                                                        m_parent.Region(), 
+                                                        m_parent.Version(), 
+                                                        m_parent.GetConfig().GetLanguageFilesDB(), 
+                                                        false,                                      //! #TODO: Get rid of this option eventually
+                                                        m_parent.GetOptions().bscriptdebug) );
         script.SetName(basename);
         tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
 
@@ -432,7 +432,7 @@ namespace pmd2
                                         seq.second,
                                         m_parent.Region(), 
                                         m_parent.Version(),
-                                        *(m_parent.m_langdat) );
+                                        m_parent.GetConfig().GetLanguageFilesDB() );
             }
             
             if( utils::LibWide().isLogOn() )
@@ -460,16 +460,17 @@ namespace pmd2
         m_parent->m_pHandler->WriteDirectory(set, m_path);
     }
 
-    GameScripts::GameScripts(const std::string & scrdir, const ConfigLoader & gconf,  bool bscriptdebug, bool bescapexml)
+    GameScripts::GameScripts(const std::string & scrdir, const ConfigLoader & gconf, const scriptprocoptions & options )
         :m_scriptdir(scrdir), 
-         m_scrRegion(gconf.GetGameVersion().region), 
-         m_gameVersion(gconf.GetGameVersion().version),
+         //m_scrRegion(gconf.GetGameVersion().region), 
+         //m_gameVersion(gconf.GetGameVersion().version),
          m_pHandler(new GameScriptsHandler(*this)), 
          m_common(DirNameScriptCommon),
-         m_langdat(std::addressof(gconf.GetLanguageFilesDB())),
-         m_escapexml(bescapexml),
+         //m_langdat(std::addressof(gconf.GetLanguageFilesDB())),
+         //m_escapexml(bescapexml),
          m_gconf(gconf),
-         m_bbscriptdebug(bscriptdebug)
+         //m_bbscriptdebug(bscriptdebug)
+         m_options(options)
     {
         Load();
     }
@@ -499,12 +500,12 @@ namespace pmd2
 
     void GameScripts::ImportXML(const std::string & dir)
     {
-        ImportXMLGameScripts(dir,*this);
+        ImportXMLGameScripts(dir,*this, m_options);
     }
 
     void GameScripts::ExportXML(const std::string & dir)
     {
-        ExportGameScriptsXML(dir,*this, !m_escapexml); //We don't want pugixml to escape characters if we already did!!
+        ExportGameScriptsXML(dir,*this, m_options); //We don't want pugixml to escape characters if we already did!!
     }
 
     std::unordered_map<std::string, LevelScript> GameScripts::LoadAll()
@@ -537,12 +538,12 @@ namespace pmd2
 
     eGameRegion GameScripts::Region() const
     {
-        return m_scrRegion;
+        return GetConfig().GetGameVersion().region;
     }
 
     eGameVersion GameScripts::Version() const
     {
-        return m_gameVersion;
+        return GetConfig().GetGameVersion().version;
     }
 
     void GameScripts::WriteScriptSet(const LevelScript & set)

@@ -970,7 +970,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts();
+            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load scripts!");
 
@@ -1099,7 +1099,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(m_escxml, m_scriptdebug);
+            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 
@@ -1173,7 +1173,7 @@ namespace statsutil
         eGameVersion ver = m_version;
         ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), m_scriptdebug, false ), 
                      cfgloader,
-                     true, 
+                     pmd2::scriptprocoptions{true, true, false, m_scriptdebug},
                      outpath.toString() );
         cout<<"\nDone!\n";
         return 0;
@@ -1229,7 +1229,7 @@ namespace statsutil
         eGameVersion ver = m_version;
         ScriptDataToXML( ::filetypes::ParseScriptData(inpath.toString()), 
                          cfgloader,
-                         true, 
+                         pmd2::scriptprocoptions{true, true, false, m_scriptdebug},
                          outpath.toString() );
         cout<<"\nDone!\n";
         return 0;

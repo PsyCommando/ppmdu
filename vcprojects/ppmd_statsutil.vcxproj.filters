@@ -232,7 +232,7 @@
       <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1203,25 +1203,8 @@ namespace pmd2
         return FindOpCodeInfo_EoS( static_cast<uint16_t>(opcode) );
     }
 
-    inline eScriptOpCodesEoS FindOpCodeByName_EoS( const std::string & name, size_t nbparams )
-    {
-        size_t foundmultiparam = 0;
-        for( size_t i = 0; i < OpCodesInfoListEoS.size(); ++i )
-        {
-            if( OpCodesInfoListEoS[i].name == name )
-            {
-                if( OpCodesInfoListEoS[i].nbparams == nbparams )
-                    return static_cast<eScriptOpCodesEoS>(i);   //Exact match, return
-                else if( OpCodesInfoListEoS[i].nbparams == -1 )
-                    foundmultiparam = i;                        //Mark any command that matched with -1 parameters for later
-            }
-        }
-        //Return the -1 parameter that matched the name if we didn't find an exact match
-        if( foundmultiparam != 0 )
-            return static_cast<eScriptOpCodesEoS>(foundmultiparam);
-        else
-            return eScriptOpCodesEoS::INVALID;
-    }
+    eScriptOpCodesEoS FindOpCodeByName_EoS( const std::string & name, size_t nbparams );
+
 
     inline size_t GetNbOpCodes_EoS()
     {

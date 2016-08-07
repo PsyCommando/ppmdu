@@ -121,6 +121,7 @@ namespace filetypes
     /***********************************************************************************
         ParseScript
     ***********************************************************************************/
+    //! #TODO: Move compiler/decompiler specific options to the new compiler/decompiler header!
     pmd2::Script ParseScript( const std::string           & scriptfile, 
                               pmd2::eGameRegion             gloc, 
                               pmd2::eGameVersion            gvers, 
@@ -131,6 +132,7 @@ namespace filetypes
     /***********************************************************************************
         WriteScript
     ***********************************************************************************/
+    //! #TODO: Move compiler/decompiler specific options to the new compiler/decompiler header!
     void  WriteScript(const std::string            & scriptfile, 
                       const pmd2::Script           & scrdat, 
                       pmd2::eGameRegion              gloc, 

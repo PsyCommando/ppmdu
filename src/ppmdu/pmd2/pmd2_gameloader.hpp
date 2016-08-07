@@ -18,12 +18,15 @@ Description:
 #include <ppmdu/pmd2/pmd2_audio.hpp>
 #include <ppmdu/pmd2/pmd2_asm_manip.hpp>
 
+//! #TODO: The gameloader header could be possibly more easily turned into an accessible
+//!         interface for a possible shared library. If the dependencies and implementation can be
+//!         pimpl-ifed.
+
 namespace pmd2
 {
 //======================================================================================
 //  GameDataLoader
 //======================================================================================
-
     /*
         GameDataLoader
             This identify what game the files being handled belongs to, and allows accessing all its data
@@ -31,12 +34,13 @@ namespace pmd2
             easy retrieval and editing.
 
             Its made up of separate modules that each handles their respective specialized field of data.
+
+            **This instantiate the MainPMD2ConfigWrapper config instance**
     */
     class GameDataLoader
     {
     public:
-        //GameDataLoader( const std::string & romroot, const std::string & gamelangxmlfile = "gamelang.xml" );
-        GameDataLoader( const std::string & romroot, const std::string & pmd2confxmlfile = DefConfigFileName );
+        GameDataLoader( const std::string & romroot, const std::string & pmd2confxmlfile );
         ~GameDataLoader();
 
         //Set ROM Root Dir (Directory conatining arm9.bin, data, and overlay directory)
@@ -51,7 +55,7 @@ namespace pmd2
         void Load();
 
         GameText         * LoadGameText();
-        GameScripts      * LoadScripts(bool escapeasxml = false, bool bscriptdebug = false );
+        GameScripts      * LoadScripts(const scriptprocoptions & options);
         GameGraphics     * LoadGraphics();
         GameStats        * LoadStats();
         GameAudio        * LoadAudio();
@@ -59,7 +63,6 @@ namespace pmd2
 
         //Handles Writing the Game Data
         void Write();
-
 
         void WriteGameText();
         void WriteScripts();
@@ -94,14 +97,11 @@ namespace pmd2
         PMD2_ASM_Manip          * GetAsmManip();
         const PMD2_ASM_Manip    * GetAsmManip()const;
 
-        //const ConfigLoader      * GetConfig()const;
-
     private:
         void AnalyseGame();
         bool LoadConfigUsingARM9();
 
     private:
-        //std::shared_ptr<ConfigLoader>        m_conf;
         std::shared_ptr<GameText>            m_text;
         std::unique_ptr<GameScripts>         m_scripts;
         std::unique_ptr<GameGraphics>        m_graphics;
@@ -114,8 +114,6 @@ namespace pmd2
         std::string                          m_configfile;
 
         //State
-        //eGameRegion                          m_gameregion;
-        //eGameVersion                         m_gameversion;
         bool                                 m_bAnalyzed;
 
         //Error conditions
