@@ -1157,13 +1157,9 @@ namespace statsutil
         Poco::Path outpath;
         
         if( m_outputPath.empty() )
-        {
             outpath = inpath.absolute().makeParent();
-        }
         else
-        {
             outpath = Poco::Path(m_outputPath).makeAbsolute().makeDirectory();
-        }
 
         //Test output path
         ConfigLoader cfgloader( m_version, m_region, m_pmd2cfg );
@@ -1171,7 +1167,12 @@ namespace statsutil
 
         eGameRegion  reg = m_region;
         eGameVersion ver = m_version;
-        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), m_region, m_version, cfgloader.GetLanguageFilesDB(), m_scriptdebug, false ), 
+        ScriptToXML( ::filetypes::ParseScript(inpath.toString(), 
+                                              m_region, 
+                                              m_version, 
+                                              cfgloader.GetLanguageFilesDB(), 
+                                              m_scriptdebug, 
+                                              false ), 
                      cfgloader,
                      pmd2::scriptprocoptions{true, true, false, m_scriptdebug},
                      outpath.toString() );

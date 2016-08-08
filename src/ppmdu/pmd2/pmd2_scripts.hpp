@@ -224,6 +224,8 @@ namespace pmd2
         LevelScript operator()()const;
         void      operator()(const LevelScript & set)const;
 
+        inline const std::string & path()const {return m_path;}
+
     private:
         std::string   m_path;
         GameScripts * m_parent;

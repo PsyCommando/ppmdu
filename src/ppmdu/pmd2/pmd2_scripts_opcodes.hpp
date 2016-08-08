@@ -8,11 +8,13 @@ Description: Contains data on script opcodes.
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
+#include <utils/parse_utils.hpp>
 #include <cstdint>
 #include <vector>
 #include <string>
 #include <array>
 #include <cassert>
+#include <iomanip>
 
 
 //! #TODO: Replace most of the data access functions in here with a single interface for retrieving
@@ -900,6 +902,7 @@ namespace pmd2
     {
         SingleOp = 0,           //Simple command, default
         OpWithReturnVal,        //A single op that returns a value and may have a set of cases appended to it
+        Debug,                  //For debug instruction that don't work in the retail game
 
         Switch,                 //This marks the start of a conditional structure
         Case,                   //This marks a case in a previous conditional structure
@@ -1341,7 +1344,7 @@ namespace pmd2
         }
 
         const std::string              & Name     ()const { return *pname;}
-        int8_t                           NbParams ()const { return nbparams;}
+        int16_t                          NbParams ()const { return nbparams;}
         const std::vector<OpParamInfo> & ParamInfo()const { return *pparaminfo;}
         eCommandCat                      Category ()const { return category; }
         eInstructionType                 GetMyInstructionType()const 
@@ -1502,11 +1505,24 @@ namespace pmd2
             }
         }
 
+        /*
+        */
+        inline bool IsDebugInstruction()const
+        {
+            switch(Category())
+            {
+                case eCommandCat::Debug:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
 
         operator bool()const {return pname!= nullptr && pparaminfo != nullptr;}
 
         const std::string              * pname;
-        uint8_t                          nbparams;
+        int16_t                          nbparams;
         eCommandCat                      category;
         const std::vector<OpParamInfo> * pparaminfo;
     };
@@ -1786,11 +1802,13 @@ namespace pmd2
                 return static_cast<int16_t>(id);
             else
             {
-                std::stringstream sstr;
-                int16_t outval = 0;
-                sstr << name;
-                sstr >> outval;
-                return outval;
+                //std::stringstream sstr;
+                //int16_t outval = 0;
+                //if(name.size() > 2 && name[0] == '0' && name[1] == 'x')
+                //    sstr<<std::hex;
+                //sstr << name;
+                //sstr >> outval;
+                return utils::parseHexaValToValue<int16_t>(name);
             }
         }
 

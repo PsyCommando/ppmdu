@@ -594,7 +594,7 @@ namespace filetypes
         SSB_Parser( _Init beg, _Init end, eOpCodeVersion scrver, eGameRegion scrloc, const LanguageFilesDB & langdat )
             :m_opfinder(scrver), m_beg(beg), m_end(end), m_cur(beg), m_scrversion(scrver), m_scrRegion(scrloc), m_lblcnt(0), 
              m_nbroutines(0), m_nbconsts(0), m_nbstrs(0),m_hdrlen(0),m_datablocklen(0), m_constlutbeg(0), m_stringlutbeg(0),
-            m_datahdrgrouplen(0), m_langdat(langdat)
+            m_datahdrgrouplen(0), m_langdat(langdat),m_instbeg(0),m_instend(0)
         {}
 
 
@@ -617,7 +617,7 @@ namespace filetypes
             raw_ssb_content transit;
             m_lblcnt = 0;
             ParseHeader();
-            transit.rawroutines       = std::move(ParseRoutines());
+            transit.rawroutines     = std::move(ParseRoutines());
             transit.constantstrings = std::move(ParseConstants());
             transit.strings         = std::move(ParseStrings());
 
@@ -680,8 +680,8 @@ namespace filetypes
             }
             else
             {
-                cout<<"SSB_Parser::ParseHeader(): Unknown script region!!\n";
                 assert(false);
+                throw std::runtime_error("SSB_Parser::ParseHeader(): Unknown script region!!");
             }
 
             //Parse Data header
@@ -824,14 +824,14 @@ namespace filetypes
         void ParseCode()
         {
             //Iterate once through the entire code, regardless of groups, list all jump targets, and parse all operations
-            const size_t instbeg        = m_hdrlen + ssb_data_hdr::LEN + (m_nbroutines * routine_entry::LEN);
-            const size_t instend        = m_hdrlen + m_datablocklen;
+            m_instbeg = m_hdrlen + ssb_data_hdr::LEN + (m_nbroutines * routine_entry::LEN);
+            m_instend = m_hdrlen + m_datablocklen;
 #ifdef _DEBUG
-            assert(m_inputsz >= instend);
+            assert(m_inputsz >= m_instend);
 #endif
-            initer       itcollect      = std::next( m_beg, instbeg );
+            initer       itcollect      = std::next( m_beg, m_instbeg );
             initer       itdatabeg      = std::next( m_beg, m_hdrlen );
-            initer       itdataend      = std::next( m_beg, instend );
+            initer       itdataend      = std::next( m_beg, m_instend );
             size_t       instdataoffset = 0; //Offset relative to the beginning of the data
 
             while( itcollect != itdataend )
@@ -845,7 +845,8 @@ namespace filetypes
                 {
                     assert(false);
                     stringstream sstr;
-                    sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute file offset  " <<hex <<uppercase <<instdataoffset + instbeg <<"!";
+                    sstr <<"SSB_Parser::ParseInstructionSequence() : Unknown Opcode at absolute file offset  " 
+                         <<hex <<uppercase <<instdataoffset + m_instbeg <<"!";
                     throw std::runtime_error(sstr.str());
                 }
                 instdataoffset += ScriptWordLen; //Count instructions and data. Parameters are added by the called functions as needed
@@ -856,7 +857,7 @@ namespace filetypes
             ParseCommand 
                 Read and add command to the rawinstruction table!
         *******************************************************************************/
-        void ParseCommand( size_t                   & foffset, 
+        void ParseCommand( size_t                   & instdataoffset, 
                            initer                   & itcur, 
                            initer                   & itendseq, 
                            uint16_t                   curop, 
@@ -870,7 +871,24 @@ namespace filetypes
             size_t paramlen = 0;
 
             if( codeinfo.NbParams() != 0 && itcur == itendseq )
-                throw std::runtime_error("SSB_Parser::ParseCommand(): Not enough data left to parse any parameters!!");
+            {
+                if( codeinfo.IsDebugInstruction() )
+                {
+                    //Drop the instruction
+                    clog << "<!>- WARNING: Dropped instruction 0x" <<hex <<uppercase <<curop 
+                         <<" with missing parameters, at offset 0x" <<instdataoffset + m_instbeg 
+                         <<", in current script..\n";
+                    return;
+                }
+                else
+                {
+                    stringstream sstrer;
+                    sstrer<<"SSB_Parser::ParseCommand(): Not enough data left to parse the "
+                          <<codeinfo.NbParams() <<" parameters, of instruction 0x" <<hex <<uppercase <<curop 
+                          <<"!! File offset 0x" <<instdataoffset + m_instbeg;
+                    throw std::runtime_error(sstrer.str());
+                }
+            }
 
             if( codeinfo.NbParams() > 0 )
             {
@@ -890,13 +908,14 @@ namespace filetypes
             if( cntparam != nbparams )
             {
                 stringstream sstrer;
-                sstrer <<"\n<!>- Found instruction with not enough bytes left to assemble all its parameters at offset 0x" <<hex <<uppercase <<foffset <<dec <<nouppercase <<"\n";
+                sstrer <<"SSB_Parser::ParseCommand(): Couldn't parse all parameters for instruction 0x"
+                       <<hex <<uppercase <<curop <<" at file offset 0x" <<instdataoffset + m_instbeg;
                 throw std::runtime_error(sstrer.str());
             }
             else
                 m_rawinst.push_back(std::move(inst));
 
-            foffset += paramlen;
+            instdataoffset += paramlen;
         }
 
         /*******************************************************************************
@@ -951,6 +970,8 @@ namespace filetypes
         size_t              m_stringlutbeg;         //in bytes //Start of strings lookup table for the strings
         vector<pair<eGameLanguages,size_t>> m_stringblksSizes;      //in bytes //The lenghts of all strings blocks for each languages
         
+        size_t              m_instbeg;              //Absolute file offset of the start of the instructions list.
+        size_t              m_instend;              //Absolute file offset of the end of the instruction list.
 #ifdef _DEBUG
         size_t              m_inputsz;              //in bytes //The size of the input container
 #endif
@@ -1494,6 +1515,10 @@ namespace filetypes
         vector<uint8_t> fdata( std::move(utils::io::ReadFileToByteVector(scriptfile)) );
         eOpCodeVersion opvers = GameVersionToOpCodeVersion(gvers);
 
+#ifdef _DEBUG
+        if( scriptfile == R"(C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out\data\SCRIPT\D53P41C\n09a2211.ssb)" )
+            cout <<"\nfound file to debug\n";
+#endif
         if( opvers == eOpCodeVersion::Invalid )
             throw std::runtime_error("ParseScript(): Wrong game version!!");
 

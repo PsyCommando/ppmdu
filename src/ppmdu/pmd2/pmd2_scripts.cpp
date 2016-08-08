@@ -110,24 +110,40 @@ namespace pmd2
 
     void GameScriptsHandler::LoadSSB(ScriptSet & tgtgrp, const std::string & fpath )
     {
-        assert(m_parent.m_langdat);
-        string basename = Poco::Path(fpath).getBaseName();
-        auto script = std::move( filetypes::ParseScript(fpath, 
-                                                        m_parent.Region(), 
-                                                        m_parent.Version(), 
-                                                        m_parent.GetConfig().GetLanguageFilesDB(), 
-                                                        false,                                      //! #TODO: Get rid of this option eventually
-                                                        m_parent.GetOptions().bscriptdebug) );
-        script.SetName(basename);
-        tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
-
+        try 
+        {
+            string basename = Poco::Path(fpath).getBaseName();
+            auto script = std::move( filetypes::ParseScript(fpath, 
+                                                            m_parent.Region(), 
+                                                            m_parent.Version(), 
+                                                            m_parent.GetConfig().GetLanguageFilesDB(), 
+                                                            false,                                      //! #TODO: Get rid of this option eventually
+                                                            m_parent.GetOptions().bscriptdebug) );
+            script.SetName(basename);
+            tgtgrp.Sequences().emplace(std::move(std::make_pair(basename, std::move(script) )));
+        }
+        catch(const std::exception &)
+        {
+            stringstream sstrer;
+            sstrer << "GameScriptsHandler::LoadSSB(): Encountered error loading SSB file \"" <<fpath <<"\"!";
+            throw_with_nested(std::runtime_error(sstrer.str()));
+        }
     }
 
 
     void GameScriptsHandler::LoadSSData(ScriptSet& tgtgrp, const std::string & fpath)
     {
-        string basename = Poco::Path(fpath).getBaseName();
-        tgtgrp.SetData( std::forward<ScriptData>(filetypes::ParseScriptData(fpath)) );
+        try 
+        {
+            string basename = Poco::Path(fpath).getBaseName();
+            tgtgrp.SetData( std::forward<ScriptData>(filetypes::ParseScriptData(fpath)) );
+        }
+        catch(const std::exception &)
+        {
+            stringstream sstrer;
+            sstrer << "GameScriptsHandler::LoadSSData(): Encountered error loading script data file \"" <<fpath <<"\"!";
+            throw_with_nested(std::runtime_error(sstrer.str()));
+        }
     }
 
 
@@ -204,7 +220,7 @@ namespace pmd2
         if( fqueue.empty() ) 
             return;
 
-        auto lambdafindsse = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSE_FileExt && p.getBaseName() == ScriptPrefix_enter;};
+        const static auto lambdafindsse = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSE_FileExt && p.getBaseName() == ScriptPrefix_enter;};
         auto itcur         = fqueue.begin();
         while( (itcur = std::find_if( fqueue.begin(), fqueue.end(), lambdafindsse)) != fqueue.end() )
         {

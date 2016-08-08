@@ -464,10 +464,10 @@ namespace pmd2
         { "CaseText",                               2,  1, 0, 0, eCommandCat::CaseNoJump,       { {eOpParamTypes::Integer},         {eOpParamTypes::String} } },
         { "CaseValue",                              3, -1, 1, 0, eCommandCat::Case,             { {eOpParamTypes::UNK_Placeholder}, {eOpParamTypes::Integer},         {eOpParamTypes::InstructionOffset} } }, //First could be a logical operator? Second the value to compare against, and third jump address
         { "CaseVariable",                           3, -1, 1, 0, eCommandCat::Case,         },
-        { "debug_Assert",                           1, -1, 0, 0, eCommandCat::SingleOp,     },
-        { "debug_Print",                            1, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Constant} } },
-        { "debug_PrintFlag",                        2, -1, 0, 0, eCommandCat::SingleOp,         { {eOpParamTypes::Unk_ScriptVariable}, {eOpParamTypes::Constant} } },
-        { "debug_PrintScenario",                    2, -1, 0, 0, eCommandCat::SingleOp,     },
+        { "debug_Assert",                           1, -1, 0, 0, eCommandCat::Debug,     },
+        { "debug_Print",                            1, -1, 0, 0, eCommandCat::Debug,         { {eOpParamTypes::Constant} } },
+        { "debug_PrintFlag",                        2, -1, 0, 0, eCommandCat::Debug,         { {eOpParamTypes::Unk_ScriptVariable}, {eOpParamTypes::Constant} } },
+        { "debug_PrintScenario",                    2, -1, 0, 0, eCommandCat::Debug,     },
         { "DefaultText",                            1,  0, 0, 0, eCommandCat::Default,          { {eOpParamTypes::String} } },
         { "Destroy",                                0, -1, 0, 0, eCommandCat::Destroy       },
         { "End",                                    0, -1, 0, 0, eCommandCat::End           },
@@ -746,7 +746,7 @@ namespace pmd2
 //
 //
 //
-    const std::unordered_multimap<std::string, uint16_t> CmdLUT
+    const std::unordered_multimap<std::string, uint16_t> CmdLUT_EoS
     {{
         { "Null",                                 0 },
         { "back_ChangeGround",                    1 },
@@ -3049,11 +3049,12 @@ namespace pmd2
     }
 
     eScriptOpCodesEoS FindOpCodeByName_EoS(const std::string & name, size_t nbparams)
+#if 0
     {
-        auto frange = CmdLUT.equal_range(name);
-        if( frange.first != CmdLUT.end() )
+        auto frange = CmdLUT_EoS.equal_range(name);
+        if( frange.first != CmdLUT_EoS.end() )
         {
-            uint16_t pmultiparamsid = CmdLUT.size();
+            uint16_t pmultiparamsid = CmdLUT_EoS.size();
             for( auto itf = frange.first; itf != frange.second; ++itf )
             {
                 uint16_t curid = itf->second;
@@ -3062,29 +3063,31 @@ namespace pmd2
                 else if(OpCodesInfoListEoS[curid].nbparams == -1)
                     pmultiparamsid = curid;
             }
-            if(pmultiparamsid != CmdLUT.size())
+            if(pmultiparamsid != CmdLUT_EoS.size())
                 return static_cast<eScriptOpCodesEoS>(pmultiparamsid);
         }
         return eScriptOpCodesEoS::INVALID;
     }
-    //{
-    //    size_t foundmultiparam = 0;
-    //    for( size_t i = 0; i < OpCodesInfoListEoS.size(); ++i )
-    //    {
-    //        if( OpCodesInfoListEoS[i].name == name )
-    //        {
-    //            if( OpCodesInfoListEoS[i].nbparams == nbparams )
-    //                return static_cast<eScriptOpCodesEoS>(i);   //Exact match, return
-    //            else if( OpCodesInfoListEoS[i].nbparams == -1 )
-    //                foundmultiparam = i;                        //Mark any command that matched with -1 parameters for later
-    //        }
-    //    }
-    //    //Return the -1 parameter that matched the name if we didn't find an exact match
-    //    if( foundmultiparam != 0 )
-    //        return static_cast<eScriptOpCodesEoS>(foundmultiparam);
-    //    else
-    //        return eScriptOpCodesEoS::INVALID;
-    //}
+#else
+    {
+        size_t foundmultiparam = 0;
+        for( size_t i = 0; i < OpCodesInfoListEoS.size(); ++i )
+        {
+            if( OpCodesInfoListEoS[i].name == name )
+            {
+                if( OpCodesInfoListEoS[i].nbparams == nbparams )
+                    return static_cast<eScriptOpCodesEoS>(i);   //Exact match, return
+                else if( OpCodesInfoListEoS[i].nbparams == -1 )
+                    foundmultiparam = i;                        //Mark any command that matched with -1 parameters for later
+            }
+        }
+        //Return the -1 parameter that matched the name if we didn't find an exact match
+        if( foundmultiparam != 0 )
+            return static_cast<eScriptOpCodesEoS>(foundmultiparam);
+        else
+            return eScriptOpCodesEoS::INVALID;
+    }
+#endif
 
     std::string RoutineTyToStr(uint16_t ty)
     {

@@ -949,21 +949,15 @@ namespace pmd2
                 }
                 case eOpParamTypes::Unk_LivesRef:
                 {
-                    uint16_t livesid = m_paraminf.LivesInfo(param.value());
-                    //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
-                    //if( m_version == eGameVersion::EoS )
-                    //    livesid = FindLivesIdByName_EoS(param.value());
+                    outinst.parameters.push_back(m_paraminf.LivesInfo(param.value()));
+                    //if(livesid != InvalidLivesID )
+                    //    outinst.parameters.push_back(livesid);
                     //else
-                    //    livesid = FindLivesIdByName_EoTD(param.value());
-
-                    if(livesid != InvalidLivesID )
-                        outinst.parameters.push_back(livesid);
-                    else
-                    {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                             <<" : used invalid \"lives\" id value as a raw integer.\n"; 
-                        outinst.parameters.push_back( ToWord(param.as_int()) );
-                    }
+                    //{
+                    //    clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                    //         <<" : used invalid \"lives\" id value as a raw integer.\n"; 
+                    //    outinst.parameters.push_back( ToWord(param.as_int()) );
+                    //}
                     break;
                 }
                 case eOpParamTypes::Unk_PerformerRef:
@@ -1991,7 +1985,8 @@ namespace pmd2
                         }
                         else
                         {
-                            cerr <<"Unknown script variable for instruction!! IMPLEMENT BETTER ERROR HANDLING!\n";
+                            clog << "<!>- Got a script variable id out of range for instruction at script file offset 0x" 
+                                    <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), pval );
                         }
                         break;
@@ -2002,7 +1997,11 @@ namespace pmd2
                         if(!facename.empty())
                             AppendAttribute( instn, deststr.str(), facename);
                         else
-                            break; //! #FIXME: Not a good idea. Better just write it as an integer
+                        {
+                            clog << "<!>- Got an face type out of range for instruction at script file offset 0x" 
+                                    <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
+                            AppendAttribute( instn, deststr.str(),  pval );
+                        }
                         return;
                     }
                     case eOpParamTypes::Unk_LivesRef:
@@ -2011,7 +2010,11 @@ namespace pmd2
                         if(pinf)
                             AppendAttribute( instn, deststr.str(), pinf->name );
                         else
-                            break; //! #FIXME: Not a good idea. Better just write it as an integer
+                        {
+                            clog << "<!>- Got an actor id out of range for instruction at script file offset 0x" 
+                                    <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
+                            AppendAttribute( instn, deststr.str(), pval );
+                        }
                         return;
                     }
                     case eOpParamTypes::Unk_CRoutineId:
@@ -2035,8 +2038,8 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), *pstr );
                         else
                         {
-                            //! #TODO: Log this
-                            cerr <<"Unknown facemode for instruction!! IMPLEMENT BETTER ERROR HANDLING!\n";
+                            clog << "<!>- Got a face position mode out of range for instruction at script file offset 0x" 
+                                    <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         }
                         return;
@@ -2060,7 +2063,9 @@ namespace pmd2
                             else
                             {
                                 //! #TODO: Log this
-                                assert(false);
+                                clog << "<!>- Got a level id out of range for instruction at script file offset 0x" 
+                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
+                                //assert(false);
                                 stringstream sstrid;
                                 sstrid <<"0x" <<hex <<uppercase <<pval; 
                                 AppendAttribute( instn, deststr.str(),  sstrid.str() );
@@ -2656,7 +2661,7 @@ namespace pmd2
         }
         catch(const std::exception & )
         {
-            throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error in file " + dir));
+            throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error processing " + entry.path()));
         }
         ++completed;
         return true;
