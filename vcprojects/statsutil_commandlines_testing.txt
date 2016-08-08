@@ -2,14 +2,26 @@
 -e "EoSJapan" "EoSJapanOut" -text
 -e -romroot "EoSRomRoot" "EoSOut" -script
 
+//North American Rom Script Data Test
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" 
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log 
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts
 -scripts -text
 
--e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out" "ExplorersOfSkyJP_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts -text
+//Single Script File Test
+"EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssb" "ExplorersOfSky_Stats"
+"EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssb" "ExplorersOfSky_Stats/test.xml"
+"ExplorersOfSky_Stats/m01a01a.xml" "ExplorersOfSky_Stats/test.ssb"
 
+//Single Script Data File Test
+"EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssa" "ExplorersOfSky_Stats"
+"EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssa" "ExplorersOfSky_Stats/testdata.xml"
+"ExplorersOfSky_Stats/m01a01a.xml" "ExplorersOfSky_Stats/test.ssa"
 
--e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\PMD_EoS_Euro" "ExplorersOfSkyEU_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts -text
--i -romroot "C:\Users\Guill\Desktop\Workdir\eos_euro" "ExplorersOfSkyEU_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts -text
+//Japanese Rom Export Test
+-e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\3656-Pokemon_Fushigi_no_Dungeon-Sora_no_Tankentai(JP)(Caravan).nds_out" "ExplorersOfSkyJP_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts
+
+//European Rom Test
+-e -romroot "C:\Users\Guill\Pokemon\RomHacks\PMDES\OtherPMDGames\PMD_EoS_Euro" "ExplorersOfSkyEU_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts
+-i -romroot "C:\Users\Guill\Desktop\Workdir\eos_euro" "ExplorersOfSkyEU_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts
