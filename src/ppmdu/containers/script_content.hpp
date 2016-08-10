@@ -80,6 +80,7 @@ namespace pmd2
 //==========================================================================================================
 //  Script Instructions
 //==========================================================================================================
+    //! #TODO: Make this a single class, and get rid of inheritance. We could just make a wrapper around the instruction that contains both and instruction and a list of sub instruction, to remedy the problem.
     /***********************************************************************************************
         ScriptInstruction
             Represents a single instruction from a script.
@@ -260,11 +261,11 @@ namespace pmd2
     {
         int16_t livesid = 0;
         int16_t unk1    = 0;
-        int16_t unk2    = 0;
-        int16_t unk3    = 0;
+        int16_t xoff    = 0;
+        int16_t yoff    = 0;
         int16_t unk4    = 0;
         int16_t unk5    = 0;
-        int16_t unk6    = 0;
+        int16_t scrid   = 0;
     };
 
     struct ObjectDataEntry

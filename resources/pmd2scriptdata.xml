@@ -756,6 +756,20 @@
         <Mode>Top_LC_FaceOutw</Mode>
         <Mode>Top_RC_FaceOutw</Mode>
       </FacePositionModes>
+      
+      <!--**********************************************-->
+      <!--Directions-->
+      <!--**********************************************-->
+      <Directions>
+        <Direction _id="1">Down</Direction>
+        <Direction _id="2">DownRight</Direction>
+        <Direction _id="3">Right</Direction>
+        <Direction _id="4">UpRight</Direction>
+        <Direction _id="5">Up</Direction>
+        <Direction _id="6">UpLeft</Direction>
+        <Direction _id="7">Left</Direction>
+        <Direction _id="8">DownLeft</Direction>
+      </Directions>
     
       <!--**********************************************-->
       <!--Common Routine Info(unionall.ssb routine names)-->
@@ -1463,6 +1477,15 @@
         <Routine id="699" unk1="10" name="BUBBLE_TEST"  />
         <Routine id="700" unk1="10" name="MAP_TEST"  />
       </CommonRoutineInfo>
+    
+      <!--**********************************************-->
+      <!--Menu IDs-->
+      <!--**********************************************-->
+      <MenuIds>
+        <!--TODO-->
+        <Menu id="1" name="PlayerNameInputMenu" />
+      </MenuIds>
+    
     </Game>
     
     <!--**********************************************-->

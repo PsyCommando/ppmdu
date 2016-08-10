@@ -188,6 +188,23 @@ namespace pugixmlutils
     }
 
 
+    inline pugi::xml_node AppendCData( pugi::xml_node & parentnode, const std::string & value )
+    {
+        using namespace pugi;
+        xml_node resnode = parentnode.append_child(node_cdata);
+        resnode.set_value(value.c_str());
+        return resnode;
+    }
+
+    inline pugi::xml_node AppendPCData( pugi::xml_node & parentnode, const std::string & value )
+    {
+        using namespace pugi;
+        xml_node resnode = parentnode.append_child(node_pcdata);
+        resnode.set_value(value.c_str());
+        return resnode;
+    }
+
+
     /*
         HandleParsingError
             If there were no errors while parsing does nothing. Otherwise throws an appropriate exception!

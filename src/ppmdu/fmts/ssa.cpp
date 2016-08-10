@@ -102,26 +102,26 @@ namespace filetypes
 
         int16_t livesid;
         int16_t unk1;   //Is a byte
-        int16_t unk2;   //Is a byte
-        int16_t unk3;   //Is a byte
+        int16_t xoff;   //Is a byte
+        int16_t yoff;   //Is a byte
         int16_t unk4;   //Is a byte
         int16_t unk5;   //Is a byte
-        int16_t unk6;
+        int16_t scrid;
         // <- Padding word is here
 
         livesentry()
-            :livesid(0), unk1(0), unk2(0), unk3(0), unk4(0),
-             unk5(0), unk6(0)
+            :livesid(0), unk1(0), xoff(0), yoff(0), unk4(0),
+             unk5(0), scrid(0)
         {}
 
         livesentry(const livesentry & other)
-            :livesid(other.livesid), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6)
+            :livesid(other.livesid), unk1(other.unk1), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+             unk5(other.unk5), scrid(other.scrid)
         {}
 
         livesentry(const pmd2::LivesDataEntry & other)
-            :livesid(other.livesid), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6)
+            :livesid(other.livesid), unk1(other.unk1), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+             unk5(other.unk5), scrid(other.scrid)
         {}
 
         template<class _outit>
@@ -129,11 +129,11 @@ namespace filetypes
         {
             itw = utils::WriteIntToBytes(livesid,   itw);
             itw = utils::WriteIntToBytes(unk1,   itw);
-            itw = utils::WriteIntToBytes(unk2,   itw);
-            itw = utils::WriteIntToBytes(unk3,   itw);
+            itw = utils::WriteIntToBytes(xoff,   itw);
+            itw = utils::WriteIntToBytes(yoff,   itw);
             itw = utils::WriteIntToBytes(unk4,   itw);
             itw = utils::WriteIntToBytes(unk5,   itw);
-            itw = utils::WriteIntToBytes(unk6,   itw);
+            itw = utils::WriteIntToBytes(scrid,   itw);
             //Padding word
             itw = utils::WriteIntToBytes(ScriptDataPaddingWord,   itw);
             return itw;
@@ -145,11 +145,11 @@ namespace filetypes
         {
             itr = utils::ReadIntFromBytes(livesid,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,   itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk5,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk6,   itr, itpend);
+            itr = utils::ReadIntFromBytes(scrid,   itr, itpend);
             //Padding word
             std::advance(itr, sizeof(int16_t));
             return itr;
@@ -160,11 +160,11 @@ namespace filetypes
             pmd2::LivesDataEntry out;
             out.livesid = livesid;
             out.unk1 = unk1;
-            out.unk2 = unk2;
-            out.unk3 = unk3;
+            out.xoff = xoff;
+            out.yoff = yoff;
             out.unk4 = unk4;
             out.unk5 = unk5;
-            out.unk6 = unk6;
+            out.scrid = scrid;
             return std::move(out);
         }
 
@@ -172,11 +172,11 @@ namespace filetypes
         {
             livesid  = other.livesid;
             unk1     = other.unk1;
-            unk2     = other.unk2;
-            unk3     = other.unk3;
+            xoff     = other.xoff;
+            yoff     = other.yoff;
             unk4     = other.unk4;
             unk5     = other.unk5;
-            unk6     = other.unk6;
+            scrid     = other.scrid;
             return *this;
         }
     };

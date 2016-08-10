@@ -82,6 +82,8 @@ namespace pmd2
         const string NODE_Face      = "Face";
         const string NODE_FacePosMo = "FacePositionModes";
         const string NODE_Mode      = "Mode";
+        const string NODE_Directions= "Directions";
+        const string NODE_Direction = "Direction";
         const string NODE_CRoutineI = "CommonRoutineInfo";
         const string NODE_Routine   = "Routine";
         const string NODE_ObjectLst = "ObjectsList";
@@ -464,6 +466,8 @@ namespace pmd2
                         ParseFaceNames(subnode);
                     else if( subnode.name() == NODE_FacePosMo )
                         ParseFaceModeNames(subnode);
+                    else if( subnode.name() == NODE_Directions )
+                        ParseDirectionNames(subnode);
                     else if( subnode.name() == NODE_CRoutineI )
                         ParseCommonRoutines(subnode);
                     else if(subnode.name() == NODE_ObjectLst )
@@ -587,6 +591,15 @@ namespace pmd2
             for( const auto & facem : facemodesn.children(NODE_Mode.c_str()) )
                 facemodes.push_back(make_pair(facem.text().get(), facem.text().get()));
             m_gscriptdata.m_faceposmodes.PushEntriesPairs(facemodes.begin(), facemodes.end());
+        }
+
+        void ParseDirectionNames(const xml_node & directionsn)
+        {
+            using namespace ConfigXML;
+            std::deque<pair<string,string>> directions;
+            for( const auto & dir : directionsn.children(NODE_Direction.c_str()) )
+                directions.push_back(make_pair(dir.text().get(), dir.text().get()));
+            m_gscriptdata.m_directions.PushEntriesPairs(directions.begin(), directions.end());
         }
 
         void ParseCommonRoutines(const xml_node & routinesn)

@@ -21,6 +21,9 @@ using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
 
+#define PMD2XML_STRING_AS_CDATA
+//#define PMD2XML_STRING_AS_PCDATA
+
 namespace pmd2
 {
 
@@ -64,6 +67,7 @@ namespace pmd2
 
 
     //! #TODO: Make a synchronised text output stack !
+
 
 
 //==============================================================================
@@ -174,7 +178,8 @@ namespace pmd2
 
         const string ATTR_XOffset           = "x"s;
         const string ATTR_YOffset           = "y"s;
-        const string ATTR_Direction         = "direction"s;
+        const string ATTR_Direction         = "facing"s;
+        const string ATTR_ScriptID          = "onaction_scriptid"s;
 
         const string ATTR_UnknownPrintf     = "unk_%d"s;
 
@@ -189,6 +194,9 @@ namespace pmd2
         const string ATTR_Unk8  = "unk8"s;
         const string ATTR_Unk9  = "unk9"s;
         const string ATTR_Unk10 = "unk10"s;
+
+        
+
     };
 
 //==============================================================================
@@ -817,6 +825,20 @@ namespace pmd2
                 for( const auto & strs: subn)
                 {
                     xml_attribute xlang = strs.attribute(ATTR_Language.c_str());
+#if defined(PMD2XML_STRING_AS_CDATA) || defined(PMD2XML_STRING_AS_PCDATA)
+                    xml_text cdatatext  = strs.text();
+
+                    if( cdatatext && xlang )
+                    {
+                        eGameLanguages lang = StrToGameLang(xlang.value());
+
+                        if( lang == eGameLanguages::Invalid )
+                        {
+                            throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                        }
+                        m_strqueues[lang].push_back(cdatatext.get());
+                    }
+#else
                     xml_attribute xval  = strs.attribute(ATTR_Value.c_str());
 
                     if( xval && xlang )
@@ -829,6 +851,7 @@ namespace pmd2
                         }
                         m_strqueues[lang].push_back(xval.value());
                     }
+#endif
                 }
 
                 //Add to the list of parameter only once per string, not per language!!!
@@ -950,14 +973,6 @@ namespace pmd2
                 case eOpParamTypes::Unk_LivesRef:
                 {
                     outinst.parameters.push_back(m_paraminf.LivesInfo(param.value()));
-                    //if(livesid != InvalidLivesID )
-                    //    outinst.parameters.push_back(livesid);
-                    //else
-                    //{
-                    //    clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                    //         <<" : used invalid \"lives\" id value as a raw integer.\n"; 
-                    //    outinst.parameters.push_back( ToWord(param.as_int()) );
-                    //}
                     break;
                 }
                 case eOpParamTypes::Unk_PerformerRef:
@@ -1006,6 +1021,11 @@ namespace pmd2
                              <<" : used invalid face position mode value as a raw integer.\n"; 
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
+                    break;
+                }
+                case eOpParamTypes::Direction:
+                {
+                    outinst.parameters.push_back(m_paraminf.Direction(param.value()));
                     break;
                 }
                 case eOpParamTypes::Integer:
@@ -1278,18 +1298,18 @@ namespace pmd2
 
                 for( const auto & attr : actor.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk2 )
-                        entry.unk2 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk3 )
-                        entry.unk3 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_Direction )
+                        entry.unk1 = m_paraminf.DirectionData(attr.value());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk4 )
                         entry.unk4 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk5 )
                         entry.unk5 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk6 )
-                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_ScriptID )
+                        entry.scrid = ToSWord(attr.as_uint());
                 }
                 outlay.lives.push_back(std::move(entry));
             }
@@ -1451,7 +1471,7 @@ namespace pmd2
 
             try
             {
-                HandleParsingError( doc.load_file(file.c_str()), file);
+                HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default), file);
             }
             catch(const std::exception & )
             {
@@ -2091,6 +2111,16 @@ namespace pmd2
                         AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
                         return;
                     }
+                    case eOpParamTypes::Unk_BgmTrack:
+                    {
+                        AppendAttribute( instn, deststr.str(), Convert14bTo16b(pval) );
+                        return;
+                    }
+                    case eOpParamTypes::Direction:
+                    {
+                        AppendAttribute( instn, deststr.str(), m_paraminf.Direction(pval) );
+                        return;
+                    }
                     case eOpParamTypes::UNK_Placeholder:
                     {
                         break; //Just break and handle as nameless parameters
@@ -2137,6 +2167,7 @@ namespace pmd2
                 if( !res.second )
                     cerr << "\nConstant duplicate reference to CID# " <<pval <<", \"" <<m_seq.ConstTbl()[pval] <<"\"!!\n";
                 AppendAttribute( instn, OpParamTypesNames[static_cast<size_t>(eOpParamTypes::Constant)], m_seq.ConstTbl()[pval] );
+
                 return;
             }
             else if( isStringIdInRange(pval - m_seq.ConstTbl().size()) ) //The string ids in the instructions include the length of the const table if there's one!
@@ -2153,7 +2184,13 @@ namespace pmd2
                 {
                     xml_node xlang = AppendChildNode(instn, NODE_String);
                     AppendAttribute( xlang, ATTR_Language, GetGameLangName(lang.first) );
+#ifdef PMD2XML_STRING_AS_CDATA
+                    AppendCData(xlang, lang.second.at(stroffset) );
+#elif defined(PMD2XML_STRING_AS_PCDATA)
+                    AppendPCData(xlang, lang.second.at(stroffset) );
+#else
                     AppendAttribute( xlang, ATTR_Value,    lang.second.at(stroffset) );
+#endif
                     if(!res.second)
                         cerr <<", \"" <<lang.second.at(stroffset) <<"\" ";
                 }
@@ -2373,12 +2410,12 @@ namespace pmd2
                 else
                     AppendAttribute(xactor, IDAttrName, actor.livesid);
 
-                AppendAttribute(xactor, ATTR_Unk1, MakeHexa(actor.unk1,buf.data()) );
-                AppendAttribute(xactor, ATTR_Unk2, MakeHexa(actor.unk2,buf.data()) );
-                AppendAttribute(xactor, ATTR_Unk3, MakeHexa(actor.unk3,buf.data()) );
-                AppendAttribute(xactor, ATTR_Unk4, MakeHexa(actor.unk4,buf.data()) );
-                AppendAttribute(xactor, ATTR_Unk5, MakeHexa(actor.unk5,buf.data()) );
-                AppendAttribute(xactor, ATTR_Unk6, MakeHexa(actor.unk6,buf.data()) );
+                AppendAttribute(xactor, ATTR_Direction, m_paraminf.DirectionData(actor.unk1) );
+                AppendAttribute(xactor, ATTR_XOffset,   actor.xoff );
+                AppendAttribute(xactor, ATTR_YOffset,   actor.yoff );
+                AppendAttribute(xactor, ATTR_Unk4,      MakeHexa(actor.unk4,buf.data()) );
+                AppendAttribute(xactor, ATTR_Unk5,      MakeHexa(actor.unk5,buf.data()) );
+                AppendAttribute(xactor, ATTR_ScriptID,  actor.scrid );
                 ++cntact;
             }
         }
@@ -2523,7 +2560,7 @@ namespace pmd2
             const unsigned int flag = (m_options.bescapepcdata)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
             //Write doc
-            if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag ) )
+            if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag, pugi::encoding_utf8 ) )
                 throw std::runtime_error("GameScriptsXMLWriter::Write(): PugiXML can't write xml file " + sstrfname.str());
         }
 

@@ -988,6 +988,7 @@ namespace pmd2
         CoordinateY,             //A coordinate on Y axis
         InstructionOffset,      //An offset within the list of instructions to a specific instruction.
         Volume,                 //A sound volume
+        //Speed,                  //An arbitrary speed value indicating the rate at which an action is performed
 
         NbTypes,
         Invalid,
@@ -1756,9 +1757,43 @@ namespace pmd2
             return parsedid;
         }
 
+        //DirectionData (For use in script data!)
+        inline const std::string & DirectionData( int16_t dir )const
+        {
+            const std::string * pstr = m_gconf.GetGameScriptData().Directions().FindByIndex((dir - 1)); //Directions go from 1 to 8!
+            if(!pstr)
+                return ScriptNullValName;
+            else
+                return *pstr;
+        }
+
+        inline int16_t DirectionData( const std::string & name )const
+        {
+            int16_t dirid = FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().Directions(), name );
+            if( DoesStringBeginsWithNumber(name) )
+                return dirid;  //Since it got converted literally from a number, we don't add 1 !!
+            else 
+                return dirid + 1;  //Directions go from at 1 to 8!
+        }
+
+        //Direction (For use in script parameters)
+        inline const std::string & Direction( int16_t dir )const
+        {
+            const std::string * pstr = m_gconf.GetGameScriptData().Directions().FindByIndex(dir); //Directions go from 0 to 7!
+            if(!pstr)
+                return ScriptNullValName;
+            else
+                return *pstr;
+        }
+
+        inline int16_t Direction( const std::string & name )const
+        {
+            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().Directions(), name );
+        }
+
     private:
 
-        inline bool DoesStringBeginsWithNumber(const std::string & str)
+        static inline bool DoesStringBeginsWithNumber(const std::string & str)
         {
             return (std::isdigit(str.front(), std::locale::classic() ) || str.front() == '-');
         }

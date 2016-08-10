@@ -632,6 +632,7 @@ namespace pmd2
         inline const commonroutines_t   & CommonRoutineInfo()const  {return m_commonroutines;}
         inline const stringlut_t        & FaceNames()const          {return m_facenames;}
         inline const stringlut_t        & FacePosModes()const       {return m_faceposmodes;}
+        inline const stringlut_t        & Directions()const         {return m_directions;}
         inline const objinf_t           & ObjectsInfo()const        {return m_objectsinfo;}
 
     private:
@@ -642,6 +643,7 @@ namespace pmd2
         commonroutines_t    m_commonroutines;
         stringlut_t         m_facenames;
         stringlut_t         m_faceposmodes;
+        stringlut_t         m_directions;
         objinf_t            m_objectsinfo;
     };
 
