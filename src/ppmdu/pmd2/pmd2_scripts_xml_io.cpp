@@ -21,8 +21,8 @@ using namespace std;
 using namespace pugi;
 using namespace pugixmlutils;
 
-#define PMD2XML_STRING_AS_CDATA
-//#define PMD2XML_STRING_AS_PCDATA
+//#define PMD2XML_STRING_AS_CDATA
+#define PMD2XML_STRING_AS_PCDATA
 
 namespace pmd2
 {
@@ -828,7 +828,7 @@ namespace pmd2
 #if defined(PMD2XML_STRING_AS_CDATA) || defined(PMD2XML_STRING_AS_PCDATA)
                     xml_text cdatatext  = strs.text();
 
-                    if( cdatatext && xlang )
+                    if( /*cdatatext && */xlang )
                     {
                         eGameLanguages lang = StrToGameLang(xlang.value());
 
@@ -1471,7 +1471,7 @@ namespace pmd2
 
             try
             {
-                HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default), file);
+                HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
             }
             catch(const std::exception & )
             {
