@@ -1299,7 +1299,7 @@ namespace pmd2
                 for( const auto & attr : actor.attributes() )
                 {
                     if( attr.name() == ATTR_Direction )
-                        entry.unk1 = m_paraminf.DirectionData(attr.value());
+                        entry.facing = m_paraminf.DirectionData(attr.value());
                     else if( attr.name() == ATTR_XOffset )
                         entry.xoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_YOffset )
@@ -1347,22 +1347,22 @@ namespace pmd2
 
                 for( const auto & attr : object.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_Direction )
+                        entry.facing = m_paraminf.DirectionData(attr.value());
                     else if( attr.name() == ATTR_Unk2 )
                         entry.unk2 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk3 )
                         entry.unk3 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk4 )
-                        entry.unk4 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk5 )
-                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk6 )
                         entry.unk6 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk7 )
                         entry.unk7 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk8 )
-                        entry.unk8 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_ScriptID )
+                        entry.scrid = ToSWord(attr.as_uint());
                 }
                 outlay.objects.push_back(std::move(entry));
             }
@@ -2410,7 +2410,7 @@ namespace pmd2
                 else
                     AppendAttribute(xactor, IDAttrName, actor.livesid);
 
-                AppendAttribute(xactor, ATTR_Direction, m_paraminf.DirectionData(actor.unk1) );
+                AppendAttribute(xactor, ATTR_Direction, m_paraminf.DirectionData(actor.facing) );
                 AppendAttribute(xactor, ATTR_XOffset,   actor.xoff );
                 AppendAttribute(xactor, ATTR_YOffset,   actor.yoff );
                 AppendAttribute(xactor, ATTR_Unk4,      MakeHexa(actor.unk4,buf.data()) );
@@ -2439,14 +2439,14 @@ namespace pmd2
                 xml_node     xobject = AppendChildNode( xobjects, NODE_Object );
 
                 AppendAttribute(xobject, IDAttrName, m_paraminf.ObjectIDToStr(entry.objid) );
-                AppendAttribute(xobject, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
+                AppendAttribute(xobject, ATTR_Direction, m_paraminf.DirectionData(entry.facing) );
                 AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-                AppendAttribute(xobject, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
-                AppendAttribute(xobject, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xobject, ATTR_XOffset, entry.xoff );
+                AppendAttribute(xobject, ATTR_YOffset, entry.yoff );
                 AppendAttribute(xobject, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
                 AppendAttribute(xobject, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
-                AppendAttribute(xobject, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
+                AppendAttribute(xobject, ATTR_ScriptID, entry.scrid );
                 ++cnt;
             }
         }

@@ -1084,7 +1084,8 @@ namespace pmd2
 //==========================================================================================================
 
     const int16_t InvalidLivesID = ScriptNullVal;
-
+    
+    const int16_t ScriptNullDirection  = 0;
 //
 //
 //
@@ -1758,8 +1759,11 @@ namespace pmd2
         }
 
         //DirectionData (For use in script data!)
-        inline const std::string & DirectionData( int16_t dir )const
+        inline std::string DirectionData( int16_t dir )const
         {
+            if( static_cast<uint16_t>(dir) > 8 )
+                return std::to_string(dir); //In this case, put the value as-is
+
             const std::string * pstr = m_gconf.GetGameScriptData().Directions().FindByIndex((dir - 1)); //Directions go from 1 to 8!
             if(!pstr)
                 return ScriptNullValName;
@@ -1770,7 +1774,13 @@ namespace pmd2
         inline int16_t DirectionData( const std::string & name )const
         {
             int16_t dirid = FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().Directions(), name );
-            if( DoesStringBeginsWithNumber(name) )
+
+            //We need to do this, since a direction of 0 is invalid, but since we opted for using indices to represent directions 
+            // internally in the GameScriptData, our internal invalid value of -1 must be converted to the script's invalid direction of 0! We can't do it otherwise, because 0 
+            // is a valid indice in the table of directions, and we couldn't tell if its a valid direction or not afterwards..
+            if(dirid == ScriptNullVal) 
+                return ScriptNullDirection;
+            else if( DoesStringBeginsWithNumber(name) )
                 return dirid;  //Since it got converted literally from a number, we don't add 1 !!
             else 
                 return dirid + 1;  //Directions go from at 1 to 8!

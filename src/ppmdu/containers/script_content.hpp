@@ -260,7 +260,7 @@ namespace pmd2
     struct LivesDataEntry
     {
         int16_t livesid = 0;
-        int16_t unk1    = 0;
+        int16_t facing  = 0;
         int16_t xoff    = 0;
         int16_t yoff    = 0;
         int16_t unk4    = 0;
@@ -270,15 +270,15 @@ namespace pmd2
 
     struct ObjectDataEntry
     {
-        int16_t objid= 0;
-        int16_t unk1 = 0;
-        int16_t unk2 = 0;
-        int16_t unk3 = 0;
-        int16_t unk4 = 0;
-        int16_t unk5 = 0;
-        int16_t unk6 = 0;
-        int16_t unk7 = 0;
-        int16_t unk8 = 0;
+        int16_t objid   = 0;
+        int16_t facing  = 0;
+        int16_t unk2    = 0;
+        int16_t unk3    = 0;
+        int16_t xoff    = 0;
+        int16_t yoff    = 0;
+        int16_t unk6    = 0;
+        int16_t unk7    = 0;
+        int16_t scrid   = 0;
     };
 
     struct PerformerDataEntry

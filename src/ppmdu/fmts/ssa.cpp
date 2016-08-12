@@ -101,7 +101,7 @@ namespace filetypes
         static const size_t LEN = 16; //14 if not counting the last padding word!
 
         int16_t livesid;
-        int16_t unk1;   //Is a byte
+        int16_t facing;   //Is a byte
         int16_t xoff;   //Is a byte
         int16_t yoff;   //Is a byte
         int16_t unk4;   //Is a byte
@@ -110,17 +110,17 @@ namespace filetypes
         // <- Padding word is here
 
         livesentry()
-            :livesid(0), unk1(0), xoff(0), yoff(0), unk4(0),
+            :livesid(0), facing(0), xoff(0), yoff(0), unk4(0),
              unk5(0), scrid(0)
         {}
 
         livesentry(const livesentry & other)
-            :livesid(other.livesid), unk1(other.unk1), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+            :livesid(other.livesid), facing(other.facing), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
              unk5(other.unk5), scrid(other.scrid)
         {}
 
         livesentry(const pmd2::LivesDataEntry & other)
-            :livesid(other.livesid), unk1(other.unk1), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+            :livesid(other.livesid), facing(other.facing), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
              unk5(other.unk5), scrid(other.scrid)
         {}
 
@@ -128,7 +128,7 @@ namespace filetypes
             _outit Write(_outit itw)const
         {
             itw = utils::WriteIntToBytes(livesid,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
+            itw = utils::WriteIntToBytes(facing,   itw);
             itw = utils::WriteIntToBytes(xoff,   itw);
             itw = utils::WriteIntToBytes(yoff,   itw);
             itw = utils::WriteIntToBytes(unk4,   itw);
@@ -144,7 +144,7 @@ namespace filetypes
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
             itr = utils::ReadIntFromBytes(livesid,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
+            itr = utils::ReadIntFromBytes(facing,   itr, itpend);
             itr = utils::ReadIntFromBytes(xoff,   itr, itpend);
             itr = utils::ReadIntFromBytes(yoff,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
@@ -159,7 +159,7 @@ namespace filetypes
         {
             pmd2::LivesDataEntry out;
             out.livesid = livesid;
-            out.unk1 = unk1;
+            out.facing = facing;
             out.xoff = xoff;
             out.yoff = yoff;
             out.unk4 = unk4;
@@ -171,7 +171,7 @@ namespace filetypes
         livesentry & operator=(const pmd2::LivesDataEntry & other)
         {
             livesid  = other.livesid;
-            unk1     = other.unk1;
+            facing     = other.facing;
             xoff     = other.xoff;
             yoff     = other.yoff;
             unk4     = other.unk4;
@@ -191,43 +191,43 @@ namespace filetypes
         static const size_t LEN = 20; //18 if not counting the last padding word!
 
         int16_t objid;
-        int16_t unk1;   
+        int16_t facing;   
         int16_t unk2;   
         int16_t unk3;  
-        int16_t unk4;  
-        int16_t unk5;  
+        int16_t xoff;  
+        int16_t yoff;  
         int16_t unk6;
         int16_t unk7;
-        int16_t unk8;
+        int16_t scrid;
         // <- Padding word is here
 
         objectentry()
-            :objid(0), unk1(0), unk2(0), unk3(0), unk4(0),
-             unk5(0), unk6(0), unk7(0), unk8(0)
+            :objid(0), facing(0), unk2(0), unk3(0), xoff(0),
+             yoff(0), unk6(0), unk7(0), scrid(0)
         {}
 
         objectentry(const objectentry & other)
-            :objid(other.objid), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6), unk7(other.unk7), unk8(other.unk8)
+            :objid(other.objid), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+             yoff(other.yoff), unk6(other.unk6), unk7(other.unk7), scrid(other.scrid)
         {}
 
         objectentry(const pmd2::ObjectDataEntry & other)
-            :objid(other.objid), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6), unk7(other.unk7), unk8(other.unk8)
+            :objid(other.objid), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+             yoff(other.yoff), unk6(other.unk6), unk7(other.unk7), scrid(other.scrid)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
             itw = utils::WriteIntToBytes(objid,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
+            itw = utils::WriteIntToBytes(facing,   itw);
             itw = utils::WriteIntToBytes(unk2,   itw);
             itw = utils::WriteIntToBytes(unk3,   itw);
-            itw = utils::WriteIntToBytes(unk4,   itw);
-            itw = utils::WriteIntToBytes(unk5,   itw);
+            itw = utils::WriteIntToBytes(xoff,   itw);
+            itw = utils::WriteIntToBytes(yoff,   itw);
             itw = utils::WriteIntToBytes(unk6,   itw);
             itw = utils::WriteIntToBytes(unk7,   itw);
-            itw = utils::WriteIntToBytes(unk8,   itw);
+            itw = utils::WriteIntToBytes(scrid,   itw);
             //Padding word
             itw = utils::WriteIntToBytes(ScriptDataPaddingWord,   itw);
             return itw;
@@ -238,14 +238,14 @@ namespace filetypes
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
             itr = utils::ReadIntFromBytes(objid,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
+            itr = utils::ReadIntFromBytes(facing,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk5,   itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,   itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk6,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk7,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk8,   itr, itpend);
+            itr = utils::ReadIntFromBytes(scrid,   itr, itpend);
             //Padding word
             std::advance(itr, sizeof(int16_t));
             return itr;
@@ -255,28 +255,28 @@ namespace filetypes
         {
             pmd2::ObjectDataEntry out;
             out.objid = objid;
-            out.unk1 = unk1;
+            out.facing = facing;
             out.unk2 = unk2;
             out.unk3 = unk3;
-            out.unk4 = unk4;
-            out.unk5 = unk5;
+            out.xoff = xoff;
+            out.yoff = yoff;
             out.unk6 = unk6;
             out.unk7 = unk7;
-            out.unk8 = unk8;
+            out.scrid = scrid;
             return std::move(out);
         }
 
         objectentry & operator=(const pmd2::ObjectDataEntry & other)
         {
             objid   = other.objid;
-            unk1    = other.unk1;
+            facing    = other.facing;
             unk2    = other.unk2;
             unk3    = other.unk3;
-            unk4    = other.unk4;
-            unk5    = other.unk5;
+            xoff    = other.xoff;
+            yoff    = other.yoff;
             unk6    = other.unk6;
             unk7    = other.unk7;
-            unk8    = other.unk8;
+            scrid    = other.scrid;
             return *this;
         }
     };
