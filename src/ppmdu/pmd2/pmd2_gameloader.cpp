@@ -1,5 +1,6 @@
 #include "pmd2_gameloader.hpp"
 #include <utils/utility.hpp>
+#include <utils/library_wide.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <fstream>
 using namespace std;
@@ -105,10 +106,20 @@ namespace pmd2
             if( result.first != eGameVersion::Invalid && result.second != eGameRegion::Invalid )
             {
                 MainPMD2ConfigWrapper::Instance().InitConfig(result.first, result.second, m_configfile);
-                //m_conf.reset( new ConfigLoader(result.first, result.second, m_configfile) );
             }
             else
                 throw std::runtime_error("GameDataLoader::AnalyseGame(): Couldn't determine the version of the pmd2 ROM data!");
+        }
+
+        //Compatibility check
+        if( !MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().issupported )
+        {
+            stringstream ssunsup;
+            ssunsup << "<!>- WARNING: " << MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().id <<" is not flagged as a supported version of the game!\n";
+            const string strunsup = ssunsup.str();
+            cout << strunsup;
+            if(utils::LibWide().isLogOn())
+                clog << strunsup;
         }
     }
 

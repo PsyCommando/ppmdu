@@ -308,8 +308,8 @@ namespace pmd2
 
     struct PosMarkDataEntry
     {
-        int16_t unk0 = 0;
-        int16_t unk1 = 0;   
+        int16_t xoff = 0;
+        int16_t yoff = 0;   
         int16_t unk2 = 0;   
         int16_t unk3 = 0;  
         int16_t unk4 = 0;  
@@ -320,10 +320,10 @@ namespace pmd2
 
     struct UnkTbl1DataEntry
     {
-        int16_t unk0 = 0;
+        int16_t croutineid = 0;
         int16_t unk1 = 0;   
         int16_t unk2 = 0;   
-        int16_t unk3 = 0;  
+        int16_t scrid = 0;  
     };
 
     struct ScriptLayer

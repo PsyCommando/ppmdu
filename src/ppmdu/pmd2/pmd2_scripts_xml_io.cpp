@@ -153,7 +153,7 @@ namespace pmd2
 
         const string NODE_Layers            = "Layers"s;
         const string NODE_Layer             = "Layer"s;
-        const string ATTR_DummyID           = "dummy_id"s;
+        const string ATTR_DummyID           = "_id"s;
 
         const string NODE_Actors            = "Actors"s;
         const string NODE_Actor             = "Actor"s;
@@ -179,7 +179,7 @@ namespace pmd2
         const string ATTR_XOffset           = "x"s;
         const string ATTR_YOffset           = "y"s;
         const string ATTR_Direction         = "facing"s;
-        const string ATTR_ScriptID          = "onaction_scriptid"s;
+        const string ATTR_ScriptID          = "act_scriptid"s;
 
         const string ATTR_UnknownPrintf     = "unk_%d"s;
 
@@ -1028,6 +1028,11 @@ namespace pmd2
                     outinst.parameters.push_back(m_paraminf.Direction(param.value()));
                     break;
                 }
+                case eOpParamTypes::ItemID:
+                {
+                    outinst.parameters.push_back(m_paraminf.Item(param.value()));
+                    return;
+                }
                 case eOpParamTypes::Integer:
                 case eOpParamTypes::Duration:
                 case eOpParamTypes::CoordinateY:
@@ -1197,22 +1202,40 @@ namespace pmd2
         void ParseUnkTable1(xml_node & datan)
         {
             using namespace scriptXML;
-            xml_node unktbl1 = datan.child(NODE_UnkTable1.c_str());
+            const string & AttrID  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
+            xml_node       unktbl1 = datan.child(NODE_UnkTable1.c_str());
 
             for(const auto & curunk1entry : unktbl1.children(NODE_UnkTable1Entry.c_str()) )
             {
                 UnkTbl1DataEntry entry;
-                xml_attribute xunk0 = curunk1entry.attribute(ATTR_Unk0.c_str());
-                xml_attribute xunk1 = curunk1entry.attribute(ATTR_Unk1.c_str());
-                xml_attribute xunk2 = curunk1entry.attribute(ATTR_Unk2.c_str());
-                xml_attribute xunk3 = curunk1entry.attribute(ATTR_Unk3.c_str());
-
-                if(xunk0 && xunk1 && xunk2 && xunk3)
+                xml_attribute  xcrtnid = curunk1entry.attribute(AttrID.c_str());
+                if(!xcrtnid)
                 {
-                    entry.unk0 = ToWord(xunk0.as_uint());
-                    entry.unk1 = ToWord(xunk1.as_uint());
-                    entry.unk2 = ToWord(xunk2.as_uint());
-                    entry.unk3 = ToWord(xunk3.as_uint());
+                    stringstream sstrer;
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseUnkTable1(): Missing " <<AttrID <<" attribute!!";
+                    throw std::runtime_error(sstrer.str());
+                }
+
+                entry.croutineid = m_paraminf.CRoutine(xcrtnid.value());
+                if(entry.croutineid == InvalidCRoutineID)
+                {
+                    cerr << "SSDataXMLParser::ParseUnkTable1(), offset: " <<curunk1entry.offset_debug() <<": Got common routine id " 
+                         <<entry.croutineid <<"! Interpreting as number instead!\n";
+                    entry.croutineid = ToSWord(xcrtnid.as_int());
+                }
+
+                //UnkTbl1DataEntry entry;
+               // xml_attribute xcrtnid = curunk1entry.attribute(ATTR_.c_str());
+                xml_attribute xunk1   = curunk1entry.attribute(ATTR_Unk1.c_str());
+                xml_attribute xunk2   = curunk1entry.attribute(ATTR_Unk2.c_str());
+                xml_attribute xscrid  = curunk1entry.attribute(ATTR_ScriptID.c_str());
+
+                if(xcrtnid && xunk1 && xunk2 && xscrid)
+                {
+                    //entry.croutineid    = ToWord(xcrtnid.as_uint());
+                    entry.unk1          = ToWord(xunk1.as_uint());
+                    entry.unk2          = ToWord(xunk2.as_uint());
+                    entry.scrid         = ToWord(xscrid.as_uint());
                     m_out.UnkTbl1().push_back(std::move(entry));
                 }
                 else
@@ -1235,10 +1258,10 @@ namespace pmd2
 
                 for( const auto & attr : marker.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk0 )
-                        entry.unk0 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk2 )
                         entry.unk2 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk3 )
@@ -2121,6 +2144,11 @@ namespace pmd2
                         AppendAttribute( instn, deststr.str(), m_paraminf.Direction(pval) );
                         return;
                     }
+                    case eOpParamTypes::ItemID:
+                    {
+                        AppendAttribute( instn, deststr.str(), m_paraminf.Item(pval) );
+                        return;
+                    }
                     case eOpParamTypes::UNK_Placeholder:
                     {
                         break; //Just break and handle as nameless parameters
@@ -2326,6 +2354,7 @@ namespace pmd2
             if(m_data.UnkTbl1().empty())
                 return;
             xml_node       xunktbl1 = AppendChildNode(parentn, NODE_UnkTable1);
+            const string   IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
             array<char,32> buf{0};
 
             size_t cnt = 0;
@@ -2333,10 +2362,16 @@ namespace pmd2
             {
                 WriteCommentNode( xunktbl1, to_string(cnt) );
                 xml_node xentry = AppendChildNode(xunktbl1, NODE_UnkTable1Entry);
-                AppendAttribute(xentry, ATTR_Unk0, MakeHexa(unk1ent.unk0, buf.data()) );
-                AppendAttribute(xentry, ATTR_Unk1, MakeHexa(unk1ent.unk1, buf.data()) );
-                AppendAttribute(xentry, ATTR_Unk2, MakeHexa(unk1ent.unk2, buf.data()) );
-                AppendAttribute(xentry, ATTR_Unk3, MakeHexa(unk1ent.unk3, buf.data()) );
+                const auto * inf = m_paraminf.CRoutine(unk1ent.croutineid);
+
+                if(inf)
+                    AppendAttribute(xentry, IDAttrName, inf->name);
+                else
+                    AppendAttribute(xentry, IDAttrName, unk1ent.croutineid);
+
+                AppendAttribute(xentry, ATTR_Unk1,      MakeHexa(unk1ent.unk1, buf.data()) );
+                AppendAttribute(xentry, ATTR_Unk2,      MakeHexa(unk1ent.unk2, buf.data()) );
+                AppendAttribute(xentry, ATTR_ScriptID,  unk1ent.scrid );
                 ++cnt;
             }
         }
@@ -2354,8 +2389,8 @@ namespace pmd2
             {
                 WriteCommentNode( xposmark, to_string(cnt) );
                 xml_node xentry = AppendChildNode(xposmark, NODE_Marker);
-                AppendAttribute(xentry, ATTR_Unk0, MakeHexa(marker.unk0, buf.data()) );
-                AppendAttribute(xentry, ATTR_Unk1, MakeHexa(marker.unk1, buf.data()) );
+                AppendAttribute(xentry, ATTR_XOffset, marker.xoff );
+                AppendAttribute(xentry, ATTR_YOffset, marker.yoff );
                 AppendAttribute(xentry, ATTR_Unk2, MakeHexa(marker.unk2, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk3, MakeHexa(marker.unk3, buf.data()) );
                 AppendAttribute(xentry, ATTR_Unk4, MakeHexa(marker.unk4, buf.data()) );
@@ -2574,6 +2609,10 @@ namespace pmd2
             sstr <<std::right <<std::setw(10) <<setfill(' ') <<set.Identifier() <<" Set";
             WriteCommentNode(parentn, sstr.str() );
             WriteCommentNode(parentn, "##########################################" );
+            sstr.str(string());
+            sstr.clear();
+            sstr << "Has " <<((set.Data() != nullptr)? "1 data file, and ": "") <<set.Sequences().size() <<" associated script(s)";
+            WriteCommentNode(parentn, sstr.str() );
             xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
 
             AppendAttribute( xgroup, ATTR_GrpName, set.Identifier() );

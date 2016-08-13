@@ -475,7 +475,7 @@ namespace filetypes
 
     /*
         unkentry
-            
+            UNk3 entry at the end of the file right before the layer table.
     */
     struct unkentry
     {
@@ -548,8 +548,8 @@ namespace filetypes
     {
         static const size_t LEN = 16; 
 
-        int16_t unk0;
-        int16_t unk1;   
+        int16_t xoff;
+        int16_t yoff;   
         int16_t unk2;   
         int16_t unk3;  
         int16_t unk4;  
@@ -558,25 +558,25 @@ namespace filetypes
         int16_t unk7;
 
         posmarkentry()
-            :unk0(0), unk1(0), unk2(0), unk3(0), unk4(0),
+            :xoff(0), yoff(0), unk2(0), unk3(0), unk4(0),
              unk5(0), unk6(0), unk7(0)
         {}
 
         posmarkentry(const posmarkentry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
+            :xoff(other.xoff), yoff(other.yoff), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
              unk5(other.unk5), unk6(other.unk6), unk7(other.unk7)
         {}
 
         posmarkentry(const pmd2::PosMarkDataEntry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
+            :xoff(other.xoff), yoff(other.yoff), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
              unk5(other.unk5), unk6(other.unk6), unk7(other.unk7)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
-            itw = utils::WriteIntToBytes(unk0,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
+            itw = utils::WriteIntToBytes(xoff,   itw);
+            itw = utils::WriteIntToBytes(yoff,   itw);
             itw = utils::WriteIntToBytes(unk2,   itw);
             itw = utils::WriteIntToBytes(unk3,   itw);
             itw = utils::WriteIntToBytes(unk4,   itw);
@@ -590,8 +590,8 @@ namespace filetypes
         template<class _fwdinit>
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
-            itr = utils::ReadIntFromBytes(unk0,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,   itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
             itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
@@ -604,8 +604,8 @@ namespace filetypes
         operator pmd2::PosMarkDataEntry()
         {
             pmd2::PosMarkDataEntry out;
-            out.unk0 = unk0;
-            out.unk1 = unk1;
+            out.xoff = xoff;
+            out.yoff = yoff;
             out.unk2 = unk2;
             out.unk3 = unk3;
             out.unk4 = unk4;
@@ -617,8 +617,8 @@ namespace filetypes
 
         posmarkentry & operator=(const pmd2::PosMarkDataEntry & other)
         {
-            unk0    = other.unk0;
-            unk1    = other.unk1;
+            xoff    = other.xoff;
+            yoff    = other.yoff;
             unk2    = other.unk2;
             unk3    = other.unk3;
             unk4    = other.unk4;
@@ -635,30 +635,30 @@ namespace filetypes
     struct unktbl1entry
     {
         static const size_t LEN = 8; 
-        int16_t unk0;
+        int16_t croutineid;
         int16_t unk1;   
         int16_t unk2;   
-        int16_t unk3; 
+        int16_t scrid; 
 
         unktbl1entry()
-            :unk0(0), unk1(0), unk2(0), unk3(0)
+            :croutineid(0), unk1(0), unk2(0), scrid(0)
         {}
 
         unktbl1entry(const unktbl1entry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3)
+            :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
         unktbl1entry(const pmd2::UnkTbl1DataEntry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3)
+            :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
-            itw = utils::WriteIntToBytes(unk0,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
-            itw = utils::WriteIntToBytes(unk2,   itw);
-            itw = utils::WriteIntToBytes(unk3,   itw);
+            itw = utils::WriteIntToBytes(croutineid,    itw);
+            itw = utils::WriteIntToBytes(unk1,          itw);
+            itw = utils::WriteIntToBytes(unk2,          itw);
+            itw = utils::WriteIntToBytes(scrid,         itw);
             return itw;
         }
 
@@ -666,29 +666,29 @@ namespace filetypes
         template<class _fwdinit>
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
-            itr = utils::ReadIntFromBytes(unk0,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
+            itr = utils::ReadIntFromBytes(croutineid,   itr, itpend);
+            itr = utils::ReadIntFromBytes(unk1,         itr, itpend);
+            itr = utils::ReadIntFromBytes(unk2,         itr, itpend);
+            itr = utils::ReadIntFromBytes(scrid,        itr, itpend);
             return itr;
         }
 
         operator pmd2::UnkTbl1DataEntry()
         {
             pmd2::UnkTbl1DataEntry out;
-            out.unk0 = unk0;
-            out.unk1 = unk1;
-            out.unk2 = unk2;
-            out.unk3 = unk3;
+            out.croutineid  = croutineid;
+            out.unk1        = unk1;
+            out.unk2        = unk2;
+            out.scrid       = scrid;
             return std::move(out);
         }
 
         unktbl1entry & operator=(const pmd2::UnkTbl1DataEntry & other)
         {
-            unk0    = other.unk0;
-            unk1    = other.unk1;
-            unk2    = other.unk2;
-            unk3    = other.unk3;
+            croutineid  = other.croutineid;
+            unk1        = other.unk1;
+            unk2        = other.unk2;
+            scrid       = other.scrid;
             return *this;
         }
     };

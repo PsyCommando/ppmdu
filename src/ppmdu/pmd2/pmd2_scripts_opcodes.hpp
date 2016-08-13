@@ -977,6 +977,8 @@ namespace pmd2
         MenuID,                 //ID of a menu in the game data
         ActingLayerID,          //ID of a layer within an ssa file being run.
 
+        ItemID,                 //ID of an item in-game
+
         //
         Unk_MvSlSpecInt,        //First parameter of the MovePositionOffset, MovePositionMark, SlidePositionMark, Slide2PositionMark, camera_Move2Default
                                 //Third parameter of camera_SetEffect
@@ -1005,7 +1007,7 @@ namespace pmd2
         "strref",
 
         "actorid",          
-        "Unk_PerformerRef",      
+        "performerid",      
         "objectid",         
         "svar",    
         "scenario", 
@@ -1020,6 +1022,8 @@ namespace pmd2
         "stationid",
         "menuid",
         "layerid",
+
+        "itemid",
 
         "Unk_EncInt",
 
@@ -1799,6 +1803,20 @@ namespace pmd2
         inline int16_t Direction( const std::string & name )const
         {
             return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().Directions(), name );
+        }
+
+        //Item IDs
+        inline std::string Item( int16_t itemid )const
+        {
+            return std::to_string(itemid);
+        }
+
+        inline int16_t Item( const std::string & name )const
+        {
+            if(DoesStringBeginsWithNumber(name))
+                return utils::parseHexaValToValue<int16_t>(name);
+            else
+                throw std::runtime_error("ParameterReferences::Item(): Item id " + name + " is invalid!");
         }
 
     private:

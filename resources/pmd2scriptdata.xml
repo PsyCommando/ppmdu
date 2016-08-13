@@ -1483,9 +1483,73 @@
       <!--**********************************************-->
       <MenuIds>
         <!--TODO-->
-        <Menu id="1" name="PlayerNameInputMenu" />
+        <Menu id="1" name="PlayerName" />
+        
+        <Menu id="4" name="TeamName" />
+        
+        <Menu id="11" name="SaveMenu" />
+        <Menu id="12" name="KangaskhanStorage" />
+        <Menu id="13" name="Storage" />
+        
+        <Menu id="15" name="DuskullBank" />
+        <Menu id="16" name="TeamAssembly" />
+        
+        <Menu id="18" name="KecleonShop" />
+        <Menu id="19" name="KecleonWares" />
+      
+        <Menu id="23" name="SwapShop" />
+        <Menu id="24" name="SwapShop2" />
+        
+        <Menu id="27" name="DayCare" />
+        
+        <Menu id="29" name="JuiceBar" />
+        <Menu id="30" name="JuiceBarPickItem" />
+        
+        <Menu id="31" name="RecycleShop" />
+        
+        <Menu id="33" name="Lottery" />
+        
+        <Menu id="35" name="SOSMailPicker" />
+        
+        <Menu id="39" name="JobBoard" />
+        <Menu id="40" name="OutlawBoard" />
+        
+        <Menu id="43" name="JobRewardText" />
+        
+        <Menu id="48" name="PersonalityTest" />
+        
+        <Menu id="54" name="DungeonResult?" />
+        
+        <Menu id="60" name="GuildMiniGameScoreboard" />
+        
+        <Menu id="67" name="DiaryBidoof" />
+        <Menu id="68" name="DiarySunflora" />
+        <Menu id="69" name="GuildFAQBoard" />
+        <Menu id="70" name="DiaryBidoofSpEP" />
+        
+        <!--<Menu id="" name="" />-->
       </MenuIds>
+      
+      <!--**********************************************-->
+      <!--Process Special IDs-->
+      <!--**********************************************-->
+      <ProcessSpecialIDs>
+        <!--TODO-->
+        <Special id="25" name="JumpToTitleScreen" />
+        
+        <Special id="37" name="AddTableItemToBag" />
+        <Special id="39" name="AddTableItemToStorage" />
+        
+        <Special id="56" name="IsBagFull" />
+      </ProcessSpecialIDs>
     
+      <!--**********************************************-->
+      <!--Sprite Effect IDs-->
+      <!--**********************************************-->
+      <SpriteEffectIDs>
+        <!--TODO-->
+        <Efect id="92" name="SweatDrop" />
+      </SpriteEffectIDs>
     </Game>
     
     <!--**********************************************-->
