@@ -109,6 +109,9 @@ namespace utils
     //Prefix <!>- to text and log into clog, only if log enabled.
     void LogError   ( const std::string & text );
 
+    //Prefix <!>- to text and log into clog, only if log enabled.
+    void LogWarning ( const std::string & text );
+
     //Prefix <*>- to text and log into clog, only if log enabled.
     void LogMessage ( const std::string & text );
 

@@ -172,7 +172,6 @@ namespace pmd2
         typedef std::vector<DungeonFloor>      floors_t;
         typedef std::deque<PokemonSpawnList>   pkmnspwnlst_t;
         typedef std::deque<ItemSpawnList>      itemspwnlst_t;
-        //typedef std::deque<>;
         typedef floors_t::iterator             iterator;
         typedef floors_t::const_iterator       const_iterator;
 

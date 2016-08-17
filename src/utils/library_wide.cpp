@@ -70,6 +70,12 @@ namespace utils
             clog << "<!>- " <<text;
     }
 
+    void LogWarning ( const std::string & text )
+    {
+        if( LibWide().isLogOn() )
+            clog << "<!>- " <<text;
+    }
+
     void LogMessage( const std::string & text )
     {
         if( LibWide().isLogOn() )

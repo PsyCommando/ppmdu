@@ -3,7 +3,7 @@
 #include <utils/utility.hpp>
 using namespace std;
 using namespace pmd2;
-#pragma optimize( "", off )
+//#pragma optimize( "", off )
 namespace filetypes
 {
 //==========================================================================================
@@ -284,33 +284,7 @@ namespace filetypes
         void FillTables()
         {
             //Fill dungeon table
-            //{
-                ParseLUTAndData( m_subhdr.ptrDungeonLUT, m_subhdr.ptrFloorDataBlock, m_dungeonstbl, m_itbegin );
-
-            //    const size_t nbdungeonptrs = (m_subhdr.ptrFloorDataBlock - m_subhdr.ptrDungeonLUT) / sizeof(uint32_t);
-            //    auto         itDungLutBeg  = m_itbegin;
-            //    std::advance( itDungLutBeg, m_subhdr.ptrDungeonLUT );
-            //    m_itcur = itDungLutBeg;
-
-            //    for( size_t cntdun = 0; cntdun < nbdungeonptrs; ++cntdun )
-            //    {
-            //        uint32_t offsetentry = 0;
-            //        m_itcur = utils::ReadIntFromBytes( offsetentry, m_itcur );
-            //        raw_dungeon_entry dung;
-            //        if( offsetentry != 0 )
-            //        {
-            //            auto itdunentry = m_itbegin;
-            //            std::advance( itdunentry, offsetentry );
-            //            itdunentry = dung.ReadFromContainer( itdunentry, itDungLutBeg );
-            //        }
-            //        else
-            //        {
-            //            //IDK what we should do here tbh..
-            //            clog << "Got null pointer in dungeon LUT!\n";
-            //        }
-            //        m_dungeonstbl.push_back( std::move(dung) );
-            //    }
-            //}
+            ParseLUTAndData( m_subhdr.ptrDungeonLUT, m_subhdr.ptrFloorDataBlock, m_dungeonstbl, m_itbegin );
 
             //Fill item spawn lists table
             uint32_t begitem  = ParseLUTAndData( m_subhdr.ptrItemSpawnListLUT, m_sir0hdr.subheaderptr, m_itemspwnlststbl, m_itbegin );
@@ -396,4 +370,4 @@ namespace filetypes
 
 
 };
-#pragma optimize( "", on )
+//#pragma optimize( "", on )

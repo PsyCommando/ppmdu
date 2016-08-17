@@ -4,7 +4,7 @@
 whereami_wrapper.hpp
 psycommando@gmail.com
 28/07/2016
-Description: A simple layer in-between the c functions of who am i and std lib strings.
+Description: A simple layer in-between the c functions of whereami and std lib strings.
 */
 #include <string>
 
