@@ -198,7 +198,7 @@ namespace pmd2
         bool     isalias;       //Whether this group refers to the same instructions as the previous one.
         cnt_t    instructions;
         uint16_t type;
-        uint16_t unk2;
+        uint16_t parameter;
     };
 
 //==========================================================================================================

@@ -25,14 +25,14 @@ namespace filetypes
         static const size_t LEN = 3 * sizeof(uint16_t);
         uint16_t begoffset = 0;
         uint16_t type      = 0;
-        uint16_t unk2      = 0;
+        uint16_t parameter = 0;
 
         template<class _outit>
             _outit Write(_outit itwriteto)const
         {
             itwriteto = utils::WriteIntToBytes(begoffset,  itwriteto);
             itwriteto = utils::WriteIntToBytes(type,       itwriteto);
-            itwriteto = utils::WriteIntToBytes(unk2,       itwriteto);
+            itwriteto = utils::WriteIntToBytes(parameter,  itwriteto);
             return itwriteto;
         }
 
@@ -42,7 +42,7 @@ namespace filetypes
         {
             itReadfrom = utils::ReadIntFromBytes(begoffset, itReadfrom, itpastend );
             itReadfrom = utils::ReadIntFromBytes(type,      itReadfrom, itpastend );
-            itReadfrom = utils::ReadIntFromBytes(unk2,      itReadfrom, itpastend );
+            itReadfrom = utils::ReadIntFromBytes(parameter, itReadfrom, itpastend );
             return itReadfrom;
         }
     };
@@ -318,8 +318,8 @@ namespace filetypes
             {
                 const auto & crtn = m_routines[cntrtn];
                 ScriptRoutine destrtn;
-                destrtn.type = crtn.type;
-                destrtn.unk2 = crtn.unk2;
+                destrtn.type      = crtn.type;
+                destrtn.parameter = crtn.parameter;
 
                 //If the current routine has the same offset as the last, consider it an alias.
                 if(lastrtnbeg == crtn.begoffset )
@@ -872,6 +872,8 @@ namespace filetypes
 
             if( codeinfo.NbParams() != 0 && itcur == itendseq )
             {
+                //This is a hack for the japanese version of the game, where some debug instructions are inexplicably left laying around incomplete.
+                // Possibly since they're just ignored by the game in retail build?
                 if( codeinfo.IsDebugInstruction() )
                 {
                     //Drop the instruction
@@ -1034,7 +1036,7 @@ namespace filetypes
         {
             routine_entry curgrp;
             curgrp.type      = rtn.type;
-            curgrp.unk2      = rtn.unk2;
+            curgrp.parameter = rtn.parameter;
 
             if( rtn.IsAliasOfPrevGroup() )
                 curgrp.begoffset = lastrtnbeg;

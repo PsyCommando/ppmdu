@@ -167,10 +167,10 @@ namespace pmd2
         const string NODE_Events            = "Events"s;
         const string NODE_Event             = "Event"s;
 
-        const string NODE_UnkTable3         = "UnkTable3"s;
-        const string NODE_UnkTable3Entry    = "Entry"s;
+        //const string NODE_UnkTable3         = "UnkTable3"s;
+        //const string NODE_UnkTable3Entry    = "Entry"s;
 
-        const string NODE_UnkTable1         = "UnkTable1"s;
+        const string NODE_UnkTable1         = "TriggersTable"s;
         const string NODE_UnkTable1Entry    = "Entry"s;
 
         const string NODE_PositionMarkers   = "PositionMarkers"s;
@@ -331,7 +331,7 @@ namespace pmd2
             else if(!RoutineHasParameter(routinety))
             {
                 //We don't have a parameter value, standard functions never usually have a parameter, so default it to 0.
-                grpout.unk2 = 0;
+                grpout.parameter = 0;
                 return;
             }
             
@@ -342,26 +342,26 @@ namespace pmd2
                 {
                     uint16_t livesid = m_paraminf.LivesInfo(attr.value());
                     if(livesid != InvalidLivesID )
-                        grpout.unk2 = livesid;
+                        grpout.parameter = livesid;
                     else
                     {
                         clog <<routinen.path() <<", " <<routinen.offset_debug() 
                                 <<" : used invalid \"lives\" id value as a raw integer.\n"; 
-                        grpout.unk2 = ToWord(attr.as_int());
+                        grpout.parameter = ToWord(attr.as_int());
                     }
                     break;
                 }
                 case eOpParamTypes::Unk_PerformerRef:
                 {
                     //!#TODO
-                    grpout.unk2 = ToWord(attr.as_uint());
+                    grpout.parameter = ToWord(attr.as_uint());
                     break;
                 }
                 case eOpParamTypes::Unk_ObjectRef:
                 {
                     try
                     {
-                        grpout.unk2 = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
+                        grpout.parameter = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
                     }
                     catch( const std::exception & )
                     {
@@ -375,7 +375,7 @@ namespace pmd2
                 }
                 case eOpParamTypes::UNK_Placeholder:
                 {
-                    grpout.unk2 = ToWord(attr.as_uint());
+                    grpout.parameter = ToWord(attr.as_uint());
                     break;
                 }
             };
@@ -1754,7 +1754,7 @@ namespace pmd2
             //    AppendAttribute( xroutine, ATTR_RoutineType, routinetype );
             
             //If we don't have a paramter normally, and the parameter is 0, just skip over this and return!
-            if( !RoutineHasParameter(cur.type) && cur.unk2 == 0 )
+            if( !RoutineHasParameter(cur.type) && cur.parameter == 0 )
                 return xroutine;
             
             eOpParamTypes  rparamty  = RoutineParameterType(cur.type);
@@ -1766,27 +1766,27 @@ namespace pmd2
                 {
                     case eOpParamTypes::Unk_LivesRef:
                     {
-                        const livesent_info * pinf = m_paraminf.LivesInfo(cur.unk2);
+                        const livesent_info * pinf = m_paraminf.LivesInfo(cur.parameter);
                         if(pinf)
                             AppendAttribute( xroutine, *paramname, pinf->name );
                         else
-                            AppendAttribute( xroutine, *paramname, cur.unk2 );
+                            AppendAttribute( xroutine, *paramname, cur.parameter );
                         break;
                     }
                     case eOpParamTypes::Unk_ObjectRef:
                     {
-                        AppendAttribute(xroutine, *paramname, m_paraminf.ObjectIDToStr(cur.unk2) );
+                        AppendAttribute(xroutine, *paramname, m_paraminf.ObjectIDToStr(cur.parameter) );
                         break;
                     }
                     case eOpParamTypes::Unk_PerformerRef:
                     default:
                     { 
-                        AppendAttribute( xroutine, *paramname, cur.unk2 );
+                        AppendAttribute( xroutine, *paramname, cur.parameter );
                     }
                 };
             }
             else
-                AppendAttribute( xroutine, ATTR_RoutineParam2, cur.unk2 );
+                AppendAttribute( xroutine, ATTR_RoutineParam2, cur.parameter );
 
             return xroutine;
         }

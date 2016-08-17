@@ -522,13 +522,16 @@ namespace utils
         AppendPaddingBytes
             This function takes a back insert iterator and the length of the container to append padding
             to, along with the length to align on to determine how much padding is needed.
+
+            Return the nb of padding bytes that were inserted!
     *********************************************************************************************/
     template<class _backinit>
-        void AppendPaddingBytes( _backinit itinsertat, size_t lentoalign, size_t alignon, const uint8_t PadByte = 0 )
+        size_t AppendPaddingBytes( _backinit itinsertat, size_t lentoalign, size_t alignon, const uint8_t PadByte = 0 )
     {
         size_t lenpadding = CalculateLengthPadding(lentoalign, alignon);
         for( size_t ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
             itinsertat = PadByte;
+        return lenpadding;
     }
 
 //===============================================================================
