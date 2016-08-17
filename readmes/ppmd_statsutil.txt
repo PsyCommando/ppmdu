@@ -24,8 +24,7 @@ Changelog:
     * Fixed game string import.
 -0.22(2016/06/18):
     * Fixed bad SIR0 padding.
--
-0.23(----/--/--):
+-0.23(2016/08/--):
     <-!!!!!-> Remade entirely how parameters are processed at the command line, because of the new features requiring extra details. <-!!!!->
 
     * Added XML configuration file system, to handle most game versions specific data.
@@ -41,9 +40,10 @@ Changelog:
         already supported \n, \0.
     * The script strings parser supports the same escape characters!
     * The configuration files are now loaded relatively to the executable's directory instead of the current working directory.
-    * References to entities, levels, face portraits, common routines, and more are replaced with their debug name! 
-      This should make everything more readable. The values are loaded from the script data XML file.
-    * Added basic support for importing/exporting script data.
+    * References to entities, levels, face portraits, common routines, and more are replaced with their debug name and other info
+      stored and editable in the "pmd2scriptdata.xml" file! 
+      This should make everything more readable, and customizable/maintainable no matter if there are ASM hacks applied to the game or not. 
+    * Added support for importing/exporting script data along with scripts.
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -75,9 +75,11 @@ This tool can export various data from the Pokemon Mystery Dungeon : Explorers o
 games(Only tested with Sky for now).
 
 Right now it supports:
-- Game text (Dialog, menus, item names, move names, pokemon names, etc..)
+- Game text (Some dialog, menus, item names, move names, pokemon names, etc..)
 - Move data (Base power, type, name, descritpion, etc.. )
 - Pokemon data (Name, category, type, stats growth, level-up moves, hm/tm moves, egg moves, etc..)
+- Game scripts and script data.(This include all scripted dialogs, interactions, cutscenes, game logic, 
+                                 and basically anything happening out of dungeon)
 
 ------------------------------
 --Random Uninteresting Fact--:
@@ -92,77 +94,96 @@ How to use:
 ----------------------------------------------------------------------------------------------------
 
 ** IMPORTANT **
-    Keep the gamelang.xml file in the same directory as the executable! Or specify the path to it 
-    using the -gl option at the command line followed with the path!
+    - Keep all XML files with the executable, or if you have to move them, use the proper command line option.
 
- * For exporting everything, just drag and drop the ROM data directory onto the application.
- * For importing everything, open a command prompt, and put the path of the directory resulting from the 
-   "export everything" operation, followed with the path of the ROM's data directory.
-   
- You can force either operation using the "-e" or "-i" option, respectively!
- 
- NOTE: Export ALL and Import ALL do not export or import game strings! Because the data 
-       exported or imported during those operations already contain a small part of the game
-       strings, and thus many issues would arise when those would get overwritten by the 
-       full game strings file on import!
-       
-       If you want to edit the game strings, export them separately, using the 
-       -e -str options.
-       If you want to import game strings, make sure you import them before 
-       importing any other stats files changes(move data, pokemon data, etc..). 
-       So that the changes made in the other stats files are applied afterwards. 
-       To import only the game strings, use the -i -str options.
+The easiest way to work with the tool is to open a command prompt, and running an import/export all command:
+
+Example line for exporting all:
+    ppmd_statsutil.exe -e -romroot "EoSRomRoot" "ExplorersOfSky_Out"
+
+Example line for importing all:
+    ppmd_statsutil.exe -i -romroot "EoSRomRoot" "ExplorersOfSky_Out"
+
+
+The -i tells the tool to import, while -e tells it to export. 
+
+The -romroot followed by the directory containing the extracted rom's files sets the directory 
+the tool will work with for either exporting from, or importing into. 
+Its expected to contain:
+    * A "data" directory containing the game's extracted filesystem. 
+    * A "arm9.bin" file. 
+    * A "overlay" directory containing the overlay_####.bin files for the game.
+
+The one and only argument, "ExplorersOfSky_Out", is the path to export the data to, or to import from.
+Its expected to have a certain directory structure (Directories may be entirely ommited, when they don't contain any data):
+    - Any game text data must be under the "game_strings" directory, and contain text files named after their target language.
+    - Any item data xml files must be under the "item_data" directory and contain the xml for all items.
+    - Any move data xml files must be under the "move_data" directory and contain the xml for all moves.
+    - Any pokemon data xml files must be under the "pokemon_data" directory and contain the xml for all pokemon/entities.
+    - The script sub-directories must be under the "scripts" directory.
+
 
 Exporting:
 ----------
 
 * Exporting Pokemon data to XML:
     Type this at the command line (without the first set of quotes): 
-        "ppmd_statsutil.exe -e -pk "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        "ppmd_statsutil.exe -e -pokemon -romroot "path/To/PMD2/ROM/Root/Directory" "Path/To/Output/Directory""
         Replace the paths with the appropriate paths! You can omit the output path, 
         and the xml data will be exported to a default directory.
 
 * Exporting move data to XML:
     Type this at the command line (without the first set of quotes): 
-        "ppmd_statsutil.exe -e -mv "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        "ppmd_statsutil.exe -e -moves -romroot "path/To/PMD2/ROM/Root/Directory" "Path/To/Output/Directory""
         Replace the paths with the appropriate paths! You can omit the output path, 
         and the xml data will be exported to a default directory.
 
 * Exporting item data to XML:
     Type this at the command line (without the first set of quotes): 
-        "ppmd_statsutil.exe -e -items "path/To/PMD2/ROM/Data/Directory" "Path/To/Output/Directory""
+        "ppmd_statsutil.exe -e -items -romroot "path/To/PMD2/ROM/Root/Directory" "Path/To/Output/Directory""
         Replace the paths with the appropriate paths! You can omit the output path, 
         and the xml data will be exported to a default directory.
 
 * Exporting game text to text file:
     Type this at the command line (without the first set of quotes): 
-        "ppmd_statsutil.exe -e -str "path/To/PMD2/ROM/DataDir" "Path/To/Output/File/text.txt""
+        "ppmd_statsutil.exe -e -text -romroot "path/To/PMD2/ROM/Root/Directory" "Path/To/Output/File/text.txt""
         Replace the paths with the appropriate paths! And replace the filenames as desired. 
         You can omit the output path, and the text data will be exported to a text file with the default name.
+
+* Exporting game scripts to XML:
+    Type this at the command line (without the first set of quotes): 
+        "ppmd_statsutil.exe -e -scripts -romroot "path/To/PMD2/ROM/Root/Directory" "Path/To/Output/Directory""
+        Replace the paths with the appropriate paths! You can omit the output path, 
+        and the xml data will be exported to a default directory.
+
 
 Importing:
 ----------
 
 * Importing Pokemon data from XML back into the game:
     Enter this at the commandline (without the first set of quotes):
-        "ppmd_statsutil.exe -i -pk "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
-        Replace the paths with the appropriate paths! The output path is mandatory!
+        "ppmd_statsutil.exe -i -pokemon -romroot "path/To/PMD2/ROM/Root/Directory" "path/To/Extracted/Data/Directory/To/Import""
+        Replace the paths with the appropriate paths!
 
 * Importing moves data from XML back into the game:
     Enter this at the commandline (without the first set of quotes):
-        "ppmd_statsutil.exe -i -mv "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
-        Replace the paths with the appropriate paths! The output path is mandatory!
+        "ppmd_statsutil.exe -i -moves -romroot "path/To/PMD2/ROM/Root/Directory" "path/To/Extracted/Data/Directory/To/Import""
+        Replace the paths with the appropriate paths!
 
 * Importing items data from XML back into the game:
     Enter this at the commandline (without the first set of quotes):
-        "ppmd_statsutil.exe -i -items "Path/To/Input/XMLdata/Directory" "path/To/Target/PMD2/ROM/Data/Directory""
-        Replace the paths with the appropriate paths! The output path is mandatory!
+        "ppmd_statsutil.exe -i -items -romroot "path/To/PMD2/ROM/Root/Directory" "path/To/Extracted/Data/Directory/To/Import""
+        Replace the paths with the appropriate paths!
 
 * Importing game text from a text file back into the game:
     Enter this at the commandline (without the first set of quotes):
-        "ppmd_statsutil.exe -i -str "Path/To/Input/File/text.txt" "path/To/PMD2/ROM/DataDir""
-        Replace the paths with the appropriate paths! The output path is mandatory!
+        "ppmd_statsutil.exe -i -text -romroot "path/To/PMD2/ROM/Root/Directory" "path/To/Extracted/Data/Directory/To/Import""
+        Replace the paths with the appropriate paths!
 
+* Importing Scripts from XML back into the game:
+    Enter this at the commandline (without the first set of quotes):
+        "ppmd_statsutil.exe -i -scripts -romroot "path/To/PMD2/ROM/Root/Directory" "path/To/Extracted/Data/Directory/To/Import""
+        Replace the paths with the appropriate paths!
 
 More Details:
 -------------
@@ -205,6 +226,14 @@ More Details:
     made, as the text data file that is exported also contains those strings! It does contains every
     strings used in the entire game after all !
 
+* Scripts:
+    Scripts are fairly simple overall. Each sub-directory is a level/map. 
+    "enter" script(s) + data are for anything interactable on a playable map.
+    "Acting" script + data are for cutscenes mainly.
+    "Station" script(s) + data are for things added to a map depending on the progress in the game for the most part.
+
+    Its probably better to look at the thread or the wiki/notes for details on those, as I don't have a complete understanding of them
+    yet myself. And things are likely to change a lot.
 
 To edit those, a reference sheet might come in handy, and you can pick one over there: 
 http://apointlessplace.net/wms (look for a item_p.xlsx excel sheet, and go to the keyvalue tab)
@@ -222,30 +251,31 @@ ppmd_statsutil.exe (option) input path (output path)
 
 
 Options:
-  -i     : Specifying this will force import!
-  -e     : Specifying this will force export!
-  -pk    : Specifying this will import or export only Pokemon data!
-  -mv    : Specifying this will import or export only move data!
-  -items : Specifying this will import or export only items data!
-  -str   : Specifying this will import or export only the game strings specified!
-  -locale: Force the utility to use the following locale string when importing/exporting the string file!
-  -gl    : Set the path to the file to use as the "gamelang.xml" file!
+  -i          : Specifying this will force import!
+  -e          : Specifying this will force export!
+  -pokemon    : Specifying this will import or export only Pokemon data!
+  -moves      : Specifying this will import or export only move data!
+  -items      : Specifying this will import or export only items data!
+  -text       : Specifying this will import or export only the game strings specified!
+  -scripts    : Specifying this will import or export only the game scripts!
+  -locale     : Force the utility to use the following locale string when importing/exporting the string file! Using this option will bypass using the gamelang.xml file to figure out the game's language when exporting game strings!
+  -scriptdebug: When specified, all debug related commands in the scripts are tweaked so they're enabled by default!
+  -cfg        : Set a non-default path to the pmd2data.xml file.
+  -xmlesc     : If present, this makes the program use XML/HTML escape sequences, instead of C ones. AKA &#x0A; instead of \n for example. This is mainly interesting for dealing with a XML parser that requires standard XML escape chars!
+  -romroot    : Specify the root of the extracted rom directory to work with! The directory must contain both a "data" and "overlay" directory, and at least a "arm9.bin" file! The "data" directory must contain the rom's files and directories!The "overlay" directory must contain the rom's many "overlay_00xx.bin" files!
+  -th         : Used to set the maximum number of threads to use for various tasks during execution.
+  -log        : Turn on logging to file.
 
 
 Examples:
-ppmd_statsutil.exe -i -e -pk -mv -items -str -locale "C" -gl "PathToGameLangFile/gamelang.xml" "c:/pmd_romdata/data" "c:/output/path" 
+ppmd_statsutil.exe -i -e -pokemon -moves -items -text -scripts -locale "C" -scriptdebug -cfg "path/to/pmd2/config/data/file" -xmlesc -romroot "path/to/extracted/rom/root/directory" -th 2 -log "c:/pmd_romdata/data.bin" "c:/pmd_romdata/data" 
 
 Description:
 To export game data to XML, you have to append "-e" to the
 commandline, followed with the option corresponding to what to export.
 You can import data from XML into a PMD2 game's data, by
 specifying "-i" at the commandline, followed with the
-option corresponding to what to export.
-
-When importing data from XML, the output path must be a PMD2
-game's root data directory!
-When exporting the input path must be a PMD2 game's
-root data directory!
+option corresponding to what to import.
 
 ----------------------------------------------------------------------------------------------------
 Documentation :
