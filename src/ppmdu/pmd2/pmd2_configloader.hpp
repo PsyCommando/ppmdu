@@ -488,7 +488,9 @@ namespace pmd2
         class NamedDataEntry
     {
     public:
-        typedef _DataEntryTy dataentry_t;
+        typedef _DataEntryTy                                        dataentry_t;
+        typedef typename std::vector<dataentry_t>::iterator         iterator;
+        typedef typename std::vector<dataentry_t>::const_iterator   const_iterator;
 
         /*
             PushEntriesPairs
@@ -543,7 +545,16 @@ namespace pmd2
                 return nullptr;
         }
 
-        inline size_t size()const { return m_data.size(); }
+        inline size_t           size()const {return m_data.size();}
+        //inline iterator         begin()     {return m_data.begin();}
+        inline const_iterator   begin()const{return m_data.begin();}
+        //inline iterator         end()       {return m_data.end();}
+        inline const_iterator   end()const  {return m_data.end();}
+
+        inline const dataentry_t& operator[](size_t idx)const
+        {
+            return m_data[idx];
+        }
 
     private:
         std::unordered_map<std::string, size_t> m_datastrlut;

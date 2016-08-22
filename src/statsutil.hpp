@@ -55,6 +55,7 @@ namespace statsutil
         bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
         bool ParseOptionEscapeAsXML( const std::vector<std::string> & optdata );
         bool ParseOptionScriptEnableDebugInstr( const std::vector<std::string> & optdata );
+        bool ParseOptionDumpLvlList( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
@@ -91,8 +92,13 @@ namespace statsutil
         int DoImportAll();
         int DoExportAll();
 
+        int DoDumpLevelList( std::string fpath, pmd2::GameDataLoader & gloader );
+
         int HandleImport( const std::string & frompath, pmd2::GameDataLoader & gloader );
         int HandleExport( const std::string & topath,   pmd2::GameDataLoader & gloader );
+
+        //Validation:
+        void ValidateRomRoot()const;
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -112,9 +118,9 @@ namespace statsutil
         //static const std::string                                 DefExportMvDir;
         //static const std::string                                 DefExportItemsDir;
         static const std::string                                 DefExportAllDir;
-        static const std::string                                 DefExportScriptsDir;
+//        static const std::string                                 DefExportScriptsDir;
 
-        static const std::string                                 DefLangConfFile;
+        //static const std::string                                 DefLangConfFile;
         
 
         enum struct eOpForce
@@ -150,6 +156,8 @@ namespace statsutil
             ImportSingleScriptData,
             ExportSingleScriptData,
 
+            DumpLevelList,
+
             ImportAll,
             ExportAll,
         };
@@ -176,6 +184,7 @@ namespace statsutil
         bool        m_shouldlog;      
         bool        m_escxml;         //Force escape sequences to be standard XML instead of C
         bool        m_scriptdebug;
+        bool        m_dumplvllist;
         
         pmd2::eGameRegion  m_region;
         pmd2::eGameVersion m_version;
