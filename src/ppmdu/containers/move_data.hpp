@@ -9,6 +9,7 @@ Description:
 */
 #include <cstdint>
 #include <vector>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 
 namespace pmd2{ namespace stats
 {
@@ -91,19 +92,16 @@ namespace pmd2{ namespace stats
         Export move data to XML files.
     */
     void      ExportMovesToXML     ( const MoveDB                            & src1,
-                                     const MoveDB                            & src2,
-                                     std::vector<std::string>::const_iterator  itbegnames,
-                                     std::vector<std::string>::const_iterator  itbegdesc,
+                                     const MoveDB                            * src2,
+                                     const GameText                          * gtext,
                                      const std::string                       & destdir );
+
     /*
         Import move data from xml files.
     */
     void      ImportMovesFromXML   ( const std::string                  & srcdir, 
                                      MoveDB                             & out_mvdb1,
-                                     MoveDB                             & out_mvdb2,
-                                     std::vector<std::string>::iterator   itbegnames,
-                                     std::vector<std::string>::iterator   itendnames,
-                                     std::vector<std::string>::iterator   itbegdesc,
-                                     std::vector<std::string>::iterator   itenddesc );
+                                     MoveDB                             * out_mvdb2,
+                                     GameText                           * gtext );
 };};
 #endif

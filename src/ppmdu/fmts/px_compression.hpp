@@ -10,8 +10,9 @@ Description: Utilities for dealing with what we've dubbed "PX" compression. A cu
              Thanks to Zhorken for reversing most of the format!
              https://github.com/Zhorken
 */
-#include <ppmdu/basetypes.hpp>
-
+#include <cstdint>
+#include <array>
+#include <vector>
 
 namespace compression
 {
@@ -188,7 +189,7 @@ namespace compression
             Handy to remove logs from a previous session, and avoid them getting 
             very large in size !
     */
-    void CleanExistingCompressionLogs();
+    //void CleanExistingCompressionLogs();
 
 };
 

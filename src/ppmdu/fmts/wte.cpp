@@ -54,10 +54,10 @@ namespace filetypes
             WTE_header myhead;
             try
             {
-                mysir0hdr.ReadFromContainer( itdatabeg );
+                mysir0hdr.ReadFromContainer( itdatabeg, itdataend );
                 if( mysir0hdr.magic == MagicNumber_SIR0 )
                 {
-                    myhead.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
+                    myhead.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr), itdataend );
                     return myhead.magic == WTE_MAGIC_NUMBER_INT;
                 }
             }

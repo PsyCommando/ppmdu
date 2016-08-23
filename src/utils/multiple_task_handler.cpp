@@ -51,10 +51,10 @@ namespace multitask
 
     CMultiTaskHandler::~CMultiTaskHandler()
     {
+        m_managerShouldStopAftCurTask = true;
         //Put directly here to force it
         if( m_managerThread.joinable() )
         {
-            m_managerShouldStopAftCurTask = true;
             m_managerThread.join();
         }
     }
@@ -98,6 +98,7 @@ namespace multitask
                 if( m_lastTaskFinished.wait_for( ulock, DUR_WAIT_TASKS_COMPLETE ) == cv_status::no_timeout )
                     return;
             }
+            this_thread::yield();
         }
     }
 
@@ -118,9 +119,9 @@ namespace multitask
     // If the thread is stopped, it does nothing.
     void CMultiTaskHandler::StopExecute()
     {
+        m_managerShouldStopAftCurTask = true;
         if( m_managerThread.joinable() )
         {
-            m_managerShouldStopAftCurTask = true;
             m_managerThread.join();
         }
     }

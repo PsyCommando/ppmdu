@@ -151,7 +151,7 @@ namespace ppx_extract
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
         sir0_header hdr;
-        hdr.ReadFromContainer( itdatabeg );
+        hdr.ReadFromContainer( itdatabeg, itdataend );
         DoDecompressAT4PX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
@@ -159,7 +159,7 @@ namespace ppx_extract
                                 const Poco::Path & outfilepath, bool blogenabled, bool isQuiet )
     {
         sir0_header hdr;
-        hdr.ReadFromContainer( itdatabeg );
+        hdr.ReadFromContainer( itdatabeg, itdataend );
         DoDecompressPKDPX( itdatabeg + hdr.subheaderptr, itdatabeg + hdr.ptrPtrOffsetLst, outfilepath, blogenabled, isQuiet );
     }
 
@@ -462,8 +462,8 @@ namespace ppx_extract
     //Decompress all our input files !
     void DecompressAll( pxextract_params & params )//const vector<Poco::Path> & inputpaths, vector<Poco::Path> & outputpaths, bool blogenabled )
     {
-        if( params.isLogEnabled )
-            compression::CleanExistingCompressionLogs(); //Do a little clean up
+        //if( params.isLogEnabled )
+        //    compression::CleanExistingCompressionLogs(); //Do a little clean up
 
         if( !params.isQuiet )
         {

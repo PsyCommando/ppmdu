@@ -10,10 +10,12 @@ Description:
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
+//!#MOSTLY OBSOLETE!! 
+
+
 #include <string>
 #include <vector>
 #include <ppmdu/pmd2/pmd2.hpp>
-//#include <ppmdu/basetypes.hpp>
 #include <utils/handymath.hpp>
 #include <types/content_type_analyser.hpp>
 

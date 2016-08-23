@@ -1,7 +1,9 @@
 #ifndef STATS_UTIL_HPP
 #define STATS_UTIL_HPP
 #include <utils/cmdline_util.hpp>
-#include <ppmdu/basetypes.hpp>
+#include <ppmdu/pmd2/game_stats.hpp>
+#include <ppmdu/pmd2/pmd2_gameloader.hpp>
+
 
 namespace statsutil
 {
@@ -46,14 +48,24 @@ namespace statsutil
         bool ParseOptionForceImport( const std::vector<std::string> & optdata );
         bool ParseOptionForceExport( const std::vector<std::string> & optdata );
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
-        bool ParseOptionGameLang   ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
+        bool ParseOptionConfig     ( const std::vector<std::string> & optdata );
+        bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
+        bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
+        bool ParseOptionEscapeAsXML( const std::vector<std::string> & optdata );
+        bool ParseOptionScriptEnableDebugInstr( const std::vector<std::string> & optdata );
+        bool ParseOptionDumpLvlList( const std::vector<std::string> & optdata );
 
         //Execution
         void DetermineOperation();
+        bool DetermineXMLOps( const std::string & filepath );
+
         int  Execute           ();
         int  GatherArgs        ( int argc, const char * argv[] );
+
+
+        void SetupCFGPath(const std::string & cfgrelpath); //Process the path to the CFG/data xml file. Should be run after the command line param were parsed!
 
         //Exec methods
         //int ExportPokeStatsGrowth();
@@ -72,8 +84,21 @@ namespace statsutil
         int DoExportGameScripts();
         int DoImportGameScripts();
 
+        int DoExportSingleScript();
+        int DoImportSingleScript();
+        int DoExportSingleScriptData();
+        int DoImportSingleScriptData();
+
         int DoImportAll();
         int DoExportAll();
+
+        int DoDumpLevelList( std::string fpath, pmd2::GameDataLoader & gloader );
+
+        int HandleImport( const std::string & frompath, pmd2::GameDataLoader & gloader );
+        int HandleExport( const std::string & topath,   pmd2::GameDataLoader & gloader );
+
+        //Validation:
+        void ValidateRomRoot()const;
 
         //Constants
         static const std::string                                 Exe_Name;
@@ -87,13 +112,15 @@ namespace statsutil
 
         //Default filenames names
         static const std::string                                 DefExportStrName;
+        static const std::string                                 DefExportStrDirName;
+        static const std::string                                 DefExportScriptDirName;
         //static const std::string                                 DefExportPkmnOutDir;
         //static const std::string                                 DefExportMvDir;
         //static const std::string                                 DefExportItemsDir;
         static const std::string                                 DefExportAllDir;
-        static const std::string                                 DefExportScriptsDir;
+//        static const std::string                                 DefExportScriptsDir;
 
-        static const std::string                                 DefLangConfFile;
+        //static const std::string                                 DefLangConfFile;
         
 
         enum struct eOpForce
@@ -122,17 +149,30 @@ namespace statsutil
 
             ImportGameScripts,
             ExportGameScripts,
+            
+            //New
+            ImportSingleScript,
+            ExportSingleScript,
+            ImportSingleScriptData,
+            ExportSingleScriptData,
+
+            DumpLevelList,
 
             ImportAll,
             ExportAll,
         };
 
         //Variables
-        std::string m_inputPath;      //This is the input path that was parsed 
+        std::string m_firstparam;      //This is the input path that was parsed 
         std::string m_outputPath;     //This is the output path that was parsed
+
         eOpMode     m_operationMode;  //This holds what the program should do
-        std::string m_langconf;       //The path to the language configuration file!
+        //std::string m_langconf;       //The path to the language configuration file!
+        std::string m_pmd2cfg;        //The path to the configuration file!
         std::string m_flocalestr;     //The forced locale string
+        std::string m_romrootdir;     //The extracting rom's root directory
+        std::string m_applicationdir; //Directory where the executable is
+
 
         bool        m_forcedLocale;   //Whether the -locale command line option was used at all.
         bool        m_hndlStrings;    //If we need to handle only a game string related OP, this is true!
@@ -140,9 +180,14 @@ namespace statsutil
         bool        m_hndlMoves;      //If we handle only moves
         bool        m_hndlPkmn;       //If we handle only Pokemon
         bool        m_hndlScripts;    //If we handle only Scripts
-        eOpForce    m_force;          //Whether 
+        eOpForce    m_force;          // 
         bool        m_shouldlog;      
-
+        bool        m_escxml;         //Force escape sequences to be standard XML instead of C
+        bool        m_scriptdebug;
+        bool        m_dumplvllist;
+        
+        pmd2::eGameRegion  m_region;
+        pmd2::eGameVersion m_version;
 
         utils::cmdl::RAIIClogRedirect m_redirectClog;
         //eOutFormat  m_outputFormat;   //

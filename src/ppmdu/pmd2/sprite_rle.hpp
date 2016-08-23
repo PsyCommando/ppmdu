@@ -9,7 +9,6 @@ Description: Utilites for handling the RLE compression used on sprites in PMD2.
 #TODO: put the sprite RLE stuff in here !
 
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <utils/utility.hpp>
 
@@ -40,11 +39,11 @@ namespace pmd2 { namespace compression
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( pixelsrc, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( pixamt,   itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unknown,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( pixelsrc, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( pixamt,   itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown,  itReadfrom, itPastEnd );
             return itReadfrom;
         }
     };
@@ -88,7 +87,9 @@ namespace pmd2 { namespace compression
                        its the beginning of the RLE table.
            - Returns the index of the beginning of the frame data. FRM_BEG for the current frame!
         */
-        uint32_t operator()( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itfrmin );
+        uint32_t operator()( std::vector<uint8_t>::const_iterator itbeg, 
+                             std::vector<uint8_t>::const_iterator itend,
+                             std::vector<uint8_t>::const_iterator itfrmin );
 
     private:
         std::vector<uint8_t>                        * m_pOutput; //What we currently output to.

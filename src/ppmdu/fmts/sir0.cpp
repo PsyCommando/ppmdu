@@ -22,7 +22,7 @@ using namespace utils;
 
 namespace filetypes
 {
-    static const uint8_t SIR0_EncodedOffsetsHeader = 0x04u;
+    static const uint8_t SIR0_EncodedOffsetsHeader = 0x04u; //! #REMOVEME
     const ContentTy      CnTy_SIR0 {"sir0"}; 
 //========================================================================================================
 // sir0_header
@@ -38,31 +38,13 @@ namespace filetypes
         return strs.str();
     }
 
-    //std::vector<uint8_t>::iterator sir0_header::WriteToContainer( std::vector<uint8_t>::iterator itwriteto )const
-    //{
-    //    itwriteto = utils::WriteIntToBytes( magic,        itwriteto, false );
-    //    itwriteto = utils::WriteIntToBytes( subheaderptr, itwriteto );
-    //    itwriteto = utils::WriteIntToBytes( ptrPtrOffsetLst,       itwriteto );
-    //    itwriteto = utils::WriteIntToBytes( endzero,        itwriteto );
-    //    return itwriteto;
-    //}
-
-    //std::vector<uint8_t>::const_iterator sir0_header::ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )
-    //{
-    //    magic        = utils::ReadIntFromBytes<decltype(magic)>       (itReadfrom, false );
-    //    subheaderptr = utils::ReadIntFromBytes<decltype(subheaderptr)>(itReadfrom);
-    //    ptrPtrOffsetLst       = utils::ReadIntFromBytes<decltype(ptrPtrOffsetLst)>      (itReadfrom);
-    //    endzero        = utils::ReadIntFromBytes<decltype(endzero)>       (itReadfrom);
-    //    return itReadfrom;
-    //}
-
 //========================================================================================================
 // Utility:
 //========================================================================================================
 
     sir0_head_and_list MakeSIR0ForData( const std::vector<uint32_t> &listoffsetptrs,
                                         uint32_t                     offsetsubheader,
-                                        uint32_t                     offsetendofdata )
+                                        uint32_t                     offsetendofdata )//! #REMOVEME
     {
         sir0_header hdr( MagicNumber_SIR0, 
                          offsetsubheader + sir0_header::HEADER_LEN,
@@ -94,7 +76,7 @@ namespace filetypes
     }
 
     sir0_head_and_list MakeSIR0ForData( uint32_t                     offsetsubheader,
-                                        uint32_t                     offsetendofdata )
+                                        uint32_t                     offsetendofdata ) //! #REMOVEME
     {
         static const vector<uint8_t> MinimalEncPtrOffsets = 
         { 
@@ -108,8 +90,9 @@ namespace filetypes
         return sir0_head_and_list{ hdr, MinimalEncPtrOffsets };
     }
 
+
     //#TODO: Should use a back_inserter here !
-    void EncodeSIR0PtrOffsetList( const std::vector<uint32_t> &listoffsetptrs, std::vector<uint8_t> & out_encoded )
+    void EncodeSIR0PtrOffsetList( const std::vector<uint32_t> &listoffsetptrs, std::vector<uint8_t> & out_encoded ) //! #REMOVEME
     {
         uint32_t offsetSoFar = 0; //used to add up the sum of all the offsets up to the current one
 
@@ -142,7 +125,7 @@ namespace filetypes
         out_encoded.push_back(0);
     }
 
-    std::vector<uint8_t> EncodeSIR0PtrOffsetList( const std::vector<uint32_t> &listoffsetptrs )
+    std::vector<uint8_t> EncodeSIR0PtrOffsetList( const std::vector<uint32_t> &listoffsetptrs ) //! #REMOVEME
     {
         vector<uint8_t> encodedptroffsets( 2u + listoffsetptrs.size() );  //Worst case scenario allocation
         encodedptroffsets.resize(0); //preserve alloc, allow push backs
@@ -189,7 +172,7 @@ namespace filetypes
 
     vector<uint8_t> MakeSIR0Wrap( const vector<uint8_t>    & data, 
                                   const sir0_head_and_list & sir0data, 
-                                  uint8_t                    padchar  )
+                                  uint8_t                    padchar  ) //! #REMOVEME
     {
         vector<uint8_t> wrap;
         auto            itbackins = back_inserter(wrap);
@@ -212,34 +195,20 @@ namespace filetypes
         return std::move(wrap);
     }
 
-    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar )
+    vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t> & data, uint8_t padchar ) //! #REMOVEME
     {
         //Make the SIR0 data
-        sir0_head_and_list sir0data = std::move( MakeSIR0ForData( 0, data.size() + CalculateLengthPadding( data.size(), 16u ) ) );
+        sir0_head_and_list sir0data = std::move( MakeSIR0ForData( 0, CalculatePaddedLengthTotal( data.size(), 16u ) ) );
 
         //Call the function handling everything else
         return std::move( MakeSIR0Wrap( data, sir0data, padchar ) );
     }
 
-    //vector<uint8_t> MakeSIR0Wrap( const std::vector<uint8_t>  & data, 
-    //                              uint32_t                      offsetsubheader, 
-    //                              const std::vector<uint32_t> & ptroffsetlst )
-    //{
-    //    //Calculate padding first, to ensure the end offset is valid
-    //    uint32_t lenpadding = ( CalcClosestHighestDenominator( data.size(), 16 ) -  data.size() );
-
-    //    //Make the SIR0 data
-    //    sir0_head_and_list sir0data = MakeSIR0ForData( ptroffsetlst, offsetsubheader, data.size() + lenpadding );
-
-    //    //Call the function handling everything else
-    //    return MakeSIR0Wrap( data, sir0data );
-    //}
-
-
 
 //========================================================================================================
 //  SIR0DerivHandler
 //========================================================================================================
+    //! #REMOVEME
     SIR0DerivHandler & SIR0DerivHandler::GetInstance()
     {
         static SIR0DerivHandler s_instance;
@@ -247,7 +216,7 @@ namespace filetypes
     }
 
     //Rule registration handling
-    cntRID_t SIR0DerivHandler::RegisterRule( IContentHandlingRule * rule )
+    cntRID_t SIR0DerivHandler::RegisterRule( IContentHandlingRule * rule ) //! #REMOVEME
     {
         if( rule != nullptr )
         {
@@ -265,7 +234,6 @@ namespace filetypes
             rule->setRuleID( m_currentRID );
             m_rules.insert( make_pair( m_currentRID, std::unique_ptr<IContentHandlingRule>(rule) ) );
             ++m_currentRID;
-            //m_rules.push_back( std::unique_ptr<IContentHandlingRule>( rule ) );
 
             return ridbefore;
         }
@@ -273,7 +241,7 @@ namespace filetypes
         return std::numeric_limits<unsigned int>::max();// -1;
     }
 
-    bool SIR0DerivHandler::UnregisterRule( cntRID_t ruleid )
+    bool SIR0DerivHandler::UnregisterRule( cntRID_t ruleid ) //! #REMOVEME
     {
         auto itfound = m_rules.find( ruleid );
 
@@ -294,7 +262,7 @@ namespace filetypes
         return false;
     }
    
-    ContentBlock SIR0DerivHandler::AnalyseContent( const analysis_parameter & parameters )
+    ContentBlock SIR0DerivHandler::AnalyseContent( const analysis_parameter & parameters ) //! #REMOVEME
     {
         ContentBlock contentdetails;
 
@@ -381,7 +349,7 @@ namespace filetypes
         ContentBlock cb;
 
         //Read the header
-        headr.ReadFromContainer( parameters._itdatabeg );
+        headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -391,7 +359,7 @@ namespace filetypes
 
         //Try to guess what is the subcontent
         analysis_parameter paramtopass( parameters._itparentbeg,
-                                        parameters._itparentbeg, 
+                                        parameters._itparentend, 
                                         parameters._itparentbeg, 
                                         parameters._itparentend );
 
@@ -413,7 +381,7 @@ namespace filetypes
     // rule matches, without in-depth analysis.
     bool sir0_rule::isMatch( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, const std::string & filext )
     {
-        return ReadIntFromBytes<uint32_t>(itdatabeg,false) == MagicNumber_SIR0;
+        return ReadIntFromBytes<uint32_t>(itdatabeg,itdataend,false) == MagicNumber_SIR0;
     }
 
 //========================================================================================================

@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description:
     Utilities for handling the "MESSAGE/text_*.str" files used in PMD2.
 */
+#include <ppmdu/pmd2/pmd2.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -32,6 +33,7 @@ namespace pmd2{ namespace filetypes
             Parse a text_*.str file from PMD2, to a string vector.
     */
     std::vector<std::string> ParseTextStrFile( const std::string              & filepath, 
+                                               eGameRegion                      gver,
                                                const std::locale              & txtloc = std::locale::classic() );
 
     /*
@@ -40,6 +42,7 @@ namespace pmd2{ namespace filetypes
     */
     void                     WriteTextStrFile( const std::string              & filepath, 
                                                const std::vector<std::string> & text, 
+                                               eGameRegion                      gver,
                                                const std::locale              & txtloc = std::locale::classic() );
 
 //============================================================================================

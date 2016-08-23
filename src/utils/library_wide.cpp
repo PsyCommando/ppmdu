@@ -2,6 +2,7 @@
 #include <thread>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 using namespace std;
 
 namespace utils
@@ -15,7 +16,8 @@ namespace utils
 // LWData
 //=========================================================================
     lwData::lwData()
-        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u )), m_LoggingOn(false)
+        :m_verboseOn(false), m_nbThreads(std::max( thread::hardware_concurrency()/2u, 1u )), m_LoggingOn(false),
+        m_displayProgress(true)
     {
     }
 
@@ -63,6 +65,12 @@ namespace utils
 //
 //
     void LogError  ( const std::string & text )
+    {
+        if( LibWide().isLogOn() )
+            clog << "<!>- " <<text;
+    }
+
+    void LogWarning ( const std::string & text )
     {
         if( LibWide().isLogOn() )
             clog << "<!>- " <<text;

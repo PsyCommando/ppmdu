@@ -1,4 +1,5 @@
 #include "text_str.hpp"
+#include <ppmdu/pmd2/pmd2.hpp>
 #include <utils/gfileio.hpp>
 #include <utils/utility.hpp>
 #include <utils/library_wide.hpp>
@@ -19,9 +20,9 @@ namespace pmd2 { namespace filetypes
 //
 //  Constants 
 //
-    static const string        SpecialCharSequ_MusicNote = "\129\244"; //~'music note'
-    static const unsigned char SpecialChar_CtrlChar      = 129u;
-    static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
+    //static const string        SpecialCharSequ_MusicNote = "\129\244"; //~'music note'
+    //static const unsigned char SpecialChar_CtrlChar      = 129u;
+    //static const unsigned char SpecialChar_MusicNoteEnd  = 244u;
 
 //============================================================================================
 //  Loader
@@ -33,8 +34,8 @@ namespace pmd2 { namespace filetypes
     class TextStrLoader
     {
     public:
-        TextStrLoader( const std::string & filepath, const std::locale & txtloc )
-            :m_strFilePath(filepath), m_locale(txtloc)
+        TextStrLoader( const std::string & filepath, const std::locale & txtloc, bool escapejis )
+            :m_strFilePath(filepath), m_locale(txtloc), m_escapejis(escapejis)
         {}
 
         operator std::vector<std::string>() //#REMOVEME: Just out of curiosity I wanted to try this!
@@ -62,11 +63,9 @@ namespace pmd2 { namespace filetypes
             catch( exception & e )
             {
                 stringstream sstr;
-                sstr << "ERROR: While parsing file \"" << m_strFilePath <<"\". Cannot load the game's text strings file! : "
+                sstr << "Error while parsing file \"" << m_strFilePath <<"\". Cannot load the game's text strings file! : "
                      << e.what();
-                string strerror = sstr.str();
-                clog << strerror <<"\n";
-                throw runtime_error(strerror);
+                throw_with_nested(runtime_error(sstr.str()));
             }
 
             return std::move(m_txtstr);
@@ -81,14 +80,14 @@ namespace pmd2 { namespace filetypes
             auto itptrs = m_filedata.begin();
 
             //First get the first pointer to get the end of the ptr table!
-            uint32_t endptrtbl = utils::ReadIntFromBytes<uint32_t>( itptrs );  //iterator is incremented
+            uint32_t endptrtbl = utils::ReadIntFromBytes<uint32_t>( itptrs, m_filedata.end() );  //iterator is incremented
             m_ptrTable.reserve( endptrtbl / sizeof(uint32_t) );                     //reserve memory for all pointers
             m_ptrTable.push_back( endptrtbl );
 
             //Read all pointers
             auto itendptrs = m_filedata.begin() + endptrtbl;
             for( ; itptrs != itendptrs; )
-                m_ptrTable.push_back( utils::ReadIntFromBytes<uint32_t>( itptrs ) );
+                m_ptrTable.push_back( utils::ReadIntFromBytes<uint32_t>( itptrs, m_filedata.end() ) );
         }
 
         void ReadStrings()
@@ -109,64 +108,15 @@ namespace pmd2 { namespace filetypes
                 else
                     len = (m_ptrTable[i+1] - m_ptrTable[i]);
 
-                char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
-                
-#ifndef PMD2_STRINGS_NO_LOCALE
-                stringstream out;
-                out.imbue(m_locale);
+                //char* ptrstr = reinterpret_cast<char*>(m_filedata.data() + m_ptrTable[i]); //#TODO: think of something faster...
+                auto itcurstr = m_filedata.begin() + m_ptrTable[i];
+                string curstr( itcurstr, itcurstr + len);
+                //curstr.push_back('\0');
 
-                //Copy string 
-                bool blastWasCtrlChar = false;               //Whether the last character was the \129 control char!
-                for( unsigned int cntc = 0; cntc < len; ++cntc )
-                {
-                    char c = ptrstr[cntc];
-                    if( std::isprint( c, m_locale) && !blastWasCtrlChar )    //Check if we need to replace the character with an escaped char
-                        out << c;
-                    else
-                    {
-                        switch(c)
-                        {
-                            case '\n':
-                            {
-                                out << "\\n";
-                                break;
-                            }
-                            //Check for the last character for the music note symbol, and make sure its replaced with an escape sequence
-                            case SpecialChar_MusicNoteEnd: 
-                            default:
-                            {
-                                //If non alpha-numeric, write as an escaped value!
-                                uint8_t thebyte = *(m_filedata.data() + (m_ptrTable[i]+cntc));
-                                out <<'\\' << static_cast<unsigned short>( thebyte );
-                            }
-                        };
-                    }
-                    blastWasCtrlChar = (c == SpecialChar_CtrlChar);
-                }
-
-                m_txtstr[i] = out.str();
-#else
-                auto strbackins = std::back_inserter( m_txtstr[i] );
-                for( unsigned int cntc = 0; cntc < len; ++cntc )
-                {
-                    char c = ptrstr[cntc];
-                    if( c == '\n' )
-                    {
-                        (*strbackins) = '\\';
-                        (*strbackins) = 'n';
-                    }
-                    else if( c == '\0' )
-                    {
-                        (*strbackins) = '\\';
-                        (*strbackins) = '0';
-                    }
-                    else
-                        (*strbackins) = c;
-                }
-#endif
+                m_txtstr[i] = std::move( EscapeUnprintableCharacters( curstr, m_escapejis, false, m_locale ) );
                 ++i;
             }
-            cout<<" Done!\n";
+            clog<<" Done!\n";
         }
 
         std::string              m_strFilePath;
@@ -174,6 +124,7 @@ namespace pmd2 { namespace filetypes
         std::vector<uint32_t>    m_ptrTable;
         std::vector<std::string> m_txtstr;
         const std::locale      & m_locale;
+        bool                     m_escapejis;
     };
 
 //============================================================================================
@@ -194,95 +145,95 @@ namespace pmd2 { namespace filetypes
         /*
             Returns the nb of characters that were treated as part of the escaped char
         */
-        template<class _itout>
-            unsigned int HandleEscapedChar( _itout & itwrite, const std::string & textafterbs, const std::locale & txtloc )
-        {
-            unsigned int escLen = 1; //in case of error use as a single char
+        //template<class _itout>
+        //    unsigned int HandleEscapedChar( _itout & itwrite, const std::string & textafterbs, const std::locale & txtloc )
+        //{
+        //    unsigned int escLen = 1; //in case of error use as a single char
 
-            //If the character is a backslash, and there is at least another value in the string
-            char nextchar = textafterbs.front();
+        //    //If the character is a backslash, and there is at least another value in the string
+        //    char nextchar = textafterbs.front();
 
-            //Expedite string endings handling
-            if( nextchar == '0' )
-            {
-                (*itwrite) = static_cast<unsigned char>(0);
-                ++itwrite;
-                return 2;
-            }
+        //    //Expedite string endings handling
+        //    if( nextchar == '0' )
+        //    {
+        //        (*itwrite) = static_cast<unsigned char>(0);
+        //        ++itwrite;
+        //        return 2;
+        //    }
 
-            if( isprint(nextchar,txtloc) ) 
-            {
-                //If the next character is printable
-                if( isalpha( nextchar, txtloc )  || ispunct(nextchar, txtloc) )
-                {
+        //    if( isprint(nextchar,txtloc) ) 
+        //    {
+        //        //If the next character is printable
+        //        if( isalpha( nextchar, txtloc )  || ispunct(nextchar, txtloc) )
+        //        {
 
-                    escLen = 2;
+        //            escLen = 2;
 
-                    //If its a letter or punctuation char
-                    switch(nextchar)
-                    {
-                        case'n':
-                        {
-                            (*itwrite) = '\n';
-                            break;
-                        }
-                        case 't':
-                        {
-                            (*itwrite) = '\t';
-                            break;
-                        }
-                        case '\\':
-                        {
-                            (*itwrite) = '\\';
-                            break;
-                        }
-                        case '\b':
-                        {
-                            (*itwrite) = '\b';
-                            break;
-                        }
-                        default:
-                        {
-                            clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
-                            (*itwrite) = '\\'; //Not an escaped character
-                            escLen = 1;
-                        }
-                    };
+        //            //If its a letter or punctuation char
+        //            switch(nextchar)
+        //            {
+        //                case'n':
+        //                {
+        //                    (*itwrite) = '\n';
+        //                    break;
+        //                }
+        //                case 't':
+        //                {
+        //                    (*itwrite) = '\t';
+        //                    break;
+        //                }
+        //                case '\\':
+        //                {
+        //                    (*itwrite) = '\\';
+        //                    break;
+        //                }
+        //                case '\b':
+        //                {
+        //                    (*itwrite) = '\b';
+        //                    break;
+        //                }
+        //                default:
+        //                {
+        //                    clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
+        //                    (*itwrite) = '\\'; //Not an escaped character
+        //                    escLen = 1;
+        //                }
+        //            };
 
-                    ++itwrite;
-                }
-                else if( isdigit(nextchar, txtloc) )
-                {
-                    //If its a number
-                    stringstream parse;
-                    unsigned short valread = 0; 
-                    parse.imbue( txtloc );
-                
-                    //If is decimal
-                    parse << textafterbs << dec;
-                    parse >> valread;
+        //            ++itwrite;
+        //        }
+        //        else if( isdigit(nextchar, txtloc) )
+        //        {
+        //            //If its a number
+        //            stringstream parse;
+        //            unsigned short valread = 0; 
+        //            parse.imbue( txtloc );
+        //        
+        //            //If is decimal
+        //            parse << textafterbs << dec;
+        //            parse >> valread;
 
-                    (*itwrite) = static_cast<unsigned char>(valread);
-                    ++itwrite;
+        //            (*itwrite) = static_cast<unsigned char>(valread);
+        //            ++itwrite;
 
-                    escLen = static_cast<unsigned int>(parse.tellg()) + 1; //Account for the lenght of the number + the backslash
-                }
-                else
-                {
-                    //If its neither we have no support for that
-                    clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
-                    (*itwrite) = '\\';
-                    ++itwrite;
-                }
-            }
-            else
-            {
-                (*itwrite) = '\\'; //Not an escaped character if character is unprintable
-                ++itwrite;
-            }
+        //            escLen = static_cast<unsigned int>(parse.tellg()) + 1; //Account for the lenght of the number + the backslash
+        //        }
+        //        else
+        //        {
+        //            //If its neither we have no support for that
+        //            clog <<"Ecountered unexpected escaped character \"\\" <<nextchar <<"\". Handling both characters as-is!\n";
+        //            (*itwrite) = '\\';
+        //            ++itwrite;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        (*itwrite) = '\\'; //Not an escaped character if character is unprintable
+        //        ++itwrite;
+        //    }
 
-            return escLen;
-        }
+        //    return escLen;
+        //}
 
         void Write( const std::string & filepath )
         {
@@ -299,27 +250,30 @@ namespace pmd2 { namespace filetypes
             for( unsigned int cntstr = 0; cntstr < m_txtstr.size();  )
             {
                 const auto & str = m_txtstr[cntstr];
-                utils::WriteIntToBytes( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
+                utils::WriteIntToBytes<uint32_t>( m_fileData.size(), m_fileData.begin() + m_ptrTblWriteAt );  //Write string offset
                 m_ptrTblWriteAt += PTR_LEN;
 
                 //
-                vector<char> processed;
-                auto         itprocessedbackins = back_inserter( processed );
-                processed.reserve(str.size());
-                for( unsigned int i = 0; i < str.size();  )
-                {
-                    char c = str[i];
-                    if( c == '\\' && i < (str.size()-1) )
-                    {   
-                        //HandleEscapedChar returns the amount of characters that were handled as part of the escaped char.
-                        i+= HandleEscapedChar( itprocessedbackins, str.substr( i + 1 ), m_locale ) ;
-                    }
-                    else
-                    {
-                        (*itprocessedbackins) = c; //If the character is not a backslash, or if there are no other characters after the backslash
-                        ++i;
-                    }
-                }
+                //string processed;
+                //auto         itprocessedbackins = back_inserter( processed );
+                //processed.reserve(str.size());
+                //for( unsigned int i = 0; i < str.size();  )
+                //{
+                //    char c = str[i];
+                //    if( c == '\\' && i < (str.size()-1) )
+                //    {   
+                //        //HandleEscapedChar returns the amount of characters that were handled as part of the escaped char.
+                //        i+= HandleEscapedChar( itprocessedbackins, str.substr( i + 1 ), m_locale ) ;
+                //    }
+                //    else
+                //    {
+                //        (*itprocessedbackins) = c; //If the character is not a backslash, or if there are no other characters after the backslash
+                //        ++i;
+                //    }
+                //}
+                //processed = std::move( ReplaceEscapedCharacters( str, m_locale ) );
+                string processed = str; 
+                ReplaceEscapedSequenceTest(processed);
 
                 std::copy( processed.begin(), processed.end(), itbackins );
                 ++cntstr;
@@ -340,13 +294,14 @@ namespace pmd2 { namespace filetypes
 //=========================================================================================
 //  Functions
 //=========================================================================================
-    std::vector<std::string> ParseTextStrFile( const std::string & filepath, const std::locale & txtloc )
+    std::vector<std::string> ParseTextStrFile( const std::string & filepath, eGameRegion gver, const std::locale & txtloc )
     {
+        bool escapejis = gver != eGameRegion::Japan;
         //Read the pointer table first
-        return TextStrLoader(filepath,txtloc); //lol, implicit cast operator
+        return TextStrLoader(filepath,txtloc,escapejis); //lol, implicit cast operator
     }
     
-    void WriteTextStrFile( const std::string & filepath, const std::vector<std::string> & text, const std::locale & txtloc )
+    void WriteTextStrFile( const std::string & filepath, const std::vector<std::string> & text, eGameRegion gver, const std::locale & txtloc )
     {
         TextStrWriter(text,txtloc).Write(filepath);
     }

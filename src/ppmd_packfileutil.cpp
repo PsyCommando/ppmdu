@@ -45,7 +45,7 @@ namespace ppmd_packfileutil
     void DoUnpack( string inpath, string outpath )
     {
         CPack pack;
-        types::bytevec_t filedata;
+        vector<uint8_t> filedata;
         ReadFileToByteVector( inpath, filedata );
 
         cout << "\nUnpacking file : \n" 
@@ -60,7 +60,7 @@ namespace ppmd_packfileutil
     void DoPack( string inpath, string outpath, unsigned int forcedoffset )
     {
         CPack pack;
-        types::bytevec_t outfiledata;
+        vector<uint8_t> outfiledata;
 
 	    cout << "\nPacking Directory : \n" 
                 << "   " << inpath <<"\n"

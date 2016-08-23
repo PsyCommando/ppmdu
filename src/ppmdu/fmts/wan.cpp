@@ -1,7 +1,6 @@
 #include "wan.hpp"
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/containers/sprite_data.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/containers/index_iterator.hpp>
@@ -24,7 +23,7 @@ namespace filetypes
         uint32_t CountNbAdjacentNullValues( std::vector<uint8_t>::const_iterator itbeg, std::vector<uint8_t>::const_iterator itend )
     {
         uint32_t cntNullPtrs = 0;
-        for(; (itbeg != itend) && (utils::ReadIntFromBytes<T>(itbeg) == 0); ++cntNullPtrs );
+        for(; (itbeg != itend) && (utils::ReadIntFromBytes<T>(itbeg,itend) == 0); ++cntNullPtrs );
         return cntNullPtrs;
     }
 
@@ -55,10 +54,10 @@ namespace filetypes
         /**************************************************************
         **************************************************************/
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            ptrgrp = utils::ReadIntFromBytes<decltype(ptrgrp)>(itReadfrom);
-            nbseqs = utils::ReadIntFromBytes<decltype(nbseqs)>(itReadfrom);
+            ptrgrp = utils::ReadIntFromBytes<decltype(ptrgrp)>(itReadfrom,itPastEnd);
+            nbseqs = utils::ReadIntFromBytes<decltype(nbseqs)>(itReadfrom,itPastEnd);
             return itReadfrom;
         }
     };
@@ -68,16 +67,16 @@ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    AnimFrame ReadAnimFrameFromContainer( vector<uint8_t>::const_iterator & itread )
+    AnimFrame ReadAnimFrameFromContainer( vector<uint8_t>::const_iterator & itread, vector<uint8_t>::const_iterator itend )
     {
         AnimFrame myfrm;
 
-        myfrm.frameDuration   = utils::ReadIntFromBytes<decltype(myfrm.frameDuration)>  (itread);
-        myfrm.metaFrmGrpIndex = utils::ReadIntFromBytes<decltype(myfrm.metaFrmGrpIndex)>(itread);
-        myfrm.sprOffsetX     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetX)>    (itread);
-        myfrm.sprOffsetY     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetY)>    (itread);
-        myfrm.shadowOffsetX  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetX)> (itread);
-        myfrm.shadowOffsetY  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetY)> (itread);
+        myfrm.frameDuration   = utils::ReadIntFromBytes<decltype(myfrm.frameDuration)>  (itread, itend);
+        myfrm.metaFrmGrpIndex = utils::ReadIntFromBytes<decltype(myfrm.metaFrmGrpIndex)>(itread, itend);
+        myfrm.sprOffsetX     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetX)>      (itread, itend);
+        myfrm.sprOffsetY     = utils::ReadIntFromBytes<decltype(myfrm.sprOffsetY)>      (itread, itend);
+        myfrm.shadowOffsetX  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetX)>   (itread, itend);
+        myfrm.shadowOffsetY  = utils::ReadIntFromBytes<decltype(myfrm.shadowOffsetY)>   (itread, itend);
 
         return std::move(myfrm);
     }
@@ -149,15 +148,15 @@ namespace filetypes
     {
         auto        itRead   = m_rawdata.begin();
         sir0_header sir0head;
-        sir0head.ReadFromContainer(itRead);
+        sir0head.ReadFromContainer(itRead, m_rawdata.end());
 
         //Jump to WAN header
         wan_sub_header wanhead;
-        wanhead.ReadFromContainer( itRead + sir0head.subheaderptr );
+        wanhead.ReadFromContainer( itRead + sir0head.subheaderptr, m_rawdata.end() );
 
         //Get the info on the pixel type
         wan_img_data_info frmdat;
-        frmdat.ReadFromContainer( itRead + wanhead.ptr_imginfo );
+        frmdat.ReadFromContainer( itRead + wanhead.ptr_imginfo, m_rawdata.end() );
 
         return (frmdat.is256Colors == 1 )? eSpriteImgType::spr8bpp : eSpriteImgType::spr4bpp;
     }
@@ -220,23 +219,23 @@ namespace filetypes
     **************************************************************/
     void WAN_Parser::ReadSir0Header()
     {
-        m_sir0Header.ReadFromContainer(m_rawdata.begin());
+        m_sir0Header.ReadFromContainer(m_rawdata.begin(), m_rawdata.end());
     }
 
     /**************************************************************
     **************************************************************/
     void WAN_Parser::ReadWanHeader()
     {
-        m_wanHeader     .ReadFromContainer( m_rawdata.begin() + m_sir0Header.subheaderptr );
-        m_wanAnimInfo   .ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_animinfo );
-        m_wanImgDataInfo.ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_imginfo );
+        m_wanHeader     .ReadFromContainer( m_rawdata.begin() + m_sir0Header.subheaderptr, m_rawdata.end() );
+        m_wanAnimInfo   .ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_animinfo,  m_rawdata.end() );
+        m_wanImgDataInfo.ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_imginfo,   m_rawdata.end() );
     }
 
     /**************************************************************
     **************************************************************/
     vector<gimg::colorRGB24> WAN_Parser::ReadPalette()
     {
-        m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptrPal );
+        m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptrPal, m_rawdata.end() );
         unsigned int             nbcolors = (m_wanImgDataInfo.ptrPal - m_paletteInfo.ptrpal) / 4;
         vector<gimg::colorRGB24> palettecolors( nbcolors );
         rgbx32_parser            myparser( palettecolors.begin() );
@@ -254,7 +253,7 @@ namespace filetypes
     MetaFrame WAN_Parser::ReadAMetaFrame( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
     {
         MetaFrame mf;
-        itread = mf.ReadFromWANContainer( itread, out_isLastFrm );
+        itread = mf.ReadFromWANContainer( itread, m_rawdata.end(), out_isLastFrm );
         return std::move(mf);
     }
 
@@ -343,7 +342,7 @@ namespace filetypes
 
         for( auto & entry : MFptrTbl )
         {
-            uint32_t curPtr = utils::ReadIntFromBytes<uint32_t>( itreadtbl ); //Iterator auto-incremented
+            uint32_t curPtr = utils::ReadIntFromBytes<uint32_t>( itreadtbl, m_rawdata.end() ); //Iterator auto-incremented
             entry = curPtr;
             nbMetaF += ( (curPtr - lastPtrRead) / WAN_LENGTH_ANIM_FRM );
             lastPtrRead = curPtr;
@@ -375,7 +374,7 @@ namespace filetypes
 
         do
         {
-            animframe = ReadAnimFrameFromContainer( itwhere );
+            animframe = ReadAnimFrameFromContainer( itwhere, m_rawdata.end() );
             if( !(animframe.isNull()) ) //ignore the null frame
             {
                 asequence.insertFrame( animframe );
@@ -388,7 +387,7 @@ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    vector<uint32_t> WAN_Parser::ReadAnimGroupSeqRefs( vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences/*, unsigned int parentgroupindex*/ )
+    vector<uint32_t> WAN_Parser::ReadAnimGroupSeqRefs( vector<uint8_t>::const_iterator itwhere, vector<uint8_t>::const_iterator itend, unsigned int nbsequences/*, unsigned int parentgroupindex*/ )
     {
         vector<uint32_t> mysequences;
         mysequences.resize(nbsequences);
@@ -397,7 +396,7 @@ namespace filetypes
         for( unsigned int cpseqs = 0; cpseqs < nbsequences; ++cpseqs )
         {
             //Get the pointer
-            uint32_t ptrsequence = utils::ReadIntFromBytes<uint32_t>( itwhere );
+            uint32_t ptrsequence = utils::ReadIntFromBytes<uint32_t>( itwhere, itend );
 
             mysequences[cpseqs] = ptrsequence; //ReadASequence( m_rawdata.begin() + ptrsequence );
             
@@ -454,14 +453,14 @@ namespace filetypes
         for( unsigned int cpgrp = 0; cpgrp < anims.size(); ++cpgrp )
         {
             auto & curseqs = anims[cpgrp].seqsIndexes;
-            itCurGrp = entry.ReadFromContainer(itCurGrp);
+            itCurGrp = entry.ReadFromContainer(itCurGrp, static_cast<vector<uint8_t>::const_iterator>( m_rawdata.end()) );
 
             //
             if( entry.ptrgrp != 0 && entry.nbseqs != 0 )
             {
                 //make an iterator over there !
                 vector<uint8_t>::const_iterator itseqs = m_rawdata.begin() + entry.ptrgrp;
-                anims[cpgrp].seqsIndexes = ReadAnimGroupSeqRefs( itseqs, entry.nbseqs/*, cpgrp */);
+                anims[cpgrp].seqsIndexes = ReadAnimGroupSeqRefs( itseqs, m_rawdata.end(), entry.nbseqs/*, cpgrp */);
             }
             else
             {
@@ -529,8 +528,8 @@ namespace filetypes
 
         for( unsigned int i = 0; i < offsets.size() && itCuroffset != itEndOffsets; ++i )
         {
-            offsets[i].offx = utils::ReadIntFromBytes<uint16_t>(itCuroffset); //Incremented automatically by the function
-            offsets[i].offy = utils::ReadIntFromBytes<uint16_t>(itCuroffset);
+            offsets[i].offx = utils::ReadIntFromBytes<uint16_t>(itCuroffset, itEndOffsets ); //Incremented automatically by the function
+            offsets[i].offy = utils::ReadIntFromBytes<uint16_t>(itCuroffset, itEndOffsets );
         }
 
         return std::move(offsets);
@@ -598,7 +597,7 @@ namespace filetypes
         ContentBlock cb;
 
         //Attempt reading the SIR0 header
-        headr.ReadFromContainer( parameters._itdatabeg );
+        headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -618,14 +617,14 @@ namespace filetypes
         wan_sub_header wanheadr;
 
         //Check header
-        headr.ReadFromContainer( itdatabeg );
+        headr.ReadFromContainer( itdatabeg, itdataend );
 
         //Check magic number and make sure ptrs aren't null, or invalid.
         if( headr.magic != MagicNumber_SIR0 || headr.ptrPtrOffsetLst <= 0x10 || headr.subheaderptr <= 0x10 )
             return false;
 
         //READ WAN SUB-HEADer and check if pointers fit within file!!
-        wanheadr.ReadFromContainer( itdatabeg + headr.subheaderptr );
+        wanheadr.ReadFromContainer( itdatabeg + headr.subheaderptr, itdataend );
 
         //Check if the wan header pointers are invalid
         if( wanheadr.spriteType >= 2 || 
@@ -638,7 +637,7 @@ namespace filetypes
         // 1- 0xAA padding bytes
         // 2- The beginning of the SIR0 pointer offset list. Which always begins with 0x0404 ! 
         auto iterafterwan = itdatabeg + (headr.subheaderptr + wan_sub_header::DATA_LEN);
-        uint16_t bytesAfterWan = utils::ReadIntFromBytes<uint16_t>(iterafterwan);
+        uint16_t bytesAfterWan = utils::ReadIntFromBytes<uint16_t>(iterafterwan, itdataend);
         if( bytesAfterWan != 0xAAAA && bytesAfterWan != 0x0404 )
             return false;
 

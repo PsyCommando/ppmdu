@@ -113,7 +113,7 @@ namespace filetypes
 
     void at4px_decompress::ReadHeader()
     {
-        m_itInCur = m_lastheader.ReadFromContainer( m_itInCur );
+        m_itInCur = m_lastheader.ReadFromContainer( m_itInCur, m_itInEnd );
     }
 
     void at4px_decompress::Decompress( bool blogenabled )
@@ -312,7 +312,7 @@ namespace filetypes
                               bool                                             blogenable  )
     {
         at4px_header   hdr;
-        itinputbeg = hdr.ReadFromContainer( itinputbeg );
+        itinputbeg = hdr.ReadFromContainer( itinputbeg, itinputend );
 
         px_info_header pxinf = AT4PXHeaderToPXinfo( hdr );
 
@@ -345,7 +345,7 @@ namespace filetypes
                               bool                                             blogenable )
     {
         at4px_header   hdr;
-        itinputbeg = hdr.ReadFromContainer( itinputbeg );
+        itinputbeg = hdr.ReadFromContainer( itinputbeg, itinputend );
 
         px_info_header pxinf = AT4PXHeaderToPXinfo( hdr );
 
@@ -383,7 +383,7 @@ namespace filetypes
                               bool                                             blogenable )
     {
         at4px_header   hdr;
-        itinputbeg = hdr.ReadFromContainer( itinputbeg );
+        itinputbeg = hdr.ReadFromContainer( itinputbeg, itinputend );
 
         px_info_header pxinf = AT4PXHeaderToPXinfo( hdr );
 
@@ -526,7 +526,7 @@ namespace filetypes
 
         //Read the header
         //ReadTheAT4PXHeader( parameters._itdatabeg, headr );
-        headr.ReadFromContainer( parameters._itdatabeg );
+        headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -583,8 +583,8 @@ namespace filetypes
             auto         itdatabeg = parameters._itdatabeg;
 
             //Read the header
-            sir0hdr.ReadFromContainer( itdatabeg );
-            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr) );
+            sir0hdr.ReadFromContainer( itdatabeg, parameters._itdataend );
+            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr), parameters._itdataend );
 
             //build our content block info
             cb._startoffset          = 0;
@@ -607,10 +607,10 @@ namespace filetypes
                 sir0_header  mysir0hdr;
                 at4px_header myat4pxhdr;
 
-                mysir0hdr.ReadFromContainer( itdatabeg );
+                mysir0hdr.ReadFromContainer( itdatabeg, itdataend );
                 if( mysir0hdr.magic == MagicNumber_SIR0 )
                 {
-                    myat4pxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
+                    myat4pxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr), itdataend );
                     return std::equal( MagicNumber_AT4PX.begin(), MagicNumber_AT4PX.end(), myat4pxhdr.magicn.begin() );
                 }
             }

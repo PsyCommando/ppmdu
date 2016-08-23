@@ -14,6 +14,7 @@
 using namespace std;
 using ::utils::Resolution;
 
+#if 0
 namespace pmd2 { namespace graphics
 {
 
@@ -365,8 +366,8 @@ const Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount )
         // And we stop when we stumble on a null entry, as it signify the end of the table
         {
             int cptabort=0;
-            vector<uint8_t>::iterator itt = ittptrs,
-                                   ittend;
+            vector<uint8_t>::iterator itt    = ittptrs;
+            vector<uint8_t>::iterator ittend = ;
             while( !out_rletable.back().isNullEntry() && cptabort < 1024 && itt != ittend )
             {
                 RLE_TableEntry curentry(0,0,0);
@@ -452,3 +453,4 @@ const Resolution & GetImgResolutionForPixelAmt( uint32_t pixelamount )
     }
 
 };};
+#endif

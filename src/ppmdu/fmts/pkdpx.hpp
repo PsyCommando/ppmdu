@@ -9,7 +9,6 @@ Description: Tools for handling PKDPX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-//#include <ppmdu/basetypes.hpp>
 #include <vector>
 #include <cstdint>
 #include <types/content_type_analyser.hpp>
@@ -74,15 +73,16 @@ namespace filetypes
         }
 
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
             for( uint8_t & abyte : magicn )
             {
-                abyte = *itReadfrom; 
-                ++itReadfrom;
+                abyte = utils::ReadIntFromBytes<uint8_t>(itReadfrom,itPastEnd);
+                //abyte = *itReadfrom; 
+                //++itReadfrom;
             }
 
-            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom,itPastEnd); //iterator is incremented
 
             for( uint8_t & aflag : flaglist )
             {
@@ -90,7 +90,7 @@ namespace filetypes
                 ++itReadfrom;
             }
 
-            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom); //iterator is incremented
+            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom,itPastEnd); //iterator is incremented
 
             return itReadfrom;
         }

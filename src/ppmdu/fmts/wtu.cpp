@@ -52,7 +52,7 @@ namespace filetypes
                                const std::string    & filext )
         {
             WTU_header myhead;
-            myhead.ReadFromContainer( itdatabeg );
+            myhead.ReadFromContainer( itdatabeg, itdataend );
             return myhead.magic == WTU_MAGIC_NUMBER_INT;
         }
 

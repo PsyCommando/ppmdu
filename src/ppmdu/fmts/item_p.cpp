@@ -74,30 +74,30 @@ namespace pmd2 {namespace filetypes
 
             //Parse header
             sir0_header hdr;
-            hdr.ReadFromContainer(data.begin());
+            hdr.ReadFromContainer(data.begin(), data.end());
 
             const uint32_t NbEntries = (hdr.ptrPtrOffsetLst - hdr.subheaderptr) / stats::ItemDataLen_EoS;
             auto           itCur     = (data.begin() + hdr.subheaderptr);
             itemdat.resize(NbEntries);
 
             for( unsigned int cnt = 0; cnt < NbEntries; ++cnt )
-                ParseItem_p_entry( itCur, itemdat[cnt] );
+                ParseItem_p_entry( itCur, data.end(), itemdat[cnt] );
         }
 
-        void ParseItem_p_entry( vector<uint8_t>::const_iterator & itread, stats::itemdata & item )
+        void ParseItem_p_entry( vector<uint8_t>::const_iterator & itread, vector<uint8_t>::const_iterator & itend, stats::itemdata & item )
         {
-            itread = ReadIntFromBytes( item.buyPrice,   itread );
-            itread = ReadIntFromBytes( item.sellPrice,  itread );
-            itread = ReadIntFromBytes( item.category,   itread );
-            itread = ReadIntFromBytes( item.spriteID,   itread );
-            itread = ReadIntFromBytes( item.itemID,     itread );
-            itread = ReadIntFromBytes( item.param1,     itread );
-            itread = ReadIntFromBytes( item.param2,     itread );
-            itread = ReadIntFromBytes( item.param3,     itread );
-            itread = ReadIntFromBytes( item.unk1,       itread );
-            itread = ReadIntFromBytes( item.unk2,       itread );
-            itread = ReadIntFromBytes( item.unk3,       itread );
-            itread = ReadIntFromBytes( item.unk4,       itread );
+            itread = ReadIntFromBytes( item.buyPrice,   itread, itend );
+            itread = ReadIntFromBytes( item.sellPrice,  itread, itend );
+            itread = ReadIntFromBytes( item.category,   itread, itend );
+            itread = ReadIntFromBytes( item.spriteID,   itread, itend );
+            itread = ReadIntFromBytes( item.itemID,     itread, itend );
+            itread = ReadIntFromBytes( item.param1,     itread, itend );
+            itread = ReadIntFromBytes( item.param2,     itread, itend );
+            itread = ReadIntFromBytes( item.param3,     itread, itend );
+            itread = ReadIntFromBytes( item.unk1,       itread, itend );
+            itread = ReadIntFromBytes( item.unk2,       itread, itend );
+            itread = ReadIntFromBytes( item.unk3,       itread, itend );
+            itread = ReadIntFromBytes( item.unk4,       itread, itend );
         }
 
         void ParseItem_s_p( const string & path, stats::ItemsDB & itemdat )
@@ -106,7 +106,7 @@ namespace pmd2 {namespace filetypes
 
             //Parse header
             sir0_header hdr;
-            hdr.ReadFromContainer(data.begin());
+            hdr.ReadFromContainer(data.begin(), data.end());
 
             const uint32_t NbEntries = (hdr.ptrPtrOffsetLst - hdr.subheaderptr) / stats::ExclusiveItemDataLen; //Nb of entries in the exclusive item data file
             auto           itdatbeg  = data.begin() + hdr.subheaderptr;
@@ -121,19 +121,19 @@ namespace pmd2 {namespace filetypes
             //
             for( size_t cntExEntry = 0; cntExEntry < NbEntries && cntitemID < itemdat.size(); ++cntExEntry, ++cntitemID )
             {
-                ParseItem_s_p_entry( itdatbeg, itemdat[cntitemID] );
+                ParseItem_s_p_entry( itdatbeg, data.end(), itemdat[cntitemID] );
             }
         }
 
-        void ParseItem_s_p_entry( vector<uint8_t>::const_iterator & itread, stats::itemdata & item )
+        void ParseItem_s_p_entry( vector<uint8_t>::const_iterator & itread, vector<uint8_t>::const_iterator & itend, stats::itemdata & item )
         {
             stats::exclusiveitemdata * ptrex = item.GetExclusiveItemData(); //Make the exclusive item data container
 
             if( ptrex == nullptr )
                 ptrex = item.MakeExclusiveData();
 
-            itread = ReadIntFromBytes( ptrex->type,  itread );
-            itread = ReadIntFromBytes( ptrex->param, itread );
+            itread = ReadIntFromBytes( ptrex->type,  itread, itend );
+            itread = ReadIntFromBytes( ptrex->param, itread, itend );
         }
 
         const std::string & m_pathBalanceDir;

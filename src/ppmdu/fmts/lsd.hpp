@@ -6,18 +6,19 @@ lsd.hpp
 Description: Tools for reading LSD files from the PMD2 scripts!
 */
 #include <cstdint>
-#include <vector>
+#include <deque>
 #include <string>
 #include <array>
 
 namespace filetypes
 {
+    const std::string  LSD_FileExt  = "lsd";
     const unsigned int LSDStringLen = 8;  //8 characters
 
     /*
         Type for the LSD content
     */
-    typedef std::vector< std::array<char,LSDStringLen> > lsddata_t;
+    typedef std::deque< std::array<char,LSDStringLen> > lsddata_t;
 
     /*
         ParseLSD

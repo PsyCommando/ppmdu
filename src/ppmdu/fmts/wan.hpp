@@ -62,18 +62,18 @@ namespace filetypes
         {
             itwriteto = utils::WriteIntToBytes( pixelsrc, itwriteto );
             itwriteto = utils::WriteIntToBytes( pixamt,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( unk14,   itwriteto );
-            itwriteto = utils::WriteIntToBytes( zIndex,  itwriteto );
+            itwriteto = utils::WriteIntToBytes( unk14,    itwriteto );
+            itwriteto = utils::WriteIntToBytes( zIndex,   itwriteto );
             return itwriteto;
         }
         
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            pixelsrc = utils::ReadIntFromBytes<decltype(pixelsrc)>(itReadfrom);
-            pixamt   = utils::ReadIntFromBytes<decltype(pixamt)>  (itReadfrom);
-            unk14    = utils::ReadIntFromBytes<decltype(unk14)>   (itReadfrom);
-            zIndex   = utils::ReadIntFromBytes<decltype(zIndex)>  (itReadfrom);
+            pixelsrc = utils::ReadIntFromBytes<decltype(pixelsrc)>(itReadfrom, itPastEnd);
+            pixamt   = utils::ReadIntFromBytes<decltype(pixamt)>  (itReadfrom, itPastEnd);
+            unk14    = utils::ReadIntFromBytes<decltype(unk14)>   (itReadfrom, itPastEnd);
+            zIndex   = utils::ReadIntFromBytes<decltype(zIndex)>  (itReadfrom, itPastEnd);
             return itReadfrom;
         }
     };
@@ -128,12 +128,12 @@ namespace filetypes
         }
 
         template<class _inIt>
-            _inIt ReadFromContainer( _inIt itReadfrom )
+            _inIt ReadFromContainer( _inIt itReadfrom, _inIt itEnd )
         {
-            ptr_animinfo = utils::ReadIntFromBytes<decltype(ptr_animinfo)>(itReadfrom);
-            ptr_imginfo  = utils::ReadIntFromBytes<decltype(ptr_imginfo)> (itReadfrom);
-            spriteType   = utils::ReadIntFromBytes<decltype(spriteType)>  (itReadfrom);
-            unk12        = utils::ReadIntFromBytes<decltype(unk12)>       (itReadfrom);
+            ptr_animinfo = utils::ReadIntFromBytes<decltype(ptr_animinfo)>(itReadfrom, itEnd);
+            ptr_imginfo  = utils::ReadIntFromBytes<decltype(ptr_imginfo)> (itReadfrom, itEnd);
+            spriteType   = utils::ReadIntFromBytes<decltype(spriteType)>  (itReadfrom, itEnd);
+            unk12        = utils::ReadIntFromBytes<decltype(unk12)>       (itReadfrom, itEnd);
             return itReadfrom;
         }
 
@@ -201,14 +201,14 @@ namespace filetypes
         }
 
         template<class _inIt>
-            _inIt ReadFromContainer( _inIt itReadfrom )
+            _inIt ReadFromContainer( _inIt itReadfrom, _inIt itend )
         {
-            ptrImgsTbl   = utils::ReadIntFromBytes<decltype(ptrImgsTbl)>  (itReadfrom);
-            ptrPal       = utils::ReadIntFromBytes<decltype(ptrPal)>      (itReadfrom);
-            unk13        = utils::ReadIntFromBytes<decltype(unk13)>       (itReadfrom);
-            is256Colors  = utils::ReadIntFromBytes<decltype(is256Colors)> (itReadfrom);
-            unk11        = utils::ReadIntFromBytes<decltype(unk11)>       (itReadfrom);
-            nbImgsTblPtr = utils::ReadIntFromBytes<decltype(nbImgsTblPtr)>(itReadfrom);
+            ptrImgsTbl   = utils::ReadIntFromBytes<decltype(ptrImgsTbl)>  (itReadfrom, itend);
+            ptrPal       = utils::ReadIntFromBytes<decltype(ptrPal)>      (itReadfrom, itend);
+            unk13        = utils::ReadIntFromBytes<decltype(unk13)>       (itReadfrom, itend);
+            is256Colors  = utils::ReadIntFromBytes<decltype(is256Colors)> (itReadfrom, itend);
+            unk11        = utils::ReadIntFromBytes<decltype(unk11)>       (itReadfrom, itend);
+            nbImgsTblPtr = utils::ReadIntFromBytes<decltype(nbImgsTblPtr)>(itReadfrom, itend);
             return itReadfrom;
         }
 
@@ -294,17 +294,17 @@ namespace filetypes
         }
 
         template<class _inIt>
-            _inIt ReadFromContainer( _inIt itReadfrom )
+            _inIt ReadFromContainer( _inIt itReadfrom, _inIt itend )
         {
-            ptr_metaFrmTable  = utils::ReadIntFromBytes<decltype(ptr_metaFrmTable)> (itReadfrom);
-            ptr_pOffsetsTable = utils::ReadIntFromBytes<decltype(ptr_pOffsetsTable)>(itReadfrom);
-            ptr_animGrpTable  = utils::ReadIntFromBytes<decltype(ptr_animGrpTable)> (itReadfrom);
-            nb_anim_groups    = utils::ReadIntFromBytes<decltype(nb_anim_groups)>   (itReadfrom);
-            unk6              = utils::ReadIntFromBytes<decltype(unk6)>             (itReadfrom);
-            unk7              = utils::ReadIntFromBytes<decltype(unk7)>             (itReadfrom);
-            unk8              = utils::ReadIntFromBytes<decltype(unk8)>             (itReadfrom);
-            unk9              = utils::ReadIntFromBytes<decltype(unk9)>             (itReadfrom);
-            unk10             = utils::ReadIntFromBytes<decltype(unk10)>            (itReadfrom);
+            ptr_metaFrmTable  = utils::ReadIntFromBytes<decltype(ptr_metaFrmTable)> (itReadfrom, itend);
+            ptr_pOffsetsTable = utils::ReadIntFromBytes<decltype(ptr_pOffsetsTable)>(itReadfrom, itend);
+            ptr_animGrpTable  = utils::ReadIntFromBytes<decltype(ptr_animGrpTable)> (itReadfrom, itend);
+            nb_anim_groups    = utils::ReadIntFromBytes<decltype(nb_anim_groups)>   (itReadfrom, itend);
+            unk6              = utils::ReadIntFromBytes<decltype(unk6)>             (itReadfrom, itend);
+            unk7              = utils::ReadIntFromBytes<decltype(unk7)>             (itReadfrom, itend);
+            unk8              = utils::ReadIntFromBytes<decltype(unk8)>             (itReadfrom, itend);
+            unk9              = utils::ReadIntFromBytes<decltype(unk9)>             (itReadfrom, itend);
+            unk10             = utils::ReadIntFromBytes<decltype(unk10)>            (itReadfrom, itend);
             return itReadfrom;
         }
 
@@ -348,14 +348,14 @@ namespace filetypes
         }
 
         template<class _inIt>
-            _inIt ReadFromContainer( _inIt itReadfrom )
+            _inIt ReadFromContainer( _inIt itReadfrom, _inIt itpastend )
         {
-            ptrpal         = utils::ReadIntFromBytes<decltype(ptrpal)>        (itReadfrom);
-            unk3           = utils::ReadIntFromBytes<decltype(unk3)>          (itReadfrom);
-            nbcolorsperrow = utils::ReadIntFromBytes<decltype(nbcolorsperrow)>(itReadfrom);
-            unk4           = utils::ReadIntFromBytes<decltype(unk4)>          (itReadfrom);
-            unk5           = utils::ReadIntFromBytes<decltype(unk5)>          (itReadfrom);
-            nullbytes      = utils::ReadIntFromBytes<decltype(nullbytes)>     (itReadfrom);
+            ptrpal         = utils::ReadIntFromBytes<decltype(ptrpal)>        (itReadfrom, itpastend);
+            unk3           = utils::ReadIntFromBytes<decltype(unk3)>          (itReadfrom, itpastend);
+            nbcolorsperrow = utils::ReadIntFromBytes<decltype(nbcolorsperrow)>(itReadfrom, itpastend);
+            unk4           = utils::ReadIntFromBytes<decltype(unk4)>          (itReadfrom, itpastend);
+            unk5           = utils::ReadIntFromBytes<decltype(unk5)>          (itReadfrom, itpastend);
+            nullbytes      = utils::ReadIntFromBytes<decltype(nullbytes)>     (itReadfrom, itpastend);
             return itReadfrom;
         }
 
@@ -414,6 +414,7 @@ namespace filetypes
     template<class _TIMG_t, class _randit>
         uint32_t ParseZeroStrippedTImg( _randit                    itcomptblbeg, 
                                         _randit                    filebeg, 
+                                        _randit                    fileend,
                                         utils::Resolution          imgres, 
                                         gimg::PxlReadIter<_TIMG_t> itinsertat )
     {
@@ -424,7 +425,7 @@ namespace filetypes
 
         do
         {
-            itcomptblbeg = entry.ReadFromContainer(itcomptblbeg);
+            itcomptblbeg = entry.ReadFromContainer(itcomptblbeg,fileend);
 
             if( !(entry.isNull()) )
             {
@@ -450,7 +451,7 @@ namespace filetypes
             of pixels to assemble the decompressed tiled image!
     **********************************************************************/
     template<class _randit>
-        std::vector<ImgAsmTblEntry> FillAsmTable( _randit itcomptblbeg )
+        std::vector<ImgAsmTblEntry> FillAsmTable( _randit itcomptblbeg, _randit itpastend )
     {
         using namespace std;
         using namespace utils;
@@ -459,7 +460,7 @@ namespace filetypes
 
         do
         {
-            itcomptblbeg = entry.ReadFromContainer(itcomptblbeg);
+            itcomptblbeg = entry.ReadFromContainer(itcomptblbeg,itpastend);
 
             if( !(entry.isNull()) )
             {
@@ -575,7 +576,7 @@ namespace filetypes
             //Read all ptrs in the raw data!
             for( unsigned int i = 0; i < m_wanImgDataInfo.nbImgsTblPtr; ++i )
             {
-                uint32_t ptrtoimg = utils::ReadIntFromBytes<uint32_t>( itfrmptr ); //iter is incremented automatically
+                uint32_t ptrtoimg = utils::ReadIntFromBytes<uint32_t>( itfrmptr, static_cast<vector<uint8_t>::const_iterator>(m_rawdata.end()) ); //iter is incremented automatically
 
                 if( utils::LibWide().isLogOn() )
                     std::clog <<"== Frame #" <<i <<" ==\n";
@@ -601,7 +602,7 @@ namespace filetypes
             uint32_t          totalbyamt = 0;
 
             //Read the assembly table
-            auto asmtable = FillAsmTable( itwhere );
+            auto asmtable = FillAsmTable( itwhere, m_rawdata.end() );
 
             //Log the asm table if logging is on
             if( utils::LibWide().isLogOn() )
@@ -721,8 +722,9 @@ namespace filetypes
             gimg::PxlReadIter<TIMG_t> myPixelReader(cur_img); 
 
             //Build the image
-            uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>( itwhere, 
+            uint32_t byteshandled = ParseZeroStrippedTImg<TIMG_t>(  itwhere, 
                                                                     m_rawdata.begin(), 
+                                                                    m_rawdata.end(), 
                                                                     myres,
                                                                     myPixelReader );
 
@@ -749,7 +751,9 @@ namespace filetypes
 
         std::vector<pmd2::graphics::SpriteAnimationGroup>  ReadAnimGroups();   // Reads the animation data
         pmd2::graphics::AnimationSequence                  ReadASequence( std::vector<uint8_t>::const_iterator itwhere );
-        std::vector<uint32_t>                        ReadAnimGroupSeqRefs( std::vector<uint8_t>::const_iterator itwhere, unsigned int nbsequences/*, unsigned int parentgroupindex*/ );
+        std::vector<uint32_t>                        ReadAnimGroupSeqRefs( std::vector<uint8_t>::const_iterator itwhere, 
+                                                                           std::vector<uint8_t>::const_iterator itend,
+                                                                           unsigned int nbsequences/*, unsigned int parentgroupindex*/ );
         
         //This get all anim sequences refered to by those groups, and it changes the pointer offsets to indexes in the anim sequence table!
         std::vector<pmd2::graphics::AnimationSequence>    ReadAnimSequences( std::vector<pmd2::graphics::SpriteAnimationGroup> & groupsWPtr );
@@ -762,7 +766,7 @@ namespace filetypes
         template<class _retty>
             inline _retty ReadOff( uint32_t fileoffset, bool littleendian = true )const
         {
-            return utils::ReadIntFromBytes<_retty>( (m_rawdata.begin() + fileoffset), littleendian );
+            return utils::ReadIntFromBytes<_retty>( (m_rawdata.begin() + fileoffset), m_rawdata.end(), littleendian );
         }
 
     private:

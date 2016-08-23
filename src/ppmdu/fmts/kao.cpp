@@ -110,7 +110,7 @@ namespace filetypes
         //When we got our first non-null entry, and divide the ptr by the size of an entry, to get the amount of entries
         // And avoid further resizing.
         //Get the first non-null entry and get the nb of entries in the table of content of the file being read
-        tocsubentry_t   firsptr      = utils::ReadIntFromBytes<tocsubentry_t>(itfoundnonnull);
+        tocsubentry_t   firsptr      = utils::ReadIntFromBytes<tocsubentry_t>(itfoundnonnull, itend);
         uint32_t        nbtocentries = firsptr / (m_pImportTo->m_nbtocsubentries * SUBENTRY_SIZE);
         auto            ittoc        = m_itInBeg;
 
@@ -149,6 +149,7 @@ namespace filetypes
         typedef CKaomado::data_t data_t;
         auto & toc    =  m_pImportTo->m_tableofcontent;
         auto & imgdat =  m_pImportTo->m_imgdata;
+        vector<uint8_t>::const_iterator itend = m_kaomadoBuff.end();
 
         //Alias to make things a little more readable
         vector<tocsubentry_t> & currententry = toc[indexentry]._portraitsentries;
@@ -160,7 +161,7 @@ namespace filetypes
                 cout <<"\tSubEntry #"  <<right <<setw(3) <<setfill('0')  <<cptsubentry <<" : ";
 
             tocsubentry_t tocreadentry; //The entry we just read in the last loop
-            tocreadentry = utils::ReadIntFromBytes<tocsubentry_t>( itrawtocentry );
+            tocreadentry = utils::ReadIntFromBytes<tocsubentry_t>( itrawtocentry, itend );
             
             if(m_bVerbose)
                 cout <<hex <<showbase <<tocreadentry <<dec <<noshowbase;
@@ -168,7 +169,7 @@ namespace filetypes
             //Avoid null and invalid entries
             if( CKaomado::isToCSubEntryValid(tocreadentry) )
             {
-                uint32_t entrylen       = GetLenRawPortraitData( m_itInBeg, tocreadentry );
+                uint32_t entrylen       = GetLenRawPortraitData( m_itInBeg, itend, tocreadentry );
                 tocsz_t  entryinsertpos = (indexentry * DEF_KAO_TOC_ENTRY_NB_PTR) + cptsubentry; //Position to insert stuff for this entry in the data vector
                 data_t & tmpPortrait    = imgdat[entryinsertpos]; //a little reference to make things easier
                 auto     itentryread    = m_itInBeg + tocreadentry;
@@ -214,13 +215,13 @@ namespace filetypes
         return itrawtocentry;
     }
 
-    uint32_t KaoParser::GetLenRawPortraitData( vector<uint8_t>::const_iterator itdatabeg, tocsubentry_t entryoffset )
+    uint32_t KaoParser::GetLenRawPortraitData( vector<uint8_t>::const_iterator itdatabeg, vector<uint8_t>::const_iterator itdataend, tocsubentry_t entryoffset )
     {
         //Skip palette, and read at4px header
         at4px_header head;
         std::advance( itdatabeg, 
                       static_cast<decltype(KAO_PORTRAIT_PAL_LEN)>(entryoffset) + KAO_PORTRAIT_PAL_LEN ); 
-        head.ReadFromContainer( itdatabeg );
+        head.ReadFromContainer( itdatabeg, itdataend );
         return head.compressedsz + KAO_PORTRAIT_PAL_LEN;
     }
 
@@ -569,7 +570,7 @@ namespace filetypes
 
         //Allocate memory
         m_imgBuff.reserve( szBiggestImg );
-        m_outBuff.reserve( utils::GetNextInt32DivisibleBy16( estimatedlength ) ); //align on 16 bytes
+        m_outBuff.reserve( utils::CalculatePaddedLengthTotal( estimatedlength, 16u ) ); //align on 16 bytes
 
         //Resize raw output buf to ToC lenght so we can begin inserting data afterwards
         m_outBuff.resize( Expected_ToC_Len, 0 ); 
@@ -611,7 +612,7 @@ namespace filetypes
             cout<<"\n";
 
         //Align the end of the file on 16 bytes
-        const unsigned int nbpaddingbytes = utils::GetNextInt32DivisibleBy16( m_outBuff.size() ) - m_outBuff.size();
+        const unsigned int nbpaddingbytes = utils::CalculateLengthPadding( m_outBuff.size(), 16u );
 
         //Add padding bytes
         for( int i = 0; i < nbpaddingbytes; ++i )

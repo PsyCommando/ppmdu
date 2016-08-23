@@ -14,6 +14,7 @@
 #include <Poco/File.h>
 #include <Poco/Path.h>
 #include <cassert>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 
 using namespace std;
 using namespace pugi;
@@ -63,7 +64,8 @@ namespace pmd2 { namespace stats
         const string CMT_EoTD         = "Pokemon Mystery Dungeon: Explorers of Time/Darkness item data";
         const string CMT_EoTDData     = "Data exclusive to Pokemon Mystery Dungeon: Explorers of Time/Darkness items";
 
-        const string ATTR_GameVer     = "GameVersion";
+        const string ATTR_GameVer     = CommonXMLGameVersionAttrStr;
+        //! #TODO: Remove these and use the common system for fetching the version name strings!!
         const string ATTR_GameVerEoS  = "EoS";
         const string ATTR_GameVerEoTD = "EoTD";
     };
@@ -78,22 +80,19 @@ namespace pmd2 { namespace stats
     class ItemXMLWriter
     {
     public:
-        ItemXMLWriter( const ItemsDB                  &src,
-                       vector<string>::const_iterator  itbegitemnames,
-                       vector<string>::const_iterator  itenditemnames,
-                       vector<string>::const_iterator  itbegitemdesc,
-                       vector<string>::const_iterator  itenditemdesc,
-                       vector<string>::const_iterator  itbegitemlongdesc,
-                       vector<string>::const_iterator  itenditemlongdesc )
-            :m_items(src), 
-             m_begitemnames(itbegitemnames),    m_enditemnames(itenditemnames),
-             m_begitemsdesc(itbegitemdesc),     m_enditemsdesc(itenditemdesc),
-             m_begitemldesc(itbegitemlongdesc), m_enditemldesc(itenditemlongdesc)
+        ItemXMLWriter( const ItemsDB &src, const GameText * pgtext = nullptr )
+            :m_items(src), m_pgametext(pgtext), m_bNoStrings(false)
         {}
 
 
         void Write( const string & destdir )
         {
+            if( !m_pgametext || !m_pgametext->AreStringsLoaded() )
+            {
+                clog<<"<!>- ItemXMLWriter::Write(): No string loaded! Ignoring text! (Names, descriptions, etc..)\n";
+                m_bNoStrings = true;
+            }
+
             using namespace itemxml;
             if( !utils::isFolder(destdir) )
             {
@@ -102,18 +101,15 @@ namespace pmd2 { namespace stats
                 throw runtime_error( sstr.str() );
             }
             
-            auto         itcurname     = m_begitemnames;
-            auto         itcurshrtdesc = m_begitemsdesc;
-            auto         itcurlongdesc = m_begitemldesc;
             const string dirprefix = utils::TryAppendSlash( destdir );
             stringstream fname;
 
-            for( size_t i = 0; i < m_items.size(); ++i, ++itcurname, ++itcurshrtdesc, ++itcurlongdesc )
+            for( size_t cntitem = 0; cntitem < m_items.size(); ++cntitem )
             {
                 fname.str(string()); //Purge stringstream
                 xml_document doc;
                 xml_node     itemdata = doc.append_child( ROOT_Item.c_str() );
-                bool         isEoS    = m_items[i].Get_EoTD_ItemData() == nullptr;
+                bool         isEoS    = m_items[cntitem].Get_EoTD_ItemData() == nullptr;
 
                 if( isEoS )
                 {
@@ -126,11 +122,12 @@ namespace pmd2 { namespace stats
                     WriteCommentNode( itemdata, CMT_EoTD );
                 }
 
-                _WriteStrings( itemdata, *itcurname, *itcurshrtdesc, *itcurlongdesc );
+                if(!m_bNoStrings)
+                    WriteStrings( itemdata, cntitem );
                 WriteCommentNode( itemdata, CMT_Data );
-                _WriteItemData( itemdata, m_items[i] );
+                _WriteItemData( itemdata, m_items[cntitem] );
 
-                fname <<dirprefix <<setw(4) <<setfill('0') <<dec <<i <<"_" << PrepareItemFName(*itcurname) <<".xml";
+                MakeFilename( fname, dirprefix, cntitem );
 
                 if( ! doc.save_file( fname.str().c_str() ) )
                 {
@@ -143,6 +140,23 @@ namespace pmd2 { namespace stats
         }
 
     private:
+
+        stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntitem )
+        {
+            const std::string * pstr = nullptr;
+            if( !m_bNoStrings && (pstr = m_pgametext->GetDefaultLanguage().GetStringIfBlockExists(eStringBlocks::ItemNames, cntitem)) )
+            {
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntitem <<"_" 
+                          <<PrepareItemFName(*pstr, m_pgametext->begin()->first) <<".xml";
+            }
+            else
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntitem <<".xml";
+                
+
+            return out_fname;
+        }
+
+
         //Length of the conversion buffer
         //static const int                          CBuffSZ = (sizeof(int)*8+1);
         ////Conversion buffers. Used for faster value conversion. (Don't need all the extra locale stuff from stringstream, as all values are raw data)
@@ -173,19 +187,44 @@ namespace pmd2 { namespace stats
             return sstr.str();
         }
 
-        inline string PrepareItemFName( const string & name )
+        inline string PrepareItemFName( const string & name, eGameLanguages glang )
         {
-            return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) ); //Remove ending "\0" and remove illegal characters for filesystem
+            return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ), std::locale( *m_pgametext->GetLocaleString(glang)) ); //Remove ending "\0" and remove illegal characters for filesystem
         }
 
-        void _WriteStrings( xml_node & pn, const string & name, const string & shortdesc, const string & longdesc )
+        inline void WriteStringNode( xml_node & strnode, const string & nodename, const string * value )
+        {
+            if( value )
+                WriteNodeWithValue( strnode, nodename, utils::StrRemoveAfter( *value, "\\0" ) ); //remove ending \0
+        }
+
+        void WriteStrings( xml_node & in, unsigned int cntitem )
         {
             using namespace itemxml;
-            xml_node strnode = pn.append_child( NODE_Strings.c_str() );
-            WriteNodeWithValue( strnode, PROP_Name,      utils::StrRemoveAfter( name,      "\\0" ).c_str() ); //remove trailling \0
-            WriteNodeWithValue( strnode, PROP_ShortDesc, utils::StrRemoveAfter( shortdesc, "\\0" ).c_str() ); //remove trailling \0
-            WriteNodeWithValue( strnode, PROP_LongDesc,  utils::StrRemoveAfter( longdesc,  "\\0" ).c_str() ); //remove trailling \0
+            WriteCommentNode( in, "In-game text" );
+            xml_node strnode = in.append_child( NODE_Strings.c_str() );
+
+            //Add all loaded languages
+            for( const auto & alang : *m_pgametext )
+            {
+                xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
+                //Write Name
+                WriteStringNode( langnode, PROP_Name,      alang.second.GetStringIfBlockExists(eStringBlocks::ItemNames, cntitem) );
+                //Write Description
+                WriteStringNode( langnode, PROP_ShortDesc, alang.second.GetStringIfBlockExists(eStringBlocks::ItemDescS, cntitem) );
+                //Write Description
+                WriteStringNode( langnode, PROP_LongDesc,  alang.second.GetStringIfBlockExists(eStringBlocks::ItemDescL, cntitem) );
+            }
         }
+
+        //void _WriteStrings( xml_node & pn, uint16_t cntitem )
+        //{
+        //    using namespace itemxml;
+        //    xml_node strnode = pn.append_child( NODE_Strings.c_str() );
+        //    WriteNodeWithValue( strnode, PROP_Name,      utils::StrRemoveAfter( name,      "\\0" ).c_str() ); //remove trailling \0
+        //    WriteNodeWithValue( strnode, PROP_ShortDesc, utils::StrRemoveAfter( shortdesc, "\\0" ).c_str() ); //remove trailling \0
+        //    WriteNodeWithValue( strnode, PROP_LongDesc,  utils::StrRemoveAfter( longdesc,  "\\0" ).c_str() ); //remove trailling \0
+        //}
 
         void _WriteItemData( xml_node & pn, const stats::itemdata & item )
         {
@@ -224,12 +263,8 @@ namespace pmd2 { namespace stats
 
     private:
         const ItemsDB                & m_items;
-        vector<string>::const_iterator m_begitemnames;
-        vector<string>::const_iterator m_enditemnames;
-        vector<string>::const_iterator m_begitemsdesc;
-        vector<string>::const_iterator m_enditemsdesc;
-        vector<string>::const_iterator m_begitemldesc;
-        vector<string>::const_iterator m_enditemldesc;
+        const GameText               * m_pgametext;
+        bool                           m_bNoStrings;
     };
 
     /**********************************************************************
@@ -238,21 +273,19 @@ namespace pmd2 { namespace stats
     class ItemXMLParser
     {
     public:
-        ItemXMLParser( vector<string>::iterator  itbegitemnames,
-                       vector<string>::iterator  itenditemnames,
-                       vector<string>::iterator  itbegitemdesc,
-                       vector<string>::iterator  itenditemdesc,
-                       vector<string>::iterator  itbegitemlongdesc,
-                       vector<string>::iterator  itenditemlongdesc )
-            :m_begitemnames(itbegitemnames),    m_enditemnames(itenditemnames),
-             m_begitemsdesc(itbegitemdesc),     m_enditemsdesc(itenditemdesc),
-             m_begitemldesc(itbegitemlongdesc), m_enditemldesc(itenditemlongdesc)
+        ItemXMLParser( GameText* pgtext )
+            :m_pgametext(pgtext), m_bNoStrings(false)
         {}
 
         ItemsDB Parse( const string & srcdir )
         {
-            ItemsDB mydb;
+            if( !m_pgametext || m_pgametext->AreStringsLoaded() )
+            {
+                clog << "<!>- ItemXMLParser::Parse(): No strings loaded, ignoring everything text related! (Names, descriptions, etc..)\n";
+                m_bNoStrings = true;
+            }
 
+            ItemsDB mydb;
             try
             {
                 Poco::DirectoryIterator itDirEnd;
@@ -261,7 +294,7 @@ namespace pmd2 { namespace stats
                 for( Poco::DirectoryIterator itDir(srcdir); itDir != itDirEnd; ++itDir )
                 {
                     if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
-                        filelst.push_back( (itDir.path().absolute().toString()) );
+                        filelst.push_back( Poco::Path::transcode(itDir.path().absolute().toString()) );
                 }
 
                 return std::move( _ParseAllItems(filelst) );
@@ -279,17 +312,6 @@ namespace pmd2 { namespace stats
         ItemsDB _ParseAllItems( const vector<string> filelst )
         {
             using namespace itemxml;
-
-            //Check if we
-            xml_document     doccheck;
-            xml_parse_result loadres = doccheck.load_file(filelst.front().c_str());
-            if( ! loadres )
-            {
-                stringstream sstr;
-                sstr <<"Can't load XML document \"" <<filelst.front() <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
-                throw std::runtime_error(sstr.str());
-            }
-
             ItemsDB resitems;
 
             resitems.resize(filelst.size());
@@ -299,6 +321,12 @@ namespace pmd2 { namespace stats
             {
                 xml_document     doc;
                 xml_parse_result loadres = doc.load_file( item.c_str() );
+                if( ! loadres )
+                {
+                    stringstream sstr;
+                    sstr <<"Can't load XML document \"" <<filelst.front() <<"\"! Pugixml returned an error : \"" << loadres.description() <<"\"";
+                    throw std::runtime_error(sstr.str());
+                }
 
                 _ParseItem( doc.first_child(), *ititem, item );
 
@@ -308,38 +336,64 @@ namespace pmd2 { namespace stats
             return std::move( resitems );
         }
 
-        void _ParseStrings( const pugi::xml_node & stringnode, uint16_t itemID )
+        void ReadStrings( xml_node & strnode, uint32_t itemID )
         {
             using namespace itemxml;
+            for( auto & curnode : strnode.children() )
+            {
+                eGameLanguages glang = StrToGameLang(curnode.name());
+                if( glang != eGameLanguages::Invalid )
+                {
+                    //Parse multi-language strings
+                    ReadLangStrings(curnode, glang, itemID);
+                }
+                else
+                {
+                    //If the game isn't multi-lingual, just parse the strings for english
+                    clog<<"<!>- ItemXMLParser::ReadStrings() : Found a non language named node!\n";
+                    ReadLangStrings(curnode, eGameLanguages::english, itemID);
+                }
+            }
+        }
 
-            auto   itNames         = m_begitemnames;
-            auto   itShortDesc     = m_begitemsdesc;
-            auto   itLongDesc      = m_begitemldesc;
+        void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t itemID )
+        {
+            auto langstr = m_pgametext->GetStrings(lang);
+            if( langstr == m_pgametext->end() )
+            {
+                clog<<"<!>- ItemXMLParser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
+                return;
+            }
 
-            std::advance( itNames,     itemID );
-            std::advance( itShortDesc, itemID );
-            std::advance( itLongDesc,  itemID );
-
-            string & name      = *itNames;
-            string & shortdesc = *itShortDesc;
-            string & longdesc  = *itLongDesc;
-
-            for( auto & curnode : stringnode.children() )
+            using namespace itemxml;
+            for( auto & curnode : langnode.children() )
             {
                 if( curnode.name() == PROP_Name )
                 {
-                    name  = curnode.child_value();
-                    name += "\\0"; //put back the \0
+                    string itemname = curnode.child_value();
+                    itemname += "\\0"; //put back the \0
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemNames, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item names string block!");
+                    *(pstr) = itemname;
                 }
                 else if( curnode.name() == PROP_ShortDesc )
                 {
-                    shortdesc  = curnode.child_value();
-                    shortdesc += "\\0"; //put back the \0
+                    string itemdescsh = curnode.child_value();
+                    itemdescsh += "\\0"; //put back the \0
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemDescS, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item short description string block!");
+                    *(pstr) = itemdescsh;
                 }
                 else if( curnode.name() == PROP_LongDesc )
                 {
-                    longdesc  = curnode.child_value();
-                    longdesc += "\\0"; //put back the \0
+                    string itemdescl = curnode.child_value();
+                    itemdescl += "\\0"; //put back the \0
+                    string * pstr = langstr->second.GetStringIfBlockExists(eStringBlocks::ItemDescL, itemID);
+                    if(!pstr)
+                        throw std::runtime_error("ItemXMLParser::ReadLangStrings(): Couldn't access the item long description string block!");
+                    *(pstr) = itemdescl;
                 }
             }
         }
@@ -349,9 +403,9 @@ namespace pmd2 { namespace stats
             using namespace itemxml;
             //Check the game version of the data
             xml_attribute gv = itemnode.attribute( ATTR_GameVer.c_str() );
-            const string  gvs= gv.as_string(); 
+            const string  gvs= gv.value(); 
 
-            if( !gvs.empty() ) //If the attribute exists
+            if( gv ) //If the attribute exists
             {
                 if( gvs == ATTR_GameVerEoS )
                 {
@@ -404,11 +458,13 @@ namespace pmd2 { namespace stats
                 }
             }
 
+            if(m_bNoStrings)
+                return;
             //Once we got our itemID, do the strings!
             for( auto & curnode : itemnode.children() )
             {
                 if( curnode.name() == NODE_Strings )
-                    _ParseStrings( curnode, item.itemID );
+                    ReadStrings( curnode, item.itemID );
             }
         }
 
@@ -465,6 +521,7 @@ namespace pmd2 { namespace stats
         void _ParseEoTDData( const pugi::xml_node & itemnode, stats::itemdata & item )
         {
             //#TODO: Finish _ParseEoTDData !
+            cerr <<"\nExplorers of Time and Darkness data parsing not implemented yet!!!\n";
             assert(false);
 
             using namespace itemxml;
@@ -478,21 +535,24 @@ namespace pmd2 { namespace stats
                 }
                 else if( curnode.name() == NODE_Data )
                 {
-
+                    assert(false);
                 }
             }
 
             //
-            _ParseStrings( strnode, item.itemID );
+            ReadStrings( strnode, item.itemID );
         }
 
     private:
-        vector<string>::iterator m_begitemnames;
-        vector<string>::iterator m_enditemnames;
-        vector<string>::iterator m_begitemsdesc;
-        vector<string>::iterator m_enditemsdesc;
-        vector<string>::iterator m_begitemldesc;
-        vector<string>::iterator m_enditemldesc;
+        //vector<string>::iterator m_begitemnames;
+        //vector<string>::iterator m_enditemnames;
+        //vector<string>::iterator m_begitemsdesc;
+        //vector<string>::iterator m_enditemsdesc;
+        //vector<string>::iterator m_begitemldesc;
+        //vector<string>::iterator m_enditemldesc;
+
+        GameText * m_pgametext;
+        bool       m_bNoStrings;
     };
 
 //=================================================================================
@@ -502,33 +562,49 @@ namespace pmd2 { namespace stats
     /*
         Export item data to XML files.
     */
+    //void      ExportItemsToXML     ( const ItemsDB                           & srcitems,
+    //                                 std::vector<std::string>::const_iterator  itbegitemnames,
+    //                                 std::vector<std::string>::const_iterator  itenditemnames,
+    //                                 std::vector<std::string>::const_iterator  itbegitemdesc,
+    //                                 std::vector<std::string>::const_iterator  itenditemdesc,
+    //                                 std::vector<std::string>::const_iterator  itbegitemlongdesc,
+    //                                 std::vector<std::string>::const_iterator  itenditemlongdesc,
+    //                                 const std::string                       & destdir )
+    //{
+    //    ItemXMLWriter( srcitems, 
+    //                   itbegitemnames,    itenditemnames, 
+    //                   itbegitemdesc,     itenditemdesc,
+    //                   itbegitemlongdesc, itenditemlongdesc ).Write(destdir);
+    //}
     void      ExportItemsToXML     ( const ItemsDB                           & srcitems,
-                                     std::vector<std::string>::const_iterator  itbegitemnames,
-                                     std::vector<std::string>::const_iterator  itenditemnames,
-                                     std::vector<std::string>::const_iterator  itbegitemdesc,
-                                     std::vector<std::string>::const_iterator  itenditemdesc,
-                                     std::vector<std::string>::const_iterator  itbegitemlongdesc,
-                                     std::vector<std::string>::const_iterator  itenditemlongdesc,
+                                     const GameText                          * pgametext,
                                      const std::string                       & destdir )
     {
-        ItemXMLWriter( srcitems, 
-                       itbegitemnames,    itenditemnames, 
-                       itbegitemdesc,     itenditemdesc,
-                       itbegitemlongdesc, itenditemlongdesc ).Write(destdir);
+        ItemXMLWriter(srcitems, pgametext).Write(destdir);
     }
+
+
     /*
         Import item data from xml files.
     */
-    ItemsDB    ImportItemsFromXML   ( const std::string                  & srcdir, 
-                                     std::vector<std::string>::iterator  itbegitemnames,
-                                     std::vector<std::string>::iterator  itenditemnames,
-                                     std::vector<std::string>::iterator  itbegitemdesc,
-                                     std::vector<std::string>::iterator  itenditemdesc,
-                                     std::vector<std::string>::iterator  itbegitemlongdesc,
-                                     std::vector<std::string>::iterator  itenditemlongdesc )
+    //ItemsDB    ImportItemsFromXML   ( const std::string                  & srcdir, 
+    //                                 std::vector<std::string>::iterator  itbegitemnames,
+    //                                 std::vector<std::string>::iterator  itenditemnames,
+    //                                 std::vector<std::string>::iterator  itbegitemdesc,
+    //                                 std::vector<std::string>::iterator  itenditemdesc,
+    //                                 std::vector<std::string>::iterator  itbegitemlongdesc,
+    //                                 std::vector<std::string>::iterator  itenditemlongdesc )
+    //{
+    //    return std::move( ItemXMLParser( itbegitemnames,    itenditemnames, 
+    //                                     itbegitemdesc,     itenditemdesc,
+    //                                     itbegitemlongdesc, itenditemlongdesc ).Parse(srcdir) );
+    //}
+
+
+    ItemsDB   ImportItemsFromXML   ( const std::string                  & srcdir, 
+                                     GameText                           * pgametext )
     {
-        return std::move( ItemXMLParser( itbegitemnames,    itenditemnames, 
-                                         itbegitemdesc,     itenditemdesc,
-                                         itbegitemlongdesc, itenditemlongdesc ).Parse(srcdir) );
+        return std::move( ItemXMLParser(pgametext).Parse(srcdir) );
     }
+
 };};

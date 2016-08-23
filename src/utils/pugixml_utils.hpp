@@ -108,9 +108,29 @@ namespace pugixmlutils
         xml_attribute att = parent.append_attribute(name.c_str());
 #ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(std::to_wstring(value).c_str()) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
 #else
         if( !att.set_value(std::to_string(value).c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
+#endif
+        return std::move(att);
+    }
+
+    template<>
+        inline pugi::xml_attribute AppendAttribute<int16_t>( pugi::xml_node & parent, const pugi::string_t & name, int16_t value ) 
+    {
+        using namespace pugi;
+        xml_attribute att   = parent.append_attribute(name.c_str());
+        int16_t       cvval = 0;
+#ifdef PUGIXML_WCHAR_MODE
+        std::wstringstream ws;
+        ws<<value;
+        if( !att.set_value(ws.str().c_str()) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
+#else
+        std::stringstream ss;
+        ss<<value;
+        if( !att.set_value(ss.str().c_str()) )
             throw std::runtime_error("pugixml couldn't set the value of attribute " + name);
 #endif
         return std::move(att);
@@ -124,7 +144,23 @@ namespace pugixmlutils
 
 #ifdef PUGIXML_WCHAR_MODE
         if( !att.set_value(value) )
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name) );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
+#else
+        if( !att.set_value(value) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
+#endif
+        return std::move(att);
+    }
+
+    template<>
+        inline pugi::xml_attribute AppendAttribute<pugi::char_t*>( pugi::xml_node & parent, const pugi::string_t & name, pugi::char_t* value )  
+    {
+        using namespace pugi;
+        xml_attribute att = parent.append_attribute(name.c_str());
+
+#ifdef PUGIXML_WCHAR_MODE
+        if( !att.set_value(value) )
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + as_utf8(name.c_str()) );
 #else
         if( !att.set_value(value) )
             throw std::runtime_error("pugixml couldn't set the value of attribute " + name );
@@ -142,7 +178,7 @@ namespace pugixmlutils
         if( !att.set_value(value.c_str()) )
         {
             //std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-            throw std::runtime_error("pugixml couldn't set the value of attribute " + /*myconv.to_bytes(*/as_utf8(name)/*)*/ );
+            throw std::runtime_error("pugixml couldn't set the value of attribute " + /*myconv.to_bytes(*/as_utf8(name.c_str())/*)*/ );
         }
 #else
         if( !att.set_value(value.c_str()) )
@@ -152,97 +188,28 @@ namespace pugixmlutils
     }
 
 
+    inline pugi::xml_node AppendCData( pugi::xml_node & parentnode, const std::string & value )
+    {
+        using namespace pugi;
+        xml_node resnode = parentnode.append_child(node_cdata);
+        resnode.set_value(value.c_str());
+        return resnode;
+    }
+
+    inline pugi::xml_node AppendPCData( pugi::xml_node & parentnode, const std::string & value )
+    {
+        using namespace pugi;
+        xml_node resnode = parentnode.append_child(node_pcdata);
+        resnode.set_value(value.c_str());
+        return resnode;
+    }
+
+
     /*
         HandleParsingError
             If there were no errors while parsing does nothing. Otherwise throws an appropriate exception!
     */
-    void HandleParsingError( const pugi::xml_parse_result & result, const std::string & xmlpath )
-    ;
-    //{
-    //    using namespace std;
-    //    using namespace pugi;
-    //    if( !result )
-    //    {
-    //        stringstream sstr;
-    //        sstr << "Error, pugixml couldn't parse the XML file \"" <<xmlpath <<"\" !";
-
-    //        switch( result.status )
-    //        {
-    //            case xml_parse_status::status_file_not_found:
-    //            {
-    //                sstr<< "The file was not found!";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_io_error:
-    //            {
-    //                sstr<< "An error occured while opening the file for reading!";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_no_document_element:
-    //            {
-    //                sstr<< "The XML file lacks a document element!";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_unrecognized_tag:
-    //            {
-    //                sstr<< "The tag at offset " <<result.offset <<" was unrecognized !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_end_element_mismatch:
-    //            {
-    //                sstr<< "Encountered unexpected end tag at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_start_element:
-    //            {
-    //                sstr<< "Encountered bad start tag at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_end_element:
-    //            {
-    //                sstr<< "Encountered bad end tag at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_attribute:
-    //            {
-    //                sstr<< "Encountered bad attribute at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_cdata:
-    //            {
-    //                sstr<< "Encountered bad cdata at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_comment:
-    //            {
-    //                sstr<< "Encountered bad comment at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_doctype:
-    //            {
-    //                sstr<< "Encountered bad document type at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_pcdata:
-    //            {
-    //                sstr<< "Encountered bad pcdata at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_bad_pi:
-    //            {
-    //                sstr<< "Encountered bad document declaration/parsing instructions at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //            case xml_parse_status::status_append_invalid_root:
-    //            {
-    //                sstr<< "Invalid type of root node at offset " <<result.offset <<" !";
-    //                break;
-    //            }
-    //        };
-
-    //        throw runtime_error( sstr.str() );
-    //    }
-    //}
+    void HandleParsingError( const pugi::xml_parse_result & result, const std::string & xmlpath );
 };
 
 #endif

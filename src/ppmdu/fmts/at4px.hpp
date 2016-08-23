@@ -9,7 +9,6 @@ Description: stuff for handling and building AT4PX files.
 License: Creative Common 0 ( Public Domain ) https://creativecommons.org/publicdomain/zero/1.0/
 All wrongs reversed, no crappyrights :P
 */
-//#include <ppmdu/basetypes.hpp>
 #include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
@@ -34,7 +33,7 @@ namespace filetypes
         at4px_header
         Structure of the header for an AT4PX file
     *******************************************************/
-    struct at4px_header /*: public utils::data_array_struct*/
+    struct at4px_header
     {
         static const unsigned int HEADER_SZ        = 18u; //Bytes
         static const unsigned int NB_FLAGS         = 9u;  //Nb of PX compression flags
@@ -47,8 +46,6 @@ namespace filetypes
 
         //Overrides
         inline unsigned int                  size()const {return HEADER_SZ;}
-        //std::vector<uint8_t>::iterator       WriteToContainer ( std::vector<uint8_t>::iterator       itwriteto )const;
-        //std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom );
 
         //Implementations specific to at4px_header
         template<class _outit>
@@ -75,15 +72,16 @@ namespace filetypes
         }
 
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer(  _init itReadfrom, _init itpastend )
         {
             for( uint8_t & abyte : magicn )
             {
-                abyte = *itReadfrom; 
-                ++itReadfrom;
+                abyte = utils::ReadIntFromBytes<uint8_t>(itReadfrom, itpastend);
+                //abyte = *itReadfrom; 
+                //++itReadfrom;
             }
 
-            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom); //iterator is incremented
+            compressedsz = utils::ReadIntFromBytes<decltype(compressedsz)>(itReadfrom, itpastend); //iterator is incremented
 
             for( uint8_t & aflag : flaglist )
             {
@@ -91,7 +89,7 @@ namespace filetypes
                 ++itReadfrom;
             }
 
-            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom); //iterator is incremented
+            decompsz = utils::ReadIntFromBytes<decltype(decompsz)>(itReadfrom, itpastend); //iterator is incremented
 
             return itReadfrom;
         }

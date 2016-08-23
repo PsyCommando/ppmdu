@@ -1969,7 +1969,7 @@ namespace DSE
             for( auto & infslot : prginf )
             {
                 //Read a ptr
-                uint16_t prginfblk = utils::ReadIntFromBytes<uint16_t>(itreadprg); //Iterator is incremented
+                uint16_t prginfblk = utils::ReadIntFromBytes<uint16_t>(itreadprg, m_itend); //Iterator is incremented
 
                 if( prginfblk != 0 )
                 {
@@ -2078,7 +2078,7 @@ namespace DSE
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
-                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr); //Iterator is incremented
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr, m_itend); //Iterator is incremented
 
                 if( smplinfoffset != 0 )
                 {
@@ -2135,7 +2135,7 @@ namespace DSE
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
-                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itlenchk); //Iterator is incremented
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itlenchk, m_itend); //Iterator is incremented
                 if( smplinfoffset != 0 )
                 {
                     if( lastoffs == 0 )
@@ -2155,7 +2155,7 @@ namespace DSE
             for( auto & ablock : waviptrs )
             {
                 //Read a ptr
-                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr); //Iterator is incremented
+                uint16_t smplinfoffset = utils::ReadIntFromBytes<uint16_t>(itreadptr, m_itend); //Iterator is incremented
 
                 if( smplinfoffset != 0 )
                 {
@@ -2897,7 +2897,7 @@ namespace DSE
                                    vector<uint8_t>::const_iterator   itdataend,
                                    const std::string & filext)
             {
-                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SWDL_MagicNumber);
+                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg, itdataend, false) == DSE::SWDL_MagicNumber);
             }
 
         private:

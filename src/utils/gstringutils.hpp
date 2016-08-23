@@ -8,6 +8,8 @@ Description: Some functions for common operations on strings of characters.
 */
 #include <string>
 #include <algorithm>
+#include <locale>
+
 
 namespace utils
 {
@@ -47,6 +49,22 @@ namespace utils
     inline std::string StrRemoveAfter( const std::string & str, const std::string & delim )
     {
         return str.substr( 0, str.find( delim, 0 ) );
+    }
+
+
+    /*
+        CompareStrIgnoreCase
+            Compare 2 strings ignoring whether they're upper or lower case!
+    */
+    inline bool CompareStrIgnoreCase( const std::string & strA, const std::string & strB, std::locale curloc = std::locale::classic() )
+    {
+        if( strA.size() != strB.size() )
+            return false;
+        auto lambdacmpchar = [&curloc]( char c1, char c2 )->bool
+        {
+            return (std::tolower(c1, curloc ) == std::tolower(c2, curloc ));
+        };
+        return std::equal( strA.begin(), strA.end(), strB.begin(), lambdacmpchar );
     }
 };
 

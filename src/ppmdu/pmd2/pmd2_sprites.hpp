@@ -17,7 +17,6 @@ No crappyrights. All wrong reversed!
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <utility>
 
@@ -73,17 +72,17 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( ptr_ptrstable_e,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( ptr_offset_f,          itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( ptr_offset_g,          itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nb_blocks_in_offset_g, itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( nb_entries_offset_e,   itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown1,              itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown2,              itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown3,              itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown4,              itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( ptr_ptrstable_e,       itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( ptr_offset_f,          itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( ptr_offset_g,          itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nb_blocks_in_offset_g, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nb_entries_offset_e,   itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown1,              itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown2,              itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown3,              itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown4,              itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -122,14 +121,14 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( ptr_frm_ptrs_table, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( ptrPal,             itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unkn_1,             itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unkn_2,             itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unkn_3,             itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( nbImgsTblPtr,       itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptr_frm_ptrs_table, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( ptrPal,             itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unkn_1,             itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unkn_2,             itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unkn_3,             itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( nbImgsTblPtr,       itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -165,12 +164,12 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( spr_ptr_info,   itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( spr_ptr_frames, itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown0,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( unknown1,       itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( spr_ptr_info,   itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes( spr_ptr_frames, itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes( unknown0,       itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes( unknown1,       itReadfrom, itPastEnd);
             return itReadfrom;
         }
 
@@ -214,14 +213,14 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom,  _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes (Unk0,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes (Index, itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes (Val0,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes (Val1,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes (Val2,  itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes (Val3,  itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes (Unk0,  itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes (Index, itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes (Val0,  itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes (Val1,  itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes (Val2,  itReadfrom, itPastEnd);
+            itReadfrom = utils::ReadIntFromBytes (Val3,  itReadfrom, itPastEnd);
             return itReadfrom;
         }
 
@@ -284,10 +283,10 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( ptrtoarray, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( szofarray,  itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptrtoarray, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( szofarray,  itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -327,14 +326,14 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( id,         itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( val0,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( val1,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( val2,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( val3,       itReadfrom);
-            itReadfrom = utils::ReadIntFromBytes( endofentry, itReadfrom);
+            itReadfrom = utils::ReadIntFromBytes( id,         itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( val0,       itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( val1,       itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( val2,       itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( val3,       itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( endofentry, itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -383,10 +382,10 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( val0, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( val1, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( val0, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( val1, itReadfrom, itPastEnd );
             return itReadfrom;
         }
 
@@ -430,14 +429,14 @@ namespace pmd2{ namespace graphics
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            itReadfrom = utils::ReadIntFromBytes( ptrpalbeg, itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unknown0,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unknown1,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unknown2,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( unknown3,  itReadfrom );
-            itReadfrom = utils::ReadIntFromBytes( endofdata, itReadfrom );
+            itReadfrom = utils::ReadIntFromBytes( ptrpalbeg, itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown0,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown1,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown2,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( unknown3,  itReadfrom, itPastEnd );
+            itReadfrom = utils::ReadIntFromBytes( endofdata, itReadfrom, itPastEnd );
             return itReadfrom;
         }
 

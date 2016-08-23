@@ -89,29 +89,28 @@ namespace DSE
 
 
         template<class _init>
-            _init ReadFromContainer(  _init itReadfrom )
+            _init ReadFromContainer( _init itReadfrom, _init itPastEnd )
         {
-            magicn      = utils::ReadIntFromBytes<decltype(magicn)>     (itReadfrom, false ); //iterator is incremented
-            unk7        = utils::ReadIntFromBytes<decltype(unk7)>       (itReadfrom);
-            flen        = utils::ReadIntFromBytes<decltype(flen)>       (itReadfrom);
-            version     = utils::ReadIntFromBytes<decltype(version)>    (itReadfrom);
-            unk1        = utils::ReadIntFromBytes<decltype(unk1)>       (itReadfrom);
-            unk2        = utils::ReadIntFromBytes<decltype(unk2)>       (itReadfrom);
-            unk3        = utils::ReadIntFromBytes<decltype(unk3)>       (itReadfrom);
-            unk4        = utils::ReadIntFromBytes<decltype(unk4)>       (itReadfrom);
-
-            year        = utils::ReadIntFromBytes<decltype(year)>       (itReadfrom);
-            month       = utils::ReadIntFromBytes<decltype(month)>      (itReadfrom);
-            day         = utils::ReadIntFromBytes<decltype(day)>        (itReadfrom);
-            hour        = utils::ReadIntFromBytes<decltype(hour)>       (itReadfrom);
-            minute      = utils::ReadIntFromBytes<decltype(minute)>     (itReadfrom);
-            second      = utils::ReadIntFromBytes<decltype(second)>     (itReadfrom);
-            centisec    = utils::ReadIntFromBytes<decltype(centisec)>   (itReadfrom);
+            magicn      = utils::ReadIntFromBytes<decltype(magicn)>     ( itReadfrom, itPastEnd, false ); //iterator is incremented
+            unk7        = utils::ReadIntFromBytes<decltype(unk7)>       ( itReadfrom, itPastEnd );
+            flen        = utils::ReadIntFromBytes<decltype(flen)>       ( itReadfrom, itPastEnd );
+            version     = utils::ReadIntFromBytes<decltype(version)>    ( itReadfrom, itPastEnd );
+            unk1        = utils::ReadIntFromBytes<decltype(unk1)>       ( itReadfrom, itPastEnd );
+            unk2        = utils::ReadIntFromBytes<decltype(unk2)>       ( itReadfrom, itPastEnd );
+            unk3        = utils::ReadIntFromBytes<decltype(unk3)>       ( itReadfrom, itPastEnd );
+            unk4        = utils::ReadIntFromBytes<decltype(unk4)>       ( itReadfrom, itPastEnd );
+            year        = utils::ReadIntFromBytes<decltype(year)>       ( itReadfrom, itPastEnd );
+            month       = utils::ReadIntFromBytes<decltype(month)>      ( itReadfrom, itPastEnd );
+            day         = utils::ReadIntFromBytes<decltype(day)>        ( itReadfrom, itPastEnd );
+            hour        = utils::ReadIntFromBytes<decltype(hour)>       ( itReadfrom, itPastEnd );
+            minute      = utils::ReadIntFromBytes<decltype(minute)>     ( itReadfrom, itPastEnd );
+            second      = utils::ReadIntFromBytes<decltype(second)>     ( itReadfrom, itPastEnd );
+            centisec    = utils::ReadIntFromBytes<decltype(centisec)>   ( itReadfrom, itPastEnd );
 
             itReadfrom  = utils::ReadStrFromByteContainer( itReadfrom, fname.data(), FNameLen );
 
-            unk5        = utils::ReadIntFromBytes<decltype(unk5)>       (itReadfrom);
-            unk6        = utils::ReadIntFromBytes<decltype(unk6)>       (itReadfrom);
+            unk5        = utils::ReadIntFromBytes<decltype(unk5)>       ( itReadfrom, itPastEnd );
+            unk6        = utils::ReadIntFromBytes<decltype(unk6)>       ( itReadfrom, itPastEnd );
 
             return itReadfrom;
         }

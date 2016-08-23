@@ -185,9 +185,6 @@
     <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\gstringutils.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
@@ -223,6 +220,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\readmes\ppmd_palettetool.txt" />
+    <Text Include="..\readmes\ppmd_palettetool.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

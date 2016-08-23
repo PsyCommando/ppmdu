@@ -24,25 +24,6 @@ namespace utils
 //===============================================================================================
 
     /************************************************************************
-        (Deprecated)data_array_struct
-            A base structure for structures to be read from files, such as 
-            headers, and any constant size blocks of data !
-
-        #TODO: Phase this out !
-    ************************************************************************/
-    //struct data_array_struct
-    //{
-    //    virtual ~data_array_struct(){}
-    //    virtual unsigned int size()const=0;
-
-    //    //The method expects that the interators can be incremented at least as many times as "size()" returns !
-    //    virtual std::vector<uint8_t>::iterator       WriteToContainer(  std::vector<uint8_t>::iterator       itwriteto )const = 0;
-
-    //    //The method expects that the interators can be incremented at least as many times as "size()" returns !
-    //    virtual std::vector<uint8_t>::const_iterator ReadFromContainer( std::vector<uint8_t>::const_iterator itReadfrom )     = 0;
-    //};
-
-    /************************************************************************
         Resolution
             A struct with human readable naming to make handling resolution
             values easier.
@@ -95,9 +76,6 @@ namespace utils
         struct ChronoRAII
     {
         typedef TimescaleT timescale_t;
-        //MrChronometer( const std::string name = "*", std::ostream * messageoutput = nullptr );
-        //~MrChronometer();
-        //static const std::string HOURS_Symbol;
 
         ChronoRAII( const std::string name = "*", std::ostream * messageoutput = nullptr )
             :_name(name)
@@ -203,12 +181,34 @@ namespace utils
             return val;
     }
 
-
     /************************************************************************************
         PortablePause
             Use this to make a pause for user input that will work on any OS.
     ************************************************************************************/
     void PortablePause();
+
+
+    /*
+        PrintNestedExceptions
+            Simple recursive function to print nested exception.
+    */
+    inline void PrintNestedExceptions( std::ostream & output, const std::exception & e, unsigned int level = 0 )
+    {
+        if( level == 0 )
+            output <<std::string(level,' ') <<"Exception: " << e.what() <<"\n";
+        else
+            output <<std::string(level,' ') <<"(" <<level  <<") : " << e.what() <<"\n";
+        try
+        {
+            std::rethrow_if_nested(e);
+        }
+        catch(const std::exception & e)
+        {
+            PrintNestedExceptions(output, e, level + 1);
+        }
+        catch(...){}
+    }
+
 
 };
 

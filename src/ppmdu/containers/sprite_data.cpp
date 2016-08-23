@@ -49,6 +49,8 @@ namespace pmd2{ namespace graphics
             case eRes::_64x32: return graphics::RES_64x32_SPRITE;
             case eRes::_32x64: return graphics::RES_32x64_SPRITE;
         };
+
+        clog << "<!>- MetaFrame::eResToResolution() : Invalid Resolution!";
         assert(false); //Asked for invalid resolution !
         return RES_INVALID;
     }
@@ -80,15 +82,17 @@ namespace pmd2{ namespace graphics
     }
 
 
-    vector<uint8_t>::const_iterator MetaFrame::ReadFromWANContainer( vector<uint8_t>::const_iterator & itread, bool & out_isLastFrm )
+    vector<uint8_t>::const_iterator MetaFrame::ReadFromWANContainer( vector<uint8_t>::const_iterator & itread,  
+                                                                     vector<uint8_t>::const_iterator   itpastend, 
+                                                                     bool                            & out_isLastFrm )
     {
         //Read the raw values first
-        imageIndex      = utils::ReadIntFromBytes<decltype(imageIndex)>(itread); //itread is incremented automatically!
-        unk0            = utils::ReadIntFromBytes<decltype(unk0)>(itread);
-        uint16_t offyfl = utils::ReadIntFromBytes<uint16_t>(itread);
-        uint16_t offxfl = utils::ReadIntFromBytes<uint16_t>(itread);
-        unk15           = utils::ReadIntFromBytes<decltype(unk15)>(itread);
-        unk1            = utils::ReadIntFromBytes<decltype(unk1)>(itread);
+        imageIndex      = utils::ReadIntFromBytes<decltype(imageIndex)>(itread,itpastend); //itread is incremented automatically!
+        unk0            = utils::ReadIntFromBytes<decltype(unk0)>      (itread,itpastend);
+        uint16_t offyfl = utils::ReadIntFromBytes<uint16_t>            (itread,itpastend);
+        uint16_t offxfl = utils::ReadIntFromBytes<uint16_t>            (itread,itpastend);
+        unk15           = utils::ReadIntFromBytes<decltype(unk15)>     (itread,itpastend);
+        unk1            = utils::ReadIntFromBytes<decltype(unk1)>      (itread,itpastend);
 
         //Set the cleaned offsets
         offsetY         = 0x03FF & offyfl; //keep the 10 lowest bits
@@ -97,13 +101,13 @@ namespace pmd2{ namespace graphics
         //Get the resolution
         resolution      = MetaFrame::GetResolutionFromOffset_uint16( offxfl, offyfl );
         
-        //x offset flags
+        // x offset flags
         vFlip           = utils::IsBitOn( offxfl, 13u );
         hFlip           = utils::IsBitOn( offxfl, 12u );
         out_isLastFrm   = utils::IsBitOn( offxfl, 11u ); //X bit 5, tells whether this is the last meta-f in a grp
         XOffbit6        = utils::IsBitOn( offxfl, 10u );
         XOffbit7        = utils::IsBitOn( offxfl,  9u );
-        //y offset flags
+        // y offset flags
         YOffbit3        = utils::IsBitOn( offyfl, 13u );
         Mosaic          = utils::IsBitOn( offyfl, 12u );
         YOffbit5        = utils::IsBitOn( offyfl, 11u );

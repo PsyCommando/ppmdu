@@ -24,10 +24,10 @@ namespace utils
 	//Consts
     //static const unsigned int SZ_INT32          = 0x4;
     //static const unsigned int SZ_INT16          = 0x2;
-	static const unsigned int MASK_UINT32_BYTE0 = 0X000000FF,  //0000 0000 - 0000 0000 - 0000 0000 - 1111 1111
-							  MASK_UINT32_BYTE1 = 0x0000FF00,  //0000 0000 - 0000 0000 - 1111 1111 - 0000 0000
-							  MASK_UINT32_BYTE2 = 0x00FF0000,  //0000 0000 - 1111 1111 - 0000 0000 - 0000 0000
-							  MASK_UINT32_BYTE3 = 0xFF000000;  //1111 1111 - 0000 0000 - 0000 0000 - 0000 0000
+	//static const unsigned int MASK_UINT32_BYTE0 = 0X000000FF,  //0000 0000 - 0000 0000 - 0000 0000 - 1111 1111
+	//						  MASK_UINT32_BYTE1 = 0x0000FF00,  //0000 0000 - 0000 0000 - 1111 1111 - 0000 0000
+	//						  MASK_UINT32_BYTE2 = 0x00FF0000,  //0000 0000 - 1111 1111 - 0000 0000 - 0000 0000
+	//						  MASK_UINT32_BYTE3 = 0xFF000000;  //1111 1111 - 0000 0000 - 0000 0000 - 0000 0000
 
 
     /*********************************************************************************************
@@ -69,7 +69,7 @@ namespace utils
 		It works on a per byte level.
 
 	*********************************************************************************************/
-	unsigned int LittleEndianToBigEndianUInt32( unsigned int val );
+	//unsigned int LittleEndianToBigEndianUInt32( unsigned int val );
 
 
 	/*********************************************************************************************
@@ -83,8 +83,8 @@ namespace utils
 		Assembles the bytes into an unsigned int, and applies masks to clean up any weirdness caused by bitshifts!
 
 	*********************************************************************************************/
-	unsigned int ByteBuffToUnsignedInt( const byte buff[] );
-    void         UnsignedIntToByteBuff( unsigned int value, byte buff[] );
+	//unsigned int ByteBuffToUnsignedInt( const byte buff[] );
+ //   void         UnsignedIntToByteBuff( unsigned int value, byte buff[] );
 
 
     /*********************************************************************************************
@@ -97,8 +97,8 @@ namespace utils
         Description:
         Assembles the bytes in the buffer into an int16, applying masks to clean it up..
     *********************************************************************************************/
-    unsigned short ByteBuffToInt16( const byte buff[] );
-    void           Int16ToByteBuff( unsigned short value, byte outbuff[] );
+    //unsigned short ByteBuffToInt16( const byte buff[] );
+    //void           Int16ToByteBuff( unsigned short value, byte outbuff[] );
 
 
     /*********************************************************************************************
@@ -158,31 +158,31 @@ namespace utils
             Tool to read integer values from a byte vector!
             ** The iterator's passed as input, has its position changed !!
     *********************************************************************************************/
-    template<class T, class _init> 
-        inline T ReadIntFromBytes( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
-    {
-        static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Type T is not an integer!" );
-        T out_val = 0;
+    //template<class T, class _init> 
+    //    inline T ReadIntFromBytes( _init & itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+    //{
+    //    static_assert( std::numeric_limits<T>::is_integer, "ReadIntFromBytes() : Type T is not an integer!" );
+    //    T out_val = 0;
 
-        auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
-        {
-            T tmp = (*itin);
-            out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
-        };
+    //    auto lambdaShiftBitOr = [&itin, &out_val]( unsigned int shiftamt )
+    //    {
+    //        T tmp = (*itin);
+    //        out_val |= ( tmp << (shiftamt * 8) ) & ( 0xFF << (shiftamt*8) );
+    //    };
 
-        if( basLittleEndian )
-        {
-            for( unsigned int i = 0; i < sizeof(T); ++i, ++itin )
-                lambdaShiftBitOr(i);
-        }
-        else
-        {
-            for( int i = (sizeof(T)-1); i >= 0; --i, ++itin )
-                lambdaShiftBitOr(i);
-        }
+    //    if( basLittleEndian )
+    //    {
+    //        for( unsigned int i = 0; i < sizeof(T); ++i, ++itin )
+    //            lambdaShiftBitOr(i);
+    //    }
+    //    else
+    //    {
+    //        for( int i = (sizeof(T)-1); i >= 0; --i, ++itin )
+    //            lambdaShiftBitOr(i);
+    //    }
 
-        return out_val;
-    }
+    //    return out_val;
+    //}
 
     /*********************************************************************************************
         ReadIntFromBytes
@@ -190,12 +190,12 @@ namespace utils
             
             #NOTE :The iterator is passed by copy here !! And the incremented iterator is returned!
     *********************************************************************************************/
-    template<class T, class _init> 
-        inline _init ReadIntFromBytes( T & dest, _init itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
-    {
-        dest = ReadIntFromBytes<typename T>( itin, basLittleEndian );
-        return itin;
-    }
+    //template<class T, class _init> 
+    //    inline _init ReadIntFromBytes( T & dest, _init itin, bool basLittleEndian = true ) //#TODO : Need to make sure that the iterator is really incremented!
+    //{
+    //    dest = ReadIntFromBytes<typename T>( itin, basLittleEndian );
+    //    return itin;
+    //}
 
 
     /*********************************************************************************************
@@ -422,6 +422,63 @@ namespace utils
             return WriteStrToByteContainer( itwhere, str.c_str(), str.size()+1 );
     }
 
+    /*
+        ReadCStrFromBytes
+            Reads a null terminated 8bits c-string.
+
+            -> beg is modified!
+    */
+    template<class _init>
+        std::string ReadCStrFromBytes( _init & beg, _init pastend )
+    {
+        std::string result;
+
+        for( ;beg != pastend && (*beg) != 0; ++beg )
+            result.push_back(*beg);
+
+        if( beg == pastend )
+            throw runtime_error("String went past expected end!");
+
+        return std::move(result);
+    }
+
+
+    /************************************************************************************
+        safestrlen
+            Count the length of a string, and has a iterator check
+            to ensure it won't loop into infinity if it can't find a 0.
+    ************************************************************************************/
+    template<typename init_t>
+        inline size_t safestrlen( init_t beg, init_t pastend )
+    {
+        size_t cntchar = 0;
+        for(; beg != pastend && (*beg) != 0; ++cntchar, ++beg );
+
+        if( beg == pastend )
+            throw runtime_error("String went past expected end!");
+
+        return cntchar;
+    }
+
+    /************************************************************************************
+        FetchString
+            Fetchs a null terminated C-String from a file offset.
+    ************************************************************************************/
+    template<typename _init>
+        std::string FetchString( uint32_t fileoffset, _init itfbeg, _init itfend )
+    {
+        auto    itstr = itfbeg;
+        std::advance( itstr,  fileoffset );
+        size_t  strlength = safestrlen(itstr, itfend);
+        string  dest;
+        dest.resize(strlength);
+
+        for( size_t cntchar = 0; cntchar < strlength; ++cntchar, ++itstr )
+            dest[cntchar] = (*itstr);
+
+        return std::move(dest);
+    }
+
 
     /*********************************************************************************************
         CalculateLengthPadding
@@ -433,7 +490,7 @@ namespace utils
                 - alignon: The number by which the length should be divisible by.
 
             Return:
-                The length of the padding necessary to align the given length on
+                The number of padding bytes necessary to align the given length on
                 "alignon".
     *********************************************************************************************/
     template<typename _SizeTy>
@@ -442,31 +499,52 @@ namespace utils
         return ( (length % alignon) != 0 )? (alignon - (length % alignon)) : 0;
     }
 
+    /*********************************************************************************************
+        CalculatePaddedLengthTotal
+            Calculate the nb of padding bytes needed to align a given length on 
+            the divisor specified, and add those to the length specified. Returning
+            the total amount of bytes after adding the padding bytes.
+            
+            Parameters:
+                - length : The length to align.
+                - alignon: The number by which the length should be divisible by.
+
+            Return:
+                The total amount of bytes after adding the padding bytes.
+    *********************************************************************************************/
+    template<typename _SizeTy>
+        inline _SizeTy CalculatePaddedLengthTotal( _SizeTy length, _SizeTy alignon )
+    {
+        return CalculateLengthPadding(length, alignon) + length;
+    }
 
     /*********************************************************************************************
         AppendPaddingBytes
             This function takes a back insert iterator and the length of the container to append padding
             to, along with the length to align on to determine how much padding is needed.
+
+            Return the nb of padding bytes that were inserted!
     *********************************************************************************************/
     template<class _backinit>
-        void AppendPaddingBytes( _backinit itinsertat, size_t lentoalign, size_t alignon, const uint8_t PadByte = 0 )
+        size_t AppendPaddingBytes( _backinit itinsertat, size_t lentoalign, size_t alignon, const uint8_t PadByte = 0 )
     {
         size_t lenpadding = CalculateLengthPadding(lentoalign, alignon);
         for( size_t ctpad = 0; ctpad < lenpadding; ++ctpad, ++itinsertat )
             itinsertat = PadByte;
+        return lenpadding;
     }
 
 //===============================================================================
 //								Utility
 //===============================================================================
-    inline unsigned int GetNextInt32DivisibleBy16( unsigned int baseoffset )
-    {
-        if( (baseoffset % 16) != 0 )
-        {
-            return ( ( baseoffset / 16 ) + 1 ) * 16;
-        }
-        return baseoffset;
-    }
+    //inline unsigned int GetNextInt32DivisibleBy16( unsigned int baseoffset )
+    //{
+    //    if( (baseoffset % 16) != 0 )
+    //    {
+    //        return ( ( baseoffset / 16 ) + 1 ) * 16;
+    //    }
+    //    return baseoffset;
+    //}
 
 };
 

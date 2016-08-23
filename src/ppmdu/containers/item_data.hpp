@@ -10,6 +10,7 @@ Description:
 #include <vector>
 #include <string>
 #include <memory>
+#include <ppmdu/pmd2/pmd2_text.hpp>
 
 namespace pmd2 { namespace stats 
 {
@@ -171,24 +172,35 @@ namespace pmd2 { namespace stats
     /*
         Export item data to XML files.
     */
+    //void      ExportItemsToXML     ( const ItemsDB                           & srcitems,
+    //                                 std::vector<std::string>::const_iterator  itbegitemnames,
+    //                                 std::vector<std::string>::const_iterator  itenditemnames,
+    //                                 std::vector<std::string>::const_iterator  itbegitemdesc,
+    //                                 std::vector<std::string>::const_iterator  itenditemdesc,
+    //                                 std::vector<std::string>::const_iterator  itbegitemlongdesc,
+    //                                 std::vector<std::string>::const_iterator  itenditemlongdesc,
+    //                                 const std::string                       & destdir );
+
     void      ExportItemsToXML     ( const ItemsDB                           & srcitems,
-                                     std::vector<std::string>::const_iterator  itbegitemnames,
-                                     std::vector<std::string>::const_iterator  itenditemnames,
-                                     std::vector<std::string>::const_iterator  itbegitemdesc,
-                                     std::vector<std::string>::const_iterator  itenditemdesc,
-                                     std::vector<std::string>::const_iterator  itbegitemlongdesc,
-                                     std::vector<std::string>::const_iterator  itenditemlongdesc,
+                                     const GameText                          * pgametext,
                                      const std::string                       & destdir );
+
     /*
         Import item data from xml files.
     */
+    //ItemsDB   ImportItemsFromXML   ( const std::string                  & srcdir, 
+    //                                 std::vector<std::string>::iterator  itbegitemnames,
+    //                                 std::vector<std::string>::iterator  itenditemnames,
+    //                                 std::vector<std::string>::iterator  itbegitemdesc,
+    //                                 std::vector<std::string>::iterator  itenditemdesc,
+    //                                 std::vector<std::string>::iterator  itbegitemlongdesc,
+    //                                 std::vector<std::string>::iterator  itenditemlongdesc );
+
     ItemsDB   ImportItemsFromXML   ( const std::string                  & srcdir, 
-                                     std::vector<std::string>::iterator  itbegitemnames,
-                                     std::vector<std::string>::iterator  itenditemnames,
-                                     std::vector<std::string>::iterator  itbegitemdesc,
-                                     std::vector<std::string>::iterator  itenditemdesc,
-                                     std::vector<std::string>::iterator  itbegitemlongdesc,
-                                     std::vector<std::string>::iterator  itenditemlongdesc );
+                                     GameText                           * pgametext );
+
+
+
 
 };};
 

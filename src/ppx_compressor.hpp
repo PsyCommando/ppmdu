@@ -6,7 +6,7 @@ ppx_compressor.hpp
 psycommando@gmail.com
 Description:  Code for running the PX compressor utility!
 */
-#include <ppmdu/basetypes.hpp>
+
 
 namespace ppx_compress
 {

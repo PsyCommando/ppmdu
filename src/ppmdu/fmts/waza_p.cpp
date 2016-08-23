@@ -34,10 +34,10 @@ namespace pmd2 { namespace filetypes
         }
 
         template<class _init>
-            _init ReadFromContainer( _init itWhere )
+            _init ReadFromContainer( _init itWhere, _init itPastEnd )
         {
-            ptrMovesData = utils::ReadIntFromBytes<decltype(ptrMovesData)>(itWhere); 
-            ptrPLSTbl    = utils::ReadIntFromBytes<decltype(ptrPLSTbl)>   (itWhere); 
+            ptrMovesData = utils::ReadIntFromBytes<decltype(ptrMovesData)>(itWhere,itPastEnd); 
+            ptrPLSTbl    = utils::ReadIntFromBytes<decltype(ptrPLSTbl)>   (itWhere,itPastEnd); 
             return itWhere;
         }
     };
@@ -130,12 +130,12 @@ namespace pmd2 { namespace filetypes
 
         void ParseHeader()
         {
-            m_header.ReadFromContainer( m_rawdata.begin() );
+            m_header.ReadFromContainer( m_rawdata.begin(), m_rawdata.end() );
         }
 
         void ParseWazaPtrs()
         {
-            m_wazaptrs.ReadFromContainer( (m_rawdata.begin() + m_header.subheaderptr) );
+            m_wazaptrs.ReadFromContainer( (m_rawdata.begin() + m_header.subheaderptr), m_rawdata.end() );
         }
 
         vector<pkmnPtrs> ParsePtrTable()
@@ -157,7 +157,7 @@ namespace pmd2 { namespace filetypes
                 //Read a Poke's 3 pointers
                 for( unsigned int cntptr = 0; cntptr < 3; ++cntptr )
                 {
-                    uint32_t curptr = utils::ReadIntFromBytes<uint32_t>(itRead);
+                    uint32_t curptr = utils::ReadIntFromBytes<uint32_t>(itRead, m_rawdata.end());
 
                     //Break if we hit padding bytes
                     if( curptr == PaddedPointer )
@@ -310,7 +310,7 @@ namespace pmd2 { namespace filetypes
         template<class T>
             inline void ReadValue( T & out_val, vector<uint8_t>::const_iterator & itRead )
         {
-            out_val = utils::ReadIntFromBytes<T>(itRead);
+            out_val = utils::ReadIntFromBytes<T>(itRead, m_rawdata.end());
         }
 
         inline bool wasHeaderParsed()const { return (m_header.magic != 0); }

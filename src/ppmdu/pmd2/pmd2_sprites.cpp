@@ -1488,32 +1488,32 @@ namespace pmd2
         //Methods
         void sprite_parser::ReadSIR0Header()
         {
-            m_sir0header.ReadFromContainer( m_itcurdata );
+            m_sir0header.ReadFromContainer( m_itcurdata, m_itenddata );
         }
 
         void sprite_parser::ReadEntireSpriteSubHeader()
         {
             //#1 - Read the subheader
-            m_subheader.ReadFromContainer( m_itbegdata + m_sir0header.subheaderptr );
+            m_subheader.ReadFromContainer( m_itbegdata + m_sir0header.subheaderptr, m_itenddata );
 
             //#2 - Read the sprite info
-            m_sprinf.ReadFromContainer( m_itbegdata + m_subheader.spr_ptr_info );
+            m_sprinf.ReadFromContainer( m_itbegdata + m_subheader.spr_ptr_info, m_itenddata );
 
             //#3 - Read the sprite frame data
-            m_sprfrmdat.ReadFromContainer( m_itbegdata + m_subheader.spr_ptr_frames );
+            m_sprfrmdat.ReadFromContainer( m_itbegdata + m_subheader.spr_ptr_frames, m_itenddata );
         }
 
         void sprite_parser::ReadPalette()
         {
             //#1 - Calculate the size of the palette
-            uint32_t           offsetPalBeg = ReadIntFromBytes<uint32_t>( (m_itbegdata + m_sprfrmdat.ptrPal) );
+            uint32_t           offsetPalBeg = ReadIntFromBytes<uint32_t>( (m_itbegdata + m_sprfrmdat.ptrPal), m_itenddata );
             uint32_t           nbcolorspal  = ( m_sprfrmdat.ptrPal - offsetPalBeg ) / 4;
             vector<colRGB24>   mypalette( nbcolorspal );
             rgbx32_parser      theparser( mypalette.begin() );
             palette_fmtinf     palfmt;
 
             //#1.5 - Read the palette's format info:
-            palfmt.ReadFromContainer( m_itbegdata + m_sprfrmdat.ptrPal );
+            palfmt.ReadFromContainer( m_itbegdata + m_sprfrmdat.ptrPal, m_itenddata );
             m_pCurSpriteOut->m_palfmt = palfmt;
 
             //2 - Read it
@@ -1552,7 +1552,7 @@ namespace pmd2
             //#2 - Read each pointers and fill up the table
             while( itfrm != itfrmend )
             {
-                uint32_t ptr = utils::ReadIntFromBytes<uint32_t>(itfrm);
+                uint32_t ptr = utils::ReadIntFromBytes<uint32_t>(itfrm, itfrmend);
                 //for( unsigned int shifter = 0; shifter < 4; ++shifter, ++itfrm )
                 //{
                 //    uint32_t temp = *itfrm; //just to be sure we don't overflow
@@ -1583,14 +1583,15 @@ namespace pmd2
             {
                 //Get the first frame's frm_beg
                 if( m_offsetFirstFrameBeg == 0 ) 
-                    m_offsetFirstFrameBeg = decoder( m_itbegdata, m_itbegdata + pointer );
+                    m_offsetFirstFrameBeg = decoder( m_itbegdata, m_itenddata, m_itbegdata + pointer );
                 else
-                    decoder( m_itbegdata, m_itbegdata + pointer );
+                    decoder( m_itbegdata, m_itenddata, m_itbegdata + pointer );
             }
         }
 
         //INCREMENTS THE ITERATOR PASSED BY REFERENCE !!!!
-        vector<datablock_i_entry> ReadASingleDatablockITable( vector<uint8_t>::const_iterator& itfrom )
+        vector<datablock_i_entry> ReadASingleDatablockITable( vector<uint8_t>::const_iterator& itfrom,
+                                                              vector<uint8_t>::const_iterator  itfromend )
         {
             vector<datablock_i_entry> table(64u); //We don't know the size in advance
             datablock_i_entry         dataentry;
@@ -1598,8 +1599,8 @@ namespace pmd2
 
             do
             {
-                dataentry.Reset(); //reset values to 0
-                itfrom = dataentry.ReadFromContainer( itfrom );
+                dataentry.Reset(); //reset values to 0vector<uint8_t>::const_iterator itfromendvector<uint8_t>::const_iterator itfromend
+                itfrom = dataentry.ReadFromContainer( itfrom, itfromend );
                 table.push_back( dataentry );
             }while( !dataentry.isNullEntry() );
 
@@ -1607,7 +1608,7 @@ namespace pmd2
         }
 
         //INCREMENTS THE ITERATOR PASSED BY REFERENCE !!!!
-        vector<uint32_t> ReadASingleDatablockHTable( vector<uint8_t>::const_iterator& itfrom, uint32_t expectednbentries, const vector<uint32_t> & offset2indexconvtable )
+        vector<uint32_t> ReadASingleDatablockHTable( vector<uint8_t>::const_iterator& itfrom, vector<uint8_t>::const_iterator itfromend, uint32_t expectednbentries, const vector<uint32_t> & offset2indexconvtable )
         {
             vector<uint32_t> DBHTable     (expectednbentries);
             auto             itLastOff    = offset2indexconvtable.begin();
@@ -1615,7 +1616,7 @@ namespace pmd2
 
             for( auto & anoffset : DBHTable )
             {
-                uint32_t offset  = utils::ReadIntFromBytes<uint32_t>(itfrom); //Increments iterator
+                uint32_t offset  = utils::ReadIntFromBytes<uint32_t>(itfrom,itfromend); //Increments iterator
                 auto     itfound = std::find( itLastOff, offset2indexconvtable.end(), offset ); //faster on shorter distances
 
                 if( itfound != offset2indexconvtable.end() )
@@ -1660,7 +1661,7 @@ namespace pmd2
             //for( auto & aptr : ptrsDBG )
             for( unsigned int i = 0; i < ptrsDBG.size(); ++i )
             {
-                itReadGPtr = ptrsDBG[i].ReadFromContainer( itReadGPtr );
+                itReadGPtr = ptrsDBG[i].ReadFromContainer( itReadGPtr, m_itenddata );
 
                 if( ptrsDBG[i].isNullEntry() )
                 {
@@ -1687,7 +1688,7 @@ namespace pmd2
             for( unsigned int i = 0; i < DataBlockH.size(); ++i )
             {
                 for( unsigned int j = 0; j < DataBlockH[i].size(); ++j )
-                    DataBlockH[i][j] = utils::ReadIntFromBytes<uint32_t>( itReadDBH );
+                    DataBlockH[i][j] = utils::ReadIntFromBytes<uint32_t>( itReadDBH, itEndDBH );
 
                 if( DataBlockH[i].empty() )
                     advance( itReadDBH, 4 ); //skip a null entry in this case, since we didn't increment the iterator!
@@ -1726,7 +1727,7 @@ namespace pmd2
                         uniquefileoffsetDBITables.push_back( currentptr );
 
                         //And read the data
-                        DataBlockI.push_back( ReadASingleDatablockITable( m_itbegdata + currentptr ) );
+                        DataBlockI.push_back( ReadASingleDatablockITable( m_itbegdata + currentptr, m_itenddata ) );
 
                         //Transform the offset in DBH to the offset we just inserted to in DataBlockI
                         DataBlockH[i][j] = uniquefileoffsetDBITables.size() - 1;
@@ -1770,9 +1771,9 @@ namespace pmd2
             for( auto & bbe_entry : m_pCurSpriteOut->m_datablockE )
             {
                 //Read the pointer
-                uint32_t entryoffset = utils::ReadIntFromBytes<uint32_t>(itdbbeg);
+                uint32_t entryoffset = utils::ReadIntFromBytes<uint32_t>(itdbbeg, m_itenddata);
                 //Read the data pointed
-                bbe_entry.ReadFromContainer( m_itbegdata + entryoffset );
+                bbe_entry.ReadFromContainer( m_itbegdata + entryoffset, m_itenddata );
             }
         }
 
@@ -1788,7 +1789,7 @@ namespace pmd2
                 m_pCurSpriteOut->m_datablockF.resize( (m_offsetH - m_sprinf.ptr_offset_f) / datablock_f_entry::MY_SIZE );
 
                 for( auto & anentry : m_pCurSpriteOut->m_datablockF )
-                    itreadf = anentry.ReadFromContainer( itreadf );
+                    itreadf = anentry.ReadFromContainer( itreadf, m_itenddata );
             }
         }
 

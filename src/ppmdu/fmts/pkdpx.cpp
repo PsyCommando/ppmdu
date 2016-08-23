@@ -1,9 +1,8 @@
 #include "pkdpx.hpp"
+#include <iterator>
 #include <ppmdu/fmts/px_compression.hpp>
-//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
-#include <ppmdu/basetypes.hpp>
 #include <utils/utility.hpp>
 #include <cassert>
 using namespace std;
@@ -253,7 +252,7 @@ namespace filetypes
     {
         //Get header
         pkdpx_header myhdr;
-        itinputbeg = myhdr.ReadFromContainer( itinputbeg );
+        itinputbeg = myhdr.ReadFromContainer( itinputbeg, itinputend );
         px_info_header pxinf = PKDPXHeaderToPXinfo( myhdr );
 
         //1 - make buffer
@@ -270,7 +269,7 @@ namespace filetypes
         //3 - copy buffer
         std::copy( buffer.begin(), buffer.end(), itoutwhere );
 
-        return buffer.size();
+        return static_cast<uint16_t>(buffer.size());
     }
 
     /*******************************************************
@@ -293,7 +292,7 @@ namespace filetypes
                               bool                                             blogenable )
     {
         pkdpx_header   hdr;
-        itinputbeg = hdr.ReadFromContainer( itinputbeg );
+        itinputbeg = hdr.ReadFromContainer( itinputbeg, itinputend );
 
         px_info_header pxinf = PKDPXHeaderToPXinfo( hdr );
 
@@ -334,7 +333,7 @@ namespace filetypes
                               bool                                             blogenable )
     {
         pkdpx_header   hdr;
-        itinputbeg = hdr.ReadFromContainer( itinputbeg );
+        itinputbeg = hdr.ReadFromContainer( itinputbeg, itinputend );
 
         px_info_header pxinf = PKDPXHeaderToPXinfo( hdr );
 
@@ -344,7 +343,7 @@ namespace filetypes
         //2 - decompress
         compression::DecompressPX( pxinf, itinputbeg, itinputend, out_decompressed, blogenable );
 
-        return out_decompressed.size();
+        return static_cast<uint16_t>(out_decompressed.size());
     }
 
 //========================================================================================================
@@ -414,7 +413,7 @@ namespace filetypes
         auto itdatabeg = parameters._itdatabeg;
 
         //Read the header
-        headr.ReadFromContainer( itdatabeg );
+        headr.ReadFromContainer( itdatabeg, parameters._itdataend );
 
         //build our content block info
         cb._startoffset          = 0;
@@ -476,8 +475,8 @@ namespace filetypes
             auto         itdatabeg = parameters._itdatabeg;
 
             //Read the header
-            sir0hdr.ReadFromContainer( itdatabeg );
-            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr) );
+            sir0hdr.ReadFromContainer( itdatabeg, parameters._itdataend );
+            headr.ReadFromContainer( (parameters._itdatabeg + sir0hdr.subheaderptr), parameters._itdataend );
 
             //build our content block info
             cb._startoffset          = 0;
@@ -504,10 +503,10 @@ namespace filetypes
             pkdpx_header mypkdpxhdr;
             try
             {
-                mysir0hdr.ReadFromContainer( itdatabeg );
+                mysir0hdr.ReadFromContainer( itdatabeg, itdataend );
                 if( mysir0hdr.magic == MagicNumber_SIR0 )
                 {
-                    mypkdpxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr) );
+                    mypkdpxhdr.ReadFromContainer( (itdatabeg + mysir0hdr.subheaderptr), itdataend );
                     return std::equal( MagicNumber_PKDPX.begin(), MagicNumber_PKDPX.end(), mypkdpxhdr.magicn.begin() );
                 }
             }

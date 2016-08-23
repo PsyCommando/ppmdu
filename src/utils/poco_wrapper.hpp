@@ -23,7 +23,7 @@ namespace utils
             -bFilenameOnly : If set to true, returns only the filename, 
                              not the complete path!
     ************************************************************************/
-    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly = false );
+    std::vector<std::string> ListDirContent_FilesAndDirs( const std::string & dirpath, bool bFilenameOnly = false, bool noslashaftdir = false );
 
     /************************************************************************
         DoCreateDirectory
@@ -50,11 +50,21 @@ namespace utils
     ************************************************************************/
     bool pathExists( const std::string & inputpath );
 
+    /*
+    */
+    bool pathIsAbsolute( const std::string & inputpath );
+
+    /*
+    */
+    bool pathIsRelative( const std::string & inputpath );
+
     /************************************************************************
         getCWD
             Return the absolute path to the current working directory!
     ************************************************************************/
     std::string getCWD();
+
+    std::string GetPathOnly(const std::string & path);
 
     /************************************************************************
         GetBaseNameOnly
@@ -74,6 +84,32 @@ namespace utils
             Return the file name and extension only.
     ************************************************************************/
     std::string GetFilename( const std::string & path );
+
+    /************************************************************************
+        GetApplicationDirectory
+            Returns the absolute path to the directory containing the executable.
+            It needs the parameters passed at the command line to work.
+
+            (**WARNING**): This thing is a big, slow hack. 
+            It instantiate a stub Poco::Application overloaded class 
+            and retrieve the path from the instance.
+    ************************************************************************/
+    //std::string GetApplicationDirectory( int argc, char* argv[] );
+
+
+    /*
+        MakeAbsolutePath
+            Make a relative path absolute, relative to a specified absolute path.
+
+            Params:
+                -relp     : Relative directory or file path.
+                -absbasep : Absolute path "relp" is to be made relative to.
+
+            If no absolute path is specified, the path is relative to the
+            current working directory.
+    */
+    std::string MakeAbsolutePath( const std::string & relp, const std::string & absbasep );
+    std::string MakeAbsolutePath( const std::string & relp );
 };
 
 #endif

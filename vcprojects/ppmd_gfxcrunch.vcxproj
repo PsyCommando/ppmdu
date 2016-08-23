@@ -52,7 +52,9 @@
     <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_langconf.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\color.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\data formats</Filter>
@@ -211,14 +213,6 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\gstringutils.cpp">
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
-      <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\utility</Filter>
@@ -299,9 +293,9 @@
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_langconf.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
     <ClInclude Include="..\src\types\contentid_generator.hpp" />
@@ -561,10 +555,11 @@
   <ItemGroup>
     <Text Include="..\readmes\ppmd_gfxcrunch.txt" />
     <Text Include="..\resources\pokesprites_names.txt" />
+    <Text Include="GfxCrunch_TestingCommandlines.txt" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\animres.xml" />
-    <Xml Include="..\resources\gamelang.xml" />
+    <Xml Include="..\resources\pmd2data.xml" />
     <Xml Include="..\resources\template_chranims.xml" />
     <Xml Include="..\resources\template_exchranims.xml" />
   </ItemGroup>

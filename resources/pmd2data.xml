@@ -1,0 +1,309 @@
+﻿<PMD2>
+  <!--=======================================================================-->
+  <!--PPMDU Configuration File-->
+  <!--=======================================================================-->
+  <!--This file is meant to contain all the data that the program uses -->
+  <!--at runtime that could be considered version specific, or that might-->
+  <!--change at one point.-->
+  
+  <!--Layout:-->
+  <!--Its made of the following structure this far : -->
+  <!--<PMD2>-->
+  <!--  <GameEditions />-->
+  <!--  <GameConstants />-->
+  <!--  <Binaries />-->
+  <!--  <StringIndexData />-->
+  <!--</PMD2>-->
+  
+  <!--External File Paths: -->
+  <!--Its also possible to spread the content of those over several external files.-->
+  <!--To indicate to the parser that some data need to be parsed in an external file, -->
+  <!--just add a <External filepath="" /> node to the PMD2 parent document node and set the "filepath" attribute to an -->
+  <!--absolute path to a xml file. -->
+  <!--Or, a path relative to the current configuration file to another xml file.-->
+  <!--External XML files must have opening and closing <PMD2> tags and follow the exact same layout as the main config file-->
+  
+  <!--=======================================================================-->
+  <!--List of known Game Editions-->
+  <!--=======================================================================-->
+  <!--Details on each of the supported game versions, along with data to help identify them.-->
+  <!--id          = A unique name to refer to the game version throughout this file.-->
+  <!--gamecode    = The ROM's gamecode corresponding to the game version.-->
+  <!--version     = Which of the 3 games in the explorers series is this? Either "EoS", "EoT", or "EoD"-->
+  <!--region      = The region where the game was sold. Either "NorthAmerica", "Europe", or "Japan"-->
+  <!--arm9off14   = The 16bits value in the arm9.bin at offset 0x0E. It differs between games, and won't be modded, so its used to find out what games the files belong to.-->
+  <!--defaultlang = Language to use when exporting named files. For example pokemon data xml files will be named in english if this is "English"-->
+  <!--issupported = Whether the game is supported by the program. Better not change those unless you made changes.-->
+  <GameEditions>
+    <Game id="EoS_NA" gamecode="C2SE" version="EoS" region="NorthAmerica" arm9off14="0x271A" defaultlang="English"  issupported="true"/>
+    <Game id="EoD_NA" gamecode="YFYE" version="EoD" region="NorthAmerica" arm9off14="0x6AD6" defaultlang="English"  issupported="false"/>
+    <Game id="EoT_NA" gamecode="YFTE" version="EoT" region="NorthAmerica" arm9off14="0xE309" defaultlang="English"  issupported="false"/>
+    
+    <Game id="EoS_EU" gamecode="C2SP" version="EoS" region="Europe"       arm9off14="0x64AF" defaultlang="English"  issupported="true"/>
+    <Game id="EoD_EU" gamecode="YFYP" version="EoD" region="Europe"       arm9off14="0xBB01" defaultlang="English"  issupported="false"/>
+    <Game id="EoT_EU" gamecode="YFTP" version="EoT" region="Europe"       arm9off14="0x725F" defaultlang="English"  issupported="false"/>
+    
+    <Game id="EoS_JP" gamecode="C2SJ" version="EoS" region="Japan"        arm9off14="0x87B5" defaultlang="Japanese" issupported="false"/> 
+    <Game id="EoD_JP" gamecode="YFYJ" version="EoD" region="Japan"        arm9off14="0x30C6" defaultlang="Japanese" issupported="false"/>
+    <Game id="EoT_JP" gamecode="YFTJ" version="EoT" region="Japan"        arm9off14="0x09C7" defaultlang="Japanese" issupported="false"/>
+  </GameEditions>
+  
+  <!--=======================================================================-->
+  <!--GameConstants-->
+  <!--=======================================================================-->
+  <!--Version specific constants-->
+  <GameConstants>
+    <Game version="EoS">
+      <Value id="NbPossibleHeros"       value="21"/>
+      <Value id="NbPossiblePartners"    value="32"/>
+      <Value id="NbUniqueEntities"      value="600"/>
+      <Value id="NbTotalEntities"       value="1200"/>
+    </Game>
+
+    <Game version="EoT" version2="EoD">
+      <!--#TODO-->
+    </Game>
+  </GameConstants>
+
+  <!--=======================================================================-->
+  <!--Offsets from game binaries, and other details for each game versions-->
+  <!--=======================================================================-->
+  <!--Various blocks in the binaries containing relevant data.-->
+  <Binaries>
+    <!-- **************** -->
+    <!-- Explorers of Sky -->
+    <!-- **************** -->
+    
+    <!--NorthAmerica-->
+    <Game id="EoS_NA">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>
+        <Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>
+        <Block name="Entities"          beg="0xA7FF0"   end="0xA9208"/>
+        <Block name="Events"            beg="0xA5488"   end="0xA68BC"/>
+        <Block name="ItemTablesPtrs1"   beg="0xB0948"   end="0xB09B0"/>
+        <Block name="SMDEventsFunTable" beg="0xB0B90"   end="0xB0D8C"/>
+      </Bin>
+      <!-- overlay_0011 -->
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
+        <Block name="ScriptOpCodes"     beg="0x03C3D0" end="0x03CFC8"/>
+      </Bin>
+      <!-- overlay_0013 -->
+      <Bin filepath="overlay/overlay_0013.bin" loadaddress="0x238A140">
+        <Block name="StartersPartnerIds"  beg="0x1F4C" end="0x1F76"/>
+        <Block name="StartersHeroIds"     beg="0x1F78" end="0x1FB8"/>
+        <Block name="StartersStrings"     beg="0x200C" end="0x206C"/>
+        <Block name="QuizzQuestionStrs"   beg="0x206C" end="0x20F0"/>
+        <Block name="QuizzAnswerStrs"     beg="0x20F0" end="0x224E"/>
+      </Bin>
+    </Game>
+
+    <!--Europe-->
+    <Game id="EoS_EU">
+      <!--#TODO-->
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
+        <Block name="Events"            beg="0xA5BE0" end="0xA715C"/>
+      </Bin>
+      <!-- overlay_0011 -->
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DCB80">
+        <Block name="ScriptOpCodes" beg="0x3C470" end="0x3D068"/>
+      </Bin>
+    </Game>
+
+    <!--Japan-->
+    <Game id="EoS_JP">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0xA9438" end="0xAA650"/>
+        <Block name="Events"            beg="0xA689C" end="0xA7D0C"/>
+        <Block name="ScriptVars"        beg="0x9EC44" end="0x9F374"/>
+      </Bin>
+      <!-- overlay_0011 -->
+      <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DD8E0">
+        <Block name="ScriptOpCodes" beg="0x3C294" end="0x3CE8C"/>
+        <Block name="Objects"       beg="0x42AD8" end="0x444DC"/>
+        <Block name="CRoutines"     beg="0x404AC" end="0x41A94"/>
+      </Bin>
+    </Game>
+
+    <!-- ********************* -->
+    <!-- Explorers of Darkness -->
+    <!-- ********************* -->
+    
+    <!--NorthAmerica-->
+    <Game id="EoD_NA">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09F6F4" end="0x0A02A0"/>
+      </Bin>
+    </Game>
+    
+    <!--Europe-->
+    <Game id="EoD_EU">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09ECFC" end="0x09F8A8"/>
+      </Bin>
+    </Game>
+    
+    <!--Japan-->
+    <Game id="EoD_JP">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A0AC8" end="0x0A1674"/>
+      </Bin>
+    </Game>
+    
+    <!-- ***************** -->
+    <!-- Explorers of Time -->
+    <!-- ***************** -->
+    
+    <!--NorthAmerica-->
+    <Game id="EoT_NA">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09F790" end="0x0A033C"/>
+      </Bin>
+    </Game>
+    
+    <!--Europe-->
+    <Game id="EoT_EU">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x09ED98" end="0x09F944"/>
+      </Bin>
+    </Game>
+    
+    <!--Japan-->
+    <Game id="EoT_JP">
+      <!-- arm9 -->
+      <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <Block name="Entities"          beg="0x0A0B64" end="0x0A1710"/>
+      </Bin>
+    </Game>
+    
+  </Binaries>
+
+  <!--=======================================================================-->
+  <!--Game text offsets-->
+  <!--=======================================================================-->
+  <!--Various blocks of strings in the string files containing specific strings.-->
+  <StringIndexData>
+    <!--Explorers of Sky, North America-->
+    <Game id="EoS_NA">
+      <Languages>
+        <Language filename="text_e.str" name="English" locale="en-US" />
+      </Languages>
+      <StringBlocks>
+        <StringBlock name="Item Names"                beg="6773"  end="8173"/>
+        <StringBlock name="Move Names"                beg="8173"  end="8734"/>
+        <StringBlock name="Pokemon Names"             beg="8734"  end="9334"/>
+        <StringBlock name="Pokemon Categories"        beg="9334"  end="9934"/>
+        
+        <StringBlock name="Move Descriptions"         beg="10145" end="10704"/>
+        <StringBlock name="Item Long Descriptions"    beg="10704" end="12104"/>
+        <StringBlock name="Item Short Descriptions"   beg="12104" end="13504"/>
+        
+        <StringBlock name="Type Names"                beg="13770" end="13989"/>
+        <StringBlock name="Ability Names"             beg="13789" end="13913"/>
+        <StringBlock name="Ability Descriptions"      beg="13913" end="14037"/>
+        
+        <StringBlock name="Portrait Names"            beg="16076" end="16108"/>
+      </StringBlocks>
+    </Game>
+    
+    <!--Explorers of Time and Darkness, North America-->
+    <Game id="EoT_NA" id2="EoD_NA">
+      <Languages>
+        <Language filename="text_e.str" name="English" locale="en-US" />
+      </Languages>
+      <StringBlocks>
+        <StringBlock name="Item Names"                beg="4927"  end="5927"/>
+        <StringBlock name="Move Names"                beg="5927"  end="6488"/>
+        <StringBlock name="Pokemon Names"             beg="6488"  end="7088"/>
+        <StringBlock name="Pokemon Categories"        beg="7088"  end="7688"/>
+        
+        <StringBlock name="Move Descriptions"         beg="7897"  end="8456"/>
+        <StringBlock name="Item Long Descriptions"    beg="8456"  end="9456"/>
+        <StringBlock name="Item Short Descriptions"   beg="9456"  end="10456"/>
+        
+        <StringBlock name="Type Names"                beg="10713" end="10732"/>
+        <StringBlock name="Ability Names"             beg="10732" end="10856"/>
+        <StringBlock name="Ability Descriptions"      beg="10856" end="10980"/>
+        
+        <StringBlock name="Portrait Names"            beg="12401" end="12433"/>
+      </StringBlocks>
+    </Game>
+    
+    <!--Explorers of Sky, Japan-->
+    <Game id="EoS_JP">
+      <Languages>
+        <Language filename="text_j.str" name="Japanese" locale=".932" />
+      </Languages>
+      <StringBlocks>
+        <!--#TODO-->
+        <StringBlock name="Portrait Names"            beg="5465" end="5497"/>
+        <StringBlock name="Pokemon Names"             beg="5519"  end="6119"/>
+      </StringBlocks>
+    </Game>
+    
+    <!--Explorers of Time and Darkness, Japan-->
+    <Game id="EoT_JP" id2="EoD_JP">
+      <Languages>
+        <Language filename="text_j.str" name="Japanese" locale=".932" />
+      </Languages>
+      <StringBlocks>
+        <!--#TODO-->
+      </StringBlocks>
+    </Game>
+    
+    <!--Explorers of Sky, Europe-->
+    <Game id="EoS_EU">
+      <Languages>
+        <Language filename="text_e.str" name="English"  locale="en-US" />
+        <Language filename="text_f.str" name="French"   locale="fr-FR" />
+        <Language filename="text_g.str" name="German"   locale="de-DE" />
+        <Language filename="text_i.str" name="Italian"  locale="it-IT" />
+        <Language filename="text_s.str" name="Spanish"  locale="es-ES" />
+      </Languages>
+      <StringBlocks>
+        <StringBlock name="Item Names"                beg="6775"  end="8175"/>
+        <StringBlock name="Move Names"                beg="8175"  end="8736"/>
+        <StringBlock name="Pokemon Names"             beg="8736"  end="9336"/>
+        <StringBlock name="Pokemon Categories"        beg="9336"  end="9936"/>
+        
+        <StringBlock name="Move Descriptions"         beg="10147" end="10706"/>
+        <StringBlock name="Item Long Descriptions"    beg="10706" end="12106"/>
+        <StringBlock name="Item Short Descriptions"   beg="12106" end="13506"/>
+        
+        <StringBlock name="Type Names"                beg="13772" end="13991"/>
+        <StringBlock name="Ability Names"             beg="13791" end="13915"/>
+        <StringBlock name="Ability Descriptions"      beg="13915" end="14039"/>
+        
+        <StringBlock name="Portrait Names"            beg="16078" end="16110"/>
+      </StringBlocks>
+    </Game>
+    
+    <!--Explorers of Time and Darkness, Europe-->
+    <Game id="EoT_EU" id2="EoD_EU">
+      <Languages>
+        <Language filename="text_e.str" name="English"  locale="en-US" />
+        <Language filename="text_f.str" name="French"   locale="fr-FR" />
+        <Language filename="text_g.str" name="German"   locale="de-DE" />
+        <Language filename="text_i.str" name="Italian"  locale="it-IT" />
+        <Language filename="text_s.str" name="Spanish"  locale="es-ES" />
+      </Languages>
+      <StringBlocks>
+        <!--#TODO-->
+      </StringBlocks>
+    </Game>
+    
+  </StringIndexData>
+  
+  <!--Append any external files to parse here!-->
+  <External filepath="pmd2scriptdata.xml" />
+
+</PMD2>

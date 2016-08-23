@@ -48,7 +48,7 @@ namespace DSE
                 ContentBlock cb;
 
                 //Read the header
-                headr.ReadFromContainer( parameters._itdatabeg );
+                headr.ReadFromContainer( parameters._itdatabeg, parameters._itdataend );
 
                 //build our content block info 
                 cb._startoffset          = 0;
@@ -65,7 +65,7 @@ namespace DSE
                                    vector<uint8_t>::const_iterator   itdataend,
                                    const std::string & filext)
             {
-                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg,false) == DSE::SEDL_MagicNumber);
+                return (utils::ReadIntFromBytes<uint32_t>(itdatabeg, itdataend, false) == DSE::SEDL_MagicNumber);
             }
 
         private:

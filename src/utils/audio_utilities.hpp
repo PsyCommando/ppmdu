@@ -90,7 +90,7 @@ namespace utils
         inline void RawPCM16Parser( _init itbegraw, _init itendraw, _backinsit itdest )
     {
         for(; itbegraw != itendraw; ++itdest )
-            (*itdest) = utils::ReadIntFromBytes<_OutSmplTy>( itbegraw ); //Iterator is incremented
+            (*itdest) = utils::ReadIntFromBytes<_OutSmplTy>(itbegraw, itendraw); //Iterator is incremented
     }
 
     //Iterator range variant

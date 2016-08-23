@@ -1,27 +1,23 @@
 #ifndef PX_COMPRESSION_CPP
 #define PX_COMPRESSION_CPP
 #include <ppmdu/fmts/px_compression.hpp>
-#include <ppmdu/basetypes.hpp>
-#include <thread>
+//!#FIXME: LOTS of probably useless includes here!!!
+#include <iterator>
+#include <cstdint>
+#include <algorithm>
 #include <future>
 #include <atomic>
 #include <vector>
 #include <deque>
-#include <algorithm>
-#include <cstdint>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <exception>
 #include <sstream>
 #include <cassert>
-#include <climits>
 #include <string>
-#include <map>
 #include <numeric>
 #include <Poco/File.h>
 #include <utils/utility.hpp>
-//#include <ppmdu/containers/tiled_image.hpp>
 using namespace std;
 using namespace utils;
 
@@ -107,7 +103,7 @@ namespace compression
             All the possible operations that can be done to compress data!
             Entries 0 to 8 correspond to their respective ctrl flag indexes!
         *********************************************************************************/
-        static enum struct ePXOperation : int8_t
+        enum struct ePXOperation : int8_t
         {
             COPY_ASIS                                 =-1,
             COPY_NYBBLE_4TIMES                        = 0,
@@ -1538,19 +1534,19 @@ namespace compression
     /*********************************************************************************
         CleanExistingCompressionLogs
     *********************************************************************************/
-    void CleanExistingCompressionLogs()
-    {
-        Poco::File logfileComp( PX_COMPRESSION_LOGFILE_NAME ), 
-                   logfileDecomp( PX_DECOMPRESSION_LOGFILE_NAME );
+    //void CleanExistingCompressionLogs()
+    //{
+    //    Poco::File logfileComp( PX_COMPRESSION_LOGFILE_NAME ), 
+    //               logfileDecomp( PX_DECOMPRESSION_LOGFILE_NAME );
 
-        if( logfileComp.exists() )
-            logfileComp.remove();
+    //    if( logfileComp.exists() )
+    //        logfileComp.remove();
 
-        if( logfileDecomp.exists() )
-            logfileDecomp.remove();
+    //    if( logfileDecomp.exists() )
+    //        logfileDecomp.remove();
 
-        cout<<"Cleaned log files!\n";
-    }
+    //    cout<<"Cleaned log files!\n";
+    //}
 
 };
 #endif

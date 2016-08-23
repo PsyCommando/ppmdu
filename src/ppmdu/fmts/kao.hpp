@@ -12,7 +12,6 @@ It should be noted that .kao files are headerless.
 A big thanks to Zhorken for reversing most of the format!
 https://github.com/Zhorken
 */
-#include <ppmdu/basetypes.hpp>
 #include <ppmdu/pmd2/pmd2_palettes.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/pmd2/pmd2_image_formats.hpp>
@@ -106,6 +105,7 @@ namespace filetypes
         std::vector<uint8_t>::const_iterator ParseToCEntry( std::vector<kao_toc_entry>::size_type  & indexentry, 
                                                             std::vector<uint8_t>::const_iterator     itrawtocentry );
         uint32_t             GetLenRawPortraitData( std::vector<uint8_t>::const_iterator itdatabeg, 
+                                                    std::vector<uint8_t>::const_iterator itdataend, 
                                                     tocsubentry_t                        entryoffset );
 
         void ImportFromFolders();

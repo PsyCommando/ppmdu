@@ -12,7 +12,7 @@ namespace utils{ namespace io
     {
         ifstream inputfile(path, ios::in | ios::binary | ios::ate); //ate : Opens the file, with the read pos at the end, to allow getting the file size
 
-        if (!(inputfile.good() && inputfile.is_open()))
+        if (!inputfile)
         {
             stringstream sstr;
             sstr <<"ReadFileToByteVector() : impossible to open file \"" <<path <<"\"!\n";
@@ -45,8 +45,9 @@ namespace utils{ namespace io
     void WriteByteVectorToFile(const std::string & path, const std::vector<uint8_t> & filedata)
     {
         ofstream outputfile(path, ios::binary);
+        outputfile.exceptions( ofstream::badbit );
 
-        if (!(outputfile.good() && outputfile.is_open()))
+        if(!outputfile)
         {
             stringstream sstr;
             sstr <<"WriteByteVectorToFile() : impossible to open file \"" <<path <<"\"!\n";
@@ -60,8 +61,9 @@ namespace utils{ namespace io
     {
         vector<string> stringlist;
         ifstream       strfile( filepath );
+        strfile.exceptions( ifstream::badbit );
 
-        if( !( strfile.good() && strfile.is_open() ) )
+        if( !strfile )
         {
             std::stringstream strs;
             strs << "ReadTextFileLineByLine(): Error: file is missing or cannot be opened ! Path :\n"
@@ -70,7 +72,7 @@ namespace utils{ namespace io
         }
         strfile.imbue(txtloc);
 
-        while( !strfile.eof() && !strfile.bad() )
+        while( !strfile.eof() )
         {
             string tmp;
             getline( strfile, tmp );
@@ -83,9 +85,10 @@ namespace utils{ namespace io
     void WriteTextFileLineByLine( const std::vector<std::string> & data, const std::string & filepath, const std::locale & txtloc )
     {
         static const char EOL = '\n';
-        ofstream output( filepath/*, std::ios::binary*/ );
+        ofstream output(filepath);
+        output.exceptions( ofstream::badbit );
 
-        if( !( output.good() && output.is_open() ) )
+        if( !output )
         {
             std::stringstream strs;
             strs << "WriteTextFileLineByLine(): Error: file is missing or cannot be opened ! Path :\n"
@@ -97,8 +100,6 @@ namespace utils{ namespace io
         const unsigned int lastentry = data.size() - 1;
         for( unsigned int i = 0; i < data.size(); ++i )// const auto & entry : data )
         {
-            //output.write( entry.c_str(), entry.size() + 1 );
-            //output.write( &EOL, 1 );
             output << data[i];
             if( i < lastentry ) //Avoid the extra unneeded EoL
                output <<"\n";

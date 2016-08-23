@@ -66,7 +66,7 @@ namespace utils
     }
 
     template<class _Ty>
-        _Ty parseHexaValToValue( const std::string & str )
+        inline _Ty parseHexaValToValue( const std::string & str )
     {
         using namespace std;
         _Ty          out_val;

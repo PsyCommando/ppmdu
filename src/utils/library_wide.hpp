@@ -8,11 +8,16 @@ Description:
     Contains a singleton holding information relevant to how most of the library should behave.
     Basically, a form of clean "globals" !
 
-    #TODO: Use a map with named parameters instead ! It'll make it much more versatile.
+    #TODO: Use a map with named parameters instead ! It'll make it much more versatile. 
+           And name it "SharedArguments".
+           Then, individual application can implement their own wrapper over that that
+           just parses the relevant data for the duration of the execution.
+
+           Though, having some basic shared arguments might help. Like log on, and display progress?
 */
-#include <ppmdu/basetypes.hpp>
 #include <locale>
 #include <string>
+#include <unordered_map>
 
 namespace utils
 {
@@ -32,16 +37,40 @@ namespace utils
         bool isVerboseOn()const;
 
         //Nb threads to use at most
-        void setNbThreadsToUse( unsigned int nbthreads );
+        void         setNbThreadsToUse( unsigned int nbthreads );
         unsigned int getNbThreadsToUse()const;
 
         inline void isLogOn( bool state ){ m_LoggingOn = state; }
         inline bool isLogOn()const       { return m_LoggingOn;  }
 
+        inline bool ShouldDisplayProgress()const     {return m_displayProgress;}
+        inline void ShouldDisplayProgress(bool bdisp){ m_displayProgress = bdisp; }
+
+        /*
+            Common values between all programs
+        */
+        enum struct eBasicValues
+        {
+            ProgramLogDir,
+            ProgramExeDir,
+            NbValues,
+        };
+
+        //! #TODO: Polish this, and integrate it!!
+        inline std::string       & StringValue(eBasicValues val)      { return m_baseval[val];}
+        inline const std::string & StringValue(eBasicValues val)const { return m_baseval.at(val);}
+
+        inline std::string       & StringValue(const std::string & valname)      { return m_sharedvalues[valname];}
+        inline const std::string & StringValue(const std::string & valname)const { return m_sharedvalues.at(valname);}
+
     private:
+        bool         m_displayProgress;
         bool         m_verboseOn;
         bool         m_LoggingOn;
         unsigned int m_nbThreads;
+
+        std::unordered_map<eBasicValues,std::string> m_baseval;
+        std::unordered_map<std::string, std::string> m_sharedvalues;
     };
 
     /***************************************************************
@@ -79,6 +108,9 @@ namespace utils
 
     //Prefix <!>- to text and log into clog, only if log enabled.
     void LogError   ( const std::string & text );
+
+    //Prefix <!>- to text and log into clog, only if log enabled.
+    void LogWarning ( const std::string & text );
 
     //Prefix <*>- to text and log into clog, only if log enabled.
     void LogMessage ( const std::string & text );

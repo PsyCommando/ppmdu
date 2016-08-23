@@ -10,6 +10,8 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <memory>
+#include <functional>
 #include <Poco/DirectoryIterator.h>
 #include <Poco/File.h>
 #include <Poco/Path.h>
@@ -24,8 +26,8 @@ namespace pmd2 {namespace stats
 //===============================================================================================
     namespace pkmnXML
     {
-        static const string NODE_Pkmn     = "Pokemon";
-        static const string ATTR_GameVer  = "GameVersion";
+        static const string ROOT_Pkmn     = "Pokemon";
+        static const string ATTR_GameVer  = CommonXMLGameVersionAttrStr;
 
         static const string NODE_GenderEnt= "GenderedEntity";
 
@@ -99,7 +101,7 @@ namespace pmd2 {namespace stats
         static const string PROP_Unk30    = "Unk30";
     };
 
-    //#TODO: Constants with the same values are spread out around the code! Do something about that!
+    //! #TODO: Constants with the same values are spread out around the code! Do something about that!
     static const string GameVersion_EoS  = "EoS";
     static const string GameVersion_EoTD = "EoT/D";
 
@@ -115,13 +117,17 @@ namespace pmd2 {namespace stats
     {
     public:
         PokemonDB_XMLWriter( const PokemonDB                         & src, 
-                             std::vector<std::string>::const_iterator  itbegnames,
-                             std::vector<std::string>::const_iterator  itbegcat )
-            :m_src(src),m_itbegnames(itbegnames),m_itbegcat(itbegcat)
+                             const GameText                          * gtext )
+            :m_src(src),m_pgametext(gtext), m_bNoStrings(false)
         {}
 
         void Write( const std::string & outdir )
         {
+            if( !m_pgametext || (m_pgametext && !m_pgametext->AreStringsLoaded()) )
+            {
+                m_bNoStrings = true;
+            }
+
             WriteAllEntries(outdir);
         }
 
@@ -130,6 +136,7 @@ namespace pmd2 {namespace stats
         //Returns a pointer to the buffer passed as argument
         inline const char * FastTurnIntToHexCStr( unsigned int value )
         {
+            //!#FIXME: sprintf_s is not portable!!! Better just use stringstreams now..
             sprintf_s( m_convBuff.data(), CBuffSZ, "0x%s", itoa( value, m_secConvbuffer.data(), 16 ) );
             return m_convBuff.data();
         }
@@ -162,32 +169,58 @@ namespace pmd2 {namespace stats
         }
 
 
-        inline string PreparePokeNameFName( const string & name )
+        inline string PreparePokeNameFName( const string & name, eGameLanguages lang )
         {
-            return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) ); //Remove ending "\0" and remove illegal characters for filesystem
+            const string * plocstr = m_pgametext->GetLocaleString(lang);
+            if( plocstr )
+                return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ), std::locale( *plocstr ) ); //Remove ending "\0" and remove illegal characters for filesystem
+            else 
+                return utils::CleanFilename( name.substr( 0, name.find("\\0",0 ) ) );
+        }
+
+        stringstream & MakeFilename( stringstream & out_fname, const string & outpathpre, unsigned int cntpkmn )
+        {
+            const string * pfstr = nullptr;
+            if( !m_bNoStrings && (pfstr = m_pgametext->GetDefaultLanguage().GetStringIfBlockExists( eStringBlocks::PkmnNames, cntpkmn )) )
+            {
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
+            }
+            else
+                out_fname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<".xml";
+
+            return out_fname;
         }
 
         void WriteAllEntries( const string & outdir )
         {
+            using namespace pkmnXML;
             stringstream sstrfname;
-            auto         itcurname = m_itbegnames;
             const string outpathpre = utils::TryAppendSlash(outdir);
 
-            for( unsigned int i = 0; i < m_src.size(); ++i, ++itcurname )
+            for( unsigned int cntpkmn = 0; cntpkmn < m_src.size(); ++cntpkmn )
             {
-                using namespace pkmnXML;
                 sstrfname.str(string());
-                sstrfname <<outpathpre <<setw(4) <<setfill('0') <<i <<"_" <<PreparePokeNameFName(*itcurname) <<".xml";
+                MakeFilename(sstrfname, outpathpre, cntpkmn);
+                //if( !m_bNoStrings )
+                //{
+                //    const string * pfstr = m_pgametext->begin()->second.GetStringInBlock( eStringBlocks::PkmnNames, cntpkmn );
+                //    if( pfstr )
+                //        sstrfname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<"_" <<PreparePokeNameFName(*pfstr, m_pgametext->begin()->first) <<".xml";
+                //    else
+                //        sstrfname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<".xml";
+                //}
+                //else
+                //    sstrfname <<outpathpre <<setw(4) <<setfill('0') <<cntpkmn <<".xml";
 
                 xml_document doc;
-                xml_node     pknode = doc.append_child( NODE_Pkmn.c_str() );
+                xml_node     pknode = doc.append_child( ROOT_Pkmn.c_str() );
 
                 if( m_src.isEoSData() )
                     AppendAttribute( pknode, ATTR_GameVer, GameVersion_EoS );
                 else
                     AppendAttribute( pknode, ATTR_GameVer, GameVersion_EoTD );
 
-                WriteAPokemon( m_src[i], pknode, i );
+                WriteAPokemon( m_src[cntpkmn], pknode, cntpkmn );
 
                 if( ! doc.save_file( sstrfname.str().c_str() ) )
                     throw std::runtime_error("Can't write xml file " + sstrfname.str());
@@ -233,10 +266,19 @@ namespace pmd2 {namespace stats
             using namespace pkmnXML;
             xml_node strnode = pn.append_child( NODE_Strings.c_str() );
 
-            //Write Name
-            WriteNodeWithValue( strnode, PROP_Name, utils::StrRemoveAfter( *(m_itbegnames + pkindex), "\\0" ) ); //remove ending \0
-            //Write Category
-            WriteNodeWithValue( strnode, PROP_Category, utils::StrRemoveAfter( *(m_itbegcat + pkindex), "\\0" ) ); //remove ending \0
+            //Add all loaded languages
+            for( const auto & alang : *m_pgametext )
+            {
+                xml_node langnode = strnode.append_child( GetGameLangName(alang.first).c_str() );
+                //Write Name
+                const string * pname = alang.second.GetStringIfBlockExists(eStringBlocks::PkmnNames,pkindex);
+                if( pname )
+                    WriteNodeWithValue( langnode, PROP_Name, utils::StrRemoveAfter( *pname, "\\0" ) ); //remove ending \0
+                //Write Category
+                const string * pcat = alang.second.GetStringIfBlockExists(eStringBlocks::PkmnCats,pkindex);
+                if( pcat )
+                    WriteNodeWithValue( langnode, PROP_Category, utils::StrRemoveAfter( *pcat, "\\0" ) ); //remove ending \0
+            }
         }
 
         void WriteMonsterData( const PokeMonsterData & md, xml_node & pn )
@@ -321,7 +363,7 @@ namespace pmd2 {namespace stats
                 //Write lvl-up data
                 xml_node lvlnode = growthnode.append_child( NODE_Level.c_str() );
                 //Exp Required
-                WriteNodeWithValue( lvlnode, PROP_ExpReq, FastTurnIntToCStr(sg[i].first) );
+                WriteNodeWithValue( lvlnode, PROP_ExpReq, FastTurnIntToCStr( sg[i].first) );
 
                 //Stats
                 WriteNodeWithValue( lvlnode, PROP_HP,     FastTurnIntToCStr(sg[i].second.HP) );
@@ -373,12 +415,16 @@ namespace pmd2 {namespace stats
         static const int                          CBuffSZ = (sizeof(int)*8+1);
 
         const PokemonDB                         & m_src;
-        std::vector<std::string>::const_iterator m_itbegnames;
-        std::vector<std::string>::const_iterator m_itbegcat;
+        const GameText                          * m_pgametext;
+
+        //std::vector<std::string>::const_iterator m_itbegnames;
+        //std::vector<std::string>::const_iterator m_itbegcat;
 
         //Conversion buffers. Used for faster value conversion. (Don't need all the extra locale stuff from stringstream, as all values are raw data)
         array<char,CBuffSZ>                      m_convBuff;
         array<char,CBuffSZ>                      m_secConvbuffer;
+
+        bool                                     m_bNoStrings; //If true, omit strings entirely, and don't write pokemon names for each files!
     };
 
     /***************************************************************************************
@@ -399,19 +445,34 @@ namespace pmd2 {namespace stats
             - itbegcat   : The beginning iterator of the game's pokemon category strings.
             - itendcat   : The end iterator of the game's pokemon category strings.
         */
-        PokemonDB_XMLParser( PokemonDB                          & out_pkdb,
-                             std::vector<std::string>::iterator   itbegnames,
-                             std::vector<std::string>::iterator   itendnames,
-                             std::vector<std::string>::iterator   itbegcat,
-                             std::vector<std::string>::iterator   itendcat )
-           :m_out(out_pkdb),m_boundsNames(make_pair(itbegnames,itendnames)), m_boundsCats(make_pair(itbegcat,itendcat)), m_isEoS(false)
-        {}
+        //PokemonDB_XMLParser( PokemonDB                          & out_pkdb,
+        //                     std::vector<std::string>::iterator   itbegnames,
+        //                     std::vector<std::string>::iterator   itendnames,
+        //                     std::vector<std::string>::iterator   itbegcat,
+        //                     std::vector<std::string>::iterator   itendcat )
+        //   :m_out(out_pkdb),m_boundsNames(make_pair(itbegnames,itendnames)), m_boundsCats(make_pair(itbegcat,itendcat)), m_isEoS(false)
+        //{}
 
-        void Parse( const std::string & srcdir )
+        /*
+        */
+        PokemonDB_XMLParser( PokemonDB & out_pkdb, GameText  * inout_gtext )
+            :m_out(out_pkdb), m_isEoS(false), m_pgametext(inout_gtext), m_bParsePokemonId(false)
         {
+        }
+        
+
+        void Parse( const std::string & srcdir, bool bparsepkid = true )
+        {
+            if( !m_pgametext || (m_pgametext && !m_pgametext->AreStringsLoaded()) )
+            {
+                m_bNoStrings = true;
+                clog << "<!>- PokemonDB_XMLParser::Parse(): No strings present, ignoring completely strings(names, text, etc..)!\n";
+            }
+            m_bParsePokemonId = bparsepkid;
+
             try
             {
-                m_out.Pkmn() = ReadAllPokemon(srcdir);
+                m_out.Pkmn() = std::move( ReadAllPokemon(srcdir) );
                 m_out.isEoSData(m_isEoS);
             }
             catch( exception & e )
@@ -424,6 +485,28 @@ namespace pmd2 {namespace stats
 
     private:
 
+        /*
+            Decides whether to parse the pokemon id from the filename or just use the file counter value instead.
+        */
+        uint32_t GetCurrentPokemonID( const std::string & pkmn, uint32_t cntPkmn)
+        {
+            uint32_t pkid = 0;
+            if( m_bParsePokemonId )
+            {
+                stringstream sstrmoveid;
+                auto         itendnumber = std::find_if_not( pkmn.begin(), 
+                                                             pkmn.end(), 
+                                                            std::bind( &(std::isalnum<char>), 
+                                                                        std::placeholders::_1, 
+                                                                        std::ref(locale::classic()) ) );
+                sstrmoveid << string( pkmn.begin(), itendnumber );
+                sstrmoveid >> pkid;
+            }
+            else
+                pkid = cntPkmn;
+            return pkid;
+        }
+
         vector<CPokemon> ReadAllPokemon( const string & srcdir )
         {
             using namespace pkmnXML;
@@ -433,8 +516,11 @@ namespace pmd2 {namespace stats
             for( Poco::DirectoryIterator itDir(srcdir); itDir != itDirEnd; ++itDir )
             {
                 if( itDir->isFile() && Poco::Path(itDir.path()).getExtension() == "xml" )
-                    filelst.push_back( (itDir.path().absolute().toString()) );
+                    filelst.push_back( Poco::Path::transcode(itDir.path().absolute().toString()) );
             }
+
+            if( filelst.empty() )
+                throw std::runtime_error( "PokemonDB_XMLParser::ReadAllPokemon(): Couldn't find any xml files under the path \"" + srcdir + "\"!" );
 
             vector<CPokemon> result;
             result.reserve(filelst.size());
@@ -443,9 +529,7 @@ namespace pmd2 {namespace stats
             uint32_t cntPkmn  = 0;
             for( auto & pkmn : filelst )
             {
-                string & strname = GetStringRefPkmn(cntPkmn);
-                string & strcat  = GetStringRefCat(cntPkmn);
-
+                uint32_t         pkid = GetCurrentPokemonID(pkmn,cntPkmn);
                 xml_document     doc;
                 xml_parse_result loadres = doc.load_file(pkmn.c_str());
                 if( ! loadres )
@@ -455,8 +539,15 @@ namespace pmd2 {namespace stats
                     throw std::runtime_error(sstr.str());
                 }
 
-                bool hadEoSAttribute = false;
-                result.push_back( ReadPokemon( doc.first_child(), strname, strcat, hadEoSAttribute ) );
+                bool     hadEoSAttribute = false;
+                xml_node rootnode        = doc.child(ROOT_Pkmn.c_str());
+                if( rootnode )
+                    result.push_back( ReadPokemon( rootnode, cntPkmn, hadEoSAttribute ) );
+                else
+                {
+                    clog << "<!>- PokemonDB_XMLParser::ReadAllPokemon(): Skipping XML file with no pokemon data..\n";
+                    continue;
+                }
 
                 //Count EoS pokes
                 if( hadEoSAttribute )
@@ -479,35 +570,35 @@ namespace pmd2 {namespace stats
             return std::move(result);
         }
 
-        //Get pokemon name string reference
-        std::string & GetStringRefPkmn( uint32_t index )
-        {
-            auto it = m_boundsNames.first + index;
-            if( it < m_boundsNames.second )
-                return *it;
-            else
-            {
-                stringstream sstr;
-                sstr << "ERROR: The name string for Pokemon at index " <<dec << index <<" is out of the valid Pokemon name string range!";
-                throw std::out_of_range( sstr.str() );
-            }
-        }
+        ////Get pokemon name string reference
+        //std::string & GetStringRefPkmn( uint32_t index )
+        //{
+        //    auto it = m_boundsNames.first + index;
+        //    if( it < m_boundsNames.second )
+        //        return *it;
+        //    else
+        //    {
+        //        stringstream sstr;
+        //        sstr << "ERROR: The name string for Pokemon at index " <<dec << index <<" is out of the valid Pokemon name string range!";
+        //        throw std::out_of_range( sstr.str() );
+        //    }
+        //}
 
-        //Get category string reference
-        std::string & GetStringRefCat( uint32_t index )
-        {
-            auto it = m_boundsCats.first + index;
-            if( it < m_boundsCats.second )
-                return *it;
-            else
-            {
-                stringstream sstr;
-                sstr << "ERROR: The category string for Pokemon at index " <<dec << index <<" is out of the valid Pokemon category string range!";
-                throw std::out_of_range( sstr.str() );
-            }
-        }
+        ////Get category string reference
+        //std::string & GetStringRefCat( uint32_t index )
+        //{
+        //    auto it = m_boundsCats.first + index;
+        //    if( it < m_boundsCats.second )
+        //        return *it;
+        //    else
+        //    {
+        //        stringstream sstr;
+        //        sstr << "ERROR: The category string for Pokemon at index " <<dec << index <<" is out of the valid Pokemon category string range!";
+        //        throw std::out_of_range( sstr.str() );
+        //    }
+        //}
 
-        CPokemon ReadPokemon( xml_node & pknode, string & pkname, string & pkcat, bool & isEoS )
+        CPokemon ReadPokemon( xml_node & pknode, uint32_t cntpokemon, bool & isEoS )
         {
             using namespace pkmnXML;
             //CPokemon curpoke;
@@ -535,22 +626,22 @@ namespace pmd2 {namespace stats
                 else
                 {
                     stringstream sstr;
-                    sstr << "Invalid game version attribute of \"" <<gvs <<"\" for Pokemon " <<pkname <<"!";
+                    sstr << "Invalid game version attribute of \"" <<gvs <<"\" for Pokemon " <<cntpokemon <<"!";
                     throw runtime_error(sstr.str());
                 } 
             }
             else
             {
                 stringstream sstr;
-                sstr << "Game version attribute for Pokemon " <<pkname <<" is missing!";
+                sstr << "Game version attribute for Pokemon " <<cntpokemon <<" is missing!";
                 throw runtime_error(sstr.str());
             }
 
             for( auto & curnode : pknode.children() )
             {
-                if( curnode.name() == NODE_Strings )
+                if( !m_bNoStrings && curnode.name() == NODE_Strings )
                 {
-                    ReadStrings(curnode,pkname,pkcat);
+                    ReadStrings(curnode,cntpokemon);
                 }
                 else if( curnode.name() == NODE_SGrowth )
                 {
@@ -596,20 +687,55 @@ namespace pmd2 {namespace stats
                 return CPokemon( move(gen1), move(sg), move(mvset1), move(mvset2) );
         }
 
-        void ReadStrings( xml_node & strnode, string & pkname, string & pkcat )
+        void ReadStrings( xml_node & strnode, uint32_t cntpkmn )
         {
             using namespace pkmnXML;
             for( auto & curnode : strnode.children() )
             {
+                eGameLanguages glang = StrToGameLang(curnode.name());
+                if( glang != eGameLanguages::Invalid )
+                {
+                    //Parse multi-language strings
+                    ReadLangStrings(curnode, glang, cntpkmn);
+                }
+                else
+                {
+                    //If the game isn't multi-lingual, just parse the strings for english
+                    clog<<"<!>- PokemonDB_XMLParser::ReadStrings() : Found a non language named node!\n";
+                    ReadLangStrings(curnode, eGameLanguages::english, cntpkmn);
+                }
+            }
+        }
+
+        void ReadLangStrings( xml_node & langnode, eGameLanguages lang, uint32_t cntpkmn )
+        {
+            auto langstr = m_pgametext->GetStrings(lang);
+            if( langstr == m_pgametext->end() )
+            {
+                clog<<"<!>- PokemonDB_XMLParser::ReadLangStrings(): Found strings for " <<GetGameLangName(lang) <<", but the language was not loaded for editing! Skipping!\n";
+                return;
+            }
+
+            using namespace pkmnXML;
+            for( auto & curnode : langnode.children() )
+            {
                 if( curnode.name() == PROP_Name )
                 {
-                    pkname = curnode.child_value();
+                    string pkname = curnode.child_value();
                     pkname += "\\0"; //put back the \0
+                    string * pstr = langstr->second.GetStringIfBlockExists( eStringBlocks::PkmnNames, cntpkmn );
+                    if(!pstr)
+                        throw std::runtime_error("PokemonDB_XMLParser::ReadLangStrings(): Couldn't access the pokemon name string block!");
+                    *(pstr) = pkname;
                 }
                 else if( curnode.name() == PROP_Category )
                 {
-                    pkcat = curnode.child_value();
+                    string pkcat = curnode.child_value();
                     pkcat += "\\0"; //put back the \0
+                    string * pstr = langstr->second.GetStringIfBlockExists( eStringBlocks::PkmnCats, cntpkmn );
+                    if(!pstr)
+                        throw std::runtime_error("PokemonDB_XMLParser::ReadLangStrings(): Couldn't access the pokemon category name string block!");
+                    *(pstr) = pkcat;
                 }
             }
         }
@@ -805,29 +931,48 @@ namespace pmd2 {namespace stats
 
     private:
         PokemonDB & m_out;
-        strbounds_t m_boundsNames;
-        strbounds_t m_boundsCats;
+        GameText  * m_pgametext;
+        //strbounds_t m_boundsNames;
+        //strbounds_t m_boundsCats;
         bool        m_isEoS;
+        bool        m_bNoStrings; //If true, omit strings entirely.
+        bool        m_bParsePokemonId;
     };
 
 //===============================================================================================
 //  Functions
 //===============================================================================================
+    //void      ExportPokemonsToXML  ( const PokemonDB                         & src,
+    //                                 std::vector<std::string>::const_iterator  itbegnames,
+    //                                 std::vector<std::string>::const_iterator  itbegcat,
+    //                                 const std::string                       & destDir )
+    //{
+    //    PokemonDB_XMLWriter( src, itbegnames, itbegcat ).Write(destDir);
+    //}
+
     void      ExportPokemonsToXML  ( const PokemonDB                         & src,
-                                     std::vector<std::string>::const_iterator  itbegnames,
-                                     std::vector<std::string>::const_iterator  itbegcat,
-                                     const std::string                       & destDir )
+                                     const GameText                          * gtext,
+                                     const std::string                       & destdir )
     {
-        PokemonDB_XMLWriter( src, itbegnames, itbegcat ).Write(destDir);
+        PokemonDB_XMLWriter( src, gtext ).Write(destdir);
     }
     
-    void      ImportPokemonsFromXML( const std::string                  & srcdir, 
-                                     PokemonDB                          & out_pkdb,
-                                     std::vector<std::string>::iterator   itbegnames,
-                                     std::vector<std::string>::iterator   itendnames,
-                                     std::vector<std::string>::iterator   itbegcat,
-                                     std::vector<std::string>::iterator   itendcat )
+    //void      ImportPokemonsFromXML( const std::string                  & srcdir, 
+    //                                 PokemonDB                          & out_pkdb,
+    //                                 std::vector<std::string>::iterator   itbegnames,
+    //                                 std::vector<std::string>::iterator   itendnames,
+    //                                 std::vector<std::string>::iterator   itbegcat,
+    //                                 std::vector<std::string>::iterator   itendcat )
+    //{
+    //    PokemonDB_XMLParser( out_pkdb, itbegnames, itendnames, itbegcat, itendcat ).Parse(srcdir);
+    //}
+
+
+    void      ImportPokemonsFromXML ( const std::string                 & srcdir, 
+                                      PokemonDB                         & out_pkdb,
+                                      GameText                          * inout_gtext )
     {
-        PokemonDB_XMLParser( out_pkdb, itbegnames, itendnames, itbegcat, itendcat ).Parse(srcdir);
+        PokemonDB_XMLParser( out_pkdb, inout_gtext ).Parse(srcdir);
     }
+
 };};
