@@ -24,9 +24,8 @@ Changelog:
     * Fixed game string import.
 -0.22(2016/06/18):
     * Fixed bad SIR0 padding.
--0.23(2016/08/--):
+-0.23(2016/08/22):
     <-!!!!!-> Remade entirely how parameters are processed at the command line, because of the new features requiring extra details. <-!!!!->
-
     * Added XML configuration file system, to handle most game versions specific data.
     * Added ability to XML conf file to refer to append external configuration files by using a <External filename="" /> node.
     * Added Script decompiler + recompiler. Everything is human readable XML.
@@ -44,6 +43,7 @@ Changelog:
       stored and editable in the "pmd2scriptdata.xml" file! 
       This should make everything more readable, and customizable/maintainable no matter if there are ASM hacks applied to the game or not. 
     * Added support for importing/exporting script data along with scripts.
+    * Added support for dumping the level list to a SIR0 file. Its pretty much completely useless to anyone for now however.
 
 ----------------------------------------------------------------------------------------------------
 License info:
@@ -115,7 +115,7 @@ Its expected to contain:
     * A "overlay" directory containing the overlay_####.bin files for the game.
 
 The one and only argument, "ExplorersOfSky_Out", is the path to export the data to, or to import from.
-Its expected to have a certain directory structure (Directories may be entirely ommited, when they don't contain any data):
+Its expected to have a certain directory structure on import (Directories may be entirely ommited, when they don't contain any data):
     - Any game text data must be under the "game_strings" directory, and contain text files named after their target language.
     - Any item data xml files must be under the "item_data" directory and contain the xml for all items.
     - Any move data xml files must be under the "move_data" directory and contain the xml for all moves.
