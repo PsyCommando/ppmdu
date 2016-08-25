@@ -234,6 +234,9 @@
     <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp">
       <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\parallel_tasks.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
@@ -403,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\parallel_tasks.hpp">
+      <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

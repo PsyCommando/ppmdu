@@ -9,7 +9,8 @@
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
 #include <utils/pugixml_utils.hpp>
 #include <utils/library_wide.hpp>
-#include <utils/multiple_task_handler.hpp>
+//#include <utils/multiple_task_handler.hpp>
+#include <utils/parallel_tasks.hpp>
 #include <ppmdu/fmts/ssb.hpp>
 #include <atomic>
 #include <thread>
@@ -2796,7 +2797,8 @@ namespace pmd2
         out_dest.WriteScriptSet(out_dest.m_common);
 
         //Prepare import of everything else!
-        multitask::CMultiTaskHandler taskhandler;
+        //multitask::CMultiTaskHandler taskhandler;
+        utils::AsyncTaskHandler taskhandler;
         Poco::DirectoryIterator dirit(dir);
         Poco::DirectoryIterator dirend;
         while( dirit != dirend )
@@ -2806,7 +2808,7 @@ namespace pmd2
 
                 Poco::Path destination(out_dest.GetScriptDir());
                 destination.append(dirit.path().getBaseName());
-                taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLImport, 
+                taskhandler.QueueTask( utils::AsyncTaskHandler::task_t( std::bind( RunLevelXMLImport, 
                                                                      std::ref(out_dest), 
                                                                      dirit->path(), 
                                                                      destination.toString(),
@@ -2833,9 +2835,9 @@ namespace pmd2
                 //                           out_dest.m_setsindex.size(), 
                 //                           std::ref(shouldUpdtProgress) );
             }
-            taskhandler.Execute();
-            taskhandler.BlockUntilTaskQueueEmpty();
-            taskhandler.StopExecute();
+            taskhandler.Start();
+            taskhandler.WaitTasksFinished();
+            taskhandler.WaitStop();
 
             shouldUpdtProgress = false;
             if(updatethread.valid())
@@ -2873,11 +2875,12 @@ namespace pmd2
         atomic_bool                  shouldUpdtProgress = true;
         future<void>                 updtProgress;
         atomic<uint32_t>             completed = 0;
-        multitask::CMultiTaskHandler taskhandler;
+        //multitask::CMultiTaskHandler taskhandler;
+        utils::AsyncTaskHandler      taskhandler;
         //Export everything else
         for( const auto & entry : gs.m_setsindex )
         {
-            taskhandler.AddTask( multitask::pktask_t( std::bind( RunLevelXMLExport, 
+            taskhandler.QueueTask( utils::AsyncTaskHandler::task_t( std::bind( RunLevelXMLExport, 
                                                                  std::cref(entry.second), 
                                                                  std::cref(dir), 
                                                                  std::cref(gs.GetConfig()),
@@ -2896,9 +2899,9 @@ namespace pmd2
                                            gs.m_setsindex.size(), 
                                            std::ref(shouldUpdtProgress) );
             }
-            taskhandler.Execute();
-            taskhandler.BlockUntilTaskQueueEmpty();
-            taskhandler.StopExecute();
+            taskhandler.Start();
+            taskhandler.WaitTasksFinished();
+            taskhandler.WaitStop();
 
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
