@@ -44,6 +44,8 @@ Changelog:
       This should make everything more readable, and customizable/maintainable no matter if there are ASM hacks applied to the game or not. 
     * Added support for importing/exporting script data along with scripts.
     * Added support for dumping the level list to a SIR0 file. Its pretty much completely useless to anyone for now however.
+-0.23.1(2016/08/24):
+    * Fixed issue on windows 10 where a lot of the scripts wouldn't export or import properly. The multithreading class was at fault.
 
 ----------------------------------------------------------------------------------------------------
 License info:

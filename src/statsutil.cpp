@@ -108,7 +108,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.23";
+    const string CStatsUtil::Version             = "0.23.1";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
