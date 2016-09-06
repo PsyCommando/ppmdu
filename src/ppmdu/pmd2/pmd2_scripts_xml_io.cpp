@@ -68,6 +68,10 @@ namespace pmd2
 
 
     //! #TODO: Make a synchronised text output stack !
+    inline std::ostream & slog()
+    {
+        return utils::LibWide().Logger().Log();
+    }
 
 
 
@@ -346,7 +350,7 @@ namespace pmd2
                         grpout.parameter = livesid;
                     else
                     {
-                        clog <<routinen.path() <<", " <<routinen.offset_debug() 
+                        slog() <<routinen.path() <<", " <<routinen.offset_debug() 
                                 <<" : used invalid \"lives\" id value as a raw integer.\n"; 
                         grpout.parameter = ToWord(attr.as_int());
                     }
@@ -945,7 +949,7 @@ namespace pmd2
                         outinst.parameters.push_back(croutineid);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
                              <<" : used invalid \"common routine\" id value as a raw integer.\n"; 
                         outinst.parameters.push_back( ToWord(param.as_int()) );
                     }
@@ -965,7 +969,7 @@ namespace pmd2
                         outinst.parameters.push_back(varid);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
                              <<" : used invalid game variable id value as a raw integer.\n";
                         outinst.parameters.push_back( ToWord(param.as_int()) );
                     }
@@ -1003,7 +1007,7 @@ namespace pmd2
                     uint16_t lvlid = m_paraminf.LevelInfo(param.value());
                     if( lvlid == InvalidLevelID && param.value() != NullLevelId)
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
                              <<" : invalid level id value, using it as a raw integer.\n"; 
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
@@ -1018,7 +1022,7 @@ namespace pmd2
                         outinst.parameters.push_back(faceposmode);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
                              <<" : used invalid face position mode value as a raw integer.\n"; 
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
@@ -1510,14 +1514,19 @@ namespace pmd2
             m_out_gver = StrToGameVersion(xversion.value());
             m_out_reg  = StrToGameRegion (xregion.value());
 
-            return std::move( LevelScript( utils::GetBaseNameOnly(file), 
-                             std::move(ParseRoutines(parentn)),
-                             std::move(ParseLSD   (parentn))));
+
+            const std::string fbasename = utils::GetBaseNameOnly(file);
+            if( utils::LibWide().isLogOn() )
+                slog() << "#Parsing " <<fbasename <<".xml \n";
+
+            return std::move(LevelScript( fbasename, 
+                                 std::move(ParseSets(parentn)),
+                                 std::move(ParseLSD (parentn))));
         }
 
     private:
 
-        LevelScript::scriptgrps_t ParseRoutines( xml_node & parentn )
+        LevelScript::scriptgrps_t ParseSets( xml_node & parentn )
         {
             using namespace scriptXML;
             LevelScript::scriptgrps_t groups;
@@ -1528,11 +1537,11 @@ namespace pmd2
                 if( !xname )
                 {
                     if(utils::LibWide().isLogOn())
-                        clog<<"->Skipped unnamed group!\n";
+                        slog()<<" ->Skipped unnamed routine!\n";
                     continue;
                 }
                 else if( utils::LibWide().isLogOn() )
-                    clog<<"->Parsing Script Group " <<xname.value() <<"\n";
+                    slog()<<" ->Parsing script set \"" <<xname.value() <<"\"\n";
 
                 LevelScript::scriptgrps_t::value_type agroup( xname.value() );
                 for( auto & comp : grp )
@@ -1565,6 +1574,9 @@ namespace pmd2
                     table.push_back(val);
                 }
             }
+            if( utils::LibWide().isLogOn() )
+                slog() << " ->Parsed " <<table.size() << " LSD entries\n";
+
             return std::move(table);
         }
 
@@ -1580,11 +1592,11 @@ namespace pmd2
             if( !xname )
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Unamed sequence, skipping!\n";
+                    slog() << "\t*Unamed sequence, skipping!\n";
                 return;
             }
             else if( utils::LibWide().isLogOn() )
-                clog << "\t*Parsing " <<name <<"\n";
+                slog() << "\t*Parsing " <<name <<", type : ssb\n";
 
             //If we're unionall.ssb, change the type accordingly
             if( name == ScriptPrefix_unionall )
@@ -1606,7 +1618,7 @@ namespace pmd2
             if(!xtype)
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Untyped script data, skipping!\n";
+                    slog() << "\t*Untyped script data, skipping!\n";
                 return;
             }
             eScrDataTy scrty = StrToScriptDataType(xtype.value());
@@ -1614,11 +1626,11 @@ namespace pmd2
             if(!xname)
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Unamed script data, skipping!\n";
+                    slog() << "\t*Unamed script data, skipping!\n";
                 return;
             }
             else if( utils::LibWide().isLogOn() )
-                clog << "\t*Parsing " <<xname.value() <<", type : " <<xtype.value() <<"\n";
+                slog() << "\t*Parsing " <<xname.value() <<", type : " <<xtype.value() <<"\n";
 
             //Set Appropriate type
             switch(scrty)
@@ -1641,7 +1653,7 @@ namespace pmd2
                 default:
                 {
                     if( utils::LibWide().isLogOn() )
-                        clog << "\t*Couldn't determine script type. Skipping!\n";
+                        slog() << "\t*Couldn't determine script type. Skipping!\n";
                     return;
                 }
             };
@@ -1852,7 +1864,7 @@ namespace pmd2
                 }
                 default:
                 {
-                    clog<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
+                    slog()<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
                 }
             };                
         }
@@ -2029,7 +2041,7 @@ namespace pmd2
                         }
                         else
                         {
-                            clog << "<!>- Got a script variable id out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got a script variable id out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), pval );
                         }
@@ -2042,7 +2054,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), facename);
                         else
                         {
-                            clog << "<!>- Got an face type out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got an face type out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(),  pval );
                         }
@@ -2055,7 +2067,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), pinf->name );
                         else
                         {
-                            clog << "<!>- Got an actor id out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got an actor id out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), pval );
                         }
@@ -2082,7 +2094,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), *pstr );
                         else
                         {
-                            clog << "<!>- Got a face position mode out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got a face position mode out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         }
@@ -2107,7 +2119,7 @@ namespace pmd2
                             else
                             {
                                 //! #TODO: Log this
-                                clog << "<!>- Got a level id out of range for instruction at script file offset 0x" 
+                                slog() << "<!>- Got a level id out of range for instruction at script file offset 0x" 
                                      <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                                 //assert(false);
                                 stringstream sstrid;
@@ -2705,6 +2717,8 @@ namespace pmd2
                             string             dest, 
                             atomic<uint32_t> & completed )
     {
+        if( utils::LibWide().isLogOn() )
+            slog() <<"##### Importing " << fname <<" #####\n";
         try
         {
             eGameRegion  tempregion  = eGameRegion::Invalid;
@@ -2715,6 +2729,8 @@ namespace pmd2
         }
         catch(const std::exception &)
         {
+            if( utils::LibWide().isLogOn() )
+                slog() <<"<!>- Failed importing " << fname <<"\n";
             throw_with_nested(std::runtime_error("RunLevelXMLImport(): Error in file " + fname));
         }
         ++completed;
@@ -2732,12 +2748,16 @@ namespace pmd2
                             const scriptprocoptions & options,
                             atomic<uint32_t>        & completed )
     {
+        if( utils::LibWide().isLogOn() )
+            slog() <<"##### Exporting " <<entry.path() <<" #####\n";
         try
         {
             GameScriptsXMLWriter(entry(), gs).Write(dir, options);
         }
         catch(const std::exception & )
         {
+            if( utils::LibWide().isLogOn() )
+                slog() <<"<!>- Failed exporting " << dir <<"\n";
             throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error processing " + entry.path()));
         }
         ++completed;
@@ -2779,7 +2799,7 @@ namespace pmd2
         future<void>                 updatethread;
         //Grab our version and region from the 
         if(utils::LibWide().ShouldDisplayProgress())
-            cout<<"<*>- Compiling COMON.xml..\n";
+            cout<<"<*>- Loading COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
@@ -2788,11 +2808,19 @@ namespace pmd2
         if( tempregion != out_dest.Region() || tempversion != out_dest.Version() )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
 
-        if(utils::LibWide().ShouldDisplayProgress())
+        if(utils::LibWide().ShouldDisplayProgress() || utils::LibWide().isLogOn() )
         {
-            cout<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.Region()) 
+            stringstream sstr;
+            sstr<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.Region()) 
                 <<"\", and version \"" <<GetGameVersionName(out_dest.Version())<<"!\n";
+            const string cmnid = sstr.str();
+
+            if((utils::LibWide().isLogOn()))
+                slog() << cmnid;
+            if(utils::LibWide().ShouldDisplayProgress())
+                cout << cmnid;
         }
+
         //Write out common
         out_dest.WriteScriptSet(out_dest.m_common);
 
@@ -2801,9 +2829,14 @@ namespace pmd2
         utils::AsyncTaskHandler taskhandler;
         Poco::DirectoryIterator dirit(dir);
         Poco::DirectoryIterator dirend;
+        if(utils::LibWide().isLogOn())
+            slog() << "<*>- Listing XML to import..\n";
+        size_t cntdir = 0;
         while( dirit != dirend )
         {
-            if( dirit->isFile() && dirit.path().getExtension() == "xml" )
+            if( dirit->isFile() && 
+                dirit.path().getExtension() == "xml" && 
+                dirit.path().getBaseName() != DirNameScriptCommon ) //Skip COMMON.xml since we handled it already!
             {
 
                 Poco::Path destination(out_dest.GetScriptDir());
@@ -2813,9 +2846,14 @@ namespace pmd2
                                                                      dirit->path(), 
                                                                      destination.toString(),
                                                                      std::ref(completed) ) ) );
+                if(utils::LibWide().isLogOn())
+                    slog() << "\t+ " <<dirit.path().getFileName() <<"\n";
+                ++cntdir;
             }
             ++dirit;
         }
+        if(utils::LibWide().isLogOn())
+            slog() << "Done listing " <<cntdir <<" entries\n\n";
 
         try
         {
@@ -2835,6 +2873,8 @@ namespace pmd2
                 //                           out_dest.m_setsindex.size(), 
                 //                           std::ref(shouldUpdtProgress) );
             }
+            if(utils::LibWide().isLogOn())
+                slog() << "Running import tasks..\n";
             taskhandler.Start();
             taskhandler.WaitTasksFinished();
             taskhandler.WaitStop();
@@ -2854,9 +2894,10 @@ namespace pmd2
             std::rethrow_exception( std::current_exception() );
         }
 
-
         if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
+        if(utils::LibWide().isLogOn())
+            slog()<<"All import tasks completed!\n";
     }
 
     /*
@@ -2877,6 +2918,8 @@ namespace pmd2
         atomic<uint32_t>             completed = 0;
         //multitask::CMultiTaskHandler taskhandler;
         utils::AsyncTaskHandler      taskhandler;
+        if(utils::LibWide().isLogOn())
+            slog() << "<*>- Listing level directories to export..\n";
         //Export everything else
         for( const auto & entry : gs.m_setsindex )
         {
@@ -2886,7 +2929,11 @@ namespace pmd2
                                                                  std::cref(gs.GetConfig()),
                                                                  std::cref(options),
                                                                  std::ref(completed) ) ) );
+            if(utils::LibWide().isLogOn())
+                slog() << "\t+ " << utils::GetBaseNameOnly(entry.first) <<"\n";
         }
+        if(utils::LibWide().isLogOn())
+            slog() << "Done listing " <<gs.m_setsindex.size() <<" directories.\n\n";
 
         try
         {
@@ -2899,6 +2946,8 @@ namespace pmd2
                                            gs.m_setsindex.size(), 
                                            std::ref(shouldUpdtProgress) );
             }
+            if(utils::LibWide().isLogOn())
+                slog() << "Running export tasks..\n";
             taskhandler.Start();
             taskhandler.WaitTasksFinished();
             taskhandler.WaitStop();
@@ -2919,6 +2968,8 @@ namespace pmd2
 
         if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
+        if(utils::LibWide().isLogOn())
+            slog()<<"All export tasks completed!\n";
     }
 
     /*
@@ -2977,7 +3028,7 @@ namespace pmd2
                        const ConfigLoader  & gconf )
     {
         using namespace scriptXML;
-        xml_document     doc;
+        xml_document doc;
         try
         {
             HandleParsingError( doc.load_file(srcfile.c_str()), srcfile);

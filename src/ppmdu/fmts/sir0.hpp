@@ -14,7 +14,7 @@ No crappyrights. All wrongs reversed !
 //#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
-#include <map>
+//#include <map>
 #include <deque>
 
 namespace filetypes

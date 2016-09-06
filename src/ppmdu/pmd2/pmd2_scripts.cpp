@@ -19,6 +19,11 @@ using namespace std;
 
 namespace pmd2
 {
+    inline std::ostream & slog()
+    {
+        return utils::LibWide().Logger().Log();
+    }
+
 //==============================================================================
 //  
 //==============================================================================
@@ -113,6 +118,8 @@ namespace pmd2
         try 
         {
             string basename = Poco::Path(fpath).getBaseName();
+            if(utils::LibWide().isLogOn())
+                slog() <<"\t*" <<basename <<".ssb\n";
             auto script = std::move( filetypes::ParseScript(fpath, 
                                                             m_parent.Region(), 
                                                             m_parent.Version(), 
@@ -135,7 +142,10 @@ namespace pmd2
     {
         try 
         {
-            string basename = Poco::Path(fpath).getBaseName();
+            Poco::Path myp(fpath);
+            string basename = myp.getBaseName();
+            if(utils::LibWide().isLogOn())
+                slog() <<"\t*" <<myp.getFileName() <<"\n";
             tgtgrp.SetData( std::forward<ScriptData>(filetypes::ParseScriptData(fpath)) );
         }
         catch(const std::exception &)
@@ -161,7 +171,6 @@ namespace pmd2
             if( itfound != fqueue.end() )
             {
                 string curbasename = itfound->toString();
-                clog << "\n\tFound matching ssb, " <<curbasename <<", for prefix " <<prefix  <<"\n";
                 LoadSSB( tgtgrp, curbasename );
                 fqueue.erase(itfound);
                 itfound = fqueue.begin(); //Re-assign here, because the iterator got invalidated
@@ -195,12 +204,13 @@ namespace pmd2
         if( itfounddata == fqueue.end() )
         {
             if( utils::LibWide().isLogOn() )
-                clog << "\n\tNo " <<prefix <<" data found!\n";
+                slog() << "\tNo " <<prefix <<" data found!\n";
             return;
         }
         else
         {
-            clog <<"\n\tLoading " <<prefix <<"." <<fext <<" and its dependencies..";
+            if( utils::LibWide().isLogOn() )
+                slog() <<"\tLoading " <<prefix <<"." <<fext <<" and its dependencies..";
         }
 
         //#3 - Otherwise keep going and load the data first ###
@@ -219,27 +229,37 @@ namespace pmd2
     {
         if( fqueue.empty() ) 
             return;
-
+        
         const static auto lambdafindsse = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSE_FileExt && p.getBaseName() == ScriptPrefix_enter;};
-        auto itcur         = fqueue.begin();
-        while( (itcur = std::find_if( fqueue.begin(), fqueue.end(), lambdafindsse)) != fqueue.end() )
+        auto itcur         =  std::find_if( fqueue.begin(), fqueue.end(), lambdafindsse);
+        if(itcur != fqueue.end())
         {
-            Poco::Path p = *itcur;
-            fqueue.erase(itcur); //Delete here, because we invalidate the iterator in the LoadSub method
+            if(utils::LibWide().isLogOn())
+                slog() <<" -- Parsing enter set.. --\n";
+            //do
+            //{
+                Poco::Path p = *itcur;
+                fqueue.erase(itcur); //Delete here, because we invalidate the iterator in the LoadSub method
 
-            string basename( std::move(p.getBaseName()));
-            ScriptSet grp( basename, eScriptSetType::UNK_enter );
-            LoadSSData( grp, p.toString() );
-            LoadNumberedSSBForPrefix( fqueue, basename, grp );
-            out_scrset.Components().push_back(std::move(grp));
+                string basename( std::move(p.getBaseName()));
+                ScriptSet grp( basename, eScriptSetType::UNK_enter );
+                if(utils::LibWide().isLogOn())
+                    slog() <<" ->Parsing \"Enter\" " <<p.getFileName() <<"\n";
+                LoadSSData( grp, p.toString() );
+                LoadNumberedSSBForPrefix( fqueue, basename, grp );
+                out_scrset.Components().push_back(std::move(grp));
+            //}
+            //while( (itcur = std::find_if( fqueue.begin(), fqueue.end(), lambdafindsse)) != fqueue.end() );
+            /*LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptSetType::UNK_enter, fqueue, out_scrset );*/
         }
-        /*LoadScrDataAndMatchedNumberedSSBs( ScriptPrefix_enter, filetypes::SSE_FileExt, eScriptSetType::UNK_enter, fqueue, out_scrset );*/
     }
 
     void GameScriptsHandler::LoadSub( const Poco::Path & datafpath, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset )
     {
         string basename( std::move(datafpath.getBaseName()));
         ScriptSet grp( basename, eScriptSetType::UNK_station );
+        if(utils::LibWide().isLogOn())
+            slog() <<" ->Parsing \"Station\" " <<datafpath.getFileName() <<"\n";
         LoadSSData( grp, datafpath.toString() );
         LoadNumberedSSBForPrefix( fqueue, basename, grp );
         out_scrset.Components().push_back(std::move(grp));
@@ -247,7 +267,8 @@ namespace pmd2
 
     void GameScriptsHandler::LoadGrpLSDContent( const Poco::Path & curdir, std::deque<Poco::Path> & fqueue, LevelScript & out_scrset )
     {
-
+        if(utils::LibWide().isLogOn())
+            slog() <<" -- Parsing references from the LSD.. --\n";
         //Load files by name in the lsd table!
 
         for( const auto & afile : out_scrset.LSDTable() )
@@ -275,7 +296,7 @@ namespace pmd2
             if( itfoundssb != fqueue.end() )
                 fqueue.erase(itfoundssb);
             else
-                clog<< "GameScriptsHandler::LoadGrpLSDContent(): Expected SSB file named" << ssbpath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
+                slog()<< "GameScriptsHandler::LoadGrpLSDContent(): Expected SSB file named" << ssbpath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
 
             auto itfoundssa = std::find_if( fqueue.begin(), fqueue.end(), [&ssapath]( const Poco::Path & path )->bool
             {
@@ -285,9 +306,11 @@ namespace pmd2
             if( itfoundssa != fqueue.end() )
                 fqueue.erase(itfoundssa);
             else
-                clog<<"GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" << ssapath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
+                slog()<<"GameScriptsHandler::LoadGrpLSDContent(): Expected SSA file named" << ssapath.toString() << ", but couldn't find it.. Possibly a duplicate entry!\n";
 
             //#3 - Handle the files
+            if(utils::LibWide().isLogOn())
+                slog() <<" ->Parsing \"Acting\" " <<ssapath.getFileName() <<"\n";
             ScriptSet scrpair( string( std::begin(afile), std::end(afile) ), eScriptSetType::UNK_acting );
             LoadSSB   ( scrpair, ssbpath.toString() );
             LoadSSData( scrpair, ssapath.toString() );
@@ -306,13 +329,13 @@ namespace pmd2
         Path curdir(path);
 
         if( utils::LibWide().isLogOn() )
-            clog << "Loading Directory " <<curdir.parent().getBaseName() <<"/" <<curdir.getBaseName() <<".. ";
+            slog() << "#Loading Level Directory " <<curdir.getBaseName() <<"/\n";
 
         //#0 Fetch file list
         DirectoryIterator  itdir(curdir);
         DirectoryIterator  itdirend;
         deque<Path>        processqueue;
-        LevelScript          curset(curdir.getBaseName());
+        LevelScript        curset(curdir.getBaseName());
         
 
         while( itdir != itdirend )
@@ -330,12 +353,13 @@ namespace pmd2
             });
             if( itfoundunion != processqueue.end() )
             {
-                clog << "\n\tParsing unionall.ssb..";
+                if(utils::LibWide().isLogOn())
+                    slog() << " -- Parsing unionall.ssb.. --\n";
                 ScriptSet unionall( "unionall", eScriptSetType::UNK_unionall );
                 LoadSSB( unionall, itfoundunion->toString() );
                 curset.Components().push_back( std::move(unionall) );
                 processqueue.erase(itfoundunion);
-                clog <<"\n";
+                //slog() <<"\n";
             }
         }
 
@@ -347,10 +371,10 @@ namespace pmd2
             });
             if( itfoundlsd != processqueue.end() )
             {
-                clog <<"\n\tParsing LSD file..";
+                //slog() <<" ->Parsing LSD file..\n";
                 LoadLSD(curset, itfoundlsd->toString());
                 processqueue.erase(itfoundlsd);
-                clog <<"\n";
+                //slog() <<"\n";
             }
         }
 
@@ -359,11 +383,7 @@ namespace pmd2
 
         //#4 Load script files from LSD
         if( !curset.LSDTable().empty() )
-        {
-            clog <<"\n\tLoading LSD references..";
             LoadGrpLSDContent( curdir, processqueue, curset );
-            clog <<"\n";
-        }
 
         //#5 Load the SSS subs
         auto lambdafindsss = [](const Poco::Path & p)->bool{return p.getExtension() == filetypes::SSS_FileExt;};
@@ -378,16 +398,14 @@ namespace pmd2
         //#8 - List files remaining in the queue
         if( !processqueue.empty() )
         {
-            clog <<"\n\t" <<processqueue.size() <<" files were ignored:\n";
+            slog() <<" ->" <<processqueue.size() <<" files were ignored:\n";
                  
             while( !processqueue.empty() )
             {
-                clog <<"\t\t" <<processqueue.front().getFileName() <<"\n";
+                slog() <<"\t" <<processqueue.front().getFileName() <<"\n";
                 processqueue.pop_front();
             }
         }
-
-        clog <<"\n";
         return std::move(curset);
     }
 
@@ -399,6 +417,9 @@ namespace pmd2
             tgtdir.createDirectory();
         else if( tgtdir.exists() && !tgtdir.isDirectory() )
             throw std::runtime_error("GameScriptsHandler::WriteDirectory(): Output dir exist already as a file! Can't overwrite with a directory!");
+
+        if( utils::LibWide().isLogOn() )
+            slog() << "#Writing Level Directory " <<utils::GetBaseNameOnly(path) <<"/\n";
 
         //Write LSD table if needed
         Poco::Path lsdpath(path);
@@ -420,29 +441,30 @@ namespace pmd2
         if( ! set.LSDTable().empty() )
         {
             if( utils::LibWide().isLogOn() )
-                clog<<"\tWriting LSD file...\n";
+                slog()<<" ->Writing LSD file...\n";
             filetypes::WriteLSD( set.LSDTable(), fpath );
         }
     }
 
-    void GameScriptsHandler::WriteGroups(const LevelScript & set, const std::string & dirpath)
+    void GameScriptsHandler::WriteGroups(const LevelScript & lvlscr, const std::string & dirpath)
     {
         if( utils::LibWide().isLogOn() )
-            clog << "\tWriting groups to " <<dirpath <<"\n";
-        for( const auto & grp : set ) 
+            slog() << " ->Writing " <<lvlscr.Components().size() <<" script set(s) to " <<Poco::Path(dirpath).getBaseName() <<"/\n";
+
+        for( const auto & set : lvlscr ) 
         {
             if( utils::LibWide().isLogOn() )
-                clog << "\t\tWriting " <<grp.Identifier() <<"...";
+                slog() << "\t\t*" <<set.Identifier() <<"...\n";
 
             //Write data file
-            if( grp.Data() )
+            if( set.Data() )
             {
-                filetypes::WriteScriptData( Poco::Path(dirpath).append(grp.Data()->Name()).makeFile().setExtension(grp.GetDataFext()).toString(),
-                                            *grp.Data() );
+                filetypes::WriteScriptData( Poco::Path(dirpath).append(set.Data()->Name()).makeFile().setExtension(set.GetDataFext()).toString(),
+                                            *set.Data() );
             }
 
             //Write SSBs
-            for( const auto & seq : grp.Sequences() )
+            for( const auto & seq : set.Sequences() )
             {
                 filetypes::WriteScript( Poco::Path(dirpath).append(seq.first).makeFile().setExtension(filetypes::SSB_FileExt).toString(), 
                                         seq.second,
@@ -451,8 +473,8 @@ namespace pmd2
                                         m_parent.GetConfig().GetLanguageFilesDB() );
             }
             
-            if( utils::LibWide().isLogOn() )
-                clog <<"\n";
+            //if( utils::LibWide().isLogOn() )
+            //    slog() <<"\n";
         }
     }
 

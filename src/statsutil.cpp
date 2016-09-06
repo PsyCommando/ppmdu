@@ -499,6 +499,7 @@ namespace statsutil
         m_shouldlog = true;
         m_redirectClog.Redirect( "log.txt" );
         utils::LibWide().isLogOn(true);
+        cout <<"<!>- Enabled logging to current working directory!\n";
         return true;
     }
 
@@ -577,8 +578,16 @@ namespace statsutil
         {
 //! #TODO: Eventually put the parsing of the program's directory into the cmdlineutil baseclass!
             m_applicationdir = utils::GetPathExeDirectory();
-            if( !SetArguments(argc,argv) )
+            utils::LibWide().StringValue(utils::lwData::eBasicValues::ProgramExeDir) = m_applicationdir;
+            utils::LibWide().StringValue(utils::lwData::eBasicValues::ProgramLogDir) = utils::getCWD();
+            if( !SetArguments(argc,argv) ) //This parses the command line!!!!
                 return -3;
+            //Now that the command line is parsed, do stuff with it
+            if(utils::LibWide().isLogOn())
+            {
+                utils::LibWide().Logger(new logging::SingleOutMTLogger);
+                utils::LibWide().Logger() << "Logger initiated!\n";
+            }
             SetupCFGPath(m_pmd2cfg);
             DetermineOperation();
         }
@@ -640,7 +649,7 @@ namespace statsutil
         if(infile.isFile())
         {
             const string pathext = inpath.getExtension();
-                
+            
             if( pathext == ::filetypes::SSB_FileExt )
                 m_operationMode = eOpMode::ExportSingleScript;
             else if( pathext == ::filetypes::SSA_FileExt || pathext == ::filetypes::SSS_FileExt || pathext == ::filetypes::SSE_FileExt )

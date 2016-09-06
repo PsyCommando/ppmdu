@@ -18,7 +18,7 @@ Description: A simple and quick implementation of a multi-thread logger.
 #include <atomic>
 #include <future>
 #include "gfileutils.hpp"
-#include "library_wide.hpp"
+
 
 namespace logging
 {
@@ -32,22 +32,32 @@ namespace logging
     };
 
     /***********************************************************************************
-        ILogger
+        BaseLogger
             Interface for loggers.
     ***********************************************************************************/
-    class ILogger
+    class BaseLogger
     {
     public:
-        virtual ~ILogger(){}
-        virtual std::ostream & Log() = 0;
+        virtual ~BaseLogger(){}
+        virtual std::ostream & Log(){ return std::clog; }
 
+        //inline operator std::ostream&()
+        //{
+        //    return Log();
+        //}
     };
+
+    /*
+        Helper to hide to the cpp access to library wide
+    */
+    const std::string & GetLibWideLogDirectory();
 
     /***********************************************************************************
         ThreadSafeFileLogger
         
     ***********************************************************************************/
     template<class _StrategyTy> class ThreadSafeFileLogger;
+
 
 
     /***********************************************************************************
@@ -57,9 +67,14 @@ namespace logging
             It prints out the thread's output in order on destruction, or when flush is called!
     ***********************************************************************************/
     template<>
-        class ThreadSafeFileLogger<Strategy::OneOutputForAll> : public ILogger
+        class ThreadSafeFileLogger<Strategy::OneOutputForAll> : public BaseLogger
     {
     public:
+
+        ThreadSafeFileLogger()
+            :m_mainthredlogout(&std::clog), m_mainthread(std::this_thread::get_id())
+        {}
+
         ThreadSafeFileLogger( std::thread::id mainthid, std::ostream * output )
             :m_mainthredlogout(output), m_mainthread(mainthid)
         {}
@@ -162,9 +177,13 @@ namespace logging
             Multiple outputs for each threads!
     ***********************************************************************************/
     template<>
-        class ThreadSafeFileLogger<Strategy::OneOutputPerThread> : public ILogger
+        class ThreadSafeFileLogger<Strategy::OneOutputPerThread> : public BaseLogger
     {
     public:
+        ThreadSafeFileLogger()
+            :m_mainthredlogout(&std::clog), m_mainthread(std::this_thread::get_id())
+        {}
+
         ThreadSafeFileLogger( std::thread::id mainthid, std::ostream * mainlog )
             :m_mainthredlogout(mainlog), m_mainthread(mainthid)
         {}
@@ -201,10 +220,7 @@ namespace logging
         }
 
     private:
-        inline const std::string & GetLogDirectory()
-        {
-            return utils::LibWide().StringValue(utils::lwData::eBasicValues::ProgramLogDir);
-        }
+        inline const std::string & GetLogDirectory() {return GetLibWideLogDirectory();}
 
         std::ostream * SetupOrGetThreadLog( std::thread::id thid )
         {
@@ -234,7 +250,34 @@ namespace logging
         std::ostream                                     * m_mainthredlogout;
         std::unordered_map<std::thread::id, std::ofstream> m_logstreams;
     };
+
+
+    /*
+        DummyLogger
+            A dummy logger which simply redirects to clog.
+    */
+    class DummyLogger : public BaseLogger
+    {
+    public:
+        /*
+            Returns the correct log stream for the current thread
+        */
+        //std::ostream & Log()
+        //{
+        //    return std::clog;
+        //}
+    };
+
+    //Handy typedefs 
+    using SingleOutMTLogger = ThreadSafeFileLogger<Strategy::OneOutputForAll>;
+    using MultiOutMTLogger  = ThreadSafeFileLogger<Strategy::OneOutputPerThread>;
 };
+
+template<class TY>
+    std::ostream & operator<<( logging::BaseLogger & logger, const TY & other )
+{
+    return ( logger.Log() << other );
+}
 
 #endif // !MULTI_THREAD_LOGGER_HPP
 

@@ -7,6 +7,7 @@
 #include <functional>
 #include <deque>
 #include <regex>
+#include <string>
 using namespace std;
 using namespace pugi;
 

@@ -44,8 +44,6 @@ namespace filetypes
         for( const auto & entry : data )
         {
             itwrite = std::copy( entry.begin(), entry.end(), itwrite );
-            //for( char achar : entry )
-            //    itwrite = WriteIntToBytes( achar, itwrite ); 
         }
 
         return itwrite;

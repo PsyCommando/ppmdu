@@ -237,6 +237,9 @@
     <ClCompile Include="..\src\utils\parallel_tasks.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\multithread_logger.cpp">
+      <Filter>Source Files\ppmdu\utility</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">

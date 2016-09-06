@@ -18,6 +18,8 @@ Description:
 #include <locale>
 #include <string>
 #include <unordered_map>
+#include <memory>
+#include <utils/multithread_logger.hpp>
 
 namespace utils
 {
@@ -46,6 +48,16 @@ namespace utils
         inline bool ShouldDisplayProgress()const     {return m_displayProgress;}
         inline void ShouldDisplayProgress(bool bdisp){ m_displayProgress = bdisp; }
 
+        inline logging::BaseLogger & Logger()                          
+        { 
+            static logging::DummyLogger dumlog;
+            if(m_plog)
+                return *m_plog; 
+            else
+                return dumlog;
+        }
+        inline void Logger(logging::BaseLogger * logger) { return m_plog.reset(logger); }
+
         /*
             Common values between all programs
         */
@@ -68,6 +80,7 @@ namespace utils
         bool         m_verboseOn;
         bool         m_LoggingOn;
         unsigned int m_nbThreads;
+        std::unique_ptr<logging::BaseLogger> m_plog;
 
         std::unordered_map<eBasicValues,std::string> m_baseval;
         std::unordered_map<std::string, std::string> m_sharedvalues;

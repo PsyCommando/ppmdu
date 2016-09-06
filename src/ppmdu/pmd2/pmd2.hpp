@@ -13,8 +13,8 @@ Description:
 
 namespace pmd2
 {
-    class exBasePPMDUException                : public std::runtime_error  { public: using std::runtime_error::runtime_error;  };
-    class exMalformedEscapedCharacterSequence : public exBasePPMDUException{ public: using exBasePPMDUException::exBasePPMDUException; };
+    class exBasePPMDUException                : public std::runtime_error  { public: using std::runtime_error::runtime_error;  };           //! #REMOVE
+    class exMalformedEscapedCharacterSequence : public exBasePPMDUException{ public: using exBasePPMDUException::exBasePPMDUException; };   //! #REMOVE
 
 //======================================================================================
 //  Constants
@@ -24,6 +24,13 @@ namespace pmd2
     */
     const std::string CommonXMLGameVersionAttrStr = "gameVersion";
     const std::string CommonXMLGameRegionAttrStr  = "gameRegion";
+    const std::string CommonXMLToolVersionAttrStr = "libVersion";
+
+    /*
+        Current version string
+    */
+    const std::string PMD2ToolsetVersion = "";
+    
 
     /*******************************************************************************
         eGameVersion
@@ -36,7 +43,7 @@ namespace pmd2
         EoD,        //Explorers of Darkness
         //EoTEoD,     //Both/either Explorers of Time/Darkness
 
-        NBGameVers, //Must be beofre last
+        NBGameVers, //Must be before last
         Invalid,
     };
 
@@ -79,15 +86,15 @@ namespace pmd2
     /*******************************************************************************
         Event/Resource Names
     *******************************************************************************/
-    const std::string ResourcePrefix_A = "a";
+    const std::string ResourcePrefix_A = "a";   //Acting?
     const std::string ResourcePrefix_B = "b";
     const std::string ResourcePrefix_C = "c";
     const std::string ResourcePrefix_D = "d";   //Dungeon
     const std::string ResourcePrefix_G = "g";   //Guild
     const std::string ResourcePrefix_H = "h";   //Home?
-    const std::string ResourcePrefix_M = "m";
-    const std::string ResourcePrefix_N = "n";
-    const std::string ResourcePrefix_P = "p";   //Part?
+    const std::string ResourcePrefix_M = "m";   //Main
+    const std::string ResourcePrefix_N = "n";   
+    const std::string ResourcePrefix_P = "p";   //Part?/Path?
     const std::string ResourcePrefix_S = "s";
     const std::string ResourcePrefix_T = "t";   //Town
     const std::string ResourcePrefix_V = "v";   //Visual?
@@ -138,15 +145,15 @@ namespace pmd2
     const std::string FName_TextSpaSufx   = "s";
 
     //!#FIXME: Should use GameLangLoader instead!
-    const std::array<std::string, static_cast<size_t>(eGameLanguages::NbLang)> GameLanguagesSuffixes=
-    {{
-        FName_TextEngSufx,
-        FName_TextJapSufx,
-        FName_TextFreSufx,
-        FName_TextGerSufx,
-        FName_TextItaSufx,
-        FName_TextSpaSufx,
-    }};
+    //const std::array<std::string, static_cast<size_t>(eGameLanguages::NbLang)> GameLanguagesSuffixes=
+    //{{
+    //    FName_TextEngSufx,
+    //    FName_TextJapSufx,
+    //    FName_TextFreSufx,
+    //    FName_TextGerSufx,
+    //    FName_TextItaSufx,
+    //    FName_TextSpaSufx,
+    //}};
 
     /*******************************************************************************
         GameLanguagesNames
