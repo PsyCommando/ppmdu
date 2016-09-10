@@ -318,7 +318,7 @@ namespace pmd2
         int16_t unk7 = 0;
     };
 
-    struct UnkTbl1DataEntry
+    struct TriggerDataEntry
     {
         int16_t croutineid = 0;
         int16_t unk1 = 0;   
@@ -336,14 +336,14 @@ namespace pmd2
 
     /***********************************************************************************************
         ScriptData
-            Position data contained in SSA, SSS, and SSE files.
+            Data contained in SSA, SSS, and SSE files.
     ***********************************************************************************************/
     class ScriptData
     {
     public:
         typedef std::vector<ScriptLayer>      layers_t;
         typedef std::vector<PosMarkDataEntry> posmarks_t;
-        typedef std::vector<UnkTbl1DataEntry> unktbl1ents_t;
+        typedef std::vector<TriggerDataEntry> unktbl1ents_t;
 
         ScriptData()
             :m_datatype(eScrDataTy::Invalid)
@@ -382,16 +382,16 @@ namespace pmd2
 
     /***********************************************************************************************
         ScriptSet
-            A script set is an ensemble of one or no ScriptData, and one or more
-            Script, that share a common identifier.
+            A script set is an ensemble of one or no ScriptData, and none or more
+            Scripts, that share a common identifier.
     ***********************************************************************************************/
     class ScriptSet
     {
     public:
-        typedef std::unique_ptr<ScriptData>      dataptr_t;
+        typedef std::unique_ptr<ScriptData>  dataptr_t;
         typedef std::map<std::string,Script> seqtbl_t;
-        typedef seqtbl_t::const_iterator               const_seqtbl_iter_t;
-        typedef seqtbl_t::iterator                     seqtbl_iter_t;
+        typedef seqtbl_t::const_iterator     const_seqtbl_iter_t;
+        typedef seqtbl_t::iterator           seqtbl_iter_t;
 
         ScriptSet(const std::string & id, eScriptSetType ty = eScriptSetType::INVALID)
             :m_indentifier(id), m_type(ty)
@@ -460,10 +460,10 @@ namespace pmd2
         const std::string & GetDataFext()const;
 
     private:
-        std::string     m_indentifier;
-        dataptr_t       m_data;          //Contains SSA, SSS, or SSE files. There can be 0 or more.
-        seqtbl_t        m_sequences;     //Contains SSB data.
-        eScriptSetType  m_type;
+        std::string     m_indentifier;  //The identifier for this set. AKA the filename prefix all its components share.
+        dataptr_t       m_data;         //Contains SSA, SSS, or SSE files. There can be 0 or more.
+        seqtbl_t        m_sequences;    //Contains SSB data.
+        eScriptSetType  m_type;         //Type of the set. Is usually tied to the data file, but not always.
     };
 
 //==========================================================================================================
@@ -480,13 +480,13 @@ namespace pmd2
     public:
         typedef std::array<char,8>           lsdtblentry_t;
         typedef std::deque<lsdtblentry_t>    lsdtbl_t;
-        typedef std::deque<ScriptSet>        scriptgrps_t;
-        typedef scriptgrps_t::iterator       iterator;
-        typedef scriptgrps_t::const_iterator const_iterator;
+        typedef std::deque<ScriptSet>        scriptsets_t;
+        typedef scriptsets_t::iterator       iterator;
+        typedef scriptsets_t::const_iterator const_iterator;
 
         //Constructors
         LevelScript            (const std::string & name);
-        LevelScript            (const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl );
+        LevelScript            (const std::string & name, scriptsets_t && sets, lsdtbl_t && lsdtbl );
         LevelScript            (const LevelScript   & other);
         LevelScript & operator=(const LevelScript   & other);
         LevelScript            (LevelScript        && other);
@@ -496,9 +496,9 @@ namespace pmd2
         inline void                  Name(const std::string & name)   { m_name = name; }
         inline const std::string   & Name()const                      { return m_name; }
 
-        inline void                  Components(scriptgrps_t && comp) { m_components = std::move(comp); }
-        inline const scriptgrps_t  & Components()const                { return m_components; }
-        inline scriptgrps_t        & Components()                     { return m_components; }
+        inline void                  Components(scriptsets_t && comp) { m_components = std::move(comp); }
+        inline const scriptsets_t  & Components()const                { return m_components; }
+        inline scriptsets_t        & Components()                     { return m_components; }
 
         inline lsdtbl_t            & LSDTable()                       {return m_lsdentries;}
         inline const lsdtbl_t      & LSDTable()const                  {return m_lsdentries;}
@@ -512,7 +512,7 @@ namespace pmd2
 
     private:
         std::string  m_name;         //The name of the set. Ex: "D01P11A" or "COMMON"
-        scriptgrps_t m_components;   //All scripts + data groups (SSA,SSS,SSE + SSB)
+        scriptsets_t m_components;   //All scripts + data groups (SSA,SSS,SSE + SSB)
         lsdtbl_t     m_lsdentries;   //Entries in the LSD table Stored here for now
         bool         m_bmodified;    //Whether the content of this set was modified
     };

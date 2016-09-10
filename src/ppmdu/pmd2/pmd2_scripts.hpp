@@ -21,6 +21,7 @@ Description: This code is used to load/index the game scripts.
 
 namespace pmd2
 {
+    const std::string ScriptCompilerReportFname  = "CompilerReportFilename"; //KeyName of the compiler report filename in the libwide data!
     const std::string ScriptXMLRoot_SingleScript = "SingleScript"; 
     const std::string ScriptXMLRoot_Level        = "Level"; 
     const std::string ScriptDataXMLRoot_SingleDat= "SingleData"; 

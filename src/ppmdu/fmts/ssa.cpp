@@ -648,7 +648,7 @@ namespace filetypes
             :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
-        unktbl1entry(const pmd2::UnkTbl1DataEntry & other)
+        unktbl1entry(const pmd2::TriggerDataEntry & other)
             :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
@@ -673,9 +673,9 @@ namespace filetypes
             return itr;
         }
 
-        operator pmd2::UnkTbl1DataEntry()
+        operator pmd2::TriggerDataEntry()
         {
-            pmd2::UnkTbl1DataEntry out;
+            pmd2::TriggerDataEntry out;
             out.croutineid  = croutineid;
             out.unk1        = unk1;
             out.unk2        = unk2;
@@ -683,7 +683,7 @@ namespace filetypes
             return std::move(out);
         }
 
-        unktbl1entry & operator=(const pmd2::UnkTbl1DataEntry & other)
+        unktbl1entry & operator=(const pmd2::TriggerDataEntry & other)
         {
             croutineid  = other.croutineid;
             unk1        = other.unk1;
@@ -948,7 +948,14 @@ namespace filetypes
 
             //#1 - Write the offset the specified entries for the current layer begins at, and how many there are.
             auto & target = m_layertbl[cntlayer].tables[static_cast<size_t>(ty)];
-            target.nbentries = list.size();
+            if( list.size() > std::numeric_limits<uint16_t>::max() )
+            {
+                std::stringstream sstr;
+                sstr << "SSDataWriter::WriteATable(): To many entries in layer #" <<cntlayer <<"'s table of type " <<static_cast<int>(ty) 
+                     <<"! Got " <<list.size() <<", expected less than " <<std::numeric_limits<uint16_t>::max();
+                throw std::overflow_error(sstr.str());
+            }
+            target.nbentries = static_cast<uint16_t>(list.size());
             target.offset    = (target.nbentries == 0)? (GetBlockBeg(ty) - 1) : GetCurFOff(); //If empty, set pointer 1 word behind current block beg!
 
             //#2 - Then append all entries for the current layer to the current file position
