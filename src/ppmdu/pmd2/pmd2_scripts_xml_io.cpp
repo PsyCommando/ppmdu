@@ -327,7 +327,7 @@ namespace pmd2
             //m_results.insert_or_assign( fname, compileresult{true, true} );
         }
 
-        void InsertWarning(const std::string & fname, const std::string & absfpath, unsigned long fileoffset, std::string && warnmsg)
+        void InsertWarning(const std::string & fname, unsigned long fileoffset, std::string && warnmsg)
         {
             //compilerwarning warn;
             //FillErrorStruct( warn, absfpath, fileoffset, std::forward<std::string>(warnmsg) );
@@ -1989,6 +1989,8 @@ namespace pmd2
                 {
                     if(utils::LibWide().isLogOn())
                         slog()<<" ->Skipped unnamed set!\n";
+                    if(m_preport)
+                        m_preport->InsertWarning( m_curlvlbasename, curset.offset_debug(), "Skipped script set with no name!" );
                     continue;
                 }
                 else if( utils::LibWide().isLogOn() )
@@ -2044,6 +2046,8 @@ namespace pmd2
             {
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Unamed sequence, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, seqn.offset_debug(), "Skipped script with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
@@ -2072,6 +2076,8 @@ namespace pmd2
             {
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Untyped script data, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no type!" );
                 return;
             }
             eScrDataTy scrty = StrToScriptDataType(xtype.value());
@@ -2080,6 +2086,8 @@ namespace pmd2
             {
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Unamed script data, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
@@ -2107,6 +2115,8 @@ namespace pmd2
                 {
                     if( utils::LibWide().isLogOn() )
                         slog() << "\t*Couldn't determine script type. Skipping!\n";
+                    if(m_preport)
+                        m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data. Couldn't determine type \"" + string(xtype.value()) + "\"!" );
                     return;
                 }
             };

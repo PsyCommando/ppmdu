@@ -46,9 +46,11 @@ Changelog:
     * Added support for dumping the level list to a SIR0 file. Its pretty much completely useless to anyone for now however.
 -0.23.1(2016/08/24):
     * Fixed issue on windows 10 where a lot of the scripts wouldn't export or import properly. The multithreading class was at fault.
--0.23.2(----/--/--):
+-0.23.2(2016/09/09):
     * Fixed the logs and console not displaying errors and silently skipping a file when there was an error in it. This was a side effect
       of changing the method of handling multi-threading, since I forgot I was not checking for exceptions..
+    * Added output of a compiler report file with all the issues encountered during script compilation.
+    * Improved a lot the error output. It now shows the actual line the error is on, and an approximate positions of the error on the line.
 
 ----------------------------------------------------------------------------------------------------
 License info:
