@@ -68,6 +68,42 @@ namespace pmd2
 
 
     //! #TODO: Make a synchronised text output stack !
+    inline std::ostream & slog()
+    {
+        return utils::LibWide().Logger().Log();
+    }
+
+
+    /*
+        Utility function for getting the line number and the full line of an error in pugixml!
+    */
+    /*std::pair<unsigned long long, std::string> */
+    struct ret_t{unsigned long long lnnb; unsigned long long lastlinebeg; std::string line;} GetLineNbAndLineAtOffset( unsigned long long offset, const std::string & fname)
+    {
+        std::ifstream input;
+        input.exceptions(std::ios::badbit);
+        input.open(fname);
+        unsigned long long cntfoff     = 0;
+        unsigned long long cntline     = 0;
+        unsigned long long lastlinebeg = 0;
+        for( ; cntfoff < offset; ++cntfoff )
+        {
+            if( input.get() == '\n')
+            {
+                ++cntline;
+                lastlinebeg = cntfoff + 1; //Might be a bit buggy though, since some platforms/text editors do it differently.. 
+            }
+        }
+
+        //Grab the line
+        input.seekg(lastlinebeg, std::ios::beg);
+        std::string errline;
+        std::getline( input, errline );
+        //return std::make_pair( cntline, std::move(errline) );
+        return ret_t{cntline, lastlinebeg, errline};
+    }
+
+
 
 
 
@@ -87,7 +123,7 @@ namespace pmd2
         const string NODE_GrpNameRef    = "Ref"s;            //AKA sub-acting 
         const string ATTR_GrpName       = ATTR_Name;        //AKA sub-acting names
 
-        const string NODE_ScriptGroup   = "ScriptSet"s;
+        const string NODE_ScriptSet   = "ScriptSet"s;
         const string ATTR_ScrGrpName    = ATTR_Name;
         
         // ----------------------------------------------
@@ -200,6 +236,251 @@ namespace pmd2
 
     };
 
+//
+//
+//
+    class CompileErrorException : public std::runtime_error
+    {
+        //std::string        m_msg;
+        unsigned long long m_foffset;
+    public:
+        CompileErrorException( const std::string & msg, unsigned long long fileoffset )
+            :std::runtime_error(msg), m_foffset(fileoffset)
+        {}
+        CompileErrorException( const CompileErrorException & other ) = default;
+        CompileErrorException( CompileErrorException && other ) = default;
+        CompileErrorException & operator=(const CompileErrorException & other) = default;
+        CompileErrorException & operator=(CompileErrorException && other) = default;
+
+        unsigned long long getFileOffset()const { return m_foffset; }
+    };
+
+//==============================================================================
+//  CompilerReport
+//==============================================================================
+    /*  
+        CompilerReport
+            Thread safe compile report helper.
+    */
+    class CompilerReport
+    {
+    public:
+
+        //
+        struct compileerror
+        {
+            unsigned long long  fileoffset; //Offset in the XML file of the error
+            unsigned long long  linenumber; //Number of the line with the error in the XML file
+            std::string         message;    //Error message
+            std::string         line;       //Text of the line where the error is 
+            unsigned long long  charonline; //Approx offset of the character on the line that caused the error.
+            unsigned long long  linebegoff; //File offset of the beginning of the line
+        };
+
+        //
+        struct compilerwarning : public compileerror
+        {};
+
+        typedef std::deque<compilerwarning> warningqueue_t;
+
+        //
+        struct compileresult
+        {
+            bool            bprocessed;     //Whether the file was processed at all.
+            bool            bsuccess;       //Whether the file was successfully compiled or not
+            std::string     absfilepath;    //Absolute path to the file this result is for!
+            compileerror    err;            //If there was an error, its data is here
+            warningqueue_t  warnings;       //This contains all the warnings for this file.
+
+            void InsertWarning(unsigned long long fileoffset, std::string && warnmsg )
+            {
+                compilerwarning warn;
+                FillErrorStruct( warn, absfilepath, fileoffset, std::forward<std::string>(warnmsg) );
+                bprocessed = true;         //Just in case, set this to processed, since we obviously are processing it!
+                warnings.push_back(warn);
+            }
+        };
+
+    private:
+        using compileentry_t = std::unordered_map<std::string, compileresult>::value_type;
+    public:
+
+        /*
+            Creates and init the entry for a given filename.
+        */
+        void InitResult(const std::string & fname, const std::string & absfpath )
+        {
+            std::lock_guard<std::mutex> lck(m_mtx);
+            compileresult curresult;
+            curresult.bprocessed  = false;
+            curresult.bsuccess    = false;
+            curresult.absfilepath = absfpath;
+            m_results.emplace( fname, std::move(curresult) );
+        }
+
+        void InsertSuccess(const std::string & fname)
+        {
+            std::lock_guard<std::mutex> lck(m_mtx);
+            auto & curresult = m_results[fname];
+            curresult.bprocessed = true;
+            curresult.bsuccess   = true;
+            //m_results.insert_or_assign( fname, compileresult{true, true} );
+        }
+
+        void InsertWarning(const std::string & fname, unsigned long fileoffset, std::string && warnmsg)
+        {
+            //compilerwarning warn;
+            //FillErrorStruct( warn, absfpath, fileoffset, std::forward<std::string>(warnmsg) );
+
+            //std::lock_guard<std::mutex> lck(m_mtx);
+            //auto & curresult = m_results[fname];
+            //curresult.bprocessed = true;         //Just in case, set this to processed, since we obviously are processing it!
+            //curresult.warnings.push_back(warn);
+            std::lock_guard<std::mutex> lck(m_mtx);
+            m_results[fname].InsertWarning(fileoffset,std::forward<std::string>(warnmsg));
+        }
+
+        void InsertError(const std::string & fname, unsigned long fileoffset, std::string && errmsg )
+        {
+            compileerror errordata;
+            //errordata.fileoffset = fileoffset;
+            //errordata.message    = std::move(errmsg);
+            //errordata.linebegoff = 0;
+            //errordata.linenumber = 0;
+
+            //try
+            //{
+            //    auto lineoff = GetLineNbAndLineAtOffset(fileoffset, absfpath);
+            //    errordata.linenumber = lineoff.lnnb;
+            //    errordata.line       = lineoff.line;
+            //    errordata.linebegoff = lineoff.lastlinebeg;
+            //    errordata.lineoffset = errordata.fileoffset - errordata.linebegoff;
+            //}
+            //catch(const std::exception & e)
+            //{
+            //    slog() <<"<!>- CompilerReport::InsertError(): Encountered an exception while trying to open the file containing the error for seeking extra details..\n"
+            //           <<e.what() <<"\n";
+            //}
+            //FillErrorStruct(errordata, absfpath, fileoffset, std::forward<std::string>(errmsg) );
+
+            std::lock_guard<std::mutex> lck(m_mtx);
+            auto & curresult = m_results[fname];
+            FillErrorStruct(errordata, curresult.absfilepath, fileoffset, std::forward<std::string>(errmsg) );
+            curresult.bprocessed = true;
+            curresult.bsuccess   = false;
+            curresult.err        = std::move(errordata);
+            //m_results.insert_or_assign( fname, compileresult{true, false, std::forward<compileerror>(errordata)} );
+        }
+
+        void PrintErrorReport( std::ostream & output, const unsigned long nbexpected )
+        {
+            std::lock_guard<std::mutex> lck(m_mtx);
+            unsigned long                      nbsuccessful = 0;
+            unsigned long                      nbunproc     = 0;
+            unsigned long                      nberrors     = 0;
+            //std::map<std::string, std::string> errorstoprint;
+
+            output << "== Script Compiler Report, PPMDU Toolset v" <<PMD2ToolsetVersion <<" ==\n";
+
+            for( const compileentry_t & pair : m_results )
+            {
+                if( !pair.second.bprocessed )
+                {
+                    output << pair.first << ": !!- Unprocessed -!! This is a developper error, please tell us about this!!\n";
+                    assert(false);
+                    ++nbunproc;
+                }
+                else if( pair.second.bprocessed ) 
+                {
+                    if(!pair.second.bsuccess)
+                    {
+                        ++nberrors;
+                        output <<"*" << pair.first <<": " <<MakeErrorMessage(pair) <<"\n";
+                        //errorstoprint.emplace( pair.first, MakeErrorMessage(pair) );
+                    }
+                    else
+                        ++nbsuccessful;
+
+                    output<<PrintWarnings(pair);
+                }
+            }
+            
+
+            output //<<"\n" 
+                   <<"->Result: " 
+                   <<nbsuccessful <<"/" <<nbexpected <<" succeeded, " 
+                   <<nberrors <<"/" <<nbexpected <<" failed, "
+                   <<nbunproc <<"/" <<nbexpected <<" unprocessed"
+                   <<"\n";
+            if( nberrors == 0 && nbexpected == nbsuccessful )
+                output <<"->Success! No errors!\n";
+            else if( nberrors != 0 && nbexpected != nbsuccessful )
+                output <<"->Compilation failed! Encountered some errors while compiling some script(s)!\n\n";
+
+            if( nbunproc != 0 )
+                output <<"->Some files were skipped for some unknown reasons! Please report this to the developper!\n\n";
+
+            //for(const auto & errmsg : errorstoprint)
+            //    output <<"*" <<errmsg.first << ": " <<errmsg.second <<"\n";
+        }
+
+        inline compileresult & operator[]( const std::string & fname ) {return m_results[fname];}
+
+
+        template<class StructTy>
+            static void FillErrorStruct(StructTy & str, const std::string & absfpath, unsigned long fileoffset, std::string && msg)
+        {
+            str.fileoffset = fileoffset;
+            str.message    = std::move(msg);
+            str.linebegoff = 0;
+            str.linenumber = 0;
+
+            try
+            {
+                auto lineoff = GetLineNbAndLineAtOffset(fileoffset, absfpath);
+                str.linenumber = lineoff.lnnb;
+                str.line       = lineoff.line;
+                str.linebegoff = lineoff.lastlinebeg;
+                str.charonline = fileoffset - lineoff.lastlinebeg;
+            }
+            catch(const std::exception & e)
+            {
+                slog() <<"<!>- CompilerReport::FillErrorStruct(): Encountered an exception while trying to open the file containing the error/warning location..\n"
+                       <<e.what() <<"\n";
+            }
+        }
+
+    private:
+
+        std::string PrintWarnings(const compileentry_t & pair)const
+        {
+            std::stringstream sstr;
+            for( const auto & warn : pair.second.warnings )
+            {
+                sstr <<"!Warning: "
+                     <<"(offset: " <<warn.fileoffset <<", line: " <<warn.linenumber + 1 <<") : " 
+                     <<warn.message <<"\Line:\n" <<warn.line <<"\n" 
+                     <<std::setw(warn.charonline) <<"^(" <<warn.charonline <<")\n";
+            }
+            return sstr.str();
+        }
+
+        std::string MakeErrorMessage(const compileentry_t & pair)const
+        {
+            std::stringstream sstr;
+            const compileerror & err = pair.second.err;
+            sstr <<"(offset: " <<err.fileoffset <<", line: " <<err.linenumber + 1 <<") : " 
+                 <<err.message <<"\nError line:\n" <<err.line <<"\n" 
+                 <<std::setw(err.charonline) <<"^(" <<err.charonline <<")\n";
+            return sstr.str();
+        }
+
+    private:
+        std::mutex                                     m_mtx;
+        std::unordered_map<std::string, compileresult> m_results;
+    };
+
+
 //==============================================================================
 //  GameScriptsXMLParser
 //==============================================================================
@@ -213,17 +494,18 @@ namespace pmd2
     public:
         /*
         */
-        SSBXMLParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf )
+        SSBXMLParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf, CompilerReport::compileresult * ptrres = nullptr )
             :m_version(version), 
              m_region(region), 
              m_opinfo(version),
              m_gconf(conf), 
-             m_paraminf(conf)
+             m_paraminf(conf),
+             m_preportentry(ptrres)
         {}
 
         /*
         */
-        Script operator()( const xml_node & seqn)
+        Script operator()( const xml_node & seqn )
         {
             using namespace scriptXML;
             xml_attribute xname = seqn.attribute(ATTR_ScrSeqName.c_str());
@@ -232,7 +514,7 @@ namespace pmd2
             {
                 stringstream sstr;
                 PrintErrorPos(sstr, seqn) << "SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!";
-                throw std::runtime_error(sstr.str());
+                throw CompileErrorException(sstr.str(), seqn.offset_debug());
             }
             xml_node xcode = seqn.child(NODE_Code.c_str());
 
@@ -242,6 +524,7 @@ namespace pmd2
             IncrementAllStringReferencesParameters(); //Increment all strings values by the nb of entries in the const table.
 
             //Move strings
+            //! #REMOVEME: this is obsolete
             m_out.ConstTbl() = std::move( Script::consttbl_t( m_constqueue.begin(), m_constqueue.end() ) );
             for( auto & aq : m_strqueues )
             {
@@ -292,12 +575,15 @@ namespace pmd2
                     for(const auto & ref : aconstref.second.referersoffsets)
                         sstr <<"\t*Reference " <<cnt++ <<", \"" <<filename <<"\" offset: " <<ref <<"\n";
                     assert(false);
-                    throw std::runtime_error(sstr.str());
+                    throw CompileErrorException(sstr.str(), 0);
                 }
             }
         }
 
         /*****************************************************************************************
+            ParseTypedRoutine
+                Read routines XML tags and determine what it translates to and intereprets the
+                parameter when applicable.
         *****************************************************************************************/
         void ParseTypedRoutine(const xml_node & routinen, uint16_t routinety, ScriptRoutine & grpout, bool isalias)
         {
@@ -309,7 +595,7 @@ namespace pmd2
                 stringstream sstrer;
                 PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine has unknown parameter type \"" 
                                                <<static_cast<uint16_t>(ptype) <<"\"!!";
-                throw std::runtime_error(sstrer.str());
+                throw CompileErrorException(sstrer.str(), routinen.offset_debug());
             }
 
             xml_attribute attr = routinen.attribute(ppname->c_str());
@@ -325,7 +611,7 @@ namespace pmd2
                     stringstream sstrer;
                     PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine is missing its expected parameter \"" 
                                                    <<*ppname <<"\"!!";
-                    throw std::runtime_error(sstrer.str());
+                    throw CompileErrorException(sstrer.str(), routinen.offset_debug());
                 }
                 ptype = eOpParamTypes::UNK_Placeholder; //We want to handle it as a regular value
             }
@@ -336,53 +622,69 @@ namespace pmd2
                 return;
             }
             
-            //! #TODO: this is redundant, better find a smart way to deal with this..
-            switch(ptype)
+            uint16_t entid = 0;
+            if( ptype != eOpParamTypes::UNK_Placeholder && !HandleTypedEntityIds(attr, routinen, ptype, entid) )
             {
-                case eOpParamTypes::Unk_LivesRef:
-                {
-                    uint16_t livesid = m_paraminf.LivesInfo(attr.value());
-                    if(livesid != InvalidLivesID )
-                        grpout.parameter = livesid;
-                    else
-                    {
-                        clog <<routinen.path() <<", " <<routinen.offset_debug() 
-                                <<" : used invalid \"lives\" id value as a raw integer.\n"; 
-                        grpout.parameter = ToWord(attr.as_int());
-                    }
-                    break;
-                }
-                case eOpParamTypes::Unk_PerformerRef:
-                {
-                    //!#TODO
-                    grpout.parameter = ToWord(attr.as_uint());
-                    break;
-                }
-                case eOpParamTypes::Unk_ObjectRef:
-                {
-                    try
-                    {
-                        grpout.parameter = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
-                    }
-                    catch( const std::exception & )
-                    {
-                        stringstream sstrer;
-                        PrintErrorPos(sstrer,routinen) 
-                            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<attr.value() 
-                            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
-                        throw_with_nested( std::runtime_error(sstrer.str()) );
-                    }
-                    break;
-                }
-                case eOpParamTypes::UNK_Placeholder:
-                {
-                    grpout.parameter = ToWord(attr.as_uint());
-                    break;
-                }
-            };
+                //PRINT ERROR!
+                stringstream sstrer;
+                PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine has an invalid parameter attribute name \"" <<attr.name() <<"\"!!";
+                throw CompileErrorException(sstrer.str(), routinen.offset_debug());
+            }
+            else if( ptype == eOpParamTypes::UNK_Placeholder )
+            {
+                entid = ToWord( attr.as_uint() );
+            }
+            grpout.parameter = entid;
+
+            //! #TODO: this is redundant, better find a smart way to deal with this..
+            //switch(ptype)
+            //{
+            //    case eOpParamTypes::Unk_LivesRef:
+            //    {
+            //        uint16_t livesid = m_paraminf.LivesInfo(attr.value());
+            //        if(livesid != InvalidLivesID )
+            //            grpout.parameter = livesid;
+            //        else
+            //        {
+            //            slog() <<routinen.path() <<", " <<routinen.offset_debug() 
+            //                    <<" : used invalid \"lives\" id value as a raw integer.\n"; 
+            //            grpout.parameter = ToWord(attr.as_int());
+            //        }
+            //        break;
+            //    }
+            //    case eOpParamTypes::Unk_PerformerRef:
+            //    {
+            //        //!#TODO
+            //        grpout.parameter = ToWord(attr.as_uint());
+            //        break;
+            //    }
+            //    case eOpParamTypes::Unk_ObjectRef:
+            //    {
+            //        try
+            //        {
+            //            grpout.parameter = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
+            //        }
+            //        catch( const std::exception & )
+            //        {
+            //            stringstream sstrer;
+            //            PrintErrorPos(sstrer,routinen) 
+            //                << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<attr.value() 
+            //                <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+            //            throw_with_nested( CompileErrorException(sstrer.str(), routinen.offset_debug()) );
+            //        }
+            //        break;
+            //    }
+            //    case eOpParamTypes::UNK_Placeholder:
+            //    {
+            //        grpout.parameter = ToWord(attr.as_uint());
+            //        break;
+            //    }
+            //};
         }
 
         /*****************************************************************************************
+            ParseCode
+                Read routines and parse their instructions.
         *****************************************************************************************/
         void ParseCode( const xml_node & coden )
         {
@@ -390,19 +692,19 @@ namespace pmd2
             Script::grptbl_t & outtbl = m_out.Routines();
 
             uint16_t lastroutinetype = 0;
-            for( const xml_node & group : coden.children() )
+            for( const xml_node & routine : coden.children() )
             {
                 uint16_t routinety = 0;
-                bool     isalias   = NODE_RoutineAlias == group.name();
+                bool     isalias   = NODE_RoutineAlias == routine.name();
 
                 if(isalias)
                 {
                     if(m_out.Routines().empty()) 
                     {
                         stringstream sstrer;
-                        PrintErrorPos(sstrer,group) 
+                        PrintErrorPos(sstrer,routine) 
                             << "SSBXMLParser::ParseCode(): The first routine cannot be an alias!";
-                        throw std::runtime_error(sstrer.str());
+                        throw CompileErrorException(sstrer.str(), routine.offset_debug());
                     }
                     //If its an alias, the type is held in the type attribute, not the name of the node
                     //xml_attribute xtype = group.attribute(ATTR_RoutineType.c_str());
@@ -416,48 +718,33 @@ namespace pmd2
                     routinety = lastroutinetype;
                 }
                 else
-                    routinety = StrToRoutineTyInt(group.name());
+                    routinety = StrToRoutineTyInt(routine.name());
                 
 
                 //Parse the attributes and instructions if the routine is a valid type!
                 if(routinety != 0)
                 {
-                    ScriptRoutine grpout;
-                    ParseTypedRoutine(group, routinety, grpout, isalias);
+                    ScriptRoutine rtnout;
+                    ParseTypedRoutine(routine, routinety, rtnout, isalias);
                     if(!isalias)
                     {
-                        for( const xml_node & inst : group )
-                            ParseInstruction(inst,grpout.instructions);
+                        for( const xml_node & inst : routine )
+                            ParseInstruction(inst, rtnout.instructions);
                     }
-                    outtbl.push_back(std::move(grpout));
+                    outtbl.push_back(std::move(rtnout));
                 }
                 lastroutinetype = routinety; //Set the type of the last routine
             }
         }
 
         /*****************************************************************************************
+            ParseInstruction
+                This handles all XML tags within a script's code, and translate those to commands.
         *****************************************************************************************/
         template<typename _InstContainer>
             void ParseInstruction( const xml_node & instn, _InstContainer & outcnt )
         {
             using namespace scriptXML;
-            //static const unordered_map<std::string, eInstructionType> Ref 
-            //{{
-            //    {NODE_Instruction, eInstructionType::Command},
-            //    {NODE_MetaLabel,   eInstructionType::MetaLabel},
-            //}};
-
-            //auto itf = Ref.find(instn.name());
-            //if( itf != Ref.end() )
-            //{
-            //    if(itf->second == eInstructionType::MetaLabel)
-            //        ParseMetaLabel(instn, outcnt);
-            //    else
-            //        ParseCommand(instn, outcnt);
-            //}
-            //else
-            //    TryParseCommandNode(instn, outcnt);
-            
             if( instn.name() == NODE_Instruction )
                 ParseCommand(instn, outcnt);
             else if( instn.name() == NODE_MetaLabel )
@@ -467,6 +754,9 @@ namespace pmd2
         }
 
         /*****************************************************************************************
+            ParseMetaLabel
+                This is useb to parse label meta-instructions. So we can keep track of where
+                any commands refering to it will need to jump when we assemble the script file!
         *****************************************************************************************/
         template<typename _InstContainer>
             void ParseMetaLabel( const xml_node & instn, _InstContainer & outcnt )
@@ -475,7 +765,7 @@ namespace pmd2
             xml_attribute xid = instn.attribute(ATTR_LblID.c_str());
 
             if( !xid )
-                throw std::runtime_error("SSBXMLParser::ParseInstruction(): Label with invalid ID found! " + instn.path());
+                throw CompileErrorException("SSBXMLParser::ParseInstruction(): Label with invalid ID found! " + instn.path(), instn.offset_debug());
 
             uint16_t labelid = ToWord(xid.as_int());
             m_labelchecker[labelid].bexists = true; //We know this label exists
@@ -513,8 +803,8 @@ namespace pmd2
             {
                 stringstream sstrer;
                 PrintErrorPos(sstrer,instn) <<"SSBXMLParser::TryParseCommandNode(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
-                    <<", in group instruction #" <<outcnt.size() <<" Node name doesn't match any known meta instructions or command!!";
-                throw std::runtime_error(sstrer.str());
+                    <<", in group instruction #" <<outcnt.size() <<" Node name " <<nodename <<" doesn't match any known meta instructions or command!!";
+                throw CompileErrorException(sstrer.str(), instn.offset_debug());
             }
 
             OpCodeInfoWrapper opinfo = m_opinfo.Info(foundop);
@@ -535,6 +825,8 @@ namespace pmd2
         }
         
         /*****************************************************************************************
+            ParseSubInstruction
+                Helper to handle sub-instructions any non-command instructions might have.
         *****************************************************************************************/
         void ParseSubInstructions(const xml_node & parentinstn, ScriptInstruction & dest )
         {
@@ -555,9 +847,9 @@ namespace pmd2
             {
                 //!#TODO: Merge the other method for parsing parameters with sub-instructions with this one!!
                 stringstream sstrer;
-               PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
-                    <<", in group instruction #" <<outcnt.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
-                throw std::runtime_error(sstrer.str());
+                PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseInstruction(): Script \"" <<m_out.Name() <<"\", instruction group #" << m_out.Routines().size() 
+                                            <<", in group instruction #" <<outcnt.size() <<" doesn't have a \"" <<ATTR_Name <<"\" attribute!!";
+                throw CompileErrorException(sstrer.str(), instn.offset_debug());
             }
             else
                 instname = name.value();
@@ -572,7 +864,7 @@ namespace pmd2
             xml_attribute_iterator  itatend     = instn.attributes_end();
             size_t                  nbparams    = 0;
 
-            if( itat != itatend  && name /*&& strcmp(itat->name(), ATTR_Name.c_str()) == 0*/ )
+            if( itat != itatend  && name)
                 ++itat; //Skip name attribute
 
             nbparams = std::distance( itat, itatend );
@@ -588,10 +880,9 @@ namespace pmd2
             if( outinstr.value == InvalidOpCode )
             {
                 stringstream sstrer;
-
                 PrintErrorPos(sstrer, instn) << "SSBXMLParser::ParseCommand(): No matching command for " 
                     <<instname <<", taking " <<nbparams <<" parameter(s) found!";;
-                throw std::runtime_error(sstrer.str());
+                throw CompileErrorException(sstrer.str(), instn.offset_debug());
             }
 
             //#3 - Parse parameters
@@ -600,7 +891,6 @@ namespace pmd2
                 DecideHowParseParams( instn, itat, itatend, nbparams, oinf, hasstrings,outinstr, outcnt );
 
             //!#TODO: Merge the other method for parsing parameters with sub-instructions with this one!!
-
             outcnt.push_back(std::move(outinstr));            
         }
 
@@ -634,6 +924,7 @@ namespace pmd2
                     if( ParseDefinedParameters( instn, itat, itatend, oinf, hasstrings, outinstr ) != oinf.NbParams() )
                     {
                         assert(false); //should never happen!!
+                        throw CompileErrorException("SSBXMLParser::ParseCommand(): Parsed less parameters than expected!!", instn.offset_debug());
                     }
                 }
                 else if( oinf.ParamInfo().size() < oinf.NbParams() &&   //If not all parameters were defined
@@ -643,13 +934,11 @@ namespace pmd2
                     //We do not handle string nodes in this case!
                     if( ParsePartiallyDefinedParameters(instn, itat, itatend, oinf, hasstrings, outinstr) != oinf.NbParams() )
                     {
-#ifdef _DEBUG
                         assert(false);
-#endif
                         //Error, lacks required parameters!!
                         stringstream sstrer;
                         PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseCommand(): Command \"" <<instn.path() <<"\" had less parameters specified than expected!!";
-                        throw std::runtime_error(sstrer.str()); //Error!!
+                        throw CompileErrorException(sstrer.str(), instn.offset_debug());
                     }
                 }
             }
@@ -660,13 +949,11 @@ namespace pmd2
             }
             else if( nbparams < oinf.NbParams() || itat == itatend )
             {
-#ifdef _DEBUG
-                        assert(false);
-#endif
+                assert(false);
                 //Error, lacks required parameters!!
                 stringstream sstrer;
                 PrintErrorPos(sstrer,instn) <<"SSBXMLParser::ParseCommand(): Command \"" <<instn.path() <<"\" had less parameters specified than expected!!";
-                throw std::runtime_error(sstrer.str()); //Error!!
+                throw CompileErrorException(sstrer.str(), instn.offset_debug());
             }
 
         }
@@ -674,8 +961,10 @@ namespace pmd2
 
         /*****************************************************************************************
             ParseRawParameters
-                Parses any parameters named "param", and push them into the
-                parameter list of the function!
+                Parses any undefined parameters named "param", and push them into the
+                parameter list of the function! 
+                Used for command with either no defined parameters, or for commands that
+                takes a variable amount of parameters.
         *****************************************************************************************/
         size_t ParseRawParameters(  xml_attribute_iterator & itat, 
                                     xml_attribute_iterator & itatend,
@@ -729,6 +1018,7 @@ namespace pmd2
                 or the defined param list!
                 Returns the nb of parameters parsed.
         *****************************************************************************************/
+        //! #TODO: Review this method. Its overly complicated, hard to read, and redundant.
         size_t ParseDefinedParameters( const xml_node         & instn, 
                                        xml_attribute_iterator & itat, 
                                        xml_attribute_iterator & itatend,
@@ -750,12 +1040,11 @@ namespace pmd2
                     {
                         ParseTypedCommandParameterAttribute(*itat, instn, attrparamtype, outinstr );
                     }
-                    else if( pinf.ptype == eOpParamTypes::String ) //Strings will never match 
+                    else if( pinf.ptype == eOpParamTypes::String ) //Strings will never match the current attribute since they're sub-nodes
                     {
                         if( attrparamtype == eOpParamTypes::Constant && itat != itatend )
                         {
-                            //Special case for constants and strings, since they can be replaced by one another
-                            HandleAConstref( *itat, outinstr );
+                            HandleAConstref( *itat, outinstr ); //Special case for constants and strings, since they can be replaced by one another
                         }
                         else if(hasstrings)
                         {
@@ -769,7 +1058,7 @@ namespace pmd2
                             stringstream ss;
                             PrintErrorPos(ss,instn) <<"SSBXMLParser::ParseDefinedParameters(): Expected String node or constref, but neither were found! " 
                                                     << instn.path();
-                            throw std::runtime_error(ss.str());
+                            throw CompileErrorException(ss.str(), instn.offset_debug());
                         }
                     }
                     else
@@ -777,7 +1066,7 @@ namespace pmd2
                         stringstream ss;
                         PrintErrorPos(ss,instn) <<"SSBXMLParser::ParseDefinedParameters(): Unexpected parameter " <<itat->name() <<"\", " <<attrname <<"\"! "
                                                 << instn.path();
-                        throw std::runtime_error( ss.str() );
+                        throw CompileErrorException(ss.str(), instn.offset_debug());
                     }
                 }
                 else if( pinf.ptype == eOpParamTypes::String ) 
@@ -796,7 +1085,7 @@ namespace pmd2
                         stringstream ss;
                         PrintErrorPos(ss,instn) <<"SSBXMLParser::ParseDefinedParameters(): Expected String node, but none were found! "
                                                 << instn.path();
-                        throw std::runtime_error( ss.str() );
+                        throw CompileErrorException(ss.str(), instn.offset_debug());
                     }
                     break; //Break immediatetly, since, we don't have any attributes left!!
                 }
@@ -813,6 +1102,7 @@ namespace pmd2
 
         /*****************************************************************************************
             HandleStringNodes
+                Handle any possible sub-nodes containing strings the node might have.
         *****************************************************************************************/
         void HandleStringNodes(const xml_node & instn, ScriptInstruction & outinstr)
         {
@@ -829,13 +1119,13 @@ namespace pmd2
 #if defined(PMD2XML_STRING_AS_CDATA) || defined(PMD2XML_STRING_AS_PCDATA)
                     xml_text cdatatext  = strs.text();
 
-                    if( /*cdatatext && */xlang )
+                    if( xlang )
                     {
                         eGameLanguages lang = StrToGameLang(xlang.value());
 
                         if( lang == eGameLanguages::Invalid )
                         {
-                            throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                            throw CompileErrorException("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + " for string!", strs.offset_debug());
                         }
                         m_strqueues[lang].push_back(cdatatext.get());
                     }
@@ -848,7 +1138,7 @@ namespace pmd2
 
                         if( lang == eGameLanguages::Invalid )
                         {
-                            throw std::runtime_error("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + "for string!");
+                            throw CompileErrorException("SSBXMLParser::ParseTypedCommandParameterAttribute(): Encountered unknown language "s + xlang.value() + " for string!", strs.offset_debug());
                         }
                         m_strqueues[lang].push_back(xval.value());
                     }
@@ -864,13 +1154,14 @@ namespace pmd2
 
         /*****************************************************************************************
             CleanAttributeName
+                Remove any suffixed numbers from a command parameter attribute identifier.
         *****************************************************************************************/
         inline string CleanAttributeName( const pugi::char_t * cname )
         {
             string name(cname);
             for( size_t i = 0; i < name.size(); ++i )
             {
-                if( name[i] == '_' && (i + 1 < name.size()) && std::isdigit(name[i+1], locale::classic()) )
+                if( name[i] == '_' && (i + 1 < name.size()) && std::isdigit(name[i+1], locale::classic()) ) //Check if the parameter name is followed by "_XX" where XX is a number.
                     return name.substr(0,i);
             }
             return std::move(name);
@@ -888,6 +1179,7 @@ namespace pmd2
 
         /*****************************************************************************************
             HandleAConstref
+                Obtains the string from a constant string attribute for a given command node.
         *****************************************************************************************/
         inline void HandleAConstref(const xml_attribute & param, ScriptInstruction & outinst )
         {
@@ -897,6 +1189,8 @@ namespace pmd2
 
         /*****************************************************************************************
             ParseTypedCommandParameterAttribute
+                Determine the kind of parameter it is by the the attribute's identifier, 
+                and parse its value depending on the determined type.
         *****************************************************************************************/
         void ParseTypedCommandParameterAttribute( const xml_attribute & param, const xml_node & parentinstn, eOpParamTypes pty, ScriptInstruction & outinst )
         {
@@ -910,7 +1204,7 @@ namespace pmd2
                 }
                 case eOpParamTypes::String:
                 {
-                    if( m_region == eGameRegion::Japan )
+                    if( m_region == eGameRegion::Japan ) //In the japanese version all strings are constants
                     {
                         HandleAConstref( param, outinst );
                     }
@@ -920,13 +1214,17 @@ namespace pmd2
                 {
                     //Labels IDs
                     uint16_t lblid = ToWord( param.as_uint() );
-                    auto itf = m_labelchecker.find( lblid );
+                    auto itf = m_labelchecker.find( lblid ); //See if we have a reference to this label already
                     
                     if( itf != m_labelchecker.end() )
-                        itf->second.referersoffsets.push_back(parentinstn.offset_debug());
-                        //itf->second.nbref += 1;
+                        itf->second.referersoffsets.push_back(parentinstn.offset_debug()); //If it exists already, add this command to the list of references to this label
                     else
-                        m_labelchecker.emplace( std::make_pair( lblid, labelRefInf{ false, {{parentinstn.offset_debug()}} } ) ); //We found a ref to this label, but didn't check it
+                    {
+                        labelRefInf lblr;
+                        lblr.bexists         = false;                           //We don't know if the label exists yet
+                        lblr.referersoffsets = {{parentinstn.offset_debug()}};  //Mark the offset we got the reference at
+                        m_labelchecker.emplace( std::make_pair(lblid, std::move(lblr)) );  //Add this command as a reference to this label
+                    }
 
                     outinst.parameters.push_back( lblid );
                     break;
@@ -934,19 +1232,16 @@ namespace pmd2
                 case eOpParamTypes::Unk_CRoutineId:
                 {
                     uint16_t croutineid = m_paraminf.CRoutine(param.value());
-
-                    //! #TODO: When the parameter info gets encapsulated and abstracted in its own class, remove this!
-                    //if( m_version == eGameVersion::EoS )
-                    //    croutineid = FindCommonRoutineIDByName_EoS(param.value());
-                    //else
-                    //    croutineid = FindCommonRoutineIDByName_EoTD(param.value());
-
                     if(croutineid != InvalidCRoutineID )
                         outinst.parameters.push_back(croutineid);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                             <<" : used invalid \"common routine\" id value as a raw integer.\n"; 
+                        stringstream sstr; 
+                        sstr << "Invalid common routine name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
                         outinst.parameters.push_back( ToWord(param.as_int()) );
                     }
 
@@ -955,7 +1250,18 @@ namespace pmd2
                 case eOpParamTypes::Unk_FaceType:
                 {
                     uint16_t faceid = m_paraminf.Face(param.value());
-                    outinst.parameters.push_back(faceid);
+                    if(faceid != InvalidFaceID)
+                        outinst.parameters.push_back(faceid);
+                    else
+                    {
+                        stringstream sstr; 
+                        sstr << "Invalid face name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
+                        outinst.parameters.push_back( ToWord(param.as_int()) );
+                    }
                     break;
                 }
                 case eOpParamTypes::Unk_ScriptVariable:
@@ -965,46 +1271,67 @@ namespace pmd2
                         outinst.parameters.push_back(varid);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                             <<" : used invalid game variable id value as a raw integer.\n";
+                        stringstream sstr; 
+                        sstr << "Invalid game variable name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
                         outinst.parameters.push_back( ToWord(param.as_int()) );
                     }
                     break;
                 }
-                case eOpParamTypes::Unk_LivesRef:
-                {
-                    outinst.parameters.push_back(m_paraminf.LivesInfo(param.value()));
-                    break;
-                }
-                case eOpParamTypes::Unk_PerformerRef:
-                {
-                    //!#TODO
-                    outinst.parameters.push_back( ToWord( param.as_uint() ) );
-                    break;
-                }
-                case eOpParamTypes::Unk_ObjectRef:
-                {
-                    try
-                    {
-                        outinst.parameters.push_back(m_paraminf.StrToObjectID(param.value())); //! #FIXME: Verify it or somthing?
-                    }
-                    catch( const std::exception & )
-                    {
-                        stringstream sstrer;
-                        PrintErrorPos(sstrer,parentinstn) 
-                            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<param.value() 
-                            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
-                        throw_with_nested( std::runtime_error(sstrer.str()) );
-                    }
-                    break;
-                }
+                //case eOpParamTypes::Unk_LivesRef:
+                //{
+                //    uint16_t actid = m_paraminf.LivesInfo(param.value());
+                //    if(actid != ScriptNullVal)
+                //        outinst.parameters.push_back(actid);
+                //    else
+                //    {
+                //        stringstream sstr; 
+                //        sstr << "Invalid actor name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                //        string msg = sstr.str();
+                //        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                //        if(m_preportentry)
+                //            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
+                //        outinst.parameters.push_back( ToWord(param.as_int()) );
+                //    }
+                //    break;
+                //}
+                //case eOpParamTypes::Unk_PerformerRef:
+                //{
+                //    //!#TODO
+                //    outinst.parameters.push_back( ToWord( param.as_uint() ) );
+                //    break;
+                //}
+                //case eOpParamTypes::Unk_ObjectRef:
+                //{
+                //    try
+                //    {
+                //        uint16_t objectid = m_paraminf.StrToObjectID(param.value());
+                //        outinst.parameters.push_back(objectid); //! #FIXME: Verify it or somthing?
+                //    }
+                //    catch( const std::exception & )
+                //    {
+                //        stringstream sstrer;
+                //        PrintErrorPos(sstrer,parentinstn) 
+                //            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<param.value() 
+                //            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+                //        throw_with_nested( CompileErrorException(sstrer.str(), parentinstn.offset_debug()) );
+                //    }
+                //    break;
+                //}
                 case eOpParamTypes::Unk_LevelId:
                 {
                     uint16_t lvlid = m_paraminf.LevelInfo(param.value());
                     if( lvlid == InvalidLevelID && param.value() != NullLevelId)
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                             <<" : invalid level id value, using it as a raw integer.\n"; 
+                        stringstream sstr;
+                        sstr << "Invalid level id name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
 
@@ -1018,8 +1345,12 @@ namespace pmd2
                         outinst.parameters.push_back(faceposmode);
                     else
                     {
-                        clog <<parentinstn.path() <<", " <<parentinstn.offset_debug() 
-                             <<" : used invalid face position mode value as a raw integer.\n"; 
+                        stringstream sstr;
+                        sstr << "Invalid face position mode name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
                         outinst.parameters.push_back(ToSWord(param.as_int()));
                     }
                     break;
@@ -1042,17 +1373,97 @@ namespace pmd2
                     outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) );
                     break;
                 }
+                case eOpParamTypes::UInteger:
+                case eOpParamTypes::UNK_Placeholder:
+                case eOpParamTypes::Boolean:
+                case eOpParamTypes::Volume:
+                case eOpParamTypes::BitsFlag:
+                case eOpParamTypes::Unk_MvSlSpecInt:
+                {
+                    outinst.parameters.push_back( ToWord( param.as_uint() ) );
+                    break;
+                }
                 case eOpParamTypes::StationId:
                 case eOpParamTypes::ActingLayerID:
+                case eOpParamTypes::ScenarioId:
+                case eOpParamTypes::Unk_ProcSpec:
+                case eOpParamTypes::Unk_RoutineId:
+                case eOpParamTypes::Unk_AnimationID:
+                case eOpParamTypes::MenuID:
+                case eOpParamTypes::Unk_BgmTrack:
                 {
-                    outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) );
+                    outinst.parameters.push_back( Convert16bTo14b(ToSWord(param.as_int())) ); //!Placeholder for IDs !
                     break;
                 }
                 default:
                 {
-                    outinst.parameters.push_back( ToWord( param.as_uint() ) );
+                    uint16_t outval = 0;
+                    if(!HandleTypedEntityIds( param, parentinstn, pty, outval)) //Check if all fails if its an entity id of some kind!
+                    {
+                        stringstream sstrer;
+                        sstrer << "Invalid parameter name!\"" <<param.name() <<"\"!";
+                        string msg = sstrer.str();
+                        throw CompileErrorException(sstrer.str(), parentinstn.offset_debug());
+                    }
+                    outinst.parameters.push_back(outval);
                 }
             }
+        }
+
+        /*
+            HandleTypedEntityIds
+                This handles entity referencing parameters specifically.
+                Return false if the value isn't an entity id!
+        */
+        bool HandleTypedEntityIds(const xml_attribute & param, const xml_node & parentinstn, eOpParamTypes pty, uint16_t & outval)
+        {
+            using namespace scriptXML;
+            switch(pty)
+            {
+                case eOpParamTypes::Unk_LivesRef:
+                {
+                    uint16_t actid = m_paraminf.LivesInfo(param.value());
+                    if(actid != ScriptNullVal)
+                        outval = actid;
+                    else
+                    {
+                        stringstream sstr; 
+                        sstr << "Invalid actor name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
+                        string msg = sstr.str();
+                        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
+                        if(m_preportentry)
+                            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
+                        outval =  ToWord(param.as_int());
+                    }
+                    break;
+                }
+                case eOpParamTypes::Unk_PerformerRef:
+                {
+                    //!#TODO
+                    outval = ToWord( param.as_uint() );
+                    break;
+                }
+                case eOpParamTypes::Unk_ObjectRef:
+                {
+                    try
+                    {
+                        uint16_t objectid = m_paraminf.StrToObjectID(param.value());
+                        outval = objectid; //! #FIXME: Verify it or somthing?
+                    }
+                    catch( const std::exception & )
+                    {
+                        stringstream sstrer;
+                        PrintErrorPos(sstrer,parentinstn) 
+                            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<param.value() 
+                            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
+                        throw_with_nested( CompileErrorException(sstrer.str(), parentinstn.offset_debug()) );
+                    }
+                    break;
+                }
+                default:
+                    return false;
+            };
+            return true;
         }
 
         /*****************************************************************************************
@@ -1061,21 +1472,6 @@ namespace pmd2
         {
             using namespace scriptXML;
             m_out.ConstTbl() = std::move( Script::consttbl_t( m_constqueue.begin(), m_constqueue.end() ) );
-
-            //deque<string> constantsout; //The deque avoids re-allocating a vector constantly
-            //for( const auto & conststr : constn.children(NODE_Constant.c_str()) )
-            //{
-            //    xml_attribute xval = conststr.attribute(ATTR_Value.c_str());
-            //    if(!xval)
-            //    {
-            //        stringstream sstrer;
-            //        sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", Constant #"  <<constantsout.size()
-            //               <<" is missing its \"" <<ATTR_Value <<"\" attribute!";
-            //        throw std::runtime_error( sstrer.str() );
-            //    }
-            //    constantsout.push_back(xval.value());
-            //}
-            //m_out.ConstTbl() = std::move( Script::consttbl_t( constantsout.begin(), constantsout.end() ) );
         }
 
         /*****************************************************************************************
@@ -1091,14 +1487,14 @@ namespace pmd2
                     stringstream sstrer;
                     sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<" is missing its \"" <<ATTR_Language <<"\" attribute!";
-                    throw std::runtime_error( sstrer.str() );
+                    throw CompileErrorException(sstrer.str(), strblkn.offset_debug());
             }
             if( (glang = StrToGameLang(xlang.value())) == eGameLanguages::Invalid )
             {
                     stringstream sstrer;
                     sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<" has an invalid value\"" <<xlang.value() <<"\" as its \"" <<ATTR_Language <<"\" attribute value!";
-                    throw std::runtime_error( sstrer.str() );
+                    throw CompileErrorException(sstrer.str(), strblkn.offset_debug());
             }
 
             deque<string> langstr; //save on realloc each times on a vector
@@ -1113,7 +1509,7 @@ namespace pmd2
                     sstrer << "SSBXMLParser::ParseConsts(): Script \"" <<m_out.Name() <<"\", String block #"  <<m_out.StrTblSet().size()
                            <<", language \"" <<xlang.value() <<"\", string #" <<langstr.size() 
                            <<", is missing its \"" <<ATTR_Value <<"\" attribute!";
-                    throw std::runtime_error( sstrer.str() );
+                    throw CompileErrorException(sstrer.str(), str.offset_debug());
                 }
             }
             m_out.InsertStrLanguage( glang, std::move(Script::strtbl_t( langstr.begin(), langstr.end() )) );
@@ -1141,6 +1537,7 @@ namespace pmd2
         //LevelEntryInfoWrapper m_lvlentryinf;
         ParameterReferences  m_paraminf;
         const ConfigLoader & m_gconf;
+        CompilerReport::compileresult * m_preportentry; //Compiler report entry pointer, when applicable, null otherwise
     };
 
 
@@ -1157,8 +1554,8 @@ namespace pmd2
         }
 
     public:
-        SSDataXMLParser( const ConfigLoader & conf )
-            :m_gconf(conf), m_paraminf(conf)
+        SSDataXMLParser( const ConfigLoader & conf, CompilerReport::compileresult * preport = nullptr )
+            :m_gconf(conf), m_paraminf(conf), m_preport(preport)
         {}
 
         ScriptData operator()(xml_node & datan)
@@ -1170,7 +1567,7 @@ namespace pmd2
                 stringstream sstrer;
                 PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Script data is missing its \"" 
                                             << ATTR_ScrDatName << "\" attribute!!";
-                throw std::runtime_error(sstrer.str());
+                throw CompileErrorException(sstrer.str(), datan.offset_debug());
             }
             xml_attribute xtype = datan.attribute(ATTR_ScriptType.c_str());
             if(!xtype)
@@ -1178,7 +1575,7 @@ namespace pmd2
                 stringstream sstrer;
                 PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Script data is missing its \"" 
                                             << ATTR_ScriptType <<"\" attribute!!";
-                throw std::runtime_error(sstrer.str());
+                throw CompileErrorException(sstrer.str(), datan.offset_debug());
             }
 
             eScrDataTy dataty = StrToScriptDataType(xtype.value());
@@ -1186,13 +1583,13 @@ namespace pmd2
             {
                 stringstream sstrer;
                 PrintErrorPos(sstrer,datan) << "SSDataXMLParser::operator(): Invalid script data type!!";
-                throw std::runtime_error(sstrer.str());
+                throw CompileErrorException(sstrer.str(), datan.offset_debug());
             }
 
             //Init output data
             m_out = std::move( ScriptData(xname.value(), dataty) );
 
-            ParseUnkTable1(datan);
+            ParseTriggers(datan);
             ParsePosMarkers(datan);
             ParseLayers(datan);
 
@@ -1200,7 +1597,7 @@ namespace pmd2
         }
 
     private:
-        void ParseUnkTable1(xml_node & datan)
+        void ParseTriggers(xml_node & datan)
         {
             using namespace scriptXML;
             const string & AttrID  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
@@ -1208,43 +1605,59 @@ namespace pmd2
 
             for(const auto & curunk1entry : unktbl1.children(NODE_UnkTable1Entry.c_str()) )
             {
-                UnkTbl1DataEntry entry;
-                xml_attribute  xcrtnid = curunk1entry.attribute(AttrID.c_str());
-                if(!xcrtnid)
-                {
-                    stringstream sstrer;
-                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseUnkTable1(): Missing " <<AttrID <<" attribute!!";
-                    throw std::runtime_error(sstrer.str());
-                }
-
-                entry.croutineid = m_paraminf.CRoutine(xcrtnid.value());
-                if(entry.croutineid == InvalidCRoutineID)
-                {
-                    cerr << "SSDataXMLParser::ParseUnkTable1(), offset: " <<curunk1entry.offset_debug() <<": Got common routine id " 
-                         <<entry.croutineid <<"! Interpreting as number instead!\n";
-                    entry.croutineid = ToSWord(xcrtnid.as_int());
-                }
-
-                //UnkTbl1DataEntry entry;
-               // xml_attribute xcrtnid = curunk1entry.attribute(ATTR_.c_str());
+                TriggerDataEntry entry;
+                xml_attribute xcrtnid = curunk1entry.attribute(AttrID.c_str());
                 xml_attribute xunk1   = curunk1entry.attribute(ATTR_Unk1.c_str());
                 xml_attribute xunk2   = curunk1entry.attribute(ATTR_Unk2.c_str());
                 xml_attribute xscrid  = curunk1entry.attribute(ATTR_ScriptID.c_str());
 
+                //if(!xcrtnid)
+                //{
+                //    stringstream sstrer;
+                //    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseTriggers(): A trigger entry is missing its \"" <<AttrID <<"\" attribute(s)!  Or one or more of them is not written correctly!";
+                //    throw CompileErrorException(sstrer.str(), curunk1entry.offset_debug());
+                //}
                 if(xcrtnid && xunk1 && xunk2 && xscrid)
                 {
                     //entry.croutineid    = ToWord(xcrtnid.as_uint());
                     entry.unk1          = ToWord(xunk1.as_uint());
                     entry.unk2          = ToWord(xunk2.as_uint());
                     entry.scrid         = ToWord(xscrid.as_uint());
-                    m_out.UnkTbl1().push_back(std::move(entry));
                 }
                 else
                 {
-                    stringstream sstrer;
-                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseUnkTable1(): Missing one or more of the 4 attributes for Unk Table 1 entry!";
-                    throw std::runtime_error(sstrer.str());
+                    stringstream sstrer;  
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseTriggers(): A trigger entry is missing its  "; 
+                    if(!xcrtnid)
+                        sstrer << AttrID <<", ";
+                    if(!xunk1)
+                        sstrer << ATTR_Unk1 <<", ";
+                    if(!xunk2)
+                        sstrer << ATTR_Unk2 <<", ";
+                    if(!xscrid)
+                        sstrer << ATTR_ScriptID << " ";
+                    sstrer <<"attribute(s)! Or one or more of them is not written correctly!";
+                    throw CompileErrorException(sstrer.str(), curunk1entry.offset_debug());
                 }
+
+                entry.croutineid = m_paraminf.CRoutine(xcrtnid.value());
+                if(entry.croutineid == InvalidCRoutineID)
+                {
+                    std::stringstream sstr;
+                    sstr << "SSDataXMLParser::ParseTriggers(), offset: " <<curunk1entry.offset_debug() <<": Got invalid common routine name " 
+                         <<xcrtnid.value() <<"! Interpreting as number instead!";
+                    std::string msg = sstr.str();
+                    slog()<<msg <<"\n";
+                    if(m_preport)
+                        m_preport->InsertWarning(curunk1entry.offset_debug(), std::move(msg));
+                    entry.croutineid = ToSWord(xcrtnid.as_int());
+                }
+
+                //TriggerDataEntry entry;
+               // xml_attribute xcrtnid = curunk1entry.attribute(ATTR_.c_str());
+
+                m_out.UnkTbl1().push_back(std::move(entry));
+
             }
         }
 
@@ -1309,14 +1722,19 @@ namespace pmd2
                 {
                     stringstream sstrer;
                     PrintErrorPos(sstrer,actor) << "SSDataXMLParser::ParseActors(): Missing actor id attribute!!";
-                    throw std::runtime_error(sstrer.str());
+                    throw CompileErrorException(sstrer.str(), actor.offset_debug());
                 }
 
                 entry.livesid = m_paraminf.LivesInfo(xid.value());
                 if(entry.livesid == InvalidLivesID)
                 {
-                    cerr << "SSDataXMLParser::ParseActors(), offset: " <<actor.offset_debug() <<": Got Invalid actor id " 
-                         <<entry.livesid <<"! Interpreting as number instead!\n";
+                    std::stringstream sstr;
+                    sstr << "SSDataXMLParser::ParseActors(), offset: " <<actor.offset_debug() <<": Got invalid actor name " 
+                         <<entry.livesid <<"! Interpreting as number instead!";
+                    std::string msg = sstr.str();
+                    slog()<<msg <<"\n";
+                    if(m_preport)
+                        m_preport->InsertWarning(actor.offset_debug(), std::move(msg));
                     entry.livesid = ToSWord(xid.as_int());
                 }
 
@@ -1352,7 +1770,7 @@ namespace pmd2
                 {
                     stringstream sstrer;
                     PrintErrorPos(sstrer,object) << "SSDataXMLParser::ParseObjects(): Missing " <<AttrID <<" attribute!!";
-                    throw std::runtime_error(sstrer.str());
+                    throw CompileErrorException(sstrer.str(), object.offset_debug());
                 }
 
                 const string objid = xid.value();
@@ -1366,7 +1784,7 @@ namespace pmd2
                     PrintErrorPos(sstrer,object) 
                         << "SSDataXMLParser::ParseObjects(): Object id " <<objid 
                         <<", is missing object number! Can't reliably pinpoint the correct object instance!";
-                    throw_with_nested(std::runtime_error(sstrer.str()));
+                    throw_with_nested(CompileErrorException(sstrer.str(), object.offset_debug()));
                 }
 
                 for( const auto & attr : object.attributes() )
@@ -1440,14 +1858,19 @@ namespace pmd2
                 {
                     stringstream sstrer;
                     PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
-                    throw std::runtime_error(sstrer.str());
+                    throw CompileErrorException(sstrer.str(), aevent.offset_debug());
                 }
 
                 entry.unk0 = m_paraminf.CRoutine(xevid.value());
                 if(entry.unk0 == InvalidCRoutineID)
                 {
-                    cerr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got common routine id " 
-                         <<entry.unk0 <<"! Interpreting as number instead!\n";
+                    std::stringstream sstr;
+                    sstr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got invalid common routine name " 
+                         <<xevid.value() <<"! Interpreting as number instead!";
+                    std::string msg = sstr.str();
+                    slog()<<msg <<"\n";
+                    if(m_preport)
+                        m_preport->InsertWarning(aevent.offset_debug(), std::move(msg));
                     entry.unk0 = ToSWord(xevid.as_int());
                 }
 
@@ -1472,9 +1895,10 @@ namespace pmd2
         }
 
     private:
-        const ConfigLoader & m_gconf;
-        ScriptData           m_out;
-        ParameterReferences  m_paraminf;
+        const ConfigLoader            & m_gconf;
+        ScriptData                      m_out;
+        ParameterReferences             m_paraminf;
+        CompilerReport::compileresult * m_preport;
     };
 
     /*****************************************************************************************
@@ -1485,21 +1909,37 @@ namespace pmd2
     {
     public:
         GameScriptsXMLParser(eGameRegion & out_reg, eGameVersion & out_gver, const ConfigLoader & conf)
-            :m_out_reg(out_reg), m_out_gver(out_gver), m_gconf(conf)
+            :m_out_reg(out_reg), m_out_gver(out_gver), m_gconf(conf), m_preport(nullptr)
         {}
 
-        LevelScript Parse( const std::string & file )
+        LevelScript Parse( const std::string & file, CompilerReport * reporter = nullptr )
         {
             using namespace scriptXML;
             xml_document doc;
+            m_curlvlbasename = utils::GetBaseNameOnly(file);
+            m_preport        = reporter;
+            
+            if(m_preport)
+                m_preport->InitResult(m_curlvlbasename, utils::MakeAbsolutePath(file)); //Init the entry for this file!
 
+            pugi::xml_parse_result parseres;
             try
             {
-                HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
+                //HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
+                parseres = doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single);
             }
-            catch(const std::exception & )
+            catch(const std::exception & ) //This is in case of a fatal error, when pugi throws an exception
             {
-                throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Pugixml failed loading file!"));
+                if(m_preport)
+                    m_preport->InsertError( m_curlvlbasename, parseres.offset, parseres.description() );
+                throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Fatal error loading file! Pugixml returned an exception!!"));
+            }
+
+            if(!parseres)
+            {
+                if(m_preport)
+                    m_preport->InsertError( m_curlvlbasename, parseres.offset, parseres.description() );
+                throw std::runtime_error("GameScriptsXMLParser::Parse() : Error while parsing XML.. (offset: " + std::to_string(parseres.offset) + ") " + parseres.description() );
             }
 
             xml_node      parentn    = doc.child(ROOT_ScripDir.c_str());
@@ -1510,42 +1950,64 @@ namespace pmd2
             m_out_gver = StrToGameVersion(xversion.value());
             m_out_reg  = StrToGameRegion (xregion.value());
 
-            return std::move( LevelScript( utils::GetBaseNameOnly(file), 
-                             std::move(ParseRoutines(parentn)),
-                             std::move(ParseLSD   (parentn))));
+            if( utils::LibWide().isLogOn() )
+                slog() << "#Parsing " <<m_curlvlbasename <<".xml \n";
+
+            try
+            {
+                LevelScript reslvlscr( m_curlvlbasename, 
+                                     std::move(ParseSets(parentn)),
+                                     std::move(ParseLSD (parentn)));
+                if(m_preport)
+                    m_preport->InsertSuccess(m_curlvlbasename);
+                return std::move(reslvlscr);
+            }
+            catch( const CompileErrorException & e )
+            {
+                if(m_preport)
+                    m_preport->InsertError( m_curlvlbasename, e.getFileOffset(), e.what() );
+                rethrow_exception(current_exception());
+            }
+            catch(...)
+            {
+                //If this happens, its not the compiler's problem
+                rethrow_exception(current_exception());
+            }
         }
 
     private:
 
-        LevelScript::scriptgrps_t ParseRoutines( xml_node & parentn )
+        LevelScript::scriptsets_t ParseSets( xml_node & parentn )
         {
             using namespace scriptXML;
-            LevelScript::scriptgrps_t groups;
+            LevelScript::scriptsets_t sets;
 
-            for( auto & grp : parentn.children(NODE_ScriptGroup.c_str()) )
+            for( auto & curset : parentn.children(NODE_ScriptSet.c_str()) )
             {
-                xml_attribute xname = grp.attribute(ATTR_GrpName.c_str());
+                xml_attribute xname = curset.attribute(ATTR_GrpName.c_str());
                 if( !xname )
                 {
                     if(utils::LibWide().isLogOn())
-                        clog<<"->Skipped unnamed group!\n";
+                        slog()<<" ->Skipped unnamed set!\n";
+                    if(m_preport)
+                        m_preport->InsertWarning( m_curlvlbasename, curset.offset_debug(), "Skipped script set with no name!" );
                     continue;
                 }
                 else if( utils::LibWide().isLogOn() )
-                    clog<<"->Parsing Script Group " <<xname.value() <<"\n";
+                    slog()<<" ->Parsing script set \"" <<xname.value() <<"\"\n";
 
-                LevelScript::scriptgrps_t::value_type agroup( xname.value() );
-                for( auto & comp : grp )
+                LevelScript::scriptsets_t::value_type outset( xname.value() );
+                for( auto & comp : curset )
                 {
                     if( comp.name() == NODE_ScriptSeq )
-                        HandleSequence( comp, agroup );
+                        HandleSequence( comp, outset );
                     else if( comp.name() == NODE_ScriptData )
-                        HandleData(comp, agroup);
+                        HandleData(comp, outset );
                 }
-                groups.push_back(std::forward<LevelScript::scriptgrps_t::value_type>(agroup));
+                sets.push_back(std::forward<LevelScript::scriptsets_t::value_type>(outset));
             }
 
-            return std::move(groups);
+            return std::move(sets);
         }
 
         LevelScript::lsdtbl_t ParseLSD( xml_node & parentn )
@@ -1565,13 +2027,16 @@ namespace pmd2
                     table.push_back(val);
                 }
             }
+            if( utils::LibWide().isLogOn() )
+                slog() << " ->Parsed " <<table.size() << " LSD entries\n";
+
             return std::move(table);
         }
 
         /*
             Returns if the sequence was unionall.ssb
         */
-        void HandleSequence(xml_node & seqn, LevelScript::scriptgrps_t::value_type & destgrp)
+        void HandleSequence(xml_node & seqn, LevelScript::scriptsets_t::value_type & destgrp)
         {
             using namespace scriptXML;
             xml_attribute xname = seqn.attribute( ATTR_ScrSeqName.c_str() );
@@ -1580,25 +2045,29 @@ namespace pmd2
             if( !xname )
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Unamed sequence, skipping!\n";
+                    slog() << "\t*Unamed sequence, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, seqn.offset_debug(), "Skipped script with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
-                clog << "\t*Parsing " <<name <<"\n";
+                slog() << "\t*Parsing " <<name <<", type : ssb\n";
 
             //If we're unionall.ssb, change the type accordingly
             if( name == ScriptPrefix_unionall )
                 destgrp.Type(eScriptSetType::UNK_unionall);
 
-            //If we're unionall.ssb, change the type accordingly
+            CompilerReport::compileresult * prepres = nullptr;
+            if(m_preport)
+                prepres = &(*m_preport)[m_curlvlbasename];
             destgrp.Sequences().emplace( std::forward<string>(name), 
-                                         std::forward<Script>( SSBXMLParser(m_out_gver, m_out_reg, m_gconf)(seqn) ) );
+                                         std::forward<Script>( SSBXMLParser(m_out_gver, m_out_reg, m_gconf, prepres)(seqn) ) );
         }
 
         /*
             Return a type based on the kind of data it is
         */
-        void HandleData(xml_node & datan, LevelScript::scriptgrps_t::value_type & destgrp)
+        void HandleData(xml_node & datan, LevelScript::scriptsets_t::value_type & destgrp)
         {
             using namespace scriptXML;
             xml_attribute    xname = datan.attribute( ATTR_ScrDatName.c_str() );
@@ -1606,7 +2075,9 @@ namespace pmd2
             if(!xtype)
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Untyped script data, skipping!\n";
+                    slog() << "\t*Untyped script data, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no type!" );
                 return;
             }
             eScrDataTy scrty = StrToScriptDataType(xtype.value());
@@ -1614,11 +2085,13 @@ namespace pmd2
             if(!xname)
             {
                 if( utils::LibWide().isLogOn() )
-                    clog << "\t*Unamed script data, skipping!\n";
+                    slog() << "\t*Unamed script data, skipping!\n";
+                if(m_preport)
+                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
-                clog << "\t*Parsing " <<xname.value() <<", type : " <<xtype.value() <<"\n";
+                slog() << "\t*Parsing " <<xname.value() <<", type : " <<xtype.value() <<"\n";
 
             //Set Appropriate type
             switch(scrty)
@@ -1641,18 +2114,25 @@ namespace pmd2
                 default:
                 {
                     if( utils::LibWide().isLogOn() )
-                        clog << "\t*Couldn't determine script type. Skipping!\n";
+                        slog() << "\t*Couldn't determine script type. Skipping!\n";
+                    if(m_preport)
+                        m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data. Couldn't determine type \"" + string(xtype.value()) + "\"!" );
                     return;
                 }
             };
 
-            destgrp.SetData( SSDataXMLParser(m_gconf)(datan) );
+            CompilerReport::compileresult * prepres = nullptr;
+            if(m_preport)
+                prepres = &(*m_preport)[m_curlvlbasename];
+            destgrp.SetData( SSDataXMLParser(m_gconf,prepres)(datan) );
         }
 
     private:
         eGameRegion         & m_out_reg;
         eGameVersion        & m_out_gver;
         const ConfigLoader  & m_gconf;
+        CompilerReport      * m_preport;
+        std::string           m_curlvlbasename;
     };
 
 
@@ -1852,7 +2332,7 @@ namespace pmd2
                 }
                 default:
                 {
-                    clog<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
+                    slog()<<"SSBXMLWriter::HandleInstruction(): Encountered invalid instruction type!! Skipping!\n";
                 }
             };                
         }
@@ -2029,7 +2509,7 @@ namespace pmd2
                         }
                         else
                         {
-                            clog << "<!>- Got a script variable id out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got a script variable id out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), pval );
                         }
@@ -2042,7 +2522,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), facename);
                         else
                         {
-                            clog << "<!>- Got an face type out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got an face type out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(),  pval );
                         }
@@ -2055,7 +2535,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), pinf->name );
                         else
                         {
-                            clog << "<!>- Got an actor id out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got an actor id out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), pval );
                         }
@@ -2082,7 +2562,7 @@ namespace pmd2
                             AppendAttribute( instn, deststr.str(), *pstr );
                         else
                         {
-                            clog << "<!>- Got a face position mode out of range for instruction at script file offset 0x" 
+                            slog() << "<!>- Got a face position mode out of range for instruction at script file offset 0x" 
                                     <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                             AppendAttribute( instn, deststr.str(), static_cast<uint16_t>(pval) );
                         }
@@ -2107,7 +2587,7 @@ namespace pmd2
                             else
                             {
                                 //! #TODO: Log this
-                                clog << "<!>- Got a level id out of range for instruction at script file offset 0x" 
+                                slog() << "<!>- Got a level id out of range for instruction at script file offset 0x" 
                                      <<hex <<uppercase <<intr.dbg_origoffset <<dec <<nouppercase <<"!\n";
                                 //assert(false);
                                 stringstream sstrid;
@@ -2596,7 +3076,7 @@ namespace pmd2
             const unsigned int flag = (m_options.bescapepcdata)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
             //Write doc
-            if( ! doc.save_file( sstrfname.str().c_str(), "\t", flag, pugi::encoding_utf8 ) )
+            if( ! doc.save_file( sstrfname.str().c_str(), "    "/*"\t"*/, flag, pugi::encoding_utf8 ) )
                 throw std::runtime_error("GameScriptsXMLWriter::Write(): PugiXML can't write xml file " + sstrfname.str());
         }
 
@@ -2614,7 +3094,7 @@ namespace pmd2
             sstr.clear();
             sstr << "Has " <<((set.Data() != nullptr)? "1 data file, and ": "") <<set.Sequences().size() <<" associated script(s)";
             WriteCommentNode(parentn, sstr.str() );
-            xml_node xgroup = AppendChildNode( parentn, NODE_ScriptGroup );
+            xml_node xgroup = AppendChildNode( parentn, NODE_ScriptSet );
 
             AppendAttribute( xgroup, ATTR_GrpName, set.Identifier() );
 
@@ -2693,7 +3173,6 @@ namespace pmd2
 //==============================================================================
 //  GameScripts
 //==============================================================================
-
     /*
         RunLevelXMLImport
             Helper for importing script data from XML.
@@ -2703,18 +3182,28 @@ namespace pmd2
     bool RunLevelXMLImport( GameScripts      & gs, 
                             string             fname, 
                             string             dest, 
-                            atomic<uint32_t> & completed )
+                            atomic<uint32_t> & completed,
+                            CompilerReport   & reporter)
     {
+        if( utils::LibWide().isLogOn() )
+            slog() <<"##### Importing " << fname <<" #####\n";
         try
         {
             eGameRegion  tempregion  = eGameRegion::Invalid;
             eGameVersion tempversion = eGameVersion::Invalid;
-            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname) ) );
+            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname,&reporter) ) );
             if( tempregion != gs.Region() || tempversion != gs.Version() )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
-        catch(const std::exception &)
+        catch(const std::exception & e)
         {
+            if( utils::LibWide().isLogOn() )
+            {
+                slog() <<"<!>- Failed compiling " << fname <<"\n";
+                utils::PrintNestedExceptions(slog(), e );
+            }
+            cerr <<"\n<!>- Failed compiling " << fname <<"\n";
+            utils::PrintNestedExceptions(cerr, e );
             throw_with_nested(std::runtime_error("RunLevelXMLImport(): Error in file " + fname));
         }
         ++completed;
@@ -2732,12 +3221,21 @@ namespace pmd2
                             const scriptprocoptions & options,
                             atomic<uint32_t>        & completed )
     {
+        if( utils::LibWide().isLogOn() )
+            slog() <<"##### Exporting " <<entry.path() <<" #####\n";
         try
         {
             GameScriptsXMLWriter(entry(), gs).Write(dir, options);
         }
-        catch(const std::exception & )
+        catch(const std::exception & e)
         {
+            if( utils::LibWide().isLogOn() )
+            {
+                slog() <<"<!>- Failed decompiling " << dir <<"\n";
+                utils::PrintNestedExceptions(slog(), e );
+            }
+            cerr <<"\n<!>- Failed decompiling " << dir <<"\n";
+            utils::PrintNestedExceptions(cerr, e );
             throw_with_nested(std::runtime_error("RunLevelXMLExport(): Error processing " + entry.path()));
         }
         ++completed;
@@ -2772,38 +3270,53 @@ namespace pmd2
         if(out_dest.m_setsindex.empty())
             throw std::runtime_error("ImportXMLGameScripts(): No script data to load to!!");
 
-        decltype(out_dest.Region())   tempregion;
+        decltype(out_dest.Region())  tempregion;
         decltype(out_dest.Version()) tempversion;
         atomic_bool                  shouldUpdtProgress = true;
         atomic<uint32_t>             completed = 0;
         future<void>                 updatethread;
+        CompilerReport               reporter;
         //Grab our version and region from the 
         if(utils::LibWide().ShouldDisplayProgress())
-            cout<<"<*>- Compiling COMON.xml..\n";
+            cout<<"<*>- Loading COMON.xml..\n";
 
         stringstream commonfilename;
         commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
-        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str()) );
+        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str(), &reporter) );
 
         if( tempregion != out_dest.Region() || tempversion != out_dest.Version() )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
 
-        if(utils::LibWide().ShouldDisplayProgress())
+        if(utils::LibWide().ShouldDisplayProgress() || utils::LibWide().isLogOn() )
         {
-            cout<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.Region()) 
+            stringstream sstr;
+            sstr<<"<!>- Detected game region \"" <<GetGameRegionNames(out_dest.Region()) 
                 <<"\", and version \"" <<GetGameVersionName(out_dest.Version())<<"!\n";
+            const string cmnid = sstr.str();
+
+            if((utils::LibWide().isLogOn()))
+                slog() << cmnid;
+            if(utils::LibWide().ShouldDisplayProgress())
+                cout << cmnid;
         }
+
         //Write out common
         out_dest.WriteScriptSet(out_dest.m_common);
 
         //Prepare import of everything else!
         //multitask::CMultiTaskHandler taskhandler;
+
         utils::AsyncTaskHandler taskhandler;
         Poco::DirectoryIterator dirit(dir);
         Poco::DirectoryIterator dirend;
+        if(utils::LibWide().isLogOn())
+            slog() << "<*>- Listing XML to import..\n";
+        size_t cntdir = 0;
         while( dirit != dirend )
         {
-            if( dirit->isFile() && dirit.path().getExtension() == "xml" )
+            if( dirit->isFile() && 
+                dirit.path().getExtension() == "xml" && 
+                dirit.path().getBaseName() != DirNameScriptCommon ) //Skip COMMON.xml since we handled it already!
             {
 
                 Poco::Path destination(out_dest.GetScriptDir());
@@ -2812,11 +3325,16 @@ namespace pmd2
                                                                      std::ref(out_dest), 
                                                                      dirit->path(), 
                                                                      destination.toString(),
-                                                                     std::ref(completed) ) ) );
+                                                                     std::ref(completed),
+                                                                     std::ref(reporter) ) ) );
+                if(utils::LibWide().isLogOn())
+                    slog() << "\t+ " <<dirit.path().getFileName() <<"\n";
+                ++cntdir;
             }
             ++dirit;
         }
-
+        if(utils::LibWide().isLogOn())
+            slog() << "Done listing " <<cntdir <<" entries\n\n";
         try
         {
             if(utils::LibWide().ShouldDisplayProgress())
@@ -2835,6 +3353,8 @@ namespace pmd2
                 //                           out_dest.m_setsindex.size(), 
                 //                           std::ref(shouldUpdtProgress) );
             }
+            if(utils::LibWide().isLogOn())
+                slog() << "Running import tasks..\n";
             taskhandler.Start();
             taskhandler.WaitTasksFinished();
             taskhandler.WaitStop();
@@ -2845,6 +3365,9 @@ namespace pmd2
             if(utils::LibWide().ShouldDisplayProgress())
                 cout<<"\r100%"; //Can't be bothered to make another drawing update
 
+            ofstream outputresult( utils::MakeAbsolutePath( utils::LibWide().StringValue(ScriptCompilerReportFname), utils::LibWide().StringValue(utils::lwData::eBasicValues::ProgramLogDir) ) );
+            outputresult.exceptions(std::ios::badbit);
+            reporter.PrintErrorReport(outputresult, out_dest.m_setsindex.size() + 1); //Add one for the unionall.ssb script!
         }
         catch(...)
         {
@@ -2854,9 +3377,10 @@ namespace pmd2
             std::rethrow_exception( std::current_exception() );
         }
 
-
         if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
+        if(utils::LibWide().isLogOn())
+            slog()<<"All import tasks completed!\n";
     }
 
     /*
@@ -2877,6 +3401,8 @@ namespace pmd2
         atomic<uint32_t>             completed = 0;
         //multitask::CMultiTaskHandler taskhandler;
         utils::AsyncTaskHandler      taskhandler;
+        if(utils::LibWide().isLogOn())
+            slog() << "<*>- Listing level directories to export..\n";
         //Export everything else
         for( const auto & entry : gs.m_setsindex )
         {
@@ -2886,7 +3412,11 @@ namespace pmd2
                                                                  std::cref(gs.GetConfig()),
                                                                  std::cref(options),
                                                                  std::ref(completed) ) ) );
+            if(utils::LibWide().isLogOn())
+                slog() << "\t+ " << utils::GetBaseNameOnly(entry.first) <<"\n";
         }
+        if(utils::LibWide().isLogOn())
+            slog() << "Done listing " <<gs.m_setsindex.size() <<" directories.\n\n";
 
         try
         {
@@ -2899,6 +3429,8 @@ namespace pmd2
                                            gs.m_setsindex.size(), 
                                            std::ref(shouldUpdtProgress) );
             }
+            if(utils::LibWide().isLogOn())
+                slog() << "Running export tasks..\n";
             taskhandler.Start();
             taskhandler.WaitTasksFinished();
             taskhandler.WaitStop();
@@ -2919,6 +3451,8 @@ namespace pmd2
 
         if(utils::LibWide().ShouldDisplayProgress())
             cout<<"\n";
+        if(utils::LibWide().isLogOn())
+            slog()<<"All export tasks completed!\n";
     }
 
     /*
@@ -2977,7 +3511,7 @@ namespace pmd2
                        const ConfigLoader  & gconf )
     {
         using namespace scriptXML;
-        xml_document     doc;
+        xml_document doc;
         try
         {
             HandleParsingError( doc.load_file(srcfile.c_str()), srcfile);

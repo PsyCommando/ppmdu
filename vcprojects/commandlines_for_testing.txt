@@ -13,6 +13,7 @@
 
 -smdlpath "ProfLayton" -swdlpath "ProfLayton" -mbank "ProfLayton/BG.SWD" "out_playton" -nofx -log "out_playton/log.txt" -v
 
+-bgmcntpath "999" "bgm" "out_999_xml" -xml
 -bgmcntpath "999" "bgm" "out_999" -log "out_999/log.txt" -v
 -bgmcntpath "999" "bgm" "out_999" -nofx -log "out_999/log.txt" -v
 -bgmcntpath "999" "bgm" "out_999_midi/999cvinfo.xml" -log "out_999_midi/log.txt" -v -makecvinfo

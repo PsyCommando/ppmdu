@@ -21,6 +21,7 @@ Description: This code is used to load/index the game scripts.
 
 namespace pmd2
 {
+    const std::string ScriptCompilerReportFname  = "CompilerReportFilename"; //KeyName of the compiler report filename in the libwide data!
     const std::string ScriptXMLRoot_SingleScript = "SingleScript"; 
     const std::string ScriptXMLRoot_Level        = "Level"; 
     const std::string ScriptDataXMLRoot_SingleDat= "SingleData"; 
@@ -68,41 +69,16 @@ namespace pmd2
     extern const std::regex MatchScriptFileTypes;       //Matches all ssa,ssb,sss, and lsd files
     extern const std::string ScriptRegExNameNumSSBSuff; //Regex to suffix to the basename to get the pattern for the numbered SSBs
 
-//
-//
-//
-    //class ScriptImportExportConfig
-    //{
-    //public:
-    //    ScriptImportExportConfig(bool escapetxt = false, bool bnodeisinst = false)
-    //        :m_bescapepcdata(escapetxt),m_bnodeinst(bnodeisinst)
-    //    {}
-    //    ScriptImportExportConfig(const ScriptImportExportConfig & other)
-    //        :m_bescapepcdata(other.m_bescapepcdata),m_bnodeinst(other.m_bnodeinst)
-    //    {}
-    //    inline ScriptImportExportConfig & operator=(const ScriptImportExportConfig & other)
-    //    { m_bescapepcdata = other.m_bescapepcdata; m_bnodeinst = other.m_bnodeinst; return *this; }
-
-    //    inline ScriptImportExportConfig &   AutoEscText(bool b)   { m_bescapepcdata = b; return *this; }
-    //    inline bool                         AutoEscText()const    {return m_bescapepcdata; }
-    //    inline ScriptImportExportConfig &   NodeIsInstr(bool b)   {m_bnodeinst = b; return *this;}
-    //    inline bool                         NodeIsInstr()const    {return m_bnodeinst; }
-    //private:
-    //    bool m_bescapepcdata;
-    //    bool m_bnodeinst;
-    //};
-
-
     /*
         scriptprocoptions
             Set of options to be passed to script handling functions.
     */
     struct scriptprocoptions
     {
-        bool bescapepcdata;  //Whether we allow the xml writer to escape characters to its discretion.
-        bool bnodeisinst; //Whether the node name should be set to the instruction's name during export
-        bool bmarkoffsets; //Whether the offsets of each instructions should be marked by comments
-        bool bscriptdebug; //Whether the debug_branch instructions should be tweaked to work as if debug mode was on
+        bool bescapepcdata;     //Whether we allow the xml writer to escape characters to its discretion.
+        bool bnodeisinst;       //Whether the node name should be set to the instruction's name during export
+        bool bmarkoffsets;      //Whether the offsets of each instructions should be marked by comments
+        bool bscriptdebug;      //Whether the debug_branch instructions should be tweaked to work as if debug mode was on
     };
     const scriptprocoptions DefConfigOptions{true, true, false, false};
 

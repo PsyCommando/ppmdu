@@ -93,6 +93,28 @@ namespace filetypes
 
             return itReadfrom;
         }
+
+        operator compression::px_info_header()const 
+        {
+            compression::px_info_header pxinf;
+            pxinf.compressedsz   = compressedsz;
+            pxinf.controlflags   = flaglist;
+            pxinf.decompressedsz = decompsz;
+            return pxinf;
+        }
+
+        at4px_header & operator=( const compression::px_info_header & other )
+        {
+            compressedsz = other.compressedsz;
+            flaglist     = other.controlflags;
+            decompsz     = static_cast<uint16_t>(other.decompressedsz);
+            if( other.decompressedsz > std::numeric_limits<uint16_t>::max() )
+            {
+                assert(false); //This should never be bigger than a int16 with a AT4PX
+                throw std::overflow_error("at4px_header::operator=(): decompressedsz is bigger than a int16!");
+            }
+            return *this;
+        }
     };
 
 //==================================================================

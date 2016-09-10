@@ -195,6 +195,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\utility</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\multithread_logger.cpp" />
     <ClCompile Include="..\src\utils\parallel_tasks.cpp" />
     <ClCompile Include="..\src\utils\poco_wrapper.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>

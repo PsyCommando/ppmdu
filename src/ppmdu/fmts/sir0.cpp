@@ -7,7 +7,7 @@ Description:
 
 No crappyrights. All wrongs reversed ! 
 */
-#include <ppmdu/fmts/sir0.hpp>
+#include "sir0.hpp"
 
 #include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>

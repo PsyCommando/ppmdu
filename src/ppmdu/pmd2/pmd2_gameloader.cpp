@@ -25,7 +25,7 @@ namespace pmd2
         m_scripts .reset(nullptr);
 
         //Text has to be destroyed last to avoid possible circular ownership lockups
-        if( !m_text.unique() ) 
+        if( m_text.use_count() > 0 ) 
             clog<<"<!>- Warning! While destroying the Gameloader object, there were still " <<m_text.use_count() <<" others owner of the GameText pointer!!\n";
         m_text.reset();
     }

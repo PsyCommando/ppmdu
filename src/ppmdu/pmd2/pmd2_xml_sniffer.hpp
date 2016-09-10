@@ -38,11 +38,13 @@ namespace pmd2
 
     void CheckGameVersionAndGameRegion( const RootNodeInfo & rootnode, 
                                         eGameVersion       & out_ver, 
-                                        eGameRegion        & out_reg )
+                                        eGameRegion        & out_reg,
+                                        bool                 bprintdetails = true )
     {
         if( rootnode.attributes.size() >= 2 )
         {
-            cout <<"<!>-XML Script file detected!\n";
+            if(bprintdetails)
+                cout <<"<!>-XML Script file detected!\n";
             try
             {
                 out_ver = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
@@ -52,8 +54,11 @@ namespace pmd2
             {
                 throw_with_nested(std::logic_error("CheckGameVersionAndGameRegion(): Couldn't get the game version and or game region values attributes from document root!!"));
             }
-            cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(out_ver) <<"\n"
-                 <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(out_reg)  <<"\n";
+            if(bprintdetails)
+            {
+                cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(out_ver) <<"\n"
+                     <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(out_reg)  <<"\n";
+            }
 
             if( out_ver == eGameVersion::Invalid )
                 throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game version attribute in root node is invalid!");

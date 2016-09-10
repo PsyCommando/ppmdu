@@ -19,7 +19,7 @@ namespace utils
     const std::string DefaultPathSeparators = "\\/";
 
     //Take a path to a file, and return the path without the filename+extension, or else the exact same path
-	std::string GetPathOnly( const std::string & fullpath, const std::string & separator = DefaultPathSeparators );
+	//std::string GetPathOnly( const std::string & fullpath, const std::string & separator = DefaultPathSeparators );
 
     //Take a path, and return only the filename+extension if there is one! Else returns empty string.
     std::string GetFilenameFromPath( const std::string & fullpath, const std::string & separator = DefaultPathSeparators );

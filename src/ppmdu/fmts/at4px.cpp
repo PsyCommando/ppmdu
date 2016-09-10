@@ -1,8 +1,8 @@
 #include "at4px.hpp"
-#include <ppmdu/pmd2/pmd2_filetypes.hpp>
+//#include <ppmdu/pmd2/pmd2_filetypes.hpp>
 #include <ppmdu/fmts/px_compression.hpp>
-#include <ppmdu/pmd2/pmd2_palettes.hpp>
-#include <ppmdu/pmd2/pmd2_image_formats.hpp>
+//#include <ppmdu/pmd2/pmd2_palettes.hpp>
+//#include <ppmdu/pmd2/pmd2_image_formats.hpp>
 #include <types/content_type_analyser.hpp>
 #include <ppmdu/fmts/sir0.hpp>
 #include <exception>
@@ -12,7 +12,7 @@
 using namespace std;
 using namespace filetypes;
 using compression::px_info_header;
-using pmd2::graphics::rgb15_parser;
+//using pmd2::graphics::rgb15_parser;
 using compression::ePXCompLevel;
 
 namespace filetypes

@@ -94,6 +94,23 @@ namespace filetypes
 
             return itReadfrom;
         }
+
+        operator compression::px_info_header()const 
+        {
+            compression::px_info_header pxinf;
+            pxinf.compressedsz   = compressedsz;
+            pxinf.controlflags   = flaglist;
+            pxinf.decompressedsz = decompsz;
+            return pxinf;
+        }
+
+        pkdpx_header & operator=( const compression::px_info_header & other )
+        {
+            compressedsz = other.compressedsz;
+            flaglist     = other.controlflags;
+            decompsz     = other.decompressedsz;
+            return *this;
+        }
     };
 
 
