@@ -143,6 +143,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\gbyteutils.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -151,6 +154,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\gfileio.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -159,6 +165,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\gfileutil.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -167,6 +176,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\library_wide.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -175,6 +187,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -183,6 +198,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\poco_wrapper.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -191,6 +209,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\utils\utility.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\utility</Filter>
@@ -199,6 +220,9 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">Source Files\ppmdutils\utility</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">Source Files\ppmdutils\utility</Filter>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\ppmd_packfileutil.cpp" />
   </ItemGroup>
@@ -534,18 +558,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -561,6 +588,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ppmdu_utils_library_d.lib</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -597,6 +625,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>ppmdu_utils_library.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>libpng16.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -1,0 +1,296 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_XP|Win32">
+      <Configuration>Release_XP</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_XP|x64">
+      <Configuration>Release_XP</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ppmdu_utils_library</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <SourcePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(VC_SourcePath);</SourcePath>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|Win32'">
+    <IncludePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\poco\Foundation\include;$(IncludePath)</IncludePath>
+    <SourcePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(VC_SourcePath);</SourcePath>
+    <CustomBuildAfterTargets />
+    <TargetName>$(ProjectName)_xp</TargetName>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(SolutionDir)lib\poco\Util\include;$(SolutionDir)lib\poco\Foundation\include;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <SourcePath>src;lib/whereami/src;lib/pugixml-1.6/src;$(VC_SourcePath);</SourcePath>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <TargetName>$(ProjectName)_d</TargetName>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;PUGIXML_HEADER_ONLY;POCO_STATIC;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(SolutionDir)include" mkdir "$(SolutionDir)include"
+if not exist "$(SolutionDir)include\utils" mkdir "$(SolutionDir)include\utils"
+if not exist "$(SolutionDir)bin" mkdir "$(SolutionDir)bin"
+(echo #ifndef PPMDU_UTILS_VERSION_HPP&amp; echo #define PPMDU_UTILS_VERSION_HPP&amp; echo const char * UtilsVersion = "$(Version)";&amp; echo #endif)  &gt; "$(SolutionDir)include/utils/utility_version.hpp"
+xcopy /E /Y "$(SolutionDir)src\utils\*.hpp" "$(SolutionDir)include\utils"
+copy /Y /B "$(TargetPath)" "$(SolutionDir)lib_debug\$(TargetName).lib"
+</Command>
+    </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;PUGIXML_HEADER_ONLY;POCO_STATIC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <MinimalRebuild>true</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(SolutionDir)include" mkdir "$(SolutionDir)include"
+if not exist "$(SolutionDir)include\utils" mkdir "$(SolutionDir)include\utils"
+if not exist "$(SolutionDir)bin" mkdir "$(SolutionDir)bin"
+(echo #ifndef PPMDU_UTILS_VERSION_HPP&amp; echo #define PPMDU_UTILS_VERSION_HPP&amp; echo const char * UtilsVersion = "$(Version)";&amp; echo #endif)  &gt; "$(SolutionDir)include/utils/utility_version.hpp"
+xcopy /E /Y "$(SolutionDir)src\utils\*.hpp" "$(SolutionDir)include\utils"
+copy /Y /B "$(TargetPath)" "$(SolutionDir)lib_release\$(TargetName).lib"</Command>
+    </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;PUGIXML_HEADER_ONLY;POCO_STATIC;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PostBuildEvent>
+      <Command>if not exist "$(SolutionDir)include" mkdir "$(SolutionDir)include"
+if not exist "$(SolutionDir)include\utils" mkdir "$(SolutionDir)include\utils"
+if not exist "$(SolutionDir)bin" mkdir "$(SolutionDir)bin"
+(echo #ifndef PPMDU_UTILS_VERSION_HPP&amp; echo #define PPMDU_UTILS_VERSION_HPP&amp; echo const char * UtilsVersion = "$(Version)";&amp; echo #endif)  &gt; "$(SolutionDir)include/utils/utility_version.hpp"
+xcopy /E /Y "$(SolutionDir)src\utils\*.hpp" "$(SolutionDir)include\utils"
+copy /Y /B "$(TargetPath)" "$(SolutionDir)lib_release\$(TargetName).lib"
+</Command>
+    </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_XP|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="lib\whereami\src\whereami.h" />
+    <ClInclude Include="src\utils\audio_utilities.hpp" />
+    <ClInclude Include="src\utils\cmdline_util.hpp" />
+    <ClInclude Include="src\utils\gbyteutils.hpp" />
+    <ClInclude Include="src\utils\gfileio.hpp" />
+    <ClInclude Include="src\utils\gfileutils.hpp" />
+    <ClInclude Include="src\utils\gstringutils.hpp" />
+    <ClInclude Include="src\utils\handymath.hpp" />
+    <ClInclude Include="src\utils\library_wide.hpp" />
+    <ClInclude Include="src\utils\multiple_task_handler.hpp" />
+    <ClInclude Include="src\utils\multithread_logger.hpp" />
+    <ClInclude Include="src\utils\parallel_tasks.hpp" />
+    <ClInclude Include="src\utils\parse_utils.hpp" />
+    <ClInclude Include="src\utils\poco_wrapper.hpp" />
+    <ClInclude Include="src\utils\pugixml_utils.hpp" />
+    <ClInclude Include="src\utils\utility.hpp" />
+    <ClInclude Include="src\utils\uuid_gen_wrapper.hpp" />
+    <ClInclude Include="src\utils\whereami_wrapper.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="lib\whereami\src\whereami.c" />
+    <ClCompile Include="src\utils\cmdline_util.cpp" />
+    <ClCompile Include="src\utils\gbyteutils.cpp" />
+    <ClCompile Include="src\utils\gfileio.cpp" />
+    <ClCompile Include="src\utils\gfileutil.cpp" />
+    <ClCompile Include="src\utils\library_wide.cpp" />
+    <ClCompile Include="src\utils\multiple_task_handler.cpp" />
+    <ClCompile Include="src\utils\parallel_tasks.cpp" />
+    <ClCompile Include="src\utils\poco_wrapper.cpp" />
+    <ClCompile Include="src\utils\pugixml_utils.cpp" />
+    <ClCompile Include="src\utils\utility.cpp" />
+    <ClCompile Include="src\utils\uuid_gen_wrapper.cpp" />
+    <ClCompile Include="src\utils\whereami_wrapper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ppmdu_utility_library.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
