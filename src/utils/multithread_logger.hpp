@@ -41,6 +41,7 @@ namespace logging
         virtual ~BaseLogger(){}
         virtual std::ostream & Log(){ return std::clog; }
 
+        virtual void Flush(){};
         //inline operator std::ostream&()
         //{
         //    return Log();
@@ -217,6 +218,12 @@ namespace logging
                 return *pos;
             else
                 throw std::runtime_error("ThreadSafeFileLogger::Log(): Error, logstream is null! This should never happen!");
+        }
+
+        void Flush()
+        {
+            for( auto & strm : m_logstreams )
+                strm.second.flush();
         }
 
     private:

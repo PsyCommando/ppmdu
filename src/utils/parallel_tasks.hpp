@@ -16,7 +16,42 @@ Description: A set of utilities for handling multi-threaded tasks execution. Mea
 
 namespace utils
 {
+    /*
+    */
+    class ExceptionQueue
+    {
+    public:
+        void Push( std::exception_ptr ptr )
+        {
+            std::lock_guard<std::mutex> lck(m_mtx);
+            m_exceptions.push_back(ptr);
+        }
 
+        std::exception_ptr Pop()
+        {
+            std::lock_guard<std::mutex> lck(m_mtx);
+            std::exception_ptr ptr = m_exceptions.front();
+            m_exceptions.pop_front();
+            return ptr;
+        }
+
+        inline void PopAndThrow()
+        {
+            rethrow_exception(Pop());
+        }
+
+        inline bool   empty()const { return m_exceptions.empty(); }
+        inline size_t size()const  { return m_exceptions.size(); }
+
+    private:
+        //Exception handling
+        std::mutex                     m_mtx;
+        std::deque<std::exception_ptr> m_exceptions;         
+    };
+
+
+    /*
+    */
     class TaskQueue
     {
     public:
@@ -112,6 +147,8 @@ namespace utils
 //======================================================================================================================================
 //  AsyncTasks
 //======================================================================================================================================
+    /*
+    */
     class AsyncWorker
     {
     public:
@@ -178,6 +215,9 @@ namespace utils
                 m_myfut.wait();
         }
 
+        inline ExceptionQueue       & GetExceptions()      {return m_excepts;}
+        inline const ExceptionQueue & GetExceptions()const {return m_excepts;}
+
     private:
         void Work()
         {
@@ -186,7 +226,14 @@ namespace utils
                 TaskQueue::task_t mytask;
                 if(m_ptasks->TryPopWait(mytask) && mytask.valid())
                 {
-                    mytask();
+                    try
+                    {
+                        mytask();
+                    }
+                    catch(const std::exception &)
+                    {
+                        m_excepts.Push(std::current_exception());
+                    }
                 }
             }
         }
@@ -195,8 +242,11 @@ namespace utils
         TaskQueue       * m_ptasks;
         std::atomic_bool  m_bshouldwork;
         std::future<void> m_myfut;
+        ExceptionQueue    m_excepts;
     };
 
+    /*
+    */
     class AsyncTaskHandler
     {
     public:

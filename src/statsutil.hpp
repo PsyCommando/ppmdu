@@ -31,6 +31,7 @@ namespace statsutil
 
     private:
         CStatsUtil();
+        ~CStatsUtil();
 
         //Parse Arguments
         bool ParseInputPath  ( const std::string              & path );

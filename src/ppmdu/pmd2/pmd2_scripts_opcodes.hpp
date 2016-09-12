@@ -1653,7 +1653,10 @@ namespace pmd2
 
         inline int16_t Face( const std::string & name )const 
         {
-            return FindIDByName<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), name);
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<NullFaceID>(m_gconf.GetGameScriptData().FaceNames(), name, ScriptNullValName, false ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
         //Face Posistion Modes
@@ -1664,7 +1667,10 @@ namespace pmd2
 
         inline int16_t FacePosMode( const std::string & name )const 
         {
-            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().FacePosModes(), name );
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().FacePosModes(), name, ScriptNullValName, false ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
         //Common Routine Info
@@ -1675,7 +1681,10 @@ namespace pmd2
 
         inline int16_t CRoutine( const std::string & name )const 
         {
-            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().CommonRoutineInfo(), name );
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<InvalidCRoutineID>( m_gconf.GetGameScriptData().CommonRoutineInfo(), name, ScriptNullValName, false ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
         //Level Info
@@ -1686,7 +1695,10 @@ namespace pmd2
 
         inline int16_t LevelInfo( const std::string & name )const 
         {
-            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LevelInfo(), name );
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LevelInfo(), name, ScriptNullValName, false ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
         //Lives Info
@@ -1697,7 +1709,10 @@ namespace pmd2
 
         inline int16_t LivesInfo( const std::string & name )const 
         {
-            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LivesEnt(), name );
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().LivesEnt(), name ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
         //GameVar Info
@@ -1731,7 +1746,10 @@ namespace pmd2
 
         inline int16_t ObjectInfo( const std::string & name )const 
         {
-            return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().ObjectsInfo(), name );
+            if( !DoesStringBeginsWithNumber(name) )
+                return FindIDByName<ScriptNullVal>( m_gconf.GetGameScriptData().ObjectsInfo(), name ); //Don't allow converting to a number when not found!
+            else
+                return utils::parseHexaValToValue<int16_t>(name);
         }
 
 
@@ -1853,9 +1871,9 @@ namespace pmd2
             }
         }
 
-
+        //tryconverttoint : If true, will attempt converting to an integer when there are no matches!
         template<int16_t _INVALIDID, class _EntryTy>
-            inline int16_t FindIDByName( _EntryTy container, const std::string & name, const std::string & invalidstr = ScriptNullValName )const 
+            inline int16_t FindIDByName( _EntryTy container, const std::string & name, const std::string & invalidstr = ScriptNullValName, bool tryconverttoint = true )const 
         { 
             if( name == invalidstr )
                 return _INVALIDID;
@@ -1863,7 +1881,7 @@ namespace pmd2
             const size_t id = container.FindIndexByName(name);
             if(id != std::numeric_limits<size_t>::max())
                 return static_cast<int16_t>(id);
-            else
+            else if(tryconverttoint)
             {
                 //std::stringstream sstr;
                 //int16_t outval = 0;
@@ -1873,6 +1891,8 @@ namespace pmd2
                 //sstr >> outval;
                 return utils::parseHexaValToValue<int16_t>(name);
             }
+            else
+                return _INVALIDID;
         }
 
     private:

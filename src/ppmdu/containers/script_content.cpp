@@ -148,7 +148,7 @@ namespace pmd2
         :m_name(name), m_bmodified(false)
     {}
 
-    LevelScript::LevelScript(const std::string & name, scriptgrps_t && comp, lsdtbl_t && lsdtbl)
+    LevelScript::LevelScript(const std::string & name, scriptsets_t && comp, lsdtbl_t && lsdtbl)
         :m_name(name), m_lsdentries(std::move(lsdtbl)), m_components(std::move(comp)), m_bmodified(false)
     {}
 

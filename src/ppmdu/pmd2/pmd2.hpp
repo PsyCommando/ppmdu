@@ -27,9 +27,9 @@ namespace pmd2
     const std::string CommonXMLToolVersionAttrStr = "libVersion";
 
     /*
-        Current version string
+        Current version string. Represents the version of the PPMDU library used.
     */
-    const std::string PMD2ToolsetVersion = "";
+    const std::string PMD2ToolsetVersion = "0.1.0"; //! #TODO: Replace with something that takes care of incrementing this for us!
     
 
     /*******************************************************************************
