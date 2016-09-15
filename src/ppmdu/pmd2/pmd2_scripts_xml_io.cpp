@@ -3673,7 +3673,7 @@ namespace pmd2
             outputresult.exceptions(std::ios::badbit);
 
             if( !options.basdir ) //We need to specify the nb when imported as XML files
-                reporter.SetNbExpected( taskhandler.size() + 1 ); //Add one for the unionall.ssb script!
+                reporter.SetNbExpected( cntdir + 1 ); //Add one for the unionall.ssb script!
             reporter.PrintErrorReport(outputresult); 
         }
         catch(...)
