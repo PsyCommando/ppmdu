@@ -88,6 +88,12 @@
     <Filter Include="Source Files\ppmdu\data formats\Scripts">
       <UniqueIdentifier>{65176b6f-ce98-48fa-b35d-a5486d3d4b66}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{3e04f0ba-58c6-4394-b3df-92b41f9c28cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{baf3dfc1-2050-47f8-ba24-b401226b0a48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -242,6 +248,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -415,6 +424,9 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\parallel_tasks.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
