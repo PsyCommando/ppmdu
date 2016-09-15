@@ -1938,7 +1938,7 @@ namespace pmd2
             xml_document doc;
             try
             {
-                xml_node    parentn = HandleLoadXMLDoc(doc, file, ROOT_ScripDir, "SCRIPT");
+                xml_node    parentn = HandleLoadXMLDoc(doc, file, ROOT_ScripDir);
                 LevelScript reslvlscr( m_curfilebasename, 
                                      std::move(ParseSets(parentn)),
                                      std::move(ParseLSD (parentn)));
@@ -2014,14 +2014,22 @@ namespace pmd2
             HandleLoadXMLDoc
                 Load a xml document through pugixml and handle exceptions and dealing with game version the file is for!
                 Returns the specified root node.
+
+                - parentdirname: relevant when importing subfiles. Because most subfiles have similar names between levels. So the level name (parent dir name) is added to the name
+                                 so it can be differentiated from the other compiled files with the same name!
         */
-        xml_node HandleLoadXMLDoc( xml_document & doc, const std::string & fpath, const std::string & rootnodename, const std::string & parentdirname)
+        xml_node HandleLoadXMLDoc( xml_document & doc, const std::string & fpath, const std::string & rootnodename, const std::string * parentdirname = nullptr)
         {
             using namespace scriptXML;
             //xml_document        doc;
             xml_parse_result    parseres;
             stringstream        sstrcurfname;
-            sstrcurfname <<parentdirname <<"/" <<utils::GetBaseNameOnly(fpath);
+
+            if(parentdirname)
+                sstrcurfname <<parentdirname <<"/" <<utils::GetBaseNameOnly(fpath);
+            else
+                sstrcurfname <<utils::GetBaseNameOnly(fpath);
+
             m_curfilebasename = sstrcurfname.str(); //Set current file for compiler error reporting.
 
             //Init the entry for this file!
@@ -2104,7 +2112,7 @@ namespace pmd2
                 m_preport->SetNbExpected( m_preport->GetNbExpected() + 1 );
 
             xml_document doc;
-            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_ScriptSet, lvlname);
+            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_ScriptSet, &lvlname);
 
             if( utils::LibWide().isLogOn() )
                 slog() << "#Parsing Script Set file " <<m_curfilebasename <<".xml \n";
@@ -2124,7 +2132,7 @@ namespace pmd2
                 m_preport->SetNbExpected( m_preport->GetNbExpected() + 1 );
 
             xml_document doc;
-            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_LSD, lvlname);
+            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_LSD, &lvlname);
 
             if( utils::LibWide().isLogOn() )
                 slog() << "#Parsing LSD file " <<m_curfilebasename <<".xml \n";
