@@ -1035,6 +1035,8 @@ namespace pmd2
         "vol",
     }};
 
+    //!#NOTE: Add any new paramter type to the ParseTypedCommandParameterAttribute function in the SSB XML parser! Or end up with a crash.
+
     inline const std::string * OpParamTypesToStr( eOpParamTypes ty )
     {
         if( ty < eOpParamTypes::NbTypes )
@@ -1252,7 +1254,8 @@ namespace pmd2
     };
 
     /*
-        Returns whether a routines accepts a value as its extra parameter value.
+        RoutineHasParameter
+            Returns whether a given routine type makes use of the parameter in its entry in the routine table.
     */
     inline bool RoutineHasParameter(uint16_t ty)
     {
@@ -1799,7 +1802,7 @@ namespace pmd2
 
             //We need to do this, since a direction of 0 is invalid, but since we opted for using indices to represent directions 
             // internally in the GameScriptData, our internal invalid value of -1 must be converted to the script's invalid direction of 0! We can't do it otherwise, because 0 
-            // is a valid indice in the table of directions, and we couldn't tell if its a valid direction or not afterwards..
+            // is a valid indice in the table of directions, and we couldn't tell if its a valid direction or not afterwards when validating the result..
             if(dirid == ScriptNullVal) 
                 return ScriptNullDirection;
             else if( DoesStringBeginsWithNumber(name) )
@@ -1879,18 +1882,11 @@ namespace pmd2
                 return _INVALIDID;
 
             const size_t id = container.FindIndexByName(name);
+
             if(id != std::numeric_limits<size_t>::max())
                 return static_cast<int16_t>(id);
             else if(tryconverttoint)
-            {
-                //std::stringstream sstr;
-                //int16_t outval = 0;
-                //if(name.size() > 2 && name[0] == '0' && name[1] == 'x')
-                //    sstr<<std::hex;
-                //sstr << name;
-                //sstr >> outval;
                 return utils::parseHexaValToValue<int16_t>(name);
-            }
             else
                 return _INVALIDID;
         }

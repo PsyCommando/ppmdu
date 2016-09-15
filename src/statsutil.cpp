@@ -267,7 +267,7 @@ namespace statsutil
             std::bind( &CStatsUtil::ParseOptionConfig, &GetInstance(), placeholders::_1 ),
         },
 
-        //
+        //Escape text using XML escape sequences
         {
             "xmlesc",
             0,
@@ -276,6 +276,15 @@ namespace statsutil
             "This is mainly interesting for dealing with a XML parser that requires standard XML escape chars!",
             "-xmlesc",
             std::bind( &CStatsUtil::ParseOptionEscapeAsXML, &GetInstance(), placeholders::_1 ),
+        },
+
+        //Export/Import script data as directories
+        {
+            "scrasdir",
+            0,
+            "If present, scripts will be exported as sub files within a directory, instead of a single huge xml file.",
+            "-scrasdir",
+            std::bind( &CStatsUtil::ParseOptionScriptAsDir, &GetInstance(), placeholders::_1 ),
         },
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -362,6 +371,7 @@ namespace statsutil
         m_version         = eGameVersion::EoS;
         m_scriptdebug     = false;
         m_dumplvllist     = false;
+        m_scriptasdir     = false;
         utils::LibWide().StringValue(ScriptCompilerReportFname) = "compiler_report.txt"; //Set this keyvalue to our default report filename!
     }
 
@@ -561,6 +571,12 @@ namespace statsutil
         return m_dumplvllist = true;
     }
 
+    bool CStatsUtil::ParseOptionScriptAsDir(const std::vector<std::string> & optdata )
+    {
+        cout << "<!>- Exporting/Importing Script XML as Directories!\n";
+        return m_scriptasdir = true;
+    }
+
     void CStatsUtil::SetupCFGPath(const std::string & cfgrelpath)
     {
         assert(!m_applicationdir.empty());
@@ -573,6 +589,8 @@ namespace statsutil
         else
             throw std::logic_error("CStatsUtil::SetupCFGPath(): Path to pmd2data xml file is non-existant! " + cfgpath.toString());
     }
+
+
 
 
 //
@@ -1009,7 +1027,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
+            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load scripts!");
 
@@ -1138,7 +1156,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
+            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 

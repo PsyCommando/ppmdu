@@ -134,6 +134,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp" />
     <ClCompile Include="..\src\types\contentid_generator.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />

@@ -5,8 +5,10 @@
 //North American Rom Script Data Test
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" 
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts
+-e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts -scrasdir
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log 
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts
+-i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts -scrasdir
 -scripts -text
 
 //Single Script File Test

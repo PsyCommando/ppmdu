@@ -30,7 +30,20 @@ namespace pmd2
         Current version string. Represents the version of the PPMDU library used.
     */
     const std::string PMD2ToolsetVersion = "0.1.0"; //! #TODO: Replace with something that takes care of incrementing this for us!
-    
+    struct toolkitversion_t
+    { 
+        unsigned int major, minor, patch; 
+
+        toolkitversion_t(unsigned int maj=0, unsigned int min=0, unsigned int ptch=0)
+            :major(maj), minor(min),patch(ptch)
+        {}
+
+        inline bool operator==( const toolkitversion_t& other )const { return major == other.major && minor == other.minor && patch == other.patch; }
+        inline bool operator!=( const toolkitversion_t& other )const { return !operator==(other); }
+
+    };
+    extern const toolkitversion_t PMD2ToolsetVersionStruct;
+    toolkitversion_t ParseToolsetVerion( const std::string & verstxt );
 
     /*******************************************************************************
         eGameVersion

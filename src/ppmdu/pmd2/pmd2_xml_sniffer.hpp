@@ -24,6 +24,42 @@ namespace pmd2
         std::unordered_map<std::string, std::string> attributes;
     };
 
+
+//
+//
+//
+    /*
+        SetPPMDU_RootNodeXMLAttributes
+            Add to the specified XML node the attributes used on all XML root nodes used with PPMDU
+            Those are the game version, game region, and toolset version!
+    */
+    inline void SetPPMDU_RootNodeXMLAttributes( pugi::xml_node & destnode, eGameVersion ver, eGameRegion reg )
+    {
+        pugixmlutils::AppendAttribute( destnode, CommonXMLGameVersionAttrStr, GetGameVersionName(ver) );
+        pugixmlutils::AppendAttribute( destnode, CommonXMLGameRegionAttrStr,  GetGameRegionNames(reg) );
+        pugixmlutils::AppendAttribute( destnode, CommonXMLToolVersionAttrStr, PMD2ToolsetVersion );
+    }
+
+    /*
+        GetPPMDU_RootNodeXMLAttributes
+            Get from the specified XML node the attributes used on all XML root nodes used with PPMDU
+            Those are the game version, game region, and toolset version!
+    */
+    inline void GetPPMDU_RootNodeXMLAttributes( const pugi::xml_node & srcnode, eGameVersion & out_ver, eGameRegion & out_reg, std::string & out_toolsetver )
+    {
+        using namespace pugi;
+        xml_attribute   xversion    = srcnode.attribute(CommonXMLGameVersionAttrStr.c_str());
+        xml_attribute   xregion     = srcnode.attribute(CommonXMLGameRegionAttrStr.c_str());
+        xml_attribute   xppmduv     = srcnode.attribute(CommonXMLToolVersionAttrStr.c_str());
+        out_ver = StrToGameVersion(xversion.value());
+        out_reg = StrToGameRegion (xregion.value());
+        out_toolsetver = xppmduv.value();
+    }
+
+//
+//
+//
+
     inline RootNodeInfo GetRootNodeFromXML( const std::string & file )
     {
         using namespace pugi;
@@ -39,35 +75,7 @@ namespace pmd2
     void CheckGameVersionAndGameRegion( const RootNodeInfo & rootnode, 
                                         eGameVersion       & out_ver, 
                                         eGameRegion        & out_reg,
-                                        bool                 bprintdetails = true )
-    {
-        if( rootnode.attributes.size() >= 2 )
-        {
-            if(bprintdetails)
-                cout <<"<!>-XML Script file detected!\n";
-            try
-            {
-                out_ver = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
-                out_reg  = pmd2::StrToGameRegion (rootnode.attributes.at(CommonXMLGameRegionAttrStr));
-            }
-            catch(const std::exception&)
-            {
-                throw_with_nested(std::logic_error("CheckGameVersionAndGameRegion(): Couldn't get the game version and or game region values attributes from document root!!"));
-            }
-            if(bprintdetails)
-            {
-                cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(out_ver) <<"\n"
-                     <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(out_reg)  <<"\n";
-            }
-
-            if( out_ver == eGameVersion::Invalid )
-                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game version attribute in root node is invalid!");
-            if( out_reg == eGameRegion::Invalid )
-                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region attribute in root node is invalid!");
-        }
-        else
-            throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region and version attribute in root node are missing!");
-    }
+                                        bool                 bprintdetails = true );
 
     inline bool IsXMLSingleScript(const std::string & rootname)
     {

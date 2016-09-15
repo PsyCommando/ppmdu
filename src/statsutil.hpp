@@ -57,6 +57,7 @@ namespace statsutil
         bool ParseOptionEscapeAsXML( const std::vector<std::string> & optdata );
         bool ParseOptionScriptEnableDebugInstr( const std::vector<std::string> & optdata );
         bool ParseOptionDumpLvlList( const std::vector<std::string> & optdata );
+        bool ParseOptionScriptAsDir(const std::vector<std::string> & optdata ); 
 
         //Execution
         void DetermineOperation();
@@ -67,6 +68,7 @@ namespace statsutil
 
 
         void SetupCFGPath(const std::string & cfgrelpath); //Process the path to the CFG/data xml file. Should be run after the command line param were parsed!
+
 
         //Exec methods
         //int ExportPokeStatsGrowth();
@@ -186,6 +188,7 @@ namespace statsutil
         bool        m_escxml;         //Force escape sequences to be standard XML instead of C
         bool        m_scriptdebug;
         bool        m_dumplvllist;
+        bool        m_scriptasdir;  //Whether scripts are exported/imported as directories
         
         pmd2::eGameRegion  m_region;
         pmd2::eGameVersion m_version;
