@@ -11,6 +11,8 @@
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts -scrasdir
 -scripts -text
 
+-romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" -cfg "../../resources/pmd2data.xml" -log -dumpactorlist
+
 //Single Script File Test
 "EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssb" "ExplorersOfSky_Stats"
 "EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssb" "ExplorersOfSky_Stats/test.xml"

@@ -64,7 +64,7 @@ namespace pmd2
 
         //Meta Labels
         MetaLabel,          //A jump label
-        MetaCaseLabel,      //A jump label for a conditional case
+        MetaCaseLabel,      //A jump label for a conditional case //#REMOVEME
 
         //Meta instructions
         MetaSwitch,         //The instruction contains case sub-instructions
@@ -272,8 +272,8 @@ namespace pmd2
     {
         int16_t objid   = 0;
         int16_t facing  = 0;
-        int16_t unk2    = 0;
-        int16_t unk3    = 0;
+        int16_t width   = 0;
+        int16_t height  = 0;
         int16_t xoff    = 0;
         int16_t yoff    = 0;
         int16_t unk6    = 0;
@@ -297,13 +297,13 @@ namespace pmd2
 
     struct EventDataEntry
     {
-        int16_t unk0 = 0;
-        int16_t unk1 = 0;
-        int16_t unk2 = 0;
-        int16_t unk3 = 0;
-        int16_t unk4 = 0;
-        int16_t unk5 = 0;
-        int16_t unk6 = 0;
+        int16_t width       = 0;
+        int16_t height      = 0;
+        int16_t xoff        = 0;
+        int16_t yoff        = 0;
+        int16_t unk4        = 0;
+        int16_t unk5        = 0;
+        int16_t actionidx  = 0;
     };
 
     struct PosMarkDataEntry
@@ -318,7 +318,7 @@ namespace pmd2
         int16_t unk7 = 0;
     };
 
-    struct TriggerDataEntry
+    struct ActionDataEntry
     {
         int16_t croutineid = 0;
         int16_t unk1 = 0;   
@@ -343,7 +343,7 @@ namespace pmd2
     public:
         typedef std::vector<ScriptLayer>      layers_t;
         typedef std::vector<PosMarkDataEntry> posmarks_t;
-        typedef std::vector<TriggerDataEntry> unktbl1ents_t;
+        typedef std::vector<ActionDataEntry> trgentry_t;
 
         ScriptData()
             :m_datatype(eScrDataTy::Invalid)
@@ -365,14 +365,14 @@ namespace pmd2
         inline posmarks_t           & PosMarkers()      {return m_posmarkers;}
         inline const posmarks_t     & PosMarkers()const {return m_posmarkers;}
 
-        inline unktbl1ents_t        & UnkTbl1()         {return m_unktbl1;}
-        inline const unktbl1ents_t  & UnkTbl1()const    {return m_unktbl1;}
+        inline trgentry_t        & ActionTable()         {return m_trgtbl;}
+        inline const trgentry_t  & ActionTable()const    {return m_trgtbl;}
 
     private:
         std::string     m_name;
         layers_t        m_layers;
         posmarks_t      m_posmarkers;
-        unktbl1ents_t   m_unktbl1;
+        trgentry_t      m_trgtbl;
         eScrDataTy      m_datatype;
     };
 

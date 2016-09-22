@@ -113,7 +113,10 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\lib\whereami\src\whereami.c" />
+    <ClCompile Include="..\lib\whereami\src\whereami.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\script_content.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp" />
@@ -237,10 +240,16 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\statsutil.cpp" />
-    <ClCompile Include="..\src\utils\whereami_wrapper.cpp" />
+    <ClCompile Include="..\src\utils\whereami_wrapper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\lib\whereami\src\whereami.h" />
+    <ClInclude Include="..\lib\whereami\src\whereami.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
     <ClInclude Include="..\src\ppmdu\containers\script_content.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp" />

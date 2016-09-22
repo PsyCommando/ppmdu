@@ -16,7 +16,7 @@ namespace filetypes
     {
         if(itwhere == itend)
             throw std::out_of_range("LoadLevelFNameString(): Level backgrounds file ended unexpectedly!");
-        itwhere = std::copy_n( itwhere, LevelBgEntry::LevelFnameMaxLen, out_str.begin() );
+        std::copy_n( itwhere, LevelBgEntry::LevelFnameMaxLen, out_str.begin() );
     }
 
 
@@ -26,9 +26,9 @@ namespace filetypes
         LevelBgEntry curentry;
 
         //Load the 3 obligatory ones
-        LoadLevelFNameString(itwhere, itend, curentry.name1.begin());
-        LoadLevelFNameString(itwhere, itend, curentry.name2.begin());
-        LoadLevelFNameString(itwhere, itend, curentry.name3.begin());
+        LoadLevelFNameString(itwhere, itend, curentry.name1);
+        LoadLevelFNameString(itwhere, itend, curentry.name2);
+        LoadLevelFNameString(itwhere, itend, curentry.name3);
 
         //Load the extra names
         for( size_t cntname = 0; cntname < LevelBgEntry::MaxNbExtraNames; ++cntname )
@@ -44,12 +44,12 @@ namespace filetypes
                 if(itwhere == itend)
                     throw std::out_of_range("LoadLevelEntry(): Level backgrounds file ended unexpectedly!");
                 lvlextraname.front() = c;
-                itwhere = std::copy_n( itwhere, (LevelBgEntry::LevelFnameMaxLen-1), lvlextraname.begin() + 1 );
+                std::copy_n( itwhere, (LevelBgEntry::LevelFnameMaxLen-1), lvlextraname.begin() + 1 );
                 curentry.extranames.push_back(std::move(lvlextraname));
             }
             else //If the string is empty
             {
-                std::advance( itwhere, (LevelBgEntry::EntryLen - ((cntname+3) * LevelBgEntry::LevelFnameMaxLen) ); //Skip over the rest of the bytes from this entry
+                std::advance( itwhere, (LevelBgEntry::EntryLen - ((cntname+3) * LevelBgEntry::LevelFnameMaxLen) ) ); //Skip over the rest of the bytes from this entry
                 break; //If that entry is null, all the others will be too
             }
         }

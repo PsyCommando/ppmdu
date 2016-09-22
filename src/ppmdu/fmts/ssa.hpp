@@ -26,7 +26,7 @@ namespace filetypes
         static const size_t LEN = 18;
         uint16_t nblayers;
         uint16_t ptrlayertbl;
-        uint16_t unkdb1ptr;
+        uint16_t actionptr;
         uint16_t actorsptr;
         uint16_t objectsptr;
         uint16_t performersptr;
@@ -41,7 +41,7 @@ namespace filetypes
         {
             itw = utils::WriteIntToBytes( nblayers,     itw );
             itw = utils::WriteIntToBytes( ptrlayertbl,  itw );
-            itw = utils::WriteIntToBytes( unkdb1ptr,    itw );
+            itw = utils::WriteIntToBytes( actionptr,    itw );
             itw = utils::WriteIntToBytes( actorsptr,     itw );
             itw = utils::WriteIntToBytes( objectsptr,    itw );
             itw = utils::WriteIntToBytes( performersptr,      itw );
@@ -57,7 +57,7 @@ namespace filetypes
         {
             itr = utils::ReadIntFromBytes( nblayers,        itr, itpend );
             itr = utils::ReadIntFromBytes( ptrlayertbl,     itr, itpend );
-            itr = utils::ReadIntFromBytes( unkdb1ptr,       itr, itpend );
+            itr = utils::ReadIntFromBytes( actionptr,       itr, itpend );
             itr = utils::ReadIntFromBytes( actorsptr,        itr, itpend );
             itr = utils::ReadIntFromBytes( objectsptr,       itr, itpend );
             itr = utils::ReadIntFromBytes( performersptr,         itr, itpend );

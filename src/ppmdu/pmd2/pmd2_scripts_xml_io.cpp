@@ -222,16 +222,19 @@ namespace pmd2
         const string NODE_Events            = "Events"s;
         const string NODE_Event             = "Event"s;
 
-        const string NODE_UnkTable1         = "TriggersTable"s;
-        const string NODE_UnkTable1Entry    = "Entry"s;
+        const string NODE_ActionTable       = "ActionsTable"s;
+        const string NODE_ActionTableEntry  = "Action"s;
 
         const string NODE_PositionMarkers   = "PositionMarkers"s;
         const string NODE_Marker            = "Marker"s;
 
+        const string ATTR_Width             = "width"s;
+        const string ATTR_Height            = "height"s;
         const string ATTR_XOffset           = "x"s;
         const string ATTR_YOffset           = "y"s;
         const string ATTR_Direction         = "facing"s;
         const string ATTR_ScriptID          = "act_scriptid"s;
+        const string ATTR_ActionID          = "actionid"s;
 
         //Unknown parameters
         const string ATTR_Unk0  = "unk0"s;
@@ -1527,7 +1530,7 @@ namespace pmd2
             //Init output data
             m_out = std::move( ScriptData(xname.value(), dataty) );
 
-            ParseTriggers(datan);
+            ParseActions(datan);
             ParsePosMarkers(datan);
             ParseLayers(datan);
 
@@ -1535,15 +1538,15 @@ namespace pmd2
         }
 
     private:
-        void ParseTriggers(xml_node & datan)
+        void ParseActions(xml_node & datan)
         {
             using namespace scriptXML;
             const string & AttrID  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
-            xml_node       unktbl1 = datan.child(NODE_UnkTable1.c_str());
+            xml_node       unktbl1 = datan.child(NODE_ActionTable.c_str());
 
-            for(const auto & curunk1entry : unktbl1.children(NODE_UnkTable1Entry.c_str()) )
+            for(const auto & curunk1entry : unktbl1.children(NODE_ActionTableEntry.c_str()) )
             {
-                TriggerDataEntry entry;
+                ActionDataEntry entry;
                 xml_attribute xcrtnid = curunk1entry.attribute(AttrID.c_str());
                 xml_attribute xunk1   = curunk1entry.attribute(ATTR_Unk1.c_str());
                 xml_attribute xunk2   = curunk1entry.attribute(ATTR_Unk2.c_str());
@@ -1565,7 +1568,7 @@ namespace pmd2
                 else
                 {
                     stringstream sstrer;  
-                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseTriggers(): A trigger entry is missing its  "; 
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseActions(): A trigger entry is missing its  "; 
                     if(!xcrtnid)
                         sstrer << AttrID <<", ";
                     if(!xunk1)
@@ -1582,7 +1585,7 @@ namespace pmd2
                 if(entry.croutineid == InvalidCRoutineID)
                 {
                     std::stringstream sstr;
-                    sstr << "SSDataXMLParser::ParseTriggers(), offset: " <<curunk1entry.offset_debug() <<": Got invalid common routine name " 
+                    sstr << "SSDataXMLParser::ParseActions(), offset: " <<curunk1entry.offset_debug() <<": Got invalid common routine name " 
                          <<xcrtnid.value() <<"! Interpreting as number instead!";
                     std::string msg = sstr.str();
                     slog()<<msg <<"\n";
@@ -1591,10 +1594,10 @@ namespace pmd2
                     entry.croutineid = ToSWord(xcrtnid.as_int());
                 }
 
-                //TriggerDataEntry entry;
+                //ActionDataEntry entry;
                // xml_attribute xcrtnid = curunk1entry.attribute(ATTR_.c_str());
 
-                m_out.UnkTbl1().push_back(std::move(entry));
+                m_out.ActionTable().push_back(std::move(entry));
 
             }
         }
@@ -1729,10 +1732,10 @@ namespace pmd2
                 {
                     if( attr.name() == ATTR_Direction )
                         entry.facing = m_paraminf.DirectionData(attr.value());
-                    else if( attr.name() == ATTR_Unk2 )
-                        entry.unk2 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk3 )
-                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Width )
+                        entry.width = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Height )
+                        entry.height = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_XOffset )
                         entry.xoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_YOffset )
@@ -1791,42 +1794,52 @@ namespace pmd2
             for( const auto & aevent : evn )
             {
                 EventDataEntry entry;
-                xml_attribute  xevid = aevent.attribute(AttrID.c_str());
-                if(!xevid)
-                {
-                    stringstream sstrer;
-                    PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
-                    throw CompileErrorException(sstrer.str(), aevent.offset_debug());
-                }
+                //xml_attribute  xevid = aevent.attribute(AttrID.c_str());
+                //if(!xevid)
+                //{
+                //    stringstream sstrer;
+                //    PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
+                //    throw CompileErrorException(sstrer.str(), aevent.offset_debug());
+                //}
 
-                entry.unk0 = m_paraminf.CRoutine(xevid.value());
-                if(entry.unk0 == InvalidCRoutineID)
-                {
-                    std::stringstream sstr;
-                    sstr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got invalid common routine name " 
-                         <<xevid.value() <<"! Interpreting as number instead!";
-                    std::string msg = sstr.str();
-                    slog()<<msg <<"\n";
-                    if(m_preport)
-                        m_preport->InsertWarning(aevent.offset_debug(), std::move(msg));
-                    entry.unk0 = ToSWord(xevid.as_int());
-                }
+                //entry.croutineid = m_paraminf.CRoutine(xevid.value());
+                //if(entry.croutineid == InvalidCRoutineID)
+                //{
+                //    std::stringstream sstr;
+                //    sstr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got invalid common routine name " 
+                //         <<xevid.value() <<"! Interpreting as number instead!";
+                //    std::string msg = sstr.str();
+                //    slog()<<msg <<"\n";
+                //    if(m_preport)
+                //        m_preport->InsertWarning(aevent.offset_debug(), std::move(msg));
+                //    entry.croutineid = ToSWord(xevid.as_int());
+                //}
 
                 for( const auto & attr : aevent.attributes() )
                 {
-
-                    if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk2 )
-                        entry.unk2 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk3 )
-                        entry.unk3 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_Width )
+                        entry.width = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Height )
+                        entry.height = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk4 )
                         entry.unk4 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk5 )
                         entry.unk5 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk6 )
-                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_ActionID )
+                    {
+                        entry.actionidx = ToWord(attr.as_uint());
+                        if( entry.actionidx > m_out.ActionTable().size() )
+                        {
+                            stringstream sstrer;
+                            PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): The current event has an invalid action index of " <<entry.actionidx 
+                                                         <<", while we have only " <<m_out.ActionTable().size() <<" actions in the action table!";
+                            throw CompileErrorException(sstrer.str(), aevent.offset_debug());
+                        }
+                    }
                 }
                 outlay.events.push_back(std::move(entry));
             }
@@ -2991,7 +3004,7 @@ namespace pmd2
             AppendAttribute( xdata, ATTR_ScrDatName, m_data.Name());
             AppendAttribute( xdata, ATTR_ScriptType, ScriptDataTypeToStr(m_data.Type()));
 
-            WriteUnkTable1(xdata);
+            WriteActionTable(xdata);
             WritePositionMarkers(xdata);
             WriteLayers(xdata);
         }
@@ -3004,20 +3017,20 @@ namespace pmd2
             return buffer;
         }
 
-        void WriteUnkTable1(xml_node & parentn)
+        void WriteActionTable(xml_node & parentn)
         {
             using namespace scriptXML;
-            if(m_data.UnkTbl1().empty())
+            if(m_data.ActionTable().empty())
                 return;
-            xml_node       xunktbl1 = AppendChildNode(parentn, NODE_UnkTable1);
+            xml_node       xunktbl1 = AppendChildNode(parentn, NODE_ActionTable);
             const string   IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
             array<char,32> buf{0};
 
             size_t cnt = 0;
-            for( const auto & unk1ent : m_data.UnkTbl1() )
+            for( const auto & unk1ent : m_data.ActionTable() )
             {
                 WriteCommentNode( xunktbl1, to_string(cnt) );
-                xml_node xentry = AppendChildNode(xunktbl1, NODE_UnkTable1Entry);
+                xml_node xentry = AppendChildNode(xunktbl1, NODE_ActionTableEntry);
                 const auto * inf = m_paraminf.CRoutine(unk1ent.croutineid);
 
                 if(inf)
@@ -3131,8 +3144,8 @@ namespace pmd2
 
                 AppendAttribute(xobject, IDAttrName, m_paraminf.ObjectIDToStr(entry.objid) );
                 AppendAttribute(xobject, ATTR_Direction, m_paraminf.DirectionData(entry.facing) );
-                AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xobject, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xobject, ATTR_Width,   entry.width );
+                AppendAttribute(xobject, ATTR_Height,  entry.height );
                 AppendAttribute(xobject, ATTR_XOffset, entry.xoff );
                 AppendAttribute(xobject, ATTR_YOffset, entry.yoff );
                 AppendAttribute(xobject, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
@@ -3191,25 +3204,26 @@ namespace pmd2
             xml_node        xevents     = AppendChildNode( parentn, NODE_Events );
             size_t          cnt         = 0;
             const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
-            array<char,32>  buf{0};
+            array<char,32>  buf{0}; //Temporary buffer for conversion ops
 
             for( const auto & entry : layer.events )
             {
                 WriteCommentNode( xevents, to_string(cnt) );
                 xml_node     xevent = AppendChildNode( xevents, NODE_Event );
-                const auto * inf = m_paraminf.CRoutine(entry.unk0);
+                //const auto * inf = m_paraminf.CRoutine(entry.croutineid);
 
-                if(inf)
-                    AppendAttribute(xevent, IDAttrName, inf->name);
-                else
-                    AppendAttribute(xevent, IDAttrName, entry.unk0);
+                //if(inf)
+                //    AppendAttribute(xevent, IDAttrName, inf->name);
+                //else
+                //    AppendAttribute(xevent, IDAttrName, entry.croutineid);
 
-                AppendAttribute(xevent, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xevent, ATTR_Width,     entry.width );
+                AppendAttribute(xevent, ATTR_Height,    entry.height );
+                AppendAttribute(xevent, ATTR_XOffset,   entry.xoff );
+                AppendAttribute(xevent, ATTR_YOffset,   entry.yoff );
+                AppendAttribute(xevent, ATTR_Unk4,      MakeHexa(entry.unk4,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk5,      MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xevent, ATTR_ActionID, entry.actionidx );
                 ++cnt;
             }
         }
