@@ -252,7 +252,6 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     </ClInclude>
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
     <ClInclude Include="..\src\ppmdu\containers\script_content.hpp" />
-    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />

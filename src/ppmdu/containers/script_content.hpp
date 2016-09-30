@@ -283,16 +283,16 @@ namespace pmd2
 
     struct PerformerDataEntry
     {
-        int16_t unk0 = 0;
-        int16_t unk1 = 0;
-        int16_t unk2 = 0;
-        int16_t unk3 = 0;
-        int16_t unk4 = 0;
-        int16_t unk5 = 0;
-        int16_t unk6 = 0;
-        int16_t unk7 = 0;
-        int16_t unk8 = 0;
-        int16_t unk9 = 0;
+        int16_t type    = 0; //Value from 0 to 5
+        int16_t facing  = 0; 
+        int16_t unk2    = 0;
+        int16_t unk3    = 0;
+        int16_t xoff    = 0;
+        int16_t yoff    = 0;
+        int16_t unk6    = 0;
+        int16_t unk7    = 0;
+        //int16_t unk8    = 0;
+        //int16_t unk9    = 0;
     };
 
     struct EventDataEntry
@@ -303,7 +303,7 @@ namespace pmd2
         int16_t yoff        = 0;
         int16_t unk4        = 0;
         int16_t unk5        = 0;
-        int16_t actionidx  = 0;
+        int16_t actionidx   = 0;
     };
 
     struct PosMarkDataEntry

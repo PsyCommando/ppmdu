@@ -60,21 +60,22 @@ namespace pmd2
 //  Script
 //==============================================================================
     Script::Script(const Script & tocopy)
-        :m_name(tocopy.m_name), /*m_originalfname(tocopy.m_originalfname),*/
-         m_groups(tocopy.m_groups), m_strtable(tocopy.m_strtable),
+        :m_name(tocopy.m_name),
+         m_groups(tocopy.m_groups), 
+         m_strtable(tocopy.m_strtable),
          m_contants(tocopy.m_contants)
     {}
     
     Script::Script(Script      && tomove)
-        :m_name(std::move(tomove.m_name)), /*m_originalfname(std::move(tomove.m_originalfname)),*/
-         m_groups(std::move(tomove.m_groups)), m_strtable(std::move(tomove.m_strtable)),
+        :m_name(std::move(tomove.m_name)),
+         m_groups(std::move(tomove.m_groups)), 
+         m_strtable(std::move(tomove.m_strtable)),
          m_contants(std::move(tomove.m_contants))
     {}
 
     Script & Script::operator=( const Script & tocopy )
     {
         m_name          = tocopy.m_name;
-        //m_originalfname = tocopy.m_originalfname;
         m_groups        = tocopy.m_groups;
         m_strtable      = tocopy.m_strtable;
         m_contants      = tocopy.m_contants;
@@ -84,7 +85,6 @@ namespace pmd2
     Script & Script::operator=( Script && tomove )
     {
         m_name          = std::move(tomove.m_name);
-        //m_originalfname = std::move(tomove.m_originalfname);
         m_groups        = std::move(tomove.m_groups);
         m_strtable      = std::move(tomove.m_strtable);
         m_contants      = std::move(tomove.m_contants);

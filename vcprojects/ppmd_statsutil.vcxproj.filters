@@ -82,9 +82,6 @@
     <Filter Include="Source Files\ppmdu\data formats\Scripts">
       <UniqueIdentifier>{65176b6f-ce98-48fa-b35d-a5486d3d4b66}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\ppmdu\file formats\levels">
-      <UniqueIdentifier>{3e04f0ba-58c6-4394-b3df-92b41f9c28cf}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\ppmdu\file formats\levels">
       <UniqueIdentifier>{baf3dfc1-2050-47f8-ba24-b401226b0a48}</UniqueIdentifier>
     </Filter>
@@ -421,9 +418,6 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\parallel_tasks.hpp">
       <Filter>Header Files\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp">
-      <Filter>Header Files\ppmdu\file formats\levels</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\whereami_wrapper.hpp">
       <Filter>Header Files\utility</Filter>

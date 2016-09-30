@@ -235,6 +235,7 @@ namespace pmd2
         const string ATTR_Direction         = "facing"s;
         const string ATTR_ScriptID          = "act_scriptid"s;
         const string ATTR_ActionID          = "actionid"s;
+        const string ATTR_PerfType          = "type"s;
 
         //Unknown parameters
         const string ATTR_Unk0  = "unk0"s;
@@ -1760,26 +1761,26 @@ namespace pmd2
                 PerformerDataEntry entry;
                 for( const auto & attr : performer.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk0 )
-                        entry.unk0 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_PerfType )
+                        entry.type = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Direction )
+                        entry.facing = m_paraminf.DirectionData(attr.value());
                     else if( attr.name() == ATTR_Unk2 )
                         entry.unk2 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk3 )
                         entry.unk3 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk4 )
-                        entry.unk4 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk5 )
-                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk6 )
                         entry.unk6 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk7 )
                         entry.unk7 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk8 )
-                        entry.unk8 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk9 )
-                        entry.unk9 = ToWord(attr.as_uint());
+                    //else if( attr.name() == ATTR_Unk8 )
+                    //    entry.unk8 = ToWord(attr.as_uint());
+                    //else if( attr.name() == ATTR_Unk9 )
+                    //    entry.unk9 = ToWord(attr.as_uint());
                 }
                 outlay.performers.push_back(std::move(entry));
             }
@@ -3171,25 +3172,16 @@ namespace pmd2
             {
                 WriteCommentNode( xperfs, to_string(cnt) );
                 xml_node xperf = AppendChildNode( xperfs, NODE_Performer );
-
-                //const livesent_info * inf    = m_paraminf.LivesInfo(actor.livesid);
-                //assert(inf);
-
-                //if(inf)
-                //    AppendAttribute(xactor, IDAttrName, inf->name);
-                //else
-                //    AppendAttribute(xactor, IDAttrName, actor.livesid);
-
-                AppendAttribute(xperf, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk9, MakeHexa(entry.unk9,buf.data()) );
+                AppendAttribute(xperf, ATTR_PerfType,   entry.type );
+                AppendAttribute(xperf, ATTR_Direction,  m_paraminf.DirectionData(entry.facing) );
+                AppendAttribute(xperf, ATTR_Unk2,       MakeHexa(entry.unk2,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk3,       MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xperf, ATTR_XOffset,    entry.xoff );
+                AppendAttribute(xperf, ATTR_YOffset,    entry.yoff );
+                AppendAttribute(xperf, ATTR_Unk6,       MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk7,       MakeHexa(entry.unk7,buf.data()) );
+                //AppendAttribute(xperf, ATTR_Unk8,       MakeHexa(entry.unk8,buf.data()) );
+                //AppendAttribute(xperf, ATTR_Unk9,       MakeHexa(entry.unk9,buf.data()) );
                 ++cnt;
             }
         }
@@ -3210,13 +3202,6 @@ namespace pmd2
             {
                 WriteCommentNode( xevents, to_string(cnt) );
                 xml_node     xevent = AppendChildNode( xevents, NODE_Event );
-                //const auto * inf = m_paraminf.CRoutine(entry.croutineid);
-
-                //if(inf)
-                //    AppendAttribute(xevent, IDAttrName, inf->name);
-                //else
-                //    AppendAttribute(xevent, IDAttrName, entry.croutineid);
-
                 AppendAttribute(xevent, ATTR_Width,     entry.width );
                 AppendAttribute(xevent, ATTR_Height,    entry.height );
                 AppendAttribute(xevent, ATTR_XOffset,   entry.xoff );

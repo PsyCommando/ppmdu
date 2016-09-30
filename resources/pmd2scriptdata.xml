@@ -1550,7 +1550,7 @@
       <!--Sprite Effect IDs-->
       <!--**********************************************-->
       <SpriteEffectIDs>
-        <!--TODO-->
+        <!--TODO: Will eventually contains a list of all the common sprite effects so we can figure out what offset is for what effect-->
         <Efect id="92" name="SweatDrop" />
       </SpriteEffectIDs>
     </Game>
