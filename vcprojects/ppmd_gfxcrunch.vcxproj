@@ -45,6 +45,7 @@
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp" />
@@ -310,8 +311,15 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release WinXP|x64'">EasyBMP</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\move_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bma.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bpa.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bpc.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bpc_compression.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\bpl.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp" />

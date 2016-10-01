@@ -179,6 +179,10 @@ namespace gfx_util
             (*ptrtmp) = parser.ParseAs8bpp();
             targetptr.reset( ptrtmp.release() );
         }
+        else
+        {
+            assert(false); //! #TODO
+        }
     }
 
     /*
@@ -1833,7 +1837,7 @@ namespace gfx_util
                      << "Poochyena can't wait to begin!\n";
             }
         }
-        catch( Poco::Exception pex )
+        catch( const Poco::Exception & pex )
         {
             cerr <<"\n" << "<!>-POCO Exception - " <<pex.name() <<"(" <<pex.code() <<") : " << pex.message() <<endl;
             if( utils::LibWide().isLogOn() )
@@ -1841,7 +1845,7 @@ namespace gfx_util
             PrintReadme();
             return pex.code();
         }
-        catch( exception e )
+        catch( const exception & e )
         {
             cerr <<"\n" 
                  <<"\nWelp.. Poochyena hit herself in confusion while biting through the parameters!\nShe's in a bit of a pinch. It looks like she might cry...\n"
@@ -1950,23 +1954,23 @@ namespace gfx_util
 
             cout<<"\r100%";
         }
-        catch( Poco::Exception e )
+        catch( const Poco::Exception & )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
 
             //rethrow
-            throw e;
+            std::rethrow_exception(current_exception());
         }
-        catch( exception e )
+        catch( const exception & )
         {
             shouldUpdtProgress = false;
             if( updtProgress.valid() )
                 updtProgress.get();
 
             //rethrow
-            throw e;
+            std::rethrow_exception(current_exception());
         }
         cout<<"\n";
     }

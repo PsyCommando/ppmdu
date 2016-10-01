@@ -186,6 +186,7 @@ namespace utils
         {
             m_index      = other.m_index;
             m_pContainer = other.m_pContainer;
+            return *this;
         }
     };
 };
