@@ -26,9 +26,9 @@ namespace filetypes
         LevelBgEntry curentry;
 
         //Load the 3 obligatory ones
-        LoadLevelFNameString(itwhere, itend, curentry.name1);
-        LoadLevelFNameString(itwhere, itend, curentry.name2);
-        LoadLevelFNameString(itwhere, itend, curentry.name3);
+        LoadLevelFNameString(itwhere, itend, curentry.bplname);
+        LoadLevelFNameString(itwhere, itend, curentry.bpcname);
+        LoadLevelFNameString(itwhere, itend, curentry.bmaname);
 
         //Load the extra names
         for( size_t cntname = 0; cntname < LevelBgEntry::MaxNbExtraNames; ++cntname )
@@ -64,9 +64,9 @@ namespace filetypes
         void WriteLevelEntry( _backinsit itwhere, const LevelBgEntry & lvlentry )
     {
         //Write the 3 obligatory names first
-        itwhere = std::copy(lvlentry.name1.begin(), lvlentry.name1.end(), itwhere);
-        itwhere = std::copy(lvlentry.name2.begin(), lvlentry.name2.end(), itwhere);
-        itwhere = std::copy(lvlentry.name3.begin(), lvlentry.name3.end(), itwhere);
+        itwhere = std::copy(lvlentry.bplname.begin(), lvlentry.bplname.end(), itwhere);
+        itwhere = std::copy(lvlentry.bpcname.begin(), lvlentry.bpcname.end(), itwhere);
+        itwhere = std::copy(lvlentry.bmaname.begin(), lvlentry.bmaname.end(), itwhere);
 
         //Write extra names!
         for( size_t cntname = 0; cntname < LevelBgEntry::MaxNbExtraNames; ++cntname )

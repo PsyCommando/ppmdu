@@ -30,9 +30,9 @@ namespace filetypes
         static const size_t LevelFnameMaxLen = 8;
         static const size_t MaxNbExtraNames  = 8;
         typedef std::array<char, LevelFnameMaxLen> lvlstr_t;
-        lvlstr_t                name1;
-        lvlstr_t                name2;
-        lvlstr_t                name3;
+        lvlstr_t                bplname;
+        lvlstr_t                bpcname;
+        lvlstr_t                bmaname;
         std::vector<lvlstr_t>   extranames;
     };
     typedef std::vector<LevelBgEntry> lvlbglist_t;
