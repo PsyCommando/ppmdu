@@ -16,6 +16,326 @@ Description:
 namespace bpc_compression
 {
 
+    /*
+        BPCDecompressor
+    */
+    template<class _outit>
+        class BPCDecompressor
+    {
+        static const uint8_t CMD_CyclePatternAndCp                      = 0xE0;
+        static const uint8_t CMD_CyclePatternAndCp_NbCpNextByte         = 0xFF;
+
+        static const uint8_t CMD_UseLastPatternAndCp                    = 0xC0;
+        static const uint8_t CMD_UseLastPatternAndCp_NbCpNextByte       = 0xDF;
+
+        static const uint8_t CMD_LoadByteAsPatternAndCp                 = 0x80;
+        static const uint8_t CMD_LoadByteAsPatternAndCp_NbCpNextByte    = 0xBF;
+        
+
+        static const uint8_t CMD_LoadNextByteAsNbToCopy = 0x7E;
+        static const uint8_t CMD_LoadNextWordAsNbToCopy = 0x7F;
+
+        static const  size_t SizePreAlloc = 16;
+    public:
+        typedef _outit outit_t;
+
+       enum struct eState : int
+        {
+            ERROR               = -1,
+            WaitingForCmd       =  0,
+            FillingParamBuffer  =  1,
+        };
+
+        struct patternbuffer
+        {
+            uint16_t wordbuf   = 0;   //r2
+            uint8_t  hbyte     = 0;   //r7
+            uint8_t  cachedhby = 0;   //r13_14h
+        };
+
+        struct DecompState
+        {
+            eState          state           = eState::WaitingForCmd;
+            uint8_t         lastcmdbyte     = 0;                        //The last command byte parsed
+            bool            bhasleftover    = false;                    //Whether there is a leftover word to handle writing!
+            patternbuffer   patbuff;                                    //The buffer storing the patterns to copy
+            
+        };
+
+        BPCDecompressor( outit_t destout )
+            :m_itw(destout), m_nbbytoconsume(0)
+        {
+            m_parambuffer.reserve(SizePreAlloc);
+        }
+
+        void operator()( uint8_t by )
+        {
+            //Process the byte accordingly
+            switch(m_state.state)
+            {
+                case eState::WaitingForCmd:
+                {
+                    HandleCommandByte(by);
+                    break;
+                }
+                case eState::FillingParamBuffer:
+                {
+                    HandleParameterByte(by);
+                    break;
+                }
+                case eState::ERROR:
+                default:
+                {
+                    throw std::runtime_error("BPCDecompressor::operator()(): Decompressor is an invalid state!");
+                }
+            };
+        }
+
+    private:
+        inline bool IsBufferedPatternOp(uint8_t cmdby)const { return (cmdby >= CMD_LoadByteAsPatternAndCp); }
+        inline bool IsLoadingPatternFromNextByte(uint8_t cmdby)const {return (cmdby >= CMD_LoadByteAsPatternAndCp && cmdby < CMD_UseLastPatternAndCp); }
+
+        int CalcCurrentNbToCopy()const 
+        {
+            int nbtocp = 0;
+            switch(m_state.lastcmdbyte)
+            {
+                case CMD_CyclePatternAndCp_NbCpNextByte:
+                case CMD_UseLastPatternAndCp_NbCpNextByte:
+                case CMD_LoadByteAsPatternAndCp_NbCpNextByte:
+                case CMD_LoadNextByteAsNbToCopy:
+                {
+                    if(m_parambuffer.size() < 1)
+                        throw std::out_of_range("BPCDecompressor::CalcCurrentNbToCopy(): Parameter buffer doesn't contains enough bytes to compute the nb of words to copy. Need 1.");
+                    nbtocp = m_parambuffer[0];
+                    break;
+                }
+                case CMD_LoadNextWordAsNbToCopy:
+                {
+                    if(m_parambuffer.size() < 2)
+                        throw std::out_of_range("BPCDecompressor::CalcCurrentNbToCopy(): Parameter buffer doesn't contains enough bytes to compute the nb of words to copy. Need 2.");
+                    nbtocp = m_parambuffer[0] | (m_parambuffer[1] << 8);
+                    break;
+                }
+                default:
+                {
+                    nbtocp = m_state.lastcmdbyte;
+                    if(m_state.lastcmdbyte >= CMD_CyclePatternAndCp)
+                        nbtocp -= CMD_CyclePatternAndCp;
+                    else if(m_state.lastcmdbyte >= CMD_UseLastPatternAndCp)
+                        nbtocp -= CMD_UseLastPatternAndCp;
+                    else if(m_state.lastcmdbyte >= CMD_LoadByteAsPatternAndCp)
+                        nbtocp -= CMD_LoadByteAsPatternAndCp;
+                }
+            };
+
+            if(m_state.bhasleftover)
+                nbtocp -= 1;
+
+            return nbtocp;
+        }
+        
+        inline size_t NbBytesNeededForNbToCopy()const
+        {
+            switch(m_state.lastcmdbyte)
+            {
+                case CMD_CyclePatternAndCp_NbCpNextByte:
+                case CMD_UseLastPatternAndCp_NbCpNextByte:
+                case CMD_LoadByteAsPatternAndCp_NbCpNextByte:
+                case CMD_LoadNextByteAsNbToCopy:
+                    return 1;
+                case CMD_LoadNextWordAsNbToCopy:
+                    return 2;
+            };
+            return 0;
+        }
+        
+        size_t NbParamBytesNeededCurOp()const
+        {
+            //First check if we get the nb to copy from the next bytes
+            size_t nbtoload = NbBytesNeededForNbToCopy();
+
+            //Since we load a byte for this add one more byte!
+            if( IsLoadingPatternFromNextByte(m_state.lastcmdbyte) ) // >= CMD_LoadByteAsPatternAndCp && m_state.lastcmdbyte < CMD_UseLastPatternAndCp) 
+                ++nbtoload;
+
+            //Anything below this will copy x bytes stored after the command byte and length to copy
+            if( m_state.lastcmdbyte < CMD_LoadByteAsPatternAndCp )
+            {
+                //Try to predict if we'll load an extra byte if the nb copied is even
+                if( NbBytesNeededForNbToCopy() <= m_parambuffer.size() ) 
+                {
+                    int nbtocopy = CalcCurrentNbToCopy();
+                    //Add an extra byte to load, because if not divisible by 2 we load 2 bytes anyways, and if divisivle by 2, we load another byte to fill the pattern buffer
+                    if( nbtocopy >= 0 )
+                        nbtoload += static_cast<uint32_t>(nbtocopy + 1); 
+                }
+                 
+                //If we also have a leftover byte, we're going to take another extra byte
+                if(m_state.bhasleftover)
+                    nbtoload += 1; 
+            }
+
+            return nbtoload;    //Otherwise at least wait for those bytes for now
+        }
+
+        void HandleCommandByte( uint8_t by )
+        {
+            m_state.lastcmdbyte = by;
+
+            //First check if we have enough data accumulated to do anything
+            size_t nbbyneeded = NbParamBytesNeededCurOp();
+
+            //cout <<"Cmd : 0x" <<hex <<uppercase <<static_cast<uint16_t>(by) <<nouppercase <<dec <<", ParamLen: " <<nbbyneeded <<", Leftover: " <<boolalpha <<m_state.bhasleftover <<noboolalpha <<"\n";
+
+            //Wait to fill up the buffer first!
+            if( nbbyneeded > m_parambuffer.size())
+            {
+                m_nbbytoconsume = (nbbyneeded - m_parambuffer.size());
+                m_state.state   = eState::FillingParamBuffer;
+                cout <<"Pushing bytes: ";
+                return;
+            }
+
+            Process();
+        }
+
+        void HandleParameterByte( uint8_t by )
+        {
+            //cout <<hex <<uppercase <<static_cast<uint16_t>(by) <<dec <<nouppercase <<" ";
+            assert(m_nbbytoconsume > 0);
+            m_parambuffer.push_back(by);
+            --m_nbbytoconsume;
+
+            //Re-evaluate here, so we can update the nb of bytes to load if needed
+            const size_t nbtoload = NbParamBytesNeededCurOp();
+            if( nbtoload > m_parambuffer.size() )
+                m_nbbytoconsume = (nbtoload - m_parambuffer.size());
+
+            //If we got everything then jump to processing the thing
+            if(m_nbbytoconsume == 0)
+                Process();
+        }
+
+        inline bool ShouldCycleBytePattern()const
+        {
+            return IsLoadingPatternFromNextByte(m_state.lastcmdbyte) || (m_state.lastcmdbyte >= CMD_CyclePatternAndCp && m_state.lastcmdbyte <= CMD_CyclePatternAndCp_NbCpNextByte);
+        }
+
+        inline void CycleHighBytePattern()
+        {
+            uint8_t tmp               = m_state.patbuff.cachedhby;
+            m_state.patbuff.cachedhby = m_state.patbuff.hbyte;
+            m_state.patbuff.hbyte     = tmp;
+        }
+
+        void Process()
+        {
+            //cout <<"\nProcessing..\n";
+            //Calculate the nb of words to copy
+            int nbtocopy = CalcCurrentNbToCopy();
+
+            //Get the offset of the first parameter after the nb to copy
+            size_t offparam = NbBytesNeededForNbToCopy();
+
+            //This is done before the leftover byte
+            if(ShouldCycleBytePattern())
+                CycleHighBytePattern();
+            if( IsLoadingPatternFromNextByte(m_state.lastcmdbyte) )
+            {
+                m_state.patbuff.hbyte = m_parambuffer[offparam];
+                ++offparam;
+            }
+
+            //Then check for leftover bytes patterns to add
+            if(m_state.bhasleftover)
+            {
+                uint16_t pattern = 0;
+                if(IsBufferedPatternOp(m_state.lastcmdbyte))
+                    pattern = (m_state.patbuff.wordbuf) | (m_state.patbuff.hbyte << 8);
+                else
+                {
+                    pattern = (m_state.patbuff.wordbuf) | (m_parambuffer[offparam] << 8);
+                    ++offparam;
+                }
+                //m_itw                = utils::WriteIntToBytes(pattern, m_itw);
+                WriteWord(pattern);
+                m_state.bhasleftover = false;
+            }
+
+            //Run the main operation only if we have a non-zero nb of bytes to copy.
+            if( nbtocopy >= 0 )
+                HandleMainOp(nbtocopy,offparam);
+
+            //Clear our buffer, and reset the state after processing!
+            m_parambuffer.resize(0);
+            m_nbbytoconsume = 0;
+            m_state.state   = eState::WaitingForCmd;
+            //cout <<"\n\n";
+        }
+
+        void HandleMainOp( size_t nbtocopy, size_t offparam )
+        {
+            //Handle the main operation now
+            size_t cntcopy = 0;
+            if(IsBufferedPatternOp(m_state.lastcmdbyte))
+            {
+                uint16_t pattern = 0;
+                m_state.patbuff.wordbuf = m_state.patbuff.hbyte | (m_state.patbuff.hbyte << 8);
+                pattern                 = m_state.patbuff.wordbuf;
+
+                //Copy the patterns the nb of times needed
+                for( ; cntcopy < nbtocopy; cntcopy += 2 )
+                    WriteWord(pattern);
+            }
+            else
+            {
+                //022EC6B8 E58DC02C str     r12,[r13,2Ch]             //[r13,2Ch] = r12 //This should be done here, but it seems like it does absolutely nothing??
+                for( ; cntcopy < nbtocopy; cntcopy += 2, offparam += 2 )
+                {
+                    uint16_t value = 0;
+
+                    if( (offparam + 1) < m_parambuffer.size() )
+                        value = m_parambuffer[offparam] | (m_parambuffer[offparam + 1] << 8);
+                    else 
+                        assert(false);
+                    WriteWord(value);
+                }
+            }
+
+            //If the ammount copied was even, we setup the copy a leftover word on the next command byte
+            if( cntcopy == nbtocopy )
+            {
+                m_state.bhasleftover = true;
+                if(IsBufferedPatternOp(m_state.lastcmdbyte))
+                    m_state.patbuff.wordbuf = m_state.patbuff.hbyte;
+                else
+                {
+                    m_state.patbuff.wordbuf = m_parambuffer[offparam];
+                    ++offparam;
+                }
+            }
+        }
+
+        inline void WriteWord( uint16_t w )
+        {
+            //cout <<hex <<uppercase <<w <<dec <<nouppercase <<" ";
+            m_itw = utils::WriteIntToBytes(w, m_itw);
+        }
+
+    private:
+        outit_t                 m_itw;
+        std::vector<uint8_t>    m_parambuffer;    //Parameter bytes for the current operation will be stockpiled here!
+        long                    m_nbbytoconsume;  //The nb of parameters bytes left to feed the functor so it can execute the current op properly
+        DecompState             m_state;
+    };
+
+
+
+
+
+
+
     //! #IDEA : Decompression Input Iterator?
         struct decompstate
         {
@@ -245,8 +565,7 @@ namespace bpc_compression
                     //022EC750 12400001 subne   r0,r0,1h              //r0 = LastComparedValue - 1
                     utils::WriteIntToBytes( static_cast<uint16_t>(m_state.r2 | (m_state.r7 << 8)), std::back_inserter(m_decompbuffer));
                     m_state.r3 = 0;
-                    if(m_state.r0 > 0)
-                        m_state.r0 -= 1;
+                    m_state.r0 -= 1;
                 }
 
                 //022EC740 E1871407 orr     r1,r7,r7,lsl 8h           //r1 = nextbpcdbbbyte | (nextbpcdbbbyte << 8)
@@ -257,26 +576,29 @@ namespace bpc_compression
                 //022EC758 EA000001 b       22EC764h              ///022EC764 v
                 m_state.r2 = m_state.r7 | (m_state.r7 << 8);
 
-                const size_t nbtocopy = m_state.r0;
-                size_t cntcopy = 0;
-                for(; cntcopy < nbtocopy; cntcopy+=2 )
+                if(m_state.r0 != static_cast<uint32_t>(-1))
                 {
-                    /////022EC75C
-                    //022EC75C E0CB20B2 strh    r2,[r11],2h               //[r11] = r2, r11 = r11 + 2
-                    //022EC760 E2811002 add     r1,r1,2h                  //r1 = CNT_6 + 2
-                    utils::WriteIntToBytes( static_cast<uint16_t>(m_state.r2), std::back_inserter(m_decompbuffer));
-                }
-                /////022EC764
-                //022EC764 E1510000 cmp     r1,r0
-                //if( CNT_6 < (curdbbbyte - 0x80) )
-                //    022EC768 BAFFFFFB blt     22EC75Ch              ///022EC75C ^ 
-                //else if( CNT_6 <= (curdbbbyte - 0x80) )
-                if( cntcopy <= nbtocopy )
-                {
-                    //022EC76C D3A03001 movle   r3,1h                 //r3 = 1
-                    //022EC770 D1A02007 movle   r2,r7                 //r2 = nextbpcdbbbyte
-                    m_state.r3 = 1;
-                    m_state.r2 = m_state.r7;
+                    const size_t nbtocopy = m_state.r0;
+                    size_t cntcopy = 0;
+                    for(; cntcopy < nbtocopy; cntcopy+=2 )
+                    {
+                        /////022EC75C
+                        //022EC75C E0CB20B2 strh    r2,[r11],2h               //[r11] = r2, r11 = r11 + 2
+                        //022EC760 E2811002 add     r1,r1,2h                  //r1 = CNT_6 + 2
+                        utils::WriteIntToBytes( static_cast<uint16_t>(m_state.r2), std::back_inserter(m_decompbuffer));
+                    }
+                    /////022EC764
+                    //022EC764 E1510000 cmp     r1,r0
+                    //if( CNT_6 < (curdbbbyte - 0x80) )
+                    //    022EC768 BAFFFFFB blt     22EC75Ch              ///022EC75C ^ 
+                    //else if( CNT_6 <= (curdbbbyte - 0x80) )
+                    if( cntcopy <= nbtocopy )
+                    {
+                        //022EC76C D3A03001 movle   r3,1h                 //r3 = 1
+                        //022EC770 D1A02007 movle   r2,r7                 //r2 = nextbpcdbbbyte
+                        m_state.r3 = 1;
+                        m_state.r2 = m_state.r7;
+                    }
                 }
             }
             else
@@ -291,7 +613,9 @@ namespace bpc_compression
                     uint32_t tmp    = PeekByteAtCurIndex();
                     m_state.r0      = 0;
                     m_state.r0      = tmp | (PeekByteAtCurIndex(1) << 8);
-                    m_state.proccnt = GetBegRelativeIndex() + 2; 
+                    m_state.proccnt += 2; 
+
+                    cout <<"\tNbToCopy: " <<m_state.r0 <<"\n";
                 }
                 else if( cmdbyte == 0x7E )
                 {
@@ -299,7 +623,9 @@ namespace bpc_compression
                     //022EC688 02816001 addeq   r6,r1,1h
                     m_state.r0      = 0;
                     m_state.r0      = PeekByteAtCurIndex();
-                    m_state.proccnt = GetBegRelativeIndex() + 1; 
+                    m_state.proccnt += 1; 
+
+                    cout <<"\tNbToCopy: " <<m_state.r0 <<"\n";
                 }
 
                 //022EC68C E3530000 cmp     r3,0h                 //r3 is a boolean flag triggered by some command bytes
@@ -311,45 +637,48 @@ namespace bpc_compression
                     //022EC698 12400001 subne   r0,r0,1h              //r0 = curdbbbyte - 1
                     //022EC69C 11821401 orrne   r1,r2,r1,lsl 8h       //r1 = r2 | (r1 << 8)
                     //022EC6A0 10CB10B2 strneh  r1,[r11],2h           //[r11] = r1, r11 = r11 + 2
-                    utils::WriteIntToBytes( static_cast<uint16_t>(m_state.r2 | (PeekByteAtCurIndex() << 8)), std::back_inserter(m_decompbuffer));
+                    utils::WriteIntToBytes( static_cast<uint16_t>(m_state.r2 | (PeekByteAtProcIndex() << 8)), std::back_inserter(m_decompbuffer));
                     m_state.r3       = 0;
                     m_state.proccnt += 1;
-                    if( m_state.r0 > 0 )
-                        m_state.r0      -= 1;
+                    m_state.r0      -= 1;
                 }
-                //022EC6A4 E3A01000 mov     r1,0h                     //r1 = 0
-                //022EC6A8 EA000005 b       22EC6C4h              ///022EC6C4 v
-                const size_t NbToCopy = m_state.r0;
-                size_t cntcopy = 0;
-                for(; cntcopy < NbToCopy; )
+
+                if(m_state.r0 != static_cast<uint32_t>(-1)) //Since we used signed value do a check here
                 {
-                    /////022EC6AC
-                    //022EC6AC E5D6E001 ldrb    r14,[r6,1h]
-                    //022EC6B0 E4D6C002 ldrb    r12,[r6],2h
-                    //022EC6B4 E2811002 add     r1,r1,2h
-                    //022EC6B8 E58DC02C str     r12,[r13,2Ch]
-                    //022EC6BC E18CC40E orr     r12,r12,r14,lsl 8h
-                    //022EC6C0 E0CBC0B2 strh    r12,[r11],2h
-                    uint16_t by1 = PeekByteAtProcIndex(1);
-                    uint16_t by2 = PeekByteAtProcIndex();
-                    m_state.proccnt += 2;
-                    cntcopy         += 2;
-                    m_state.r13_2Ch = by2;
-                    utils::WriteIntToBytes( static_cast<uint16_t>(by2 | (by1 << 8)), std::back_inserter(m_decompbuffer));
-                }
-                /////022EC6C4
-                //022EC6C4 E1510000 cmp     r1,r0
-                //if( r1 < curdbbbyte )
-                //    022EC6C8 BAFFFFF7 blt     22EC6ACh              ///022EC6AC ^
-                if( cntcopy == NbToCopy )
-                {
-                    //if( r1 <= curdbbbyte )
-                    //    022EC6CC D3A03001 movle   r3,1h             //r3 = 1
-                    //    022EC6D0 D4D62001 ldrleb  r2,[r6],1h        //r2 = [PtrCurBPC_DBB], ++PtrCurBPC_DBB   
-                    //022EC6D4 EA000026 b       22EC774h              ///022EC774 v
-                    m_state.r3      = 1;
-                    m_state.r2      = PeekByteAtProcIndex();
-                    m_state.proccnt += 1;
+                    //022EC6A4 E3A01000 mov     r1,0h                     //r1 = 0
+                    //022EC6A8 EA000005 b       22EC6C4h              ///022EC6C4 v
+                    const size_t NbToCopy = m_state.r0;
+                    size_t cntcopy = 0;
+                    for(; cntcopy < NbToCopy; )
+                    {
+                        /////022EC6AC
+                        //022EC6AC E5D6E001 ldrb    r14,[r6,1h]
+                        //022EC6B0 E4D6C002 ldrb    r12,[r6],2h
+                        //022EC6B4 E2811002 add     r1,r1,2h
+                        //022EC6B8 E58DC02C str     r12,[r13,2Ch]
+                        //022EC6BC E18CC40E orr     r12,r12,r14,lsl 8h
+                        //022EC6C0 E0CBC0B2 strh    r12,[r11],2h
+                        uint16_t by1 = PeekByteAtProcIndex(1);
+                        uint16_t by2 = PeekByteAtProcIndex();
+                        m_state.proccnt += 2;
+                        cntcopy         += 2;
+                        m_state.r13_2Ch = by2;
+                        utils::WriteIntToBytes( static_cast<uint16_t>(by2 | (by1 << 8)), std::back_inserter(m_decompbuffer));
+                    }
+                    /////022EC6C4
+                    //022EC6C4 E1510000 cmp     r1,r0
+                    //if( r1 < curdbbbyte )
+                    //    022EC6C8 BAFFFFF7 blt     22EC6ACh              ///022EC6AC ^
+                    if( cntcopy == NbToCopy )
+                    {
+                        //if( r1 <= curdbbbyte )
+                        //    022EC6CC D3A03001 movle   r3,1h             //r3 = 1
+                        //    022EC6D0 D4D62001 ldrleb  r2,[r6],1h        //r2 = [PtrCurBPC_DBB], ++PtrCurBPC_DBB   
+                        //022EC6D4 EA000026 b       22EC774h              ///022EC774 v
+                        m_state.r3      = 1;
+                        m_state.r2      = PeekByteAtProcIndex();
+                        m_state.proccnt += 1;
+                    }
                 }
             }
         }
