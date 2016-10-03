@@ -17,10 +17,10 @@ namespace bpc_compression
 {
 
     /*
-        BPCDecompressor
+        BPCImgDecompressor
     */
     template<class _outit>
-        class BPCDecompressor
+        class BPCImgDecompressor
     {
         static const uint8_t CMD_CyclePatternAndCp                      = 0xE0;
         static const uint8_t CMD_CyclePatternAndCp_NbCpNextByte         = 0xFF;
@@ -62,7 +62,7 @@ namespace bpc_compression
             
         };
 
-        BPCDecompressor( outit_t destout )
+        BPCImgDecompressor( outit_t destout )
             :m_itw(destout), m_nbbytoconsume(0)
         {
             m_parambuffer.reserve(SizePreAlloc);
@@ -330,13 +330,247 @@ namespace bpc_compression
         DecompState             m_state;
     };
 
+    /*
+        BPCImgCompressor
+    */
+    template<class _intit, class _outit>
+        class BPCImgCompressor
+    {
+        typedef _outit outit_t;
+        typedef _intit init_t;
+
+        /*
+        */
+        enum struct eOpType
+        {
+            Invalid,
+            SequenceCopy,   //Copy a sequence of words as-is
+            ByteCopy,       //Copy a single byte over several words
+        };
+
+        /*
+        */
+        enum struct ePatternBuffOp
+        {
+            UseCurrentByte, //Uses the current pattern byte (r7)
+            UseLastByte,    //Swap the current pattern byte with the one used that was used before the current one (r7 <-> [r13,14h])
+            SetNewByte,     //Load the next byte after the len to copy as the new current pattern byte, and keep track of the old one. (r7 -> [r13,14h], then load into r7)
+        };
+
+        /*
+        */
+        struct Operation
+        {
+            eOpType         type;
+
+            //Sequence info
+            init_t          itbegs;     //The start of the sequence of bytes to copy
+            init_t          itends;     //The end of the sequence of bytes to copy
+            size_t          seqlen;     //The length of the sequence to be copied. The distance between "itends" and "itbegs".
+                                        // If odd, the "differed" variable will be used to fill in, as the game always copies an even nb of bytes.
+            uint8_t         differed;   //If the sequence of similar bytes' "seqlen" is odd, this will contains the value of the byte that differed.
+
+            //Byte Patterns stuff
+            ePatternBuffOp patop;       //This will be set according to what the currently buffered pattern byte is.
+            uint8_t        newpatbyte;  //If the "patop" is "SetNewByte" this will contain the new byte to set!
+
+            Operation()
+                :seqlen(0),type(eOpType::Invalid), patop(ePatternBuffOp::UseCurrentByte)
+            {}
+
+            inline bool HasLeftover()const
+            {
+                return (seqlen % 2 != 0);
+            }
+        };
+
+    public:
+        BPCImgCompressor( init_t itbeg, init_t itend )
+            :m_itbeg(itbeg), m_itend(itend)
+        {}
+
+        void operator()(outit_t itout)
+        {
+            m_itw = itout;
+        }
+
+    private:
+
+        //#1- We want to take small 128 bytes chunks and try to see what is the 2 most common bytes, so we can set those as patterns in those locations
+
+        //#2- Sequences of the same byte that end on a odd number of similar bytes need to include the byte which differed at the end of the sequence!
+
+
+        std::vector<uint8_t> MakeCommandByte( const Operation & curop )
+        {
+            //If a sequence to copy ends with a word made of 2 different bytes, we want the sequence(minus the word made of 2 different bytes) to be written as a odd number of bytes in the command byte, 
+        }
+
+    private:
+        init_t                  m_itbeg;
+        init_t                  m_itend;
+        outit_t                 m_itw;
+    };
+
+
+//
+//
+//
+    /*
+        BPC_SecEntryDecompressor
+    */
+    template<class _init, class _outcnt>
+        class BPC_SecEntryDecompressor
+    {
+        typedef _init   init_t;
+        typedef _outcnt outcnt_t;
+        
+        //Phase 1 CMD
+        static const uint8_t CMD_ZeroOutBeg    = 0x00;  //Write null words
+        static const uint8_t CMD_FillOutBeg    = 0x80;  //Write words with the specified high byte
+        static const uint8_t CMD_CopyBytesBeg  = 0xC0;  //Write words with the specified high bytes sequence
+
+        //Phase 2 CMD
+        static const uint8_t CMD_SeekOffsetBeg = 0x00;  //Seek from the position of the word currently being operated on.
+        static const uint8_t CMD_FillLowBeg    = 0x80;  //Add a specific low byte to the words currently operating on.
+        static const uint8_t CMD_CopyLowBeg    = 0xC0;  //Add the low bytes sequence to the words currently operating on.
+
+        static const size_t  NbWordsPerEntry = 9;
+
+    public:
+
+        BPC_SecEntryDecompressor( init_t   itbeg, 
+                                  init_t   itend, 
+                                  uint16_t decomplen ) //The length of the data decompressed in words, divided by 8. AKA as stored in the BPC header.
+            :m_itbeg(itbeg), m_itend(itend), m_decomplen(((decomplen - 1) * NbWordsPerEntry) * sizeof(int16_t)), m_itw(std::back_inserter(m_outputbuf))
+        {}
+        
+        outcnt_t operator()()
+        {
+            init_t itcur = m_itbeg;
+            m_outputbuf.reserve(m_decomplen);
+
+            //Step#1: Write the words, with their high bytes.
+            while( (m_outputbuf.size() < m_decomplen) && (itcur != m_itend) )
+                HandleCmdTableA(itcur);
+
+            if(itcur == m_itend || m_outputbuf.size() < m_decomplen )
+                throw std::runtime_error("BPC_SecEntryDecompressor::operator()(): Input data ended unexpectedly.");
+
+            //Step#2: Write the low bytes of the specified words.
+            auto itbufcur = std::begin(m_outputbuf);
+            auto itbufend = std::end(m_outputbuf);
+            while( (itbufcur != itbufend) && (itcur != m_itend) )
+            {
+                if(itcur == m_itend)
+                    throw std::runtime_error("BPC_SecEntryDecompressor::operator()(): Input data ended unexpectedly.");
+                HandleCmdTableB(itcur, itbufcur, itbufend);
+            }
+
+            //Step#3: Add value to words.
+            //! #TODO
+
+            return std::move(m_outputbuf);
+        }
+
+    private:
+        void HandleCmdTableA(init_t & itsrc)
+        {
+            size_t cmdby = ReadSrcByte(itsrc);
+
+            if( cmdby < CMD_FillOutBeg )
+            {
+                //The cmdby is the nb of words to zero out!
+                std::fill_n( m_itw, ((cmdby * sizeof(int16_t)) + 2), 0 ); //We always write at least one if we get here
+            }
+            else if( cmdby >= CMD_FillOutBeg && cmdby < CMD_CopyBytesBeg )
+            {
+                //(cmdby - CMD_FillOutBeg) is the nb of words to write with the next parameter byte as high byte
+                uint16_t param = ReadSrcByte(itsrc) << 8;
+
+                const size_t NbToWrite = ((cmdby - CMD_FillOutBeg) * sizeof(int16_t)) + 2; //We always write at least one if we get here
+                for( size_t cntby = 0; cntby < NbToWrite; cntby += sizeof(int16_t) )
+                    utils::WriteIntToBytes( param, m_itw );
+            }
+            else if( cmdby >= CMD_CopyBytesBeg )
+            {
+                //(cmdby - CMD_CopyBytesBeg) is the nb of words to write with the sequence of bytes as high byte
+                const size_t NbToWrite = ((cmdby - CMD_CopyBytesBeg) * sizeof(int16_t)) + 2; //We always write at least one if we get here
+                for( size_t cntby = 0; (cntby < NbToWrite); cntby += sizeof(int16_t) )
+                {
+                    uint16_t param = ReadSrcByte(itsrc) << 8;
+                    utils::WriteIntToBytes( param, m_itw );
+                }
+            }
+        }
+
+        template<class _cntit>
+            void HandleCmdTableB(init_t & itsrc, _cntit & itword, _cntit itwordend)
+        {
+            size_t cmdby = ReadSrcByte(itsrc);
+
+            if( cmdby < CMD_FillLowBeg )
+            {
+                //We skip over the nb of words indicated by the cmdbyte
+                const size_t skiplen = (cmdby + 1) * sizeof(int16_t);
+                for( size_t i = 0; i < skiplen; ++i )
+                {
+                    if( itword != itwordend )
+                        ++itword;
+                    else
+                        throw std::runtime_error("BPC_SecEntryDecompressor::HandleCmdTableB(): Output data shorter than expected, or input data corrupted.");
+                }
+            }
+            else if( cmdby >= CMD_FillLowBeg && cmdby < CMD_CopyLowBeg )
+            {
+                //We put the value of the param byte as the low byte of the nb of words contained in the cmdbyte
+                const size_t   nbtoprocess = (cmdby - CMD_FillLowBeg) + 1; //We always write at least one if we get here
+                const uint16_t lbyte       = ReadSrcByte(itsrc);
+
+                for( size_t i = 0; i < nbtoprocess; ++i )
+                {
+                    if( itword == itwordend )
+                        throw std::runtime_error("BPC_SecEntryDecompressor::HandleCmdTableB(): Output data shorter than expected, or input data corrupted.");
+                    (*itword) |= lbyte;
+                    itword+=2;
+                }
+            }
+            else if( cmdby >= CMD_CopyLowBeg )
+            {
+                //We put the value of the param byte as the low byte of the nb of words contained in the cmdbyte
+                const size_t   nbtoprocess = (cmdby - CMD_CopyLowBeg) + 1; //We always write at least one if we get here
+                for( size_t i = 0; i < nbtoprocess; ++i )
+                {
+                    if( itword == itwordend )
+                        throw std::runtime_error("BPC_SecEntryDecompressor::HandleCmdTableB(): Output data shorter than expected, or input data corrupted.");
+                    (*itword) |= ReadSrcByte(itsrc);
+                    itword+=2;
+                }
+            }
+        }
+
+        inline uint8_t ReadSrcByte(init_t & itcur)
+        {
+            if(itcur == m_itend)
+                throw std::runtime_error("BPC_SecEntryDecompressor::ReadSrcByte(): Input data shorter than expected.");
+            const uint8_t val = (*itcur);
+            ++itcur;
+            return val;
+        }
+
+    private:
+        init_t                              m_itbeg;
+        init_t                              m_itend;
+        std::back_insert_iterator<outcnt_t> m_itw;
+
+        outcnt_t    m_outputbuf;
+        size_t      m_decomplen;    //The length of the decompressed output in bytes
+    };
 
 
 
 
-
-
-    //! #IDEA : Decompression Input Iterator?
+//! #IDEA : Decompression Input Iterator?
         struct decompstate
         {
             uint32_t r0      = 0;
