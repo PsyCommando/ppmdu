@@ -449,6 +449,9 @@
     <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\resources\pokesprites_names.txt">
