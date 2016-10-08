@@ -56,6 +56,20 @@ namespace pmd2
             palindex  = (val >> 12);        //1111 0000 0000 0000
             return *this; 
         }
+
+        inline tileproperties & operator|=(uint16_t val) 
+        {
+            tileindex |= 0x3FF & val;        //0000 0011 1111 1111 Grab the lowest 10 bits for this one
+            hflip     |= (0x400 & val) > 0;  //0000 0100 0000 0000
+            vflip     |= (0x800 & val) > 0;  //0000 1000 0000 0000
+            palindex  |= (val >> 12);        //1111 0000 0000 0000
+            return *this; 
+        }
+
+        inline operator bool()const
+        {
+            return (tileindex != 0) && hflip && vflip & (palindex != 0);
+        }
     };
 
 
@@ -81,9 +95,12 @@ namespace pmd2
         typedef std::vector<tileproperties> tmapdat_t;
         typedef TilesetPalette              pal_t;      //15, 16 colors palettes
 
-        inline pal_t        & Palettes(){return m_palettes;}
-        inline imgdat_t     & Tiles()   {return m_imgdata;}
-        inline tmapdat_t    & TileMap() {return m_tilemapping;}
+        inline pal_t            & Palettes(){return m_palettes;}
+        inline const pal_t      & Palettes()const {return m_palettes;}
+        inline imgdat_t         & Tiles()   {return m_imgdata;}
+        inline const imgdat_t   & Tiles()const {return m_imgdata;}
+        inline tmapdat_t        & TileMap() {return m_tilemapping;}
+        inline const tmapdat_t  & TileMap()const {return m_tilemapping;}
 
     private:
         pal_t       m_palettes;
@@ -97,10 +114,10 @@ namespace pmd2
 //
 //
     /*
-        ExportTilesetPair
-            Exports either the upper or lower screen tileset into the specified directory.
+        ExportTilesetPairToRaw
+            Exports either the upper or lower screen tileset into the specified directory as raw unprocessed images and palettes.
     */
-    void ExportTilesetPair( const std::string & destdir, const Tileset * pupscrtset,  const Tileset * plowscrtset = nullptr );
+    void ExportTilesetPairToRaw( const std::string & destdir, const Tileset * pupscrtset,  const Tileset * plowscrtset = nullptr );
 
 
 };

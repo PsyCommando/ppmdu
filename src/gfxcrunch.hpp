@@ -82,6 +82,7 @@ namespace gfx_util
         bool ParseOptionPkSprites       ( const std::vector<std::string> & optdata );
         bool ParseOptionPropSprites     ( const std::vector<std::string> & optdata );
         bool ParseOptionConfig          ( const std::vector<std::string> & optdata );
+        bool ParseOptionTSet            ( const std::vector<std::string> & optdata );
 
 
         //Execution
@@ -106,6 +107,8 @@ namespace gfx_util
         void HandleBGP();
         void HandleWAN();
         void HandleWTE();
+        void DoImportTileset();
+        void DoExportTileset();
 
 
         //Utility
@@ -210,6 +213,7 @@ namespace gfx_util
         bool m_doPkSpr;
         bool m_doPkKao;
         bool m_doPropSpr;
+        bool m_doTileset;
         std::vector<std::string> m_extraargs;
     };
 };

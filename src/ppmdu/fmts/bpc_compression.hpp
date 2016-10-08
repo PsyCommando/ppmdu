@@ -193,7 +193,7 @@ namespace bpc_compression
             {
                 m_nbbytoconsume = (nbbyneeded - m_parambuffer.size());
                 m_state.state   = eState::FillingParamBuffer;
-                cout <<"Pushing bytes: ";
+                //cout <<"Pushing bytes: ";
                 return;
             }
 
@@ -423,7 +423,7 @@ namespace bpc_compression
         class BPC_TileMapDecompressor
     {
         typedef _init   init_t;
-        typedef _outcnt outcnt_t;
+        typedef typename std::remove_reference<_outcnt>::type outcnt_t;
         
         //Phase 1 CMD
         static const uint8_t CMD_ZeroOutBeg    = 0x00;  //Write null words
@@ -439,8 +439,8 @@ namespace bpc_compression
 
     public:
 
-        BPC_TileMapDecompressor( init_t   itbeg, 
-                                  init_t   itend, 
+        BPC_TileMapDecompressor( _init   itbeg, 
+                                  _init   itend, 
                                   size_t   decomplen ) //The length of the data decompressed in bytes ((decomplen - 1) * NbWordsPerEntry) * sizeof(int16_t)
             :m_itbeg(itbeg), m_itend(itend), m_decomplen(decomplen), m_itw(std::back_inserter(m_outputbuf))
         {}
@@ -489,15 +489,15 @@ namespace bpc_compression
                 //(cmdby - CMD_FillOutBeg) is the nb of words to write with the next parameter byte as high byte
                 uint16_t param = ReadSrcByte(itsrc) << 8;
 
-                const size_t NbToWrite = ((cmdby - CMD_FillOutBeg) * sizeof(int16_t)) + 2; //We always write at least one if we get here
-                for( size_t cntby = 0; cntby < NbToWrite; cntby += sizeof(int16_t) )
+                const size_t NbToWrite = ( (cmdby - CMD_FillOutBeg) * sizeof(int16_t) ); //We always write at least one if we get here
+                for( size_t cntby = 0; cntby <= NbToWrite; cntby += sizeof(int16_t) )
                     utils::WriteIntToBytes( param, m_itw );
             }
             else if( cmdby >= CMD_CopyBytesBeg )
             {
                 //(cmdby - CMD_CopyBytesBeg) is the nb of words to write with the sequence of bytes as high byte
-                const size_t NbToWrite = ((cmdby - CMD_CopyBytesBeg) * sizeof(int16_t)) + 2; //We always write at least one if we get here
-                for( size_t cntby = 0; (cntby < NbToWrite); cntby += sizeof(int16_t) )
+                const size_t NbToWrite = ((cmdby - CMD_CopyBytesBeg) * sizeof(int16_t)); //We always write at least one if we get here
+                for( size_t cntby = 0; (cntby <= NbToWrite); cntby += sizeof(int16_t) )
                 {
                     uint16_t param = ReadSrcByte(itsrc) << 8;
                     utils::WriteIntToBytes( param, m_itw );

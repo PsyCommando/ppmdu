@@ -3,3 +3,5 @@
 "m_ground_bin" "m_ground2.bin"
 
 "ExplorersOfSkyOriginal" "out_sprites"
+
+-e -tilesets "EoSRomRoot/data/MAP_BG/d01p11a.bpc"

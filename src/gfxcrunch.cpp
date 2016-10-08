@@ -13,6 +13,9 @@
 #include <ppmdu/fmts/wte.hpp>
 #include <ppmdu/fmts/bgp.hpp>
 #include <ppmdu/fmts/kao.hpp>
+#include <ppmdu/containers/level_tileset.hpp>
+#include <ppmdu/fmts/bpc.hpp>
+#include <ppmdu/fmts/bpl.hpp>
 #include <cfenv>
 #include <string>
 #include <algorithm>
@@ -492,6 +495,15 @@ namespace gfx_util
             std::bind( &CGfxUtil::ParseOptionWAN,  &GetInstance(), placeholders::_1 ),
         },
 
+        //Tilesets
+        {
+            "tilesets",
+            0,
+            "Specifying this will force the program to export a tileset, or import it from a directory.",
+            "-tilesets",
+            std::bind( &CGfxUtil::ParseOptionTSet,  &GetInstance(), placeholders::_1 ),
+        },
+
         //Other formats here
 
     //=====================
@@ -556,6 +568,7 @@ namespace gfx_util
         m_ImportByIndex = false;
         m_bRedirectClog = false;
         m_bNoResAutoFix = false;
+        m_doTileset     = false;
         m_execMode      = eExecMode::INVALID_Mode;
         m_PrefOutFormat = utils::io::eSUPPORT_IMG_IO::PNG;
 
@@ -1575,6 +1588,11 @@ namespace gfx_util
         return true;
     }
 
+    bool CGfxUtil::ParseOptionTSet( const std::vector<std::string> & optdata )
+    {
+        return m_doTileset = true;
+    }
+
 
 //--------------------------------------------
 //  Main Exec functions
@@ -1768,6 +1786,20 @@ namespace gfx_util
             else if( m_Export )
             {
                 DoExportMiscSprites();
+                returnval = 0;
+            }
+        }
+
+        if( m_doTileset )
+        {
+            if(m_Import)
+            {
+                DoImportTileset();
+                returnval = 0;
+            }
+            else if(m_Export)
+            {
+                DoExportTileset();
                 returnval = 0;
             }
         }
@@ -2267,6 +2299,74 @@ namespace gfx_util
         else if( m_Export )
         {
         }
+        assert(false);
+    }
+
+
+    void CGfxUtil::DoExportTileset()
+    {
+        vector<string> procqueue;
+        auto itinstproc = back_inserter(procqueue);
+        procqueue.push_back(m_inputPath);
+        copy( m_extraargs.begin(), m_extraargs.end(), itinstproc );
+
+        int againcnt = 0;
+        for( const auto & item : procqueue )
+        {
+            try
+            {
+                Poco::Path inpath(item);
+                Poco::File infile(inpath);
+                Poco::Path outpath;
+
+                if( againcnt != 0 )
+                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\", " <<VariationOfAgain[againcnt % VariationOfAgain.size()] <<"!\n";
+                else
+                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
+
+                if( procqueue.size() > 1 )
+                    outpath = Poco::Path(m_outputPath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+                else if( m_outputPath.empty() )
+                    outpath = Poco::Path(inpath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+                else
+                    outpath = Poco::Path(m_outputPath);
+
+                if( infile.exists() && infile.isFile() )
+                {
+                    if( m_Import )
+                    {
+                        assert(false);
+                    }
+                    else if( m_Export )
+                    {
+                        auto tilesets = ::filetypes::ParseBPC(Poco::Path(inpath).setExtension("bpc").toString());
+                        tilesets.first.Palettes()  = ::filetypes::ParseBPL(Poco::Path(inpath).setExtension("bpl").toString());
+                        tilesets.second.Palettes() = tilesets.first.Palettes();
+                        ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
+                    }
+                    cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
+                }
+                else
+                {
+                    stringstream sstr;
+                    sstr << "CGfxUtil::DoImportTileset(): Input path \"" <<infile.path() <<"\" doesn't exist, or is not a file!";
+                    throw runtime_error(sstr.str());
+                }
+            }
+            catch( const Poco::Exception & e )
+            {
+                clog <<"Poco::Exception: " << e.what() <<"\n";
+            }
+            catch( const exception & e )
+            {
+                clog <<"Exception: " << e.what() <<"\n";
+            }
+            ++againcnt;
+        }
+    }
+
+    void CGfxUtil::DoImportTileset()
+    {
         assert(false);
     }
 
