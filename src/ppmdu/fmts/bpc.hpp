@@ -9,6 +9,7 @@ Description: Utilities for handling the BPC file format.
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <utils/gbyteutils.hpp>
 #include <ppmdu/containers/level_tileset.hpp>
+#include <types/content_type_analyser.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -19,7 +20,8 @@ namespace filetypes
 //============================================================================================
 //  Constants
 //============================================================================================
-    const std::string BPC_FileExt = "bpc";
+    extern const ContentTy  CnTy_BPC;
+    const std::string       BPC_FileExt = "bpc";
 
 
 //============================================================================================
@@ -66,16 +68,16 @@ namespace filetypes
                 return itr;
             }
         };
-        uint16_t                            offsuprscr;
-        uint16_t                            offslowrscr;
-        std::array<indexentry,NbTilesets>   tilesetsinfo;
+        uint16_t                offsuprscr;
+        uint16_t                offslowrscr;
+        std::vector<indexentry> tilesetsinfo;
 
         template<class _outit>
             _outit Write( _outit itw )const
         {
             itw = utils::WriteIntToBytes(offsuprscr,    itw );
             itw = utils::WriteIntToBytes(offslowrscr,   itw );
-            for( const auto & entry : tilesetsinfo )
+            for( auto & entry : tilesetsinfo )
                 itw = entry.Write(itw);
             return itw;
         }
@@ -85,8 +87,10 @@ namespace filetypes
         {
             itr = utils::ReadIntFromBytes(offsuprscr,    itr, itpend );
             itr = utils::ReadIntFromBytes(offslowrscr,   itr, itpend );
-            for( auto & entry : tilesetsinfo )
-                itr = entry.Read(itr,itpend);
+            const size_t nbentries = (offsuprscr != 0 && offslowrscr != 0)? 2 : (offsuprscr != 0 || offslowrscr!= 0)? 1 : 0;
+            tilesetsinfo.resize(nbentries);
+            for( size_t cnt = 0; cnt < nbentries; ++cnt )
+                itr = tilesetsinfo[cnt].Read(itr,itpend);
             return itr;
         }
     };

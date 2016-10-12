@@ -19,7 +19,7 @@ namespace bpc_compression
     /*
         BPCImgDecompressor
     */
-    template<class _outit>
+    template<class _init, class _outit>
         class BPCImgDecompressor
     {
         static const uint8_t CMD_CyclePatternAndCp                      = 0xE0;
@@ -37,252 +37,152 @@ namespace bpc_compression
 
         static const  size_t SizePreAlloc = 16;
     public:
+        typedef _init  init_t;
         typedef _outit outit_t;
-
-       enum struct eState : int
-        {
-            ERROR               = -1,
-            WaitingForCmd       =  0,
-            FillingParamBuffer  =  1,
-        };
-
-        struct patternbuffer
-        {
-            uint16_t wordbuf   = 0;   //r2
-            uint8_t  hbyte     = 0;   //r7
-            uint8_t  cachedhby = 0;   //r13_14h
-        };
 
         struct DecompState
         {
-            eState          state           = eState::WaitingForCmd;
-            uint8_t         lastcmdbyte     = 0;                        //The last command byte parsed
-            bool            bhasleftover    = false;                    //Whether there is a leftover word to handle writing!
-            patternbuffer   patbuff;                                    //The buffer storing the patterns to copy
-            
+            bool        bhasleftover = false; //Whether there is a leftover word to handle writing!
+            //The buffer storing the patterns to copy
+            uint16_t    wordbuf   = 0;   //r2
+            uint8_t     hbyte     = 0;   //r7
+            uint8_t     cachedhby = 0;   //r13_14h
         };
 
-        BPCImgDecompressor( outit_t destout )
-            :m_itw(destout), m_nbbytoconsume(0)
+        BPCImgDecompressor( _init & itbeg, _init itend, size_t decomplen )
+            :m_itcur(itbeg), m_itend(itend), m_decomplen(decomplen),m_bytesoutput(0),m_bytesread(0),m_pitw(nullptr)
         {
-            m_parambuffer.reserve(SizePreAlloc);
         }
 
-        void operator()( uint8_t by )
+        void operator()(outit_t & destout)
         {
-            //Process the byte accordingly
-            switch(m_state.state)
-            {
-                case eState::WaitingForCmd:
-                {
-                    HandleCommandByte(by);
-                    break;
-                }
-                case eState::FillingParamBuffer:
-                {
-                    HandleParameterByte(by);
-                    break;
-                }
-                case eState::ERROR:
-                default:
-                {
-                    throw std::runtime_error("BPCDecompressor::operator()(): Decompressor is an invalid state!");
-                }
-            };
+            m_bytesoutput = 0;
+            m_bytesread   = 0;
+            m_pitw = &destout;
+            for( ; m_itcur != m_itend && m_bytesoutput < m_decomplen;  )
+                Process();
+
+            clog<<"Compressed img length : 0x" <<hex <<uppercase <<m_bytesread <<nouppercase <<dec <<"\n";
+
+            if(m_itcur == m_itend )
+                throw std::runtime_error("BPCImgDecompressor::operator()(): Reached the end of input data unexpectedly!");
+
+            if( (m_bytesread % 2) != 0 )
+                std::advance(m_itcur, 1);
         }
+
+        inline size_t GetNbBytesOutput()const { return m_bytesoutput; }
+        inline size_t GetNbBytesRead()const   { return m_bytesread; }
 
     private:
+
+        inline uint8_t ReadByteFromSrc()
+        {
+            if( m_itcur == m_itend )
+                throw std::runtime_error("BPCImgDecompressor::ReadByteFromSrc(): Unexpectedly reached end of input data!");
+            uint8_t val = *m_itcur;
+            ++m_itcur;
+            ++m_bytesread;
+            return val;
+        }
+
+        inline void WriteWord( uint16_t w )
+        {
+            assert(m_pitw);
+            utils::WriteIntToBytes(w, (*m_pitw));
+            m_bytesoutput += 2;
+        }
+
         inline bool IsBufferedPatternOp(uint8_t cmdby)const { return (cmdby >= CMD_LoadByteAsPatternAndCp); }
         inline bool IsLoadingPatternFromNextByte(uint8_t cmdby)const {return (cmdby >= CMD_LoadByteAsPatternAndCp && cmdby < CMD_UseLastPatternAndCp); }
 
-        int CalcCurrentNbToCopy()const 
+        int DetermineLenToOutput(uint8_t cmdbyte) 
         {
             int nbtocp = 0;
-            switch(m_state.lastcmdbyte)
+            switch(cmdbyte)
             {
                 case CMD_CyclePatternAndCp_NbCpNextByte:
                 case CMD_UseLastPatternAndCp_NbCpNextByte:
                 case CMD_LoadByteAsPatternAndCp_NbCpNextByte:
                 case CMD_LoadNextByteAsNbToCopy:
                 {
-                    if(m_parambuffer.size() < 1)
-                        throw std::out_of_range("BPCDecompressor::CalcCurrentNbToCopy(): Parameter buffer doesn't contains enough bytes to compute the nb of words to copy. Need 1.");
-                    nbtocp = m_parambuffer[0];
+                    nbtocp = ReadByteFromSrc();
                     break;
                 }
                 case CMD_LoadNextWordAsNbToCopy:
                 {
-                    if(m_parambuffer.size() < 2)
-                        throw std::out_of_range("BPCDecompressor::CalcCurrentNbToCopy(): Parameter buffer doesn't contains enough bytes to compute the nb of words to copy. Need 2.");
-                    nbtocp = m_parambuffer[0] | (m_parambuffer[1] << 8);
+                    uint8_t lowbyte = ReadByteFromSrc();
+                    nbtocp = lowbyte | (ReadByteFromSrc() << 8);
                     break;
                 }
                 default:
                 {
-                    nbtocp = m_state.lastcmdbyte;
-                    if(m_state.lastcmdbyte >= CMD_CyclePatternAndCp)
+                    nbtocp = cmdbyte;
+                    if(cmdbyte >= CMD_CyclePatternAndCp)
                         nbtocp -= CMD_CyclePatternAndCp;
-                    else if(m_state.lastcmdbyte >= CMD_UseLastPatternAndCp)
+                    else if(cmdbyte >= CMD_UseLastPatternAndCp)
                         nbtocp -= CMD_UseLastPatternAndCp;
-                    else if(m_state.lastcmdbyte >= CMD_LoadByteAsPatternAndCp)
+                    else if(cmdbyte >= CMD_LoadByteAsPatternAndCp)
                         nbtocp -= CMD_LoadByteAsPatternAndCp;
                 }
             };
 
+            //when we have a leftover word, we subtract one word automatically
             if(m_state.bhasleftover)
                 nbtocp -= 1;
 
             return nbtocp;
         }
-        
-        inline size_t NbBytesNeededForNbToCopy()const
+
+        inline bool ShouldCycleBytePattern(uint8_t cmdbyte)const
         {
-            switch(m_state.lastcmdbyte)
-            {
-                case CMD_CyclePatternAndCp_NbCpNextByte:
-                case CMD_UseLastPatternAndCp_NbCpNextByte:
-                case CMD_LoadByteAsPatternAndCp_NbCpNextByte:
-                case CMD_LoadNextByteAsNbToCopy:
-                    return 1;
-                case CMD_LoadNextWordAsNbToCopy:
-                    return 2;
-            };
-            return 0;
-        }
-        
-        size_t NbParamBytesNeededCurOp()const
-        {
-            //First check if we get the nb to copy from the next bytes
-            size_t nbtoload = NbBytesNeededForNbToCopy();
-
-            //Since we load a byte for this add one more byte!
-            if( IsLoadingPatternFromNextByte(m_state.lastcmdbyte) ) // >= CMD_LoadByteAsPatternAndCp && m_state.lastcmdbyte < CMD_UseLastPatternAndCp) 
-                ++nbtoload;
-
-            //Anything below this will copy x bytes stored after the command byte and length to copy
-            if( m_state.lastcmdbyte < CMD_LoadByteAsPatternAndCp )
-            {
-                //Try to predict if we'll load an extra byte if the nb copied is even
-                if( NbBytesNeededForNbToCopy() <= m_parambuffer.size() ) 
-                {
-                    int nbtocopy = CalcCurrentNbToCopy();
-                    //Add an extra byte to load, because if not divisible by 2 we load 2 bytes anyways, and if divisivle by 2, we load another byte to fill the pattern buffer
-                    if( nbtocopy >= 0 )
-                        nbtoload += static_cast<uint32_t>(nbtocopy + 1); 
-                }
-                 
-                //If we also have a leftover byte, we're going to take another extra byte
-                if(m_state.bhasleftover)
-                    nbtoload += 1; 
-            }
-
-            return nbtoload;    //Otherwise at least wait for those bytes for now
-        }
-
-        void HandleCommandByte( uint8_t by )
-        {
-            m_state.lastcmdbyte = by;
-
-            //First check if we have enough data accumulated to do anything
-            size_t nbbyneeded = NbParamBytesNeededCurOp();
-
-            //cout <<"Cmd : 0x" <<hex <<uppercase <<static_cast<uint16_t>(by) <<nouppercase <<dec <<", ParamLen: " <<nbbyneeded <<", Leftover: " <<boolalpha <<m_state.bhasleftover <<noboolalpha <<"\n";
-
-            //Wait to fill up the buffer first!
-            if( nbbyneeded > m_parambuffer.size())
-            {
-                m_nbbytoconsume = (nbbyneeded - m_parambuffer.size());
-                m_state.state   = eState::FillingParamBuffer;
-                //cout <<"Pushing bytes: ";
-                return;
-            }
-
-            Process();
-        }
-
-        void HandleParameterByte( uint8_t by )
-        {
-            //cout <<hex <<uppercase <<static_cast<uint16_t>(by) <<dec <<nouppercase <<" ";
-            assert(m_nbbytoconsume > 0);
-            m_parambuffer.push_back(by);
-            --m_nbbytoconsume;
-
-            //Re-evaluate here, so we can update the nb of bytes to load if needed
-            const size_t nbtoload = NbParamBytesNeededCurOp();
-            if( nbtoload > m_parambuffer.size() )
-                m_nbbytoconsume = (nbtoload - m_parambuffer.size());
-
-            //If we got everything then jump to processing the thing
-            if(m_nbbytoconsume == 0)
-                Process();
-        }
-
-        inline bool ShouldCycleBytePattern()const
-        {
-            return IsLoadingPatternFromNextByte(m_state.lastcmdbyte) || (m_state.lastcmdbyte >= CMD_CyclePatternAndCp && m_state.lastcmdbyte <= CMD_CyclePatternAndCp_NbCpNextByte);
+            return IsLoadingPatternFromNextByte(cmdbyte) || (cmdbyte >= CMD_CyclePatternAndCp && cmdbyte <= CMD_CyclePatternAndCp_NbCpNextByte);
         }
 
         inline void CycleHighBytePattern()
         {
-            uint8_t tmp               = m_state.patbuff.cachedhby;
-            m_state.patbuff.cachedhby = m_state.patbuff.hbyte;
-            m_state.patbuff.hbyte     = tmp;
+            uint8_t tmp       = m_state.cachedhby;
+            m_state.cachedhby = m_state.hbyte;
+            m_state.hbyte     = tmp;
         }
 
         void Process()
         {
-            //cout <<"\nProcessing..\n";
-            //Calculate the nb of words to copy
-            int nbtocopy = CalcCurrentNbToCopy();
+            uint8_t cmd        = ReadByteFromSrc();
+            int     nbwordsout = DetermineLenToOutput(cmd);
 
-            //Get the offset of the first parameter after the nb to copy
-            size_t offparam = NbBytesNeededForNbToCopy();
-
-            //This is done before the leftover byte
-            if(ShouldCycleBytePattern())
+            //Cycle the pattern bytes and or load a new pattern byte if needed, before the leftover byte
+            if(ShouldCycleBytePattern(cmd))
                 CycleHighBytePattern();
-            if( IsLoadingPatternFromNextByte(m_state.lastcmdbyte) )
-            {
-                m_state.patbuff.hbyte = m_parambuffer[offparam];
-                ++offparam;
-            }
+            if( IsLoadingPatternFromNextByte(cmd) )
+                m_state.hbyte = ReadByteFromSrc();
 
             //Then check for leftover bytes patterns to add
             if(m_state.bhasleftover)
             {
                 uint16_t pattern = 0;
-                if(IsBufferedPatternOp(m_state.lastcmdbyte))
-                    pattern = (m_state.patbuff.wordbuf) | (m_state.patbuff.hbyte << 8);
+                if(IsBufferedPatternOp(cmd))
+                    pattern = (m_state.wordbuf) | (m_state.hbyte << 8);
                 else
-                {
-                    pattern = (m_state.patbuff.wordbuf) | (m_parambuffer[offparam] << 8);
-                    ++offparam;
-                }
-                //m_itw                = utils::WriteIntToBytes(pattern, m_itw);
+                    pattern = (m_state.wordbuf) | (ReadByteFromSrc() << 8);
                 WriteWord(pattern);
                 m_state.bhasleftover = false;
             }
 
-            //Run the main operation only if we have a non-zero nb of bytes to copy.
-            if( nbtocopy >= 0 )
-                HandleMainOp(nbtocopy,offparam);
-
-            //Clear our buffer, and reset the state after processing!
-            m_parambuffer.resize(0);
-            m_nbbytoconsume = 0;
-            m_state.state   = eState::WaitingForCmd;
-            //cout <<"\n\n";
+            //Run the main operation only if we have a non-negative nb of bytes to copy.
+            if( nbwordsout >= 0 )
+                HandleMainOp(cmd, nbwordsout);
         }
 
-        void HandleMainOp( size_t nbtocopy, size_t offparam )
+        void HandleMainOp( uint8_t cmd, size_t nbtocopy )
         {
             //Handle the main operation now
             size_t cntcopy = 0;
-            if(IsBufferedPatternOp(m_state.lastcmdbyte))
+            if(IsBufferedPatternOp(cmd))
             {
                 uint16_t pattern = 0;
-                m_state.patbuff.wordbuf = m_state.patbuff.hbyte | (m_state.patbuff.hbyte << 8);
-                pattern                 = m_state.patbuff.wordbuf;
+                m_state.wordbuf = m_state.hbyte | (m_state.hbyte << 8);
+                pattern         = m_state.wordbuf;
 
                 //Copy the patterns the nb of times needed
                 for( ; cntcopy < nbtocopy; cntcopy += 2 )
@@ -291,43 +191,40 @@ namespace bpc_compression
             else
             {
                 //022EC6B8 E58DC02C str     r12,[r13,2Ch]             //[r13,2Ch] = r12 //This should be done here, but it seems like it does absolutely nothing??
-                for( ; cntcopy < nbtocopy; cntcopy += 2, offparam += 2 )
+                for( ; cntcopy < nbtocopy && m_itcur != m_itend; cntcopy += 2 )
                 {
-                    uint16_t value = 0;
-
-                    if( (offparam + 1) < m_parambuffer.size() )
-                        value = m_parambuffer[offparam] | (m_parambuffer[offparam + 1] << 8);
-                    else 
-                        assert(false);
+                    uint16_t value = ReadByteFromSrc();
+                    if(m_itcur == m_itend)
+                        throw std::runtime_error("BPCImgDecompressor::HandleMainOp(): Unexpected end of the input data!");
+                    value |= (ReadByteFromSrc() << 8);
                     WriteWord(value);
                 }
+
+                if(cntcopy < nbtocopy)
+                    throw std::runtime_error("BPCImgDecompressor::HandleMainOp(): Unexpected end of the input data!");
             }
 
             //If the ammount copied was even, we setup the copy a leftover word on the next command byte
             if( cntcopy == nbtocopy )
             {
                 m_state.bhasleftover = true;
-                if(IsBufferedPatternOp(m_state.lastcmdbyte))
-                    m_state.patbuff.wordbuf = m_state.patbuff.hbyte;
+                if(IsBufferedPatternOp(cmd))
+                    m_state.wordbuf = m_state.hbyte;
                 else
-                {
-                    m_state.patbuff.wordbuf = m_parambuffer[offparam];
-                    ++offparam;
-                }
+                    m_state.wordbuf = ReadByteFromSrc();
             }
         }
 
-        inline void WriteWord( uint16_t w )
-        {
-            //cout <<hex <<uppercase <<w <<dec <<nouppercase <<" ";
-            m_itw = utils::WriteIntToBytes(w, m_itw);
-        }
+
 
     private:
-        outit_t                 m_itw;
-        std::vector<uint8_t>    m_parambuffer;    //Parameter bytes for the current operation will be stockpiled here!
-        long                    m_nbbytoconsume;  //The nb of parameters bytes left to feed the functor so it can execute the current op properly
-        DecompState             m_state;
+        DecompState  m_state;           //Decompression state
+        init_t     & m_itcur;
+        init_t       m_itend;
+        outit_t    * m_pitw;            //Pointer to the output iterator
+        size_t       m_decomplen;       //The nb of bytes we expect to output
+        size_t       m_bytesoutput;     //The nb of bytes output
+        size_t       m_bytesread;       //The nb of bytes that were read so far
     };
 
     /*
@@ -423,7 +320,7 @@ namespace bpc_compression
         class BPC_TileMapDecompressor
     {
         typedef _init   init_t;
-        typedef typename std::remove_reference<_outcnt>::type outcnt_t;
+        typedef _outcnt outcnt_t;
         
         //Phase 1 CMD
         static const uint8_t CMD_ZeroOutBeg    = 0x00;  //Write null words
@@ -439,76 +336,68 @@ namespace bpc_compression
 
     public:
 
-        BPC_TileMapDecompressor( _init   itbeg, 
-                                  _init   itend, 
-                                  size_t   decomplen ) //The length of the data decompressed in bytes ((decomplen - 1) * NbWordsPerEntry) * sizeof(int16_t)
-            :m_itbeg(itbeg), m_itend(itend), m_decomplen(decomplen), m_itw(std::back_inserter(m_outputbuf))
+        BPC_TileMapDecompressor( _init & itbeg, 
+                                 _init   itend, 
+                                 size_t  decomplen ) //The length of the data decompressed in bytes ((decomplen - 1) * NbWordsPerEntry) * sizeof(int16_t)
+            :m_itcur(itbeg), m_itend(itend), m_decomplen(decomplen), m_itw(std::back_inserter(m_outputbuf))
         {}
         
         outcnt_t operator()()
         {
-            init_t itcur = m_itbeg;
             m_outputbuf.reserve(m_decomplen);
 
             //Step#1: Write the words, with their high bytes.
-            while( (m_outputbuf.size() < m_decomplen) && (itcur != m_itend) )
-                HandleCmdTableA(itcur);
+            while( (m_outputbuf.size() < m_decomplen) && (m_itcur != m_itend) )
+                HandleCmdTableA();
 
-            if(itcur == m_itend || m_outputbuf.size() < m_decomplen )
+            if(m_itcur == m_itend || m_outputbuf.size() < m_decomplen )
                 throw std::runtime_error("BPC_TileMapDecompressor::operator()(): Input data ended unexpectedly.");
 
             //Step#2: Write the low bytes of the specified words.
             auto itbufcur = std::begin(m_outputbuf);
             auto itbufend = std::end(m_outputbuf);
-            while( (itbufcur != itbufend) && (itcur != m_itend) )
+            while( (itbufcur != itbufend) && (m_itcur != m_itend) )
             {
-                if(itcur == m_itend)
+                if(m_itcur == m_itend)
                     throw std::runtime_error("BPC_TileMapDecompressor::operator()(): Input data ended unexpectedly.");
-                HandleCmdTableB(itcur, itbufcur, itbufend);
+                HandleCmdTableB(itbufcur, itbufend);
             }
-
-            //Step#3: Add value to words.
-            //! #TODO
-            //Its possible that its not necessary
-
             return std::move(m_outputbuf);
         }
 
     private:
-        void HandleCmdTableA(init_t & itsrc)
+        void HandleCmdTableA()
         {
-            size_t cmdby = ReadSrcByte(itsrc);
+            size_t cmdby = ReadSrcByte();
 
             if( cmdby < CMD_FillOutBeg )
             {
                 //The cmdby is the nb of words to zero out!
-                std::fill_n( m_itw, ((cmdby * sizeof(int16_t)) + 2), 0 ); //We always write at least one if we get here
+                for( size_t cnt = 0; cnt <= cmdby; ++cnt )
+                    utils::WriteIntToBytes<uint16_t>(0,m_itw);//We always write at least one if we get here
             }
             else if( cmdby >= CMD_FillOutBeg && cmdby < CMD_CopyBytesBeg )
             {
                 //(cmdby - CMD_FillOutBeg) is the nb of words to write with the next parameter byte as high byte
-                uint16_t param = ReadSrcByte(itsrc) << 8;
-
-                const size_t NbToWrite = ( (cmdby - CMD_FillOutBeg) * sizeof(int16_t) ); //We always write at least one if we get here
-                for( size_t cntby = 0; cntby <= NbToWrite; cntby += sizeof(int16_t) )
+                uint16_t param = ReadSrcByte() << 8;
+                for( size_t cntw = CMD_FillOutBeg; cntw <= cmdby; ++cntw )
                     utils::WriteIntToBytes( param, m_itw );
             }
             else if( cmdby >= CMD_CopyBytesBeg )
             {
                 //(cmdby - CMD_CopyBytesBeg) is the nb of words to write with the sequence of bytes as high byte
-                const size_t NbToWrite = ((cmdby - CMD_CopyBytesBeg) * sizeof(int16_t)); //We always write at least one if we get here
-                for( size_t cntby = 0; (cntby <= NbToWrite); cntby += sizeof(int16_t) )
+                for( size_t cntw = CMD_CopyBytesBeg; cntw <= cmdby; ++cntw )
                 {
-                    uint16_t param = ReadSrcByte(itsrc) << 8;
+                    uint16_t param = ReadSrcByte() << 8;
                     utils::WriteIntToBytes( param, m_itw );
                 }
             }
         }
 
         template<class _cntit>
-            void HandleCmdTableB(init_t & itsrc, _cntit & itword, _cntit itwordend)
+            void HandleCmdTableB(_cntit & itword, _cntit itwordend)
         {
-            size_t cmdby = ReadSrcByte(itsrc);
+            size_t cmdby = ReadSrcByte();
 
             if( cmdby < CMD_FillLowBeg )
             {
@@ -525,10 +414,10 @@ namespace bpc_compression
             else if( cmdby >= CMD_FillLowBeg && cmdby < CMD_CopyLowBeg )
             {
                 //We put the value of the param byte as the low byte of the nb of words contained in the cmdbyte
-                const size_t   nbtoprocess = (cmdby - CMD_FillLowBeg) + 1; //We always write at least one if we get here
-                const uint16_t lbyte       = ReadSrcByte(itsrc);
+                const size_t   nbwords = cmdby; 
+                const uint16_t lbyte   = ReadSrcByte();
 
-                for( size_t i = 0; i < nbtoprocess; ++i )
+                for( size_t cntw = CMD_FillLowBeg; cntw <= nbwords; ++cntw )//We always write at least one if we get here
                 {
                     if( itword == itwordend )
                         throw std::runtime_error("BPC_TileMapDecompressor::HandleCmdTableB(): Output data shorter than expected, or input data corrupted.");
@@ -539,36 +428,33 @@ namespace bpc_compression
             else if( cmdby >= CMD_CopyLowBeg )
             {
                 //We put the value of the param byte as the low byte of the nb of words contained in the cmdbyte
-                const size_t   nbtoprocess = (cmdby - CMD_CopyLowBeg) + 1; //We always write at least one if we get here
-                for( size_t i = 0; i < nbtoprocess; ++i )
+                const size_t   nbwords = cmdby; //We always write at least one if we get here
+                for( size_t cntw = CMD_CopyLowBeg; cntw <= nbwords; ++cntw )
                 {
                     if( itword == itwordend )
                         throw std::runtime_error("BPC_TileMapDecompressor::HandleCmdTableB(): Output data shorter than expected, or input data corrupted.");
-                    (*itword) |= ReadSrcByte(itsrc);
+                    (*itword) |= ReadSrcByte();
                     itword+=2;
                 }
             }
         }
 
-        /*
-            ReadSrcByte
-                Reads a byte from the source, and check and increment the iterator.
-        */
-        inline uint8_t ReadSrcByte(init_t & itcur)
+        inline uint8_t ReadSrcByte()
         {
-            if(itcur == m_itend)
+            if(m_itcur == m_itend)
                 throw std::runtime_error("BPC_TileMapDecompressor::ReadSrcByte(): Input data shorter than expected.");
-            const uint8_t val = (*itcur);
-            ++itcur;
+            const uint8_t val = (*m_itcur);
+            ++m_itcur;
             return val;
         }
 
     private:
-        init_t                              m_itbeg;
+        init_t                            & m_itcur;
         init_t                              m_itend;
         std::back_insert_iterator<outcnt_t> m_itw;
-        outcnt_t                            m_outputbuf;    //The temporary buffer where the data is put before the second pass
-        size_t                              m_decomplen;    //The length of the expected decompressed output in bytes
+
+        outcnt_t    m_outputbuf;
+        size_t      m_decomplen;    //The length of the decompressed output in bytes
     };
 
 };

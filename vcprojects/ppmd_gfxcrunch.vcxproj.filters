@@ -70,6 +70,9 @@
     <Filter Include="Header Files\ppmdu\data formats\levels">
       <UniqueIdentifier>{9519ac34-210c-4369-9901-b07ebb73a752}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{0a755e6a-c199-43c8-85c7-7a1c41250c35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -446,14 +449,17 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="..\src\ppmdu\fmts\bma.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\level_tileset.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

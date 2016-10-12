@@ -77,6 +77,13 @@ namespace utils{ namespace io
 
     image_format_info GetPNGImgInfo(const std::string & filepath);
 
+
+    bool ExportToPNG( std::vector<gimg::colorRGBX32>    & bitmap,
+                      const std::string                 & filepath, 
+                      unsigned int                      forcedwidth,
+                      unsigned int                      forcedheight,
+                      bool                              erroronwrongres = false );
+
 };};
 
 #endif

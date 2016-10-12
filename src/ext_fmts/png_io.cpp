@@ -401,5 +401,57 @@ namespace utils{ namespace io
     }
 
 
+    bool ExportToPNG( std::vector<gimg::colorRGBX32>    & bitmap,
+                      const std::string                 & filepath, 
+                      unsigned int                      forcedwidth,
+                      unsigned int                      forcedheight,
+                      bool                              erroronwrongres )
+    {
+        png::image<png::rgba_pixel> output;
+
+        //Copy image
+        output.resize( forcedwidth, forcedheight );
+
+        auto itpixel = bitmap.begin();
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+            {
+                png::rgba_pixel pix;
+                if( itpixel != bitmap.end() )
+                {
+                    pix.alpha = 255;
+                    pix.red   = itpixel->_red;
+                    pix.blue  = itpixel->_blue;
+                    pix.green = itpixel->_green;
+                    ++itpixel;
+                }
+                else //In case some pixels have no data
+                {
+                    pix.alpha = 255;
+                    pix.red   = 255;
+                    pix.blue  = 255;
+                    pix.green = 255;
+                }
+                output.set_pixel( i,j,  pix ); //If only one component returns the entire pixel data
+            }
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( std::exception e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+
 
 };};

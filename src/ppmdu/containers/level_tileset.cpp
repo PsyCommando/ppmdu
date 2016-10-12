@@ -1,4 +1,6 @@
 #include "level_tileset.hpp"
+#include <ext_fmts/png_io.hpp>
+#include <ppmdu/containers/tiled_image.hpp>
 #include <sstream>
 #include <fstream>
 #include <iterator>
@@ -20,15 +22,28 @@ namespace pmd2
         stringstream sstrimg;
         stringstream sstrtmap;
         stringstream sstrpal;
+        stringstream sstrsecpal;
+        stringstream sstrpalindextbl;
         sstrimg  <<utils::TryAppendSlash(destdir) <<basename;
         sstrtmap <<sstrimg.str() <<"_tilemap.bin";
-        sstrpal  <<sstrimg.str() <<"_pal.rgbx32";
-        sstrimg  <<"_img.4bpp";
+        sstrpal  <<sstrimg.str() <<"_mainpal.rgbx32";
+        sstrsecpal  <<sstrimg.str() <<"_secpal.rgbx32";
+        sstrpalindextbl  <<sstrimg.str() <<"_secpalidxtbl.bin";
+        sstrimg  <<"_img.8bpp";
 
         utils::DoCreateDirectory(destdir);
 
         //#1 export the image data
-        utils::io::WriteByteVectorToFile(sstrimg.str(), tset.Tiles());
+        {
+            ofstream ofimg(sstrimg.str(), ios::binary | ios::out );
+            ofimg.exceptions(ios::badbit);
+            ostreambuf_iterator<char> itoutimg(ofimg);
+            for( const auto & tile : tset.Tiles() )
+            {
+                for( const auto & pixel : tile )
+                    utils::WriteIntToBytes( static_cast<uint8_t>(pixel), itoutimg );
+            }
+        }
 
         //#2 export the tiling data
         {
@@ -40,15 +55,36 @@ namespace pmd2
         }
         //#3 export the palette
         {
-            ofstream ofpal(sstrtmap.str(), ios::binary | ios::out );
-            ofpal.exceptions(ios::badbit);
-            ostreambuf_iterator<char> itoutpal(ofpal);
-            for( const auto & pal : tset.Palettes().mainpal )
             {
-                for( const auto & color : pal )
+                ofstream ofpal(sstrpal.str(), ios::binary | ios::out );
+                ofpal.exceptions(ios::badbit);
+                ostreambuf_iterator<char> itoutpal(ofpal);
+                for( const auto & pal : tset.Palettes().mainpals )
                 {
-                    color.WriteAsRawByte(itoutpal);
+                    for( const auto & color : pal )
+                    {
+                        color.WriteAsRawByte(itoutpal);
+                    }
                 }
+                ofpal.close();
+            }
+            {
+                ofstream ofsecpal(sstrsecpal.str(), ios::binary | ios::out );
+                ofsecpal.exceptions(ios::badbit);
+                ostreambuf_iterator<char> itoutsecpal(ofsecpal);
+                for( const auto & color : tset.Palettes().palette2 )
+                {
+                    color.WriteAsRawByte(itoutsecpal);
+                }
+                ofsecpal.close();
+            }
+            ofstream ofsecpalidxtbl(sstrpalindextbl.str(), ios::binary | ios::out );
+            ofsecpalidxtbl.exceptions(ios::badbit);
+            ostreambuf_iterator<char> itoutidxtbl(ofsecpalidxtbl);
+            for( const auto & w : tset.Palettes().dba )
+            {
+                utils::WriteIntToBytes(w.unk3, itoutidxtbl );
+                utils::WriteIntToBytes(w.unk4, itoutidxtbl );
             }
         }
     }
@@ -73,6 +109,160 @@ namespace pmd2
         {
             ExportTilesetToRaw(destdir, FnameLowerScrData, *plowscrtset);
         }
-        assert(false); //! #TODO: Finish this
+
+        //! #TODO
+    }
+
+    //
+    void CopyATile( const pmd2::tileproperties & curtmap, const std::vector<std::vector<gimg::pixel_indexed_4bpp>> & tiles, gimg::tiled_image_i8bpp::tile_t & outitle )//_outit & itout )
+    {
+        static const size_t tilesqrtres         = 8;
+        static const size_t NbBytesPer4bppTile  = 64;
+        static const size_t NbColors4bpp        = 16;
+
+        const std::vector<gimg::pixel_indexed_4bpp> * curtile = nullptr;
+        if( curtmap.tileindex >= tiles.size() )
+        {
+            curtile = &(tiles.front());
+        }
+        else
+            curtile = &(tiles[curtmap.tileindex]);
+
+
+        size_t cntoutpix = 0;
+        //_init itcurtile = std::next(itbegcnt,tileindex);
+        if(!curtmap.hflip && !curtmap.vflip)
+        {
+            for( size_t i = 0; i < NbBytesPer4bppTile; ++i, ++cntoutpix )
+            {
+                uint8_t curby = (*curtile)[i];
+                outitle[cntoutpix] = (curby & 0xF) + (curtmap.palindex * NbColors4bpp);
+            }
+        }
+        else
+        {
+            const int InitRowCnt= (!curtmap.vflip)? 0 : tilesqrtres;
+            const int TargetRow = (!curtmap.vflip)? tilesqrtres : 0;
+            const int StepRow   = (!curtmap.vflip)? 1 :-1;
+            const int CntRAdjust= (!curtmap.vflip)? 0 :-1; //Modifier added to the row counter, when interpreting its value on an index starting at 0
+
+            for( int cntrow = InitRowCnt; cntrow != TargetRow; cntrow += StepRow )
+            {
+                size_t currowbeg = ((cntrow + CntRAdjust) * tilesqrtres);
+                int InitColCnt= (!curtmap.hflip)? 0 : tilesqrtres;
+                int TargetCol = (!curtmap.hflip)? tilesqrtres : 0;
+                int StepCol   = (!curtmap.hflip)? 1 :-1;
+                int CntCAdjust= (!curtmap.hflip)? 0 :-1; //Modifier added to the column counter, when interpreting its value on an index starting at 0
+
+                for( int cntcol = InitColCnt; cntcol != TargetCol; cntcol += StepCol, ++cntoutpix )
+                {
+                    size_t curpos = (cntcol + CntCAdjust) + currowbeg;
+                    uint8_t curby = (*curtile)[curpos];
+                    outitle[cntoutpix] = (curby & 0xF) + (curtmap.palindex * NbColors4bpp);
+                }
+
+            }
+        }
+    }
+
+    std::vector<std::vector<pmd2::tileproperties>> TileTileMaps( const Tileset & tileset )
+    {
+        const uint16_t nbtilespertile = tileset.BMAData().unk1 * tileset.BMAData().unk2;
+
+        //Make sure the nb of tiles is divisible by 9!
+        size_t nbtilestoalloc = (tileset.TileMap().size() % nbtilespertile != 0)? 
+                                (tileset.TileMap().size() % nbtilespertile + (tileset.TileMap().size() / nbtilespertile) ) :
+                                (tileset.TileMap().size() / nbtilespertile);
+
+        if( nbtilestoalloc < nbtilespertile )
+            nbtilestoalloc = nbtilespertile; //Clamp to minimum 9!
+
+        std::vector<std::vector<pmd2::tileproperties>> tiledtmaps( nbtilestoalloc, std::vector<pmd2::tileproperties>(nbtilespertile) );
+
+        for( size_t cntt = 0; cntt < tileset.TileMap().size(); ++cntt )
+        {
+            size_t desttile    = cntt / nbtilespertile;
+            size_t destsubtile = cntt % nbtilespertile;
+            tiledtmaps[desttile][destsubtile] = tileset.TileMap()[cntt];
+        }
+
+        return std::move(tiledtmaps);
+    }
+
+    gimg::tiled_image_i8bpp PreparePixels_TiledTiles(const Tileset & tileset)
+    {
+        const size_t tilegrpnbtiles = 9;
+        const size_t tilegrpwidth   = 3;
+        const size_t tilegrpheight  = 3;
+        gimg::tiled_image_i8bpp assembledimg;
+        //Make sure the nb of tiles is divisible by the tiles group dimensions!
+        size_t imgtileswidth  = (tileset.BMAData().width % tilegrpwidth != 0)? 
+                                (tileset.BMAData().width % tilegrpwidth) + (tileset.BMAData().width) :
+                                (tileset.BMAData().width);
+        size_t imgtilesheight = (tileset.BMAData().height % tilegrpheight != 0)? 
+                                (tileset.BMAData().height % tilegrpheight) + (tileset.BMAData().height) :
+                                (tileset.BMAData().height);
+
+        
+        assembledimg.setNbTilesRowsAndColumns(imgtileswidth, imgtilesheight);
+
+        //Tile in 9x9 tiles, tiles.
+        std::vector<std::vector<pmd2::tileproperties>> tiledtmap(TileTileMaps(tileset));
+
+        const size_t nbtgrpperrow       = imgtileswidth / tilegrpwidth;
+        const size_t totaltiles         = tiledtmap.size() * tiledtmap.front().size();
+        const size_t ntmgrpperrowtotal  = tileset.BMAData().width / 3;
+        const size_t nbsubtmappertmgrprow = nbtgrpperrow * tilegrpnbtiles;
+
+        size_t cnttotalsubtiles = 0; 
+
+        //Iterate and copy to the structured image
+        for( size_t cnttmpgrp = 0; (cnttmpgrp < tiledtmap.size()) && (cnttotalsubtiles < tileset.Tiles().size());  )
+        {
+            //Iterate on all individual rows of all the tmap groups on this row
+            for( size_t cnttmgrprow = 0; cnttmgrprow < tilegrpheight; ++cnttmgrprow )
+            {
+                //Iterate on an individual tmap group row of 3x3 tiles linearly as a single 1D array
+                for( size_t cntsubtiles = 0; 
+                    (cntsubtiles < ntmgrpperrowtotal) && 
+                    (cnttotalsubtiles < tileset.Tiles().size()) /*&& 
+                    (cnttotalsubtiles < (assembledimg.getTileHeight() * assembledimg.getTileWidth()))*/; 
+                    ++cntsubtiles, ++cnttotalsubtiles )
+                {
+                    size_t indextmapgrp = (cntsubtiles / tilegrpwidth) % ntmgrpperrowtotal; //This gives us what of the few current tilemap groups we're in.
+                    size_t indexsubtm   = (cntsubtiles - (indextmapgrp * tilegrpwidth) ) + (cnttmgrprow * tilegrpwidth);
+
+                    cout <<"Accessing sub-tile number " <<cnttotalsubtiles <<" ( " <<cnttmpgrp + indextmapgrp <<", " <<indexsubtm <<" )\n";
+
+                    CopyATile( tiledtmap[cnttmpgrp + indextmapgrp][indexsubtm], tileset.Tiles(), assembledimg.getTile(cnttotalsubtiles) );
+                }
+            }
+            cnttmpgrp += ntmgrpperrowtotal;
+        }
+
+        return std::move(assembledimg);
+    }
+
+
+
+    void PrintAssembledTilesetPreviewToPNG(const std::string & fpath, const Tileset & tileset)
+    {
+        gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
+        assembledimg.setNbColors(256);
+
+        //Fill the color palette
+        for( size_t cntpal = 0; cntpal < 16; ++cntpal )
+        {
+            for( size_t cntc = 0; cntc < 16; ++cntc ) 
+            {
+                auto & curcol = assembledimg.getPalette()[(cntpal * 16) + cntc];
+                auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
+                curcol.red   = cursrc._red;
+                curcol.green = cursrc._green;
+                curcol.blue  = cursrc._blue;
+            }
+        }
+
+        utils::io::ExportToPNG(assembledimg, fpath);
     }
 };

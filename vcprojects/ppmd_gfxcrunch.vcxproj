@@ -46,6 +46,7 @@
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\bma.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp" />
