@@ -219,14 +219,11 @@ namespace filetypes
                 break;  //When we hit a tile using the first null tile, that means nothing is left to copy !
 
             const auto & curtile = bgpimg.m_tiles   [tilemapdat.tileindex];
-            //const auto & curpal  = bgpimg.m_palettes[tilemapdat.palindex];
             auto       & outtile = target.getTile( cntouttiles );
 
             for( size_t cntpix = 0; cntpix < curtile.size(); ++cntpix )
-            {
                 outtile[cntpix] = curtile[cntpix].pixeldata + ( tilemapdat.palindex * PaletteNbColors ); //Get a color index in the 256 color palette
-            }
-
+            
             if( tilemapdat.hflip )
                 outtile.flipH();
 
@@ -254,15 +251,12 @@ namespace filetypes
             {
                 clog << "ExportBGP(): Invalid image format!!!!\n";
                 assert(false);
-                break;
             }
         };
         
         //Export the resulting 8bpp image
         if( !result )
-        {
             throw runtime_error( "ExportBGP(): Couldn't write PNG image to path specified \"" + outf + "\" !" );
-        }
     }
 
     BGP ImportBGP( const std::string & infile )
