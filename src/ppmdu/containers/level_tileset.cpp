@@ -362,9 +362,7 @@ namespace pmd2
                                     size_t                      tgrpoffsety, 
                                     _inittmap                 & itcurtmap, 
                                     _inittmap                   itendtmap, 
-                                    const Tileset::imgdat_t   & tiles,
-                                    size_t                      tgrptileoffx, 
-                                    size_t                      tgrptileoffy )
+                                    const Tileset::imgdat_t   & tiles )
     {
         static const size_t TileGroupWidth  = 3;
         static const size_t TileGroupHeight = 3;
