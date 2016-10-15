@@ -335,11 +335,11 @@ namespace pmd2
 
         const int XIncr = (tinfo.hflip)? -1        : 1;
         const int XTarg = (tinfo.hflip)? -1        : TileWidth;
-        const int XInit = (tinfo.hflip)? TileWidth : 0;
+        const int XInit = (tinfo.hflip)? (TileWidth - 1) : 0;
 
         const int YIncr = (tinfo.vflip)? -1          : 1;
         const int YTarg = (tinfo.vflip)? -1          : TileWHeight;
-        const int YInit = (tinfo.vflip)? TileWHeight : 0;
+        const int YInit = (tinfo.vflip)? (TileWHeight - 1) : 0;
 
         for( int y = YInit; (y != YTarg) && (ittilebeg != ittileend); y += YIncr )
         {
@@ -432,13 +432,17 @@ namespace pmd2
 
         //utils::Resolution res = MakeResDivisibleByTgrps(tileset.BMAData().width, tileset.BMAData().height);
         //assembledimg.setNbTilesRowsAndColumns( res.width, res.height );
-        const size_t imgtilewidth   = tileset.TileMap().size() / tilegrpwidth;
-        const size_t imgtileheight  = tilegrpheight;
-        const size_t imgwidthtgrp   = imgtilewidth  / (tilegrpwidth )  + ( (imgtilewidth  % (tilegrpwidth  ) != 0)? 1 : 0);  
-        const size_t imgheighttgrp  = imgtileheight / (tilegrpheight ) + ( (imgtileheight % (tilegrpheight ) != 0)? 1 : 0);  
+        const size_t imgtilewidth   = tileset.BMAData().width; /// 2;//tileset.TileMap().size() / tilegrpwidth;
+        const size_t imgtileheight  = tileset.TileMap().size() /imgtilewidth;//tilegrpheight;
+        const size_t imgwidthtgrp   = (imgtilewidth  / tilegrpwidth ) + ( (imgtilewidth  % tilegrpwidth  != 0)? 1 : 0);  
+        const size_t imgheighttgrp  = (imgtileheight / tilegrpheight) + ( (imgtileheight % tilegrpheight != 0)? 1 : 0);  
 
         assembledimg.setNbTilesRowsAndColumns( (imgwidthtgrp * tilegrpwidth), (imgtileheight * tilegrpheight) );
         clog <<"Has " <<tileset.TileMap().size() <<" Tilemap entries\nAllocated a " <<((imgwidthtgrp * tilegrpwidth) * tilesqrt) <<"x" <<((imgheighttgrp * tilegrpheight) * tilesqrt) <<" pixels image, or " <<(imgwidthtgrp * tilegrpwidth) <<"x" <<(imgheighttgrp * tilegrpheight) <<" tiles \n";
+        
+        
+        //std::advance( ittmap, 9 );
+        
         for( size_t tmgrpy = 0; tmgrpy < imgheighttgrp; ++tmgrpy ) 
         {
             for( size_t tmgrpx = 0; tmgrpx < imgwidthtgrp; ++tmgrpx )
@@ -463,7 +467,7 @@ namespace pmd2
         assembledimg.setNbColors(256);
 
         //Fill the color palette
-        for( size_t cntpal = 0; cntpal < 16; ++cntpal )
+        for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
         {
             for( size_t cntc = 0; cntc < 16; ++cntc ) 
             {
@@ -482,7 +486,7 @@ namespace pmd2
 
     void DumpCellsToPNG(const std::string & fpath, const Tileset & tileset)
     {
-        static const uint16_t NbColorsPalette    = 16;
+        //static const uint16_t NbColorsPalette    = 16;
         static const uint16_t NbColorsPerPalette = 16;
         static const size_t   ImgRowLenTiles     = 36;
 
@@ -502,13 +506,13 @@ namespace pmd2
         {
             for( size_t pidx = 0; pidx < tileset.Tiles()[tidx].size(); ++pidx )
             {
-                assembledimg.getTile(tidx)[pidx] = tileset.Tiles()[tidx][pidx] + (pallut[tidx] * NbColorsPalette);
+                assembledimg.getTile(tidx)[pidx] = tileset.Tiles()[tidx][pidx] + (pallut[tidx] * NbColorsPerPalette);
             }
         }
 
         //Fill the color palette
         assembledimg.setNbColors(256);
-        for( size_t cntpal = 0; cntpal < NbColorsPalette; ++cntpal )
+        for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
         {
             for( size_t cntc = 0; cntc < NbColorsPerPalette; ++cntc ) 
             {

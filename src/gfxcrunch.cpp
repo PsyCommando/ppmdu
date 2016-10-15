@@ -2358,10 +2358,17 @@ namespace gfx_util
                     tilesets.second.BMAData() = tilesets.first.BMAData();
 
                     ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
-                    PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("0_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
-                    PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("1_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
-                    DumpCellsToPNG( Poco::Path(outpath).append("0_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
-                    DumpCellsToPNG( Poco::Path(outpath).append("1_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
+                    if( !(tilesets.first.Tiles().empty()) )
+                    {
+                        PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("upper_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
+                        DumpCellsToPNG( Poco::Path(outpath).append("upper_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
+                    }
+
+                    if( !(tilesets.second.Tiles().empty()) )
+                    {
+                        PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("lower_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
+                        DumpCellsToPNG( Poco::Path(outpath).append("lower_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
+                    }
                     cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
                 }
                 else 
