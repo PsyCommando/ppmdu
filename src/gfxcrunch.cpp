@@ -2360,6 +2360,8 @@ namespace gfx_util
                     ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
                     PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("0_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
                     PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("1_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
+                    DumpCellsToPNG( Poco::Path(outpath).append("0_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
+                    DumpCellsToPNG( Poco::Path(outpath).append("1_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
                     cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
                 }
                 else 

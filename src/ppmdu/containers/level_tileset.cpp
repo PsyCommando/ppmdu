@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iterator>
+#include <unordered_map>
 using namespace std;
 
 namespace pmd2
@@ -29,7 +30,7 @@ namespace pmd2
         sstrpal  <<sstrimg.str() <<"_mainpal.rgbx32";
         sstrsecpal  <<sstrimg.str() <<"_secpal.rgbx32";
         sstrpalindextbl  <<sstrimg.str() <<"_secpalidxtbl.bin";
-        sstrimg  <<"_img.8bpp";
+        sstrimg  <<"_img.4bpp";
 
         utils::DoCreateDirectory(destdir);
 
@@ -40,8 +41,11 @@ namespace pmd2
             ostreambuf_iterator<char> itoutimg(ofimg);
             for( const auto & tile : tset.Tiles() )
             {
-                for( const auto & pixel : tile )
-                    utils::WriteIntToBytes( static_cast<uint8_t>(pixel), itoutimg );
+                for( size_t cntpix = 0; cntpix < (tile.size()-1); ++cntpix )
+                {
+                    uint8_t pixel4bpp = tile[cntpix] | static_cast<uint8_t>(tile[cntpix + 1]) << 4;
+                    utils::WriteIntToBytes( pixel4bpp, itoutimg );
+                }
             }
         }
 
@@ -291,12 +295,12 @@ namespace pmd2
                         if(curtmap.vflip)
                             tile.flipV();
                         assembledimg.getPixel(pixx, pixy) = tile[reltlpixidx];
-                        cout <<"Img(" <<pixx <<", " <<pixy <<") -> Tilegrp: " <<abstgrpindex <<", tile#: " <<reltgrptileidx <<", pixel index: " <<reltlpixidx <<"\n";
+                        //cout <<"Img(" <<pixx <<", " <<pixy <<") -> Tilegrp: " <<abstgrpindex <<", tile#: " <<reltgrptileidx <<", pixel index: " <<reltlpixidx <<"\n";
                     }
                 }
                 else
                 {
-                    cerr<<"Bad tgrp index " <<abstgrpindex <<" for pixel coord ( " <<pixx <<", " <<pixy <<" )\n";
+                    //cerr<<"Bad tgrp index " <<abstgrpindex <<" for pixel coord ( " <<pixx <<", " <<pixy <<" )\n";
                 }
             }
         }
@@ -304,11 +308,154 @@ namespace pmd2
         return std::move(assembledimg);
     }
 
+    /*
+            -img         : Destination image
+            -tileoffsetx : Offset in pixel of the tile's first upper left pixel
+            -tileoffsety : Offset in pixel of the tile's first upper left pixel
+            -tinfo       : Tile mapping data
+            -ittilebeg   : Iterator on the first pixel of the tile. (The pixel data must be stored linearly)
+            -ittileend   : Iterator past the last pixel of the tile. (The pixel data must be stored linearly)
+    */
+    template<class _init>
+        void WriteTileAtCoordinates( gimg::tiled_image_i8bpp & img, size_t tileoffsetx, size_t tileoffsety, const tileproperties & tinfo, _init ittilebeg, _init ittileend )
+    {
+        static const size_t TileWidth   = 8;
+        static const size_t TileWHeight = 8;
+        static const size_t SizePalette = 16;
+        const size_t oldsize = tileoffsetx * tileoffsety;
+        const size_t newsize = (( tileoffsetx + TileWidth ) * ( tileoffsety + TileWHeight )) + oldsize;
+
+        if( (tileoffsetx + TileWidth)   > img.width() ||
+            (tileoffsety + TileWHeight) > img.height() ||
+            newsize > img.getTotalNbPixels()  )
+        {
+            assert(false);
+            throw std::runtime_error( "WriteTileAtCoordinates(): Not enough pixels left to write current tile!" );
+        }
+
+        const int XIncr = (tinfo.hflip)? -1        : 1;
+        const int XTarg = (tinfo.hflip)? -1        : TileWidth;
+        const int XInit = (tinfo.hflip)? TileWidth : 0;
+
+        const int YIncr = (tinfo.vflip)? -1          : 1;
+        const int YTarg = (tinfo.vflip)? -1          : TileWHeight;
+        const int YInit = (tinfo.vflip)? TileWHeight : 0;
+
+        for( int y = YInit; (y != YTarg) && (ittilebeg != ittileend); y += YIncr )
+        {
+            for( int x = XInit; (x != XTarg) && (ittilebeg != ittileend); x += XIncr, ++ittilebeg )
+                img.getPixel(tileoffsetx + x, tileoffsety + y) = (*ittilebeg) + (tinfo.palindex * SizePalette);
+        }
+    }
+
+
+    /*
+            -tgrpoffsetx : Offset of the first upper right pixel of the first tile in the tile group on the target image.
+            -tgrpoffsety : Offset of the first upper right pixel of the first tile in the tile group on the target image.
+            -itcurtmap   : Current tilemap data entry.
+            -itendtmap   : Past the last tilemap entry for this tile group.
+            -tiles       : all the tiles for this tileset
+    */
+    template<class _inittmap>
+        void WriteTileGroupAtCoord( gimg::tiled_image_i8bpp   & img, 
+                                    size_t                      tgrpoffsetx, 
+                                    size_t                      tgrpoffsety, 
+                                    _inittmap                 & itcurtmap, 
+                                    _inittmap                   itendtmap, 
+                                    const Tileset::imgdat_t   & tiles,
+                                    size_t                      tgrptileoffx, 
+                                    size_t                      tgrptileoffy )
+    {
+        static const size_t TileGroupWidth  = 3;
+        static const size_t TileGroupHeight = 3;
+        static const size_t TileWidth       = 8;
+        static const size_t TileWHeight     = 8;
+
+        size_t currxoff = tgrpoffsetx;
+        size_t curryoff = tgrpoffsety;
+        const size_t oldsize  = (tgrpoffsetx * tgrpoffsety);
+        const size_t newsize  = ((TileGroupHeight * TileWHeight) * (TileGroupWidth  * TileWidth)) + oldsize;
+
+        if( (tgrpoffsetx + (TileGroupWidth  * TileWidth))   > img.width()  || 
+            (tgrpoffsety + (TileGroupHeight * TileWHeight)) > img.height() ||
+            newsize > img.size() )
+        {
+            assert(false);
+            throw std::runtime_error( "WriteTileGroupAtCoord(): Not enough pixels left to write current tile!" );
+        }
+
+        for( size_t tmy = 0; (tmy < TileGroupHeight) && (itcurtmap != itendtmap); ++tmy )
+        {
+            for( size_t tmx = 0; (tmx < TileGroupWidth) && (itcurtmap != itendtmap); ++tmx, ++itcurtmap )
+            {
+                size_t tindex = itcurtmap->tileindex;
+                if( itcurtmap->tileindex >= tiles.size() )
+                {
+                    clog << "Invalid tile index " <<itcurtmap->tileindex <<"\n";
+                    tindex = 0;
+                }
+                WriteTileAtCoordinates( img, (tgrpoffsetx + (tmx * TileWidth)), curryoff, *itcurtmap, std::begin(tiles[tindex]), std::end(tiles[tindex]) );
+                //currxoff += TileWidth;
+            }
+            curryoff += TileWHeight;
+            //currxoff = tgrpoffsetx;
+        }
+    }
+
+
+    //utils::Resolution MakeResDivisibleByTgrps( size_t wtiles, size_t htiles )
+    //{
+    //    const size_t tilegrpnbtiles = 9;
+    //    const size_t tilegrpwidth   = 3;
+    //    const size_t tilegrpheight  = 3;
+    //    const size_t tilesqrt       = 8;
+    //    utils::Resolution res;
+    //    res.width  = wtiles + ((wtiles % tilegrpwidth  != 0)? wtiles % tilegrpwidth  : 0);
+    //    res.height = htiles + ((htiles % tilegrpheight != 0)? htiles % tilegrpheight : 0);
+    //    return res;
+    //}
+
+
+    gimg::tiled_image_i8bpp PreparePixels_LinearTiling(const Tileset & tileset)
+    { 
+        const size_t tilegrpnbtiles = 9;
+        const size_t tilegrpwidth   = 3;
+        const size_t tilegrpheight  = 3;
+        const size_t tilesqrt       = 8;
+        size_t       currentoffsetx = 0;
+        size_t       currentoffsety = 0;
+        auto         ittmap         = tileset.TileMap().begin();
+        auto         ittmapend      = tileset.TileMap().end();
+        gimg::tiled_image_i8bpp assembledimg;
+
+        //utils::Resolution res = MakeResDivisibleByTgrps(tileset.BMAData().width, tileset.BMAData().height);
+        //assembledimg.setNbTilesRowsAndColumns( res.width, res.height );
+        const size_t imgtilewidth   = (9 * tilegrpwidth);
+        const size_t imgtileheight  = tileset.Tiles().size() / imgtilewidth;
+        const size_t imgwidthtgrp   = imgtilewidth  / (tilegrpwidth * tilesqrt)  + ( (imgtilewidth  % (tilegrpwidth  * tilesqrt) != 0)? 1 : 0);  
+        const size_t imgheighttgrp  = imgtileheight / (tilegrpheight * tilesqrt) + ( (imgtileheight % (tilegrpheight * tilesqrt) != 0)? 1 : 0);  
+
+        assembledimg.setNbTilesRowsAndColumns( imgtilewidth, imgtileheight );
+
+        for( size_t tmgrpy = 0; tmgrpy < imgheighttgrp; ++tmgrpy ) 
+        {
+            for( size_t tmgrpx = 0; tmgrpx < imgwidthtgrp; ++tmgrpx )
+            {
+                currentoffsetx = tmgrpx * (tilegrpwidth * tilesqrt);
+                WriteTileGroupAtCoord( assembledimg, currentoffsetx, currentoffsety, ittmap, ittmapend, tileset.Tiles() );
+            }
+            currentoffsety += (tilegrpheight * tilesqrt);
+            currentoffsetx = 0;
+        }
+
+        return std::move(assembledimg);
+    }
 
 
     void PrintAssembledTilesetPreviewToPNG(const std::string & fpath, const Tileset & tileset)
     {
-        gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
+        gimg::tiled_image_i8bpp assembledimg(PreparePixels_LinearTiling(tileset));
+        //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
         //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
         assembledimg.setNbColors(256);
 
@@ -329,7 +476,46 @@ namespace pmd2
     }
 
 
-    void DumpTilesToPNG(const std::string & fpath, const Tileset & tileset)
+    void DumpCellsToPNG(const std::string & fpath, const Tileset & tileset)
     {
+        static const uint16_t NbColorsPalette    = 16;
+        static const uint16_t NbColorsPerPalette = 16;
+        static const size_t   ImgRowLenTiles     = 36;
+
+        typedef uint16_t tileindex_t;
+        typedef uint8_t  palindex_t;
+        //First build a palette index lookup table
+        std::unordered_map<tileindex_t, palindex_t> pallut;
+        for( const auto & tmap : tileset.TileMap() )
+            pallut[tmap.tileindex] = tmap.palindex;
+
+        gimg::tiled_image_i8bpp assembledimg;
+        size_t                  nbrows = (tileset.Tiles().size() / ImgRowLenTiles) + ( (tileset.Tiles().size() % ImgRowLenTiles != 0)? 1 : 0);
+        assembledimg.setNbTilesRowsAndColumns( ImgRowLenTiles, nbrows );
+
+        //Write all tiles
+        for( size_t tidx = 0; tidx < tileset.Tiles().size(); ++tidx )
+        {
+            for( size_t pidx = 0; pidx < tileset.Tiles()[tidx].size(); ++pidx )
+            {
+                assembledimg.getTile(tidx)[pidx] = tileset.Tiles()[tidx][pidx] + (pallut[tidx] * NbColorsPalette);
+            }
+        }
+
+        //Fill the color palette
+        assembledimg.setNbColors(256);
+        for( size_t cntpal = 0; cntpal < NbColorsPalette; ++cntpal )
+        {
+            for( size_t cntc = 0; cntc < NbColorsPerPalette; ++cntc ) 
+            {
+                auto & curcol = assembledimg.getPalette()[(cntpal * NbColorsPerPalette) + cntc];
+                auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
+                curcol.red   = cursrc._red;
+                curcol.green = cursrc._green;
+                curcol.blue  = cursrc._blue;
+            }
+        }
+
+        utils::io::ExportToPNG(assembledimg, fpath);
     }
 };

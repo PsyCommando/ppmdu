@@ -159,6 +159,8 @@ namespace pmd2
 
     void PrintAssembledTilesetPreviewToPNG( const std::string & fpath, const Tileset & tileset );
 
+    void DumpCellsToPNG(const std::string & fpath, const Tileset & tileset);
+
 };
 
 #endif // !LEVEL_TILESET_HPP
