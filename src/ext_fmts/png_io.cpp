@@ -165,7 +165,7 @@ namespace utils{ namespace io
         {
             readPNG_indexed<png::index_pixel>( out_indexed, filepath );
         }
-        catch( png::error e )
+        catch( const png::error & e )
         {
             cerr << "<!>- PNG image is not in 4 or 8 bpp format.. Not using a palette would lead to unforseen consequences!\n"
                  << "     The required input format is an indexed PNG, 4 or 8 bits per pixels, 16 colors !\n";
@@ -209,7 +209,7 @@ namespace utils{ namespace io
         {
             output.write( filepath );
         }
-        catch( std::exception e )
+        catch( const std::exception & e )
         {
             cerr << "<!>- Error outputing image : " << filepath <<"\n"
                  << "     Exception details : \n"     
@@ -235,7 +235,7 @@ namespace utils{ namespace io
         {
             readPNG_indexed<png::index_pixel>( out_indexed, filepath );
         }
-        catch( png::error e )
+        catch( const png::error & e )
         {
             static const uint32_t bpp = gimg::tiled_image_i8bpp::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
             cerr << "<!>- PNG image is not in " <<bpp <<" bpp format.. Not using a palette would lead to unforseen consequences!\n"
@@ -267,7 +267,7 @@ namespace utils{ namespace io
         {
             output.write( filepath );
         }
-        catch( std::exception e )
+        catch( const std::exception & e )
         {
             cerr << "<!>- Error outputing image : " << filepath <<"\n"
                  << "     Exception details : \n"     
@@ -441,7 +441,43 @@ namespace utils{ namespace io
         {
             output.write( filepath );
         }
-        catch( std::exception e )
+        catch( const std::exception & e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+
+    /*
+        ExportToPNG
+    */
+    bool ExportToPNG( const std::vector<std::vector<uint8_t>>   & indexed8bpp,
+                      const std::vector<gimg::colorRGB24>       & palette,
+                      const std::string                         & filepath, 
+                      bool                                        erroronwrongres)
+    {
+        png::image<png::index_pixel> output;
+        output.set_palette( PalToPngPal(palette) );
+
+        //Copy image
+        output.resize( indexed8bpp.front().size(), indexed8bpp.size() );
+
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+                output.set_pixel( i,j, indexed8bpp[j][i] );
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( const std::exception & e )
         {
             cerr << "<!>- Error outputing image : " << filepath <<"\n"
                  << "     Exception details : \n"     

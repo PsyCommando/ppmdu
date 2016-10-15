@@ -84,6 +84,12 @@ namespace utils{ namespace io
                       unsigned int                      forcedheight,
                       bool                              erroronwrongres = false );
 
+
+    bool ExportToPNG( const std::vector<std::vector<uint8_t>>   & indexed8bpp,
+                      const std::vector<gimg::colorRGB24>       & palette,
+                      const std::string                         & filepath, 
+                      bool                                        erroronwrongres = false );
+
 };};
 
 #endif

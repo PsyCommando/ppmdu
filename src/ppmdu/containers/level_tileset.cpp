@@ -362,7 +362,8 @@ namespace pmd2
                                     size_t                      tgrpoffsety, 
                                     _inittmap                 & itcurtmap, 
                                     _inittmap                   itendtmap, 
-                                    const Tileset::imgdat_t   & tiles )
+                                    const Tileset::imgdat_t   & tiles,
+                                    size_t                    & mapcnt)
     {
         static const size_t TileGroupWidth  = 3;
         static const size_t TileGroupHeight = 3;
@@ -389,11 +390,13 @@ namespace pmd2
                 size_t tindex = itcurtmap->tileindex;
                 if( itcurtmap->tileindex >= tiles.size() )
                 {
-                    clog << "Invalid tile index " <<itcurtmap->tileindex <<"\n";
+                    clog << "    *Invalid tile index " <<itcurtmap->tileindex <<"\n";
                     tindex = 0;
                 }
+                clog <<"m#" <<mapcnt <<"    *Tile #" <<tindex <<" at (" <<(tgrpoffsetx + (tmx * TileWidth)) <<", " <<curryoff <<")\n";
                 WriteTileAtCoordinates( img, (tgrpoffsetx + (tmx * TileWidth)), curryoff, *itcurtmap, std::begin(tiles[tindex]), std::end(tiles[tindex]) );
                 //currxoff += TileWidth;
+                ++mapcnt;
             }
             curryoff += TileWHeight;
             //currxoff = tgrpoffsetx;
@@ -424,23 +427,24 @@ namespace pmd2
         size_t       currentoffsety = 0;
         auto         ittmap         = tileset.TileMap().begin();
         auto         ittmapend      = tileset.TileMap().end();
+        size_t       mapcnt         = 0;
         gimg::tiled_image_i8bpp assembledimg;
 
         //utils::Resolution res = MakeResDivisibleByTgrps(tileset.BMAData().width, tileset.BMAData().height);
         //assembledimg.setNbTilesRowsAndColumns( res.width, res.height );
-        const size_t imgtilewidth   = (9 * tilegrpwidth);
-        const size_t imgtileheight  = tileset.Tiles().size() / imgtilewidth;
-        const size_t imgwidthtgrp   = imgtilewidth  / (tilegrpwidth * tilesqrt)  + ( (imgtilewidth  % (tilegrpwidth  * tilesqrt) != 0)? 1 : 0);  
-        const size_t imgheighttgrp  = imgtileheight / (tilegrpheight * tilesqrt) + ( (imgtileheight % (tilegrpheight * tilesqrt) != 0)? 1 : 0);  
+        const size_t imgtilewidth   = tileset.TileMap().size() / tilegrpwidth;
+        const size_t imgtileheight  = tilegrpheight;
+        const size_t imgwidthtgrp   = imgtilewidth  / (tilegrpwidth )  + ( (imgtilewidth  % (tilegrpwidth  ) != 0)? 1 : 0);  
+        const size_t imgheighttgrp  = imgtileheight / (tilegrpheight ) + ( (imgtileheight % (tilegrpheight ) != 0)? 1 : 0);  
 
-        assembledimg.setNbTilesRowsAndColumns( imgtilewidth, imgtileheight );
-
+        assembledimg.setNbTilesRowsAndColumns( (imgwidthtgrp * tilegrpwidth), (imgtileheight * tilegrpheight) );
+        clog <<"Has " <<tileset.TileMap().size() <<" Tilemap entries\nAllocated a " <<((imgwidthtgrp * tilegrpwidth) * tilesqrt) <<"x" <<((imgheighttgrp * tilegrpheight) * tilesqrt) <<" pixels image, or " <<(imgwidthtgrp * tilegrpwidth) <<"x" <<(imgheighttgrp * tilegrpheight) <<" tiles \n";
         for( size_t tmgrpy = 0; tmgrpy < imgheighttgrp; ++tmgrpy ) 
         {
             for( size_t tmgrpx = 0; tmgrpx < imgwidthtgrp; ++tmgrpx )
             {
                 currentoffsetx = tmgrpx * (tilegrpwidth * tilesqrt);
-                WriteTileGroupAtCoord( assembledimg, currentoffsetx, currentoffsety, ittmap, ittmapend, tileset.Tiles() );
+                WriteTileGroupAtCoord( assembledimg, currentoffsetx, currentoffsety, ittmap, ittmapend, tileset.Tiles(), mapcnt );
             }
             currentoffsety += (tilegrpheight * tilesqrt);
             currentoffsetx = 0;
@@ -452,6 +456,7 @@ namespace pmd2
 
     void PrintAssembledTilesetPreviewToPNG(const std::string & fpath, const Tileset & tileset)
     {
+        clog <<"Writing " <<tileset.TileMap().size() <<" tiles to \"" <<fpath <<"\"" <<"\n";
         gimg::tiled_image_i8bpp assembledimg(PreparePixels_LinearTiling(tileset));
         //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
         //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
@@ -471,6 +476,7 @@ namespace pmd2
         }
 
         utils::io::ExportToPNG(assembledimg, fpath);
+        clog <<"\n";
     }
 
 
