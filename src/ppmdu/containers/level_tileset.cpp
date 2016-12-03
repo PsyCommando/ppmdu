@@ -13,6 +13,65 @@ namespace pmd2
     const std::string FnameUpperScrData = "upper";
     const std::string FnameLowerScrData = "lower";
 
+    const std::array<tsetconstants, 3> TSetIndependantSelectConstants
+    {{
+        //02323920 - When levelid == 0xFFFFFFFF, 
+        //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
+        {
+            0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+        },
+
+        //0232393C - When level entry first value is 6,7,8,9,10
+        {
+            0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+        },
+
+        //02323958 - When level entry first value is 11,12
+        {
+            0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+        },
+    }};
+
+    extern const std::array<tsetconstants, 3> TSetGroundSelectConstants
+    {{
+        //02320CD8 - When levelid == 0xFFFFFFFF
+        //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
+        {
+            0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,   
+        },
+    
+        //02320CF4 - When level entry first value == 6,7,8,9,10
+        {
+            0x0000, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,   
+        },
+    
+        //02320D10 - When level entry first value == 11,12
+        {
+            0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,
+        },
+    }};
+
+    extern const std::array<tsetconstants, 2> TSetGroundSubWorldSelectConstants
+    {
+        //02323394 - When levelid == 0xFFFFFFFF
+        //           OR level list entry first word == 1,2,3,4,5 OR bigger than 12!
+        {
+            0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+        },
+    
+        //023233B0 - When level list entry first word == 0,6,7,8,9,10,11,12
+        {
+            0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000,   
+        },
+    };
 
 
 //
@@ -169,144 +228,144 @@ namespace pmd2
         }
     }
 
-    std::vector<std::vector<pmd2::tileproperties>> TileTileMaps( const Tileset & tileset )
-    {
-        const uint16_t tmgrpsz = tileset.BMAData().unk1 * tileset.BMAData().unk2;
+    //std::vector<std::vector<pmd2::tileproperties>> TileTileMaps( const Tileset & tileset )
+    //{
+    //    const uint16_t tmgrpsz = tileset.BMAData().unk1 * tileset.BMAData().unk2;
 
-        //Make sure the nb of tiles is divisible by 9!
-        size_t nbtmgrpztoalloc = (tileset.TileMap().size() % tmgrpsz != 0)? 
-                                 (tileset.TileMap().size() / tmgrpsz) + 1 :
-                                 (tileset.TileMap().size() / tmgrpsz);
+    //    //Make sure the nb of tiles is divisible by 9!
+    //    size_t nbtmgrpztoalloc = (tileset.TileMap().size() % tmgrpsz != 0)? 
+    //                             (tileset.TileMap().size() / tmgrpsz) + 1 :
+    //                             (tileset.TileMap().size() / tmgrpsz);
 
-        if( nbtmgrpztoalloc < tmgrpsz )
-            nbtmgrpztoalloc = tmgrpsz; //Clamp to minimum 9 of!
+    //    if( nbtmgrpztoalloc < tmgrpsz )
+    //        nbtmgrpztoalloc = tmgrpsz; //Clamp to minimum 9 of!
 
-        std::vector<std::vector<pmd2::tileproperties>> tiledtmaps( nbtmgrpztoalloc, std::vector<pmd2::tileproperties>(tmgrpsz) );
+    //    std::vector<std::vector<pmd2::tileproperties>> tiledtmaps( nbtmgrpztoalloc, std::vector<pmd2::tileproperties>(tmgrpsz) );
 
-        for( size_t cntt = 0; cntt < tileset.TileMap().size(); ++cntt )
-        {
-            size_t desttile    = cntt / tmgrpsz;
-            size_t destsubtile = cntt % tmgrpsz;
-            tiledtmaps[desttile][destsubtile] = tileset.TileMap()[cntt];
-        }
+    //    for( size_t cntt = 0; cntt < tileset.TileMap().size(); ++cntt )
+    //    {
+    //        size_t desttile    = cntt / tmgrpsz;
+    //        size_t destsubtile = cntt % tmgrpsz;
+    //        tiledtmaps[desttile][destsubtile] = tileset.TileMap()[cntt];
+    //    }
 
-        return std::move(tiledtmaps);
-    }
+    //    return std::move(tiledtmaps);
+    //}
 
-    gimg::tiled_image_i8bpp PreparePixels_TiledTiles(const Tileset & tileset)
-    {
-        const size_t tilegrpnbtiles = 9;
-        const size_t tilegrpwidth   = 3;
-        const size_t tilegrpheight  = 3;
-        gimg::tiled_image_i8bpp assembledimg;
-        //Make sure the nb of tiles is divisible by the tiles group dimensions!
-        size_t imgtileswidth  = (tileset.BMAData().width % tilegrpwidth != 0)? 
-                                (tileset.BMAData().width % tilegrpwidth) + (tileset.BMAData().width) :
-                                (tileset.BMAData().width);
-        size_t imgtilesheight = (tileset.BMAData().height % tilegrpheight != 0)? 
-                                (tileset.BMAData().height % tilegrpheight) + (tileset.BMAData().height) :
-                                (tileset.BMAData().height);
+    //gimg::tiled_image_i8bpp PreparePixels_TiledTiles(const Tileset & tileset)
+    //{
+    //    const size_t tilegrpnbtiles = 9;
+    //    const size_t tilegrpwidth   = 3;
+    //    const size_t tilegrpheight  = 3;
+    //    gimg::tiled_image_i8bpp assembledimg;
+    //    //Make sure the nb of tiles is divisible by the tiles group dimensions!
+    //    size_t imgtileswidth  = (tileset.BMAData().width % tilegrpwidth != 0)? 
+    //                            (tileset.BMAData().width % tilegrpwidth) + (tileset.BMAData().width) :
+    //                            (tileset.BMAData().width);
+    //    size_t imgtilesheight = (tileset.BMAData().height % tilegrpheight != 0)? 
+    //                            (tileset.BMAData().height % tilegrpheight) + (tileset.BMAData().height) :
+    //                            (tileset.BMAData().height);
 
-        
-        assembledimg.setNbTilesRowsAndColumns(imgtileswidth, imgtilesheight);
+    //    
+    //    assembledimg.setNbTilesRowsAndColumns(imgtileswidth, imgtilesheight);
 
-        //Tile in 9x9 tiles, tiles.
-        std::vector<std::vector<pmd2::tileproperties>> tiledtmap(TileTileMaps(tileset));
+    //    //Tile in 9x9 tiles, tiles.
+    //    std::vector<std::vector<pmd2::tileproperties>> tiledtmap(TileTileMaps(tileset));
 
-        //const size_t nbtgrpperrow       = imgtileswidth / tilegrpwidth;
-        const size_t totaltiles         = tiledtmap.size() * tiledtmap.front().size();
-        const size_t ntmgrpperrowtotal  = tileset.BMAData().width / 3;
-        //const size_t nbsubtmappertmgrprow = nbtgrpperrow * tilegrpnbtiles;
+    //    //const size_t nbtgrpperrow       = imgtileswidth / tilegrpwidth;
+    //    const size_t totaltiles         = tiledtmap.size() * tiledtmap.front().size();
+    //    const size_t ntmgrpperrowtotal  = tileset.BMAData().width / 3;
+    //    //const size_t nbsubtmappertmgrprow = nbtgrpperrow * tilegrpnbtiles;
 
-        size_t cnttotalsubtiles = 0; 
+    //    size_t cnttotalsubtiles = 0; 
 
-        //Iterate and copy to the structured image
-        for( size_t cnttmpgrp = 0; (cnttmpgrp < tiledtmap.size()) && (cnttotalsubtiles < tileset.Tiles().size());  )
-        {
-            //Iterate on all individual rows of all the tmap groups on this row
-            for( size_t cnttmgrprow = 0; cnttmgrprow < tilegrpheight; ++cnttmgrprow )
-            {
-                //Iterate on an individual tmap group row of 3x3 tiles linearly as a single 1D array
-                for( size_t cntsubtiles = 0; 
-                    (cntsubtiles < ntmgrpperrowtotal) && 
-                    (cnttotalsubtiles < tileset.Tiles().size()); 
-                    ++cntsubtiles, ++cnttotalsubtiles )
-                {
-                    size_t indextmapgrp = (cntsubtiles / tilegrpwidth) % ntmgrpperrowtotal; //This gives us what of the few current tilemap groups we're in.
-                    size_t indexsubtm   = (cntsubtiles - (indextmapgrp * tilegrpwidth) ) + (cnttmgrprow * tilegrpwidth);
+    //    //Iterate and copy to the structured image
+    //    for( size_t cnttmpgrp = 0; (cnttmpgrp < tiledtmap.size()) && (cnttotalsubtiles < tileset.Tiles().size());  )
+    //    {
+    //        //Iterate on all individual rows of all the tmap groups on this row
+    //        for( size_t cnttmgrprow = 0; cnttmgrprow < tilegrpheight; ++cnttmgrprow )
+    //        {
+    //            //Iterate on an individual tmap group row of 3x3 tiles linearly as a single 1D array
+    //            for( size_t cntsubtiles = 0; 
+    //                (cntsubtiles < ntmgrpperrowtotal) && 
+    //                (cnttotalsubtiles < tileset.Tiles().size()); 
+    //                ++cntsubtiles, ++cnttotalsubtiles )
+    //            {
+    //                size_t indextmapgrp = (cntsubtiles / tilegrpwidth) % ntmgrpperrowtotal; //This gives us what of the few current tilemap groups we're in.
+    //                size_t indexsubtm   = (cntsubtiles - (indextmapgrp * tilegrpwidth) ) + (cnttmgrprow * tilegrpwidth);
 
-                    cout <<"Accessing sub-tile number " <<cnttotalsubtiles <<" ( " <<cnttmpgrp + indextmapgrp <<", " <<indexsubtm <<" )\n";
+    //                cout <<"Accessing sub-tile number " <<cnttotalsubtiles <<" ( " <<cnttmpgrp + indextmapgrp <<", " <<indexsubtm <<" )\n";
 
-                    CopyATile( tiledtmap[cnttmpgrp + indextmapgrp][indexsubtm], tileset.Tiles(), assembledimg.getTile(cnttotalsubtiles) );
-                }
-            }
-            cnttmpgrp += ntmgrpperrowtotal;
-        }
+    //                CopyATile( tiledtmap[cnttmpgrp + indextmapgrp][indexsubtm], tileset.Tiles(), assembledimg.getTile(cnttotalsubtiles) );
+    //            }
+    //        }
+    //        cnttmpgrp += ntmgrpperrowtotal;
+    //    }
 
-        return std::move(assembledimg);
-    }
+    //    return std::move(assembledimg);
+    //}
 
 
-    gimg::tiled_image_i8bpp PreparePixels_TiledMapPixelByPixel(const Tileset & tileset)
-    {
-        const size_t tilegrpnbtiles = 9;
-        const size_t tilegrpwidth   = 3;
-        const size_t tilegrpheight  = 3;
-        const size_t tilesqrt       = 8;
-        static const size_t NbColors4bpp        = 16;
-        //Set image pixel by pixel from the tilemap
-        gimg::tiled_image_i8bpp assembledimg;
+    //gimg::tiled_image_i8bpp PreparePixels_TiledMapPixelByPixel(const Tileset & tileset)
+    //{
+    //    const size_t tilegrpnbtiles = 9;
+    //    const size_t tilegrpwidth   = 3;
+    //    const size_t tilegrpheight  = 3;
+    //    const size_t tilesqrt       = 8;
+    //    static const size_t NbColors4bpp        = 16;
+    //    //Set image pixel by pixel from the tilemap
+    //    gimg::tiled_image_i8bpp assembledimg;
 
-        //Tile in 9x9 tiles, tiles.
-        std::vector<std::vector<pmd2::tileproperties>> tiledtmap(TileTileMaps(tileset));
+    //    //Tile in 9x9 tiles, tiles.
+    //    std::vector<std::vector<pmd2::tileproperties>> tiledtmap(TileTileMaps(tileset));
 
-        //Try a few different values here
-        size_t imgtileswidth  = (tileset.BMAData().width );
-        size_t imgtilesheight = (tileset.BMAData().height);
+    //    //Try a few different values here
+    //    size_t imgtileswidth  = (tileset.BMAData().width );
+    //    size_t imgtilesheight = (tileset.BMAData().height);
 
-        assembledimg.setNbTilesRowsAndColumns(imgtileswidth, imgtilesheight);
+    //    assembledimg.setNbTilesRowsAndColumns(imgtileswidth, imgtilesheight);
 
-        for(uint16_t pixy = 0; pixy < assembledimg.height(); ++pixy)
-        {
-            for(uint16_t pixx = 0; pixx < assembledimg.width(); ++pixx)
-            {
-                //Absolute tile coordinate
-                size_t abstlx = (pixx / tilesqrt);
-                size_t abstly = (pixy / tilesqrt);
-                size_t abstileindex = (abstly * imgtileswidth) + abstlx;                    //Index of the current pixel tile containing the specified pixel coordinates, in absolute nb of tiles
-                
-                //Absolute tile group coordinate
-                size_t abstgrpindex = abstileindex / tilegrpnbtiles;                        //Index of the current tile group containing the specified pixel coordinates, in absolute nb of tile groups
+    //    for(uint16_t pixy = 0; pixy < assembledimg.height(); ++pixy)
+    //    {
+    //        for(uint16_t pixx = 0; pixx < assembledimg.width(); ++pixx)
+    //        {
+    //            //Absolute tile coordinate
+    //            size_t abstlx = (pixx / tilesqrt);
+    //            size_t abstly = (pixy / tilesqrt);
+    //            size_t abstileindex = (abstly * imgtileswidth) + abstlx;                    //Index of the current pixel tile containing the specified pixel coordinates, in absolute nb of tiles
+    //            
+    //            //Absolute tile group coordinate
+    //            size_t abstgrpindex = abstileindex / tilegrpnbtiles;                        //Index of the current tile group containing the specified pixel coordinates, in absolute nb of tile groups
 
-                //Relative coord
-                size_t reltgrptileidx = abstileindex - (abstgrpindex * tilegrpnbtiles);                      //index of a PixelTile within a tilemap group (0-8)
-                size_t reltlpixidx    = ((pixy % tilesqrt) * tilesqrt) + (pixx % tilesqrt); //Index of a pixel within the current 8x8 pixel tile (0-63)
+    //            //Relative coord
+    //            size_t reltgrptileidx = abstileindex - (abstgrpindex * tilegrpnbtiles);                      //index of a PixelTile within a tilemap group (0-8)
+    //            size_t reltlpixidx    = ((pixy % tilesqrt) * tilesqrt) + (pixx % tilesqrt); //Index of a pixel within the current 8x8 pixel tile (0-63)
 
-                if( abstgrpindex < tiledtmap.size() )
-                {
-                    const auto & curtmap = tiledtmap[abstgrpindex][reltgrptileidx];
-                    if(curtmap.tileindex < tileset.Tiles().size())
-                    {
-                        gimg::tiled_image_i8bpp::tile_t tile;
-                        for(size_t cntpix = 0; cntpix < tileset.Tiles()[curtmap.tileindex].size(); ++cntpix )
-                            tile[cntpix] = tileset.Tiles()[curtmap.tileindex][cntpix] + (curtmap.palindex * NbColors4bpp);
-                        if(curtmap.hflip)
-                            tile.flipH();
-                        if(curtmap.vflip)
-                            tile.flipV();
-                        assembledimg.getPixel(pixx, pixy) = tile[reltlpixidx];
-                        //cout <<"Img(" <<pixx <<", " <<pixy <<") -> Tilegrp: " <<abstgrpindex <<", tile#: " <<reltgrptileidx <<", pixel index: " <<reltlpixidx <<"\n";
-                    }
-                }
-                else
-                {
-                    //cerr<<"Bad tgrp index " <<abstgrpindex <<" for pixel coord ( " <<pixx <<", " <<pixy <<" )\n";
-                }
-            }
-        }
+    //            if( abstgrpindex < tiledtmap.size() )
+    //            {
+    //                const auto & curtmap = tiledtmap[abstgrpindex][reltgrptileidx];
+    //                if(curtmap.tileindex < tileset.Tiles().size())
+    //                {
+    //                    gimg::tiled_image_i8bpp::tile_t tile;
+    //                    for(size_t cntpix = 0; cntpix < tileset.Tiles()[curtmap.tileindex].size(); ++cntpix )
+    //                        tile[cntpix] = tileset.Tiles()[curtmap.tileindex][cntpix] + (curtmap.palindex * NbColors4bpp);
+    //                    if(curtmap.hflip)
+    //                        tile.flipH();
+    //                    if(curtmap.vflip)
+    //                        tile.flipV();
+    //                    assembledimg.getPixel(pixx, pixy) = tile[reltlpixidx];
+    //                    //cout <<"Img(" <<pixx <<", " <<pixy <<") -> Tilegrp: " <<abstgrpindex <<", tile#: " <<reltgrptileidx <<", pixel index: " <<reltlpixidx <<"\n";
+    //                }
+    //            }
+    //            else
+    //            {
+    //                //cerr<<"Bad tgrp index " <<abstgrpindex <<" for pixel coord ( " <<pixx <<", " <<pixy <<" )\n";
+    //            }
+    //        }
+    //    }
 
-        return std::move(assembledimg);
-    }
+    //    return std::move(assembledimg);
+    //}
 
     /*
             -img         : Destination image
@@ -393,7 +452,7 @@ namespace pmd2
                     clog << "    *Invalid tile index " <<itcurtmap->tileindex <<"\n";
                     tindex = 0;
                 }
-                clog <<"m#" <<mapcnt <<"    *Tile #" <<tindex <<" at (" <<(tgrpoffsetx + (tmx * TileWidth)) <<", " <<curryoff <<")\n";
+                clog <<"TileMap #" <<mapcnt <<" - Target Tile #" <<tindex <<" at (" <<(tgrpoffsetx + (tmx * TileWidth)) <<", " <<curryoff <<")\n";
                 WriteTileAtCoordinates( img, (tgrpoffsetx + (tmx * TileWidth)), curryoff, *itcurtmap, std::begin(tiles[tindex]), std::end(tiles[tindex]) );
                 //currxoff += TileWidth;
                 ++mapcnt;
@@ -404,25 +463,12 @@ namespace pmd2
     }
 
 
-    //utils::Resolution MakeResDivisibleByTgrps( size_t wtiles, size_t htiles )
-    //{
-    //    const size_t tilegrpnbtiles = 9;
-    //    const size_t tilegrpwidth   = 3;
-    //    const size_t tilegrpheight  = 3;
-    //    const size_t tilesqrt       = 8;
-    //    utils::Resolution res;
-    //    res.width  = wtiles + ((wtiles % tilegrpwidth  != 0)? wtiles % tilegrpwidth  : 0);
-    //    res.height = htiles + ((htiles % tilegrpheight != 0)? htiles % tilegrpheight : 0);
-    //    return res;
-    //}
-
-
     gimg::tiled_image_i8bpp PreparePixels_LinearTiling(const Tileset & tileset)
     { 
-        const size_t tilegrpnbtiles = 9;
-        const size_t tilegrpwidth   = 3;
-        const size_t tilegrpheight  = 3;
-        const size_t tilesqrt       = 8;
+        static const size_t tilegrpnbtiles = 9;
+        static const size_t tilegrpwidth   = 3;
+        static const size_t tilegrpheight  = 3;
+        static const size_t tilesqrt       = 8;
         size_t       currentoffsetx = 0;
         size_t       currentoffsety = 0;
         auto         ittmap         = tileset.TileMap().begin();
@@ -430,10 +476,8 @@ namespace pmd2
         size_t       mapcnt         = 0;
         gimg::tiled_image_i8bpp assembledimg;
 
-        //utils::Resolution res = MakeResDivisibleByTgrps(tileset.BMAData().width, tileset.BMAData().height);
-        //assembledimg.setNbTilesRowsAndColumns( res.width, res.height );
-        const size_t imgtilewidth   = tileset.BMAData().width; /// 2;//tileset.TileMap().size() / tilegrpwidth;
-        const size_t imgtileheight  = tileset.TileMap().size() /imgtilewidth;//tilegrpheight;
+        const size_t imgtilewidth   = tileset.BMAData().width; 
+        const size_t imgtileheight  = tileset.TileMap().size() /imgtilewidth;
         const size_t imgwidthtgrp   = (imgtilewidth  / tilegrpwidth ) + ( (imgtilewidth  % tilegrpwidth  != 0)? 1 : 0);  
         const size_t imgheighttgrp  = (imgtileheight / tilegrpheight) + ( (imgtileheight % tilegrpheight != 0)? 1 : 0);  
 

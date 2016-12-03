@@ -18,6 +18,10 @@ Description: Utilities for editing PMD2 specific data within overlays and the ar
 #include <ppmdu/pmd2/pmd2_asm_data.hpp>
 #include <ppmdu/pmd2/pmd2_configloader.hpp>
 
+//!++#TODO: 
+//! Since we'll use an external assembler for asm hacks, and this will essentially now be just for, generating the arm asm, invoking the assembler, and veryfying if a patch was applied,
+//! better trim this down a bit!
+
 namespace pmd2
 {
 //======================================================================================

@@ -85,7 +85,7 @@ namespace pmd2
 
             static const size_t entrysz = _EntryLen; //Size of an entry 
 
-            //1st pass pile up strings in order
+            // === 1st pass pile up strings in order ===
             ::filetypes::FixedSIR0DataWrapper<std::vector<uint8_t>> sir0anddat;
             const size_t                     nbentries = std::distance(itbeg, itend);
             vector<uint8_t>                & outdata   = sir0anddat.Data();
@@ -105,7 +105,7 @@ namespace pmd2
             }
             utils::AppendPaddingBytes(itbackins, outdata.size(), 16, 0); //Pad the strings, because I'm a perfectionist
 
-            //2nd pass, write the table entries
+            // === 2nd pass, write the table entries ===
             uint32_t ptrdatatbl = outdata.size();
 
             size_t cntptr = 0;
@@ -170,57 +170,6 @@ namespace pmd2
         template<class _infwdit, class _outfwdit>
             inline _outfwdit DumpLevelList( _infwdit itbeg, _infwdit itend, _outfwdit itw )const
         {
-            //using std::vector;
-            //using std::back_inserter;
-            //static_assert( std::is_same<pmd2::level_info&, typename decltype(*itbeg)>::value ||
-            //               std::is_same<const pmd2::level_info&, typename decltype(*itbeg)>::value, 
-            //               "HardCodedDataDumper::DumpLevelList(): Iterators weren't iterators on level_info!!" );
-
-            //static const size_t entrysz = 12; //Size of an entry 
-
-            ////1st pass pile up strings in order
-            //::filetypes::FixedSIR0DataWrapper<std::vector<uint8_t>> sir0anddat;
-            //const size_t                     nbentries = std::distance(itbeg, itend);
-            //vector<uint8_t>                & outdata   = sir0anddat.Data();
-            //vector<uint32_t>                 stroffsets;
-            //stroffsets.reserve(nbentries);
-            //sir0anddat.Data().reserve((nbentries * 8) + (nbentries * entrysz));
-
-            //auto itbackins = std::back_inserter(sir0anddat.Data());
-
-            //for( auto itstr = itbeg; itstr != itend; ++itstr)
-            //{
-            //    const pmd2::level_info & inf = *itstr;
-            //    stroffsets.push_back(outdata.size());
-            //    std::copy( inf.name.begin(), inf.name.end(), itbackins );
-            //    outdata.push_back(0);
-            //    utils::AppendPaddingBytes( itbackins, outdata.size(), 4, 0 );
-            //}
-            //utils::AppendPaddingBytes(itbackins, outdata.size(), 16, 0); //Pad the strings, because I'm a perfectionist
-
-            ////2nd pass, write the table entries
-            //sir0anddat.SetDataPointerOffset(outdata.size());
-
-            //size_t cntptr = 0;
-            //for( auto itentry = itbeg; itentry != itend; ++itentry, ++cntptr )
-            //{
-            //    const pmd2::level_info & inf = *itentry;
-            //    //4 shorts, 1 string pointer
-            //    utils::WriteIntToBytes( inf.unk1,  itbackins );
-            //    utils::WriteIntToBytes( inf.unk2,  itbackins );
-            //    utils::WriteIntToBytes( inf.mapid, itbackins );
-            //    utils::WriteIntToBytes( inf.unk4,  itbackins );
-
-            //    //Write string pointer
-            //    sir0anddat.pushpointer(stroffsets[cntptr]);
-            //}
-
-            //utils::AppendPaddingBytes(itbackins, outdata.size(), 16, 0xAA);
-
-            ////Then write out!
-            ////ofstream out("level_list.bin",ios::out|ios::binary);
-            //sir0anddat.Write(itw);
-            //return itw;
             static const size_t entrysz = 12;
             return DumpStringAndList<entrysz, pmd2::level_info>(itbeg, itend, itw);
         }

@@ -72,6 +72,9 @@
     <ClInclude Include="src\utils\uuid_gen_wrapper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\cmdline_util_runner.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\utils\cmdline_util.cpp">

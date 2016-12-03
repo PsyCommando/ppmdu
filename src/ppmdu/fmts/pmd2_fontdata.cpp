@@ -7,6 +7,9 @@
 using namespace std;
 using namespace utils;
 
+
+//! #TODO: FIX THIS SHIT
+#if 0
 namespace pmd2 { namespace filetypes 
 {
     static const uint32_t          SizeMainFontDataEntry = 28; //bytes
@@ -366,3 +369,4 @@ namespace pmd2 { namespace filetypes
     //}
 
 };};
+#endif

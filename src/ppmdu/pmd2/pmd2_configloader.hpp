@@ -84,6 +84,8 @@ namespace pmd2
     };
     extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
 
+
+
 //========================================================================================
 //  Parsing utilities
 //========================================================================================
@@ -658,6 +660,35 @@ namespace pmd2
         objinf_t            m_objectsinfo;
     };
 
+//
+//
+//
+    struct asmpatchentry
+    {
+        enum struct eAsmPatchStep
+        {
+            IncludeFile,
+            OpenBin,
+            CloseBin,
+            Invalid,
+        };
+
+        struct asmpatchstep
+        {
+            eAsmPatchStep   op;
+            std::string     param;
+        };
+
+        std::string                 id;
+        std::vector<asmpatchstep>   steps;
+    };
+
+    struct GameASMPatchData
+    {
+        std::string                                    asmpatchdir;   //Path to source patch files for current game version
+        std::unordered_map<std::string,asmpatchentry>  patches;       //<ID,entrydata>
+    };
+
 //========================================================================================
 //  ConfigLoader
 //========================================================================================
@@ -699,6 +730,8 @@ namespace pmd2
 
         inline const GameScriptData & GetGameScriptData()const {return m_gscriptdata;}
 
+        inline const GameASMPatchData & GetASMPatchData()const {return m_asmpatchdata;}
+
     private:
         void Parse(uint16_t arm9off14);
         void Parse(eGameVersion version, eGameRegion region);
@@ -712,6 +745,7 @@ namespace pmd2
         GameBinariesInfo    m_binblocks;
         LanguageFilesDB     m_langdb;
         GameScriptData      m_gscriptdata;
+        GameASMPatchData    m_asmpatchdata;
     };
 
 

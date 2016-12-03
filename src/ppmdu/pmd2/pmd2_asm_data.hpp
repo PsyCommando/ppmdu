@@ -26,67 +26,6 @@ namespace pmd2
     const std::string FName_ARM9Bin       = "arm9.bin";
     const std::string FName_OverlayPrefix = "overlay_";
 
-
-//======================================================================================
-//  ARM9_Loader
-//======================================================================================
-    //class ARM9_Loader_Internal;
-    //class ARM9_Loader
-    //{
-    //public:
-
-    //    ARM9_Loader();
-    //    ARM9_Loader( ARM9_Loader && mv );
-    //    ~ARM9_Loader();
-
-    //    ARM9_Loader& operator=( ARM9_Loader && mv );
-
-    //    //File IO
-    //    void LoadBinary ( const std::string & fpath );
-    //    void WriteBinary( const std::string & fpath );
-
-    //    //Raw access
-    //    void    Write( size_t offset, uint8_t byte );
-    //    uint8_t Read ( size_t offset )const;
-
-    //    //Check to see if there were any changes to the internal state done
-    //    bool WasModified()const;
-
-    //    //!#TODO: Add something like a flyweight to handle the game specifics 
-
-    //private:
-    //    std::unique_ptr<ARM9_Loader_Internal> m_pinternal;
-    //};
-
-//======================================================================================
-//  ARM_Overlay_Loader
-//======================================================================================
-    //class ARM_Overlay_Loader_Internal;
-    //class ARM_Overlay_Loader
-    //{
-    //public:
-    //    ARM_Overlay_Loader();
-    //    ARM_Overlay_Loader( ARM_Overlay_Loader && mv );
-    //    ~ARM_Overlay_Loader();
-    //    ARM_Overlay_Loader& operator=(ARM_Overlay_Loader&& mv);
-
-    //    //File IO
-    //    void LoadBinary ( const std::string & fpath );
-    //    void WriteBinary( const std::string & fpath );
-
-    //    //Raw access
-    //    void    Write( size_t offset, uint8_t byte );
-    //    uint8_t Read ( size_t offset )const;
-
-    //    //Check to see if there were any changes to the internal state done
-    //    bool WasModified()const;
-
-    //    //!#TODO: Add something like a flyweight to handle the game specifics 
-
-    //private:
-    //    std::unique_ptr<ARM_Overlay_Loader_Internal> m_pinternal;
-    //};
-
 //======================================================================================
 //  ASM_Data_Loader
 //======================================================================================

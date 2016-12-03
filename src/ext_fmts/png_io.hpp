@@ -58,6 +58,15 @@ namespace utils{ namespace io
         bool ExportToPNG( const _TImg_t     & in_indexed,
                           const std::string & filepath );
 
+    /*
+    */
+    template<class _TImgTy>
+        bool ExportToPNG_AndCrop(   const _TImgTy     & in_indexed,
+                                    const std::string & filepath,
+                                    unsigned int        begpixX,
+                                    unsigned int        begpixY,
+                                    unsigned int        endpixX = 0,
+                                    unsigned int        endpixY = 0 );
 
 
     //Generic Import Functions

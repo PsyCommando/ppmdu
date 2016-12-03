@@ -256,6 +256,7 @@ copy /Y /B "$(TargetPath)" "$(SolutionDir)lib_release\$(TargetName).lib"
     <ClInclude Include="lib\whereami\src\whereami.h" />
     <ClInclude Include="src\utils\audio_utilities.hpp" />
     <ClInclude Include="src\utils\cmdline_util.hpp" />
+    <ClInclude Include="src\utils\cmdline_util_runner.hpp" />
     <ClInclude Include="src\utils\gbyteutils.hpp" />
     <ClInclude Include="src\utils\gfileio.hpp" />
     <ClInclude Include="src\utils\gfileutils.hpp" />

@@ -16,6 +16,85 @@ Description: Storage and processing classes for level tileset data.
 
 namespace pmd2
 {
+//
+//
+//
+    /*  
+        tmapconstants
+            Constants used in the game for parsing tilemaps.
+    */
+    struct tsetconstants
+    {
+        //
+        uint16_t unk_0x2BC;
+        uint16_t unk_0x2BE;
+        uint16_t unk_0x2CO; //Nb bpas?
+        uint16_t unk_0x2C2;
+        uint16_t unk_0x2C4; //Nb Palettes used?
+        uint16_t unk_0x2C6;
+        uint16_t unk_0x2C8;
+        //
+        uint16_t unk_0x2CA;
+        uint16_t unk_0x2CC;
+        uint16_t unk_0x2CE;
+        uint16_t unk_0x2D0;
+        uint16_t unk_0x2D2;
+        uint16_t unk_0x2D4;
+        uint16_t unk_0x2D8;
+    };
+
+    
+
+//
+//
+//
+    extern const std::array<tsetconstants, 3> TSetIndependantSelectConstants;
+    extern const std::array<tsetconstants, 3> TSetGroundSelectConstants;
+    extern const std::array<tsetconstants, 2> TSetGroundSubWorldSelectConstants;
+
+    /*
+    */
+    inline const tsetconstants & IndependantMapSeletConstants( int levelid, uint8_t lvlunk1 )
+    {
+        if( levelid != -1 )
+        {
+            if( lvlunk1 >= 6 && lvlunk1 <= 10 )
+                return TSetIndependantSelectConstants[1];
+            else if( lvlunk1 >= 11 && lvlunk1 <= 12 )
+                return TSetIndependantSelectConstants[2];
+        }
+        //if( levelid == -1 || lvlunk1 > 12 || lvlunk1 <= 5  )
+        return TSetIndependantSelectConstants[0];
+    }
+
+    /*
+    */
+    inline const tsetconstants & GroundMapSeletConstants     ( int levelid, uint8_t lvlunk1 )
+    {
+        if( levelid != -1 )
+        {
+            if( lvlunk1 >= 6 && lvlunk1 <= 10 )
+                return TSetGroundSelectConstants[1];
+            else if( lvlunk1 >= 11 && lvlunk1 <= 12 )
+                return TSetGroundSelectConstants[2];
+        }
+        //if( levelid == -1 || lvlunk1 > 12 || lvlunk1 <= 5  )
+        return TSetGroundSelectConstants[0];
+    }
+
+    /*
+    */
+    inline const tsetconstants & GroundSubWorldMapSeletConstants( int levelid, uint8_t lvlunk1 )
+    {
+        if( levelid != -1 && ( lvlunk1 == 0 || (lvlunk1 >= 6 && lvlunk1 <= 12) ) )
+            return TSetGroundSubWorldSelectConstants[1];
+        else
+            return TSetGroundSubWorldSelectConstants[0];
+    }
+
+//
+//
+//
     /*
         tileproperties
             Tile mapping entry for a single tile.
@@ -112,7 +191,18 @@ namespace pmd2
         uint16_t unk6;
         uint16_t unk7;
 
-        std::vector<uint8_t> data;
+        std::vector<uint16_t> unktable1; // The first compressed table
+        std::vector<uint16_t> unktable2; // The second compressed table
+        std::vector<uint8_t>  unktable3; // The third compressed table, possibly terrain passability mask
+    };
+
+
+    /*
+    */
+    class TilesetBPAData
+    {
+    public:
+
     };
 
 
@@ -125,25 +215,29 @@ namespace pmd2
         typedef std::vector<std::vector<gimg::pixel_indexed_4bpp>>  imgdat_t;
         typedef std::vector<tileproperties>                         tmapdat_t;
         typedef TilesetPalette                                      pal_t;      //15, 16 colors palettes
+        typedef std::vector<TilesetBPAData>                         bpadat_t;
+        typedef TilesetBMAData                                      bmadat_t;
 
-        inline pal_t            & Palettes(){return m_palettes;}
-        inline const pal_t      & Palettes()const {return m_palettes;}
-        inline imgdat_t         & Tiles()   {return m_imgdata;}
-        inline const imgdat_t   & Tiles()const {return m_imgdata;}
-        inline tmapdat_t        & TileMap() {return m_tilemapping;}
-        inline const tmapdat_t  & TileMap()const {return m_tilemapping;}
+        inline pal_t            & Palettes()        {return m_palettes;}
+        inline const pal_t      & Palettes()const   {return m_palettes;}
+        inline imgdat_t         & Tiles()           {return m_imgdata;}
+        inline const imgdat_t   & Tiles()const      {return m_imgdata;}
+        inline tmapdat_t        & TileMap()         {return m_tilemapping;}
+        inline const tmapdat_t  & TileMap()const    {return m_tilemapping;}
 
-        inline TilesetBMAData        & BMAData() {return m_bmadata;}
-        inline const TilesetBMAData  & BMAData()const {return m_bmadata;}
+        inline bmadat_t        & BMAData()          {return m_bmadata;}
+        inline const bmadat_t  & BMAData()const     {return m_bmadata;}
 
-        //!#TODO: Add animated layes, and BMA stuff!
+        inline bpadat_t         & BPAData()         {return m_bpadata;}
+        inline const bpadat_t   & BPAData()const    {return m_bpadata;}
 
     private:
 
         pal_t           m_palettes;
         imgdat_t        m_imgdata;
         tmapdat_t       m_tilemapping;
-        TilesetBMAData  m_bmadata;
+        bmadat_t        m_bmadata;
+        bpadat_t        m_bpadata;
     };
 
 
