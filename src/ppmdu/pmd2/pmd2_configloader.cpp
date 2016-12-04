@@ -129,6 +129,7 @@ namespace pmd2
         const string ATTR_BitShift  = "bitshift";
         const string ATTR_EntID     = "entid";
         const string ATTR_MapID     = "mapid";
+        const string ATTR_MapTy     = "mapty";
 
     };
 
@@ -568,7 +569,7 @@ namespace pmd2
                 {
                     if( attr.name() == ATTR_Name )
                         lvlinf.name = attr.value();
-                    else if( attr.name() == ATTR_Unk1 )
+                    else if( attr.name() == ATTR_MapTy )
                         lvlinf.unk1 = static_cast<int16_t>(attr.as_int());
                     else if( attr.name() == ATTR_Unk2 )
                         lvlinf.unk2 = static_cast<int16_t>(attr.as_int());

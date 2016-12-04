@@ -10,8 +10,8 @@ using namespace std;
 namespace pmd2
 {
 
-    const std::string FnameUpperScrData = "upper";
-    const std::string FnameLowerScrData = "lower";
+    const std::string FnameUpperLayerData = "upper";
+    const std::string FnameLowerLayerData = "lower";
 
     const std::array<tsetconstants, 3> TSetIndependantSelectConstants
     {{
@@ -58,7 +58,7 @@ namespace pmd2
     }};
 
     extern const std::array<tsetconstants, 2> TSetGroundSubWorldSelectConstants
-    {
+    {{
         //02323394 - When levelid == 0xFFFFFFFF
         //           OR level list entry first word == 1,2,3,4,5 OR bigger than 12!
         {
@@ -71,7 +71,7 @@ namespace pmd2
             0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000,   
         },
-    };
+    }};
 
 
 //
@@ -84,12 +84,12 @@ namespace pmd2
         stringstream sstrpal;
         stringstream sstrsecpal;
         stringstream sstrpalindextbl;
-        sstrimg  <<utils::TryAppendSlash(destdir) <<basename;
-        sstrtmap <<sstrimg.str() <<"_tilemap.bin";
-        sstrpal  <<sstrimg.str() <<"_mainpal.rgbx32";
-        sstrsecpal  <<sstrimg.str() <<"_secpal.rgbx32";
+        sstrimg          <<utils::TryAppendSlash(destdir) <<basename;
+        sstrtmap         <<sstrimg.str() <<"_tilemap.bin";
+        sstrpal          <<sstrimg.str() <<"_mainpal.rgbx32";
+        sstrsecpal       <<sstrimg.str() <<"_secpal.rgbx32";
         sstrpalindextbl  <<sstrimg.str() <<"_secpalidxtbl.bin";
-        sstrimg  <<"_img.4bpp";
+        sstrimg          <<"_img.4bpp";
 
         utils::DoCreateDirectory(destdir);
 
@@ -165,12 +165,12 @@ namespace pmd2
 
         if(pupscrtset)
         {
-            ExportTilesetToRaw(destdir, FnameUpperScrData, *pupscrtset);
+            ExportTilesetToRaw(destdir, FnameUpperLayerData, *pupscrtset);
         }
 
         if(plowscrtset)
         {
-            ExportTilesetToRaw(destdir, FnameLowerScrData, *plowscrtset);
+            ExportTilesetToRaw(destdir, FnameLowerLayerData, *plowscrtset);
         }
 
         //! #TODO
@@ -570,4 +570,5 @@ namespace pmd2
 
         utils::io::ExportToPNG(assembledimg, fpath);
     }
+
 };
