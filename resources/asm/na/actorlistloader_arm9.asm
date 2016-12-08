@@ -20,7 +20,7 @@
 .area 0x20A9208 - .
 
 ;Place marker to indicate PPMD applied a mod! ;Place a marker to indicate that we applied the hack
-  .ascii "PPMD PATCH ActorLoader 0.1"
+  .ascii "PATCH PPMD ActorLoader 0.1"
   dcb 0
   .align 4
 

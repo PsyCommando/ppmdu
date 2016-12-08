@@ -19,7 +19,7 @@
     .area 0x20A68BC - .
 
 ;Place marker to indicate PPMD applied a mod!
-      .ascii "PPMD PATCH LvlLstLdr 0.1"
+      .ascii "PATCH PPMD LvlLstLdr 0.1"
       dcb 0
       .align 4
 

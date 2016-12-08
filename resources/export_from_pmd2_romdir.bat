@@ -1,1 +1,0 @@
-ppmd_audioutil.exe -pmd2 "%1" "./outpmd2"

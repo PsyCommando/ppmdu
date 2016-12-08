@@ -296,9 +296,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\whereami\src\whereami.h">
       <Filter>whereami</Filter>
     </ClInclude>
@@ -329,7 +326,13 @@
     <ClInclude Include="..\src\ppmdu\pmd2\level_data.hpp">
       <Filter>Header Files\ppmdu\data formats\levels</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp">
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
   </ItemGroup>
@@ -532,7 +535,10 @@
     <ClCompile Include="..\src\mapnybbler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp">
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_levels.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>

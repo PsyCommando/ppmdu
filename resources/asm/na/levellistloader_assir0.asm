@@ -94,6 +94,15 @@ TryLoadLevelList:
 GetLevelListAddress:
   ldr r0,=LevelListTablePtr
   ldr r0,[r0]
+  ldr r0,[r0] ;Do it again because we have a sub-header
+  bx r14
+;END
+
+;Returns the total nb of levels from the sir0 subheader
+GetLevelListAddress:
+  ldr r0,=LevelListTablePtr
+  ldr r0,[r0]
+  ldr r0,[r0,4h] ;Grab the nb of entries
   bx r14
 ;END
 
@@ -102,12 +111,13 @@ GetOrLoadLevelList:
   push r14
   bl ShouldLoadLevelList
   cmp r0, 0h
-      beq @@GetAddress ;If the file is already loaded, just jump to accessing the table
+      ;beq @@GetAddress ;If the file is already loaded, just jump to accessing the table
+      bl  GetLevelListAddress
 @@LoadTable:
       bl  LevelListLoader
 @@GetAddress:
-  ldr r0,=LevelListTablePtr
-  ldr r0,[r0]
+  ;ldr r0,=LevelListTablePtr
+  ;ldr r0,[r0]
   pop r15
   .pool
 ;END

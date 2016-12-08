@@ -245,6 +245,23 @@ namespace pmd2
 //
 //
 //
+
+    /*
+        TileSetHandler
+            Use this to load tilesets from the specified romroot.
+
+            It interfaces with the bg_list.dat file, and loads properly tilesets via internal names.
+    */
+    class TileSetHandler
+    {
+    public:
+        TileSetHandler(const std::string & romrootpath);
+
+        void ExportAll(const std::string & destdirpath );
+        void ImportAll(const std::string & srcdirpath );
+    };
+
+
     /*
         ExportTilesetPairToRaw
             Exports either the upper or lower screen tileset into the specified directory as raw unprocessed images and palettes.

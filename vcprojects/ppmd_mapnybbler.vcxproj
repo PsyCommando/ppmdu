@@ -318,7 +318,7 @@
     <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\level_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
@@ -329,13 +329,14 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Header Files\ppmdutils\file formats</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Header Files\ppmdutils\file formats</Filter>
@@ -516,7 +517,7 @@
     <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
@@ -531,6 +532,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_levels.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>

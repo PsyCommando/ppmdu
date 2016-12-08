@@ -39,6 +39,9 @@ namespace pmd2
         "StartersStrings",    
         "QuizzQuestionStrs",  
         "QuizzAnswerStrs",    
+        "ScriptVars",
+        "ScriptVarsLocals",
+        "Objects",
     };
 
 
@@ -98,6 +101,8 @@ namespace pmd2
         const string NODE_Patch     = "Patch";
         const string NODE_Include   = "Include";
         const string NODE_OpenBin   = "OpenBin";
+        const string NODE_LooseBin  = "LooseBinFiles";
+        const string NODE_File      = "File";
 
 
         const string ATTR_ID        = "id";
@@ -130,6 +135,7 @@ namespace pmd2
         const string ATTR_EntID     = "entid";
         const string ATTR_MapID     = "mapid";
         const string ATTR_MapTy     = "mapty";
+        const string ATTR_SrcDat    = "srcdata";
 
     };
 
@@ -570,7 +576,7 @@ namespace pmd2
                     if( attr.name() == ATTR_Name )
                         lvlinf.name = attr.value();
                     else if( attr.name() == ATTR_MapTy )
-                        lvlinf.unk1 = static_cast<int16_t>(attr.as_int());
+                        lvlinf.mapty = static_cast<int16_t>(attr.as_int());
                     else if( attr.name() == ATTR_Unk2 )
                         lvlinf.unk2 = static_cast<int16_t>(attr.as_int());
                     else if( attr.name() == ATTR_MapID )
@@ -719,6 +725,43 @@ namespace pmd2
 
             //2. Read patch data for each game versions
             ParseASMPatchData(patchesnode);
+
+            //3. Read Loose Bin Files Data
+            ParseLooseBinFileFileEntry(patchesnode);
+        }
+
+
+        void ParseALooseBinEntry(xml_node & loosebinn)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_attribute src  = loosebinn.attribute(ATTR_SrcDat.c_str());
+            xml_attribute path = loosebinn.attribute(ATTR_FPath.c_str());
+
+            if( !src || !path )
+                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A loose bin file entry lacks either its " + ATTR_SrcDat + " attribute, or its " + ATTR_FPath + " attribute!!");
+
+            patchloosebinfile plbf;
+            plbf.src  = StrToBinaryLocation(src.value());
+            plbf.path = path.value();
+            m_asmpatchdata.lfentry.insert_or_assign( plbf.src, plbf );
+        }
+
+        void ParseLooseBinFileFileEntry(xml_node & patchesnode)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node loosebinnode = patchesnode.child(NODE_LooseBin.c_str());
+            if(!loosebinnode)
+                throw std::runtime_error("ConfigXMLParser::ParseLooseBinFileFileEntry(): There are no LooseBinFiles node in the config file!!");
+
+            for( const auto & ver : loosebinnode.children(NODE_Game.c_str()) )
+            {
+                if( ! MatchesCurrentVersionID( loosebinnode.attributes_begin(), loosebinnode.attributes_end() ) )
+                    continue;
+                for( xml_node & afile : ver.children(NODE_File.c_str()) )  
+                    ParseALooseBinEntry(afile);
+            }
         }
 
         void ParseASMDirectories(xml_node & patchesnode)
@@ -727,7 +770,7 @@ namespace pmd2
             using namespace ConfigXML;
             xml_node patchdirn = patchesnode.child(NODE_PatchDir.c_str());
             if(!patchdirn)
-                throw std::runtime_error(": There are no patch directories nodes containing the path to the required asm files in the configuration file(s)!!");
+                throw std::runtime_error("ConfigXMLParser::ParseASMDirectories(): There are no patch directories nodes containing the path to the required asm files in the configuration file(s)!!");
 
             for( const auto & ver : patchdirn.children(NODE_Game.c_str()) )
             {
@@ -740,7 +783,7 @@ namespace pmd2
             }
 
             if( m_asmpatchdata.asmpatchdir.empty() )
-                throw std::runtime_error("ConfigXMLParser::ParseASMPatches() : No matching asm patch directory found in the config for this game version!!");
+                throw std::runtime_error("ConfigXMLParser::ParseASMDirectories() : No matching asm patch directory found in the config for this game version!!");
         }
 
         void HandlePatchOp(xml_node & patchn, asmpatchentry & entry)

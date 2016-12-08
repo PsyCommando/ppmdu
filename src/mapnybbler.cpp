@@ -7,7 +7,7 @@
 #include <utils/library_wide.hpp>
 #include <ppmdu/pmd2/pmd2_gameloader.hpp>
 #include <ppmdu/pmd2/pmd2_xml_sniffer.hpp>
-#include <ppmdu/pmd2/pmd2_hcdata_dumper.hpp>
+#include <ppmdu/pmd2/pmd2_asm.hpp>
 #include <utils/poco_wrapper.hpp>
 #include <utils/whereami_wrapper.hpp>
 //stdlib
@@ -26,6 +26,32 @@
 using namespace ::utils::cmdl;
 using namespace ::utils::io;
 using namespace ::std;
+
+/*
+                --- STUFF TO DO!! ---
+    - Make the script data file separately loaded from the configuration file!
+    - Add check to verify and determine what mods are installed on a modded PMD2 game. Add safeguard so if 
+      it encounters another tool's modded code that is prefixed by something else than PATCH, ignore, and error out!
+    - Make the script data file editable, and generatable from several sources.
+        * Unmodiffied games
+        * Content of loaded scripts/levels
+        * From the files added by the modification to the game.
+    - Add support for dumping to XML, and importing for edititng the following hard-coded data to-and-from modded and unmodded games:
+        * Actors
+        * Objects
+        * Common Routines
+    - Add support for dumping and importing for editing hard-coded level data to-and-from modded and unmodded games. 
+      + Integrate with level export!
+    - Work out whether any files are shared inside the bg_list file, and whether any should be. And if they should be shared, this will complicate how everything works.
+    
+
+
+
+
+
+
+
+*/
 
 
 //=================================================================================================
@@ -338,7 +364,7 @@ using namespace ::std;
 
     bool CMapNybbler::ParseOptionAssembleBgList(const std::vector<std::string>& optdata)
     {
-        string ofpath = Poco::Path(optdata[1]).resolve("");
+        string ofpath = Poco::Path(optdata[1]).resolve("").toString();
 
 
         //Skip if we already added this task!
@@ -556,29 +582,31 @@ using namespace ::std;
 
     void CMapNybbler::RunLvlListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
-        string fpath;
-        if(task.args.empty())
-            fpath = "level_list.bin";
-        else
-            fpath = task.args[0];
+        pmd2::ConfigLoader & cfg = pmd2::MainPMD2ConfigWrapper::CfgInstance();
+        pmd2::PMD2_ASM pmdasm(gloader.GetRomRoot(), cfg);
+
+        //!#TODO: Add option to use default loaded entries
+        if(true)
+            cfg.GetGameScriptData().LevelInfo() = pmdasm.LoadLevelList();
 
         gloader.LoadAsm();
         cout<<"Dumping level_list..\n";
-        pmd2::HardCodedDataDumper(pmd2::MainPMD2ConfigWrapper::CfgInstance()).DumpLevelDataFromConf(fpath);
+        pmdasm.WriteLevelList(cfg.GetGameScriptData().LevelInfo());
         cout<<"Done with level_list!\n";
     }
 
     void CMapNybbler::RunActorListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
-        string fpath;
-        if(task.args.empty())
-            fpath = "actor_list.bin";
-        else
-            fpath = task.args[0];
+        pmd2::ConfigLoader & cfg = pmd2::MainPMD2ConfigWrapper::CfgInstance();
+        pmd2::PMD2_ASM pmdasm(gloader.GetRomRoot(), cfg);
+
+        //!#TODO: Add option to use default loaded entries
+        if(true)
+            cfg.GetGameScriptData().LivesEnt() = pmdasm.LoadActorList();
 
         gloader.LoadAsm();
         cout<<"Dumping actor_list..\n";
-        pmd2::HardCodedDataDumper(pmd2::MainPMD2ConfigWrapper::CfgInstance()).DumpActorDataFromConf(fpath);
+        pmdasm.WriteActorList(cfg.GetGameScriptData().LivesEnt());
         cout<<"Done with actor_list!\n";
     }
 

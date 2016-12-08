@@ -88,6 +88,8 @@
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
         <Block name="ScriptOpCodes"     beg="0x03C3D0" end="0x03CFC8"/>
+        <Block name="Objects"           beg="0x42C14" end="0x44618"/>
+        <Block name="CRoutines"         beg="0x405E8" end="0x41BD0"/>
       </Bin>
       <!-- overlay_0013 -->
       <Bin filepath="overlay/overlay_0013.bin" loadaddress="0x238A140">
@@ -104,6 +106,8 @@
       <!--#TODO-->
       <!-- arm9 -->
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <!--<Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>-->
+        <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
         <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
         <Block name="Events"            beg="0xA5BE0" end="0xA715C"/>
       </Bin>
@@ -120,6 +124,7 @@
         <Block name="Entities"          beg="0xA9438" end="0xAA650"/>
         <Block name="Events"            beg="0xA689C" end="0xA7D0C"/>
         <Block name="ScriptVars"        beg="0x9EC44" end="0x9F374"/>
+        <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DD8E0">
@@ -310,6 +315,24 @@
       and locating the appropriate patch files.-->
   <ASMPatchesConstants>  
     <!--*******************-->
+    <!--LooseBinFiles-->
+    <!--*******************-->
+    <!--List of where to write which file containing dumped hardcoded data for the patches to work with at runtime-->
+    <LooseBinFiles>
+      
+      <!--Explorers of Sky-->
+      <Game id="EoS_NA" id2="EoS_JP" id3="EoS_EU" >
+        <File srcdata="Events"      filepath="BALANCE/level_list.bin"   />
+        <File srcdata="Entities"    filepath="BALANCE/actor_list.bin"   />
+        <File srcdata="Objects"     filepath="BALANCE/object_list.bin"  />
+        <File srcdata="ScriptVars"  filepath="BALANCE/gvar_list.bin"    />
+        <File srcdata="CRoutines"   filepath="BALANCE/croutine_list.bin"/>
+      </Game>
+
+    </LooseBinFiles>
+    
+    
+    <!--*******************-->
     <!--Patches directories-->
     <!--*******************-->
     <PatchesDir>
@@ -361,16 +384,15 @@
         </Patch>
         
       </Game>
+      <!--###############################-->
+      <!--European Explorers of Sky-->
+      <!--###############################-->
+    
+      <!--###############################-->
+      <!--Japanese Explorers of Sky-->
+      <!--###############################-->
     </Patches>
-    
-    <!--###############################-->
-    <!--European Explorers of Sky-->
-    <!--###############################-->
-    
-    <!--###############################-->
-    <!--Japanese Explorers of Sky-->
-    <!--###############################-->
-    
+
   </ASMPatchesConstants>
   
   <!--=======================================================================-->
