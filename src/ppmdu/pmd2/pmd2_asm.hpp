@@ -1,5 +1,5 @@
 #ifndef PMD2_ASM_HPP
-#define PMD2_ADM_HPP
+#define PMD2_ASM_HPP
 /*
 pmd2_asm.hpp
 2016/05/31
@@ -15,7 +15,7 @@ Description: Utilities for editing PMD2 specific data within overlays and the ar
 #include <unordered_map>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2.hpp>
-#include <ppmdu/pmd2/pmd2_asm_data.hpp>
+//#include <ppmdu/pmd2/pmd2_asm_data.hpp>
 #include <ppmdu/pmd2/pmd2_configloader.hpp>
 
 //!++#TODO: 
@@ -27,8 +27,9 @@ namespace pmd2
 //======================================================================================
 //  Constants
 //======================================================================================
-    extern const std::string ASM_ModdedTag;
-    const int                ASM_ModdedTaDescgMaxLen = 4096;    //4096 characters max for a modded tag!
+    extern const std::string FName_ARM9Bin;                     //Default name of the arm9 binary file.
+    extern const std::string ASM_ModdedTag;                     //Tag opening any modded binary location, to indicate that the data that should be here isn't
+    extern const int         ASM_ModdedTaDescgMaxLen;           //4096 characters max for a modded tag!
 
 //======================================================================================
 //  Utilities
@@ -41,9 +42,7 @@ namespace pmd2
     class ExBinaryIsModded : public std::runtime_error 
     {
     public:
-        ExBinaryIsModded(const std::string & msg, const std::string & binpath, uint32_t binoff)
-            :std::runtime_error(msg),m_binoff(binoff),m_binpath(binpath)
-        {}
+        ExBinaryIsModded(const std::string & msg, const std::string & binpath, uint32_t binoff);
 
         std::string m_binpath;
         uint32_t    m_binoff;
@@ -109,7 +108,7 @@ namespace pmd2
             has the modded tag.
             Returns a modinfo that either returns the mod string, or an empty string if its not modded.
         */
-        modinfo CheckBlockModdedTag( const std::string & binppathrel, uint32_t offset );
+        modinfo CheckBlockModdedTag( const binarylocatioinfo & locinfo );
 
     private:
         std::unique_ptr<PMD2_ASM_Impl> m_pimpl;

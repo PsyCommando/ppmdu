@@ -257,7 +257,7 @@ namespace pmd2
         return m_audio.get();
     }
 
-    PMD2_ASM_Manip * GameDataLoader::LoadAsm()
+    PMD2_ASM * GameDataLoader::LoadAsm()
     {
         if(!m_bAnalyzed)
             AnalyseGame();
@@ -265,11 +265,8 @@ namespace pmd2
         if( m_noarm9 && m_nooverlays )
             return nullptr;
 
-        //if( !m_asmmanip )
-        //{
-        //    m_asmmanip.reset( new PMD2_ASM_Manip( ASM_Data_Loader(m_romroot), GetGameVersion(), GetGameRegion() ) );
-        //    m_asmmanip->Load();
-        //}
+        if( !m_asmmanip )
+            m_asmmanip.reset( new PMD2_ASM( m_romroot, MainPMD2ConfigWrapper::CfgInstance() ) );
         return m_asmmanip.get();
     }
 
@@ -289,8 +286,8 @@ namespace pmd2
             WriteStats();
         if( m_audio != nullptr )
             WriteAudio();
-        if( m_asmmanip != nullptr )
-            WriteAsm();
+        //if( m_asmmanip != nullptr )
+        //    WriteAsm();
     }
 
     void GameDataLoader::WriteGameText()
@@ -375,22 +372,22 @@ namespace pmd2
         assert(false);
     }
 
-    void GameDataLoader::WriteAsm()
-    {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+    //void GameDataLoader::WriteAsm()
+    //{
+    //    if(!m_bAnalyzed)
+    //        AnalyseGame();
 
-        if( m_noarm9 && m_nooverlays )
-            return;
+    //    if( m_noarm9 && m_nooverlays )
+    //        return;
 
-        if( !m_asmmanip )
-        {
-            clog <<"<!>- GameDataLoader::WriteAsm(): Nothing to write!\n";
-            return;
-        }
+    //    if( !m_asmmanip )
+    //    {
+    //        clog <<"<!>- GameDataLoader::WriteAsm(): Nothing to write!\n";
+    //        return;
+    //    }
 
-        //m_asmmanip->Write();
-    }
+    //    //m_asmmanip->Write();
+    //}
 
 // ======================== Data Access ========================
     void                      GameDataLoader::SetRomRoot(const std::string & romroot)   { m_romroot = romroot; }
@@ -411,8 +408,8 @@ namespace pmd2
     GameAudio               * GameDataLoader::GetAudio()                                { return m_audio.get(); }
     const GameAudio         * GameDataLoader::GetAudio() const                          { return m_audio.get(); }
 
-    PMD2_ASM_Manip          * GameDataLoader::GetAsmManip()                             { return m_asmmanip.get(); }
-    const PMD2_ASM_Manip    * GameDataLoader::GetAsmManip() const                       { return m_asmmanip.get(); }
+    PMD2_ASM                * GameDataLoader::GetAsm()                             { return m_asmmanip.get(); }
+    const PMD2_ASM          * GameDataLoader::GetAsm() const                       { return m_asmmanip.get(); }
 
     //const ConfigLoader * GameDataLoader::GetConfig() const
     //{

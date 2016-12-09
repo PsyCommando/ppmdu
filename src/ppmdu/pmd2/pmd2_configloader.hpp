@@ -28,8 +28,7 @@ namespace pmd2
     *******************************************************************************/
     enum struct eBinaryLocations : unsigned int
     {
-        Invalid = 0,        
-        Entities,           //Entities table
+        Entities= 0,        //Entities table
         Events,             //Events table
         ScriptOpCodes,      //Script opcodes table
         StartersHeroIds,    //Table of Hero ids for each natures
@@ -40,8 +39,10 @@ namespace pmd2
         ScriptVariables,    //Table of informations on the script variables 
         ScriptVarsLocals,   //Table of informations on the local script variables 
         Objects,            //Table containing info on all object sprite files the game can load.
+        CommonRoutines,     //Table containing info on commmon routines
 
-        NbLocations,        //Must be last
+        NbLocations,        //Must be last valid entry
+        Invalid,   
     };
     extern const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames;
 

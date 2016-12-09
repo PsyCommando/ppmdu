@@ -210,9 +210,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
@@ -248,6 +245,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
       <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

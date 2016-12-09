@@ -14,10 +14,20 @@ using namespace utils;
 
 namespace pmd2
 {
-    const std::string ASM_ModdedTag = "PATCH";
+    const std::string FName_ARM9Bin             = "arm9.bin";
+    const std::string ASM_ModdedTag             = "PATCH";
+    const int         ASM_ModdedTaDescgMaxLen   = 4096; 
 
 //=======================================================================================
-//  
+//  Exceptions
+//=======================================================================================
+
+    ExBinaryIsModded::ExBinaryIsModded(const std::string & msg, const std::string & binpath, uint32_t binoff)
+        :std::runtime_error(msg),m_binoff(binoff),m_binpath(binpath)
+    {}
+
+//=======================================================================================
+//  Implementation
 //=======================================================================================
     class PMD2_ASM_Impl
     {
@@ -27,11 +37,11 @@ namespace pmd2
         */
         PMD2_ASM_Impl(const std::string & romroot, ConfigLoader & conf)
             :m_conf(conf), m_romroot(romroot)
-        {
-        }
+        {}
 
         /*
             MakeBinPathString
+                Assemble the path to a binary within the current rom's directory structure.
         */
         std::string MakeBinPathString(const binarylocatioinfo & info)const
         {
@@ -41,17 +51,41 @@ namespace pmd2
         }
 
         /*
-            CheckBlockModdedTag
+            MakeLooseBinFileOutPath
+                Assemble the path to a binary loose file within the rom's directory structure.
         */
-        PMD2_ASM::modinfo CheckBlockModdedTag(const std::string & binppathrel, uint32_t offset)
+        std::string MakeLooseBinFileOutPath( eBinaryLocations loc )
+        {
+            auto found = m_conf.GetASMPatchData().lfentry.find(loc);
+
+            if(found ==  m_conf.GetASMPatchData().lfentry.end())
+                throw std::runtime_error("PMD2_ASM_Impl::MakeLooseBinFileOutPath(): Couldn't find the entity file output path for the actor list!");
+
+            stringstream outfpath;
+            outfpath <<TryAppendSlash(m_romroot) <<DirName_DefData <<"/" <<found->second.path ;
+            return std::move(outfpath.str());
+        }
+
+        PMD2_ASM::modinfo CheckBlockModdedTag(const binarylocatioinfo & locinfo)
+        {
+            ifstream binf;
+            OpenBinFile(binf,locinfo);
+            return CheckBlockModdedTag(binf, locinfo);
+        }
+
+        /*
+            CheckBlockModdedTag
+                Verifies if the PATCH tag is at an expected bin location offset within a binary.
+        */
+        PMD2_ASM::modinfo CheckBlockModdedTag(istream & binf, const binarylocatioinfo & locinfo)
         {
             PMD2_ASM::modinfo minfo;
-            stringstream binpath;
-            binpath <<utils::TryAppendSlash(m_romroot) <<binppathrel;
+            //stringstream binpath;
+            //binpath <<utils::TryAppendSlash(m_romroot) <<binppathrel;
             try
             {
-                ifstream binf( binpath.str(), ios::in | ios::binary );
-                binf.seekg(offset);
+                //ifstream binf( binpath.str(), ios::in | ios::binary );
+                binf.seekg(locinfo.location.beg);
                 std::istreambuf_iterator<char> init(binf);
                 std::istreambuf_iterator<char> initend;
                 if( std::equal( ASM_ModdedTag.begin(), ASM_ModdedTag.end(), init ) )
@@ -69,7 +103,7 @@ namespace pmd2
             }
             catch(const std::exception&)
             {
-                throw_with_nested( std::runtime_error("PMD2_ASM_Impl::CheckBlockModdedTag() : Failure while reading file " + binpath.str() + "!") );
+                throw_with_nested( std::runtime_error("PMD2_ASM_Impl::CheckBlockModdedTag() : Failure while reading file " + locinfo.fpath + "!") );
             }
             
             return std::move(minfo);
@@ -82,22 +116,29 @@ namespace pmd2
             void LoadData( eBinaryLocations binloc, _DataTy & out_data)
         {
             const binarylocatioinfo bininfo = m_conf.GetGameBinaryOffset(binloc);
-            size_t                  flen    = 0;
-            istream                 ifl     = OpenFile(bininfo, flen);
+            ifstream                binf;
+            OpenBinFile(binf, bininfo);
 
             //Check if modded tag is there, then load from the correct source!
-            PMD2_ASM::modinfo modinfo = CheckBlockModdedTag( binpath, bininfo.location.beg );
+            PMD2_ASM::modinfo modinfo = CheckBlockModdedTag( binf, bininfo );
+            binf.seekg(0);
+            binf.clear();
+
             if(modinfo.ismodded())
-                LoadDataFromLooseBin<_DataTy,_TransType>(out_data, binpath);
+            {
+                ifstream loosebin;
+                OpenLooseBinFile(loosebin,binloc);
+                LoadDataFromLooseBin<_DataTy,_TransType>(out_data, loosebin); //Open lose file
+            }
             else
-                LoadDataFromBin<_DataTy,_TransType>(out_data, bininfo, binpath);
+                LoadDataFromBin<_DataTy,_TransType>(out_data, bininfo, binf);
         }
 
         /*
             LoadDataFromLooseBin
         */
         template<class _DataTy, class _TransType>
-            void LoadDataFromLooseBin( _DataTy & out_data, std::istream & binstrm )
+            void LoadDataFromLooseBin( _DataTy & out_data, std::ifstream & binstrm )
         {
             filetypes::sir0_header hdr;
             hdr.ReadFromContainer( istreambuf_iterator<char>(binstrm), istreambuf_iterator<char>() );
@@ -115,7 +156,7 @@ namespace pmd2
             for( size_t cntentry = 0; cntentry < nbentries; ++cntentry )
             {
                 _TransType entry;
-                entry.Read(binstrm, bininfo.loadaddress);
+                entry.Read(binstrm, 0); //No offset applied to what is loaded from loose binaries!!
                 out_data.PushEntryPair(entry.name, entry);
             }
         }
@@ -124,7 +165,7 @@ namespace pmd2
             LoadDataFromBin
         */
         template<class _DataTy, class _TransType>
-            void LoadDataFromBin( _DataTy & out_data, const binarylocatioinfo & bininfo, std::istream & binstrm )
+            void LoadDataFromBin( _DataTy & out_data, const binarylocatioinfo & bininfo, std::ifstream & binstrm )
         {
             //2. If no modded tag, we go ahead and dump the list
             binstrm.seekg(bininfo.location.beg);
@@ -151,7 +192,7 @@ namespace pmd2
                            std::is_same<const _EntryType&, typename decltype(*itbeg)>::value, 
                            "PMD2_ASM_Impl::DumpStringAndList(): Iterators weren't iterators on expected type!!" );
 
-            static const size_t entrysz = _EntryType::Size; //Size of an entry 
+            static const size_t entrysz = _TransType::Size; //Size of an entry 
 
             // -----------------------------------------
             // === 1st pass pile up strings in order ===
@@ -186,7 +227,7 @@ namespace pmd2
                 //WriteEntryType_impl<_EntryType>::WriteEntry(*itentry, stroffsets[cntptr], sir0anddat, itbackins);
                 _TransType trans;
                 trans = (*itentry);
-                trans->WriteEntry<_EntryType>(stroffsets[cntptr], sir0anddat, itbackins);
+                trans.WriteEntry(stroffsets[cntptr], sir0anddat, itbackins);
             }
 
             utils::AppendPaddingBytes(itbackins, outdata.size(), 16, 0xAA);
@@ -212,27 +253,6 @@ namespace pmd2
         */
         GameScriptData::lvlinf_t LoadLevelList()
         {
-            //binarylocatioinfo bininfo = m_conf.GetGameBinaryOffset(eBinaryLocations::Events);
-            //const string binpath = MakeBinPathString(bininfo);// utils::TryAppendSlash(m_romroot) + bininfo.fpath;
-
-            ////1. Check if modded tag is there
-            //auto modinfo = CheckBlockModdedTag( binpath, bininfo.location.beg );
-            //if(modinfo.ismodded())
-            //    throw ExBinaryIsModded( "PMD2_ASM_Impl::LoadLevelList(): Game binaries are modified! Encountered a PATCH tag while parsing the binary location of the level list!", binpath, bininfo.location.beg );
-
-            ////2. If no modded tag, we go ahead and dump the list
-            //GameScriptData::lvlinf_t lvlinf;
-            //ifstream binf( binpath, ios::in | ios::binary );
-            //binf.seekg(bininfo.location.beg);
-
-            //while(static_cast<std::streamoff>(binf.tellg()) < bininfo.location.end)
-            //{
-            //    LevelEntry entry;
-            //    entry.Read(binf, bininfo.loadaddress);
-            //    lvlinf.PushEntryPair(entry.name, entry);
-            //}
-
-
             GameScriptData::lvlinf_t data;
             LoadData<GameScriptData::lvlinf_t, LevelEntry>(eBinaryLocations::Events, data);
             return std::move(data);
@@ -243,28 +263,6 @@ namespace pmd2
         */
         GameScriptData::livesent_t LoadActorList()
         {
-            //binarylocatioinfo bininfo = m_conf.GetGameBinaryOffset(eBinaryLocations::Entities);
-            //const string binpath = utils::TryAppendSlash(m_romroot) + bininfo.fpath;
-
-            ////1. Check if modded tag is there
-            //auto modinfo = CheckBlockModdedTag( binpath, bininfo.location.beg );
-            //if(modinfo.ismodded())
-            //    throw ExBinaryIsModded( "PMD2_ASM_Impl::LoadActorList(): Game binaries are modified! Encountered a PATCH tag while parsing the binary location of the actor list!", binpath, bininfo.location.beg );
-
-            ////2. If no modded tag, we go ahead and dump the list
-            //GameScriptData::livesent_t actorsinf;
-            //ifstream binf( MakeBinPathString(bininfo), ios::in | ios::binary );
-            //binf.seekg(bininfo.location.beg);
-
-            //while(static_cast<std::streamoff>(binf.tellg()) < bininfo.location.end)
-            //{
-            //    EntitySymbolListEntry entry;
-            //    entry.Read(binf, bininfo.loadaddress);
-            //    actorsinf.PushEntryPair(entry.name, entry);
-            //}
-
-            //return std::move(actorsinf);
-
             GameScriptData::livesent_t data;
             LoadData<GameScriptData::livesent_t, EntitySymbolListEntry>(eBinaryLocations::Entities, data);
             return std::move(data);
@@ -290,19 +288,6 @@ namespace pmd2
             return std::move(data);
         }
 
-
-        std::string MakeLooseBinFileOutPath( eBinaryLocations loc )
-        {
-            auto found = m_conf.GetASMPatchData().lfentry.find(loc);
-
-            if(found ==  m_conf.GetASMPatchData().lfentry.end())
-                throw std::runtime_error("PMD2_ASM_Impl::MakeLooseBinFileOutPath(): Couldn't find the entity file output path for the actor list!");
-
-            stringstream outfpath;
-            outfpath <<TryAppendSlash(m_romroot) <<DirName_DefData <<"/" <<found->second.path ;
-            return outfpath.str();
-        }
-
         /*
             Write the data to a loose file at the locations indicated in the configuration files, since there's no way to guarantee any changes would fit into the initial binaries.
 
@@ -314,7 +299,7 @@ namespace pmd2
             {
                 std::ofstream out(outfpath, std::ios::out|std::ios::binary);
                 out.exceptions(std::ios::badbit);
-                DumpStringAndList<LevelEntry, pmd2::level_info>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
+                DumpStringAndList<pmd2::level_info,LevelEntry>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
             }
             catch(const std::exception &)
             {
@@ -322,6 +307,8 @@ namespace pmd2
             }
         }
 
+        /*
+        */
         void WriteActorList( const GameScriptData::livesent_t & src )
         {
             const string outfpath = MakeLooseBinFileOutPath(eBinaryLocations::Entities);
@@ -329,7 +316,7 @@ namespace pmd2
             {
                 std::ofstream out(outfpath, std::ios::out|std::ios::binary);
                 out.exceptions(std::ios::badbit);
-                DumpStringAndList<EntitySymbolListEntry, pmd2::livesent_info>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
+                DumpStringAndList<pmd2::livesent_info, EntitySymbolListEntry>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
             }
             catch(const std::exception &)
             {
@@ -338,6 +325,8 @@ namespace pmd2
             
         }
 
+        /*
+        */
         void WriteObjectList( const GameScriptData::objinf_t & src )
         {
             const string outfpath = MakeLooseBinFileOutPath(eBinaryLocations::Objects);
@@ -345,7 +334,7 @@ namespace pmd2
             {
                 std::ofstream out(outfpath, std::ios::out|std::ios::binary);
                 out.exceptions(std::ios::badbit);
-                DumpStringAndList<ObjectFileListEntry, pmd2::object_info>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
+                DumpStringAndList<pmd2::object_info, ObjectFileListEntry>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
             }
             catch(const std::exception &)
             {
@@ -353,6 +342,8 @@ namespace pmd2
             }
         }
 
+        /*
+        */
         void WriteGameVariableList( const GameScriptData::gvar_t & src )
         {
             const string outfpath = MakeLooseBinFileOutPath(eBinaryLocations::ScriptVariables);
@@ -360,7 +351,7 @@ namespace pmd2
             {
                 std::ofstream out(outfpath, std::ios::out|std::ios::binary);
                 out.exceptions(std::ios::badbit);
-                DumpStringAndList<ScriptVariablesEntry, pmd2::gamevariable_info>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
+                DumpStringAndList<pmd2::gamevariable_info, ScriptVariablesEntry>(src.begin(), src.end(), std::ostreambuf_iterator<char>(out) );
             }
             catch(const std::exception &)
             {
@@ -396,25 +387,28 @@ namespace pmd2
 
     private:
 
-        std::ifstream OpenFile( const binarylocatioinfo & locinfo, size_t & out_flen )
+        /*
+        */
+        void OpenBinFile( std::ifstream & out_strm, const binarylocatioinfo & locinfo)
         {
-            stringstream sstrpath;
-            out_flen = 0;
-            sstrpath << utils::TryAppendSlash(m_romroot) <<locinfo.fpath;
-
-            ifstream indata(sstrpath.str(), ios::in | ios::binary | ios::ate );
-            if( indata.bad() || !indata.is_open() )
-                throw std::runtime_error("PMD2_ASM_Impl::OpenFile(): Couldn't open file !");
-
-            out_flen = indata.tellg();
-
-            indata.seekg(0);
-            indata.clear();
-            if( indata.bad() )
-                throw std::runtime_error("PMD2_ASM_Impl::OpenFile(): Can't read file !");
-
-            return std::move(indata);
+            const std::string binpath = MakeBinPathString(locinfo);
+            out_strm.open(binpath, ios::in | ios::binary );
+            if( out_strm.bad() || !out_strm.is_open() )
+                throw std::runtime_error("PMD2_ASM_Impl::OpenBinFile(): Couldn't open file " + binpath + "!");
+            out_strm.exceptions(ios::badbit);
         }
+
+        /*
+        */
+        void OpenLooseBinFile( std::ifstream & out_strm, eBinaryLocations loc )
+        {
+            const string binpath = MakeLooseBinFileOutPath(loc);
+            out_strm.open(binpath, ios::in | ios::binary );
+            if( out_strm.bad() || !out_strm.is_open() )
+                throw std::runtime_error("PMD2_ASM_Impl::OpenLooseBinFile(): Couldn't open file " + binpath + " !");
+            out_strm.exceptions(ios::badbit);
+        }
+
 //
 //        std::string FetchString( size_t strpos, size_t fsize, ifstream & ifstr )
 //        {
@@ -597,8 +591,8 @@ namespace pmd2
         m_pimpl->WriteAllFromConfig();
     }
 
-    PMD2_ASM::modinfo PMD2_ASM::CheckBlockModdedTag(const std::string & binppathrel, uint32_t offset)
+    PMD2_ASM::modinfo PMD2_ASM::CheckBlockModdedTag(const binarylocatioinfo & locinfo)
     {
-        m_pimpl->CheckBlockModdedTag(binppathrel,offset);
+        return m_pimpl->CheckBlockModdedTag(locinfo);
     }
 };

@@ -125,8 +125,8 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">

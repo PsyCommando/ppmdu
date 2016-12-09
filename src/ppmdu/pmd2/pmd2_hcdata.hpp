@@ -101,7 +101,7 @@ namespace pmd2
         }
 
         template<class _outfwdit, class _sir0wrapper>
-            static _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
+            _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
         {
             using namespace std;
             using namespace utils;
@@ -227,7 +227,7 @@ namespace pmd2
         }
 
         template<class _outfwdit, class _sir0wrapper>
-            static _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
+            _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
         {
             using namespace std;
             using namespace utils;
@@ -368,7 +368,7 @@ namespace pmd2
         }
 
         template<class _outfwdit, class _sir0wrapper>
-            static _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
+            _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
         {
             using namespace std;
             using namespace utils;
@@ -508,7 +508,7 @@ struct ObjectFileListEntry
     }
 
     template<class _outfwdit, class _sir0wrapper>
-        static _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
+        _outfwdit WriteEntry( uint32_t strpointer, _sir0wrapper & wrap, _outfwdit itw )
     {
         using namespace std;
         using namespace utils;

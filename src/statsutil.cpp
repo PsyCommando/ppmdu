@@ -9,7 +9,7 @@
 #include <utils/library_wide.hpp>
 //#include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_xml_sniffer.hpp>
-#include <ppmdu/pmd2/pmd2_hcdata_dumper.hpp>
+#include <ppmdu/pmd2/pmd2_asm.hpp>
 #include <utils/poco_wrapper.hpp>
 #include <utils/whereami_wrapper.hpp>
 #include <iostream>
@@ -760,6 +760,7 @@ namespace statsutil
             {
                 ValidateRomRoot();
                 GameDataLoader gloader( m_romrootdir, m_pmd2cfg );
+                gloader.AnalyseGame();
                 cout <<"\n";
                 switch(m_force)
                 {
@@ -780,6 +781,27 @@ namespace statsutil
                             ;
                         returnval = HandleExport(m_firstparam, gloader);
                         break;
+                    }
+                };
+            }
+            else if(!m_romrootdir.empty())
+            {
+                ValidateRomRoot();
+                GameDataLoader gloader( m_romrootdir, m_pmd2cfg );
+                gloader.AnalyseGame();
+
+                switch(m_operationMode)
+                {
+                    case eOpMode::DumpLevelList: //! #TODO: This will move to its own utility, along with all ASM patching!!
+                    {
+                        ValidateRomRoot();
+                        return DoDumpLevelList(m_firstparam, gloader );
+                    }
+
+                    case eOpMode::DumpActorList: //! #TODO: This will move to its own utility, along with all ASM patching!!
+                    {
+                        ValidateRomRoot();
+                        return DoDumpActorList(m_firstparam, gloader );
                     }
                 };
             }
@@ -820,17 +842,6 @@ namespace statsutil
                              <<"================================================\n";
                         returnval = DoImportSingleScriptData();
                         break;
-                    }
-                    case eOpMode::DumpLevelList: //! #TODO: This will move to its own utility, along with all ASM patching!!
-                    {
-                        ValidateRomRoot();
-                        return DoDumpLevelList(m_firstparam, GameDataLoader( m_romrootdir, m_pmd2cfg ) );
-                    }
-
-                    case eOpMode::DumpActorList: //! #TODO: This will move to its own utility, along with all ASM patching!!
-                    {
-                        ValidateRomRoot();
-                        return DoDumpActorList(m_firstparam, GameDataLoader( m_romrootdir, m_pmd2cfg ) );
                     }
                 };
             }
@@ -1275,12 +1286,13 @@ namespace statsutil
 
     int CStatsUtil::DoDumpActorList( std::string fpath, pmd2::GameDataLoader & gloader )
     {
-        if( fpath.empty() )
-            fpath = "actor_list.bin";
+        const pmd2::ConfigLoader & confload = MainPMD2ConfigWrapper::CfgInstance();
+        //if( fpath.empty() )
+        //    fpath = "actor_list.bin";
 
         gloader.LoadAsm();
         cout<<"Dumping actor_list..\n";
-        pmd2::HardCodedDataDumper(MainPMD2ConfigWrapper::CfgInstance()).DumpActorDataFromConf(fpath);
+        gloader.GetAsm()->WriteActorList( confload.GetGameScriptData().LivesEnt() );
         cout<<"Done with actor_list!\n";
         return 0;
     }
@@ -1288,12 +1300,13 @@ namespace statsutil
     int CStatsUtil::DoDumpLevelList( std::string fpath, pmd2::GameDataLoader & gloader )
 #if 1
     {
-        if( fpath.empty() )
-            fpath = "level_list.bin";
+        const pmd2::ConfigLoader & confload = MainPMD2ConfigWrapper::CfgInstance();
+        //if( fpath.empty() )
+        //    fpath = "level_list.bin";
 
         gloader.LoadAsm();
         cout<<"Dumping level_list..\n";
-        pmd2::HardCodedDataDumper(MainPMD2ConfigWrapper::CfgInstance()).DumpLevelDataFromConf(fpath);
+        gloader.GetAsm()->WriteLevelList( confload.GetGameScriptData().LevelInfo() );
         cout<<"Done with level_list!\n";
         return 0;
     }

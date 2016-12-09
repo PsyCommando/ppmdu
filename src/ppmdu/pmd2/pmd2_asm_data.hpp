@@ -34,6 +34,7 @@ namespace pmd2
         ASM_Data_Loader
             Handles loading and low-level access for the various binaries.
     */
+#if 0
     class ASM_Data_Loader
     {
     public:
@@ -66,7 +67,7 @@ namespace pmd2
     private:
 
     };
-
+#endif
 
 
 //======================================================================================

@@ -17,7 +17,7 @@ namespace filetypes
         const uint16_t nbentries = ReadIntFromBytes<uint16_t>( beg, end ); // beg is incremented
         const int      diff      = distance( beg, end );
 
-        assert(diff < 0);
+        assert(diff > 0);
         if(static_cast<unsigned int>(diff) < (nbentries * LSDStringLen))
         {
             stringstream sstr;

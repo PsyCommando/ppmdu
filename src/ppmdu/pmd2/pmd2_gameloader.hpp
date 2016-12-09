@@ -16,7 +16,7 @@ Description:
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_graphics.hpp>
 #include <ppmdu/pmd2/pmd2_audio.hpp>
-#include <ppmdu/pmd2/pmd2_asm_manip.hpp>
+#include <ppmdu/pmd2/pmd2_asm.hpp>
 
 //! #TODO: The gameloader header could be possibly more easily turned into an accessible
 //!         interface for a possible shared library. If the dependencies and implementation can be
@@ -43,6 +43,9 @@ namespace pmd2
         GameDataLoader( const std::string & romroot, const std::string & pmd2confxmlfile );
         ~GameDataLoader();
 
+        //Load configuration
+        void AnalyseGame();
+
         //Set ROM Root Dir (Directory conatining arm9.bin, data, and overlay directory)
         void                SetRomRoot( const std::string & romroot );
         const std::string & GetRomRoot()const;
@@ -54,12 +57,12 @@ namespace pmd2
         //Handles Loading the Game Data
         void Load();
 
-        GameText         * LoadGameText();
-        GameScripts      * LoadScripts(const scriptprocoptions & options);
-        GameGraphics     * LoadGraphics();
-        GameStats        * LoadStats();
-        GameAudio        * LoadAudio();
-        PMD2_ASM_Manip   * LoadAsm();
+        GameText        * LoadGameText();
+        GameScripts     * LoadScripts(const scriptprocoptions & options);
+        GameGraphics    * LoadGraphics();
+        GameStats       * LoadStats();
+        GameAudio       * LoadAudio();
+        PMD2_ASM        * LoadAsm();
 
         //Handles Writing the Game Data
         void Write();
@@ -69,7 +72,7 @@ namespace pmd2
         void WriteGraphics();
         void WriteStats();
         void WriteAudio();
-        void WriteAsm();
+        //void WriteAsm();
 
         /*
             Access to the sub-sections of the game's data
@@ -94,11 +97,11 @@ namespace pmd2
         const GameAudio         * GetAudio()const;
 
         //
-        PMD2_ASM_Manip          * GetAsmManip();
-        const PMD2_ASM_Manip    * GetAsmManip()const;
+        PMD2_ASM                * GetAsm();
+        const PMD2_ASM          * GetAsm()const;
 
     private:
-        void AnalyseGame();
+        
         bool LoadConfigUsingARM9();
 
     private:
@@ -107,7 +110,7 @@ namespace pmd2
         std::unique_ptr<GameGraphics>        m_graphics;
         std::unique_ptr<GameStats>           m_stats;
         std::unique_ptr<GameAudio>           m_audio;
-        std::unique_ptr<PMD2_ASM_Manip>      m_asmmanip;
+        std::unique_ptr<PMD2_ASM>            m_asmmanip;
 
         std::string                          m_romroot;
         std::string                          m_datadiroverride; //Contains the name of the data directory if name non-default

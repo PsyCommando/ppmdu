@@ -42,6 +42,7 @@ namespace pmd2
         "ScriptVars",
         "ScriptVarsLocals",
         "Objects",
+        "CRoutines",
     };
 
 
@@ -214,6 +215,7 @@ namespace pmd2
             ParseBinaries (pmd2n);
             ParseConstants(pmd2n);
             ParseGameScriptData(pmd2n);
+            ParseASMPatches(pmd2n);
 
             for( auto & xternal : pmd2n.children(NODE_ExtFile.c_str()) )
             {
@@ -226,13 +228,16 @@ namespace pmd2
         void DoParse(ConfigLoader & target)
         {
             using namespace ConfigXML;
+            //m_ptarget = &target;
+
             xml_node pmd2node = m_doc.child(ROOT_PMD2.c_str());
             ParseAllFields(pmd2node);
-            target.m_langdb      = std::move(LanguageFilesDB(std::move(m_lang)));
-            target.m_binblocks   = std::move(m_bin);
-            target.m_constants   = std::move(m_constants); 
-            target.m_versioninfo = std::move(m_curversion); //Done in last
-            target.m_gscriptdata = std::move(m_gscriptdata);
+            target.m_langdb         = std::move(LanguageFilesDB(std::move(m_lang)));
+            target.m_binblocks      = std::move(m_bin);
+            target.m_constants      = std::move(m_constants); 
+            target.m_versioninfo    = std::move(m_curversion); //Done in last
+            target.m_gscriptdata    = std::move(m_gscriptdata);
+            target.m_asmpatchdata   = std::move(m_asmpatchdata);
         }
 
         bool FindGameVersion( eGameVersion version, eGameRegion region )
@@ -739,10 +744,13 @@ namespace pmd2
             xml_attribute path = loosebinn.attribute(ATTR_FPath.c_str());
 
             if( !src || !path )
-                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A loose bin file entry lacks either its " + ATTR_SrcDat + " attribute, or its " + ATTR_FPath + " attribute!!");
+                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A " +  NODE_File +  " entry lacks either its " + ATTR_SrcDat + " attribute, or its " + ATTR_FPath + " attribute!!");
 
             patchloosebinfile plbf;
             plbf.src  = StrToBinaryLocation(src.value());
+            if( plbf.src == eBinaryLocations::Invalid )
+                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A " + NODE_File + " entry has unknown data source \"" + string(src.value()) +"\" !!");
+
             plbf.path = path.value();
             m_asmpatchdata.lfentry.insert_or_assign( plbf.src, plbf );
         }
@@ -757,10 +765,11 @@ namespace pmd2
 
             for( const auto & ver : loosebinnode.children(NODE_Game.c_str()) )
             {
-                if( ! MatchesCurrentVersionID( loosebinnode.attributes_begin(), loosebinnode.attributes_end() ) )
-                    continue;
-                for( xml_node & afile : ver.children(NODE_File.c_str()) )  
-                    ParseALooseBinEntry(afile);
+                if( MatchesCurrentVersionID( ver.attributes_begin(), ver.attributes_end() ) )
+                {
+                    for( xml_node & afile : ver.children(NODE_File.c_str()) )  
+                        ParseALooseBinEntry(afile);
+                }
             }
         }
 
@@ -774,10 +783,11 @@ namespace pmd2
 
             for( const auto & ver : patchdirn.children(NODE_Game.c_str()) )
             {
-                xml_attribute xv1 = ver.attribute(ATTR_Version.c_str());
-                if( StrToGameVersion(xv1.value()) == m_curversion.version )
+                if( MatchesCurrentVersionID( ver.attributes_begin(), ver.attributes_end() ) )
                 {
                     xml_attribute xpath = ver.attribute(ATTR_FPath.c_str());
+                    if(!xpath)
+                         throw std::runtime_error("ConfigXMLParser::ParseASMDirectories(): A ASM Patch Directory entry is missing its " + ATTR_FPath + " attribute!!");
                     m_asmpatchdata.asmpatchdir = xpath.value();
                 }
             }
@@ -791,19 +801,20 @@ namespace pmd2
             using namespace pugi;
             using namespace ConfigXML;
 
-            for( const auto & step : patchn.children() )
+            for( auto & step : patchn.children() )
             {
-                if( patchn.name() == NODE_Include )
+                if( step.name() == NODE_Include )
                 {
                     asmpatchentry::asmpatchstep outstep;
+
                     xml_attribute xfname = step.attribute(ATTR_FName.c_str());
                     outstep.op      = asmpatchentry::eAsmPatchStep::IncludeFile;
                     outstep.param   = xfname.value();
                     entry.steps.push_back(std::move(outstep));
                 }
-                else if( patchn.name() == NODE_OpenBin )
+                else if( step.name() == NODE_OpenBin )
                 {
-                    xml_attribute xfname = step.attribute(ATTR_FName.c_str());
+                    xml_attribute xfname = step.attribute(ATTR_FPath.c_str());
 
                     //Put open statement
                     asmpatchentry::asmpatchstep openstep;
@@ -812,8 +823,7 @@ namespace pmd2
                     entry.steps.push_back(openstep);
 
                     //Search for more sub statements...
-                    for( xml_node & substep : step.children() )
-                        HandlePatchOp(substep, entry); //recursive call
+                    HandlePatchOp(step, entry); //recursive call
                                     
                     //Put close statement
                     asmpatchentry::asmpatchstep closestep;
@@ -833,9 +843,10 @@ namespace pmd2
             {
                 xml_attribute xpname = patch.attribute( ATTR_ID.c_str() );
                 asmpatchentry entry;
+                entry.id = xpname.value();
                 HandlePatchOp(patch,entry);
                 if( !entry.steps.empty() )
-                    m_asmpatchdata.patches.emplace( string(xpname.name()), std::move(entry) );
+                    m_asmpatchdata.patches.emplace( string(entry.id), std::move(entry) );
             }
         }
 
@@ -865,6 +876,7 @@ namespace pmd2
         string                          m_confbasepath;
         GameScriptData                  m_gscriptdata;
         GameASMPatchData                m_asmpatchdata;
+        
     };
 
 

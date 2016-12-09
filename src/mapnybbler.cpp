@@ -500,7 +500,7 @@ using namespace ::std;
             };
 
             //Handle Extra tasks
-            HandleExtraTasks();
+            HandleExtraTasks(gloader);
         }
         catch( const Poco::Exception & e )
         {
@@ -583,30 +583,31 @@ using namespace ::std;
     void CMapNybbler::RunLvlListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
         pmd2::ConfigLoader & cfg = pmd2::MainPMD2ConfigWrapper::CfgInstance();
-        pmd2::PMD2_ASM pmdasm(gloader.GetRomRoot(), cfg);
+        pmd2::PMD2_ASM     * pasm = gloader.GetAsm();
 
         //!#TODO: Add option to use default loaded entries
         if(true)
-            cfg.GetGameScriptData().LevelInfo() = pmdasm.LoadLevelList();
+            cfg.GetGameScriptData().LevelInfo() = pasm->LoadLevelList();
 
         gloader.LoadAsm();
         cout<<"Dumping level_list..\n";
-        pmdasm.WriteLevelList(cfg.GetGameScriptData().LevelInfo());
+        pasm->WriteLevelList(cfg.GetGameScriptData().LevelInfo());
         cout<<"Done with level_list!\n";
     }
 
     void CMapNybbler::RunActorListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
-        pmd2::ConfigLoader & cfg = pmd2::MainPMD2ConfigWrapper::CfgInstance();
-        pmd2::PMD2_ASM pmdasm(gloader.GetRomRoot(), cfg);
+        pmd2::ConfigLoader & cfg  = pmd2::MainPMD2ConfigWrapper::CfgInstance();
+        pmd2::PMD2_ASM     * pasm = gloader.GetAsm();
+
 
         //!#TODO: Add option to use default loaded entries
         if(true)
-            cfg.GetGameScriptData().LivesEnt() = pmdasm.LoadActorList();
+            cfg.GetGameScriptData().LivesEnt() = pasm->LoadActorList();
 
         gloader.LoadAsm();
         cout<<"Dumping actor_list..\n";
-        pmdasm.WriteActorList(cfg.GetGameScriptData().LivesEnt());
+        pasm->WriteActorList(cfg.GetGameScriptData().LivesEnt());
         cout<<"Done with actor_list!\n";
     }
 
