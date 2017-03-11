@@ -335,6 +335,9 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset_list.hpp">
+      <Filter>Header Files\ppmdu\data formats\levels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\utils\cmdline_util.cpp">
@@ -540,6 +543,12 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_tileset_list.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

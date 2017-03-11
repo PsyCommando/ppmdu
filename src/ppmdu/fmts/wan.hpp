@@ -433,7 +433,12 @@ namespace filetypes
                 if( entry.pixelsrc == 0  )
                     std::fill_n( itinsertat, entry.pixamt, 0 );
                 else
-                    std::copy_n( filebeg + entry.pixelsrc, entry.pixamt, itinsertat );
+                {
+                    //std::copy_n( filebeg + entry.pixelsrc, entry.pixamt, itinsertat );
+                    auto itcopy = std::next(filebeg, entry.pixelsrc);
+                    for( size_t cntcp = 0; cntcp < entry.pixamt; ++cntcp, ++itcopy, ++itinsertat )
+                        (*itinsertat) = (*itcopy);
+                }
                 nb_bytesread += entry.pixamt;
             }
 

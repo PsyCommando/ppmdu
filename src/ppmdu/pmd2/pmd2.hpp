@@ -11,6 +11,24 @@ Description:
 #include <array>
 #include <string>
 
+/*
+    A macro for eventually exporting symbols through a DLL.
+*/
+#ifdef _WIN32
+    #if defined(PPMDU_DLL_IMPORT)
+        #define PPMDU_API __declspec(dllimport)
+    #elif defined(PPMDU_DLL_EXPORT)
+        #define PPMDU_API __declspec(dllexport)
+    #else
+        #define PPMDU_API
+    #endif // DEBUG
+#else//if //defined(__linux__)
+    #define PPMDU_API
+#endif
+
+
+
+
 namespace pmd2
 {
     class exBasePPMDUException                : public std::runtime_error  { public: using std::runtime_error::runtime_error;  };           //! #REMOVE
@@ -171,17 +189,6 @@ namespace pmd2
     const std::string FName_TextGerSufx   = "g";
     const std::string FName_TextItaSufx   = "i";
     const std::string FName_TextSpaSufx   = "s";
-
-    //!#FIXME: Should use GameLangLoader instead!
-    //const std::array<std::string, static_cast<size_t>(eGameLanguages::NbLang)> GameLanguagesSuffixes=
-    //{{
-    //    FName_TextEngSufx,
-    //    FName_TextJapSufx,
-    //    FName_TextFreSufx,
-    //    FName_TextGerSufx,
-    //    FName_TextItaSufx,
-    //    FName_TextSpaSufx,
-    //}};
 
     /*******************************************************************************
         GameLanguagesNames

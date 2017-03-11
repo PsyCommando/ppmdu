@@ -1,14 +1,20 @@
 #include "pmd2_levels.hpp"
 #include <utils/utility.hpp>
+#include <ppmdu/fmts/bpc.hpp>
+#include <ppmdu/fmts/bpa.hpp>
+#include <ppmdu/fmts/bpl.hpp>
+#include <ppmdu/fmts/bma.hpp>
+#include <ppmdu/fmts/bg_list_data.hpp>
+#include <ppmdu/containers/level_tileset.hpp>
 using namespace std;
 
 
 namespace pmd2
 {
 
-//
+//=========================================================================================================================================
 //  GameLevelsHandler
-//
+//=========================================================================================================================================
 
     class GameLevelsHandler
     {
@@ -31,7 +37,7 @@ namespace pmd2
         //
         //  Export
         //
-        void ExportLevels(const std::string & destdir)
+        void ExportAllLevels(const std::string & destdir)
         {
             //1. Export tilesets
             ExportTilesets(destdir);
@@ -41,51 +47,74 @@ namespace pmd2
                 ExportScripts(destdir);
         }
 
+        void ExportLevel(const std::string & destdir, const std::string & levelname)
+        {
+            assert(false);
+        }
+
         void ExportScripts(const std::string & destdir)
         {
+            assert(false);
         }
 
         void ExportTilesets(const std::string & destdir)
         {
             //1. Obtain level list
-            if( m_options.lvllistsrc == eHCDataLoadSrc::ParseFromXML )
-            {
-                //1a. Try using the specified list of levels
-                assert(false);
-            }
-            else if( m_options.lvllistsrc == eHCDataLoadSrc::ParseFromModdedFile )
-            {
-                //1b. Try loading modified files if modified
-                assert(false);
-            }
-            else if( m_options.lvllistsrc == eHCDataLoadSrc::ParseFromBin )
-            {
-                //1c. Try dumping binaries + checking if modified
-
-            }
-
+            const GameScriptData::lvlinf_t & lvlinf = m_gconf.GetGameScriptData().LevelInfo();
 
             //2. Load bg_list.dat
+            stringstream sstrbglist;
+            sstrbglist << utils::TryAppendSlash(m_mapbgdir) <<filetypes::FName_BGListFile;
+            filetypes::lvlbglist_t bglist(filetypes::LoadLevelList( sstrbglist.str() ));
 
             //3. Iterate level list, export each levels matching the index of the name in the BG list
+            for( const pmd2::level_info & lvl : lvlinf )
+            {
+                if( lvl.mapid < bglist.size() )
+                {
+                    stringstream sstrtsetpath;
+                    sstrtsetpath << utils::TryAppendSlash(destdir) <<lvl.name;
+                    string tsetpath = sstrtsetpath.str();
 
+                    utils::DoCreateDirectory(tsetpath);
+                    ExportATileset( lvl, bglist[lvl.mapid], tsetpath );
+                }
+                else
+                {
+                    assert(false);
+                }
+            }
 
+        }
+
+        void ExportATileset( const pmd2::level_info & lvlinf, const filetypes::LevelBgEntry & entry, const std::string & destdir )
+        {
+            Tileset tset( LoadTileset(m_mapbgdir, entry, lvlinf) );
+            assert(false);
         }
 
 
         //
         //  Import
         //
-        void ImportLevels(const std::string & srcdir)
+        void ImportAllLevels(const std::string & srcdir)
         {
+            assert(false);
+        }
+
+        void ImportLevel(const std::string & srclvldir)
+        {
+            assert(false);
         }
 
         void ImportScripts(const std::string & srcdir)
         {
+            assert(false);
         }
 
         void ImportTilesets(const std::string & srcdir)
         {
+            assert(false);
         }
 
 
@@ -98,9 +127,9 @@ namespace pmd2
 
 
 
-//
+//=========================================================================================================================================
 //  GameLevels
-//
+//=========================================================================================================================================
     GameLevels::GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, GameScripts & gs, const lvlprocopts & options)
         :m_pimpl(new GameLevelsHandler(fsrootdir,conf,gs,options))
     {}
@@ -108,14 +137,24 @@ namespace pmd2
     GameLevels::~GameLevels()
     {}
 
-    void GameLevels::ExportLevels(const std::string & destdir)
+    void GameLevels::ExportAllLevels(const std::string & destdir)
     {
-        m_pimpl->ExportLevels(destdir);
+        m_pimpl->ExportAllLevels(destdir);
     }
 
-    void GameLevels::ImportLevels(const std::string & srcdir)
+    void GameLevels::ExportLevel(const std::string & destdir, const std::string & levelname)
     {
-        m_pimpl->ImportLevels(srcdir);
+        m_pimpl->ExportLevel(destdir, levelname);
+    }
+
+    void GameLevels::ImportAllLevels(const std::string & srcdir)
+    {
+        m_pimpl->ImportAllLevels(srcdir);
+    }
+
+    void GameLevels::ImportLevel(const std::string & srclvldir)
+    {
+        m_pimpl->ImportLevel(srclvldir);
     }
 
     /**/

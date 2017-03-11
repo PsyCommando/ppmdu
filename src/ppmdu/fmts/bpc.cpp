@@ -25,27 +25,45 @@ namespace filetypes
             :m_itbeg(itbeg), m_itend(itend)
         {}
 
-        std::pair<pmd2::Tileset, pmd2::Tileset> operator()()
+        pmd2::TilesetLayers operator()()
         {
-            std::pair<pmd2::Tileset,pmd2::Tileset> tsets;
+            pmd2::TilesetLayers tsets;
             bpc_header hdr;
             hdr.Read(m_itbeg, m_itend);
+
+            CopyLayerAsmTable(tsets, hdr);
+            tsets.layers.resize(hdr.tilesetsinfo.size());
 
             auto ittinfo = hdr.tilesetsinfo.begin();
             if(hdr.offsuprscr != 0)
             {
-                ParseATileset( tsets.first,  std::next(m_itbeg, hdr.offsuprscr),  (*ittinfo) );
+                ParseALayer( tsets.layers[0],  std::next(m_itbeg, hdr.offsuprscr),  (*ittinfo) );
                 ++ittinfo;
             }
             if(hdr.offslowrscr != 0)
             {
-                ParseATileset( tsets.second, std::next(m_itbeg, hdr.offslowrscr), (*ittinfo) );
+                ParseALayer( tsets.layers[1], std::next(m_itbeg, hdr.offslowrscr), (*ittinfo) );
             }
             return std::move(tsets);
         }
 
     private:
-        void ParseATileset( pmd2::Tileset & tset, init_t itbeg, const bpc_header::indexentry & entry )
+
+        void CopyLayerAsmTable( pmd2::TilesetLayers & layers, const bpc_header & hdr )const
+        {
+            for( size_t i = 0; i < hdr.tilesetsinfo.size(); ++i )
+            {
+                pmd2::TilesetLayers::LayerAsmData data;
+                data.nbtiles    = hdr.tilesetsinfo[i].nbtiles;
+                data.unk2       = hdr.tilesetsinfo[i].unk2;
+                data.unk3       = hdr.tilesetsinfo[i].unk3;
+                data.unk4       = hdr.tilesetsinfo[i].unk4;
+                data.tmapdeclen = hdr.tilesetsinfo[i].tmapdeclen;
+                layers.layerasmdata.push_back( sts::move(data) );
+            }
+        }
+
+        void ParseALayer( pmd2::Tileset & tset, init_t itbeg, const bpc_header::indexentry & entry )
         {
             static const size_t NbBytesPerTilesRaw = 32; //In 4bpp we output 32 bytes per tile!
             static const size_t NbPixelsPerTile    = 64;
@@ -130,7 +148,13 @@ namespace filetypes
 //============================================================================================
 //  Functions
 //============================================================================================
-    std::pair<pmd2::Tileset, pmd2::Tileset> ParseBPC(const std::string & fpath)
+    //std::pair<pmd2::Tileset, pmd2::Tileset> ParseBPC(const std::string & fpath)
+    //{
+    //    auto data = utils::io::ReadFileToByteVector(fpath);
+    //    return std::move(BPCParser<decltype(data.begin())>(data.begin(), data.end())());
+    //}
+
+    pmd2::TilesetLayers ParseBPC(const std::string & fpath)
     {
         auto data = utils::io::ReadFileToByteVector(fpath);
         return std::move(BPCParser<decltype(data.begin())>(data.begin(), data.end())());

@@ -101,8 +101,6 @@ namespace pmd2
         */
         void WriteAllFromConfig();
 
-
-
         /*
             Check if the block starting at the specified address in the binary specified 
             has the modded tag.

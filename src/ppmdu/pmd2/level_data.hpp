@@ -7,6 +7,7 @@ psycommando@gmail.com
 Description: Utilities for exporting and importing level data to and from folders containing XML.
 */
 #include <ppmdu/pmd2/pmd2.hpp>
+#include <ppmdu/containers/level_tileset.hpp>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -19,13 +20,17 @@ namespace pmd2
     /*
         LevelData
             Contains data about a single level from the PMD2 game!
+            The data comes from the level's entry in the level table!
     */
     class LevelData
     {
     public:
 
     private:
-        std::string m_lvlname;
+        std::string                 m_lvlname;
+        uint8_t                     m_lvlty; //0 to 11
+        std::pair<Tileset, Tileset> m_tilesets;
+
     };
 
     /*

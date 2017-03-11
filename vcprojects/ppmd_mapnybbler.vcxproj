@@ -249,6 +249,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Header Files\ppmdutils\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\item_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset_list.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\level_tileset.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Header Files\ppmdutils\data formats</Filter>
@@ -462,6 +463,7 @@
     <ClCompile Include="..\src\ppmdu\containers\item_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\level_tileset.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\level_tileset_list.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />
@@ -475,6 +477,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bma.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp" />

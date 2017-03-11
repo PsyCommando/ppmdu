@@ -1,6 +1,10 @@
 #include "level_tileset.hpp"
 #include <ext_fmts/png_io.hpp>
 #include <ppmdu/containers/tiled_image.hpp>
+#include <ppmdu/fmts/bpc.hpp>
+#include <ppmdu/fmts/bpa.hpp>
+#include <ppmdu/fmts/bpl.hpp>
+#include <ppmdu/fmts/bma.hpp>
 #include <sstream>
 #include <fstream>
 #include <iterator>
@@ -19,19 +23,19 @@ namespace pmd2
         //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
 
         //0232393C - When level entry first value is 6,7,8,9,10
         {
             0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
 
         //02323958 - When level entry first value is 11,12
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
     }};
 
@@ -41,19 +45,19 @@ namespace pmd2
         //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
         {
             0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,   
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x022F1800,   
         },
     
         //02320CF4 - When level entry first value == 6,7,8,9,10
         {
             0x0000, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,   
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x022F1800,   
         },
     
         //02320D10 - When level entry first value == 11,12
         {
             0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x1800, 0x022F,
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x022F1800,
         },
     }};
 
@@ -63,13 +67,13 @@ namespace pmd2
         //           OR level list entry first word == 1,2,3,4,5 OR bigger than 12!
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000, 
+            0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
     
         //023233B0 - When level list entry first word == 0,6,7,8,9,10,11,12
         {
             0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
-            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x0000, 0x0000,   
+            0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x00000000,   
         },
     }};
 
@@ -80,42 +84,55 @@ namespace pmd2
     void ExportTilesetToRaw(const std::string & destdir, const std::string & basename, const Tileset & tset )
     {
         stringstream sstrimg;
-        stringstream sstrtmap;
+        //stringstream sstrtmap;
         stringstream sstrpal;
         stringstream sstrsecpal;
         stringstream sstrpalindextbl;
         sstrimg          <<utils::TryAppendSlash(destdir) <<basename;
-        sstrtmap         <<sstrimg.str() <<"_tilemap.bin";
+        //sstrtmap         <<sstrimg.str() <<"_tilemap.bin";
         sstrpal          <<sstrimg.str() <<"_mainpal.rgbx32";
         sstrsecpal       <<sstrimg.str() <<"_secpal.rgbx32";
         sstrpalindextbl  <<sstrimg.str() <<"_secpalidxtbl.bin";
-        sstrimg          <<"_img.4bpp";
+        sstrimg          <<"_img";
 
         utils::DoCreateDirectory(destdir);
 
-        //#1 export the image data
+        size_t cntlayer = 0;
+        for( const auto & layer : tset.Layers() )
         {
-            ofstream ofimg(sstrimg.str(), ios::binary | ios::out );
-            ofimg.exceptions(ios::badbit);
-            ostreambuf_iterator<char> itoutimg(ofimg);
-            for( const auto & tile : tset.Tiles() )
+            stringstream curimgname;
+            curimgname << sstrimg.str() <<"_l" <<cntlayer;
+            //#1 export the image data
             {
-                for( size_t cntpix = 0; cntpix < (tile.size()-1); ++cntpix )
+                ofstream ofimg(curimgname.str() + ".4bpp", ios::binary | ios::out );
+                ofimg.exceptions(ios::badbit);
+                ostreambuf_iterator<char> itoutimg(ofimg);
+                for( const auto & tile : layer.Tiles() )
                 {
-                    uint8_t pixel4bpp = tile[cntpix] | static_cast<uint8_t>(tile[cntpix + 1]) << 4;
-                    utils::WriteIntToBytes( pixel4bpp, itoutimg );
+                    for( size_t cntpix = 0; cntpix < (tile.size()-1); ++cntpix )
+                    {
+                        uint8_t pixel4bpp = tile[cntpix] | static_cast<uint8_t>(tile[cntpix + 1]) << 4;
+                        utils::WriteIntToBytes( pixel4bpp, itoutimg );
+                    }
                 }
             }
+
+            //#2 export the tiling data
+            {
+                stringstream sstrtmap;
+                sstrtmap<<curimgname.str() <<"_tilemap.bin";
+
+                ofstream oftile(sstrtmap.str(), ios::binary | ios::out );
+                oftile.exceptions(ios::badbit);
+
+                ostreambuf_iterator<char> itouttile(oftile);
+
+                for( const auto & word : layer.TileMap() )
+                    utils::WriteIntToBytes( static_cast<uint16_t>(word), itouttile );
+            }
+            ++cntlayer;
         }
 
-        //#2 export the tiling data
-        {
-            ofstream oftile(sstrtmap.str(), ios::binary | ios::out );
-            oftile.exceptions(ios::badbit);
-            ostreambuf_iterator<char> itouttile(oftile);
-            for( const auto & word : tset.TileMap() )
-                utils::WriteIntToBytes( static_cast<uint16_t>(word), itouttile );
-        }
         //#3 export the palette
         {
             {
@@ -152,30 +169,69 @@ namespace pmd2
         }
     }
 
-//
-//
-//
-    void ExportTilesetPairToRaw(const std::string & destdir, const Tileset * pupscrtset, const Tileset * plowscrtset)
+    Tileset LoadTileset(const std::string & mapbgdir, const filetypes::LevelBgEntry & tsetinf, const pmd2::level_info & lvlinf)
     {
-        if( !pupscrtset && !plowscrtset )
-        {
-            assert(false);
-            throw std::logic_error("ExportTilesetPair(): Both tilesets are null!");
-        }
+        Tileset tset;
+        string bpcname( tsetinf.bpcname.begin(), tsetinf.bpcname.end() );
+        string bplname( tsetinf.bplname.begin(), tsetinf.bplname.end() );
+        string bmaname( tsetinf.bmaname.begin(), tsetinf.bmaname.end() );
+        //!#TODO : Handle bpa list!
 
-        if(pupscrtset)
-        {
-            ExportTilesetToRaw(destdir, FnameUpperLayerData, *pupscrtset);
-        }
+        bpcname = utils::MakeLowerCase(bpcname);
+        bplname = utils::MakeLowerCase(bplname);
+        bmaname = utils::MakeLowerCase(bmaname);
+        //!#TODO : Handle bpa list!
 
-        if(plowscrtset)
+        auto lambdamakepath = [&mapbgdir](const string & fname, const string & ext)->string
         {
-            ExportTilesetToRaw(destdir, FnameLowerLayerData, *plowscrtset);
-        }
+            stringstream sstr;
+            sstr << mapbgdir << fname <<"." <<ext;
+            return sstr.str();
+        };
 
-        //! #TODO
+        // Load BPC
+        tset.Layers() = filetypes::ParseBPC( lambdamakepath(bpcname,filetypes::BPC_FileExt) );
+
+        // Load BMA
+        tset.BMAData() = filetypes::ParseBMA( lambdamakepath(bpcname,filetypes::BMA_FileExt) );
+
+        // Load BPA
+        //!#TODO : Handle bpa list!
+        //tset.BPAData() = filetypes::ParseBPA( lambdamakepath(bpcname,filetypes::BPA_FileExt) );
+
+        // Load BPL
+        tset.Palettes() = filetypes::ParseBPL( lambdamakepath(bplname,filetypes::BPL_FileExt) );
+
+
+        //ExportTilesetToRaw( outpath.makeAbsolute().toString(), tsetinf.bpcname, tset );
+
+
+        //auto tilesets = ::filetypes::ParseBPC(Poco::Path(inpath).setExtension("bpc").toString());
+        //tilesets.first.Palettes()  = ::filetypes::ParseBPL(Poco::Path(inpath).setExtension("bpl").toString());
+        //tilesets.second.Palettes() = tilesets.first.Palettes();
+
+        //tilesets.first.BMAData()  = ::filetypes::ParseBMA(Poco::Path(inpath).setExtension("bma").toString());
+        //tilesets.second.BMAData() = tilesets.first.BMAData();
+
+        //ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
+        //if( !(tilesets.first.Tiles().empty()) )
+        //{
+        //    PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("upper_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
+        //    DumpCellsToPNG( Poco::Path(outpath).append("upper_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
+        //}
+
+        //if( !(tilesets.second.Tiles().empty()) )
+        //{
+        //    PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("lower_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
+        //    DumpCellsToPNG( Poco::Path(outpath).append("lower_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
+        //}
+
+
+
+        return std::move(tset);
     }
 
+    //
     //
     void CopyATile( const pmd2::tileproperties & curtmap, const std::vector<std::vector<gimg::pixel_indexed_4bpp>> & tiles, gimg::tiled_image_i8bpp::tile_t & outitle )//_outit & itout )
     {
@@ -463,7 +519,7 @@ namespace pmd2
     }
 
 
-    gimg::tiled_image_i8bpp PreparePixels_LinearTiling(const Tileset & tileset)
+    gimg::tiled_image_i8bpp PreparePixels_LinearTiling(const TilesetLayer & tileset, const TilesetBMAData & bmadat)
     { 
         static const size_t tilegrpnbtiles = 9;
         static const size_t tilegrpwidth   = 3;
@@ -476,7 +532,7 @@ namespace pmd2
         size_t       mapcnt         = 0;
         gimg::tiled_image_i8bpp assembledimg;
 
-        const size_t imgtilewidth   = tileset.BMAData().width; 
+        const size_t imgtilewidth   = bmadat.width; 
         const size_t imgtileheight  = tileset.TileMap().size() /imgtilewidth;
         const size_t imgwidthtgrp   = (imgtilewidth  / tilegrpwidth ) + ( (imgtilewidth  % tilegrpwidth  != 0)? 1 : 0);  
         const size_t imgheighttgrp  = (imgtileheight / tilegrpheight) + ( (imgtileheight % tilegrpheight != 0)? 1 : 0);  
@@ -504,31 +560,36 @@ namespace pmd2
 
     void PrintAssembledTilesetPreviewToPNG(const std::string & fpath, const Tileset & tileset)
     {
-        clog <<"Writing " <<tileset.TileMap().size() <<" tiles to \"" <<fpath <<"\"" <<"\n";
-        gimg::tiled_image_i8bpp assembledimg(PreparePixels_LinearTiling(tileset));
-        //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
-        //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
-        assembledimg.setNbColors(256);
-
-        //Fill the color palette
-        for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
+        size_t cntlayer = 0;
+        for( const auto & layer : tileset.Layers() )
         {
-            for( size_t cntc = 0; cntc < 16; ++cntc ) 
-            {
-                auto & curcol = assembledimg.getPalette()[(cntpal * 16) + cntc];
-                auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
-                curcol.red   = cursrc._red;
-                curcol.green = cursrc._green;
-                curcol.blue  = cursrc._blue;
-            }
-        }
+            clog <<"Writing layer #" <<cntlayer <<" with" <<layer.TileMap().size() <<" tiles to \"" <<fpath <<"\"" <<"\n";
+            gimg::tiled_image_i8bpp assembledimg(PreparePixels_LinearTiling(layer,tileset.BMAData()));
+            //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
+            //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
+            assembledimg.setNbColors(256);
 
-        utils::io::ExportToPNG(assembledimg, fpath);
-        clog <<"\n";
+            //Fill the color palette
+            for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
+            {
+                for( size_t cntc = 0; cntc < 16; ++cntc ) 
+                {
+                    auto & curcol = assembledimg.getPalette()[(cntpal * 16) + cntc];
+                    auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
+                    curcol.red   = cursrc._red;
+                    curcol.green = cursrc._green;
+                    curcol.blue  = cursrc._blue;
+                }
+            }
+
+            utils::io::ExportToPNG(assembledimg, fpath);
+            clog <<"\n";
+            ++cntlayer;
+        }
     }
 
 
-    void DumpCellsToPNG(const std::string & fpath, const Tileset & tileset)
+    void DumpCellsToPNG(const std::string & outdir, const Tileset & tileset)
     {
         //static const uint16_t NbColorsPalette    = 16;
         static const uint16_t NbColorsPerPalette = 16;
@@ -536,39 +597,48 @@ namespace pmd2
 
         typedef uint16_t tileindex_t;
         typedef uint8_t  palindex_t;
-        //First build a palette index lookup table
-        std::unordered_map<tileindex_t, palindex_t> pallut;
-        for( const auto & tmap : tileset.TileMap() )
-            pallut[tmap.tileindex] = tmap.palindex;
+        size_t cntlayers = 0;
 
-        gimg::tiled_image_i8bpp assembledimg;
-        size_t                  nbrows = (tileset.Tiles().size() / ImgRowLenTiles) + ( (tileset.Tiles().size() % ImgRowLenTiles != 0)? 1 : 0);
-        assembledimg.setNbTilesRowsAndColumns( ImgRowLenTiles, nbrows );
-
-        //Write all tiles
-        for( size_t tidx = 0; tidx < tileset.Tiles().size(); ++tidx )
+        for( const auto & layer : tileset.Layers() )
         {
-            for( size_t pidx = 0; pidx < tileset.Tiles()[tidx].size(); ++pidx )
-            {
-                assembledimg.getTile(tidx)[pidx] = tileset.Tiles()[tidx][pidx] + (pallut[tidx] * NbColorsPerPalette);
-            }
-        }
+            //First build a palette index lookup table
+            std::unordered_map<tileindex_t, palindex_t> pallut;
+            for( const auto & tmap : layer.TileMap() )
+                pallut[tmap.tileindex] = tmap.palindex;
 
-        //Fill the color palette
-        assembledimg.setNbColors(256);
-        for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
-        {
-            for( size_t cntc = 0; cntc < NbColorsPerPalette; ++cntc ) 
-            {
-                auto & curcol = assembledimg.getPalette()[(cntpal * NbColorsPerPalette) + cntc];
-                auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
-                curcol.red   = cursrc._red;
-                curcol.green = cursrc._green;
-                curcol.blue  = cursrc._blue;
-            }
-        }
+            gimg::tiled_image_i8bpp assembledimg;
+            size_t                  nbrows = (layer.Tiles().size() / ImgRowLenTiles) + ( (layer.Tiles().size() % ImgRowLenTiles != 0)? 1 : 0);
+            assembledimg.setNbTilesRowsAndColumns( ImgRowLenTiles, nbrows );
 
-        utils::io::ExportToPNG(assembledimg, fpath);
+            //Write all tiles
+            for( size_t tidx = 0; tidx < layer.Tiles().size(); ++tidx )
+            {
+                for( size_t pidx = 0; pidx < layer.Tiles()[tidx].size(); ++pidx )
+                {
+                    assembledimg.getTile(tidx)[pidx] = layer.Tiles()[tidx][pidx] + (pallut[tidx] * NbColorsPerPalette);
+                }
+            }
+
+            //Fill the color palette
+            assembledimg.setNbColors(256);
+            for( size_t cntpal = 0; cntpal < tileset.Palettes().mainpals.size(); ++cntpal )
+            {
+                for( size_t cntc = 0; cntc < NbColorsPerPalette; ++cntc ) 
+                {
+                    auto & curcol = assembledimg.getPalette()[(cntpal * NbColorsPerPalette) + cntc];
+                    auto & cursrc = tileset.Palettes().mainpals[cntpal][cntc];
+                    curcol.red   = cursrc._red;
+                    curcol.green = cursrc._green;
+                    curcol.blue  = cursrc._blue;
+                }
+            }
+            
+            //Export the image
+            stringstream pngname;
+            pngname << utils::TryAppendSlash(outdir) << "cells_layer" <<cntlayers << ".png";
+            utils::io::ExportToPNG(assembledimg, pngname.str());
+            ++cntlayers;
+        }
     }
 
 };

@@ -98,8 +98,9 @@ namespace filetypes
 //============================================================================================
 //  Functions
 //============================================================================================
-    std::pair<pmd2::Tileset,pmd2::Tileset>  ParseBPC( const std::string & fpath );
-    void                                    WriteBPC( const std::string & destfpath, const pmd2::Tileset & srcupscr, const pmd2::Tileset & srcbotscr );
+    //std::pair<pmd2::Tileset,pmd2::Tileset>  ParseBPC( const std::string & fpath );
+    pmd2::TilesetLayers ParseBPC( const std::string & fpath );
+    void                WriteBPC( const std::string & destfpath, const pmd2::Tileset & srcupscr, const pmd2::Tileset & srcbotscr );
 
 };
 

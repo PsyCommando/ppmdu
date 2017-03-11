@@ -476,6 +476,7 @@ using namespace ::std;
         {
             ValidateRomRoot();
             pmd2::GameDataLoader gloader( m_romroot, m_cfgpath );
+            gloader.AnalyseGame(); //Load config, and etc..
             cout <<"\n";
             switch(m_opmode)
             {

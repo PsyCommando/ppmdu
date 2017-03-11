@@ -138,7 +138,6 @@ namespace pmd2
             if( arm9off14 != 0 )
             {
                 MainPMD2ConfigWrapper::Instance().InitConfig(arm9off14, m_configfile);
-                //m_conf.reset( new ConfigLoader(arm9off14, m_configfile) );
                 return true;
             }
             else
@@ -408,8 +407,8 @@ namespace pmd2
     GameAudio               * GameDataLoader::GetAudio()                                { return m_audio.get(); }
     const GameAudio         * GameDataLoader::GetAudio() const                          { return m_audio.get(); }
 
-    PMD2_ASM                * GameDataLoader::GetAsm()                             { return m_asmmanip.get(); }
-    const PMD2_ASM          * GameDataLoader::GetAsm() const                       { return m_asmmanip.get(); }
+    PMD2_ASM                * GameDataLoader::GetAsm()                                  { return m_asmmanip.get(); }
+    const PMD2_ASM          * GameDataLoader::GetAsm() const                            { return m_asmmanip.get(); }
 
     //const ConfigLoader * GameDataLoader::GetConfig() const
     //{
