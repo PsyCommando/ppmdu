@@ -88,6 +88,9 @@
     <Filter Include="Source Files\ppmdu\file formats\scripts">
       <UniqueIdentifier>{45d2c33e-155c-436f-9246-d000e7f496e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ppmdu\data formats\levels">
+      <UniqueIdentifier>{d5310b35-b1a6-46d9-af2c-25d9793f5405}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\readmes\ppmd_mapnybbler.txt">
@@ -548,7 +551,10 @@
       <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\level_tileset_list.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ppmdu\data formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_graphics.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

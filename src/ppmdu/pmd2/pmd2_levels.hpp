@@ -48,7 +48,7 @@ namespace pmd2
     class GameLevels
     {
     public:
-        GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, GameScripts & gs, const lvlprocopts & options = Default_Level_Options );
+        GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options = Default_Level_Options );
         ~GameLevels();
 
         /***********************************************************************************************

@@ -17,6 +17,7 @@ Description:
 #include <ppmdu/pmd2/pmd2_graphics.hpp>
 #include <ppmdu/pmd2/pmd2_audio.hpp>
 #include <ppmdu/pmd2/pmd2_asm.hpp>
+#include <ppmdu/pmd2/pmd2_levels.hpp>
 
 //! #TODO: The gameloader header could be possibly more easily turned into an accessible
 //!         interface for a possible shared library. If the dependencies and implementation can be
@@ -59,6 +60,7 @@ namespace pmd2
 
         GameText        * LoadGameText();
         GameScripts     * LoadScripts(const scriptprocoptions & options);
+        GameLevels      * LoadLevels(const lvlprocopts & options);
         GameGraphics    * LoadGraphics();
         GameStats       * LoadStats();
         GameAudio       * LoadAudio();
@@ -69,6 +71,7 @@ namespace pmd2
 
         void WriteGameText();
         void WriteScripts();
+        void WriteLevels();
         void WriteGraphics();
         void WriteStats();
         void WriteAudio();
@@ -83,6 +86,10 @@ namespace pmd2
         //
         GameScripts             * GetScripts();
         const GameScripts       * GetScripts()const;
+
+        //
+        GameLevels              * GetLevels();
+        const GameLevels        * GetLevels()const;
 
         //
         GameGraphics            * GetGraphics();
@@ -106,7 +113,8 @@ namespace pmd2
 
     private:
         std::shared_ptr<GameText>            m_text;
-        std::unique_ptr<GameScripts>         m_scripts;
+        std::shared_ptr<GameScripts>         m_scripts;
+        std::unique_ptr<GameLevels>          m_levels;
         std::unique_ptr<GameGraphics>        m_graphics;
         std::unique_ptr<GameStats>           m_stats;
         std::unique_ptr<GameAudio>           m_audio;

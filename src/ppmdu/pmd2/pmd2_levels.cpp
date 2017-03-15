@@ -19,7 +19,7 @@ namespace pmd2
     class GameLevelsHandler
     {
     public:
-        GameLevelsHandler(const string & fsrootpath, const ConfigLoader & conf, GameScripts & gs, lvlprocopts options )
+        GameLevelsHandler(const string & fsrootpath, const ConfigLoader & conf, shared_ptr<GameScripts> && gs, lvlprocopts options )
             :m_gconf(conf), m_options(options), m_gscript(gs)
         {
             m_pgscriptdat = &(m_gconf.GetGameScriptData());
@@ -43,8 +43,8 @@ namespace pmd2
             ExportTilesets(destdir);
 
             //2. Do scripts if needed
-            if(m_options.bexportscripts)
-                ExportScripts(destdir);
+            //if(m_options.bexportscripts)
+                //ExportScripts(destdir);
         }
 
         void ExportLevel(const std::string & destdir, const std::string & levelname)
@@ -66,6 +66,7 @@ namespace pmd2
             stringstream sstrbglist;
             sstrbglist << utils::TryAppendSlash(m_mapbgdir) <<filetypes::FName_BGListFile;
             filetypes::lvlbglist_t bglist(filetypes::LoadLevelList( sstrbglist.str() ));
+            cout <<"Loaded " <<filetypes::FName_BGListFile <<"file..\n";
 
             //3. Iterate level list, export each levels matching the index of the name in the BG list
             for( const pmd2::level_info & lvl : lvlinf )
@@ -76,12 +77,18 @@ namespace pmd2
                     sstrtsetpath << utils::TryAppendSlash(destdir) <<lvl.name;
                     string tsetpath = sstrtsetpath.str();
 
+                    cout <<"\rExporting " <<left <<setw(10) <<setfill(' ') <<lvl.name <<"..";
                     utils::DoCreateDirectory(tsetpath);
                     ExportATileset( lvl, bglist[lvl.mapid], tsetpath );
                 }
                 else
                 {
+                    //The map id refers to a map out of bound!
+                    stringstream sstrer;
+                    sstrer << "GameLevelHandler::ExportTilesets(): Error processing level \"" <<lvl.name <<"\"! Map id " 
+                           <<lvl.mapid <<" is outside the \"" <<filetypes::FName_BGListFile <<"\" level list file's range!!";
                     assert(false);
+                    throw std::runtime_error(sstrer.str());
                 }
             }
 
@@ -90,7 +97,9 @@ namespace pmd2
         void ExportATileset( const pmd2::level_info & lvlinf, const filetypes::LevelBgEntry & entry, const std::string & destdir )
         {
             Tileset tset( LoadTileset(m_mapbgdir, entry, lvlinf) );
-            assert(false);
+            ExportTilesetToRaw(destdir, lvlinf.name, tset);
+            //PrintAssembledTilesetPreviewToPNG(utils::TryAppendSlash(destdir) + "preview", tset );
+            DumpCellsToPNG( destdir, tset );
         }
 
 
@@ -119,7 +128,7 @@ namespace pmd2
 
 
         const ConfigLoader    & m_gconf;
-        GameScripts           & m_gscript;      //Ref on gamescript handler
+        shared_ptr<GameScripts> m_gscript;      //Ref on gamescript handler
         const GameScriptData  * m_pgscriptdat;  //Pointer to the gamescript data to use to load the levels
         lvlprocopts             m_options;
         string                  m_mapbgdir;
@@ -130,8 +139,8 @@ namespace pmd2
 //=========================================================================================================================================
 //  GameLevels
 //=========================================================================================================================================
-    GameLevels::GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, GameScripts & gs, const lvlprocopts & options)
-        :m_pimpl(new GameLevelsHandler(fsrootdir,conf,gs,options))
+    GameLevels::GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options)
+        :m_pimpl(new GameLevelsHandler(fsrootdir,conf,std::forward<std::shared_ptr<GameScripts>>(gs),options))
     {}
 
     GameLevels::~GameLevels()

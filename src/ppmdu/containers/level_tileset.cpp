@@ -20,19 +20,19 @@ namespace pmd2
     const std::array<tsetconstants, 3> TSetIndependantSelectConstants
     {{
         //02323920 - When levelid == 0xFFFFFFFF, 
-        //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
+        //           OR when level entry map type is 0,1,2,3,4,5, bigger than 12!
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
 
-        //0232393C - When level entry first value is 6,7,8,9,10
+        //0232393C - When level entry map type is 6,7,8,9,10
         {
             0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
 
-        //02323958 - When level entry first value is 11,12
+        //02323958 - When level entry map type is 11,12
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
@@ -42,19 +42,19 @@ namespace pmd2
     extern const std::array<tsetconstants, 3> TSetGroundSelectConstants
     {{
         //02320CD8 - When levelid == 0xFFFFFFFF
-        //           OR when level entry first value is 0,1,2,3,4,5, bigger than 12!
+        //           OR when level entry map type is 0,1,2,3,4,5, bigger than 12!
         {
             0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x022F1800,   
         },
     
-        //02320CF4 - When level entry first value == 6,7,8,9,10
+        //02320CF4 - When level entry map type == 6,7,8,9,10
         {
             0x0000, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x022F1800,   
         },
     
-        //02320D10 - When level entry first value == 11,12
+        //02320D10 - When level entry map type == 11,12
         {
             0x0000, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x022F1800,
@@ -64,13 +64,13 @@ namespace pmd2
     extern const std::array<tsetconstants, 2> TSetGroundSubWorldSelectConstants
     {{
         //02323394 - When levelid == 0xFFFFFFFF
-        //           OR level list entry first word == 1,2,3,4,5 OR bigger than 12!
+        //           OR level list entry map type == 1,2,3,4,5 OR bigger than 12!
         {
             0x0001, 0x0001, 0x0001, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0400, 0x0000, 0x00BA, 0x003E, 0x0000, 0x00000000, 
         },
     
-        //023233B0 - When level list entry first word == 0,6,7,8,9,10,11,12
+        //023233B0 - When level list entry map type == 0,6,7,8,9,10,11,12
         {
             0x0001, 0x0000, 0x0002, 0x0000, 0x000E, 0x0000, 0x0400, 
             0x0200, 0x0400, 0x00BA, 0x003E, 0x0000, 0x00000000,   
@@ -172,9 +172,12 @@ namespace pmd2
     Tileset LoadTileset(const std::string & mapbgdir, const filetypes::LevelBgEntry & tsetinf, const pmd2::level_info & lvlinf)
     {
         Tileset tset;
-        string bpcname( tsetinf.bpcname.begin(), tsetinf.bpcname.end() );
-        string bplname( tsetinf.bplname.begin(), tsetinf.bplname.end() );
-        string bmaname( tsetinf.bmaname.begin(), tsetinf.bmaname.end() );
+        string bpcname( tsetinf.bpcname.begin(), tsetinf.bpcname.end() ); //
+        bpcname = bpcname.c_str();
+        string bplname( tsetinf.bplname.begin(), tsetinf.bplname.end() ); //Use the array pointer, because of the terminating 0 character
+        bplname = bplname.c_str();
+        string bmaname( tsetinf.bmaname.begin(), tsetinf.bmaname.end() ); //
+        bmaname = bmaname.c_str();
         //!#TODO : Handle bpa list!
 
         bpcname = utils::MakeLowerCase(bpcname);
@@ -185,8 +188,8 @@ namespace pmd2
         auto lambdamakepath = [&mapbgdir](const string & fname, const string & ext)->string
         {
             stringstream sstr;
-            sstr << mapbgdir << fname <<"." <<ext;
-            return sstr.str();
+            sstr <<utils::TryAppendSlash(mapbgdir) <<fname <<"." <<ext;
+            return std::move(sstr.str());
         };
 
         // Load BPC
@@ -472,13 +475,13 @@ namespace pmd2
             -tiles       : all the tiles for this tileset
     */
     template<class _inittmap>
-        void WriteTileGroupAtCoord( gimg::tiled_image_i8bpp   & img, 
-                                    size_t                      tgrpoffsetx, 
-                                    size_t                      tgrpoffsety, 
-                                    _inittmap                 & itcurtmap, 
-                                    _inittmap                   itendtmap, 
-                                    const Tileset::imgdat_t   & tiles,
-                                    size_t                    & mapcnt)
+        void WriteTileGroupAtCoord( gimg::tiled_image_i8bpp      & img, 
+                                    size_t                         tgrpoffsetx, 
+                                    size_t                         tgrpoffsety, 
+                                    _inittmap                    & itcurtmap, 
+                                    _inittmap                      itendtmap, 
+                                    const TilesetLayer::imgdat_t & tiles,
+                                    size_t                       & mapcnt)
     {
         static const size_t TileGroupWidth  = 3;
         static const size_t TileGroupHeight = 3;
@@ -532,6 +535,7 @@ namespace pmd2
         size_t       mapcnt         = 0;
         gimg::tiled_image_i8bpp assembledimg;
 
+        //!FIXME: This calculation for the image size is wrong!
         const size_t imgtilewidth   = bmadat.width; 
         const size_t imgtileheight  = tileset.TileMap().size() /imgtilewidth;
         const size_t imgwidthtgrp   = (imgtilewidth  / tilegrpwidth ) + ( (imgtilewidth  % tilegrpwidth  != 0)? 1 : 0);  
@@ -563,7 +567,9 @@ namespace pmd2
         size_t cntlayer = 0;
         for( const auto & layer : tileset.Layers() )
         {
-            clog <<"Writing layer #" <<cntlayer <<" with" <<layer.TileMap().size() <<" tiles to \"" <<fpath <<"\"" <<"\n";
+            stringstream name;
+            name <<fpath <<"_l" <<cntlayer <<".png";
+            clog <<"Writing layer #" <<cntlayer <<" with" <<layer.TileMap().size() <<" tiles to \"" <<name.str() <<"\"" <<"\n";
             gimg::tiled_image_i8bpp assembledimg(PreparePixels_LinearTiling(layer,tileset.BMAData()));
             //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledMapPixelByPixel(tileset));
             //gimg::tiled_image_i8bpp assembledimg(PreparePixels_TiledTiles(tileset));
@@ -582,7 +588,7 @@ namespace pmd2
                 }
             }
 
-            utils::io::ExportToPNG(assembledimg, fpath);
+            utils::io::ExportToPNG(assembledimg, name.str());
             clog <<"\n";
             ++cntlayer;
         }
@@ -636,7 +642,14 @@ namespace pmd2
             //Export the image
             stringstream pngname;
             pngname << utils::TryAppendSlash(outdir) << "cells_layer" <<cntlayers << ".png";
-            utils::io::ExportToPNG(assembledimg, pngname.str());
+
+            if( assembledimg.getTotalNbPixels() != 0 )
+                utils::io::ExportToPNG(assembledimg, pngname.str());
+            else
+            {
+                cerr << "\n<!>- WARNING: Got empty image as result from dumping the tiles..\n";
+                clog<<"\n<!>- WARNING: Got empty image as result from dumping the tiles..\n";
+            }
             ++cntlayers;
         }
     }

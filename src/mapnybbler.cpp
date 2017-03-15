@@ -328,13 +328,9 @@ using namespace ::std;
 
     bool CMapNybbler::ParseOptionConfig(const std::vector<std::string>& optdata)
     {
-        if( utils::isFile(optdata[1]) )
-        {
-            SetupCFGPath(optdata[1]);
-            cout << "<!>- Set \"" <<m_cfgpath  <<"\" as path to pmd2data file!\n";
-        }
-        else
-            throw runtime_error("Path to cfg file does not exists, or is inaccessible!");
+        //Don't check if it exists because its compared to the app path and checked already inside setupcfg path!
+        SetupCFGPath(optdata[1]);
+        cout << "<!>- Set \"" <<m_cfgpath  <<"\" as path to pmd2data file!\n";
         return true;
     }
 
@@ -450,17 +446,17 @@ using namespace ::std;
             }
             case eOpMode::Export:
             {
-                if( utils::isFile(m_firstarg)  )
-                {
-                    m_processlist.push_back(m_firstarg);
-                }
-                else if(utils::isFolder(m_firstarg))
-                {
-                    //Check if we have a bglist.dat and at least one set of bpc,bpl,bma.
-                    assert(false);
-                }
-                else
-                    assert(false);
+                //if( utils::isFile(m_firstarg)  )
+                //{
+                //    m_processlist.push_back(m_firstarg);
+                //}
+                //else if(utils::isFolder(m_firstarg))
+                //{
+                //    //!TODO: Check if MAP_BG dir contains a bg_list.dat and at least one set of bpc,bpl,bma.
+                //    //First arg is export path!
+                //}
+                //else
+                //    assert(false);
                 break;
             }
         };
@@ -508,6 +504,7 @@ using namespace ::std;
             cerr <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
             if( utils::LibWide().isLogOn() )
                 clog <<"\n" << "<!>- POCO Exception - " <<e.name() <<"(" <<e.code() <<") : " << e.message() <<"\n" <<endl;
+            assert(false);
         }
         catch( const exception &e )
         {
@@ -519,6 +516,7 @@ using namespace ::std;
             cerr <<exceptstr;
             if( utils::LibWide().isLogOn() )
                 clog <<exceptstr;
+            assert(false);
         }
         return returnval;
     }
@@ -680,7 +678,12 @@ using namespace ::std;
 
     int CMapNybbler::HandleExport(const std::string & inpath, pmd2::GameDataLoader & gloader)
     {
-        assert(false);
+        //Export all levelshttps://discordapp.com/channels/@me/289451511191175168
+
+        //
+        pmd2::GameLevels * plvl = gloader.LoadLevels(pmd2::Default_Level_Options);
+        utils::DoCreateDirectory(inpath);
+        plvl->ExportAllLevels(inpath);
         return 0;
     }
 

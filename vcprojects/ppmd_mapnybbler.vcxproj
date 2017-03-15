@@ -529,6 +529,7 @@
       <Filter Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Source Files\ppmdutils\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_graphics.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Source Files\ppmdutils\file formats</Filter>
       <Filter Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Source Files\ppmdutils\file formats</Filter>

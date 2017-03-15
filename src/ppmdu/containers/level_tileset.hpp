@@ -30,12 +30,12 @@ namespace pmd2
     struct tsetconstants
     {
         //
-        uint16_t unk_0x2BC;
+        uint16_t unk_0x2BC; //Possibly boolean. Multiplied by 40 to obtain a byte size at one point while obtaining colors from the palette..
         uint16_t unk_0x2BE;
         uint16_t unk_0x2CO; //Nb bpas?
         uint16_t unk_0x2C2;
         uint16_t unk_0x2C4; //Nb Palettes used?
-        uint16_t unk_0x2C6;
+        uint16_t unk_0x2C6; //Seems to be used to get the address of the base VRAM slot the tileset is loaded at? Usually 0
         uint16_t unk_0x2C8;
         //
         uint16_t unk_0x2CA; //First layer size?
@@ -305,7 +305,7 @@ namespace pmd2
         std::vector<TilesetLayer> layers;
         
         //*** Debug stuff ***
-        std::vector<std::vector<LayerAsmData>> layerasmdata;
+        std::vector<LayerAsmData> layerasmdata;
     };
 
     /************************************************************************************************
@@ -368,9 +368,8 @@ namespace pmd2
 //
 //
 //
-
-    Tileset LoadTileset( const std::string & mapbgdir, const filetypes::LevelBgEntry & tsetinf, const pmd2::level_info & lvlinf );
-
+    //Need to provide all this because tileset loading depends on map data!
+    Tileset LoadTileset( const std::string & mapbgdir, const ::filetypes::LevelBgEntry & tsetinf, const pmd2::level_info & lvlinf );
 
     /************************************************************************************************
         TileSetHandler
@@ -395,4 +394,4 @@ namespace pmd2
 
 };
 
-#endif // !LEVEL_TILESET_HPP
+#endif //!LEVEL_TILESET_HPP

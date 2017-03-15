@@ -33,10 +33,11 @@ namespace filetypes
     */
     struct bpc_header
     {
-        static const size_t LEN        = 28; //bytes
-        static const size_t NbTilesets = 2;
+        static const size_t LEN = 4; //bytes, length of the static part of the header only!
+
         struct indexentry
         {
+            static const size_t LEN = 12;//bytes
             uint16_t nbtiles;   //The nb of 64 pixels, 4bpp tiles in the image
             uint16_t unk2;
             uint16_t unk3;
@@ -92,6 +93,12 @@ namespace filetypes
             for( size_t cnt = 0; cnt < nbentries; ++cnt )
                 itr = tilesetsinfo[cnt].Read(itr,itpend);
             return itr;
+        }
+
+        //Calculate the rawsize in bytes of the header as if it was in the file!
+        inline size_t rawsize()const
+        {
+            return LEN + (tilesetsinfo.size() * indexentry::LEN);
         }
     };
 

@@ -27,24 +27,28 @@ namespace filetypes
 
         pmd2::TilesetLayers operator()()
         {
-            pmd2::TilesetLayers tsets;
+            pmd2::TilesetLayers layers;
             bpc_header hdr;
             hdr.Read(m_itbeg, m_itend);
 
-            CopyLayerAsmTable(tsets, hdr);
-            tsets.layers.resize(hdr.tilesetsinfo.size());
+            //!TODO: Figure out if there can be more than 2 layers!
+            int actualnblayers = (hdr.offsuprscr - bpc_header::LEN) / bpc_header::indexentry::LEN;
+            clog <<"<D>- BPCParser::operator(): Actual nb of layers vs expected determined to be ~" <<actualnblayers <<"/" <<hdr.tilesetsinfo.size() <<"\n";
+
+            CopyLayerAsmTable(layers, hdr);
+            layers.layers.resize(hdr.tilesetsinfo.size());
 
             auto ittinfo = hdr.tilesetsinfo.begin();
             if(hdr.offsuprscr != 0)
             {
-                ParseALayer( tsets.layers[0],  std::next(m_itbeg, hdr.offsuprscr),  (*ittinfo) );
+                ParseALayer( layers.layers[0], std::next(m_itbeg, hdr.offsuprscr),  (*ittinfo) );
                 ++ittinfo;
             }
             if(hdr.offslowrscr != 0)
             {
-                ParseALayer( tsets.layers[1], std::next(m_itbeg, hdr.offslowrscr), (*ittinfo) );
+                ParseALayer( layers.layers[1], std::next(m_itbeg, hdr.offslowrscr), (*ittinfo) );
             }
-            return std::move(tsets);
+            return std::move(layers);
         }
 
     private:
@@ -58,12 +62,13 @@ namespace filetypes
                 data.unk2       = hdr.tilesetsinfo[i].unk2;
                 data.unk3       = hdr.tilesetsinfo[i].unk3;
                 data.unk4       = hdr.tilesetsinfo[i].unk4;
+                data.unk5       = hdr.tilesetsinfo[i].unk5;
                 data.tmapdeclen = hdr.tilesetsinfo[i].tmapdeclen;
-                layers.layerasmdata.push_back( sts::move(data) );
+                layers.layerasmdata.push_back( std::move(data) );
             }
         }
 
-        void ParseALayer( pmd2::Tileset & tset, init_t itbeg, const bpc_header::indexentry & entry )
+        void ParseALayer( pmd2::TilesetLayer & layer, init_t itbeg, const bpc_header::indexentry & entry )
         {
             static const size_t NbBytesPerTilesRaw = 32; //In 4bpp we output 32 bytes per tile!
             static const size_t NbPixelsPerTile    = 64;
@@ -87,13 +92,14 @@ namespace filetypes
             //
             size_t nbtiles = (decout4bppbuff.size() % NbBytesPerTilesRaw != 0)? 1 : 0;
             nbtiles += (decout4bppbuff.size() / NbBytesPerTilesRaw);
-            tset.Tiles().resize(nbtiles + 1);
-            tset.Tiles().front().resize(NbPixelsPerTile); //Resize the first empty tile
+            layer.Tiles().resize(nbtiles);
+            //layer.Tiles().resize(nbtiles + 1);
+            //layer.Tiles().front().resize(NbPixelsPerTile); //Resize the first empty tile
 
-            size_t cntdestpixel = NbPixelsPerTile; //Start placing pixels after the first empty tile!
+            size_t cntdestpixel = 0; //NbPixelsPerTile; //Start placing pixels after the first empty tile!
             for( size_t cntpixel = 0; cntpixel < decout4bppbuff.size(); ++cntpixel )
             {
-                auto & curtile = tset.Tiles()[cntdestpixel/NbPixelsPerTile];
+                auto & curtile = layer.Tiles()[cntdestpixel/NbPixelsPerTile];
                 curtile.resize(NbPixelsPerTile);
                 curtile[cntdestpixel % NbPixelsPerTile]       = (decout4bppbuff[cntpixel] & 0x0F);
                 curtile[(cntdestpixel % NbPixelsPerTile) + 1] = (decout4bppbuff[cntpixel] & 0xF0) >> 4;
@@ -103,8 +109,8 @@ namespace filetypes
             //
             //Handling for BPAs?
             //
-            if( entry.unk2 != 0 || entry.unk3 != 0 || entry.unk4 != 0 || entry.unk5 != 0 )
-                HandleBPAs(tset, itbeg,entry);
+            //if( entry.unk2 != 0 || entry.unk3 != 0 || entry.unk4 != 0 || entry.unk5 != 0 )
+            //    HandleBPAs(layer, tset, itbeg,entry);
 
             const size_t Tmaplen = ((entry.tmapdeclen-1) * 9) * 2;
             
@@ -114,14 +120,14 @@ namespace filetypes
             //Convert to tiles data
             for( auto itby = tmaptemp.begin(); itby != tmaptemp.end(); )
             {
-                tset.TileMap().push_back( pmd2::tileproperties(utils::ReadIntFromBytes<uint16_t>(itby,tmaptemp.end())) );
+                layer.TileMap().push_back( pmd2::tileproperties(utils::ReadIntFromBytes<uint16_t>(itby,tmaptemp.end())) );
             }
         }
 
-        void HandleBPAs( pmd2::Tileset & tset, init_t itbeg, const bpc_header::indexentry & entry )
-        {
-            //! #TODO
-        }
+        //void HandleBPAs( pmd2::TilesetLayer & layer, pmd2::Tileset & tset, init_t itbeg, const bpc_header::indexentry & entry )
+        //{
+        //    //! #TODO
+        //}
 
     private:
         init_t      m_itbeg;
