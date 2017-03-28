@@ -556,6 +556,9 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_graphics.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats\levels</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\resources\pmd2data.xml">

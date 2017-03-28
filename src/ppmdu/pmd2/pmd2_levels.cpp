@@ -12,6 +12,9 @@ using namespace std;
 namespace pmd2
 {
 
+    const std::string LevelData_LevelDefFname = "leveldef.xml";
+    const std::string LevelDataXMLRoot        = "LevelDefinition";
+
 //=========================================================================================================================================
 //  GameLevelsHandler
 //=========================================================================================================================================
@@ -127,6 +130,18 @@ namespace pmd2
         }
 
 
+        bool DirContainsXMLLevelDef(const std::string & srclvldir)
+        {
+            stringstream sstr; 
+            sstr << utils::TryAppendSlash(srclvldir) <<LevelData_LevelDefFname;
+
+            //!#TODO: make a more elaborate check!
+            if( utils::pathExists(sstr.str()) )
+                return true;
+
+            return false;
+        }
+
         const ConfigLoader    & m_gconf;
         shared_ptr<GameScripts> m_gscript;      //Ref on gamescript handler
         const GameScriptData  * m_pgscriptdat;  //Pointer to the gamescript data to use to load the levels
@@ -140,8 +155,9 @@ namespace pmd2
 //  GameLevels
 //=========================================================================================================================================
     GameLevels::GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options)
-        :m_pimpl(new GameLevelsHandler(fsrootdir,conf,std::forward<std::shared_ptr<GameScripts>>(gs),options))
-    {}
+    {
+        m_pimpl.reset(new GameLevelsHandler(fsrootdir,conf,std::forward<std::shared_ptr<GameScripts>>(gs),options));
+    }
 
     GameLevels::~GameLevels()
     {}
@@ -164,6 +180,11 @@ namespace pmd2
     void GameLevels::ImportLevel(const std::string & srclvldir)
     {
         m_pimpl->ImportLevel(srclvldir);
+    }
+
+    bool GameLevels::DirContainsXMLLevelDef(const std::string & srclvldir)
+    {
+        return m_pimpl->DirContainsXMLLevelDef(srclvldir);
     }
 
     /**/

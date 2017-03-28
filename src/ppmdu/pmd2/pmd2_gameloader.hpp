@@ -25,6 +25,23 @@ Description:
 
 namespace pmd2
 {
+//
+//
+//
+    /*
+        EX_NoRomDataAvailable
+            Exception class sent out when there is no rom data found and a functionality requiring rom data was used!
+    */
+    class EX_NoRomDataAvailable : public std::runtime_error
+    {
+    public:
+        EX_NoRomDataAvailable( const std::string & msg):std::runtime_error(msg){}
+        EX_NoRomDataAvailable( const EX_NoRomDataAvailable & other ) = default;
+        EX_NoRomDataAvailable( EX_NoRomDataAvailable && other ) = default;
+        EX_NoRomDataAvailable & operator=(const EX_NoRomDataAvailable & other) = default;
+        EX_NoRomDataAvailable & operator=(EX_NoRomDataAvailable && other) = default;
+    };
+
 //======================================================================================
 //  GameDataLoader
 //======================================================================================
@@ -56,15 +73,15 @@ namespace pmd2
         inline eGameVersion  GetGameVersion()const {return MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().version;}
 
         //Handles Loading the Game Data
-        void Load();
+        void Init();
 
-        GameText        * LoadGameText();
-        GameScripts     * LoadScripts(const scriptprocoptions & options);
-        GameLevels      * LoadLevels(const lvlprocopts & options);
-        GameGraphics    * LoadGraphics();
-        GameStats       * LoadStats();
-        GameAudio       * LoadAudio();
-        PMD2_ASM        * LoadAsm();
+        GameText        * InitGameText();
+        GameScripts     * InitScripts(const scriptprocoptions & options);
+        GameLevels      * InitLevels(const lvlprocopts & options);
+        GameGraphics    * InitGraphics();
+        GameStats       * InitStats();
+        GameAudio       * InitAudio();
+        PMD2_ASM        * InitAsm();
 
         //Handles Writing the Game Data
         void Write();
@@ -110,6 +127,8 @@ namespace pmd2
     private:
         
         bool LoadConfigUsingARM9();
+        //Code common to all init methods!
+        void DoCommonInit(bool bcheckdata = true);
 
     private:
         std::shared_ptr<GameText>            m_text;

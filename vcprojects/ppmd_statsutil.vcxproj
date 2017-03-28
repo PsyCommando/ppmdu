@@ -126,9 +126,9 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp" />
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp" />
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_levels.cpp" />
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClCompile>
@@ -258,7 +258,6 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp" />
@@ -267,7 +266,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">

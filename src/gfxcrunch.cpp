@@ -2322,74 +2322,76 @@ namespace gfx_util
 
     void CGfxUtil::DoExportTileset()
     {
-        vector<string> procqueue;
-        auto itinstproc = back_inserter(procqueue);
-        procqueue.push_back(m_inputPath);
-        copy( m_extraargs.begin(), m_extraargs.end(), itinstproc );
+        assert(false);
+        throw std::runtime_error("CGfxUtil::DoExportTileset(): Deprecated!");
+        //vector<string> procqueue;
+        //auto itinstproc = back_inserter(procqueue);
+        //procqueue.push_back(m_inputPath);
+        //copy( m_extraargs.begin(), m_extraargs.end(), itinstproc );
 
-        int againcnt = 0;
-        for( const auto & item : procqueue )
-        {
-            try
-            {
-                Poco::Path inpath(item);
-                Poco::File infile(inpath);
-                Poco::Path outpath;
+        //int againcnt = 0;
+        //for( const auto & item : procqueue )
+        //{
+        //    try
+        //    {
+        //        Poco::Path inpath(item);
+        //        Poco::File infile(inpath);
+        //        Poco::Path outpath;
 
-                if( againcnt != 0 )
-                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\", " <<VariationOfAgain[againcnt % VariationOfAgain.size()] <<"!\n";
-                else
-                    cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
+        //        if( againcnt != 0 )
+        //            cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\", " <<VariationOfAgain[againcnt % VariationOfAgain.size()] <<"!\n";
+        //        else
+        //            cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
 
-                if( procqueue.size() > 1 )
-                    outpath = Poco::Path(m_outputPath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
-                else if( m_outputPath.empty() )
-                    outpath = Poco::Path(inpath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
-                else
-                    outpath = Poco::Path(m_outputPath);
+        //        if( procqueue.size() > 1 )
+        //            outpath = Poco::Path(m_outputPath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+        //        else if( m_outputPath.empty() )
+        //            outpath = Poco::Path(inpath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+        //        else
+        //            outpath = Poco::Path(m_outputPath);
 
-                if( infile.exists() && infile.isFile() )
-                {
-                    auto tilesets = ::filetypes::ParseBPC(Poco::Path(inpath).setExtension("bpc").toString());
-                    tilesets.first.Palettes()  = ::filetypes::ParseBPL(Poco::Path(inpath).setExtension("bpl").toString());
-                    tilesets.second.Palettes() = tilesets.first.Palettes();
+        //        if( infile.exists() && infile.isFile() )
+        //        {
+        //            auto tilesets = ::filetypes::ParseBPC(Poco::Path(inpath).setExtension("bpc").toString());
+        //            tilesets.first.Palettes()  = ::filetypes::ParseBPL(Poco::Path(inpath).setExtension("bpl").toString());
+        //            tilesets.second.Palettes() = tilesets.first.Palettes();
 
-                    tilesets.first.BMAData()  = ::filetypes::ParseBMA(Poco::Path(inpath).setExtension("bma").toString());
-                    tilesets.second.BMAData() = tilesets.first.BMAData();
+        //            tilesets.first.BMAData()  = ::filetypes::ParseBMA(Poco::Path(inpath).setExtension("bma").toString());
+        //            tilesets.second.BMAData() = tilesets.first.BMAData();
 
-                    ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
-                    if( !(tilesets.first.Tiles().empty()) )
-                    {
-                        PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("upper_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
-                        DumpCellsToPNG( Poco::Path(outpath).append("upper_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
-                    }
+        //            ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
+        //            if( !(tilesets.first.Tiles().empty()) )
+        //            {
+        //                PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("upper_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
+        //                DumpCellsToPNG( Poco::Path(outpath).append("upper_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
+        //            }
 
-                    if( !(tilesets.second.Tiles().empty()) )
-                    {
-                        PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("lower_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
-                        DumpCellsToPNG( Poco::Path(outpath).append("lower_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
-                    }
-                    cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
-                }
-                else 
-                {
-                    stringstream sstr;
-                    sstr << "CGfxUtil::DoImportTileset(): Input path \"" <<infile.path() <<"\" doesn't exist, or is not a file!";
-                    throw runtime_error(sstr.str());
-                }
-            }
-            catch( const Poco::Exception & e )
-            {
-                cerr <<"Poco::Exception: " << e.what() <<"\n";
-                clog <<"Poco::Exception: " << e.what() <<"\n";
-            }
-            catch( const exception & e )
-            {
-                cerr <<"Exception: " << e.what() <<"\n";
-                clog <<"Exception: " << e.what() <<"\n";
-            }
-            ++againcnt;
-        }
+        //            if( !(tilesets.second.Tiles().empty()) )
+        //            {
+        //                PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("lower_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
+        //                DumpCellsToPNG( Poco::Path(outpath).append("lower_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
+        //            }
+        //            cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
+        //        }
+        //        else 
+        //        {
+        //            stringstream sstr;
+        //            sstr << "CGfxUtil::DoImportTileset(): Input path \"" <<infile.path() <<"\" doesn't exist, or is not a file!";
+        //            throw runtime_error(sstr.str());
+        //        }
+        //    }
+        //    catch( const Poco::Exception & e )
+        //    {
+        //        cerr <<"Poco::Exception: " << e.what() <<"\n";
+        //        clog <<"Poco::Exception: " << e.what() <<"\n";
+        //    }
+        //    catch( const exception & e )
+        //    {
+        //        cerr <<"Exception: " << e.what() <<"\n";
+        //        clog <<"Exception: " << e.what() <<"\n";
+        //    }
+        //    ++againcnt;
+        //}
     }
 
     void CGfxUtil::DoImportTileset()

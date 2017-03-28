@@ -582,13 +582,12 @@ using namespace ::std;
     void CMapNybbler::RunLvlListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
         pmd2::ConfigLoader & cfg = pmd2::MainPMD2ConfigWrapper::CfgInstance();
-        pmd2::PMD2_ASM     * pasm = gloader.GetAsm();
+        pmd2::PMD2_ASM     * pasm = gloader.InitAsm();      
 
         //!#TODO: Add option to use default loaded entries
         if(true)
             cfg.GetGameScriptData().LevelInfo() = pasm->LoadLevelList();
-
-        gloader.LoadAsm();
+  
         cout<<"Dumping level_list..\n";
         pasm->WriteLevelList(cfg.GetGameScriptData().LevelInfo());
         cout<<"Done with level_list!\n";
@@ -597,14 +596,13 @@ using namespace ::std;
     void CMapNybbler::RunActorListAssembly( const ExtraTasks & task, pmd2::GameDataLoader & gloader )
     {
         pmd2::ConfigLoader & cfg  = pmd2::MainPMD2ConfigWrapper::CfgInstance();
-        pmd2::PMD2_ASM     * pasm = gloader.GetAsm();
+        pmd2::PMD2_ASM     * pasm = gloader.InitAsm();
 
 
         //!#TODO: Add option to use default loaded entries
         if(true)
             cfg.GetGameScriptData().LivesEnt() = pasm->LoadActorList();
 
-        gloader.LoadAsm();
         cout<<"Dumping actor_list..\n";
         pasm->WriteActorList(cfg.GetGameScriptData().LivesEnt());
         cout<<"Done with actor_list!\n";
@@ -672,16 +670,28 @@ using namespace ::std;
 
     int CMapNybbler::HandleImport(const std::string & inpath, pmd2::GameDataLoader & gloader)
     {
-        assert(false);
+        pmd2::GameLevels * plvl = gloader.InitLevels(pmd2::Default_Level_Options);
+
+        if( !Poco::Path(inpath).isDirectory() )
+        {
+            //We don't know how to handle single files..
+            assert(false);
+            throw std::runtime_error("CMapNybbler::HandleImport(): file import unsupported right now!");
+        }
+
+        //Check content of directory for a level.xml file
+        if( plvl->DirContainsXMLLevelDef(inpath))
+            plvl->ImportLevel(inpath);      //Import as single level
+        else
+            plvl->ImportAllLevels(inpath);  //Import as directory containing all levels to import!
+
         return 0;
     }
 
     int CMapNybbler::HandleExport(const std::string & inpath, pmd2::GameDataLoader & gloader)
     {
-        //Export all levelshttps://discordapp.com/channels/@me/289451511191175168
-
-        //
-        pmd2::GameLevels * plvl = gloader.LoadLevels(pmd2::Default_Level_Options);
+        //Export all levels
+        pmd2::GameLevels * plvl = gloader.InitLevels(pmd2::Default_Level_Options);
         utils::DoCreateDirectory(inpath);
         plvl->ExportAllLevels(inpath);
         return 0;

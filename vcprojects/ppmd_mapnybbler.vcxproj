@@ -464,6 +464,7 @@
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\level_tileset.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\level_tileset_list.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\level_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp" />

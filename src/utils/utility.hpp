@@ -78,7 +78,7 @@ namespace utils
     {
         typedef TimescaleT timescale_t;
 
-        ChronoRAII( const std::string name = "*", std::ostream * messageoutput = nullptr )
+        ChronoRAII( const std::string & name = "*", std::ostream * messageoutput = nullptr )
             :_name(name)
         {
             _start  = std::chrono::steady_clock::now();

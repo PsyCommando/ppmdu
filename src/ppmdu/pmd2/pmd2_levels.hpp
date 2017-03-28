@@ -8,8 +8,6 @@ Description: Utilities for loading and saving levels related data to and from PM
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_configloader.hpp>
-#include <ppmdu/containers/level_tileset.hpp>
-#include <ppmdu/fmts/bg_list_data.hpp>
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <cstdint>
 #include <string>
@@ -24,6 +22,9 @@ namespace pmd2
 //  Constants
 //==========================================================================================================
     //use DirName_MAP_BG
+
+    extern const std::string LevelData_LevelDefFname; //Filenaname of the level definition file generated inside an exported level folder!
+    extern const std::string LevelDataXMLRoot;
 
 //==========================================================================================================
 //  Levels Manager
@@ -48,7 +49,7 @@ namespace pmd2
     class GameLevels
     {
     public:
-        GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options = Default_Level_Options );
+        GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options );
         ~GameLevels();
 
         /***********************************************************************************************
@@ -75,6 +76,14 @@ namespace pmd2
                 Import XML and tiledata for a single level within the "srclvldir" directory into the romroot. 
         ***********************************************************************************************/
         void ImportLevel(const std::string & srclvldir);
+
+        //utility
+
+        /***********************************************************************************************
+            DirContainsXMLLevelDef
+                Returns whether the neccessary files for importing a level from  XML data are there!
+        ***********************************************************************************************/
+        bool DirContainsXMLLevelDef(const std::string & srclvldir);
 
 
         //

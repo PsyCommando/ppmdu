@@ -970,7 +970,7 @@ namespace statsutil
                  <<"---------------------------------\n"
                  <<"Reading..\n";
 
-            pgametext = gloader.LoadGameText();
+            pgametext = gloader.InitGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game text!");
 
@@ -993,7 +993,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
+            GameScripts * pgamescripts = gloader.InitScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load scripts!");
 
@@ -1015,7 +1015,7 @@ namespace statsutil
         {
             cout <<"\nLoading Game Data..\n"
                  <<"---------------------------------\n";
-           pgamestats = gloader.LoadStats();
+           pgamestats = gloader.InitStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game stats!");
         }
@@ -1107,7 +1107,7 @@ namespace statsutil
             cout <<"\nGame Strings\n"
                  <<"---------------------------------\n"
                  <<"Reading...";
-            GameText * pgametext = gloader.LoadGameText();
+            GameText * pgametext = gloader.InitGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game text!");
 
@@ -1122,7 +1122,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
+            GameScripts * pgamescripts = gloader.InitScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 
@@ -1136,7 +1136,7 @@ namespace statsutil
         {
             cout <<"\nLoading Game Data..\n"
                  <<"---------------------------------\n";
-           pgamestats = gloader.LoadStats();
+           pgamestats = gloader.InitStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game stats!");
         }
@@ -1290,7 +1290,7 @@ namespace statsutil
         //if( fpath.empty() )
         //    fpath = "actor_list.bin";
 
-        gloader.LoadAsm();
+        gloader.InitAsm();
         cout<<"Dumping actor_list..\n";
         gloader.GetAsm()->WriteActorList( confload.GetGameScriptData().LivesEnt() );
         cout<<"Done with actor_list!\n";
@@ -1304,7 +1304,7 @@ namespace statsutil
         //if( fpath.empty() )
         //    fpath = "level_list.bin";
 
-        gloader.LoadAsm();
+        gloader.InitAsm();
         cout<<"Dumping level_list..\n";
         gloader.GetAsm()->WriteLevelList( confload.GetGameScriptData().LevelInfo() );
         cout<<"Done with level_list!\n";
