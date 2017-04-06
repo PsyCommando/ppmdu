@@ -73,7 +73,7 @@ namespace pmd2
         inline eGameVersion  GetGameVersion()const {return MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().version;}
 
         //Handles Loading the Game Data
-        void Init();
+        //void Init();
 
         GameText        * InitGameText();
         GameScripts     * InitScripts(const scriptprocoptions & options);
@@ -83,16 +83,16 @@ namespace pmd2
         GameAudio       * InitAudio();
         PMD2_ASM        * InitAsm();
 
-        //Handles Writing the Game Data
-        void Write();
+        //Handles Writing the Game Data back to the
+        //void DeInit();
 
-        void WriteGameText();
-        void WriteScripts();
-        void WriteLevels();
-        void WriteGraphics();
-        void WriteStats();
-        void WriteAudio();
-        //void WriteAsm();
+        void DeInitGameText();
+        void DeInitScripts();
+        void DeInitLevels();
+        void DeInitGraphics();
+        void DeInitStats();
+        void DeInitAudio();
+        //void DeInitAsm();
 
         /*
             Access to the sub-sections of the game's data

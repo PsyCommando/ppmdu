@@ -45,11 +45,13 @@ namespace pmd2
         GameLevels
             Loads and process levels from the PMD2 games.
     *************************************/
-    class GameLevelsHandler;
     class GameLevels
     {
     public:
+
         GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options );
+        GameLevels(const GameLevels&) = default;
+        GameLevels(GameLevels&&) = default;
         ~GameLevels();
 
         /***********************************************************************************************
@@ -58,7 +60,7 @@ namespace pmd2
         ***********************************************************************************************/
         void ExportAllLevels( const std::string & destdir );
 
-        /***********************************************************************************************  
+        /***********************************************************************************************
             ExportLevel
                 Exports level "levelname" from the romroot to the "destdir" specified, as XML and tile data.
         ***********************************************************************************************/
@@ -67,13 +69,13 @@ namespace pmd2
 
         /***********************************************************************************************
             ImportAllLevels
-                Import XML and tiledata for all levels within the "srcdir" directory into the romroot. 
+                Import XML and tiledata for all levels within the "srcdir" directory into the romroot.
         ***********************************************************************************************/
         void ImportAllLevels( const std::string & srcdir );
 
         /***********************************************************************************************
             ImportLevel
-                Import XML and tiledata for a single level within the "srclvldir" directory into the romroot. 
+                Import XML and tiledata for a single level within the "srclvldir" directory into the romroot.
         ***********************************************************************************************/
         void ImportLevel(const std::string & srclvldir);
 
@@ -88,11 +90,12 @@ namespace pmd2
 
         //
         void SetGameScriptData(const GameScriptData & pgsdata);
-        const std::string    & GetMapBgDir()const;// {return m_mapbgdir;}
-        const ConfigLoader   & GetConfig()const;  // {return m_gconf;}
-        const lvlprocopts    & GetOptions()const; // {return m_options;}
+        const std::string    & GetMapBgDir()const;
+        const ConfigLoader   & GetConfig()const;
+        const lvlprocopts    & GetOptions()const;
 
     private:
+        class GameLevelsHandler;
         std::unique_ptr<GameLevelsHandler> m_pimpl;
     };
 

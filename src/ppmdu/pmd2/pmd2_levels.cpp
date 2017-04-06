@@ -19,7 +19,7 @@ namespace pmd2
 //  GameLevelsHandler
 //=========================================================================================================================================
 
-    class GameLevelsHandler
+    class GameLevels::GameLevelsHandler
     {
     public:
         GameLevelsHandler(const string & fsrootpath, const ConfigLoader & conf, shared_ptr<GameScripts> && gs, lvlprocopts options )
@@ -142,6 +142,22 @@ namespace pmd2
             return false;
         }
 
+        //
+        inline const std::string & GetMapBgDir() const
+        {
+            return m_mapbgdir;
+        }
+
+        inline const ConfigLoader & GetConfig() const
+        {
+            return m_gconf;
+        }
+
+        inline const lvlprocopts & GetOptions() const
+        {
+            return m_options;
+        }
+
         const ConfigLoader    & m_gconf;
         shared_ptr<GameScripts> m_gscript;      //Ref on gamescript handler
         const GameScriptData  * m_pgscriptdat;  //Pointer to the gamescript data to use to load the levels
@@ -155,9 +171,8 @@ namespace pmd2
 //  GameLevels
 //=========================================================================================================================================
     GameLevels::GameLevels(const std::string & fsrootdir, const ConfigLoader & conf, std::shared_ptr<GameScripts> && gs, const lvlprocopts & options)
-    {
-        m_pimpl.reset(new GameLevelsHandler(fsrootdir,conf,std::forward<std::shared_ptr<GameScripts>>(gs),options));
-    }
+        :m_pimpl(new GameLevelsHandler(fsrootdir,conf,std::forward<std::shared_ptr<GameScripts>>(gs),options))
+    {}
 
     GameLevels::~GameLevels()
     {}
@@ -187,7 +202,6 @@ namespace pmd2
         return m_pimpl->DirContainsXMLLevelDef(srclvldir);
     }
 
-    /**/
     void GameLevels::SetGameScriptData(const GameScriptData & pgsdata)
     {
         m_pimpl->SetGameScriptData(pgsdata);
@@ -195,16 +209,16 @@ namespace pmd2
 
     const std::string & GameLevels::GetMapBgDir() const
     {
-        return m_pimpl->m_mapbgdir;
+        return m_pimpl->GetMapBgDir();
     }
 
     const ConfigLoader & GameLevels::GetConfig() const
     {
-        return m_pimpl->m_gconf;
+        return m_pimpl->GetConfig();
     }
 
     const lvlprocopts & GameLevels::GetOptions() const
     {
-        return m_pimpl->m_options;
+        return m_pimpl->GetOptions();
     }
 };

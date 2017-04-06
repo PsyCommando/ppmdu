@@ -167,17 +167,17 @@ namespace pmd2
     }
 
 // ======================== Loading ========================
-    void GameDataLoader::Init()
-    {
-        DoCommonInit();
-        InitGameText();
-        InitScripts(DefConfigOptions);
-        InitLevels(Default_Level_Options);
-        InitGraphics();
-        InitStats();
-        InitAudio();
-        InitAsm();
-    }
+    //void GameDataLoader::Init()
+    //{
+    //    DoCommonInit();
+    //    InitGameText();
+    //    InitScripts(DefConfigOptions);
+    //    InitLevels(Default_Level_Options);
+    //    InitGraphics();
+    //    InitStats();
+    //    InitAudio();
+    //    InitAsm();
+    //}
 
     void GameDataLoader::DoCommonInit( bool bcheckdata )
     {
@@ -292,26 +292,28 @@ namespace pmd2
         return m_asmmanip.get();
     }
 
-// ======================== Writing ========================
-    void GameDataLoader::Write()
-    {
-        DoCommonInit();
+// ======================== DeInit ========================
+    //void GameDataLoader::DeInit()
+    //{
+    //    DoCommonInit();
 
-        if( m_text != nullptr )
-            WriteGameText();
-        if( m_scripts != nullptr )
-            WriteScripts();
-        if( m_graphics != nullptr )
-            WriteGraphics();
-        if( m_stats != nullptr )
-            WriteStats();
-        if( m_audio != nullptr )
-            WriteAudio();
-        //if( m_asmmanip != nullptr )
-        //    WriteAsm();
-    }
+    //    if( m_text != nullptr )
+    //        DeInitGameText();
+    //    if (m_levels != nullptr)
+    //        DeInitLevels();
+    //    if( m_scripts != nullptr )
+    //        DeInitScripts();
+    //    if( m_graphics != nullptr )
+    //        DeInitGraphics();
+    //    if( m_stats != nullptr )
+    //        DeInitStats();
+    //    if( m_audio != nullptr )
+    //        DeInitAudio();
+    //    //if( m_asmmanip != nullptr )
+    //    //    WriteAsm();
+    //}
 
-    void GameDataLoader::WriteGameText()
+    void GameDataLoader::DeInitGameText()
     {
         DoCommonInit();
 
@@ -325,7 +327,7 @@ namespace pmd2
         m_text->Write();
     }
 
-    void GameDataLoader::WriteScripts()
+    void GameDataLoader::DeInitScripts()
     {
         //NOTHING to do here
         //if(!m_bAnalyzed)
@@ -343,7 +345,7 @@ namespace pmd2
         // m_scripts->Write();
     }
 
-    void GameDataLoader::WriteLevels()
+    void GameDataLoader::DeInitLevels()
     {
         DoCommonInit();
 
@@ -352,7 +354,7 @@ namespace pmd2
         assert(false);
     }
 
-    void GameDataLoader::WriteGraphics()
+    void GameDataLoader::DeInitGraphics()
     {
         DoCommonInit();
 
@@ -363,7 +365,7 @@ namespace pmd2
         assert(false);
     }
 
-    void GameDataLoader::WriteStats()
+    void GameDataLoader::DeInitStats()
     {
         DoCommonInit();
 
@@ -377,7 +379,7 @@ namespace pmd2
         m_stats->Write();
     }
 
-    void GameDataLoader::WriteAudio()
+    void GameDataLoader::DeInitAudio()
     {
         DoCommonInit();
 
