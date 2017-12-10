@@ -45,6 +45,10 @@ namespace pmd2
         GameLevels
             Loads and process levels from the PMD2 games.
     *************************************/
+    //!NOTE: Have to do this, so statsutil compiles
+#ifdef PPMDU_STATSUTIL
+    class GameLevels{};
+#else
     class GameLevels
     {
     public:
@@ -98,6 +102,7 @@ namespace pmd2
         class GameLevelsHandler;
         std::unique_ptr<GameLevelsHandler> m_pimpl;
     };
+#endif
 
 };
 

@@ -224,6 +224,8 @@ namespace pmd2
 
     GameLevels * GameDataLoader::InitLevels(const lvlprocopts & options)
     {
+        //!NOTE: Have to do this, so statsutil compiles
+#ifndef PPMDU_STATSUTIL
         DoCommonInit();
 
         if(!m_scripts)
@@ -236,6 +238,7 @@ namespace pmd2
             gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
             m_levels.reset( new GameLevels(gamefsroot.str(), MainPMD2ConfigWrapper::CfgInstance(), shared_ptr<GameScripts>(m_scripts), options) );
         }
+#endif
         return m_levels.get();
     }
 
