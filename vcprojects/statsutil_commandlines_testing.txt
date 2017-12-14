@@ -2,12 +2,18 @@
 -e "EoSJapan" "EoSJapanOut" -text
 -e -romroot "EoSRomRoot" "EoSOut" -script
 
+-i -romroot "EoSRomRootModded" "EoSOut" -cfg "../../resources/pmd2data.xml" -log 
+
 //North American Rom Script Data Test
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" 
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts
+-e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts -scrasdir
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log 
 -i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts
+-i -romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log  -scripts -scrasdir
 -scripts -text
+
+-romroot "C:\Users\Guill\Desktop\Workdir\scriptenginerom" -cfg "../../resources/pmd2data.xml" -log -dumpactorlist
 
 //Single Script File Test
 "EoSRomRoot/data/SCRIPT/D00P01/m01a01a.ssb" "ExplorersOfSky_Stats"

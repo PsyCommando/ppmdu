@@ -165,7 +165,7 @@ namespace utils{ namespace io
         {
             readPNG_indexed<png::index_pixel>( out_indexed, filepath );
         }
-        catch( png::error e )
+        catch( const png::error & )
         {
             cerr << "<!>- PNG image is not in 4 or 8 bpp format.. Not using a palette would lead to unforseen consequences!\n"
                  << "     The required input format is an indexed PNG, 4 or 8 bits per pixels, 16 colors !\n";
@@ -209,7 +209,7 @@ namespace utils{ namespace io
         {
             output.write( filepath );
         }
-        catch( std::exception e )
+        catch( const std::exception & e )
         {
             cerr << "<!>- Error outputing image : " << filepath <<"\n"
                  << "     Exception details : \n"     
@@ -235,7 +235,7 @@ namespace utils{ namespace io
         {
             readPNG_indexed<png::index_pixel>( out_indexed, filepath );
         }
-        catch( png::error e )
+        catch( const png::error & e )
         {
             static const uint32_t bpp = gimg::tiled_image_i8bpp::pixel_t::mypixeltrait_t::BITS_PER_PIXEL;
             cerr << "<!>- PNG image is not in " <<bpp <<" bpp format.. Not using a palette would lead to unforseen consequences!\n"
@@ -267,7 +267,52 @@ namespace utils{ namespace io
         {
             output.write( filepath );
         }
-        catch( std::exception e )
+        catch( const std::exception & e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+
+    bool ExportTo8bppPNG( const gimg::tiled_image_i8bpp & in_indexed,
+                          const std::string             & filepath,
+                          unsigned int                    begpixX,
+                          unsigned int                    begpixY,
+                          unsigned int                    endpixX,
+                          unsigned int                    endpixY )
+    {
+        png::image<png::index_pixel> output;
+        output.set_palette( PalToPngPal(in_indexed.getPalette()) );
+        const size_t srcMaxX = in_indexed.getNbPixelWidth()  - endpixX;
+        const size_t srcMaxY = in_indexed.getNbPixelHeight() - endpixY;
+
+        //Copy image
+        output.resize( (srcMaxX - begpixX), (srcMaxY - begpixY) );
+
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+            {
+                size_t srcX = i + begpixX;
+                size_t srcY = j + begpixY;
+
+                if( srcX < srcMaxX && srcY < srcMaxY )
+                    output.set_pixel( i,j, static_cast<uint8_t>( in_indexed.getPixel( srcX, srcY ).getWholePixelData() ) );
+                else 
+                    break;
+            }
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( const std::exception & e )
         {
             cerr << "<!>- Error outputing image : " << filepath <<"\n"
                  << "     Exception details : \n"     
@@ -380,6 +425,23 @@ namespace utils{ namespace io
         return ExportTo8bppPNG( in_indexed, filepath );
     }
 
+
+    template<>
+        bool ExportToPNG_AndCrop(   const gimg::tiled_image_i8bpp     & in_indexed,
+                                    const std::string                 & filepath,
+                                    unsigned int                        begpixX,
+                                    unsigned int                        begpixY,
+                                    unsigned int                        endpixX,
+                                    unsigned int                        endpixY )
+        {
+            return ExportTo8bppPNG(in_indexed, filepath, begpixX, begpixY, endpixX, endpixY);
+        }
+                
+
+
+
+
+
     template<>
         bool ImportFromPNG( gimg::tiled_image_i4bpp & out_indexed,
                             const std::string       & filepath, 
@@ -400,6 +462,94 @@ namespace utils{ namespace io
         return ImportFrom8bppPNG( out_indexed, filepath, forcedwidth, forcedheight, erroronwrongres );
     }
 
+
+    bool ExportToPNG( std::vector<gimg::colorRGBX32>    & bitmap,
+                      const std::string                 & filepath, 
+                      unsigned int                      forcedwidth,
+                      unsigned int                      forcedheight,
+                      bool                              erroronwrongres )
+    {
+        png::image<png::rgba_pixel> output;
+
+        //Copy image
+        output.resize( forcedwidth, forcedheight );
+
+        auto itpixel = bitmap.begin();
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+            {
+                png::rgba_pixel pix;
+                if( itpixel != bitmap.end() )
+                {
+                    pix.alpha = 255;
+                    pix.red   = itpixel->_red;
+                    pix.blue  = itpixel->_blue;
+                    pix.green = itpixel->_green;
+                    ++itpixel;
+                }
+                else //In case some pixels have no data
+                {
+                    pix.alpha = 255;
+                    pix.red   = 255;
+                    pix.blue  = 255;
+                    pix.green = 255;
+                }
+                output.set_pixel( i,j,  pix ); //If only one component returns the entire pixel data
+            }
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( const std::exception & e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+
+    /*
+        ExportToPNG
+    */
+    bool ExportToPNG( const std::vector<std::vector<uint8_t>>   & indexed8bpp,
+                      const std::vector<gimg::colorRGB24>       & palette,
+                      const std::string                         & filepath, 
+                      bool                                        erroronwrongres)
+    {
+        png::image<png::index_pixel> output;
+        output.set_palette( PalToPngPal(palette) );
+
+        //Copy image
+        output.resize( indexed8bpp.front().size(), indexed8bpp.size() );
+
+        for( unsigned int i = 0; i < output.get_width(); ++i )
+        {
+            for( unsigned int j = 0; j < output.get_height(); ++j )
+                output.set_pixel( i,j, indexed8bpp[j][i] );
+        }
+
+        try
+        {
+            output.write( filepath );
+        }
+        catch( const std::exception & e )
+        {
+            cerr << "<!>- Error outputing image : " << filepath <<"\n"
+                 << "     Exception details : \n"     
+                 << "        " <<e.what()  <<"\n";
+
+            assert(false);
+            return false;
+        }
+        return true;
+    }
 
 
 };};

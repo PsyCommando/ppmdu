@@ -6,16 +6,17 @@ utility.hpp
 psycommando@gmail.com
 Description: A header with a bunch of useful includes for the PPMD utilities. 
 */
-#include <chrono>
-#include <string>
 #include "gfileutils.hpp"
 #include "gfileio.hpp"
 #include "gstringutils.hpp"
 #include "gbyteutils.hpp"
 #include "poco_wrapper.hpp"
+#include <chrono>
+#include <string>
 #include <iosfwd>
 #include <type_traits>
 #include <vector>
+#include <sstream>
 
 namespace utils
 {
@@ -77,7 +78,7 @@ namespace utils
     {
         typedef TimescaleT timescale_t;
 
-        ChronoRAII( const std::string name = "*", std::ostream * messageoutput = nullptr )
+        ChronoRAII( const std::string & name = "*", std::ostream * messageoutput = nullptr )
             :_name(name)
         {
             _start  = std::chrono::steady_clock::now();
@@ -209,6 +210,18 @@ namespace utils
         catch(...){}
     }
 
+
+    //!#TODO: Move me into a formating header or something!!!
+    /*
+        NumberToHexString
+    */
+    template<typename _intty>
+        std::string NumberToHexString( _intty val )
+    {
+        std::stringstream sstr; 
+        sstr <<std::hex <<"0x" <<std::uppercase <<val;
+        return std::move(sstr.str());
+    }
 
 };
 

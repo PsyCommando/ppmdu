@@ -80,15 +80,20 @@ namespace DSE
             ProcessedPresets::PresetEntry entry;
             entry.prginf = prgm;
 
+            int cntsplit = 0;
             for( const auto & split : prgm.m_splitstbl )
             {
                 auto psmpl    = m_srcsmpl.sample(split.smplid);
                 auto psmplinf = m_srcsmpl.sampleInfo(split.smplid);
 
+                if (psmpl == nullptr || psmplinf == nullptr)
+                    clog << "<!>-DSE::SampleProcessor::ProcessAPrgm(): Warning! The non-existant sample ID " <<split.smplid <<" was referred to in Program#" <<prgm.id <<", split#" <<cntsplit <<". Skipping!\n";
+
                 if( psmpl != nullptr && psmplinf != nullptr )
                 {
                     ProcessASplit2( entry, split, prgm.m_lfotbl, psmpl, psmplinf, prgm );
                 }
+                ++cntsplit;
             }
             processed.AddEntry( move(entry) );
         }
@@ -115,7 +120,7 @@ namespace DSE
                             const DSE::WavInfo                      * psmplinf,
                             const DSE::ProgramInfo                  & prgminf )
         {
-            const size_t    curindex               = entry.splitsamples.size();
+            const size_t    curindex               = entry.splitsamples.size(); //!#FIXME: Past me, what the fuck?
             const bool      IsSampleLooped         = psmplinf->smplloop != 0;
             const bool      ShouldUnloop           = ( split.env.sustain == 0 ) || ( split.env.decay2 != 0x7F );
             const bool      ShouldRenderEnvAndLoop = !ShouldUnloop && IsSampleLooped;

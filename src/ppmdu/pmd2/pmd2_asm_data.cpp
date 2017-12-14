@@ -93,6 +93,7 @@ namespace pmd2
 //=======================================================================================
 //  ASM_Data_Loader
 //=======================================================================================
+#if 0
     ASM_Data_Loader::ASM_Data_Loader(const std::string & romrootdir)
     {
     }
@@ -135,7 +136,7 @@ namespace pmd2
     void ASM_Data_Loader::WriteOverlayData()
     {
     }
-
+#endif
 
 
 };

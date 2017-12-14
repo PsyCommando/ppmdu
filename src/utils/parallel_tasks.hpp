@@ -295,6 +295,7 @@ namespace utils
         }
 
         inline bool empty()const {return m_taskqueue.empty();}
+        inline size_t size()const {return m_taskqueue.size();}
 
     private:
         TaskQueue                   m_taskqueue;

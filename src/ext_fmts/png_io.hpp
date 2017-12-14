@@ -58,6 +58,15 @@ namespace utils{ namespace io
         bool ExportToPNG( const _TImg_t     & in_indexed,
                           const std::string & filepath );
 
+    /*
+    */
+    template<class _TImgTy>
+        bool ExportToPNG_AndCrop(   const _TImgTy     & in_indexed,
+                                    const std::string & filepath,
+                                    unsigned int        begpixX,
+                                    unsigned int        begpixY,
+                                    unsigned int        endpixX = 0,
+                                    unsigned int        endpixY = 0 );
 
 
     //Generic Import Functions
@@ -76,6 +85,19 @@ namespace utils{ namespace io
                                                     const std::string & filepath);
 
     image_format_info GetPNGImgInfo(const std::string & filepath);
+
+
+    bool ExportToPNG( std::vector<gimg::colorRGBX32>    & bitmap,
+                      const std::string                 & filepath, 
+                      unsigned int                      forcedwidth,
+                      unsigned int                      forcedheight,
+                      bool                              erroronwrongres = false );
+
+
+    bool ExportToPNG( const std::vector<std::vector<uint8_t>>   & indexed8bpp,
+                      const std::vector<gimg::colorRGB24>       & palette,
+                      const std::string                         & filepath, 
+                      bool                                        erroronwrongres = false );
 
 };};
 

@@ -79,8 +79,9 @@ namespace pmd2
         bool bnodeisinst;       //Whether the node name should be set to the instruction's name during export
         bool bmarkoffsets;      //Whether the offsets of each instructions should be marked by comments
         bool bscriptdebug;      //Whether the debug_branch instructions should be tweaked to work as if debug mode was on
+        bool basdir;            //Whether the scripts' XML data is exported/imported to/from a directory containing sub-files if true, or a single XML file if false.
     };
-    const scriptprocoptions DefConfigOptions{true, true, false, false};
+    const scriptprocoptions DefConfigOptions{true, true, false, false, false};
 
 //==========================================================================================================
 //  Script Manager/Loader

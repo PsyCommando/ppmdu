@@ -22,9 +22,6 @@
     <Filter Include="Source Files\ppmdu\file formats">
       <UniqueIdentifier>{7ef6af80-7059-407b-b2e4-a0e3167c4543}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ppmdu\utility">
-      <UniqueIdentifier>{ce424d06-0270-4b0b-8fd4-2980287513f9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\ppmdu">
       <UniqueIdentifier>{63d8b3a5-6b24-4651-b877-6ce0aad5a50f}</UniqueIdentifier>
     </Filter>
@@ -33,9 +30,6 @@
     </Filter>
     <Filter Include="Header Files\ppmdu\file formats">
       <UniqueIdentifier>{ff5a5ff0-b301-4feb-818d-5762b32b81a5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\ppmdu\utility">
-      <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\typesupport">
       <UniqueIdentifier>{4e7b50a6-37f0-4534-b84d-674fe581be9e}</UniqueIdentifier>
@@ -88,6 +82,15 @@
     <Filter Include="Source Files\ppmdu\data formats\Scripts">
       <UniqueIdentifier>{65176b6f-ce98-48fa-b35d-a5486d3d4b66}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{baf3dfc1-2050-47f8-ba24-b401226b0a48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{02941253-570e-4acf-96b0-a3cbd0a5eb2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{ce424d06-0270-4b0b-8fd4-2980287513f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -109,28 +112,28 @@
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\cmdline_util.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\gbyteutils.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\gfileio.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\gfileutil.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\library_wide.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\poco_wrapper.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\utility.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\statsutil.cpp">
       <Filter>Source Files</Filter>
@@ -175,7 +178,7 @@
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp">
       <Filter>Source Files\ppmdu\file formats\scripts</Filter>
@@ -207,12 +210,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
@@ -235,10 +232,19 @@
       <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\parallel_tasks.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\multithread_logger.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -261,37 +267,37 @@
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\cmdline_util.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gbyteutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gfileio.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gfileutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gstringutils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\handymath.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\library_wide.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\poco_wrapper.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\readme_writer.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\utility.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\statsutil.hpp">
       <Filter>Header Files</Filter>
@@ -312,10 +318,10 @@
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\parse_utils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\pugixml_utils.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\types\contentid_generator.hpp">
       <Filter>Header Files\typesupport</Filter>
@@ -365,9 +371,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <Filter>Header Files\ppmdu\file formats\PokemonData</Filter>
     </ClInclude>
@@ -389,11 +392,8 @@
     <ClInclude Include="..\lib\whereami\src\whereami.h">
       <Filter>whereami</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\whereami_wrapper.hpp">
-      <Filter>whereami</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\multithread_logger.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp">
       <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
@@ -407,11 +407,14 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\parallel_tasks.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\whereami_wrapper.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

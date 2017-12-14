@@ -3,42 +3,31 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
+    <_PropertySheetDisplayName>shared_build_settings</_PropertySheetDisplayName>
+    <IntDir>$(SolutionDir)build\$(ProjectName)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
+    <IncludePath>$(SolutionDir)src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)src;$(SourcePath)</SourcePath>
     <LocalDebuggerWorkingDirectory>..\workdir</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <TargetName>$(ProjectName)d</TargetName>
-    <IncludePath>$(SolutionDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib_debug;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(SolutionDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoIteratorDebug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <TargetName>$(ProjectName)d</TargetName>
-    <IncludePath>$(SolutionDir)src;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)lib_debug_noitdebug;$(LibraryPath)</LibraryPath>
-    <SourcePath>$(SolutionDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(SolutionDir)lib_release;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
-    <IncludePath>$(SolutionDir)src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release WinXP|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(SolutionDir)lib_release;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)bin\$(ProjectName)\</OutDir>
     <TargetName>$(ProjectName)_xp</TargetName>
-    <IncludePath>$(SolutionDir)src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)src;$(SourcePath)</SourcePath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <IntDir>$(Configuration)_$(ProjectName)\</IntDir>
-    <_PropertySheetDisplayName>shared_build_settings</_PropertySheetDisplayName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

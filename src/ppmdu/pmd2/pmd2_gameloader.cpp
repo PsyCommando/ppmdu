@@ -4,6 +4,7 @@
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <fstream>
 using namespace std;
+using utils::logutil::slog;
 
 namespace pmd2
 {
@@ -17,16 +18,21 @@ namespace pmd2
 
     GameDataLoader::~GameDataLoader()
     {
+        slog()<<"<!>-GameDataLoader: Deallocating..\n";
         //We delete the unique ptr in order here, to avoid issues with circular ownership
         m_audio   .reset(nullptr);
         m_graphics.reset(nullptr);
         m_stats   .reset(nullptr);
         m_asmmanip.reset(nullptr);
-        m_scripts .reset(nullptr);
 
-        //Text has to be destroyed last to avoid possible circular ownership lockups
+        //Levels depend on script via shared ptr, so delete it before deleting scripts!
+        m_levels  .reset(nullptr);
+
+        m_scripts .reset();
+
+        //Text has to be destroyed last after scripts and stats to avoid possible circular ownership lockups
         if( m_text.use_count() > 0 ) 
-            clog<<"<!>- Warning! While destroying the Gameloader object, there were still " <<m_text.use_count() <<" others owner of the GameText pointer!!\n";
+            slog()<<"<!>- Warning! While destroying the Gameloader object, there were still " <<m_text.use_count() <<" others owner of the GameText pointer!!\n";
         m_text.reset();
     }
 
@@ -38,6 +44,7 @@ namespace pmd2
         bool bfoundoverlay = false;
         bool bfounddata    = false;
 
+        slog()<<"<!>-GameDataLoader: Analyzing game folder..\n";
         for( const auto & fname : filelst )
         {
             if( fname == DirName_DefData )
@@ -60,7 +67,7 @@ namespace pmd2
         //If we can't find a directory named data, try to find one that contains the typical PMD2 files
         if( !bfounddata )
         {
-            clog <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
+            slog() <<"<!>- Couldn't find data directory under \"" <<m_romroot <<"\". Attempting to search for ROM data directory..\n";
 
             //Found the directory that contains the PMD2 filetree
             auto pathlst = utils::ListDirContent_FilesAndDirs( m_romroot, false );
@@ -79,7 +86,7 @@ namespace pmd2
 
                         if( lastslashpos != string::npos )
                         {
-                            clog <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
+                            slog() <<"<*>- ROM data directory seems to be \"" <<fpath <<"\"!\n";
                             bfounddata = true;
                             m_datadiroverride = fpath.substr( lastslashpos+1 );
                         }
@@ -96,8 +103,10 @@ namespace pmd2
         m_nooverlays = !bfoundoverlay;
         m_bAnalyzed  = true;
 
+        slog()<<"<!>-GameDataLoader: Loading configuration..\n";
         if( m_noarm9 || (!m_noarm9 && !LoadConfigUsingARM9()) )
         {
+            slog()<<"<!>-GameDataLoader: Falling back to \"romfs content\" game version detection method..\n";
             //Fallback to old method of finding game version, if we don't have the arm9 handy, or if the arm9 scan didn't work
             stringstream fsroot;
             fsroot << utils::TryAppendSlash(m_romroot) <<DirName_DefData;
@@ -110,6 +119,7 @@ namespace pmd2
             else
                 throw std::runtime_error("GameDataLoader::AnalyseGame(): Couldn't determine the version of the pmd2 ROM data!");
         }
+        slog()<<"<!>-GameDataLoader: Configuration loaded!\n";
 
         //Compatibility check
         if( !MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().issupported )
@@ -119,13 +129,14 @@ namespace pmd2
             const string strunsup = ssunsup.str();
             cout << strunsup;
             if(utils::LibWide().isLogOn())
-                clog << strunsup;
+                slog() << strunsup;
         }
     }
 
     bool GameDataLoader::LoadConfigUsingARM9()
     {
         stringstream arm9path;
+        slog()<<"<!>-GameDataLoader: Comparing arm9 binary magic value at offset 0xE with XML presets..\n";
         try 
         {
             uint16_t     arm9off14 = 0;
@@ -138,12 +149,11 @@ namespace pmd2
             if( arm9off14 != 0 )
             {
                 MainPMD2ConfigWrapper::Instance().InitConfig(arm9off14, m_configfile);
-                //m_conf.reset( new ConfigLoader(arm9off14, m_configfile) );
                 return true;
             }
             else
             {
-                clog <<"<!>- GameDataLoader::AnalyseGame(): The 14th short in \"" + FName_ARM9Bin + "\" file didn't match anything. Falling back to other detection method.\n";
+                slog() <<"<!>- GameDataLoader::AnalyseGame(): The 14th byte in \"" + FName_ARM9Bin + "\" file didn't match anything. Falling back to other detection method.\n";
                 return false;
             }
         }
@@ -157,29 +167,33 @@ namespace pmd2
     }
 
 // ======================== Loading ========================
-    void GameDataLoader::Load()
+    //void GameDataLoader::Init()
+    //{
+    //    DoCommonInit();
+    //    InitGameText();
+    //    InitScripts(DefConfigOptions);
+    //    InitLevels(Default_Level_Options);
+    //    InitGraphics();
+    //    InitStats();
+    //    InitAudio();
+    //    InitAsm();
+    //}
+
+    void GameDataLoader::DoCommonInit( bool bcheckdata )
     {
         if(!m_bAnalyzed)
             AnalyseGame();
-
-        LoadGameText();
-        LoadScripts(DefConfigOptions);
-        LoadGraphics();
-        LoadStats();
-        LoadAudio();
-        LoadAsm();
+        if( bcheckdata && m_nodata )
+            throw EX_NoRomDataAvailable( "GameDataLoader::DoCommonInit(): Couldn't open or load the data directory!" );
     }
 
-    GameText * GameDataLoader::LoadGameText()
+    GameText * GameDataLoader::InitGameText()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return nullptr;
+        DoCommonInit();
 
         if( !m_text )
         {
+            slog()<<"<!>-GameDataLoader: Requested loading of text data!\n";
             stringstream gamefsroot;
             gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
 
@@ -189,21 +203,18 @@ namespace pmd2
                 m_text->Load();
             }
             else
-                clog <<"<!>- GameDataLoader::LoadGameText(): No game config data was loaded! Skipping on loading game text!\n";
+                slog() <<"<!>- GameDataLoader::LoadGameText(): No game config data was loaded! Skipping on loading game text!\n";
         }
         return m_text.get();
     }
 
-    GameScripts * GameDataLoader::LoadScripts(const scriptprocoptions & options)
+    GameScripts * GameDataLoader::InitScripts(const scriptprocoptions & options)
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return nullptr;
+        DoCommonInit();
 
         if( !m_scripts )
         {
+            slog()<<"<!>-GameDataLoader: Requested loading of script data!\n";
             stringstream scriptdir;
             scriptdir << utils::TryAppendSlash(m_romroot) << DirName_DefData <<"/" <<DirName_SCRIPT;
             m_scripts.reset( new GameScripts(scriptdir.str(), MainPMD2ConfigWrapper::CfgInstance(), options) );
@@ -211,106 +222,115 @@ namespace pmd2
         return m_scripts.get();
     }
 
-    GameGraphics * GameDataLoader::LoadGraphics()
+    GameLevels * GameDataLoader::InitLevels(const lvlprocopts & options)
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+        //!NOTE: Have to do this, so statsutil compiles
+#ifndef PPMDU_STATSUTIL
+        DoCommonInit();
 
-        if( m_nodata )
-            return nullptr;
+        if(!m_scripts)
+            InitScripts(DefConfigOptions);
+
+        if(!m_levels)
+        {
+            slog()<<"<!>-GameDataLoader: Requested loading of level data!\n";
+            stringstream gamefsroot;
+            gamefsroot << utils::TryAppendSlash(m_romroot) << DirName_DefData;
+            m_levels.reset( new GameLevels(gamefsroot.str(), MainPMD2ConfigWrapper::CfgInstance(), shared_ptr<GameScripts>(m_scripts), options) );
+        }
+#endif
+        return m_levels.get();
+    }
+
+
+    GameGraphics * GameDataLoader::InitGraphics()
+    {
+        DoCommonInit();
 
         //Stuff
+        slog()<<"<!>-GameDataLoader: Requested loading of graphics data!\n";
         assert(false);
         return m_graphics.get();
     }
 
-    GameStats * GameDataLoader::LoadStats()
+    GameStats * GameDataLoader::InitStats()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return nullptr;
+        DoCommonInit();
 
         //Need to load game text for this
         if( !m_text )
-            LoadGameText();
+            InitGameText();
 
         if( !m_stats )
         {
+            slog()<<"<!>-GameDataLoader: Requested loading of game statistics data!\n";
             m_stats.reset( new GameStats( m_romroot, GetGameVersion(), GetGameRegion(), shared_ptr<GameText>(m_text) ) );
             m_stats->Load();
         }
         return m_stats.get();
     }
 
-    GameAudio * GameDataLoader::LoadAudio()
+    GameAudio * GameDataLoader::InitAudio()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return nullptr;
+        DoCommonInit();
 
         //Stuff
+        slog()<<"<!>-GameDataLoader: Requested loading of audio data!\n";
         assert(false);
         return m_audio.get();
     }
 
-    PMD2_ASM_Manip * GameDataLoader::LoadAsm()
+    PMD2_ASM * GameDataLoader::InitAsm()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+        DoCommonInit(false); //Don't check for data, we don't need it!
 
         if( m_noarm9 && m_nooverlays )
             return nullptr;
 
-        //if( !m_asmmanip )
-        //{
-        //    m_asmmanip.reset( new PMD2_ASM_Manip( ASM_Data_Loader(m_romroot), GetGameVersion(), GetGameRegion() ) );
-        //    m_asmmanip->Load();
-        //}
+        if( !m_asmmanip )
+        {
+            slog()<<"<!>-GameDataLoader: Requested loading of asm data!\n";
+            m_asmmanip.reset( new PMD2_ASM( m_romroot, MainPMD2ConfigWrapper::CfgInstance() ) );
+        }
         return m_asmmanip.get();
     }
 
-// ======================== Writing ========================
-    void GameDataLoader::Write()
+// ======================== DeInit ========================
+    //void GameDataLoader::DeInit()
+    //{
+    //    DoCommonInit();
+
+    //    if( m_text != nullptr )
+    //        DeInitGameText();
+    //    if (m_levels != nullptr)
+    //        DeInitLevels();
+    //    if( m_scripts != nullptr )
+    //        DeInitScripts();
+    //    if( m_graphics != nullptr )
+    //        DeInitGraphics();
+    //    if( m_stats != nullptr )
+    //        DeInitStats();
+    //    if( m_audio != nullptr )
+    //        DeInitAudio();
+    //    //if( m_asmmanip != nullptr )
+    //    //    WriteAsm();
+    //}
+
+    void GameDataLoader::DeInitGameText()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_text != nullptr )
-            WriteGameText();
-        if( m_scripts != nullptr )
-            WriteScripts();
-        if( m_graphics != nullptr )
-            WriteGraphics();
-        if( m_stats != nullptr )
-            WriteStats();
-        if( m_audio != nullptr )
-            WriteAudio();
-        if( m_asmmanip != nullptr )
-            WriteAsm();
-    }
-
-    void GameDataLoader::WriteGameText()
-    {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return;
+        DoCommonInit();
 
         if( !m_text )
         {
-            clog <<"<!>- GameDataLoader::WriteGameText(): Nothing to write!\n";
+            slog() <<"<!>- GameDataLoader::WriteGameText(): Nothing to write!\n";
             return;
         }
 
+        slog()<<"<!>-GameDataLoader: Requested writing of text data!\n";
         m_text->Write();
     }
 
-    void GameDataLoader::WriteScripts()
+    void GameDataLoader::DeInitScripts()
     {
         //NOTHING to do here
         //if(!m_bAnalyzed)
@@ -321,20 +341,25 @@ namespace pmd2
 
         //if( !m_scripts )
         //{
-        //    clog <<"<!>- GameDataLoader::WriteScripts(): Nothing to write!\n";
+        //    slog() <<"<!>- GameDataLoader::WriteScripts(): Nothing to write!\n";
         //    return;
         //}
 
         // m_scripts->Write();
     }
 
-    void GameDataLoader::WriteGraphics()
+    void GameDataLoader::DeInitLevels()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+        DoCommonInit();
 
-        if( m_nodata )
-            return;
+        slog()<<"<!>-GameDataLoader: Requested writing of level data!\n";
+        //Stuff
+        assert(false);
+    }
+
+    void GameDataLoader::DeInitGraphics()
+    {
+        DoCommonInit();
 
         if( !m_graphics )
             return;
@@ -343,30 +368,23 @@ namespace pmd2
         assert(false);
     }
 
-    void GameDataLoader::WriteStats()
+    void GameDataLoader::DeInitStats()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return;
+        DoCommonInit();
 
         if( !m_stats )
         {
-            clog <<"<!>- GameDataLoader::WriteStats(): Nothing to write!\n";
+            slog() <<"<!>- GameDataLoader::WriteStats(): Nothing to write!\n";
             return;
         }
         
+        slog()<<"<!>-GameDataLoader: Requested writing of game statistics data!\n";
         m_stats->Write();
     }
 
-    void GameDataLoader::WriteAudio()
+    void GameDataLoader::DeInitAudio()
     {
-        if(!m_bAnalyzed)
-            AnalyseGame();
-
-        if( m_nodata )
-            return;
+        DoCommonInit();
 
         if( !m_audio )
             return;
@@ -375,22 +393,22 @@ namespace pmd2
         assert(false);
     }
 
-    void GameDataLoader::WriteAsm()
-    {
-        if(!m_bAnalyzed)
-            AnalyseGame();
+    //void GameDataLoader::WriteAsm()
+    //{
+    //    if(!m_bAnalyzed)
+    //        AnalyseGame();
 
-        if( m_noarm9 && m_nooverlays )
-            return;
+    //    if( m_noarm9 && m_nooverlays )
+    //        return;
 
-        if( !m_asmmanip )
-        {
-            clog <<"<!>- GameDataLoader::WriteAsm(): Nothing to write!\n";
-            return;
-        }
+    //    if( !m_asmmanip )
+    //    {
+    //        slog() <<"<!>- GameDataLoader::WriteAsm(): Nothing to write!\n";
+    //        return;
+    //    }
 
-        //m_asmmanip->Write();
-    }
+    //    //m_asmmanip->Write();
+    //}
 
 // ======================== Data Access ========================
     void                      GameDataLoader::SetRomRoot(const std::string & romroot)   { m_romroot = romroot; }
@@ -402,6 +420,9 @@ namespace pmd2
     GameScripts             * GameDataLoader::GetScripts()                              { return m_scripts.get(); }
     const GameScripts       * GameDataLoader::GetScripts() const                        { return m_scripts.get(); }
 
+    GameLevels              * GameDataLoader::GetLevels()                               { return m_levels.get(); }
+    const GameLevels        * GameDataLoader::GetLevels() const                         { return m_levels.get(); }
+
     GameGraphics            * GameDataLoader::GetGraphics()                             { return m_graphics.get(); }
     const GameGraphics      * GameDataLoader::GetGraphics() const                       { return m_graphics.get(); }
 
@@ -411,8 +432,8 @@ namespace pmd2
     GameAudio               * GameDataLoader::GetAudio()                                { return m_audio.get(); }
     const GameAudio         * GameDataLoader::GetAudio() const                          { return m_audio.get(); }
 
-    PMD2_ASM_Manip          * GameDataLoader::GetAsmManip()                             { return m_asmmanip.get(); }
-    const PMD2_ASM_Manip    * GameDataLoader::GetAsmManip() const                       { return m_asmmanip.get(); }
+    PMD2_ASM                * GameDataLoader::GetAsm()                                  { return m_asmmanip.get(); }
+    const PMD2_ASM          * GameDataLoader::GetAsm() const                            { return m_asmmanip.get(); }
 
     //const ConfigLoader * GameDataLoader::GetConfig() const
     //{

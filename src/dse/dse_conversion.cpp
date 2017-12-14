@@ -1276,21 +1276,22 @@ namespace DSE
         if( cursmpls.empty() && cursmplsinf.empty() )
         {
             clog << "<!>- No samples!!!\n";
-#ifdef _DEBUG
             assert(false);
-#endif
             return;
         }
         else if( cursmpls.empty() || cursmplsinf.empty() )
         {
             clog << "<!>- Mismatch between the nb of sample info and converted samples for this program!!! ( " <<cursmpls.size() <<"," <<cursmplsinf.size() <<" )\n";
-#ifdef _DEBUG
             assert(false);
-#endif
             return;
         }
 
-        for( size_t cntsplit = 0; cntsplit < curprg.m_splitstbl.size(); ++cntsplit )
+        if (curprg.m_splitstbl.size() != cursmpls.size())
+        {
+            clog << "<!>- Mismatch between the nb of splits(" <<curprg.m_splitstbl.size() <<") and samples available(" <<cursmpls.size() <<") for the current program!\n";
+        }
+
+        for( size_t cntsplit = 0; cntsplit < curprg.m_splitstbl.size() && cntsplit < cursmpls.size(); ++cntsplit )
         {
             const auto & cursplit = curprg.m_splitstbl[cntsplit]; 
             stringstream sstrnames;
@@ -1398,6 +1399,7 @@ namespace DSE
         }
     }
 
+
     /***************************************************************************************
         ExportSoundfontBakedSamples
             
@@ -1405,6 +1407,8 @@ namespace DSE
     vector<SMDLPresetConversionInfo> BatchAudioLoader::ExportSoundfontBakedSamples( const std::string & destf )
     {
         using namespace sf2;
+        vector<SMDLPresetConversionInfo> trackprgconvlist;
+        m_stats = audiostats(); //reset stats
 
         if( m_pairs.size() > CHAR_MAX && !m_bSingleSF2 )
         {
@@ -1413,65 +1417,114 @@ namespace DSE
             assert(false); //#TODO
         }
 
-        //If the main bank is not loaded, try to make one out of the loaded pairs!
-        if( !IsMasterBankLoaded() )
-            BuildMasterFromPairs();
-
-        m_stats = audiostats(); //reset stats
-
-        vector<SMDLPresetConversionInfo> trackprgconvlist = move( BuildPresetConversionDB() );
-        SoundFont                        sf( m_master.metadata().fname ); 
-        
-        //Prepare
-        shared_ptr<SampleBank>  samples = m_master.smplbank().lock();
-        deque<ProcessedPresets> procpres; //We need to put all processed stuff in there, because the samples need to exist when the soundfont is written.
-
-        //Counters for the unique preset and instruments IDs
-        int cntpres = 0;
-        int cntinst = 0;
-
-        for( size_t cntpair = 0; cntpair < m_pairs.size();  )
+        //Multiple separate sf2
+        if (!IsMasterBankLoaded() && !m_bSingleSF2)
         {
-            const auto & curpair     = m_pairs[cntpair];
-            const auto   prgptr      = curpair.second.prgmbank().lock();
-            string       pairname    = "Trk#" + to_string(cntpair);
+            trackprgconvlist = move(BuildPresetConversionDB());
+            deque<ProcessedPresets> procpres; //We need to put all processed stuff in there, because the samples need to exist when the soundfont is written.
 
-            if( prgptr != nullptr )
+            //If no master bank is loaded, assume we use the swd in the pair to get our samples
+            for (size_t cntpair = 0; cntpair < m_pairs.size(); ++cntpair )
             {
-                procpres.push_back( move( ProcessDSESamples( *samples, *prgptr ) ) );
-                HandleBakedPrg( procpres.back(), &sf, pairname, cntpair, trackprgconvlist, cntinst, cntpres, prgptr->Keygrps() );
-            }
+                const auto & curpair = m_pairs[cntpair];
+                const auto   prgptr = curpair.second.prgmbank().lock();
+                const auto   samples = curpair.second.smplbank().lock();
+                string       pairname = Poco::Path(curpair.first.metadata().fname).makeFile().getBaseName();
 
-            ++cntpair;
-            if( prgptr != nullptr )
-                cout <<"\r\tProcessing samples.." <<right <<setw(3) <<setfill(' ') <<((cntpair * 100) / m_pairs.size())  <<"%";
+                if (prgptr == nullptr)
+                    continue;
+
+                SoundFont sf(pairname);
+                procpres.push_back(std::move(ProcessDSESamples(*samples, *prgptr)));
+                int cntpres = 0;
+                int cntinst = 0;
+                HandleBakedPrg(procpres.back(), &sf, pairname, cntpair, trackprgconvlist, cntinst, cntpres, prgptr->Keygrps());
+                cout << "\r\tProcessing pairs.. " << right << setw(3) << setfill(' ') << ((cntpair * 100) / m_pairs.size()) << "%";
+
+                //Write the soundfont
+                try
+                {
+                    string sf2path = Poco::Path(destf).absolute().makeParent().setFileName(to_string(cntpair) + "_" + pairname + ".sf2").toString();
+                    if( utils::LibWide().isLogOn() )
+                    {
+                        clog <<"\nWriting Soundfont \"" <<sf2path <<"\"...\n"
+                             <<"================================================================================\n";
+                    }
+                    sf.Write(sf2path);
+                }
+                catch( const overflow_error & e )
+                {
+                    stringstream sstr;
+                    sstr <<"There are too many different parameters throughout the music files in the folder to extract them to a single soundfont file!\n"
+                         << e.what() 
+                         << "\n";
+                    throw runtime_error( sstr.str() );
+                }
+            }
+            cout <<"\n";
+            
+
         }
-        cout <<"\n";
+        else //single sf2
+        {
+            if (!IsMasterBankLoaded())
+                BuildMasterFromPairs();
+
+            trackprgconvlist = move(BuildPresetConversionDB());
+            SoundFont sf(m_master.metadata().fname);
+
+            //Prepare
+            shared_ptr<SampleBank>  samples = m_master.smplbank().lock();
+            deque<ProcessedPresets> procpres; //We need to put all processed stuff in there, because the samples need to exist when the soundfont is written.
+
+            //Counters for the unique preset and instruments IDs
+            int cntpres = 0;
+            int cntinst = 0;
+
+            for (size_t cntpair = 0; cntpair < m_pairs.size(); )
+            {
+                const auto & curpair = m_pairs[cntpair];
+                const auto   prgptr = curpair.second.prgmbank().lock();
+                string       pairname = "Trk#" + to_string(cntpair);
+
+                if (prgptr != nullptr)
+                {
+                    procpres.push_back(move(ProcessDSESamples(*samples, *prgptr)));
+                    HandleBakedPrg(procpres.back(), &sf, pairname, cntpair, trackprgconvlist, cntinst, cntpres, prgptr->Keygrps());
+                }
+
+                ++cntpair;
+                if (prgptr != nullptr)
+                    cout << "\r\tProcessing samples.." << right << setw(3) << setfill(' ') << ((cntpair * 100) / m_pairs.size()) << "%";
+            }
+            cout <<"\n";
+
+            //Write the soundfont
+            try
+            {
+                if( utils::LibWide().isLogOn() )
+                {
+                    clog <<"\nWriting Soundfont...\n"
+                         <<"================================================================================\n";
+                }
+                cout<<"\tWriting soundfont \"" <<destf <<"\"..";
+                sf.Write( destf );
+                cout<<"\n";
+            }
+            catch( const overflow_error & e )
+            {
+                stringstream sstr;
+                sstr <<"There are too many different parameters throughout the music files in the folder to extract them to a single soundfont file!\n"
+                     << e.what() 
+                     << "\n";
+                throw runtime_error( sstr.str() );
+            }
+        }
+        
 
         //Print Stats
         if( utils::LibWide().isLogOn() )
             clog << m_stats.Print();
-
-        //Write the soundfont
-        try
-        {
-            if( utils::LibWide().isLogOn() )
-            {
-                clog <<"\nWriting Soundfont...\n"
-                     <<"================================================================================\n";
-            }
-            cout<<"\tWriting soundfont..";
-            sf.Write( destf );
-            cout<<"\n";
-        }
-        catch( const overflow_error & e )
-        {
-            stringstream sstr;
-            sstr <<"There are too many different parameters throughout the music files in the folder to extract them to a single soundfont file!\n"
-                 << e.what() 
-                 << "\n";
-            throw runtime_error( sstr.str() );
-        }
 
         return move( trackprgconvlist );
     }
@@ -1624,7 +1677,7 @@ namespace DSE
 
         Poco::Path outsoundfont(destdir);
         outsoundfont.append( outsoundfont.getBaseName() + ".sf2").makeFile();
-        cerr<<"<*>- Currently exporting main bank to " <<outsoundfont.toString() <<"\n";
+        cerr<<"<*>- Currently processing soundfont.." <<"\n";
 
         vector<SMDLPresetConversionInfo> merged;
         if( bbakesamples )
@@ -2028,8 +2081,9 @@ namespace DSE
 
     /*
     */
-    void BatchAudioLoader::LoadSMDLSWDLSPairsFromBlob( const std::string & blob )
+    void BatchAudioLoader::LoadFromBlobFile(const std::string & blob)
     {
+
         vector<uint8_t> filedata = utils::io::ReadFileToByteVector( blob );
 
         BlobScanner<vector<uint8_t>::const_iterator> blobscan( filedata.begin(), filedata.end() );
@@ -2037,9 +2091,9 @@ namespace DSE
         auto foundpairs = blobscan.ListAllMatchingSMDLPairs();
 
         size_t cntpairs = 0;
-        cout << "------------------------\n"
-             << "Loading pairs..\n"
-             << "------------------------\n";
+        cout << "-----------------------------------------\n"
+             << "Loading pairs from blob " <<blob <<"..\n"
+             << "-----------------------------------------\n";
         for( const auto apair : foundpairs )
         {
             if( utils::LibWide().isLogOn() )
@@ -2069,6 +2123,29 @@ namespace DSE
         }
 
         cout<<"\n..done!\n";
+    }
+
+    /*
+    */
+    void BatchAudioLoader::LoadSMDLSWDLSPairsFromBlob( const std::string & blob )
+    {
+        Poco::Path blobpath(blob);
+        if(blobpath.absolute().isDirectory())
+        {
+            Poco::DirectoryIterator dirit(blobpath);
+            Poco::DirectoryIterator dirend;
+            while (dirit != dirend)
+            {
+                if (dirit.path().isFile())
+                {
+                    LoadFromBlobFile(dirit.path().toString());
+                }
+                ++dirit;
+            }
+        }
+        else
+            LoadFromBlobFile(blob);
+
     }
 
     /*

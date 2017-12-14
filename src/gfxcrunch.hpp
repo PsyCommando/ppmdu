@@ -82,6 +82,7 @@ namespace gfx_util
         bool ParseOptionPkSprites       ( const std::vector<std::string> & optdata );
         bool ParseOptionPropSprites     ( const std::vector<std::string> & optdata );
         bool ParseOptionConfig          ( const std::vector<std::string> & optdata );
+        bool ParseOptionTSet            ( const std::vector<std::string> & optdata );
 
 
         //Execution
@@ -106,6 +107,8 @@ namespace gfx_util
         void HandleBGP();
         void HandleWAN();
         void HandleWTE();
+        void DoImportTileset();
+        void DoExportTileset();
 
 
         //Utility
@@ -157,6 +160,8 @@ namespace gfx_util
             UNPACK_POKE_SPRITES_PACK_Mode, //Export a pack file, and export all its content
             UNPACK_KAOMADO_Mode,           //Export a kaomado file from a directory
             EXPORT_MAINFONT,               //Export a folder to a 1bpp main font file!
+            
+            EXPORT_Tileset,                 //Export BPC + BMA + BPL and BPA
 
             //Special Modes:
             DECOMPRESS_AND_INDENTIFY_Mode, //Decompress the container and try to figure out what is inside
@@ -210,6 +215,7 @@ namespace gfx_util
         bool m_doPkSpr;
         bool m_doPkKao;
         bool m_doPropSpr;
+        //bool m_doTileset;
         std::vector<std::string> m_extraargs;
     };
 };

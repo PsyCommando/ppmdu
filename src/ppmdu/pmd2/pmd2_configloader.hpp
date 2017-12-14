@@ -28,8 +28,7 @@ namespace pmd2
     *******************************************************************************/
     enum struct eBinaryLocations : unsigned int
     {
-        Invalid = 0,        
-        Entities,           //Entities table
+        Entities= 0,        //Entities table
         Events,             //Events table
         ScriptOpCodes,      //Script opcodes table
         StartersHeroIds,    //Table of Hero ids for each natures
@@ -37,8 +36,13 @@ namespace pmd2
         StartersStrings,    //Table of string ids for the result
         QuizzQuestionStrs,  //Table of string ids for the Quizz Questions
         QuizzAnswerStrs,    //Table of string ids for the Quizz answers
+        ScriptVariables,    //Table of informations on the script variables 
+        ScriptVarsLocals,   //Table of informations on the local script variables 
+        Objects,            //Table containing info on all object sprite files the game can load.
+        CommonRoutines,     //Table containing info on commmon routines
 
-        NbLocations,        //Must be last
+        NbLocations,        //Must be last valid entry
+        Invalid,   
     };
     extern const std::array<std::string, static_cast<uint32_t>(eBinaryLocations::NbLocations)> BinaryLocationNames;
 
@@ -83,6 +87,8 @@ namespace pmd2
         Invalid,
     };
     extern const std::array<std::string, static_cast<uint32_t>(eStringBlocks::NBEntries)> StringBlocksNames;
+   
+
 
 //========================================================================================
 //  Parsing utilities
@@ -493,6 +499,28 @@ namespace pmd2
         typedef typename std::vector<dataentry_t>::const_iterator   const_iterator;
 
         /*
+            PushEntryPair
+                Push a single entry pair
+        */
+        void PushEntryPair( const std::string & name, const dataentry_t & data )
+        {
+            m_datastrlut.emplace(name, m_data.size() );
+            m_data.push_back(data);
+        }
+
+
+        /*
+            PushEntryPair
+                Push a single entry pair
+        */
+        //template<typename _infwdit>
+        //    void PushEntryPair( std::string && name, dataentry_t && data )
+        //{
+        //    m_datastrlut.emplace(name, m_data.size() );
+        //    m_data.push_back(data);
+        //}
+
+        /*
             PushEntriesPairs
                 Adds entries to the end of the current list.
                 The entries are expected to be std::pair<std::string,dataentry_t>
@@ -593,7 +621,7 @@ namespace pmd2
     struct level_info
     {
         std::string name;
-        int16_t     unk1;
+        int16_t     mapty;
         int16_t     unk2;
         int16_t     mapid;
         int16_t     unk4;
@@ -646,6 +674,16 @@ namespace pmd2
         inline const stringlut_t        & Directions()const         {return m_directions;}
         inline const objinf_t           & ObjectsInfo()const        {return m_objectsinfo;}
 
+        inline gvar_t                   & GameVariables()           {return m_gvars;}
+        inline gvar_t                   & ExGameVariables()         {return m_gvarsex;}
+        inline livesent_t               & LivesEnt()                {return m_livesent;}
+        inline lvlinf_t                 & LevelInfo()               {return m_levels;}
+        inline commonroutines_t         & CommonRoutineInfo()       {return m_commonroutines;}
+        inline stringlut_t              & FaceNames()               {return m_facenames;}
+        inline stringlut_t              & FacePosModes()            {return m_faceposmodes;}
+        inline stringlut_t              & Directions()              {return m_directions;}
+        inline objinf_t                 & ObjectsInfo()             {return m_objectsinfo;}
+
     private:
         gvar_t              m_gvars;
         gvar_t              m_gvarsex; //Extended game vars 0x400 range!
@@ -657,6 +695,51 @@ namespace pmd2
         stringlut_t         m_directions;
         objinf_t            m_objectsinfo;
     };
+
+//
+//
+//
+    struct asmpatchentry
+    {
+        enum struct eAsmPatchStep
+        {
+            IncludeFile,
+            OpenBin,
+            CloseBin,
+            Invalid,
+        };
+
+        struct asmpatchstep
+        {
+            eAsmPatchStep   op;
+            std::string     param;
+        };
+
+        std::string                 id;
+        std::vector<asmpatchstep>   steps;
+    };
+
+    /*
+        patchloosebinfile
+    */
+    struct patchloosebinfile
+    {
+        eBinaryLocations src;
+        std::string      path;
+    };
+
+    struct GameASMPatchData
+    {
+        std::string                                             asmpatchdir;   //Path to source patch files for current game version
+        std::unordered_map<std::string,asmpatchentry>           patches;       //<ID,entrydata>
+        std::unordered_map<eBinaryLocations,patchloosebinfile>  lfentry;       //<ID,entrydata> loose binary file path entry for the given data type
+    };
+
+
+//
+//
+//
+
 
 //========================================================================================
 //  ConfigLoader
@@ -685,19 +768,30 @@ namespace pmd2
 
         void ReloadConfig();
 
-        inline const GameVersionInfo & GetGameVersion         ()const {return m_versioninfo;}
-        inline const LanguageFilesDB & GetLanguageFilesDB     ()const {return m_langdb;}
-
-        inline const std::string     & GetGameConstantAsString( eGameConstants gconst )const {return m_constants.GetConstAsString(gconst);}
-        inline bool                    GetGameConstantAsBool  ( eGameConstants gconst )const {return m_constants.GetConstAsBool(gconst);}
-        int                            GetGameConstantAsInt   ( eGameConstants gconst )const;
-        unsigned int                   GetGameConstantAsUInt  ( eGameConstants gconst )const;
-        inline const binarylocatioinfo GetGameBinaryOffset    ( eBinaryLocations loc )const 
+        inline const GameVersionInfo    & GetGameVersion         ()const {return m_versioninfo;}
+        inline const LanguageFilesDB    & GetLanguageFilesDB     ()const {return m_langdb;}
+        inline const GameASMPatchData   & GetASMPatchData()const        {return m_asmpatchdata;}
+        inline const std::string        & GetGameConstantAsString( eGameConstants gconst )const {return m_constants.GetConstAsString(gconst);}
+        inline bool                       GetGameConstantAsBool  ( eGameConstants gconst )const {return m_constants.GetConstAsBool(gconst);}
+        int                               GetGameConstantAsInt   ( eGameConstants gconst )const;
+        unsigned int                      GetGameConstantAsUInt  ( eGameConstants gconst )const;
+        inline const binarylocatioinfo    GetGameBinaryOffset    ( eBinaryLocations loc )const 
         { 
             return std::move(m_binblocks.FindInfoByLocation(loc)); 
         }
 
-        inline const GameScriptData & GetGameScriptData()const {return m_gscriptdata;}
+        inline patchloosebinfile GetLooseBinFileEntry( eBinaryLocations loc )const    
+        {
+            auto found = m_asmpatchdata.lfentry.find(loc);
+            if(found != m_asmpatchdata.lfentry.end())
+                return found->second;
+            else
+                throw std::runtime_error("ConfigLoader::GetLooseBinFileData(): This kind of data doesn't have a a file path entry in the configuration!");
+        }
+
+        //Editable data
+        inline const GameScriptData         & GetGameScriptData()const      {return m_gscriptdata;}
+        inline GameScriptData               & GetGameScriptData()           {return m_gscriptdata;}
 
     private:
         void Parse(uint16_t arm9off14);
@@ -712,6 +806,7 @@ namespace pmd2
         GameBinariesInfo    m_binblocks;
         LanguageFilesDB     m_langdb;
         GameScriptData      m_gscriptdata;
+        GameASMPatchData    m_asmpatchdata;
     };
 
 

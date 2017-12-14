@@ -1,0 +1,97 @@
+=============================================
+==  Poochyena's PMD:EoS/T/D - Map Nybbler  ==
+=============================================
+Version	   : 0.1
+Released   : 2016/--/--
+Written by : psy_commando (psycommando@gmail.com)
+
+The entire sourcecode for all my tools that are part of this suite is available here:
+https://github.com/PsyCommando/ppmdu/
+
+----------------------------------------------------------------------------------------------------
+Changelog:
+----------------------------------------------------------------------------------------------------
+- 0.1 : Initial release!
+
+----------------------------------------------------------------------------------------------------
+License info:
+----------------------------------------------------------------------------------------------------
+My code and tools are CC0. 
+Free to re-use in any ways you may want to!
+No crappyrights, all wrongs reversed! :3
+
+This is not including any libraries I'm using that have their own licenses of course!!
+The license for each of these libraries is indicated in their respective header files,
+and they're all isolated in the "libraries" subfolder !
+
+----------------------------------------------------------------------------------------------------
+Special Thanks:
+----------------------------------------------------------------------------------------------------
+-> Many, many thanks to Zhorken for reversing most of the "PX" compression format! - https://github.com/Zhorken
+-> A big thanks to Nerketur for his help !
+-> A big thanks to TruePikachu for his help !
+-> A big thanks to Evandixon for his help !
+-> Thanks to the people from GBATemp and Project Pokemon Forums !
+-> Thanks to MNChino for helping with some of my tools !
+-> Thanks to Aissurteivos for helping out with the meaning of some of the fields!
+-> ..and anyone else I may have forgotten about ! ^^;
+
+----------------------------------------------------------------------------------------------------
+About:
+----------------------------------------------------------------------------------------------------
+This tool exports the level data used in PMD2 so it can be edited.
+Also applies some necessary asm patches to permit editing the game more in depth.
+
+----------------------------------------------------------------------------------------------------
+How to use:
+----------------------------------------------------------------------------------------------------
+
+    Level Data Folder Layout:
+
+    levels
+    {
+         >COMMON
+         >S00P01A
+         {
+            *levelinfo.xml          //Contains details about how the level fits in with the rest, the level type, its ID, and various other constants
+            *entry_script.xml       //Contains the script ran on entry by the player entity
+            *states                 //Contains scripts for the various states of the playable map, usuaully invoked by entry_script.
+            {
+                statename.xml
+                ...
+            }
+            *scenes                 //Contains cut scenes and other scripted events, those usually run without the entry_script ever being invoked.
+            {
+                scenename.xml
+                ...
+            }
+            *map                    //Contains map graphics and tiling data
+            {
+                *tileset_parts
+                {
+                    *layer0.png
+                    *layer0_anim.png
+                    *layer1_tilemap.bin
+                    *layer1.png
+                    *layer1_anim.png
+                    *layer2_tilemap.bin
+                }
+                
+            }
+         }
+         >T00P01
+         >T00P02
+         >T00P03
+         ...
+    }
+
+----------------------------------------------------------------------------------------------------
+Readme:
+----------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------
+Documentation :
+----------------------------------------------------------------------------------------------------
+See my thread here for links to my notes and etc: 
+http://projectpokemon.org/forums/showthread.php?40199-Pokemon-Mystery-Dungeon-2-Psy_commando-s-Tools-and-research-notes

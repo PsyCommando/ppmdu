@@ -64,6 +64,15 @@
     <Filter Include="Header Files\typesupport">
       <UniqueIdentifier>{7b57d2db-034d-4c5b-9257-a5ae53b73c7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{2ccd17b1-fa35-4054-86d1-eda77f98136d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\levels">
+      <UniqueIdentifier>{9519ac34-210c-4369-9901-b07ebb73a752}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{0a755e6a-c199-43c8-85c7-7a1c41250c35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
@@ -258,6 +267,27 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpc.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpl.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bma.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpa.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset.hpp">
+      <Filter>Header Files\ppmdu\data formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpc_compression.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
@@ -418,6 +448,18 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bma.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_tileset.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

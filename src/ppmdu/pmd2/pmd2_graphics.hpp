@@ -6,11 +6,20 @@ pmd2_graphics.hpp
 #include <string>
 #include <map>
 #include <cstdint>
-#include <ppmdu/containers/base_image.hpp>
+
 
 
 namespace pmd2
 {
+
+    /*
+        GameMapBgDictionary
+            Maintain the list of map bg and update the resource files as needed
+    */
+    class GameMapBgDictionary
+    {
+    public:
+    };
 
     /*
         GameGraphics
@@ -19,18 +28,20 @@ namespace pmd2
     class GameGraphics
     {
     public:
-        GameGraphics( const std::wstring & gameroot );
+        GameGraphics( const std::string & gameroot );
 
         // GetTopMenuBG      ( const std::string & name );
         // GetSprite         ( const std::string & name );
         // GetPokemonSprite  ( unsigned int pkindex );
         // GetPokemonPortrait( unsigned int pkindex );
-        // GetMapBG          ( const std::string & name );
+        GameMapBgDictionary         & GetMapBG()        {return m_mapbg;}
+        const GameMapBgDictionary   & GetMapBG()const   {return m_mapbg;}
         // GetMapTileSet     ( const std::string & name );
         // GetImage          ( const std::string & name );
 
     private:
-        std::wstring & m_gameroot;
+        std::string         m_gameroot;
+        GameMapBgDictionary m_mapbg;
     };
 };
 

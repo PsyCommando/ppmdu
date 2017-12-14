@@ -14,9 +14,9 @@ namespace filetypes
 //  DataFormat
 //=======================================================================================
 
-    /*
+    /*******************************************************
         LayerTableEntry
-    */
+    *******************************************************/
     struct LayerTableEntry
     {
         int16_t nbentries = 0;
@@ -40,10 +40,10 @@ namespace filetypes
     };
 
 
-    /*
+    /*******************************************************
         LayerEntry
             Entry from the layer list.
-    */
+    *******************************************************/
     struct LayerEntry
     {
         static const size_t LEN = 20;
@@ -92,10 +92,10 @@ namespace filetypes
     };
 
 
-    /*
+    /*******************************************************
         livesentry
-            
-    */
+            AKA Actor entry.
+    *******************************************************/
     struct livesentry
     {
         static const size_t LEN = 16; //14 if not counting the last padding word!
@@ -182,18 +182,18 @@ namespace filetypes
     };
 
 
-    /*
+    /*******************************************************
         objectentry
             
-    */
+    *******************************************************/
     struct objectentry
     {
         static const size_t LEN = 20; //18 if not counting the last padding word!
 
         int16_t objid;
         int16_t facing;   
-        int16_t unk2;   
-        int16_t unk3;  
+        int16_t width;   
+        int16_t height;  
         int16_t xoff;  
         int16_t yoff;  
         int16_t unk6;
@@ -202,32 +202,32 @@ namespace filetypes
         // <- Padding word is here
 
         objectentry()
-            :objid(0), facing(0), unk2(0), unk3(0), xoff(0),
+            :objid(0), facing(0), width(0), height(0), xoff(0),
              yoff(0), unk6(0), unk7(0), scrid(0)
         {}
 
         objectentry(const objectentry & other)
-            :objid(other.objid), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+            :objid(other.objid), facing(other.facing), width(other.width), height(other.height), xoff(other.xoff),
              yoff(other.yoff), unk6(other.unk6), unk7(other.unk7), scrid(other.scrid)
         {}
 
         objectentry(const pmd2::ObjectDataEntry & other)
-            :objid(other.objid), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+            :objid(other.objid), facing(other.facing), width(other.width), height(other.height), xoff(other.xoff),
              yoff(other.yoff), unk6(other.unk6), unk7(other.unk7), scrid(other.scrid)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
-            itw = utils::WriteIntToBytes(objid,   itw);
-            itw = utils::WriteIntToBytes(facing,   itw);
-            itw = utils::WriteIntToBytes(unk2,   itw);
-            itw = utils::WriteIntToBytes(unk3,   itw);
-            itw = utils::WriteIntToBytes(xoff,   itw);
-            itw = utils::WriteIntToBytes(yoff,   itw);
-            itw = utils::WriteIntToBytes(unk6,   itw);
-            itw = utils::WriteIntToBytes(unk7,   itw);
-            itw = utils::WriteIntToBytes(scrid,   itw);
+            itw = utils::WriteIntToBytes(objid,     itw);
+            itw = utils::WriteIntToBytes(facing,    itw);
+            itw = utils::WriteIntToBytes(width,     itw);
+            itw = utils::WriteIntToBytes(height,    itw);
+            itw = utils::WriteIntToBytes(xoff,      itw);
+            itw = utils::WriteIntToBytes(yoff,      itw);
+            itw = utils::WriteIntToBytes(unk6,      itw);
+            itw = utils::WriteIntToBytes(unk7,      itw);
+            itw = utils::WriteIntToBytes(scrid,     itw);
             //Padding word
             itw = utils::WriteIntToBytes(ScriptDataPaddingWord,   itw);
             return itw;
@@ -237,15 +237,15 @@ namespace filetypes
         template<class _fwdinit>
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
-            itr = utils::ReadIntFromBytes(objid,   itr, itpend);
+            itr = utils::ReadIntFromBytes(objid,    itr, itpend);
             itr = utils::ReadIntFromBytes(facing,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
-            itr = utils::ReadIntFromBytes(xoff,   itr, itpend);
-            itr = utils::ReadIntFromBytes(yoff,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk6,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk7,   itr, itpend);
-            itr = utils::ReadIntFromBytes(scrid,   itr, itpend);
+            itr = utils::ReadIntFromBytes(width,    itr, itpend);
+            itr = utils::ReadIntFromBytes(height,   itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,     itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,     itr, itpend);
+            itr = utils::ReadIntFromBytes(unk6,     itr, itpend);
+            itr = utils::ReadIntFromBytes(unk7,     itr, itpend);
+            itr = utils::ReadIntFromBytes(scrid,    itr, itpend);
             //Padding word
             std::advance(itr, sizeof(int16_t));
             return itr;
@@ -254,81 +254,85 @@ namespace filetypes
         operator pmd2::ObjectDataEntry()
         {
             pmd2::ObjectDataEntry out;
-            out.objid = objid;
-            out.facing = facing;
-            out.unk2 = unk2;
-            out.unk3 = unk3;
-            out.xoff = xoff;
-            out.yoff = yoff;
-            out.unk6 = unk6;
-            out.unk7 = unk7;
-            out.scrid = scrid;
+            out.objid   = objid;
+            out.facing  = facing;
+            out.width   = width;
+            out.height  = height;
+            out.xoff    = xoff;
+            out.yoff    = yoff;
+            out.unk6    = unk6;
+            out.unk7    = unk7;
+            out.scrid   = scrid;
             return std::move(out);
         }
 
         objectentry & operator=(const pmd2::ObjectDataEntry & other)
         {
             objid   = other.objid;
-            facing    = other.facing;
-            unk2    = other.unk2;
-            unk3    = other.unk3;
+            facing  = other.facing;
+            width   = other.width;
+            height  = other.height;
             xoff    = other.xoff;
             yoff    = other.yoff;
             unk6    = other.unk6;
             unk7    = other.unk7;
-            scrid    = other.scrid;
+            scrid   = other.scrid;
             return *this;
         }
     };
 
 
-    /*
+    /*******************************************************
         performerentry
             
-    */
+    *******************************************************/
     struct performerentry
     {
-        static const size_t LEN = 20;
+        static const size_t LEN        = 20;
+        static const size_t LENPadding = 4;
+        static const int8_t PadByte    = 0xFF;
 
-        int16_t unk0;
-        int16_t unk1;   
+        int16_t type;
+        int16_t facing;   
         int16_t unk2;   
         int16_t unk3;  
-        int16_t unk4;  
-        int16_t unk5;  
+        int16_t xoff;  
+        int16_t yoff;  
         int16_t unk6;
         int16_t unk7;
-        int16_t unk8;
-        int16_t unk9;
+        //<- 4 bytes of padding here!
+        //int16_t unk8;
+        //int16_t unk9;
 
         performerentry()
-            :unk0(0), unk1(0), unk2(0), unk3(0), unk4(0),
-             unk5(0), unk6(0), unk7(0), unk8(0), unk9(0)
+            :type(0), facing(0), unk2(0), unk3(0), xoff(0),
+             yoff(0), unk6(0), unk7(0)//, unk8(-1), unk9(-1)
         {}
 
         performerentry(const performerentry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6), unk7(other.unk7), unk8(other.unk8), unk9(other.unk9)
+            :type(other.type), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+             yoff(other.yoff), unk6(other.unk6), unk7(other.unk7)//, unk8(other.unk8), unk9(other.unk9)
         {}
 
         performerentry(const pmd2::PerformerDataEntry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6), unk7(other.unk7), unk8(other.unk8), unk9(other.unk9)
+            :type(other.type), facing(other.facing), unk2(other.unk2), unk3(other.unk3), xoff(other.xoff),
+             yoff(other.yoff), unk6(other.unk6), unk7(other.unk7)//, unk8(other.unk8), unk9(other.unk9)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
-            itw = utils::WriteIntToBytes(unk0,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
-            itw = utils::WriteIntToBytes(unk2,   itw);
-            itw = utils::WriteIntToBytes(unk3,   itw);
-            itw = utils::WriteIntToBytes(unk4,   itw);
-            itw = utils::WriteIntToBytes(unk5,   itw);
-            itw = utils::WriteIntToBytes(unk6,   itw);
-            itw = utils::WriteIntToBytes(unk7,   itw);
-            itw = utils::WriteIntToBytes(unk8,   itw);
-            itw = utils::WriteIntToBytes(unk9,   itw);
+            itw = utils::WriteIntToBytes(type,      itw);
+            itw = utils::WriteIntToBytes(facing,    itw);
+            itw = utils::WriteIntToBytes(unk2,      itw);
+            itw = utils::WriteIntToBytes(unk3,      itw);
+            itw = utils::WriteIntToBytes(xoff,      itw);
+            itw = utils::WriteIntToBytes(yoff,      itw);
+            itw = utils::WriteIntToBytes(unk6,      itw);
+            itw = utils::WriteIntToBytes(unk7,      itw);
+            itw = std::fill_n(itw, LENPadding, PadByte);
+            //itw = utils::WriteIntToBytes(PadWord,   itw);
+            //itw = utils::WriteIntToBytes(PadWord,   itw);
             return itw;
         }
 
@@ -336,94 +340,104 @@ namespace filetypes
         template<class _fwdinit>
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
-            itr = utils::ReadIntFromBytes(unk0,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk5,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk6,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk7,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk8,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk9,   itr, itpend);
+            itr = utils::ReadIntFromBytes(type,     itr, itpend);
+            itr = utils::ReadIntFromBytes(facing,   itr, itpend);
+            itr = utils::ReadIntFromBytes(unk2,     itr, itpend);
+            itr = utils::ReadIntFromBytes(unk3,     itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,     itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,     itr, itpend);
+            itr = utils::ReadIntFromBytes(unk6,     itr, itpend);
+            itr = utils::ReadIntFromBytes(unk7,     itr, itpend);
+            
+            for( size_t i = 0; i < LENPadding; ++i, ++itr )
+            {
+                const int8_t by = *itr;
+                if(by != PadByte)
+                {
+                    assert(false);
+                    throw std::runtime_error("performerentry::Read(): Unexpected value for one of the padding bytes at the end of a performer's entry! " + std::to_string(static_cast<unsigned short>(by)));
+                }
+            }
+            //itr = utils::ReadIntFromBytes(PadWord,     itr, itpend);
+            //itr = utils::ReadIntFromBytes(PadWord,     itr, itpend);
             return itr;
         }
 
         operator pmd2::PerformerDataEntry()
         {
             pmd2::PerformerDataEntry out;
-            out.unk0 = unk0;
-            out.unk1 = unk1;
-            out.unk2 = unk2;
-            out.unk3 = unk3;
-            out.unk4 = unk4;
-            out.unk5 = unk5;
-            out.unk6 = unk6;
-            out.unk7 = unk7;
-            out.unk8 = unk8;
-            out.unk9 = unk9;
+            out.type    = type;
+            out.facing  = facing;
+            out.unk2    = unk2;
+            out.unk3    = unk3;
+            out.xoff    = xoff;
+            out.yoff    = yoff;
+            out.unk6    = unk6;
+            out.unk7    = unk7;
+            //out.unk8    = unk8;
+            //out.unk9    = unk9;
             return std::move(out);
         }
 
         performerentry & operator=(const pmd2::PerformerDataEntry & other)
         {
-            unk0    = other.unk0;
-            unk1    = other.unk1;
+            type    = other.type;
+            facing  = other.facing;
             unk2    = other.unk2;
             unk3    = other.unk3;
-            unk4    = other.unk4;
-            unk5    = other.unk5;
+            xoff    = other.xoff;
+            yoff    = other.yoff;
             unk6    = other.unk6;
             unk7    = other.unk7;
-            unk8    = other.unk8;
-            unk9    = other.unk9;
+            //unk8    = other.unk8;
+            //unk9    = other.unk9;
             return *this;
         }
     };
 
 
-    /*
+    /*******************************************************
         evententry
             
-    */
+    *******************************************************/
     struct evententry
     {
         static const size_t LEN = 16; //14 if not counting the padding word
 
-        int16_t unk0;
-        int16_t unk1;   
-        int16_t unk2;   
-        int16_t unk3;  
+        int16_t width;
+        int16_t height;   
+        int16_t xoff;   
+        int16_t yoff;  
         int16_t unk4;  
         int16_t unk5;  
-        int16_t unk6;
+        int16_t actionptr;
         // <- Padding word is here
 
         evententry()
-            :unk0(0), unk1(0), unk2(0), unk3(0), unk4(0),
-             unk5(0), unk6(0)
+            :width(0), height(0), xoff(0), yoff(0), unk4(0),
+             unk5(0), actionptr(0)
         {}
 
         evententry(const evententry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6)
+            :width(other.width), height(other.height), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+             unk5(other.unk5), actionptr(other.actionptr)
         {}
 
         evententry(const pmd2::EventDataEntry & other)
-            :unk0(other.unk0), unk1(other.unk1), unk2(other.unk2), unk3(other.unk3), unk4(other.unk4),
-             unk5(other.unk5), unk6(other.unk6)
+            :width(other.width), height(other.height), xoff(other.xoff), yoff(other.yoff), unk4(other.unk4),
+             unk5(other.unk5), actionptr(other.actionidx)
         {}
 
         template<class _outit>
             _outit Write(_outit itw)const
         {
-            itw = utils::WriteIntToBytes(unk0,   itw);
-            itw = utils::WriteIntToBytes(unk1,   itw);
-            itw = utils::WriteIntToBytes(unk2,   itw);
-            itw = utils::WriteIntToBytes(unk3,   itw);
-            itw = utils::WriteIntToBytes(unk4,   itw);
-            itw = utils::WriteIntToBytes(unk5,   itw);
-            itw = utils::WriteIntToBytes(unk6,   itw);
+            itw = utils::WriteIntToBytes(width,         itw);
+            itw = utils::WriteIntToBytes(height,        itw);
+            itw = utils::WriteIntToBytes(xoff,          itw);
+            itw = utils::WriteIntToBytes(yoff,          itw);
+            itw = utils::WriteIntToBytes(unk4,          itw);
+            itw = utils::WriteIntToBytes(unk5,          itw);
+            itw = utils::WriteIntToBytes(actionptr,    itw);
 
             //Padding word
             itw = utils::WriteIntToBytes(ScriptDataPaddingWord,   itw);
@@ -434,13 +448,13 @@ namespace filetypes
         template<class _fwdinit>
             _fwdinit Read(_fwdinit itr, _fwdinit itpend)
         {
-            itr = utils::ReadIntFromBytes(unk0,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk1,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk2,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk3,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk4,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk5,   itr, itpend);
-            itr = utils::ReadIntFromBytes(unk6,   itr, itpend);
+            itr = utils::ReadIntFromBytes(width,        itr, itpend);
+            itr = utils::ReadIntFromBytes(height,       itr, itpend);
+            itr = utils::ReadIntFromBytes(xoff,         itr, itpend);
+            itr = utils::ReadIntFromBytes(yoff,         itr, itpend);
+            itr = utils::ReadIntFromBytes(unk4,         itr, itpend);
+            itr = utils::ReadIntFromBytes(unk5,         itr, itpend);
+            itr = utils::ReadIntFromBytes(actionptr,   itr, itpend);
 
             //Padding word
             std::advance(itr, sizeof(int16_t));
@@ -450,33 +464,33 @@ namespace filetypes
         operator pmd2::EventDataEntry()
         {
             pmd2::EventDataEntry out;
-            out.unk0 = unk0;
-            out.unk1 = unk1;
-            out.unk2 = unk2;
-            out.unk3 = unk3;
-            out.unk4 = unk4;
-            out.unk5 = unk5;
-            out.unk6 = unk6;
+            out.width       = width;
+            out.height      = height;
+            out.xoff        = xoff;
+            out.yoff        = yoff;
+            out.unk4        = unk4;
+            out.unk5        = unk5;
+            out.actionidx  = actionptr;
             return std::move(out);
         }
 
         evententry & operator=(const pmd2::EventDataEntry & other)
         {
-            unk0    = other.unk0;
-            unk1    = other.unk1;
-            unk2    = other.unk2;
-            unk3    = other.unk3;
-            unk4    = other.unk4;
-            unk5    = other.unk5;
-            unk6    = other.unk6;
+            width       = other.width;
+            height      = other.height;
+            xoff        = other.xoff;
+            yoff        = other.yoff;
+            unk4        = other.unk4;
+            unk5        = other.unk5;
+            actionptr  = other.actionidx;
             return *this;
         }
     };
 
-    /*
+    /*******************************************************
         unkentry
             UNk3 entry at the end of the file right before the layer table.
-    */
+    *******************************************************/
     struct unkentry
     {
         static const size_t LEN = 8;
@@ -541,9 +555,9 @@ namespace filetypes
 
     const unkentry DefaultUnk3TblEntry;
 
-    /*
+    /*******************************************************
         posmarkentry
-    */
+    *******************************************************/
     struct posmarkentry
     {
         static const size_t LEN = 16; 
@@ -629,10 +643,10 @@ namespace filetypes
         }
     };
 
-    /*
-        unktbl1entry
-    */
-    struct unktbl1entry
+    /*******************************************************
+        actionentry
+    *******************************************************/
+    struct actionentry
     {
         static const size_t LEN = 8; 
         int16_t croutineid;
@@ -640,15 +654,15 @@ namespace filetypes
         int16_t unk2;   
         int16_t scrid; 
 
-        unktbl1entry()
+        actionentry()
             :croutineid(0), unk1(0), unk2(0), scrid(0)
         {}
 
-        unktbl1entry(const unktbl1entry & other)
+        actionentry(const actionentry & other)
             :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
-        unktbl1entry(const pmd2::TriggerDataEntry & other)
+        actionentry(const pmd2::ActionDataEntry & other)
             :croutineid(other.croutineid), unk1(other.unk1), unk2(other.unk2), scrid(other.scrid)
         {}
 
@@ -673,9 +687,9 @@ namespace filetypes
             return itr;
         }
 
-        operator pmd2::TriggerDataEntry()
+        operator pmd2::ActionDataEntry()
         {
-            pmd2::TriggerDataEntry out;
+            pmd2::ActionDataEntry out;
             out.croutineid  = croutineid;
             out.unk1        = unk1;
             out.unk2        = unk2;
@@ -683,7 +697,7 @@ namespace filetypes
             return std::move(out);
         }
 
-        unktbl1entry & operator=(const pmd2::TriggerDataEntry & other)
+        actionentry & operator=(const pmd2::ActionDataEntry & other)
         {
             croutineid  = other.croutineid;
             unk1        = other.unk1;
@@ -718,7 +732,7 @@ namespace filetypes
                 m_out.Name(utils::GetBaseNameOnly(m_origfname));
                 m_out.Type( pmd2::StrToScriptDataType(fext) );
                 ParseHeader();
-                ParseUnkTbl1();
+                ParseActionTable();
                 ParseLayers();
                 ParsePositionMarks();
             }
@@ -736,22 +750,24 @@ namespace filetypes
             m_itcur = m_header.Read(m_itcur, m_itend);
         }
 
-        void ParseUnkTbl1()
+        void ParseActionTable()
         {
-            int nbentries = ((m_header.actorsptr - m_header.unkdb1ptr) * ScriptWordLen) / unktbl1entry::LEN;
+            int nbentries = ((m_header.actorsptr - m_header.actionptr) * ScriptWordLen) / actionentry::LEN;
             assert(nbentries > 0);
             if(nbentries > 0)
             {
-                m_out.UnkTbl1().resize(nbentries);
-                for( auto & entry : m_out.UnkTbl1() )
+                m_out.ActionTable().resize(nbentries);
+                for( size_t cnttrg = 0; cnttrg < m_out.ActionTable().size(); ++cnttrg )
                 {
-                    unktbl1entry unk1ent;
+                    auto & entry = m_out.ActionTable()[cnttrg];
+                    actionentry unk1ent;
+                    m_actionptrs.insert( std::make_pair( m_header.actionptr + ((actionentry::LEN/ScriptWordLen) * cnttrg), cnttrg) ); //Insert the offset in words for this trigger into the table, and mark the trigger is correspond to
                     m_itcur = unk1ent.Read( m_itcur, m_itend );
                     entry = unk1ent;
                 }
             }
             else
-                throw std::runtime_error("SSDataParser::ParseUnkTbl1(): No entries in UnkTbl1!!");
+                throw std::runtime_error("SSDataParser::ParseActionTable(): No entries in UnkTbl1!!");
         }
 
         void ParseLayers()
@@ -759,14 +775,7 @@ namespace filetypes
             initer_t itlayersbeg = std::next(m_itbeg, m_header.ptrlayertbl * ScriptWordLen);
 
             for( size_t i = 0; i < m_header.nblayers; ++i )
-            {
                 itlayersbeg = ParseALayer(itlayersbeg);
-                
-                //if(!m_out.Layers().back().unkentries.empty())
-                //{
-                //    clog << "Layer#" <<i <<", has unk3tbl\n";
-                //}
-            }
         }
 
         initer_t ParseALayer( initer_t itlayerbeg )
@@ -777,8 +786,7 @@ namespace filetypes
             ParseEntriesList<livesentry>    ( tmplent.actors(),     std::back_inserter(outlay.lives) );
             ParseEntriesList<objectentry>   ( tmplent.objects(),    std::back_inserter(outlay.objects) );
             ParseEntriesList<performerentry>( tmplent.performers(), std::back_inserter(outlay.performers) );
-            ParseEntriesList<evententry>    ( tmplent.events(),     std::back_inserter(outlay.events) );
-            //ParseEntriesList<unkentry>      ( tmplent.unk3lst(),    std::back_inserter(outlay.unkentries) ); //The last group is not really a group
+            ParseEventEntriesList           ( tmplent.events(),     std::back_inserter(outlay.events) );
             m_out.Layers().push_back(std::move(outlay));
             return itlayerbeg;
         }
@@ -792,6 +800,26 @@ namespace filetypes
             {
                 _entryty lv;
                 itentriesbeg = lv.Read(itentriesbeg, m_itend);
+                *itout = lv;
+            }
+        }
+
+        template<typename _backinsit>
+            inline void ParseEventEntriesList( LayerTableEntry & ent, _backinsit itout )
+        {
+            if(ent.nbentries <= 0) return;
+            initer_t itentriesbeg = std::next(m_itbeg, ent.offset * ScriptWordLen);
+            for( int16_t i = 0; i < ent.nbentries; ++i )
+            {
+                evententry lv;
+                itentriesbeg = lv.Read(itentriesbeg, m_itend);
+                auto itf = m_actionptrs.find(lv.actionptr);
+                if( itf == m_actionptrs.end() )
+                {
+                    assert(false);
+                    throw std::runtime_error("SSDataParser::ParseEventEntriesList(): Invalid offset to action, " + std::to_string(lv.actionptr) + ", found for event entry #" + std::to_string(i) );
+                }
+                lv.actionptr = itf->second; //Put the index to the action that correspond to this offset into the destination!
                 *itout = lv;
             }
         }
@@ -812,14 +840,13 @@ namespace filetypes
         }
 
     private:
-        initer_t                m_itbeg;
-        initer_t                m_itcur;
-        initer_t                m_itend;
-
-        std::string             m_origfname;
-        pmd2::ScriptData        m_out;
-
-        ssa_header              m_header;
+        initer_t                                m_itbeg;
+        initer_t                                m_itcur;
+        initer_t                                m_itend;
+        std::string                             m_origfname;
+        pmd2::ScriptData                        m_out;
+        std::unordered_map<uint16_t, size_t>    m_actionptrs;
+        ssa_header                              m_header;
     };
 
 //=======================================================================================
@@ -934,6 +961,23 @@ namespace filetypes
             throw std::runtime_error("SSDataWriter::GetBlockBeg(): Tried to write an unknown layer??? Program logic error.");
         }
 
+        template<class IntermediateTy, class _TableTy>
+            inline void SetupATablePtrForALayer(LayerEntry::eTableTypes ty, const _TableTy & list, size_t cntlayer)
+        {
+            //**Note**: If no entries, point to the last word of the last entry/datablock!!!
+            //#1 - Write the offset the specified entries for the current layer begins at, and how many there are.
+            auto & target = m_layertbl[cntlayer].tables[static_cast<size_t>(ty)];
+            if( list.size() > std::numeric_limits<uint16_t>::max() )
+            {
+                std::stringstream sstr;
+                sstr << "SSDataWriter::SetupATablePtrForALayer(): To many entries in layer #" <<cntlayer <<"'s table of type " <<static_cast<int>(ty) 
+                     <<"! Got " <<list.size() <<", expected less than " <<std::numeric_limits<uint16_t>::max();
+                throw std::overflow_error(sstr.str());
+            }
+            target.nbentries = static_cast<uint16_t>(list.size());
+            target.offset    = (target.nbentries == 0)? (GetBlockBeg(ty) - 1) : GetCurFOff(); //If empty, set pointer 1 word behind current block beg!
+        }
+
         /*
             WriteATable
                 Writes for a single layer, the content of one of its lists of assigned entries!
@@ -944,23 +988,24 @@ namespace filetypes
         template<class IntermediateTy, class _TableTy>
             void WriteATable(outit_t & itw, LayerEntry::eTableTypes ty, const _TableTy & list, size_t cntlayer )
         {
-            //**Note**: If no entries, point to the last word of the last entry/datablock!!!
-
-            //#1 - Write the offset the specified entries for the current layer begins at, and how many there are.
-            auto & target = m_layertbl[cntlayer].tables[static_cast<size_t>(ty)];
-            if( list.size() > std::numeric_limits<uint16_t>::max() )
-            {
-                std::stringstream sstr;
-                sstr << "SSDataWriter::WriteATable(): To many entries in layer #" <<cntlayer <<"'s table of type " <<static_cast<int>(ty) 
-                     <<"! Got " <<list.size() <<", expected less than " <<std::numeric_limits<uint16_t>::max();
-                throw std::overflow_error(sstr.str());
-            }
-            target.nbentries = static_cast<uint16_t>(list.size());
-            target.offset    = (target.nbentries == 0)? (GetBlockBeg(ty) - 1) : GetCurFOff(); //If empty, set pointer 1 word behind current block beg!
+            SetupATablePtrForALayer<IntermediateTy, _TableTy>(ty, list, cntlayer);
 
             //#2 - Then append all entries for the current layer to the current file position
             for(const auto & entry : list)
                 itw = IntermediateTy(entry).Write(itw); 
+        }
+
+        template<class _TableTy>
+            void WriteEventsTable(outit_t & itw, const _TableTy & list, size_t cntlayer)
+        {
+            SetupATablePtrForALayer<evententry, _TableTy>( LayerEntry::eTableTypes::Events, list, cntlayer);
+            //Special handling for events because they contain an offset!
+            for(const EventDataEntry & entry : list)
+            {
+                evententry tmp(entry);
+                tmp.actionptr = m_actoffsets.at(entry.actionidx); 
+                itw = tmp.Write(itw); 
+            }
         }
 
         /*
@@ -977,8 +1022,8 @@ namespace filetypes
             itw = std::fill_n( itw, ssa_header::LEN, 0 );
             ResizeLayerTable();
 
-            //#2 - Write Unk1Table
-            WriteUnk1Tbl(itw);
+            //#2 - Write actions table
+            WriteActionsTable(itw);
 
             //#3 - Write the rest
             WriteActors(itw);
@@ -995,11 +1040,14 @@ namespace filetypes
             WriteHeader(PrepareForWritingHeader());
         }
 
-       inline void WriteUnk1Tbl(outit_t & itw)
+       inline void WriteActionsTable(outit_t & itw)
         {
-            m_hdr.unkdb1ptr = GetCurFOff(); //Mark the file offset
-            for( const auto & entry : m_src.UnkTbl1() )
-                itw = unktbl1entry(entry).Write(itw);
+            m_hdr.actionptr = GetCurFOff(); //Mark the file offset
+            for( const auto & entry : m_src.ActionTable() )
+            {
+                m_actoffsets.push_back(GetCurFOff());
+                itw = actionentry(entry).Write(itw);
+            }
         }
 
         inline void WriteActors(outit_t & itw)
@@ -1028,7 +1076,7 @@ namespace filetypes
         {
             m_hdr.eventsptr = GetCurFOff(); //Mark the file offset
             for( size_t cntlay = 0; cntlay < m_src.Layers().size(); ++cntlay )
-                WriteATable<evententry>(itw, LayerEntry::eTableTypes::Events,  m_src.Layers()[cntlay].events, cntlay);
+                WriteEventsTable(itw, m_src.Layers()[cntlay].events, cntlay);
         }
 
         inline void WritePosMarkers(outit_t & itw)
@@ -1078,6 +1126,7 @@ namespace filetypes
         std::ofstream            m_outf;
         ssa_header               m_hdr;
         std::vector<LayerEntry>  m_layertbl;
+        std::vector<size_t>      m_actoffsets; //Contains the offsets of all the actions 
     };
 
 

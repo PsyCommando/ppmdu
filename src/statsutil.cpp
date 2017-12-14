@@ -8,7 +8,8 @@
 #include <ppmdu/fmts/text_str.hpp>
 #include <utils/library_wide.hpp>
 //#include <ppmdu/pmd2/pmd2_scripts.hpp>
-#include <ppmdu/pmd2/pmd2_hcdata_dumper.hpp>
+#include <ppmdu/pmd2/pmd2_xml_sniffer.hpp>
+#include <ppmdu/pmd2/pmd2_asm.hpp>
 #include <utils/poco_wrapper.hpp>
 #include <utils/whereami_wrapper.hpp>
 #include <iostream>
@@ -25,75 +26,6 @@ using namespace ::utils::io;
 using namespace ::pmd2::stats;
 using namespace ::pmd2;
 
-//!#REMOVEME: Better encapsulate this 
-#include <ppmdu/pmd2/pmd2_xml_sniffer.hpp>
-//#include <ppmdu/fmts/ssb.hpp>
-//#include <ppmdu/fmts/ssa.hpp>
-//#include <pugixml.hpp>
-//#include <utils/pugixml_utils.hpp>
-//#include <ppmdu/pmd2/pmd2_scripts.hpp>
-//
-//namespace XMLSniffer
-//{
-//    struct RootNodeInfo
-//    {
-//        std::string                                  name;
-//        std::unordered_map<std::string, std::string> attributes;
-//    };
-//
-//    inline RootNodeInfo GetRootNodeFromXML( const std::string & file )
-//    {
-//        using namespace pugi;
-//        xml_document doc;
-//        pugixmlutils::HandleParsingError( doc.load_file(file.c_str()), file );
-//        RootNodeInfo rinf;
-//        rinf.name = doc.document_element().name();
-//        for( const auto & attr : doc.document_element().attributes() )
-//            rinf.attributes.emplace( attr.name(), attr.value() );
-//        return std::move(rinf);
-//    }
-//
-//    void CheckGameVersionAndGameRegion( const RootNodeInfo & rootnode, 
-//                                        eGameVersion       & out_ver, 
-//                                        eGameRegion        & out_reg )
-//    {
-//        if( rootnode.attributes.size() >= 2 )
-//        {
-//            cout <<"<!>-XML Script file detected!\n";
-//            try
-//            {
-//                out_ver = pmd2::StrToGameVersion(rootnode.attributes.at(CommonXMLGameVersionAttrStr));
-//                out_reg  = pmd2::StrToGameRegion (rootnode.attributes.at(CommonXMLGameRegionAttrStr));
-//            }
-//            catch(const std::exception&)
-//            {
-//                throw_with_nested(std::logic_error("CheckGameVersionAndGameRegion(): Couldn't get the game version and or game region values attributes from document root!!"));
-//            }
-//            cout <<"<*>-Detected Game Version : " <<pmd2::GetGameVersionName(out_ver) <<"\n"
-//                 <<"<*>-Detected Game Region  : " <<pmd2::GetGameRegionNames(out_reg)  <<"\n";
-//
-//            if( out_ver == eGameVersion::Invalid )
-//                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game version attribute in root node is invalid!");
-//            if( out_reg == eGameRegion::Invalid )
-//                throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region attribute in root node is invalid!");
-//        }
-//        else
-//            throw std::invalid_argument("CheckGameVersionAndGameRegion(): Game region and version attribute in root node are missing!");
-//    }
-//
-//    inline bool IsXMLSingleScript(const std::string & rootname)
-//    {
-//        return (rootname == ScriptXMLRoot_SingleScript);
-//    }
-//
-//    inline bool IsXMLSingleScriptData(const std::string & rootname)
-//    {
-//        return (rootname == ScriptDataXMLRoot_SingleDat);
-//    }
-//
-//};
-
- //#include <ppmdu/fmts/sir0.hpp>
 
 namespace statsutil
 {
@@ -108,7 +40,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.23.2";
+    const string CStatsUtil::Version             = "0.24";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
@@ -267,7 +199,7 @@ namespace statsutil
             std::bind( &CStatsUtil::ParseOptionConfig, &GetInstance(), placeholders::_1 ),
         },
 
-        //
+        //Escape text using XML escape sequences
         {
             "xmlesc",
             0,
@@ -276,6 +208,15 @@ namespace statsutil
             "This is mainly interesting for dealing with a XML parser that requires standard XML escape chars!",
             "-xmlesc",
             std::bind( &CStatsUtil::ParseOptionEscapeAsXML, &GetInstance(), placeholders::_1 ),
+        },
+
+        //Export/Import script data as directories
+        {
+            "scrasdir",
+            0,
+            "If present, scripts will be exported as sub files within a directory, instead of a single huge xml file.",
+            "-scrasdir",
+            std::bind( &CStatsUtil::ParseOptionScriptAsDir, &GetInstance(), placeholders::_1 ),
         },
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -299,6 +240,15 @@ namespace statsutil
             "Dump a level_list.bin file from the current configuration.",
             "-dumplevellist",
             std::bind( &CStatsUtil::ParseOptionDumpLvlList, &GetInstance(), placeholders::_1 ),
+        },
+
+        //dumpactorlist
+        {
+            "dumpactorlist",
+            0, 
+            "Dump a actor_list.bin file from the current configuration.",
+            "-dumpactorlist",
+            std::bind( &CStatsUtil::ParseOptionDumpActorList, &GetInstance(), placeholders::_1 ),
         },
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -362,6 +312,8 @@ namespace statsutil
         m_version         = eGameVersion::EoS;
         m_scriptdebug     = false;
         m_dumplvllist     = false;
+        m_dumpactorlist   = false;
+        m_scriptasdir     = false;
         utils::LibWide().StringValue(ScriptCompilerReportFname) = "compiler_report.txt"; //Set this keyvalue to our default report filename!
     }
 
@@ -561,6 +513,19 @@ namespace statsutil
         return m_dumplvllist = true;
     }
 
+    bool CStatsUtil::ParseOptionDumpActorList( const std::vector<std::string> & optdata )
+    {
+        cout << "<!>- Dumping actor_list.bin from current configuration!\n";
+        m_operationMode = eOpMode::DumpActorList;
+        return m_dumpactorlist = true;
+    }
+
+    bool CStatsUtil::ParseOptionScriptAsDir(const std::vector<std::string> & optdata )
+    {
+        cout << "<!>- Exporting/Importing Script XML as Directories!\n";
+        return m_scriptasdir = true;
+    }
+
     void CStatsUtil::SetupCFGPath(const std::string & cfgrelpath)
     {
         assert(!m_applicationdir.empty());
@@ -573,6 +538,8 @@ namespace statsutil
         else
             throw std::logic_error("CStatsUtil::SetupCFGPath(): Path to pmd2data xml file is non-existant! " + cfgpath.toString());
     }
+
+
 
 
 //
@@ -793,6 +760,7 @@ namespace statsutil
             {
                 ValidateRomRoot();
                 GameDataLoader gloader( m_romrootdir, m_pmd2cfg );
+                gloader.AnalyseGame();
                 cout <<"\n";
                 switch(m_force)
                 {
@@ -813,6 +781,27 @@ namespace statsutil
                             ;
                         returnval = HandleExport(m_firstparam, gloader);
                         break;
+                    }
+                };
+            }
+            else if(!m_romrootdir.empty())
+            {
+                ValidateRomRoot();
+                GameDataLoader gloader( m_romrootdir, m_pmd2cfg );
+                gloader.AnalyseGame();
+
+                switch(m_operationMode)
+                {
+                    case eOpMode::DumpLevelList: //! #TODO: This will move to its own utility, along with all ASM patching!!
+                    {
+                        ValidateRomRoot();
+                        return DoDumpLevelList(m_firstparam, gloader );
+                    }
+
+                    case eOpMode::DumpActorList: //! #TODO: This will move to its own utility, along with all ASM patching!!
+                    {
+                        ValidateRomRoot();
+                        return DoDumpActorList(m_firstparam, gloader );
                     }
                 };
             }
@@ -853,11 +842,6 @@ namespace statsutil
                              <<"================================================\n";
                         returnval = DoImportSingleScriptData();
                         break;
-                    }
-                    case eOpMode::DumpLevelList: //! #TODO: This will move to its own utility, along with all ASM patching!!
-                    {
-                        ValidateRomRoot();
-                        return DoDumpLevelList(m_firstparam, GameDataLoader( m_romrootdir, m_pmd2cfg ) );
                     }
                 };
             }
@@ -986,7 +970,7 @@ namespace statsutil
                  <<"---------------------------------\n"
                  <<"Reading..\n";
 
-            pgametext = gloader.LoadGameText();
+            pgametext = gloader.InitGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game text!");
 
@@ -1009,7 +993,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
+            GameScripts * pgamescripts = gloader.InitScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load scripts!");
 
@@ -1031,7 +1015,7 @@ namespace statsutil
         {
             cout <<"\nLoading Game Data..\n"
                  <<"---------------------------------\n";
-           pgamestats = gloader.LoadStats();
+           pgamestats = gloader.InitStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleImport(): Couldn't load game stats!");
         }
@@ -1123,7 +1107,7 @@ namespace statsutil
             cout <<"\nGame Strings\n"
                  <<"---------------------------------\n"
                  <<"Reading...";
-            GameText * pgametext = gloader.LoadGameText();
+            GameText * pgametext = gloader.InitGameText();
             if( !pgametext )
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game text!");
 
@@ -1138,7 +1122,7 @@ namespace statsutil
         {
             cout <<"\nScripts\n"
                  <<"---------------------------------\n";
-            GameScripts * pgamescripts = gloader.LoadScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug});
+            GameScripts * pgamescripts = gloader.InitScripts(pmd2::scriptprocoptions{true, true, false, m_scriptdebug, m_scriptasdir});
             if(!pgamescripts)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load scripts!");
 
@@ -1152,7 +1136,7 @@ namespace statsutil
         {
             cout <<"\nLoading Game Data..\n"
                  <<"---------------------------------\n";
-           pgamestats = gloader.LoadStats();
+           pgamestats = gloader.InitStats();
             if(!pgamestats)
                 throw std::runtime_error("CStatsUtil::HandleExport(): Couldn't load game stats!");
         }
@@ -1300,16 +1284,30 @@ namespace statsutil
     }
 
 
+    int CStatsUtil::DoDumpActorList( std::string fpath, pmd2::GameDataLoader & gloader )
+    {
+        const pmd2::ConfigLoader & confload = MainPMD2ConfigWrapper::CfgInstance();
+        //if( fpath.empty() )
+        //    fpath = "actor_list.bin";
+
+        gloader.InitAsm();
+        cout<<"Dumping actor_list..\n";
+        gloader.GetAsm()->WriteActorList( confload.GetGameScriptData().LivesEnt() );
+        cout<<"Done with actor_list!\n";
+        return 0;
+    }
+
     int CStatsUtil::DoDumpLevelList( std::string fpath, pmd2::GameDataLoader & gloader )
 #if 1
     {
-        if( fpath.empty() )
-            fpath = "level_list.bin";
+        const pmd2::ConfigLoader & confload = MainPMD2ConfigWrapper::CfgInstance();
+        //if( fpath.empty() )
+        //    fpath = "level_list.bin";
 
-        gloader.LoadAsm();
-        cout<<"Dumping level_list.bin..\n";
-        pmd2::HardCodedDataDumper(MainPMD2ConfigWrapper::CfgInstance()).DumpLevelDataFromConf(fpath);
-        cout<<"Done with level_list.bin!\n";
+        gloader.InitAsm();
+        cout<<"Dumping level_list..\n";
+        gloader.GetAsm()->WriteLevelList( confload.GetGameScriptData().LevelInfo() );
+        cout<<"Done with level_list!\n";
         return 0;
     }
 #else

@@ -649,8 +649,6 @@ namespace gimg
 
             void ConvertBigEndian( const pixel_t & pix )
             {
-                unsigned int curbufbit = 7;
-
                 for( unsigned int curbit = 0; curbit < BitsPerPixel; ++curbit )
                 {
                     m_buf |=  (pix.getASingleBit(curbit) << m_curbit);

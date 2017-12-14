@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <utils/utility.hpp>
 #include <ppmdu/pmd2/pmd2_scripts_opcodes.hpp>
+#include <ppmdu/pmd2/pmd2_xml_sniffer.hpp>
 #include <utils/pugixml_utils.hpp>
 #include <utils/library_wide.hpp>
 //#include <utils/multiple_task_handler.hpp>
@@ -28,6 +29,9 @@ using namespace pugixmlutils;
 namespace pmd2
 {
 
+//==============================================================================
+//  15bits Integer Conversions
+//==============================================================================
     //Return is signed!!!
     inline int16_t Convert14bTo16b(uint16_t val)
     {
@@ -45,10 +49,12 @@ namespace pmd2
             return val & 0x3FFFu;
     }
 
-
+//==============================================================================
+//  Checked Short Casts
+//==============================================================================
     /*
         ToWord
-            Checked cast of a 32 bits integer into a 16 bits integer.
+            Checked cast of a 32 bits integer into a 16 bits unsigned integer.
     */
     inline uint16_t ToWord( size_t val )
     {
@@ -57,6 +63,10 @@ namespace pmd2
         return static_cast<uint16_t>(val);
     }
 
+    /*
+        ToSWord 
+            Convert a 32 bits integer to a 16bits signed integer.
+    */
     inline int16_t ToSWord( long val )
     {
         if( val <= std::numeric_limits<int16_t>::max() && val >= std::numeric_limits<int16_t>::lowest() )
@@ -66,18 +76,25 @@ namespace pmd2
             throw std::overflow_error("ToWord(): Value is larger or smaller than a 16bits integer!!");
     }
 
-
-    //! #TODO: Make a synchronised text output stack !
+//==============================================================================
+//  Logging Helpers
+//==============================================================================
+    /*
+        slog
+            A inlined helper to access the current library wide logger.
+    */
     inline std::ostream & slog()
     {
         return utils::LibWide().Logger().Log();
     }
 
-
     /*
-        Utility function for getting the line number and the full line of an error in pugixml!
+        GetLineNbAndLineAtOffset
+            Utility function for getting the line number and the full line of an error in pugixml!
+            It uses a file offset given by pugixml in bytes, and counts the end of line characters until the offset is reached.
+            It returns a struct containing the line number, the offset of the beginning of the line the offset specified is on, 
+            and the text for the line containing the error.
     */
-    /*std::pair<unsigned long long, std::string> */
     struct ret_t{unsigned long long lnnb; unsigned long long lastlinebeg; std::string line;} GetLineNbAndLineAtOffset( unsigned long long offset, const std::string & fname)
     {
         std::ifstream input;
@@ -91,7 +108,9 @@ namespace pmd2
             if( input.get() == '\n')
             {
                 ++cntline;
-                lastlinebeg = cntfoff + 1; //Might be a bit buggy though, since some platforms/text editors do it differently.. 
+                //! #NOTE: Might be a bit buggy/unreliable though, since some platforms/text editors do it differently.. (AKA CRLF vs LF only)
+                //!        And well, its impossible to know how many spaces long a tab is for a given text editor.
+                lastlinebeg = cntfoff + 1;
             }
         }
 
@@ -99,19 +118,18 @@ namespace pmd2
         input.seekg(lastlinebeg, std::ios::beg);
         std::string errline;
         std::getline( input, errline );
-        //return std::make_pair( cntline, std::move(errline) );
         return ret_t{cntline, lastlinebeg, errline};
     }
-
-
-
-
 
 //==============================================================================
 //  Constants
 //==============================================================================
     namespace scriptXML
     {
+        //Filenames
+        const string FNAME_LSD          = "lsd_table"; //Filename when script is output by directory to put the LSD table in if applicable.
+
+        //
         const string ROOT_SingleScript  = ScriptXMLRoot_SingleScript; 
         const string ROOT_ScripDir      = ScriptXMLRoot_Level;      
         const string ATTR_GVersion      = CommonXMLGameVersionAttrStr; 
@@ -125,6 +143,9 @@ namespace pmd2
 
         const string NODE_ScriptSet   = "ScriptSet"s;
         const string ATTR_ScrGrpName    = ATTR_Name;
+
+        const string ROOT_LSD           = "SingleLSD"s;
+        const string ROOT_ScriptSet     = "SingleScriptSet";
         
         // ----------------------------------------------
         // Script
@@ -157,15 +178,12 @@ namespace pmd2
 
         const string ATTR_Param         = "param"s;
 
-
         //META
         const string NODE_MetaLabel     = "Label";
         const string ATTR_LblID         = "id";
         const string NODE_MetaCaseLabel = "CaseLabel";
 
-
         //Parameters
-
         const array<string, 10> ATTR_Params =
         {
             "param",
@@ -204,22 +222,22 @@ namespace pmd2
         const string NODE_Events            = "Events"s;
         const string NODE_Event             = "Event"s;
 
-        //const string NODE_UnkTable3         = "UnkTable3"s;
-        //const string NODE_UnkTable3Entry    = "Entry"s;
-
-        const string NODE_UnkTable1         = "TriggersTable"s;
-        const string NODE_UnkTable1Entry    = "Entry"s;
+        const string NODE_ActionTable       = "ActionsTable"s;
+        const string NODE_ActionTableEntry  = "Action"s;
 
         const string NODE_PositionMarkers   = "PositionMarkers"s;
         const string NODE_Marker            = "Marker"s;
 
+        const string ATTR_Width             = "width"s;
+        const string ATTR_Height            = "height"s;
         const string ATTR_XOffset           = "x"s;
         const string ATTR_YOffset           = "y"s;
         const string ATTR_Direction         = "facing"s;
         const string ATTR_ScriptID          = "act_scriptid"s;
+        const string ATTR_ActionID          = "actionid"s;
+        const string ATTR_PerfType          = "type"s;
 
-        const string ATTR_UnknownPrintf     = "unk_%d"s;
-
+        //Unknown parameters
         const string ATTR_Unk0  = "unk0"s;
         const string ATTR_Unk1  = "unk1"s;
         const string ATTR_Unk2  = "unk2"s;
@@ -231,14 +249,18 @@ namespace pmd2
         const string ATTR_Unk8  = "unk8"s;
         const string ATTR_Unk9  = "unk9"s;
         const string ATTR_Unk10 = "unk10"s;
-
-        
-
     };
 
-//
-//
-//
+//==============================================================================
+//  CompileErrorException
+//==============================================================================
+
+    /*
+        CompileErrorException
+            Exception type meant to report an error related to compilation of the 
+            scripts.
+            Contains relevant data to trace the error location.
+    */
     class CompileErrorException : public std::runtime_error
     {
         //std::string        m_msg;
@@ -261,12 +283,16 @@ namespace pmd2
     /*  
         CompilerReport
             Thread safe compile report helper.
+            Basically, a state to contains errors and warnings for all XML files being compiled.
     */
     class CompilerReport
     {
     public:
 
-        //
+        /*
+            compileerror
+                Represents an error issued by the compiler.
+        */
         struct compileerror
         {
             unsigned long long  fileoffset; //Offset in the XML file of the error
@@ -277,13 +303,24 @@ namespace pmd2
             unsigned long long  linebegoff; //File offset of the beginning of the line
         };
 
-        //
+        /*
+            compilerwarning
+                Represents a compiler warning. Basically, the same as an error, but is a different type.
+        */
         struct compilerwarning : public compileerror
         {};
 
+        /*
+            warningqueue_t
+                A double ended queue containiningthe warnings for a file.
+        */
         typedef std::deque<compilerwarning> warningqueue_t;
 
-        //
+        /*
+            compileresult
+                The sum of all the warnings, the outcome, and any possible error, for 
+                the compilation of a single file.
+        */
         struct compileresult
         {
             bool            bprocessed;     //Whether the file was processed at all.
@@ -305,8 +342,11 @@ namespace pmd2
         using compileentry_t = std::unordered_map<std::string, compileresult>::value_type;
     public:
 
+        CompilerReport():m_nbexpected(0){}
+
         /*
-            Creates and init the entry for a given filename.
+            InitResult
+                Creates and init the entry for a given filename.
         */
         void InitResult(const std::string & fname, const std::string & absfpath )
         {
@@ -315,73 +355,59 @@ namespace pmd2
             curresult.bprocessed  = false;
             curresult.bsuccess    = false;
             curresult.absfilepath = absfpath;
-            m_results.emplace( fname, std::move(curresult) );
+            m_results.insert_or_assign( fname, std::move(curresult) );
         }
 
+        /*
+            InsertSuccess
+                Mark a file as successfully compiled.
+        */
         void InsertSuccess(const std::string & fname)
         {
             std::lock_guard<std::mutex> lck(m_mtx);
             auto & curresult = m_results[fname];
             curresult.bprocessed = true;
             curresult.bsuccess   = true;
-            //m_results.insert_or_assign( fname, compileresult{true, true} );
         }
 
+        /*
+            InsertWarning
+                Insert a warning in the compilation result entry for a given file.
+        */
         void InsertWarning(const std::string & fname, unsigned long fileoffset, std::string && warnmsg)
         {
-            //compilerwarning warn;
-            //FillErrorStruct( warn, absfpath, fileoffset, std::forward<std::string>(warnmsg) );
-
-            //std::lock_guard<std::mutex> lck(m_mtx);
-            //auto & curresult = m_results[fname];
-            //curresult.bprocessed = true;         //Just in case, set this to processed, since we obviously are processing it!
-            //curresult.warnings.push_back(warn);
             std::lock_guard<std::mutex> lck(m_mtx);
             m_results[fname].InsertWarning(fileoffset,std::forward<std::string>(warnmsg));
         }
 
+        /*
+            InsertError
+                Insert an error in the compilation result entry for a given file, and mark the entry
+                as having failed compilation.
+        */
         void InsertError(const std::string & fname, unsigned long fileoffset, std::string && errmsg )
         {
             compileerror errordata;
-            //errordata.fileoffset = fileoffset;
-            //errordata.message    = std::move(errmsg);
-            //errordata.linebegoff = 0;
-            //errordata.linenumber = 0;
-
-            //try
-            //{
-            //    auto lineoff = GetLineNbAndLineAtOffset(fileoffset, absfpath);
-            //    errordata.linenumber = lineoff.lnnb;
-            //    errordata.line       = lineoff.line;
-            //    errordata.linebegoff = lineoff.lastlinebeg;
-            //    errordata.lineoffset = errordata.fileoffset - errordata.linebegoff;
-            //}
-            //catch(const std::exception & e)
-            //{
-            //    slog() <<"<!>- CompilerReport::InsertError(): Encountered an exception while trying to open the file containing the error for seeking extra details..\n"
-            //           <<e.what() <<"\n";
-            //}
-            //FillErrorStruct(errordata, absfpath, fileoffset, std::forward<std::string>(errmsg) );
-
             std::lock_guard<std::mutex> lck(m_mtx);
             auto & curresult = m_results[fname];
             FillErrorStruct(errordata, curresult.absfilepath, fileoffset, std::forward<std::string>(errmsg) );
             curresult.bprocessed = true;
             curresult.bsuccess   = false;
             curresult.err        = std::move(errordata);
-            //m_results.insert_or_assign( fname, compileresult{true, false, std::forward<compileerror>(errordata)} );
         }
 
-        void PrintErrorReport( std::ostream & output, const unsigned long nbexpected )
+        /*
+            PrintErrorReport
+                Print to the specified stream the error report for all the file entries we have.
+        */
+        void PrintErrorReport( std::ostream & output )
         {
             std::lock_guard<std::mutex> lck(m_mtx);
             unsigned long                      nbsuccessful = 0;
             unsigned long                      nbunproc     = 0;
             unsigned long                      nberrors     = 0;
-            //std::map<std::string, std::string> errorstoprint;
 
             output << "== Script Compiler Report, PPMDU Toolset v" <<PMD2ToolsetVersion <<" ==\n";
-
             for( const compileentry_t & pair : m_results )
             {
                 if( !pair.second.bprocessed )
@@ -396,7 +422,6 @@ namespace pmd2
                     {
                         ++nberrors;
                         output <<"*" << pair.first <<": " <<MakeErrorMessage(pair) <<"\n";
-                        //errorstoprint.emplace( pair.first, MakeErrorMessage(pair) );
                     }
                     else
                         ++nbsuccessful;
@@ -405,28 +430,30 @@ namespace pmd2
                 }
             }
             
-
-            output //<<"\n" 
-                   <<"->Result: " 
-                   <<nbsuccessful <<"/" <<nbexpected <<" succeeded, " 
-                   <<nberrors <<"/" <<nbexpected <<" failed, "
-                   <<nbunproc <<"/" <<nbexpected <<" unprocessed"
+            output <<"->Result: " 
+                   <<nbsuccessful <<"/" <<m_nbexpected <<" succeeded, " 
+                   <<nberrors <<"/" <<m_nbexpected <<" failed, "
+                   <<nbunproc <<"/" <<m_nbexpected <<" unprocessed"
                    <<"\n";
-            if( nberrors == 0 && nbexpected == nbsuccessful )
+            if( nberrors == 0 && m_nbexpected == nbsuccessful )
                 output <<"->Success! No errors!\n";
-            else if( nberrors != 0 && nbexpected != nbsuccessful )
+            else if( nberrors != 0 && m_nbexpected != nbsuccessful )
                 output <<"->Compilation failed! Encountered some errors while compiling some script(s)!\n\n";
 
             if( nbunproc != 0 )
                 output <<"->Some files were skipped for some unknown reasons! Please report this to the developper!\n\n";
-
-            //for(const auto & errmsg : errorstoprint)
-            //    output <<"*" <<errmsg.first << ": " <<errmsg.second <<"\n";
         }
 
+        /*
+            operator[]
+                Access to individual compiler result map by filename.
+        */
         inline compileresult & operator[]( const std::string & fname ) {return m_results[fname];}
 
-
+        /*
+            FillErrorStruct
+                Fills + setup either a compilerwarning, or compilererror struct with the specified data.
+        */
         template<class StructTy>
             static void FillErrorStruct(StructTy & str, const std::string & absfpath, unsigned long fileoffset, std::string && msg)
         {
@@ -450,8 +477,15 @@ namespace pmd2
             }
         }
 
+        inline void          SetNbExpected( const unsigned long nbexpected ) { m_nbexpected = nbexpected; }
+        inline unsigned long GetNbExpected()const                            { return m_nbexpected; }
+
     private:
 
+        /*
+            PrintWarnings
+                Prints every warnings for a given compile result entry to a string.
+        */
         std::string PrintWarnings(const compileentry_t & pair)const
         {
             std::stringstream sstr;
@@ -465,6 +499,10 @@ namespace pmd2
             return sstr.str();
         }
 
+        /*
+            MakeErrorMessage
+                Generates a string containing the error data for a given compile result entry.
+        */
         std::string MakeErrorMessage(const compileentry_t & pair)const
         {
             std::stringstream sstr;
@@ -476,8 +514,9 @@ namespace pmd2
         }
 
     private:
-        std::mutex                                     m_mtx;
-        std::unordered_map<std::string, compileresult> m_results;
+        std::mutex                                      m_mtx;
+        std::unordered_map<std::string, compileresult>  m_results;
+        std::atomic<unsigned int>                       m_nbexpected;
     };
 
 
@@ -487,13 +526,18 @@ namespace pmd2
 
     /*****************************************************************************************
         SSBParser
-            
+            Functor that parses XML SSB data from a Script node.
     *****************************************************************************************/
     class SSBXMLParser
     {
     public:
-        /*
-        */
+        /*****************************************************************************************
+            SSBXMLParser
+                - version: Expected game version.
+                - region : Expected game region.
+                - conf   : Configuration data of the target game the XML script data is loaded for.
+                - ptrres : Pointer to a compiler result for this particular file. Null if not used.
+        *****************************************************************************************/
         SSBXMLParser( eGameVersion version, eGameRegion region, const ConfigLoader & conf, CompilerReport::compileresult * ptrres = nullptr )
             :m_version(version), 
              m_region(region), 
@@ -503,28 +547,29 @@ namespace pmd2
              m_preportentry(ptrres)
         {}
 
-        /*
-        */
+        /*****************************************************************************************
+            operator()
+                - seqn: ScriptSequence XML node to parse.
+        *****************************************************************************************/
         Script operator()( const xml_node & seqn )
         {
             using namespace scriptXML;
             xml_attribute xname = seqn.attribute(ATTR_ScrSeqName.c_str());
-
             if(!xname)
             {
                 stringstream sstr;
                 PrintErrorPos(sstr, seqn) << "SSBXMLParser::operator(): Sequence is missing its \"name\" attribute!!";
                 throw CompileErrorException(sstr.str(), seqn.offset_debug());
             }
-            xml_node xcode = seqn.child(NODE_Code.c_str());
 
+            xml_node xcode = seqn.child(NODE_Code.c_str());
             m_out = std::move( Script(xname.value()) );
             ParseCode(xcode);
             CheckLabelReferences();
-            IncrementAllStringReferencesParameters(); //Increment all strings values by the nb of entries in the const table.
+            OffsetAllStringReferencesParameters(); //Offset all string id parameters in all commands by the nb of entries in the const table.
 
             //Move strings
-            //! #REMOVEME: this is obsolete
+            //! #REMOVEME: this is obsolete. Since we don't store strings there anymore.
             m_out.ConstTbl() = std::move( Script::consttbl_t( m_constqueue.begin(), m_constqueue.end() ) );
             for( auto & aq : m_strqueues )
             {
@@ -535,7 +580,12 @@ namespace pmd2
 
     private:
 
-
+        /*****************************************************************************************
+            PrintErrorPos
+                Print to the specified stringstream a prefix containing the current filename and 
+                 the current offset of the node specified.
+                Returns the stringstream passed as reference.
+        *****************************************************************************************/
         inline stringstream & PrintErrorPos( stringstream & sstr, const xml_node & errornode )const
         {
             sstr <<m_out.Name() <<", file offset : " <<dec <<nouppercase <<errornode.offset_debug() <<" -> ";
@@ -543,12 +593,14 @@ namespace pmd2
         }
 
         /*****************************************************************************************
-            IncrementAllStringReferencesParameters
-                This increments the value of every single parameters referring to a string id
+            OffsetAllStringReferencesParameters
+                This offsets the index of every single string id parameter used in commands that 
                 we collected so far. It adds the nb of constants to the index, just as the 
-                ssb format expects!
+                ssb format expects! Mainly because the constant table has the 
+                appropriate region specific string table appended at runtime, and it all works
+                as a single table.
         *****************************************************************************************/
-        inline void IncrementAllStringReferencesParameters()
+        inline void OffsetAllStringReferencesParameters()
         {
             const size_t constblocksz = m_constqueue.size();
             for( const auto & entry : m_stringrefparam )
@@ -565,7 +617,7 @@ namespace pmd2
         {
             for( const auto & aconstref : m_labelchecker )
             {
-                if( !aconstref.second.bexists )
+                if( !aconstref.second.bexists ) //If the label was never confirmed to exist
                 {
                     const string & filename = m_out.Name();
                     stringstream sstr;
@@ -613,73 +665,25 @@ namespace pmd2
                                                    <<*ppname <<"\"!!";
                     throw CompileErrorException(sstrer.str(), routinen.offset_debug());
                 }
-                ptype = eOpParamTypes::UNK_Placeholder; //We want to handle it as a regular value
+                ptype = eOpParamTypes::UNK_Placeholder; //We want to handle it as a regular value/placeholder
             }
             else if(!RoutineHasParameter(routinety))
             {
-                //We don't have a parameter value, standard functions never usually have a parameter, so default it to 0.
-                grpout.parameter = 0;
+                grpout.parameter = 0; //We don't have a parameter value, standard functions never usually have a parameter, so default it to 0.
                 return;
             }
             
             uint16_t entid = 0;
-            if( ptype != eOpParamTypes::UNK_Placeholder && !HandleTypedEntityIds(attr, routinen, ptype, entid) )
+            if( ptype != eOpParamTypes::UNK_Placeholder && !HandleTypedEntityIds(attr, routinen, ptype, entid) ) //Handle any parameters referring to an entity of any of the 3 kinds
             {
-                //PRINT ERROR!
+                //If the parameter isn't either a placeholder, or a valid entity type, return an error
                 stringstream sstrer;
                 PrintErrorPos(sstrer,routinen) <<"SSBXMLParser::ParseTypedRoutine(): Routine has an invalid parameter attribute name \"" <<attr.name() <<"\"!!";
                 throw CompileErrorException(sstrer.str(), routinen.offset_debug());
             }
-            else if( ptype == eOpParamTypes::UNK_Placeholder )
-            {
+            else if( ptype == eOpParamTypes::UNK_Placeholder ) //If the parameter is a placeholder, just copy the value as-is
                 entid = ToWord( attr.as_uint() );
-            }
             grpout.parameter = entid;
-
-            //! #TODO: this is redundant, better find a smart way to deal with this..
-            //switch(ptype)
-            //{
-            //    case eOpParamTypes::Unk_LivesRef:
-            //    {
-            //        uint16_t livesid = m_paraminf.LivesInfo(attr.value());
-            //        if(livesid != InvalidLivesID )
-            //            grpout.parameter = livesid;
-            //        else
-            //        {
-            //            slog() <<routinen.path() <<", " <<routinen.offset_debug() 
-            //                    <<" : used invalid \"lives\" id value as a raw integer.\n"; 
-            //            grpout.parameter = ToWord(attr.as_int());
-            //        }
-            //        break;
-            //    }
-            //    case eOpParamTypes::Unk_PerformerRef:
-            //    {
-            //        //!#TODO
-            //        grpout.parameter = ToWord(attr.as_uint());
-            //        break;
-            //    }
-            //    case eOpParamTypes::Unk_ObjectRef:
-            //    {
-            //        try
-            //        {
-            //            grpout.parameter = m_paraminf.StrToObjectID(attr.value()); //! #FIXME: Verify it or somthing?
-            //        }
-            //        catch( const std::exception & )
-            //        {
-            //            stringstream sstrer;
-            //            PrintErrorPos(sstrer,routinen) 
-            //                << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<attr.value() 
-            //                <<", is missing object number! Can't reliably pinpoint the correct object instance!";
-            //            throw_with_nested( CompileErrorException(sstrer.str(), routinen.offset_debug()) );
-            //        }
-            //        break;
-            //    }
-            //    case eOpParamTypes::UNK_Placeholder:
-            //    {
-            //        grpout.parameter = ToWord(attr.as_uint());
-            //        break;
-            //    }
-            //};
         }
 
         /*****************************************************************************************
@@ -697,36 +701,26 @@ namespace pmd2
                 uint16_t routinety = 0;
                 bool     isalias   = NODE_RoutineAlias == routine.name();
 
-                if(isalias)
+                if(isalias) //If routine is an alias, we use the same type as the last routine.
                 {
-                    if(m_out.Routines().empty()) 
+                    if(m_out.Routines().empty()) //If the first routine is an alias, trigger an error.
                     {
                         stringstream sstrer;
                         PrintErrorPos(sstrer,routine) 
                             << "SSBXMLParser::ParseCode(): The first routine cannot be an alias!";
                         throw CompileErrorException(sstrer.str(), routine.offset_debug());
                     }
-                    //If its an alias, the type is held in the type attribute, not the name of the node
-                    //xml_attribute xtype = group.attribute(ATTR_RoutineType.c_str());
-                    //if(!xtype)
-                    //{
-                    //    stringstream sstrer;
-                    //    PrintErrorPos(sstrer,group) 
-                    //        << "SSBXMLParser::ParseCode(): Routine alias is missing its type!";
-                    //    throw std::runtime_error(sstrer.str());
-                    //}
                     routinety = lastroutinetype;
                 }
                 else
                     routinety = StrToRoutineTyInt(routine.name());
                 
-
                 //Parse the attributes and instructions if the routine is a valid type!
                 if(routinety != 0)
                 {
                     ScriptRoutine rtnout;
-                    ParseTypedRoutine(routine, routinety, rtnout, isalias);
-                    if(!isalias)
+                    ParseTypedRoutine(routine, routinety, rtnout, isalias); //Handle routines depending on their type
+                    if(!isalias) //We only handle instructions for non-aliases routines to avoid duplicating instructions.
                     {
                         for( const xml_node & inst : routine )
                             ParseInstruction(inst, rtnout.instructions);
@@ -746,7 +740,7 @@ namespace pmd2
         {
             using namespace scriptXML;
             if( instn.name() == NODE_Instruction )
-                ParseCommand(instn, outcnt);
+                ParseCommand(instn, outcnt);            //! #TODO: Need to merge this with TryParseCommandNode. This was used only during tests before using the command name as node name.
             else if( instn.name() == NODE_MetaLabel )
                 ParseMetaLabel(instn, outcnt);
             else
@@ -838,7 +832,7 @@ namespace pmd2
         /*****************************************************************************************
         *****************************************************************************************/
         template<typename _InstContainer>
-            void ParseCommand(const xml_node & instn, _InstContainer & outcnt)
+            void ParseCommand(const xml_node & instn, _InstContainer & outcnt) //! #TODO: Need to merge this with TryParseCommandNode. This was used only during tests before using the command name as node name.
         {
             using namespace scriptXML;
             xml_attribute name = instn.attribute(ATTR_Name.c_str());
@@ -1166,16 +1160,6 @@ namespace pmd2
             }
             return std::move(name);
         }
-        //{
-        //    string name(cname);
-        //    static const regex ParamNameCleaner(R"((\b\S+(?=_\d)))");
-        //    smatch             matches;
-        //    //First, clean the name of the parameter of any appended number if needed
-        //    if( regex_search( name, matches, ParamNameCleaner ) && matches.size() > 1 )
-        //        name = matches[1].str();
-        //    return std::move(name);
-        //}
-
 
         /*****************************************************************************************
             HandleAConstref
@@ -1281,46 +1265,6 @@ namespace pmd2
                     }
                     break;
                 }
-                //case eOpParamTypes::Unk_LivesRef:
-                //{
-                //    uint16_t actid = m_paraminf.LivesInfo(param.value());
-                //    if(actid != ScriptNullVal)
-                //        outinst.parameters.push_back(actid);
-                //    else
-                //    {
-                //        stringstream sstr; 
-                //        sstr << "Invalid actor name \"" <<param.value() <<"\"! Interpreting value as a raw integer!";
-                //        string msg = sstr.str();
-                //        slog() <<parentinstn.path() <<", " <<parentinstn.offset_debug() <<" : " <<msg <<"\n"; 
-                //        if(m_preportentry)
-                //            m_preportentry->InsertWarning( parentinstn.offset_debug(), std::move(msg) );
-                //        outinst.parameters.push_back( ToWord(param.as_int()) );
-                //    }
-                //    break;
-                //}
-                //case eOpParamTypes::Unk_PerformerRef:
-                //{
-                //    //!#TODO
-                //    outinst.parameters.push_back( ToWord( param.as_uint() ) );
-                //    break;
-                //}
-                //case eOpParamTypes::Unk_ObjectRef:
-                //{
-                //    try
-                //    {
-                //        uint16_t objectid = m_paraminf.StrToObjectID(param.value());
-                //        outinst.parameters.push_back(objectid); //! #FIXME: Verify it or somthing?
-                //    }
-                //    catch( const std::exception & )
-                //    {
-                //        stringstream sstrer;
-                //        PrintErrorPos(sstrer,parentinstn) 
-                //            << "SSBXMLParser::ParseTypedCommandParameterAttribute(): Object id " <<param.value() 
-                //            <<", is missing object number! Can't reliably pinpoint the correct object instance!";
-                //        throw_with_nested( CompileErrorException(sstrer.str(), parentinstn.offset_debug()) );
-                //    }
-                //    break;
-                //}
                 case eOpParamTypes::Unk_LevelId:
                 {
                     uint16_t lvlid = m_paraminf.LevelInfo(param.value());
@@ -1522,7 +1466,6 @@ namespace pmd2
             std::deque<ptrdiff_t>   referersoffsets;    //The offset in the xml of the references to this label
         };
 
-
         unordered_map<uint16_t, labelRefInf>         m_labelchecker;
         deque<string>                                m_constqueue;
         unordered_map<eGameLanguages, deque<string>> m_strqueues;
@@ -1534,7 +1477,6 @@ namespace pmd2
         eGameVersion     m_version;
         eGameRegion      m_region;
         OpCodeClassifier m_opinfo;
-        //LevelEntryInfoWrapper m_lvlentryinf;
         ParameterReferences  m_paraminf;
         const ConfigLoader & m_gconf;
         CompilerReport::compileresult * m_preportentry; //Compiler report entry pointer, when applicable, null otherwise
@@ -1589,7 +1531,7 @@ namespace pmd2
             //Init output data
             m_out = std::move( ScriptData(xname.value(), dataty) );
 
-            ParseTriggers(datan);
+            ParseActions(datan);
             ParsePosMarkers(datan);
             ParseLayers(datan);
 
@@ -1597,15 +1539,15 @@ namespace pmd2
         }
 
     private:
-        void ParseTriggers(xml_node & datan)
+        void ParseActions(xml_node & datan)
         {
             using namespace scriptXML;
             const string & AttrID  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
-            xml_node       unktbl1 = datan.child(NODE_UnkTable1.c_str());
+            xml_node       unktbl1 = datan.child(NODE_ActionTable.c_str());
 
-            for(const auto & curunk1entry : unktbl1.children(NODE_UnkTable1Entry.c_str()) )
+            for(const auto & curunk1entry : unktbl1.children(NODE_ActionTableEntry.c_str()) )
             {
-                TriggerDataEntry entry;
+                ActionDataEntry entry;
                 xml_attribute xcrtnid = curunk1entry.attribute(AttrID.c_str());
                 xml_attribute xunk1   = curunk1entry.attribute(ATTR_Unk1.c_str());
                 xml_attribute xunk2   = curunk1entry.attribute(ATTR_Unk2.c_str());
@@ -1627,7 +1569,7 @@ namespace pmd2
                 else
                 {
                     stringstream sstrer;  
-                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseTriggers(): A trigger entry is missing its  "; 
+                    PrintErrorPos(sstrer,curunk1entry) << "SSDataXMLParser::ParseActions(): A trigger entry is missing its  "; 
                     if(!xcrtnid)
                         sstrer << AttrID <<", ";
                     if(!xunk1)
@@ -1644,7 +1586,7 @@ namespace pmd2
                 if(entry.croutineid == InvalidCRoutineID)
                 {
                     std::stringstream sstr;
-                    sstr << "SSDataXMLParser::ParseTriggers(), offset: " <<curunk1entry.offset_debug() <<": Got invalid common routine name " 
+                    sstr << "SSDataXMLParser::ParseActions(), offset: " <<curunk1entry.offset_debug() <<": Got invalid common routine name " 
                          <<xcrtnid.value() <<"! Interpreting as number instead!";
                     std::string msg = sstr.str();
                     slog()<<msg <<"\n";
@@ -1653,10 +1595,10 @@ namespace pmd2
                     entry.croutineid = ToSWord(xcrtnid.as_int());
                 }
 
-                //TriggerDataEntry entry;
+                //ActionDataEntry entry;
                // xml_attribute xcrtnid = curunk1entry.attribute(ATTR_.c_str());
 
-                m_out.UnkTbl1().push_back(std::move(entry));
+                m_out.ActionTable().push_back(std::move(entry));
 
             }
         }
@@ -1791,10 +1733,10 @@ namespace pmd2
                 {
                     if( attr.name() == ATTR_Direction )
                         entry.facing = m_paraminf.DirectionData(attr.value());
-                    else if( attr.name() == ATTR_Unk2 )
-                        entry.unk2 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk3 )
-                        entry.unk3 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Width )
+                        entry.width = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Height )
+                        entry.height = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_XOffset )
                         entry.xoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_YOffset )
@@ -1819,26 +1761,26 @@ namespace pmd2
                 PerformerDataEntry entry;
                 for( const auto & attr : performer.attributes() )
                 {
-                    if( attr.name() == ATTR_Unk0 )
-                        entry.unk0 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_PerfType )
+                        entry.type = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Direction )
+                        entry.facing = m_paraminf.DirectionData(attr.value());
                     else if( attr.name() == ATTR_Unk2 )
                         entry.unk2 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk3 )
                         entry.unk3 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk4 )
-                        entry.unk4 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk5 )
-                        entry.unk5 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk6 )
                         entry.unk6 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk7 )
                         entry.unk7 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk8 )
-                        entry.unk8 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk9 )
-                        entry.unk9 = ToWord(attr.as_uint());
+                    //else if( attr.name() == ATTR_Unk8 )
+                    //    entry.unk8 = ToWord(attr.as_uint());
+                    //else if( attr.name() == ATTR_Unk9 )
+                    //    entry.unk9 = ToWord(attr.as_uint());
                 }
                 outlay.performers.push_back(std::move(entry));
             }
@@ -1853,42 +1795,52 @@ namespace pmd2
             for( const auto & aevent : evn )
             {
                 EventDataEntry entry;
-                xml_attribute  xevid = aevent.attribute(AttrID.c_str());
-                if(!xevid)
-                {
-                    stringstream sstrer;
-                    PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
-                    throw CompileErrorException(sstrer.str(), aevent.offset_debug());
-                }
+                //xml_attribute  xevid = aevent.attribute(AttrID.c_str());
+                //if(!xevid)
+                //{
+                //    stringstream sstrer;
+                //    PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): Missing " <<AttrID <<" attribute!!";
+                //    throw CompileErrorException(sstrer.str(), aevent.offset_debug());
+                //}
 
-                entry.unk0 = m_paraminf.CRoutine(xevid.value());
-                if(entry.unk0 == InvalidCRoutineID)
-                {
-                    std::stringstream sstr;
-                    sstr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got invalid common routine name " 
-                         <<xevid.value() <<"! Interpreting as number instead!";
-                    std::string msg = sstr.str();
-                    slog()<<msg <<"\n";
-                    if(m_preport)
-                        m_preport->InsertWarning(aevent.offset_debug(), std::move(msg));
-                    entry.unk0 = ToSWord(xevid.as_int());
-                }
+                //entry.croutineid = m_paraminf.CRoutine(xevid.value());
+                //if(entry.croutineid == InvalidCRoutineID)
+                //{
+                //    std::stringstream sstr;
+                //    sstr << "SSDataXMLParser::ParseEvents(), offset: " <<aevent.offset_debug() <<": Got invalid common routine name " 
+                //         <<xevid.value() <<"! Interpreting as number instead!";
+                //    std::string msg = sstr.str();
+                //    slog()<<msg <<"\n";
+                //    if(m_preport)
+                //        m_preport->InsertWarning(aevent.offset_debug(), std::move(msg));
+                //    entry.croutineid = ToSWord(xevid.as_int());
+                //}
 
                 for( const auto & attr : aevent.attributes() )
                 {
-
-                    if( attr.name() == ATTR_Unk1 )
-                        entry.unk1 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk2 )
-                        entry.unk2 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk3 )
-                        entry.unk3 = ToWord(attr.as_uint());
+                    if( attr.name() == ATTR_Width )
+                        entry.width = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_Height )
+                        entry.height = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_XOffset )
+                        entry.xoff = ToSWord(attr.as_uint());
+                    else if( attr.name() == ATTR_YOffset )
+                        entry.yoff = ToSWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk4 )
                         entry.unk4 = ToWord(attr.as_uint());
                     else if( attr.name() == ATTR_Unk5 )
                         entry.unk5 = ToWord(attr.as_uint());
-                    else if( attr.name() == ATTR_Unk6 )
-                        entry.unk6 = ToWord(attr.as_uint());
+                    else if( attr.name() == ATTR_ActionID )
+                    {
+                        entry.actionidx = ToWord(attr.as_uint());
+                        if( entry.actionidx > m_out.ActionTable().size() )
+                        {
+                            stringstream sstrer;
+                            PrintErrorPos(sstrer,aevent) << "SSDataXMLParser::ParseEvents(): The current event has an invalid action index of " <<entry.actionidx 
+                                                         <<", while we have only " <<m_out.ActionTable().size() <<" actions in the action table!";
+                            throw CompileErrorException(sstrer.str(), aevent.offset_debug());
+                        }
+                    }
                 }
                 outlay.events.push_back(std::move(entry));
             }
@@ -1907,65 +1859,160 @@ namespace pmd2
     *****************************************************************************************/
     class GameScriptsXMLParser
     {
+        static const unsigned int XML_ParseSettings = pugi::parse_default | pugi::parse_ws_pcdata_single;
     public:
         GameScriptsXMLParser(eGameRegion & out_reg, eGameVersion & out_gver, const ConfigLoader & conf)
             :m_out_reg(out_reg), m_out_gver(out_gver), m_gconf(conf), m_preport(nullptr)
         {}
 
-        LevelScript Parse( const std::string & file, CompilerReport * reporter = nullptr )
+        inline LevelScript Parse( const std::string & path, const scriptprocoptions & options, CompilerReport * reporter = nullptr )
         {
             using namespace scriptXML;
-            xml_document doc;
-            m_curlvlbasename = utils::GetBaseNameOnly(file);
-            m_preport        = reporter;
+            if(utils::isFolder(path))
+                return std::move(ParseDirectory(path, options, reporter));
+            else
+                return std::move(ParseFile(path, options, reporter));
+        }
+
+            //m_preport = reporter;
+
+            //xml_document doc;
+            //xml_node doc = HandleLoadXMLDoc(file);
+            //m_curfilebasename = utils::GetBaseNameOnly(file);
             
-            if(m_preport)
-                m_preport->InitResult(m_curlvlbasename, utils::MakeAbsolutePath(file)); //Init the entry for this file!
+            //if(m_preport)
+            //    m_preport->InitResult(m_curfilebasename, utils::MakeAbsolutePath(file)); //Init the entry for this file!
 
-            pugi::xml_parse_result parseres;
-            try
-            {
-                //HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
-                parseres = doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single);
-            }
-            catch(const std::exception & ) //This is in case of a fatal error, when pugi throws an exception
-            {
-                if(m_preport)
-                    m_preport->InsertError( m_curlvlbasename, parseres.offset, parseres.description() );
-                throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Fatal error loading file! Pugixml returned an exception!!"));
-            }
+            //pugi::xml_parse_result parseres;
+            //try
+            //{
+            //    //HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
+            //    parseres = doc.load_file(file.c_str(), XML_ParseSettings);
+            //}
+            //catch(const std::exception & ) //This is in case of a fatal error, when pugi throws an exception
+            //{
+            //    if(m_preport)
+            //        m_preport->InsertError( m_curfilebasename, parseres.offset, parseres.description() );
+            //    throw_with_nested(std::runtime_error("GameScriptsXMLParser::Parse() : Fatal error loading file! Pugixml returned an exception!!"));
+            //}
 
-            if(!parseres)
-            {
-                if(m_preport)
-                    m_preport->InsertError( m_curlvlbasename, parseres.offset, parseres.description() );
-                throw std::runtime_error("GameScriptsXMLParser::Parse() : Error while parsing XML.. (offset: " + std::to_string(parseres.offset) + ") " + parseres.description() );
-            }
+            //if(!parseres)
+            //{
+            //    if(m_preport)
+            //        m_preport->InsertError( m_curfilebasename, parseres.offset, parseres.description() );
+            //    throw std::runtime_error("GameScriptsXMLParser::Parse() : Error while parsing XML.. (offset: " + std::to_string(parseres.offset) + ") " + parseres.description() );
+            //}
 
-            xml_node      parentn    = doc.child(ROOT_ScripDir.c_str());
-            xml_attribute xversion   = parentn.attribute(ATTR_GVersion.c_str());
-            xml_attribute xregion    = parentn.attribute(ATTR_GRegion.c_str());
-            //xml_attribute xeventname = parentn.attribute(ATTR_DirName.c_str());
+            //xml_node      parentn    = doc.child(ROOT_ScripDir.c_str());
+            //xml_attribute xversion   = parentn.attribute(ATTR_GVersion.c_str());
+            //xml_attribute xregion    = parentn.attribute(ATTR_GRegion.c_str());
+            ////xml_attribute xeventname = parentn.attribute(ATTR_DirName.c_str());
 
-            m_out_gver = StrToGameVersion(xversion.value());
-            m_out_reg  = StrToGameRegion (xregion.value());
+            //m_out_gver = StrToGameVersion(xversion.value());
+            //m_out_reg  = StrToGameRegion (xregion.value());
+
+            //if( utils::LibWide().isLogOn() )
+            //    slog() << "#Parsing " <<m_curfilebasename <<".xml \n";
+
+            //xml_node parentn = HandleLoadXMLDoc(file, ROOT_ScripDir);
+            //try
+            //{
+            //    LevelScript reslvlscr( m_curfilebasename, 
+            //                         std::move(ParseSets(parentn)),
+            //                         std::move(ParseLSD (parentn)));
+            //    if(m_preport)
+            //        m_preport->InsertSuccess(m_curfilebasename);
+            //    return std::move(reslvlscr);
+            //}
+            //catch( const CompileErrorException & e )
+            //{
+            //    if(m_preport)
+            //        m_preport->InsertError( m_curfilebasename, e.getFileOffset(), e.what() );
+            //    rethrow_exception(current_exception());
+            //}
+            //catch(...)
+            //{
+            //    //If this happens, its not the compiler's problem
+            //    rethrow_exception(current_exception());
+            //}
+        //}
+
+        /*
+            ParseFile
+                Parse a level's script data from a single XML file!
+        */
+        LevelScript ParseFile( const std::string & file, const scriptprocoptions & options, CompilerReport * reporter = nullptr )
+        {
+            using namespace scriptXML;
+            m_preport = reporter;
 
             if( utils::LibWide().isLogOn() )
-                slog() << "#Parsing " <<m_curlvlbasename <<".xml \n";
+                slog() << "#Parsing " <<m_curfilebasename <<".xml \n";
 
+            xml_document doc;
             try
             {
-                LevelScript reslvlscr( m_curlvlbasename, 
+                xml_node    parentn = HandleLoadXMLDoc(doc, file, ROOT_ScripDir);
+                LevelScript reslvlscr( m_curfilebasename, 
                                      std::move(ParseSets(parentn)),
                                      std::move(ParseLSD (parentn)));
                 if(m_preport)
-                    m_preport->InsertSuccess(m_curlvlbasename);
+                    m_preport->InsertSuccess(m_curfilebasename);
                 return std::move(reslvlscr);
             }
             catch( const CompileErrorException & e )
             {
                 if(m_preport)
-                    m_preport->InsertError( m_curlvlbasename, e.getFileOffset(), e.what() );
+                    m_preport->InsertError( m_curfilebasename, e.getFileOffset(), e.what() );
+                rethrow_exception(current_exception());
+            }
+            catch(...)
+            {
+                //If this happens, its not the compiler's problem
+                rethrow_exception(current_exception());
+            }
+        }
+
+
+        /*
+            ParseDirectory
+                Meant to be used when the XML output has been exported to the directory format instead of all into a single file!
+        */
+        LevelScript ParseDirectory( const std::string & directorypath, const scriptprocoptions & options, CompilerReport * reporter = nullptr )
+        {
+            using namespace scriptXML;
+            const string dirname = Poco::Path::transcode(Poco::Path(directorypath).getBaseName());
+            m_curfilebasename   = dirname; //init to this, so if there's an error before the actual current file is set, we'll be able to trace it back to this dir
+            m_preport           = reporter;
+
+            //if( utils::LibWide().isLogOn() )
+            //    slog() << "#Parsing Script Directory " <<dirname <<"/\n";
+
+            LevelScript::lsdtbl_t       lsdtbl;
+            LevelScript::scriptsets_t   scrsets;
+            try
+            {
+                Poco::DirectoryIterator     dit(directorypath);
+                Poco::DirectoryIterator     dendit;
+
+                //Iterate through all XML files
+                for( ; dit != dendit; ++dit )
+                {
+                    if( dit->isFile() && (dit.path().getExtension() == "xml" || dit.path().getExtension() == "XML") )
+                    {
+                        if( dit.path().getBaseName() == FNAME_LSD ) 
+                            LoadSingleLSDFromFile(dirname, dit.path().absolute().toString(), lsdtbl); //Parse LSD
+                        else 
+                            LoadSingleSetFromFile(dirname, dit.path().absolute().toString(), scrsets); //Parse Set
+                    }
+                }
+
+                return std::move(LevelScript( dirname, std::move(scrsets), std::move(lsdtbl) ) );
+            }
+            catch( const CompileErrorException & e )
+            {
+                if(m_preport)
+                    m_preport->InsertError( m_curfilebasename, e.getFileOffset(), e.what() );
                 rethrow_exception(current_exception());
             }
             catch(...)
@@ -1977,11 +2024,143 @@ namespace pmd2
 
     private:
 
-        LevelScript::scriptsets_t ParseSets( xml_node & parentn )
+        /*
+            HandleLoadXMLDoc
+                Load a xml document through pugixml and handle exceptions and dealing with game version the file is for!
+                Returns the specified root node.
+
+                - parentdirname: relevant when importing subfiles. Because most subfiles have similar names between levels. So the level name (parent dir name) is added to the name
+                                 so it can be differentiated from the other compiled files with the same name!
+        */
+        xml_node HandleLoadXMLDoc( xml_document & doc, const std::string & fpath, const std::string & rootnodename, const std::string * parentdirname = nullptr)
         {
             using namespace scriptXML;
-            LevelScript::scriptsets_t sets;
+            //xml_document        doc;
+            xml_parse_result    parseres;
+            stringstream        sstrcurfname;
 
+            if(parentdirname)
+                sstrcurfname <<parentdirname <<"/" <<utils::GetBaseNameOnly(fpath);
+            else
+                sstrcurfname <<utils::GetBaseNameOnly(fpath);
+
+            m_curfilebasename = sstrcurfname.str(); //Set current file for compiler error reporting.
+
+            //Init the entry for this file!
+            if(m_preport)
+                m_preport->InitResult(m_curfilebasename, utils::MakeAbsolutePath(fpath)); 
+
+            try
+            {
+                //HandleParsingError( doc.load_file(file.c_str(), pugi::parse_default | pugi::parse_ws_pcdata_single), file);
+                parseres = doc.load_file(fpath.c_str(), XML_ParseSettings);
+            }
+            catch(const std::exception & ) //This is in case of a fatal error, when pugi throws an exception
+            {
+                if(m_preport)
+                    m_preport->InsertError( m_curfilebasename, parseres.offset, parseres.description() );
+                throw_with_nested(std::runtime_error("GameScriptsXMLParser::HandleLoadXMLDoc() : Fatal error loading file! Pugixml returned an exception!!"));
+            }
+
+            if(!parseres)
+            {
+                if(m_preport)
+                    m_preport->InsertError( m_curfilebasename, parseres.offset, parseres.description() );
+                throw std::runtime_error("GameScriptsXMLParser::HandleLoadXMLDoc() : Error while parsing XML.. (offset: " + std::to_string(parseres.offset) + ") " + parseres.description() );
+            }
+
+            xml_node        parentn     = doc.child(rootnodename.c_str());
+            //xml_attribute   xversion    = doc.attribute(ATTR_GVersion.c_str());
+            //xml_attribute   xregion     = doc.attribute(ATTR_GRegion.c_str());
+            eGameVersion    vertmp      ;//= StrToGameVersion(xversion.value());
+            eGameRegion     regtmp      ;//= StrToGameRegion (xregion.value());
+            string toolsetver;
+            GetPPMDU_RootNodeXMLAttributes( parentn, vertmp, regtmp, toolsetver);
+
+            //Check if the toolset version matches at least the minor and major version!
+            toolkitversion_t tkitver = ParseToolsetVerion(toolsetver);
+            if( tkitver.major != PMD2ToolsetVersionStruct.major || 
+                tkitver.minor != PMD2ToolsetVersionStruct.minor )
+            {
+                stringstream sstr;
+                sstr << "GameScriptsXMLParser::HandleLoadXMLDoc() : XML data was exported with a different version of the library! Version " <<PMD2ToolsetVersion <<" can't parse version \"" <<toolsetver <<"\"!";
+                if(m_preport)
+                    m_preport->InsertError(m_curfilebasename, parentn.offset_debug(), sstr.str());
+                throw std::runtime_error(sstr.str());
+            }
+
+            //Check if the version of the file is valid
+            if( vertmp == eGameVersion::Invalid || regtmp == eGameRegion::Invalid )
+            {
+                stringstream sstr;
+                sstr << "GameScriptsXMLParser::HandleLoadXMLDoc() : Invalid game version or region specified in root node of file \"" <<fpath <<"\"!";
+                if(m_preport)
+                    m_preport->InsertError(m_curfilebasename, parentn.offset_debug(), sstr.str());
+                throw std::runtime_error(sstr.str());
+            }
+            
+            //If we had a previous version set, check if we're still the same version
+            if( (m_out_gver != eGameVersion::Invalid && m_out_reg != eGameRegion::Invalid) && 
+                (m_out_gver != vertmp || m_out_reg != regtmp) )
+            {
+                stringstream sstr;
+                sstr << "GameScriptsXMLParser::HandleLoadXMLDoc() : Game version or region specified in root node of file \"" <<fpath <<"\" doesn't match the other files!";
+                if(m_preport)
+                    m_preport->InsertError(m_curfilebasename, parentn.offset_debug(), sstr.str());
+                throw std::runtime_error(sstr.str());
+            }
+
+            //Setup and return
+            m_out_gver = vertmp;
+            m_out_reg  = regtmp;
+            return std::move(parentn);
+        }
+
+        /*
+        */
+        void LoadSingleSetFromFile( const std::string & lvlname, const std::string & fpath, LevelScript::scriptsets_t & destsets )
+        {
+            using namespace scriptXML;
+
+            if(m_preport)
+                m_preport->SetNbExpected( m_preport->GetNbExpected() + 1 );
+
+            xml_document doc;
+            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_ScriptSet, &lvlname);
+
+            if( utils::LibWide().isLogOn() )
+                slog() << "#Parsing Script Set file " <<m_curfilebasename <<".xml \n";
+            ParseSets(rootn, destsets);
+
+            if(m_preport)
+                m_preport->InsertSuccess(m_curfilebasename);
+        }
+
+        /*
+        */
+        void LoadSingleLSDFromFile( const std::string & lvlname, const std::string & fpath, LevelScript::lsdtbl_t & destlsd )
+        {
+            using namespace scriptXML;
+
+            if(m_preport)
+                m_preport->SetNbExpected( m_preport->GetNbExpected() + 1 );
+
+            xml_document doc;
+            xml_node     rootn = HandleLoadXMLDoc(doc, fpath, ROOT_LSD, &lvlname);
+
+            if( utils::LibWide().isLogOn() )
+                slog() << "#Parsing LSD file " <<m_curfilebasename <<".xml \n";
+            destlsd = ParseLSD(rootn);
+
+            if(m_preport)
+                m_preport->InsertSuccess(m_curfilebasename);
+        }
+
+        /*
+        */
+        void ParseSets( xml_node & parentn, LevelScript::scriptsets_t & sets )
+        {
+            using namespace scriptXML;
             for( auto & curset : parentn.children(NODE_ScriptSet.c_str()) )
             {
                 xml_attribute xname = curset.attribute(ATTR_GrpName.c_str());
@@ -1990,7 +2169,7 @@ namespace pmd2
                     if(utils::LibWide().isLogOn())
                         slog()<<" ->Skipped unnamed set!\n";
                     if(m_preport)
-                        m_preport->InsertWarning( m_curlvlbasename, curset.offset_debug(), "Skipped script set with no name!" );
+                        m_preport->InsertWarning( m_curfilebasename, curset.offset_debug(), "Skipped script set with no name!" );
                     continue;
                 }
                 else if( utils::LibWide().isLogOn() )
@@ -2006,10 +2185,20 @@ namespace pmd2
                 }
                 sets.push_back(std::forward<LevelScript::scriptsets_t::value_type>(outset));
             }
+        }
 
+        /*
+        */
+        inline LevelScript::scriptsets_t ParseSets( xml_node & parentn )
+        {
+            using namespace scriptXML;
+            LevelScript::scriptsets_t sets;
+            ParseSets(parentn, sets);
             return std::move(sets);
         }
 
+        /*
+        */
         LevelScript::lsdtbl_t ParseLSD( xml_node & parentn )
         {
             using namespace scriptXML;
@@ -2047,7 +2236,7 @@ namespace pmd2
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Unamed sequence, skipping!\n";
                 if(m_preport)
-                    m_preport->InsertWarning( m_curlvlbasename, seqn.offset_debug(), "Skipped script with no name!" );
+                    m_preport->InsertWarning( m_curfilebasename, seqn.offset_debug(), "Skipped script with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
@@ -2059,7 +2248,7 @@ namespace pmd2
 
             CompilerReport::compileresult * prepres = nullptr;
             if(m_preport)
-                prepres = &(*m_preport)[m_curlvlbasename];
+                prepres = &(*m_preport)[m_curfilebasename];
             destgrp.Sequences().emplace( std::forward<string>(name), 
                                          std::forward<Script>( SSBXMLParser(m_out_gver, m_out_reg, m_gconf, prepres)(seqn) ) );
         }
@@ -2077,7 +2266,7 @@ namespace pmd2
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Untyped script data, skipping!\n";
                 if(m_preport)
-                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no type!" );
+                    m_preport->InsertWarning( m_curfilebasename, datan.offset_debug(), "Skipped script data with no type!" );
                 return;
             }
             eScrDataTy scrty = StrToScriptDataType(xtype.value());
@@ -2087,7 +2276,7 @@ namespace pmd2
                 if( utils::LibWide().isLogOn() )
                     slog() << "\t*Unamed script data, skipping!\n";
                 if(m_preport)
-                    m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data with no name!" );
+                    m_preport->InsertWarning( m_curfilebasename, datan.offset_debug(), "Skipped script data with no name!" );
                 return;
             }
             else if( utils::LibWide().isLogOn() )
@@ -2116,14 +2305,14 @@ namespace pmd2
                     if( utils::LibWide().isLogOn() )
                         slog() << "\t*Couldn't determine script type. Skipping!\n";
                     if(m_preport)
-                        m_preport->InsertWarning( m_curlvlbasename, datan.offset_debug(), "Skipped script data. Couldn't determine type \"" + string(xtype.value()) + "\"!" );
+                        m_preport->InsertWarning( m_curfilebasename, datan.offset_debug(), "Skipped script data. Couldn't determine type \"" + string(xtype.value()) + "\"!" );
                     return;
                 }
             };
 
             CompilerReport::compileresult * prepres = nullptr;
             if(m_preport)
-                prepres = &(*m_preport)[m_curlvlbasename];
+                prepres = &(*m_preport)[m_curfilebasename];
             destgrp.SetData( SSDataXMLParser(m_gconf,prepres)(datan) );
         }
 
@@ -2132,7 +2321,7 @@ namespace pmd2
         eGameVersion        & m_out_gver;
         const ConfigLoader  & m_gconf;
         CompilerReport      * m_preport;
-        std::string           m_curlvlbasename;
+        std::string           m_curfilebasename;
     };
 
 
@@ -2816,7 +3005,7 @@ namespace pmd2
             AppendAttribute( xdata, ATTR_ScrDatName, m_data.Name());
             AppendAttribute( xdata, ATTR_ScriptType, ScriptDataTypeToStr(m_data.Type()));
 
-            WriteUnkTable1(xdata);
+            WriteActionTable(xdata);
             WritePositionMarkers(xdata);
             WriteLayers(xdata);
         }
@@ -2829,20 +3018,20 @@ namespace pmd2
             return buffer;
         }
 
-        void WriteUnkTable1(xml_node & parentn)
+        void WriteActionTable(xml_node & parentn)
         {
             using namespace scriptXML;
-            if(m_data.UnkTbl1().empty())
+            if(m_data.ActionTable().empty())
                 return;
-            xml_node       xunktbl1 = AppendChildNode(parentn, NODE_UnkTable1);
+            xml_node       xunktbl1 = AppendChildNode(parentn, NODE_ActionTable);
             const string   IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
             array<char,32> buf{0};
 
             size_t cnt = 0;
-            for( const auto & unk1ent : m_data.UnkTbl1() )
+            for( const auto & unk1ent : m_data.ActionTable() )
             {
                 WriteCommentNode( xunktbl1, to_string(cnt) );
-                xml_node xentry = AppendChildNode(xunktbl1, NODE_UnkTable1Entry);
+                xml_node xentry = AppendChildNode(xunktbl1, NODE_ActionTableEntry);
                 const auto * inf = m_paraminf.CRoutine(unk1ent.croutineid);
 
                 if(inf)
@@ -2956,8 +3145,8 @@ namespace pmd2
 
                 AppendAttribute(xobject, IDAttrName, m_paraminf.ObjectIDToStr(entry.objid) );
                 AppendAttribute(xobject, ATTR_Direction, m_paraminf.DirectionData(entry.facing) );
-                AppendAttribute(xobject, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xobject, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xobject, ATTR_Width,   entry.width );
+                AppendAttribute(xobject, ATTR_Height,  entry.height );
                 AppendAttribute(xobject, ATTR_XOffset, entry.xoff );
                 AppendAttribute(xobject, ATTR_YOffset, entry.yoff );
                 AppendAttribute(xobject, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
@@ -2983,25 +3172,16 @@ namespace pmd2
             {
                 WriteCommentNode( xperfs, to_string(cnt) );
                 xml_node xperf = AppendChildNode( xperfs, NODE_Performer );
-
-                //const livesent_info * inf    = m_paraminf.LivesInfo(actor.livesid);
-                //assert(inf);
-
-                //if(inf)
-                //    AppendAttribute(xactor, IDAttrName, inf->name);
-                //else
-                //    AppendAttribute(xactor, IDAttrName, actor.livesid);
-
-                AppendAttribute(xperf, ATTR_Unk0, MakeHexa(entry.unk0,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk7, MakeHexa(entry.unk7,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk8, MakeHexa(entry.unk8,buf.data()) );
-                AppendAttribute(xperf, ATTR_Unk9, MakeHexa(entry.unk9,buf.data()) );
+                AppendAttribute(xperf, ATTR_PerfType,   entry.type );
+                AppendAttribute(xperf, ATTR_Direction,  m_paraminf.DirectionData(entry.facing) );
+                AppendAttribute(xperf, ATTR_Unk2,       MakeHexa(entry.unk2,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk3,       MakeHexa(entry.unk3,buf.data()) );
+                AppendAttribute(xperf, ATTR_XOffset,    entry.xoff );
+                AppendAttribute(xperf, ATTR_YOffset,    entry.yoff );
+                AppendAttribute(xperf, ATTR_Unk6,       MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xperf, ATTR_Unk7,       MakeHexa(entry.unk7,buf.data()) );
+                //AppendAttribute(xperf, ATTR_Unk8,       MakeHexa(entry.unk8,buf.data()) );
+                //AppendAttribute(xperf, ATTR_Unk9,       MakeHexa(entry.unk9,buf.data()) );
                 ++cnt;
             }
         }
@@ -3016,25 +3196,19 @@ namespace pmd2
             xml_node        xevents     = AppendChildNode( parentn, NODE_Events );
             size_t          cnt         = 0;
             const string    IDAttrName  = *OpParamTypesToStr(eOpParamTypes::Unk_CRoutineId);
-            array<char,32>  buf{0};
+            array<char,32>  buf{0}; //Temporary buffer for conversion ops
 
             for( const auto & entry : layer.events )
             {
                 WriteCommentNode( xevents, to_string(cnt) );
                 xml_node     xevent = AppendChildNode( xevents, NODE_Event );
-                const auto * inf = m_paraminf.CRoutine(entry.unk0);
-
-                if(inf)
-                    AppendAttribute(xevent, IDAttrName, inf->name);
-                else
-                    AppendAttribute(xevent, IDAttrName, entry.unk0);
-
-                AppendAttribute(xevent, ATTR_Unk1, MakeHexa(entry.unk1,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk2, MakeHexa(entry.unk2,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk3, MakeHexa(entry.unk3,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk4, MakeHexa(entry.unk4,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk5, MakeHexa(entry.unk5,buf.data()) );
-                AppendAttribute(xevent, ATTR_Unk6, MakeHexa(entry.unk6,buf.data()) );
+                AppendAttribute(xevent, ATTR_Width,     entry.width );
+                AppendAttribute(xevent, ATTR_Height,    entry.height );
+                AppendAttribute(xevent, ATTR_XOffset,   entry.xoff );
+                AppendAttribute(xevent, ATTR_YOffset,   entry.yoff );
+                AppendAttribute(xevent, ATTR_Unk4,      MakeHexa(entry.unk4,buf.data()) );
+                AppendAttribute(xevent, ATTR_Unk5,      MakeHexa(entry.unk5,buf.data()) );
+                AppendAttribute(xevent, ATTR_ActionID, entry.actionidx );
                 ++cnt;
             }
         }
@@ -3053,10 +3227,25 @@ namespace pmd2
     {
     public:
         GameScriptsXMLWriter( const LevelScript & set, const ConfigLoader & conf )
-            :m_scrset(set), m_gconf(conf)
+            :m_scrset(set), m_gconf(conf), m_xmlflags(pugi::format_default)
         {}
 
-        void Write(const std::string & destdir, const scriptprocoptions & options )
+        /*
+            Write
+        */
+        inline void Write(const std::string & destdir, const scriptprocoptions & options )
+        {
+            if(options.basdir)
+                WriteAsDirectory(destdir, options);
+            else
+                WriteAsFile(destdir, options);
+        }
+
+        /*
+            WriteAsFile
+                Write the content of the level's script data to a single XML file.
+        */
+        void WriteAsFile(const std::string & destdir, const scriptprocoptions & options )
         {
             using namespace scriptXML;
             m_options = options;
@@ -3064,24 +3253,99 @@ namespace pmd2
             sstrfname << utils::TryAppendSlash(destdir) <<m_scrset.Name() <<".xml";
             xml_document doc;
             xml_node     xroot = doc.append_child( ROOT_ScripDir.c_str() );
-            AppendAttribute( xroot, ATTR_GVersion, GetGameVersionName(m_gconf.GetGameVersion().version) );
-            AppendAttribute( xroot, ATTR_GRegion,  GetGameRegionNames(m_gconf.GetGameVersion().region) );
 
+            SetPPMDU_RootNodeXMLAttributes(xroot, m_gconf.GetGameVersion().version, m_gconf.GetGameVersion().region);
             //Write stuff
             WriteLSDTable(xroot);
 
             for( const auto & entry : m_scrset.Components() )
                 WriteSet(xroot,entry);
 
-            const unsigned int flag = (m_options.bescapepcdata)? pugi::format_default  :
+            m_xmlflags = (m_options.bescapepcdata)? pugi::format_default  :
                                         pugi::format_indent | pugi::format_no_escapes;
             //Write doc
-            if( ! doc.save_file( sstrfname.str().c_str(), "    "/*"\t"*/, flag, pugi::encoding_utf8 ) )
+            if( ! doc.save_file( sstrfname.str().c_str(), "    "/*"\t"*/, m_xmlflags, pugi::encoding_utf8 ) )
                 throw std::runtime_error("GameScriptsXMLWriter::Write(): PugiXML can't write xml file " + sstrfname.str());
+        }
+
+        /*
+            WriteAsDirectory
+                Write the content of the level's script data to a directory with sub-files instead of a single XML file.
+        */
+        void WriteAsDirectory(const std::string & destdir, const scriptprocoptions & options )
+        {
+            using namespace scriptXML;
+            m_options = options;
+            stringstream sstrdirname;
+            sstrdirname << utils::TryAppendSlash(destdir) <<m_scrset.Name();
+            const string newdestdir = sstrdirname.str();
+            utils::DoCreateDirectory(newdestdir);
+            m_xmlflags = (m_options.bescapepcdata)? pugi::format_default  :
+                           pugi::format_indent | pugi::format_no_escapes;
+            //Write stuff
+            WriteLSDAsFile(newdestdir);
+
+            for( const auto & entry : m_scrset.Components() )
+                WriteSetAsFile(entry, newdestdir);
         }
 
     private:
 
+        /*
+            WriteSetAsFile
+                Write a set into its own XML file named after its set identifier.
+                It creates a new file within the specified directory.
+        */
+        void WriteSetAsFile(const ScriptSet & set, const std::string & destdir)
+        {
+            using namespace scriptXML;
+            xml_document doc;
+            xml_node     xroot = doc.append_child( ROOT_ScriptSet.c_str() );
+            stringstream sstrfname;
+
+            sstrfname <<utils::TryAppendSlash(destdir);
+            //string name;
+            if( set.Data() )
+                sstrfname <<set.Data()->Name();
+            else
+                sstrfname <<set.Identifier();
+            //std::transform( name.begin(), name.end(), std::ostream_iterator<char>(sstrfname), std::bind(std::tolower<char>, std::placeholders::_1, std::cref(std::locale::classic()) ) );
+            sstrfname <<".xml";
+
+            SetPPMDU_RootNodeXMLAttributes(xroot, m_gconf.GetGameVersion().version, m_gconf.GetGameVersion().region);
+            WriteSet(xroot, set);
+
+            //Write doc
+            if( ! doc.save_file( sstrfname.str().c_str(), "    ", m_xmlflags, pugi::encoding_utf8 ) )
+                throw std::runtime_error("GameScriptsXMLWriter::WriteSetAsFile(): PugiXML can't write xml file " + sstrfname.str());
+        }
+
+        /*
+            WriteLSDAsFile
+                Write the LSD table to its own file.
+        */
+        void WriteLSDAsFile(const std::string & destdir)
+        {
+            if( m_scrset.LSDTable().empty() )
+                return;
+
+            using namespace scriptXML;
+            //use special lsd name
+            xml_document doc;
+            xml_node     xroot = doc.append_child( ROOT_LSD.c_str() );
+            stringstream sstrfname;
+            sstrfname <<utils::TryAppendSlash(destdir) <<FNAME_LSD <<".xml";
+
+            SetPPMDU_RootNodeXMLAttributes(xroot, m_gconf.GetGameVersion().version, m_gconf.GetGameVersion().region);
+            WriteLSDTable(xroot);
+
+            //Write doc
+            if( ! doc.save_file( sstrfname.str().c_str(), "    ", m_xmlflags, pugi::encoding_utf8 ) )
+                throw std::runtime_error("GameScriptsXMLWriter::WriteLSDAsFile(): PugiXML can't write xml file " + sstrfname.str());
+        }
+
+        /*
+        */
         void WriteSet( xml_node & parentn, const ScriptSet & set )
         {
             using namespace scriptXML;
@@ -3105,6 +3369,8 @@ namespace pmd2
                 WriteSSBContent(xgroup, seq.second);
         }
 
+        /*
+        */
         void WriteLSDTable( xml_node & parentn )
         {
             using namespace scriptXML;
@@ -3119,6 +3385,8 @@ namespace pmd2
             }
         }
 
+        /*
+        */
         inline void WriteSSBContent( xml_node & parentn, const Script & seq )
         {
             using namespace scriptXML;
@@ -3130,6 +3398,8 @@ namespace pmd2
             SSBXMLWriter(seq,  m_gconf, m_options)(parentn);
         }
 
+        /*
+        */
         inline void WriteSSDataContent( xml_node & parentn, const ScriptData & dat )
         {
             using namespace scriptXML;
@@ -3168,6 +3438,7 @@ namespace pmd2
         const LevelScript       & m_scrset;
         const ConfigLoader      & m_gconf;
         scriptprocoptions         m_options;
+        unsigned int              m_xmlflags;
     };
 
 //==============================================================================
@@ -3183,7 +3454,8 @@ namespace pmd2
                             string             fname, 
                             string             dest, 
                             atomic<uint32_t> & completed,
-                            CompilerReport   & reporter)
+                            CompilerReport   & reporter,
+                            const scriptprocoptions & options)
     {
         if( utils::LibWide().isLogOn() )
             slog() <<"##### Importing " << fname <<" #####\n";
@@ -3191,7 +3463,7 @@ namespace pmd2
         {
             eGameRegion  tempregion  = eGameRegion::Invalid;
             eGameVersion tempversion = eGameVersion::Invalid;
-            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname,&reporter) ) );
+            gs.WriteScriptSet( std::move( GameScriptsXMLParser(tempregion,tempversion, gs.GetConfig()).Parse(fname, options,&reporter) ) );
             if( tempregion != gs.Region() || tempversion != gs.Version() )
                 throw std::runtime_error("GameScripts::ImportXML(): Event " + fname + " from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
         }
@@ -3267,11 +3539,11 @@ namespace pmd2
                               GameScripts & out_dest, const 
                               scriptprocoptions & options )
     {
-        if(out_dest.m_setsindex.empty())
+        if( out_dest.m_common.Components().empty() && out_dest.m_setsindex.empty())
             throw std::runtime_error("ImportXMLGameScripts(): No script data to load to!!");
 
-        decltype(out_dest.Region())  tempregion;
-        decltype(out_dest.Version()) tempversion;
+        eGameRegion                  tempregion  = eGameRegion::Invalid;
+        eGameVersion                 tempversion = eGameVersion::Invalid;
         atomic_bool                  shouldUpdtProgress = true;
         atomic<uint32_t>             completed = 0;
         future<void>                 updatethread;
@@ -3281,8 +3553,11 @@ namespace pmd2
             cout<<"<*>- Loading COMON.xml..\n";
 
         stringstream commonfilename;
-        commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon <<".xml";
-        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str(), &reporter) );
+        commonfilename <<utils::TryAppendSlash(dir) <<DirNameScriptCommon;
+        if(!options.basdir)
+            commonfilename<<".xml";
+
+        out_dest.m_common = std::move( GameScriptsXMLParser(tempregion, tempversion, out_dest.GetConfig()).Parse(commonfilename.str(), options, &reporter) );
 
         if( tempregion != out_dest.Region() || tempversion != out_dest.Version() )
             throw std::runtime_error("GameScripts::ImportXML(): The COMMON event from the wrong region or game version was loaded!! Ensure the version and region attributes are set properly!!");
@@ -3312,52 +3587,80 @@ namespace pmd2
         if(utils::LibWide().isLogOn())
             slog() << "<*>- Listing XML to import..\n";
         size_t cntdir = 0;
-        while( dirit != dirend )
-        {
-            if( dirit->isFile() && 
-                dirit.path().getExtension() == "xml" && 
-                dirit.path().getBaseName() != DirNameScriptCommon ) //Skip COMMON.xml since we handled it already!
-            {
 
-                Poco::Path destination(out_dest.GetScriptDir());
-                destination.append(dirit.path().getBaseName());
-                taskhandler.QueueTask( utils::AsyncTaskHandler::task_t( std::bind( RunLevelXMLImport, 
-                                                                     std::ref(out_dest), 
-                                                                     dirit->path(), 
-                                                                     destination.toString(),
-                                                                     std::ref(completed),
-                                                                     std::ref(reporter) ) ) );
-                if(utils::LibWide().isLogOn())
-                    slog() << "\t+ " <<dirit.path().getFileName() <<"\n";
-                ++cntdir;
+
+        if(options.basdir) //Load as directories
+        {
+            while( dirit != dirend )
+            {
+                if( dirit->isDirectory() && 
+                   dirit.path().getBaseName() != DirNameScriptCommon )  //Skip COMMON.xml since we handled it already!
+                {
+                    Poco::Path destination(out_dest.GetScriptDir());
+                    destination.append(dirit.path().getBaseName());
+                    taskhandler.QueueTask( utils::AsyncTaskHandler::task_t( std::bind( RunLevelXMLImport, 
+                                                                         std::ref(out_dest), 
+                                                                         dirit->path(), 
+                                                                         destination.toString(),
+                                                                         std::ref(completed),
+                                                                         std::ref(reporter),
+                                                                         std::cref(options)) ) );
+                    if(utils::LibWide().isLogOn())
+                        slog() << "\t+ " <<dirit.path().getBaseName() <<"\n";
+                    ++cntdir;
+                }
+                ++dirit;
             }
-            ++dirit;
         }
+        else //Load as files
+        {
+            while( dirit != dirend )
+            {
+                if( dirit->isFile() &&
+                    dirit.path().getExtension() == "xml" && 
+                    dirit.path().getBaseName() != DirNameScriptCommon ) //Skip COMMON.xml since we handled it already!
+                {
+
+                    Poco::Path destination(out_dest.GetScriptDir());
+                    destination.append(dirit.path().getBaseName());
+                    taskhandler.QueueTask( utils::AsyncTaskHandler::task_t( std::bind( RunLevelXMLImport, 
+                                                                         std::ref(out_dest), 
+                                                                         dirit->path(), 
+                                                                         destination.toString(),
+                                                                         std::ref(completed),
+                                                                         std::ref(reporter),
+                                                                         std::cref(options)) ) );
+                    if(utils::LibWide().isLogOn())
+                        slog() << "\t+ " <<dirit.path().getFileName() <<"\n";
+                    ++cntdir;
+                }
+                ++dirit;
+            }
+        }
+
         if(utils::LibWide().isLogOn())
             slog() << "Done listing " <<cntdir <<" entries\n\n";
         try
         {
-            if(utils::LibWide().ShouldDisplayProgress())
+            if( !taskhandler.empty() )
             {
-                assert(!out_dest.m_setsindex.empty());
-                cout<<"\n<*>- Compiling Scripts..\n";
-                std::packaged_task<void()> task( std::bind(&PrintProgressLoop, 
-                                                           std::ref(completed), 
-                                                           out_dest.m_setsindex.size(), 
-                                                           std::ref(shouldUpdtProgress)) );
-                updatethread = std::move(task.get_future());
-                std::thread(std::move(task)).detach();
-                //updtProgress = std::async( std::launch::async, 
-                //                           PrintProgressLoop, 
-                //                           std::ref(completed), 
-                //                           out_dest.m_setsindex.size(), 
-                //                           std::ref(shouldUpdtProgress) );
+                if(utils::LibWide().ShouldDisplayProgress())
+                {
+                    assert(!out_dest.m_setsindex.empty());
+                    cout<<"\n<*>- Compiling Scripts..\n";
+                    std::packaged_task<void()> task( std::bind(&PrintProgressLoop, 
+                                                               std::ref(completed), 
+                                                               taskhandler.size(), 
+                                                               std::ref(shouldUpdtProgress)) );
+                    updatethread = std::move(task.get_future());
+                    std::thread(std::move(task)).detach();
+                }
+                if(utils::LibWide().isLogOn())
+                    slog() << "Running import tasks..\n";
+                taskhandler.Start();
+                taskhandler.WaitTasksFinished();
+                taskhandler.WaitStop();
             }
-            if(utils::LibWide().isLogOn())
-                slog() << "Running import tasks..\n";
-            taskhandler.Start();
-            taskhandler.WaitTasksFinished();
-            taskhandler.WaitStop();
 
             shouldUpdtProgress = false;
             if(updatethread.valid())
@@ -3367,7 +3670,10 @@ namespace pmd2
 
             ofstream outputresult( utils::MakeAbsolutePath( utils::LibWide().StringValue(ScriptCompilerReportFname), utils::LibWide().StringValue(utils::lwData::eBasicValues::ProgramLogDir) ) );
             outputresult.exceptions(std::ios::badbit);
-            reporter.PrintErrorReport(outputresult, out_dest.m_setsindex.size() + 1); //Add one for the unionall.ssb script!
+
+            if( !options.basdir ) //We need to specify the nb when imported as XML files
+                reporter.SetNbExpected( cntdir + 1 ); //Add one for the unionall.ssb script!
+            reporter.PrintErrorReport(outputresult); 
         }
         catch(...)
         {
@@ -3475,7 +3781,7 @@ namespace pmd2
                                 eGameVersion        & out_gver, 
                                 const ConfigLoader  & gconf  )
     {
-        return std::move( GameScriptsXMLParser(out_reg, out_gver, gconf).Parse(srcdir) );
+        return std::move( GameScriptsXMLParser(out_reg, out_gver, gconf).Parse(srcdir, DefConfigOptions) );
     }
 
     /*

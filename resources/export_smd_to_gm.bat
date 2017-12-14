@@ -1,1 +1,0 @@
-ppmd_audioutil.exe "%1" "./%1.mid" -cvinfo "pmd2_tracks_converstion_info.xml"

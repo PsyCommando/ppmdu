@@ -76,6 +76,8 @@ namespace pmd2
         "Spanish",
     }};
 
+    const toolkitversion_t PMD2ToolsetVersionStruct{0,1,0};
+
     /*
         Directories present in all versions of PMD2
     */
@@ -667,5 +669,29 @@ namespace pmd2
         return str;
     }
 
+
+    toolkitversion_t ParseToolsetVerion( const std::string & verstxt )
+    {
+        static const regex ExtractVersion("(\\d+)\\.(\\d+)\\.(\\d+)");
+        static const regex ExtractNumber("(\\d+)");
+
+        if( !std::regex_match(verstxt, ExtractVersion) )
+            throw std::runtime_error("ParseToolsetVerion(): Invalid toolset version string format!");
+
+        std::sregex_iterator it(verstxt.begin(), verstxt.end(), ExtractNumber);
+        std::sregex_iterator end;
+        if( std::distance(it, end) == 3 )
+        {
+            toolkitversion_t tver;
+            tver.major = stoi(it->str());
+            ++it;
+            tver.minor = stoi(it->str());
+            ++it;
+            tver.patch = stoi(it->str());
+            return std::move(tver);
+        }
+        else
+            throw std::runtime_error("ParseToolsetVerion(): Invalid toolset version string!");
+    }
 
 };

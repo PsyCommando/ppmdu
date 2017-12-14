@@ -31,6 +31,7 @@ namespace pmd2{ namespace graphics
         sprInvalid,
         spr4bpp,
         spr8bpp,
+        sprnoimg,
     };
 
     /*
@@ -42,6 +43,8 @@ namespace pmd2{ namespace graphics
         Character = 1,
         Unknown   = 2,
         WAT_fmt   = 3,
+
+        NbTypes,
     };
 
 //=========================================================================================
@@ -164,7 +167,7 @@ namespace pmd2{ namespace graphics
             unk1       = 0;
         }
 
-        //--- References handling ---
+        // --- References handling ---
         inline unsigned int       getNbRefs()const                  { return m_animFrmsRefer.size(); }
         inline const animrefs_t & getRef( unsigned int index )const { return m_animFrmsRefer[index]; }
 

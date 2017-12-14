@@ -162,7 +162,7 @@ namespace gimg
         typedef utils::index_iterator<tiled_image>                  iterator;
         typedef utils::const_index_iterator<const tiled_image>      const_iterator;
 
-        //------ Construction ------
+        // ------ Construction ------
         tiled_image() throw()
             :m_totalNbPixels(0), m_pixelWidth(0), m_pixelHeight(0),m_nbTileRows(0), m_nbTileColumns(0)
         {
@@ -233,7 +233,7 @@ namespace gimg
             other->m_nbTileRows    = 0;
         }
 
-        //------ Methods ------
+        // ------ Methods ------
         //Access the image data like a linear 1D array
         inline pixel_t & operator[]( unsigned int pos )
         {
@@ -402,7 +402,7 @@ namespace gimg
         typedef tiled_indexed_image<_PIXEL_T,_COLOR_T,_TILE_Height,_TILE_Width> _myty;
         typedef tiled_image<_PIXEL_T, _TILE_Height, _TILE_Width>                _parentty;
 
-        //------ Constructors ------
+        // ------ Constructors ------
         tiled_indexed_image()
             :_parentty(), m_palette(pixel_t::mypixeltrait_t::MAX_VALUE_PER_COMPONEMENT)
         {}
@@ -455,7 +455,7 @@ namespace gimg
             _parentty::moveFrom( dynamic_cast<_myty*>(other) );
         }
 
-        //------ Methods ------
+        // ------ Methods ------
         //Accessors
         inline std::vector<pal_color_t>       & getPalette()                                         { return m_palette; }
         inline const std::vector<pal_color_t> & getPalette()const                                    { return m_palette; }
@@ -537,7 +537,7 @@ namespace gimg
                             _TILED_IMG_T        &out_img,
                             bool                 invertpixelorder = false )
     {
-        //--> Inverting pixel order on pixels that overflow over one or several bytes isn't supported right now !! <--
+        // --> Inverting pixel order on pixels that overflow over one or several bytes isn't supported right now !! <--
         if( invertpixelorder && _TILED_IMG_T::pixel_t::GetBitsPerPixel() > 8 && ( ( 8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel() ) != 0 ) )
         {
             //#TODO: Specialize the temtplate when needed!
@@ -625,7 +625,7 @@ namespace gimg
     template<class _TILED_IMG_T, class _outit>
         void WriteTiledImg( _outit itBegByte, _outit itEndByte, const _TILED_IMG_T & img, bool invertpixelorder = false )
     {
-        //--> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
+        // --> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
         if( invertpixelorder && (_TILED_IMG_T::pixel_t::GetBitsPerPixel() > 8) && (8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel()) != 0 )
         {
             throw std::exception( "WriteTiledImg(): Inverting pixel order on pixels that overflow over one or several bytes isn't supported right now !!" ); //#TODO: Specialize the temtplate when needed!
@@ -710,7 +710,7 @@ namespace gimg
     template<class _TILED_IMG_T, class _backinsertit>
         void WriteTiledImg( _backinsertit itWhere, const _TILED_IMG_T & img, bool invertpixelorder = false )
     {
-        //--> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
+        // --> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
         if( invertpixelorder )
         {
             assert( ( 8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel() ) == 0 ); //#TODO: Specialize the temtplate when needed!
@@ -796,7 +796,7 @@ namespace gimg
     template<class _TILED_IMG_T>
         void OutputRawImageAsTiled( const _TILED_IMG_T & img, const std::string & filepath, bool invertpixelorder = false )
     {
-        //--> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
+        // --> Inverting pixel order on pixels that overflow over several bytes isn't supported right now !! <--
         if( invertpixelorder )
         {
             assert( ( 8u % _TILED_IMG_T::pixel_t::GetBitsPerPixel() ) == 0 ); //#TODO: Specialize the temtplate when needed!
