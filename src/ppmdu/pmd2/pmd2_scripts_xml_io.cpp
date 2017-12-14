@@ -459,7 +459,7 @@ namespace pmd2
             {
                 sstr <<"!Warning: "
                      <<"(offset: " <<warn.fileoffset <<", line: " <<warn.linenumber + 1 <<") : " 
-                     <<warn.message <<"\Line:\n" <<warn.line <<"\n" 
+                     <<warn.message <<"\nLine:\n" <<warn.line <<"\n" 
                      <<std::setw(warn.charonline) <<"^(" <<warn.charonline <<")\n";
             }
             return sstr.str();

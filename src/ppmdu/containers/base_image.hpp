@@ -14,6 +14,7 @@ Description: Base class for tiled_image and linear_image.
 #include <array>
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 
 namespace gimg
 {
@@ -736,7 +737,7 @@ namespace gimg
             NOTE: This does not provide any way of inverting pixel "endianness" or actual endianness !
     */
     template<class _ContainerType>
-        class PxlReadIter : public std::_Outit
+        class PxlReadIter : public std::iterator<std::output_iterator_tag, typename _ContainerType::value_type>
     {
     public:
         
@@ -822,7 +823,7 @@ namespace gimg
     */
 
     template< class _PIXEL_T, class _ByteContainerType >
-        class PxlWriteIter : public std::_Outit
+        class PxlWriteIter : public std::iterator<std::output_iterator_tag, typename _ByteContainerType::value_type>
     {
     public:
         
