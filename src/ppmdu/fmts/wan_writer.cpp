@@ -36,7 +36,7 @@ namespace filetypes
 
         //Fill Structures
         FillFileInfoStructures(); //Fill up the structs
-            
+
         //Allocate
         AllocateAndEstimateResultLength();
 
@@ -78,7 +78,7 @@ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    void WAN_Writer::write( const std::string     & outputpath, 
+    void WAN_Writer::write( const std::string     & outputpath,
                            std::atomic<uint32_t> * pProgress )
     {
         vector<uint8_t> outvec = write( pProgress );
@@ -127,10 +127,10 @@ namespace filetypes
         //m_AnimSequenceOffsets    .reserve( nbAnimSequences                     );
         m_AnimSequencesListOffset.reserve( nbAnimSequencePtrTables             );
         m_CompImagesTblOffsets   .reserve( m_pSprite->getNbFrames()            );
-        m_ptrOffsetTblToEncode     .reserve( MINIMUM_REQUIRED_NB_POINTERS + 
-                                            m_pSprite->getMetaFrmsGrps().size() + 
-                                            nbAnimSequences + 
-                                            nbAnimSequencePtrTables + 
+        m_ptrOffsetTblToEncode     .reserve( MINIMUM_REQUIRED_NB_POINTERS +
+                                            m_pSprite->getMetaFrmsGrps().size() +
+                                            nbAnimSequences +
+                                            nbAnimSequencePtrTables +
                                             m_pSprite->getNbFrames() );
 
         //Estimate final size to allocate output buffer
@@ -163,24 +163,24 @@ namespace filetypes
 
         //AnimGrpTable is literally nbanimgrp * 8 bytes.
         totalSize += ( m_pSprite->getAnimGroups().size() * 8 );
-            
+
         //Img data table is nbimages * 4 bytes
         totalSize += (m_pSprite->getNbFrames() * 4);
 
         //AnimInfo is 24 bytes
         //ImgDataInfo is 16 bytes
         //Wan reader is 12 bytes
-        totalSize += wan_sub_header::DATA_LEN + 
-                        wan_anim_info::DATA_LEN + 
+        totalSize += wan_sub_header::DATA_LEN +
+                        wan_anim_info::DATA_LEN +
                         wan_img_data_info::DATA_LEN;
 
-        // if the size at this point isn't divisible by 16, factor in padding bytes to make it so. 
+        // if the size at this point isn't divisible by 16, factor in padding bytes to make it so.
         totalSize = CalcClosestHighestDenominator( totalSize, 16 );
 
         //Worst case scenario size is m_ptrOffsetTblToEncode.capacity() * 4 bytes
         totalSize += (m_ptrOffsetTblToEncode.capacity() * 4);
 
-        // if the size at this point isn't divisible by 16, factor in padding bytes to make it so. 
+        // if the size at this point isn't divisible by 16, factor in padding bytes to make it so.
         totalSize = CalcClosestHighestDenominator( totalSize, 16 );
 
         m_outBuffer.reserve( totalSize );
@@ -188,10 +188,10 @@ namespace filetypes
 
     /**************************************************************
         WriteAPointer
-            To make things simpler, always use this method to 
-            write the value of a pointer to the buffer at the 
+            To make things simpler, always use this method to
+            write the value of a pointer to the buffer at the
             current pos !
-            It will automatically add an entry to the pointer 
+            It will automatically add an entry to the pointer
             offset table !
     **************************************************************/
     void WAN_Writer::WriteAPointer( uint32_t val )
@@ -323,21 +323,21 @@ namespace filetypes
 
     /**************************************************************
         This insert the next sequence into the zero strip table.
-        If its a sequence of zero, it won't write into the pixel 
-        strip table. If it is, it will.    
+        If its a sequence of zero, it won't write into the pixel
+        strip table. If it is, it will.
     **************************************************************/
-    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntry( std::vector<uint8_t>::const_iterator & itReadAt,
                                                         std::vector<uint8_t>::const_iterator   itEnd,
                                                         std::vector<uint8_t>                 & pixStrips,
-                                                        uint32_t                             & totalbytecnt, 
-                                                        uint32_t                               imgZIndex ) 
+                                                        uint32_t                             & totalbytecnt,
+                                                        uint32_t                               imgZIndex )
     {
         static const unsigned int MIN_Increments = 0x20; //Minimum increments of 32 bytes
         auto lambdaIsZero    =  []( uint8_t val )->bool{ return (val == 0); };
         auto itReadAtBefore  = itReadAt; //This is to hold the last read position for the duration of this function
-        auto itCurPos        = itReadAt; //This is to iterate over the data, without modifying itReadAt just yet! 
+        auto itCurPos        = itReadAt; //This is to iterate over the data, without modifying itReadAt just yet!
         std::advance( itCurPos, MIN_Increments );
-            
+
         //See if we're dealing with a sequence of zeroes or not!
         bool isZeroSeq = std::all_of( itReadAtBefore, itCurPos, lambdaIsZero );
 
@@ -348,7 +348,7 @@ namespace filetypes
         //Try to get other blocks of the same kind !
         while( itCurPos != itEnd )
         {
-            std::advance( itCurPos, MIN_Increments ); //This will throw an exception if the pixel count isn't divisible by our ammount of increment
+            std::advance( itCurPos, MIN_Increments ); //This will throw an exception if the pixel count isn't divisible by our ammount of increment #FIXME : No it won't past me
 
             //Check if the newly added bytes are the same kind of bytes we're looking for!
             if( isZeroSeq == std::all_of( itLastSeqBeg, itCurPos, lambdaIsZero ) )
@@ -373,7 +373,7 @@ namespace filetypes
         //auto dist = std::distance( itReadAtBefore, itLastSeqBeg );
 
         //Get only the actual sequence's data we're sure of between itReadAtBefore and itLastSeqBeg
-        
+
 
         totalbytecnt += myentry.pixamt;
 
@@ -391,7 +391,7 @@ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt, 
+    WAN_Writer::ImgAsmTbl_WithOpTy WAN_Writer::MakeImgAsmTableEntryNoStripping( vector<uint8_t>::const_iterator & itReadAt,
                                                                                       vector<uint8_t>::const_iterator   itEnd,
                                                                                       vector<uint8_t>                 & pixStrips,
                                                                                       uint32_t                        & totalbytecnt,
@@ -417,7 +417,7 @@ namespace filetypes
         uint32_t imgbegoffset = m_outBuffer.size(); //Keep the offset before to offset the entries in the assembly table !
 
         vector<uint8_t>                 pixelstrips;
-        vector<ImgAsmTbl_WithOpTy>      asmtable; 
+        vector<ImgAsmTbl_WithOpTy>      asmtable;
         auto                            itLaststrip  = frm.begin();
         uint32_t                        totalbytecnt = 0;
 
@@ -548,8 +548,8 @@ namespace filetypes
                     WriteAPointer( existingSeq );
                 }
             }
-                
-                
+
+
         }
     }
 
@@ -606,7 +606,7 @@ namespace filetypes
     **************************************************************/
     void WAN_Writer::WriteImgInfoHeadr()
     {
-        //# Save location of img info 
+        //# Save location of img info
         m_wanHeadr.ptr_imginfo = m_outBuffer.size();
 
         m_wanHeadr_img.WriteToWanContainer( m_itbackins, std::bind( &WAN_Writer::WriteAPointer, const_cast<WAN_Writer*>(this), placeholders::_1 ) );
@@ -630,8 +630,8 @@ namespace filetypes
         //Don't forget the 2 pointers of the sir0 header! in first.
         //Add padding after !
 
-        filetypes::sir0_head_and_list result = filetypes::MakeSIR0ForData( m_ptrOffsetTblToEncode, 
-                                                                            (m_sir0Header.subheaderptr-16), 
+        filetypes::sir0_head_and_list result = filetypes::MakeSIR0ForData( m_ptrOffsetTblToEncode,
+                                                                            (m_sir0Header.subheaderptr-16),
                                                                             (m_sir0Header.ptrPtrOffsetLst-16) );
 
         //Write encoded ptr offset list
