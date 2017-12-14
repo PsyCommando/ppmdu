@@ -90,7 +90,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.36";_DEBUG;_CONSOLE;_LIB;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.37";_DEBUG;_CONSOLE;_LIB;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1y</CppLanguageStandard>
     </ClCompile>
     <Link>
@@ -111,7 +111,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.36";_DEBUG;_CONSOLE;_LIB;_HAS_ITERATOR_DEBUGGING=0;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.37";_DEBUG;_CONSOLE;_LIB;_HAS_ITERATOR_DEBUGGING=0;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -133,7 +133,7 @@ copy "$(SolutionDir)resources\pmd2eos_cvinfo.xml" "$(OutDir)pmd2eos_cvinfo.xml" 
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.36";NDEBUG;_CONSOLE;_LIB;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;AUDIOUTIL_VER="0.37";NDEBUG;_CONSOLE;_LIB;USE_PPMDU_CONTENT_TYPE_ANALYSER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>

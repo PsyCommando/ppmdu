@@ -179,11 +179,18 @@ namespace DSE
 
     //-----------------------------
         /*
+            Load from either a directory or single file blob files
         */
         void LoadSMDLSWDLSPairsFromBlob( const std::string & blob );
+
         /*
         */
         void LoadSMDLSWDLPairsAndBankFromBlob( const std::string & blob, const std::string & bankname );
+
+        /*
+            Loads from a single blob file, no directory
+        */
+        void LoadFromBlobFile(const std::string & blob);
 
     //-----------------------------
     // Exporting Methods

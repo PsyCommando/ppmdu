@@ -254,7 +254,9 @@ namespace audioutil
             OPTION_BgmBlobPath,
             1,
             "Use this to specify the path to a blob of DSE containers to process. AKA a file that contains a bunch of"
-            "SMDL, SWDL, SEDL containers one after the other with no particular structure.",
+            "SMDL, SWDL, SEDL containers one after the other with no particular structure."
+            "You can also specify a folder or use several -blobpath to designate several files to be handled."
+			"When using a folder, all files within that directory with no exception will be scanned and converted, so use with caution!",
             "-blobpath \"Path/to/blob/file.whatever\"",
             std::bind( &CAudioUtil::ParseOptionBlobPath, &GetInstance(), placeholders::_1 ),
         },
@@ -756,9 +758,9 @@ namespace audioutil
     {
         Poco::File bgmblobpath( Poco::Path( optdata[1] ).makeAbsolute() );
 
-        if( bgmblobpath.exists() && bgmblobpath.isFile() )
+        if( bgmblobpath.exists() )
         {
-            m_bgmblobpath = optdata[1];
+            m_bgmblobpath.push_back(optdata[1]);
         }
         else
         {
@@ -1437,7 +1439,7 @@ namespace audioutil
     int CAudioUtil::ExportBatchPairs()
     {
         //using namespace pmd2::audio;
-        BatchAudioLoader bal(true, m_bUseLFOFx);
+        BatchAudioLoader bal(false, m_bUseLFOFx);
 
         Poco::Path   outputDir;
 
@@ -1456,8 +1458,11 @@ namespace audioutil
 
         if( !m_bgmcntpath.empty() && !m_bgmcntext.empty() )
             bal.LoadBgmContainers( m_bgmcntpath, m_bgmcntext );
-        else if( !m_bgmblobpath.empty() )
-            bal.LoadSMDLSWDLSPairsFromBlob(m_bgmblobpath);
+        else if (!m_bgmblobpath.empty())
+        {
+            for(const auto & blobpath : m_bgmblobpath)
+                bal.LoadSMDLSWDLSPairsFromBlob(blobpath);
+        }
         else
             bal.LoadMatchedSMDLSWDLPairs( m_swdlpath, m_smdlpath );
 

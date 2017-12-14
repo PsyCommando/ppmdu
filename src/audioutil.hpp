@@ -188,7 +188,7 @@ namespace audioutil
         std::string m_smdlpath;
         std::string m_bgmcntpath;
         std::string m_bgmcntext;
-        std::string m_bgmblobpath;
+        std::vector<std::string> m_bgmblobpath;
 
         eOutputType m_outtype;
 

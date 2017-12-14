@@ -94,6 +94,13 @@ Changelog:
           doesn't seems to give me accurate envelope phase durations, and that even considering that soundfont
           envelopes are logarithmic.
         + Still also trying to fix pitch issues with some samples.. But I got nothing..
+		
+- 0.37 (2017/12/) :
+		- Added multi sf2 export for games that do not use a main bank! It will now default to one sf2 per midi for games with
+		  no main bank!
+		- Tweaked the -blobpath switch so now you can specify a directory of "blob" files to scan and export!
+	      Works very well with Soma!
+		
 
 
 ----------------------------------------------------------------------------------------------------
@@ -213,6 +220,13 @@ How to use:
 
     The "Path/to/blob/file.whatever" path specifies the file to scan for SMD/SWD pairs. It will batch export
     to midi + sounfont all matched pairs it finds by comparing their internal names in their header. 
+	
+-> To export the SMD and SWD pairs out of several files using an unknow file format within the same directory, use the following:
+
+		ppmd_audioutil.exe -blobpath "Path/to/blob/directory/" "Output/Directory"
+		
+	All files within that directory will be considered to be individual blobs to be scanned.
+	So use with caution!
 
 
 # The option -nofx if specified will ignore all vibrato, phaser, volume oscillation(flanger?), cutoff effect, specified in the
@@ -309,6 +323,8 @@ Options:
 
   -blobpath  : Use this to specify the path to a blob of DSE containers to process. AKA a file that contains 
                 a bunch ofSMDL, SWDL, SEDL containers one after the other with no particular structure.
+			   You can also specify a folder or use several -blobpath to designate several files to be handled.
+			   When using a folder, all files within that directory with no exception will be scanned and converted, so use with caution!
 
   -listpres  : Use this to make the program export a list of all the presets used by the SWDL contained withinthe 
                 swdlpath specified, or the input path if doing it for a single SWDL. If a swdlpath was specified, 

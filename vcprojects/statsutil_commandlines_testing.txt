@@ -2,6 +2,8 @@
 -e "EoSJapan" "EoSJapanOut" -text
 -e -romroot "EoSRomRoot" "EoSOut" -script
 
+-i -romroot "EoSRomRootModded" "EoSOut" -cfg "../../resources/pmd2data.xml" -log 
+
 //North American Rom Script Data Test
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" 
 -e -romroot "EoSRomRoot" "ExplorersOfSky_Stats" -cfg "../../resources/pmd2data.xml" -log -scripts
