@@ -9,6 +9,7 @@ Description: Utilities for handling the BPC file format.
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <utils/gbyteutils.hpp>
 #include <ppmdu/containers/level_tileset.hpp>
+#include <types/content_type_analyser.hpp>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -19,7 +20,8 @@ namespace filetypes
 //============================================================================================
 //  Constants
 //============================================================================================
-    const std::string BPC_FileExt = "bpc";
+    extern const ContentTy  CnTy_BPC;
+    const std::string       BPC_FileExt = "bpc";
 
 
 //============================================================================================
@@ -31,10 +33,11 @@ namespace filetypes
     */
     struct bpc_header
     {
-        static const size_t LEN        = 28; //bytes
-        static const size_t NbTilesets = 2;
+        static const size_t LEN = 4; //bytes, length of the static part of the header only!
+
         struct indexentry
         {
+            static const size_t LEN = 12;//bytes
             uint16_t nbtiles;   //The nb of 64 pixels, 4bpp tiles in the image
             uint16_t unk2;
             uint16_t unk3;
@@ -66,16 +69,16 @@ namespace filetypes
                 return itr;
             }
         };
-        uint16_t                            offsuprscr;
-        uint16_t                            offslowrscr;
-        std::array<indexentry,NbTilesets>   tilesetsinfo;
+        uint16_t                offsuprscr;
+        uint16_t                offslowrscr;
+        std::vector<indexentry> tilesetsinfo;
 
         template<class _outit>
             _outit Write( _outit itw )const
         {
             itw = utils::WriteIntToBytes(offsuprscr,    itw );
             itw = utils::WriteIntToBytes(offslowrscr,   itw );
-            for( const auto & entry : tilesetsinfo )
+            for( auto & entry : tilesetsinfo )
                 itw = entry.Write(itw);
             return itw;
         }
@@ -85,17 +88,26 @@ namespace filetypes
         {
             itr = utils::ReadIntFromBytes(offsuprscr,    itr, itpend );
             itr = utils::ReadIntFromBytes(offslowrscr,   itr, itpend );
-            for( auto & entry : tilesetsinfo )
-                itr = entry.Read(itr,itpend);
+            const size_t nbentries = (offsuprscr != 0 && offslowrscr != 0)? 2 : (offsuprscr != 0 || offslowrscr!= 0)? 1 : 0;
+            tilesetsinfo.resize(nbentries);
+            for( size_t cnt = 0; cnt < nbentries; ++cnt )
+                itr = tilesetsinfo[cnt].Read(itr,itpend);
             return itr;
+        }
+
+        //Calculate the rawsize in bytes of the header as if it was in the file!
+        inline size_t rawsize()const
+        {
+            return LEN + (tilesetsinfo.size() * indexentry::LEN);
         }
     };
 
 //============================================================================================
 //  Functions
 //============================================================================================
-    std::pair<pmd2::Tileset,pmd2::Tileset>  ParseBPC( const std::string & fpath );
-    void                                    WriteBPC( const std::string & destfpath, const pmd2::Tileset & srcupscr, const pmd2::Tileset & srcbotscr );
+    //std::pair<pmd2::Tileset,pmd2::Tileset>  ParseBPC( const std::string & fpath );
+    pmd2::TilesetLayers ParseBPC( const std::string & fpath );
+    void                WriteBPC( const std::string & destfpath, const pmd2::Tileset & srcupscr, const pmd2::Tileset & srcbotscr );
 
 };
 

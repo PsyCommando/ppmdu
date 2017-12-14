@@ -16,9 +16,9 @@ Description: Utilities for handling BGP images.
 
 namespace filetypes
 {
-    extern const ContentTy CnTy_BGP; //Content ID handle
-    const std::string       BGP_Ext = "bgp";
-    const utils::Resolution BGP_RES = { 256, 192 };
+    extern const ContentTy  CnTy_BGP; //Content ID handle
+    const std::string       BGP_FileExt = "bgp";
+    const utils::Resolution BGP_RES     = { 256, 192 };
 
     /*
     */

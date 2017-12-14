@@ -39,6 +39,10 @@ namespace pmd2
         "StartersStrings",    
         "QuizzQuestionStrs",  
         "QuizzAnswerStrs",    
+        "ScriptVars",
+        "ScriptVarsLocals",
+        "Objects",
+        "CRoutines",
     };
 
 
@@ -92,6 +96,16 @@ namespace pmd2
 
         const string NODE_ExtFile   = "External";   //For external files to load config from
 
+        const string NODE_ASMPatch  = "ASMPatchesConstants";
+        const string NODE_PatchDir  = "PatchesDir";
+        const string NODE_Patches   = "Patches";
+        const string NODE_Patch     = "Patch";
+        const string NODE_Include   = "Include";
+        const string NODE_OpenBin   = "OpenBin";
+        const string NODE_LooseBin  = "LooseBinFiles";
+        const string NODE_File      = "File";
+
+
         const string ATTR_ID        = "id";
         const string ATTR_ID2       = "id2";
         const string ATTR_ID3       = "id3";
@@ -121,6 +135,8 @@ namespace pmd2
         const string ATTR_BitShift  = "bitshift";
         const string ATTR_EntID     = "entid";
         const string ATTR_MapID     = "mapid";
+        const string ATTR_MapTy     = "mapty";
+        const string ATTR_SrcDat    = "srcdata";
 
     };
 
@@ -199,6 +215,7 @@ namespace pmd2
             ParseBinaries (pmd2n);
             ParseConstants(pmd2n);
             ParseGameScriptData(pmd2n);
+            ParseASMPatches(pmd2n);
 
             for( auto & xternal : pmd2n.children(NODE_ExtFile.c_str()) )
             {
@@ -211,13 +228,16 @@ namespace pmd2
         void DoParse(ConfigLoader & target)
         {
             using namespace ConfigXML;
+            //m_ptarget = &target;
+
             xml_node pmd2node = m_doc.child(ROOT_PMD2.c_str());
             ParseAllFields(pmd2node);
-            target.m_langdb      = std::move(LanguageFilesDB(std::move(m_lang)));
-            target.m_binblocks   = std::move(m_bin);
-            target.m_constants   = std::move(m_constants); 
-            target.m_versioninfo = std::move(m_curversion); //Done in last
-            target.m_gscriptdata = std::move(m_gscriptdata);
+            target.m_langdb         = std::move(LanguageFilesDB(std::move(m_lang)));
+            target.m_binblocks      = std::move(m_bin);
+            target.m_constants      = std::move(m_constants); 
+            target.m_versioninfo    = std::move(m_curversion); //Done in last
+            target.m_gscriptdata    = std::move(m_gscriptdata);
+            target.m_asmpatchdata   = std::move(m_asmpatchdata);
         }
 
         bool FindGameVersion( eGameVersion version, eGameRegion region )
@@ -560,8 +580,8 @@ namespace pmd2
                 {
                     if( attr.name() == ATTR_Name )
                         lvlinf.name = attr.value();
-                    else if( attr.name() == ATTR_Unk1 )
-                        lvlinf.unk1 = static_cast<int16_t>(attr.as_int());
+                    else if( attr.name() == ATTR_MapTy )
+                        lvlinf.mapty = static_cast<int16_t>(attr.as_int());
                     else if( attr.name() == ATTR_Unk2 )
                         lvlinf.unk2 = static_cast<int16_t>(attr.as_int());
                     else if( attr.name() == ATTR_MapID )
@@ -693,6 +713,158 @@ namespace pmd2
                 clog<<"<!>- ConfigXMLParser::HandleExtFile(): External file node with same name as original document encountered! Ignoring to avoid infinite loop..\n";
         }
 
+
+
+
+
+        void ParseASMPatches(xml_node & pmd2n)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node patchesnode  = pmd2n.child(NODE_ASMPatch.c_str());
+            if(!patchesnode)
+                return;
+
+            //1. Read directories for each game versions
+            ParseASMDirectories(patchesnode);
+
+            //2. Read patch data for each game versions
+            ParseASMPatchData(patchesnode);
+
+            //3. Read Loose Bin Files Data
+            ParseLooseBinFileFileEntry(patchesnode);
+        }
+
+
+        void ParseALooseBinEntry(xml_node & loosebinn)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_attribute src  = loosebinn.attribute(ATTR_SrcDat.c_str());
+            xml_attribute path = loosebinn.attribute(ATTR_FPath.c_str());
+
+            if( !src || !path )
+                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A " +  NODE_File +  " entry lacks either its " + ATTR_SrcDat + " attribute, or its " + ATTR_FPath + " attribute!!");
+
+            patchloosebinfile plbf;
+            plbf.src  = StrToBinaryLocation(src.value());
+            if( plbf.src == eBinaryLocations::Invalid )
+                throw std::runtime_error("ConfigXMLParser::ParseALooseBinEntry(): A " + NODE_File + " entry has unknown data source \"" + string(src.value()) +"\" !!");
+
+            plbf.path = path.value();
+            m_asmpatchdata.lfentry.insert_or_assign( plbf.src, plbf );
+        }
+
+        void ParseLooseBinFileFileEntry(xml_node & patchesnode)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node loosebinnode = patchesnode.child(NODE_LooseBin.c_str());
+            if(!loosebinnode)
+                throw std::runtime_error("ConfigXMLParser::ParseLooseBinFileFileEntry(): There are no LooseBinFiles node in the config file!!");
+
+            for( const auto & ver : loosebinnode.children(NODE_Game.c_str()) )
+            {
+                if( MatchesCurrentVersionID( ver.attributes_begin(), ver.attributes_end() ) )
+                {
+                    for( xml_node & afile : ver.children(NODE_File.c_str()) )  
+                        ParseALooseBinEntry(afile);
+                }
+            }
+        }
+
+        void ParseASMDirectories(xml_node & patchesnode)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node patchdirn = patchesnode.child(NODE_PatchDir.c_str());
+            if(!patchdirn)
+                throw std::runtime_error("ConfigXMLParser::ParseASMDirectories(): There are no patch directories nodes containing the path to the required asm files in the configuration file(s)!!");
+
+            for( const auto & ver : patchdirn.children(NODE_Game.c_str()) )
+            {
+                if( MatchesCurrentVersionID( ver.attributes_begin(), ver.attributes_end() ) )
+                {
+                    xml_attribute xpath = ver.attribute(ATTR_FPath.c_str());
+                    if(!xpath)
+                         throw std::runtime_error("ConfigXMLParser::ParseASMDirectories(): A ASM Patch Directory entry is missing its " + ATTR_FPath + " attribute!!");
+                    m_asmpatchdata.asmpatchdir = xpath.value();
+                }
+            }
+
+            if( m_asmpatchdata.asmpatchdir.empty() )
+                throw std::runtime_error("ConfigXMLParser::ParseASMDirectories() : No matching asm patch directory found in the config for this game version!!");
+        }
+
+        void HandlePatchOp(xml_node & patchn, asmpatchentry & entry)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+
+            for( auto & step : patchn.children() )
+            {
+                if( step.name() == NODE_Include )
+                {
+                    asmpatchentry::asmpatchstep outstep;
+
+                    xml_attribute xfname = step.attribute(ATTR_FName.c_str());
+                    outstep.op      = asmpatchentry::eAsmPatchStep::IncludeFile;
+                    outstep.param   = xfname.value();
+                    entry.steps.push_back(std::move(outstep));
+                }
+                else if( step.name() == NODE_OpenBin )
+                {
+                    xml_attribute xfname = step.attribute(ATTR_FPath.c_str());
+
+                    //Put open statement
+                    asmpatchentry::asmpatchstep openstep;
+                    openstep.op     = asmpatchentry::eAsmPatchStep::OpenBin;
+                    openstep.param  = xfname.value();
+                    entry.steps.push_back(openstep);
+
+                    //Search for more sub statements...
+                    HandlePatchOp(step, entry); //recursive call
+                                    
+                    //Put close statement
+                    asmpatchentry::asmpatchstep closestep;
+                    closestep.op = asmpatchentry::eAsmPatchStep::CloseBin;
+                    entry.steps.push_back(closestep);
+                }
+                                
+            }
+        }
+
+        void HandleASMPatchEntries( xml_node & patchlistn )
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+
+            for(xml_node & patch : patchlistn.children(NODE_Patch.c_str()) )
+            {
+                xml_attribute xpname = patch.attribute( ATTR_ID.c_str() );
+                asmpatchentry entry;
+                entry.id = xpname.value();
+                HandlePatchOp(patch,entry);
+                if( !entry.steps.empty() )
+                    m_asmpatchdata.patches.emplace( string(entry.id), std::move(entry) );
+            }
+        }
+
+
+        void ParseASMPatchData(xml_node & patchesnode)
+        {
+            using namespace pugi;
+            using namespace ConfigXML;
+            xml_node patchegrpsn = patchesnode.child(NODE_Patches.c_str());
+            xml_node foundver    = patchegrpsn.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
+
+            if( !foundver )
+                return;
+
+            HandleASMPatchEntries(foundver);
+        }
+
+
     private:
         GameVersionInfo                 m_curversion;
         pugi::xml_document              m_doc;
@@ -703,6 +875,8 @@ namespace pmd2
         GameBinariesInfo                m_bin;
         string                          m_confbasepath;
         GameScriptData                  m_gscriptdata;
+        GameASMPatchData                m_asmpatchdata;
+        
     };
 
 

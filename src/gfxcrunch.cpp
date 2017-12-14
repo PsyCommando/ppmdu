@@ -13,6 +13,10 @@
 #include <ppmdu/fmts/wte.hpp>
 #include <ppmdu/fmts/bgp.hpp>
 #include <ppmdu/fmts/kao.hpp>
+#include <ppmdu/containers/level_tileset.hpp>
+#include <ppmdu/fmts/bpc.hpp>
+#include <ppmdu/fmts/bpl.hpp>
+#include <ppmdu/fmts/bma.hpp>
 #include <cfenv>
 #include <string>
 #include <algorithm>
@@ -490,6 +494,15 @@ namespace gfx_util
             "Specifying this will force the program to export a wan/wat sprite to a directory, or import it from a directory.",
             "-wan",
             std::bind( &CGfxUtil::ParseOptionWAN,  &GetInstance(), placeholders::_1 ),
+        },
+
+        //Tilesets
+        {
+            "tilesets",
+            0,
+            "Specifying this will force the program to export a tileset, or import it from a directory.",
+            "-tilesets",
+            std::bind( &CGfxUtil::ParseOptionTSet,  &GetInstance(), placeholders::_1 ),
         },
 
         //Other formats here
@@ -1207,6 +1220,10 @@ namespace gfx_util
                 cout <<"Importing BGP image!\n";
                 break;
             }
+            case eExecMode::EXPORT_Tileset:
+            {
+                cout <<"Exporting Tileset!\n";
+            }
             case eExecMode::INVALID_Mode:
             {
                 cout <<"INVALID\n";
@@ -1243,9 +1260,9 @@ namespace gfx_util
             {
                 m_execMode = eExecMode::UNPACK_POKE_SPRITES_PACK_Mode;
             }
-            else if( result._type == CnTy_AT4PX )
+            else if( result._type == CnTy_AT4PX || result._type == CnTy_BGP )
             {
-                if( inputPath.getExtension() == BGP_Ext )
+                if( inputPath.getExtension() == BGP_FileExt )
                     m_execMode = eExecMode::EXPORT_BGP_Mode;
                 else
                     throw exception("Raw AT4PX compressed files not supported at this time!");
@@ -1258,6 +1275,10 @@ namespace gfx_util
             else if( result._type == CnTy_WTE )
             {
                 m_execMode = eExecMode::EXPORT_WTE_Mode;
+            }
+            else if( result._type == CnTy_BPC )
+            {
+                m_execMode = eExecMode::EXPORT_Tileset;
             }
             else
             {
@@ -1575,6 +1596,12 @@ namespace gfx_util
         return true;
     }
 
+    bool CGfxUtil::ParseOptionTSet( const std::vector<std::string> & optdata )
+    {
+        m_execMode = eExecMode::EXPORT_Tileset;
+        return true;
+    }
+
 
 //--------------------------------------------
 //  Main Exec functions
@@ -1703,6 +1730,14 @@ namespace gfx_util
                 returnval = 0;
                 break;
             }
+            case eExecMode::EXPORT_Tileset:
+            {
+                if( utils::LibWide().isLogOn() )
+                    clog <<"Exporting tileset..\n";
+                DoExportTileset();
+                returnval = 0;
+                break;
+            }
 
             case eExecMode::INVALID_Mode:
             {
@@ -1735,12 +1770,12 @@ namespace gfx_util
             if( m_Import )
             {
                 DoImportPortraits();
-                returnval = 0;
+                return 0;
             }
             else if( m_Export )
             {
                 DoExportPortraits();
-                returnval = 0;
+                return 0;
             }
         }
 
@@ -1749,12 +1784,12 @@ namespace gfx_util
             if( m_Import )
             {
                 DoImportPokeSprites();
-                returnval = 0;
+                return 0;
             }
             else if( m_Export )
             {
                 DoExportPokeSprites();
-                returnval = 0;
+                return 0;
             }
         }
 
@@ -1763,14 +1798,28 @@ namespace gfx_util
             if( m_Import )
             {
                 DoImportMiscSprites();
-                returnval = 0;
+                return 0;
             }
             else if( m_Export )
             {
                 DoExportMiscSprites();
-                returnval = 0;
+                return 0;
             }
         }
+
+        //if( m_execMode )
+        //{
+        //    if(m_Import)
+        //    {
+        //        DoImportTileset();
+        //        return 0;
+        //    }
+        //    else if(m_Export)
+        //    {
+        //        DoExportTileset();
+        //        return 0;
+        //    }
+        //}
 
         //Handle specific content
         switch(m_GameFmt)
@@ -2267,6 +2316,86 @@ namespace gfx_util
         else if( m_Export )
         {
         }
+        assert(false);
+    }
+
+
+    void CGfxUtil::DoExportTileset()
+    {
+        assert(false);
+        throw std::runtime_error("CGfxUtil::DoExportTileset(): Deprecated!");
+        //vector<string> procqueue;
+        //auto itinstproc = back_inserter(procqueue);
+        //procqueue.push_back(m_inputPath);
+        //copy( m_extraargs.begin(), m_extraargs.end(), itinstproc );
+
+        //int againcnt = 0;
+        //for( const auto & item : procqueue )
+        //{
+        //    try
+        //    {
+        //        Poco::Path inpath(item);
+        //        Poco::File infile(inpath);
+        //        Poco::Path outpath;
+
+        //        if( againcnt != 0 )
+        //            cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\", " <<VariationOfAgain[againcnt % VariationOfAgain.size()] <<"!\n";
+        //        else
+        //            cout << "\nPoochyena used Crunch on \"" <<inpath.getFileName() <<"\"!\n";
+
+        //        if( procqueue.size() > 1 )
+        //            outpath = Poco::Path(m_outputPath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+        //        else if( m_outputPath.empty() )
+        //            outpath = Poco::Path(inpath).makeAbsolute().makeParent().append(inpath.getBaseName()).makeDirectory();
+        //        else
+        //            outpath = Poco::Path(m_outputPath);
+
+        //        if( infile.exists() && infile.isFile() )
+        //        {
+        //            auto tilesets = ::filetypes::ParseBPC(Poco::Path(inpath).setExtension("bpc").toString());
+        //            tilesets.first.Palettes()  = ::filetypes::ParseBPL(Poco::Path(inpath).setExtension("bpl").toString());
+        //            tilesets.second.Palettes() = tilesets.first.Palettes();
+
+        //            tilesets.first.BMAData()  = ::filetypes::ParseBMA(Poco::Path(inpath).setExtension("bma").toString());
+        //            tilesets.second.BMAData() = tilesets.first.BMAData();
+
+        //            ExportTilesetPairToRaw( outpath.makeAbsolute().toString(), &tilesets.first, &tilesets.second );
+        //            if( !(tilesets.first.Tiles().empty()) )
+        //            {
+        //                PrintAssembledTilesetPreviewToPNG( Poco::Path(outpath).append("upper_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first);
+        //                DumpCellsToPNG( Poco::Path(outpath).append("upper_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.first );
+        //            }
+
+        //            if( !(tilesets.second.Tiles().empty()) )
+        //            {
+        //                PrintAssembledTilesetPreviewToPNG(Poco::Path(outpath).append("lower_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second);
+        //                DumpCellsToPNG( Poco::Path(outpath).append("lower_map_"  + Poco::Path(inpath).setExtension("png").getFileName()).toString(), tilesets.second );
+        //            }
+        //            cout << "Its super effective!\n\"" <<inpath.getFileName() <<"\" fainted!\n";
+        //        }
+        //        else 
+        //        {
+        //            stringstream sstr;
+        //            sstr << "CGfxUtil::DoImportTileset(): Input path \"" <<infile.path() <<"\" doesn't exist, or is not a file!";
+        //            throw runtime_error(sstr.str());
+        //        }
+        //    }
+        //    catch( const Poco::Exception & e )
+        //    {
+        //        cerr <<"Poco::Exception: " << e.what() <<"\n";
+        //        clog <<"Poco::Exception: " << e.what() <<"\n";
+        //    }
+        //    catch( const exception & e )
+        //    {
+        //        cerr <<"Exception: " << e.what() <<"\n";
+        //        clog <<"Exception: " << e.what() <<"\n";
+        //    }
+        //    ++againcnt;
+        //}
+    }
+
+    void CGfxUtil::DoImportTileset()
+    {
         assert(false);
     }
 

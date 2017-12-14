@@ -16,7 +16,12 @@ namespace filetypes
     {
         if(itwhere == itend)
             throw std::out_of_range("LoadLevelFNameString(): Level backgrounds file ended unexpectedly!");
-        std::copy_n( itwhere, LevelBgEntry::LevelFnameMaxLen, out_str.begin() );
+        auto itstr = out_str.begin();
+        for( size_t i = 0; i < LevelBgEntry::LevelFnameMaxLen; ++i, ++itstr, ++itwhere )
+            *itstr = *itwhere;
+        
+        //std::copy_n( itwhere, LevelBgEntry::LevelFnameMaxLen, out_str.begin() );
+
     }
 
 
@@ -40,18 +45,16 @@ namespace filetypes
             if(c != 0) //If the string is not empty
             {
                 LevelBgEntry::lvlstr_t lvlextraname;
-                ++itwhere;
-                if(itwhere == itend)
-                    throw std::out_of_range("LoadLevelEntry(): Level backgrounds file ended unexpectedly!");
-                lvlextraname.front() = c;
-                std::copy_n( itwhere, (LevelBgEntry::LevelFnameMaxLen-1), lvlextraname.begin() + 1 );
-                curentry.extranames.push_back(std::move(lvlextraname));
+                LoadLevelFNameString(itwhere, itend,lvlextraname);
+                curentry.extranames.push_back(lvlextraname);
             }
-            else //If the string is empty
-            {
-                std::advance( itwhere, (LevelBgEntry::EntryLen - ((cntname+3) * LevelBgEntry::LevelFnameMaxLen) ) ); //Skip over the rest of the bytes from this entry
-                break; //If that entry is null, all the others will be too
-            }
+            else
+                std::advance( itwhere, LevelBgEntry::LevelFnameMaxLen );
+            //else //If the string is empty
+            //{
+            //    std::advance( itwhere, (LevelBgEntry::EntryLen - ((cntname+3) * LevelBgEntry::LevelFnameMaxLen) ) ); //Skip over the rest of the bytes from this entry
+            //    break; //If that entry is null, all the others will be too
+            //}
         }
         return std::move(curentry);
     }
@@ -86,14 +89,26 @@ namespace filetypes
     */
     lvlbglist_t LoadLevelList ( const std::string & bgfilefpath )
     {
-        lvlbglist_t destlst;
-        ifstream infile(bgfilefpath, std::ios::in | std::ios::binary);
-        infile.exceptions(std::ios::badbit);
-        istreambuf_iterator<char> itf(infile);
-        istreambuf_iterator<char> itend;
+        lvlbglist_t     destlst;
+        //ifstream        infile(bgfilefpath, std::ios::in | std::ios::binary | std::ios::ate);
+        //std::streamoff  fsize = infile.tellg();
+        //infile.seekg(0, ios::beg);
+        //infile.exceptions(std::ios::badbit);
 
-        while( itf != itend )
-            destlst.push_back( LoadLevelEntry(itf, itend) );
+
+        //
+        std::vector<uint8_t> fdata = utils::io::ReadFileToByteVector(bgfilefpath);
+
+        //!FIXME : THOSE ENDED UP INSERTING RANDOM ZEROS IN THE STUFF WE READ!
+        //istreambuf_iterator<char> itf(infile);
+        //istreambuf_iterator<char> itend;
+
+        //Safety check
+        const size_t    nbentries = fdata.size() / LevelBgEntry::EntryLen;
+        auto            itbeg     = fdata.begin();
+
+        for( size_t cntentry = 0; cntentry < nbentries; ++cntentry )
+            destlst.push_back( LoadLevelEntry(itbeg, fdata.end()) );
 
         return std::move(destlst);
     }

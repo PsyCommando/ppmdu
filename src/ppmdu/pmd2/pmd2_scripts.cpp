@@ -15,14 +15,15 @@
 #include <iomanip>
 #include <functional>
 using namespace std;
+using utils::logutil::slog;
 
 
 namespace pmd2
 {
-    inline std::ostream & slog()
-    {
-        return utils::LibWide().Logger().Log();
-    }
+    //inline std::ostream & slog()
+    //{
+    //    return utils::LibWide().Logger().Log();
+    //}
 
 //==============================================================================
 //  

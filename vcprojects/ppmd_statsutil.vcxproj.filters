@@ -210,12 +210,6 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_manip.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm_data.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
@@ -248,6 +242,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
       <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -374,9 +371,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp">
       <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_manip.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <Filter>Header Files\ppmdu\file formats\PokemonData</Filter>
     </ClInclude>
@@ -413,14 +407,14 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata_dumper.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\parallel_tasks.hpp">
       <Filter>Header Files\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\whereami_wrapper.hpp">
       <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

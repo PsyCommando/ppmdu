@@ -10,6 +10,7 @@ Description: A helper class for parsing the root node of a XML file exported by 
 #include <ppmdu/fmts/ssb.hpp>
 #include <ppmdu/fmts/ssa.hpp>
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
+#include <ppmdu/pmd2/pmd2_levels.hpp>
 #include <string>
 #include <unordered_map>
 #include <iostream>
@@ -85,6 +86,11 @@ namespace pmd2
     inline bool IsXMLSingleScriptData(const std::string & rootname)
     {
         return (rootname == ScriptDataXMLRoot_SingleDat);
+    }
+
+    inline bool IsXMLLevel(const std::string & rootname)
+    {
+        return (rootname == LevelDataXMLRoot);
     }
 
     //! #TODO: Add more boolean functions!!

@@ -24,19 +24,6 @@ namespace pmd2
 //==========================================================================================
 //
 //==========================================================================================
-    //const string DirName_BALANCE  = "BALANCE";
-    //const string GameTextDirectory = "MESSAGE";
-
-    //std::array<std::string, static_cast<size_t>(eGameVersion::NBGameVers)> GameVersionNames =
-    //{
-    //    "",
-    //    "EoS",
-    //    "EoTD",
-    //};
-
-    const string GameDataDir = "data";
-
-
     const string GameStats::DefPkmnDir    = "pokemon_data";
     const string GameStats::DefMvDir      = "move_data";
     
@@ -68,128 +55,17 @@ namespace pmd2
 //  GameStats
 //==========================================================================================
 
-    //GameStats::GameStats( const std::string & pmd2rootdir, const std::string & gamelangfile )
-    //    :m_romrootdir(pmd2rootdir), m_gameVersion(eGameVersion::Invalid), m_gamelangfile(gamelangfile)
-    //{
-    //    m_dataFolder = Poco::Path(pmd2rootdir).append(GameDataDir).toString();
-    //}
-
     GameStats::GameStats( const std::string & pmd2rootdir, eGameVersion gvers, eGameRegion gloc, std::shared_ptr<GameText> && gtext )
         :m_gameStrings(gtext), m_romrootdir(pmd2rootdir), m_gameVersion(gvers), m_gameRegion(gloc)
     {
-        m_dataFolder = Poco::Path(m_romrootdir).append(GameDataDir).toString();
+        m_dataFolder = Poco::Path(m_romrootdir).append(DirName_DefData).toString();
     }
 
     void GameStats::setRomRootDir( const std::string & path )
     {
         m_romrootdir = path;
-        m_dataFolder = Poco::Path(path).append(GameDataDir).toString();
+        m_dataFolder = Poco::Path(path).append(DirName_DefData).toString();
     }
-
-//--------------------------------------------------------------
-//  Game Analysis
-//--------------------------------------------------------------
-    //void GameStats::IdentifyGameVersion()
-    //{
-    //    //To identify whether its Explorers of Sky or Explorers of Time/Darkness
-    //    // check if we have a waza_p2.bin file under the /BALANCE/ directory.
-    //    stringstream sstr;
-    //    sstr << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
-
-    //    if( utils::isFolder( sstr.str() ) )
-    //    {
-    //        sstr << "/" << filetypes::WAZA2_Fname;
-    //        if( utils::isFile( sstr.str() ) )
-    //            m_gameVersion = eGameVersion::EoS;
-    //        else
-    //            m_gameVersion = eGameVersion::EoTEoD;
-    //    }
-    //    else
-    //        throw runtime_error( "Specified data directory is invalid! : " + m_dataFolder );
-
-    //    if( utils::LibWide().isLogOn() )
-    //    {
-    //        clog << "Detected game version : " 
-    //             << ( (m_gameVersion == eGameVersion::EoS )? "EoS" : ( m_gameVersion == eGameVersion::EoTEoD )? "EoT/D" : "Invalid" )
-    //             << "\n";
-    //    }
-    //}
-
-    //void GameStats::IdentifyGameLocaleStr()
-    //{
-    //    /*
-    //        Load game language file
-    //    */
-    //    if( !utils::isFile(m_gamelangfile) )
-    //        throw runtime_error("Path specified is an invalid gamelang file! : " + m_gamelangfile);
-    //    m_possibleLang = GameLanguageLoader( m_gamelangfile, m_gameVersion );
-
-    //    /*
-    //        To identify the game language, find the text_*.str file, and compare the name to the lookup table.
-    //    */
-    //    static const string TextStr_FnameBeg = "text_";
-    //    stringstream        sstr;
-    //    sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory;
-    //    const string MessageDirPath =  sstr.str();
-
-    //    if( utils::isFolder( MessageDirPath ) )
-    //    {
-    //        const vector<string> filelist = utils::ListDirContent_FilesAndDirs( MessageDirPath, true );
-    //        for( const auto & fname : filelist )
-    //        {
-    //            //if the begining of the text_*.str filename matches, do a comparison, and return the result
-    //            if( fname.size() > TextStr_FnameBeg.size() &&
-    //               fname.substr( 0, (TextStr_FnameBeg.size()) ) == TextStr_FnameBeg )
-    //            {
-    //                m_gameTextFName  = fname;
-    //                m_gameLangLocale = m_possibleLang.FindLocaleString( fname );
-
-    //                if( utils::LibWide().isLogOn() )
-    //                    clog << "Got locale string : \"" <<m_gameLangLocale <<"\" for text file \"" <<m_gameTextFName <<"\" !\n";
-    //                return;
-    //            }
-    //        }
-    //    }
- 
-    //    //We end up here if we have no data on that file name, or if the file was not found at all!!
-
-    //    m_gameLangLocale = ""; //Use default locale if nothing match
-
-    //    if( utils::LibWide().isLogOn() )
-    //        clog << "WARNING: No data found for game text file : \"" <<m_gameTextFName <<"\" ! Falling back to default locale!\n";
-    //}
-
-    //void GameStats::BuildListOfStringOffsets()
-    //{
-    //    //using namespace GameLangXMLStr;
-    //    m_strOffsets.resize(StrBlocksNames.size());
-    //    bool         bencounteredError = false;
-    //    stringstream sstr;
-
-    //    for( unsigned int i = 0; i < StrBlocksNames.size(); ++i )
-    //    {
-    //        auto result = m_possibleLang.FindStrBlockOffset( StrBlocksNames[i], m_gameTextFName );
-    //        if( result.first )
-    //        {
-    //            m_strOffsets[i].beg = result.second.first;
-    //            m_strOffsets[i].end = result.second.second;
-    //        }
-    //        else
-    //        {
-    //            sstr <<"ERROR: The beginning or the end of the " <<StrBlocksNames[i] 
-    //                 <<" string block(s) was not found in the game string location configuration file!\n\n";
-    //            bencounteredError = true;
-    //        }
-    //    }
-
-    //    //Print all the missing entries
-    //    if(bencounteredError)
-    //    {
-    //        string strerr = sstr.str();
-    //        clog << strerr <<"\n";
-    //        //throw runtime_error( strerr );
-    //    }
-    //}
 
 //--------------------------------------------------------------
 //  Loading
@@ -230,9 +106,7 @@ namespace pmd2
             m_gameStrings->Load();
         else if( !m_gameStrings )
         {
-#ifdef _DEBUG
             assert(false);
-#endif
             throw std::runtime_error("GameStats::_LoadGameStrings(): m_gameStrings is nullptr!!");
         }
     }
@@ -246,9 +120,7 @@ namespace pmd2
         }
         else if( !m_gameStrings )
         {    
-#ifdef _DEBUG
             assert(false);
-#endif
             throw std::runtime_error("GameStats::_EnsureStringsLoaded(): m_gameStrings is nullptr!!");
         }
     }
@@ -415,13 +287,10 @@ namespace pmd2
         sstrMovedat << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
         stringstream sstrGrowth;
         sstrGrowth << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE << "/"  << MLevel_FName;
-        //stringstream sstrstrings;
-        //sstrstrings << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
 
         const string fStatsGrowth = sstrGrowth.str();
         const string fPokeData    = sstrMd.str();
         const string fMoveData    = sstrMovedat.str();
-        //const string fStrings     = sstrstrings.str();
 
         cout << "Writing Pokemon Data..\n";
 
@@ -455,7 +324,7 @@ namespace pmd2
         cout << " <*>-Writing Pokemon data file \"" <<fPokeData <<"\"..\n";
         WritePokemonBaseData( md, fPokeData );
 
-        cout << "Done exporting Pokemon data!\n";
+        cout << "Done importing Pokemon data!\n";
     }
 
     void GameStats::WriteMoves()

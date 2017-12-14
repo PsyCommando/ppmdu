@@ -1,0 +1,571 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{244e0ca4-4e64-4090-a80b-e428ba7d1e6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{d9558b5a-b69e-4c22-ac58-d7b7d9638aac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu">
+      <UniqueIdentifier>{b2146a8f-29de-4e0c-b034-f71e1b369bf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu">
+      <UniqueIdentifier>{6e1ebfa7-d899-4235-9224-3d98cc3a72ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\typesupport">
+      <UniqueIdentifier>{90085d3e-8788-4bb9-b94a-cbb3e44fad96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\typesupport">
+      <UniqueIdentifier>{d30df086-3898-4eee-a3e3-625591845614}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\external formats">
+      <UniqueIdentifier>{fed1ac80-a0d6-4cf8-9e72-a11c6f25f52d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\external formats">
+      <UniqueIdentifier>{ba613f90-8818-4143-b1b2-91450853a5f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EasyBMP">
+      <UniqueIdentifier>{62d3f21f-006c-48de-bbdc-999cc1285681}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\GameDataAccess">
+      <UniqueIdentifier>{ce52a142-6427-4ad0-9e55-467820ce8d04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\GameDataAccess">
+      <UniqueIdentifier>{fc77eb48-6968-4aab-bfba-c2c73ca00250}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats">
+      <UniqueIdentifier>{76492537-5bd3-4b10-8c4f-f45f85b7525d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\levels">
+      <UniqueIdentifier>{e7aa0cfc-091c-47f0-8911-c3ab64dfc8e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats">
+      <UniqueIdentifier>{d4b51b94-3382-4c05-925d-a440e6954fdc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats">
+      <UniqueIdentifier>{c98077dd-4ecf-4577-93f5-4d03150b706a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\TempExtraForParsingText">
+      <UniqueIdentifier>{db04d8fc-a482-4061-8a69-eb3e5d336940}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{8d4b4f36-24b1-498f-9612-29d267311953}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats">
+      <UniqueIdentifier>{26c348c8-3691-479d-ba3e-99a158a668c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\TempExtraForParsingText">
+      <UniqueIdentifier>{fa1d6589-edaf-41c2-8057-e628bf8a1c19}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\levels">
+      <UniqueIdentifier>{c136788f-a95a-4dcc-a186-60e98dd38c25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="whereami">
+      <UniqueIdentifier>{170714c9-a897-4d94-9ac2-60b8fcd0db25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\file formats\Scripts">
+      <UniqueIdentifier>{751545c7-c589-48e3-b804-e3d50a0a0486}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Scripts">
+      <UniqueIdentifier>{d24da306-efb8-4e64-9d83-7a3fa74e71e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats\Scripts">
+      <UniqueIdentifier>{1c82b9d6-6d90-4c16-bfe4-c6cb1862bf2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\file formats\scripts">
+      <UniqueIdentifier>{45d2c33e-155c-436f-9246-d000e7f496e0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats\levels">
+      <UniqueIdentifier>{d5310b35-b1a6-46d9-af2c-25d9793f5405}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\readmes\ppmd_mapnybbler.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\utils\cmdline_util.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\gbyteutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\gfileio.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\gfileutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\gstringutils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\handymath.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\library_wide.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\multiple_task_handler.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\parse_utils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\poco_wrapper.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\pugixml_utils.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\utility.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\contentid_generator.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\types\content_type_analyser.hpp">
+      <Filter>Header Files\typesupport</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\bmp_io.hpp">
+      <Filter>Header Files\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\png_io.hpp">
+      <Filter>Header Files\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\rawimg_io.hpp">
+      <Filter>Header Files\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\riff_palette.hpp">
+      <Filter>Header Files\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ext_fmts\supported_io.hpp">
+      <Filter>Header Files\external formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_BMP.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_DataStructures.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\EasyBMP\EasyBMP\EasyBMP_VariousBMPutilities.h">
+      <Filter>EasyBMP</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gameloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_graphics.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\base_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\color.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\img_pixel.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\index_iterator.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\linear_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\sprite_io.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\tiled_image.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset.hpp">
+      <Filter>Header Files\ppmdu\data formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\pkdpx.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\px_compression.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\sir0.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wan.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wte.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\wtu.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_palettes.hpp">
+      <Filter>Header Files\ppmdu\file formats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
+      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bg_list_data.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bma.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpa.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpc.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpc_compression.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\bpl.hpp">
+      <Filter>Header Files\ppmdu\file formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\whereami\src\whereami.h">
+      <Filter>whereami</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp">
+      <Filter>Header Files\ppmdu\file formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp">
+      <Filter>Header Files\ppmdu\file formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp">
+      <Filter>Header Files\ppmdu\file formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\script_content.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\script_processing.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\mapnybbler.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\cmdline_util_runner.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\level_data.hpp">
+      <Filter>Header Files\ppmdu\data formats\levels</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_hcdata.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\level_tileset_list.hpp">
+      <Filter>Header Files\ppmdu\data formats\levels</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\utils\cmdline_util.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\gbyteutils.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\gfileio.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\gfileutil.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\library_wide.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\multiple_task_handler.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\poco_wrapper.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\pugixml_utils.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\utility.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\contentid_generator.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\types\content_type_analyser.cpp">
+      <Filter>Source Files\typesupport</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\bmp_io.cpp">
+      <Filter>Source Files\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\png_io.cpp">
+      <Filter>Source Files\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\rawimg_io.cpp">
+      <Filter>Source Files\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\riff_palette.cpp">
+      <Filter>Source Files\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ext_fmts\supported_io.cpp">
+      <Filter>Source Files\external formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\EasyBMP\EasyBMP\EasyBMP.cpp">
+      <Filter>EasyBMP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_configloader.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_text_io.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\color.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_data.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\sprite_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\pkdpx.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\pmd2_fontdata.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\px_compression.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\sir0.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wan_writer.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wte.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\wtu.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_palettes.cpp">
+      <Filter>Source Files\ppmdu\file formats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
+      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_tileset.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bma.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpc.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bpl.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\whereami\src\whereami.c">
+      <Filter>whereami</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\whereami_wrapper.cpp">
+      <Filter>whereami</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_xml_sniffer.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_gameloader.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\script_content.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_opcodes.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_scripts_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\script_processing.cpp">
+      <Filter>Source Files\ppmdu\data formats\Scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp">
+      <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp">
+      <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\ssb.cpp">
+      <Filter>Source Files\ppmdu\file formats\scripts</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\mapnybbler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_levels.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp">
+      <Filter>Source Files\ppmdu\file formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_tileset_list.cpp">
+      <Filter>Source Files\ppmdu\data formats\levels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_graphics.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\level_xml_io.cpp">
+      <Filter>Source Files\ppmdu\data formats\levels</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="..\resources\pmd2data.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\pmd2scriptdata.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+  </ItemGroup>
+</Project>

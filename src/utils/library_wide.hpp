@@ -130,6 +130,15 @@ namespace utils
 
     //Log into clog as-is, only if log enabled.
     void LogTextAsIs( const std::string & text );
+
+    namespace logutil
+    {
+        //Helper function to hide the whole logger mechanism!
+        inline std::ostream & slog()
+        {
+            return ::utils::LibWide().Logger().Log();
+        }
+    };
 };
 
 #endif

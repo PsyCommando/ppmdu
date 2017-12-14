@@ -8,6 +8,7 @@ Description: Utilities for handling the BPL file format.
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/containers/level_tileset.hpp>
+#include <types/content_type_analyser.hpp>
 #include <utils/utility.hpp>
 #include <cstdint>
 #include <string>
@@ -19,7 +20,8 @@ namespace filetypes
 //============================================================================================
 //  Constants
 //============================================================================================
-    const std::string BPL_FileExt = "bpl";
+    const std::string       BPL_FileExt = "bpl";
+    extern const ContentTy  CnTy_BPL; //Content ID handle
 
 //============================================================================================
 //  Struct

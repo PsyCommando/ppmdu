@@ -15,8 +15,10 @@ namespace filetypes
         lsddata_t _ParseLSD( _init beg, _init end )
     {
         const uint16_t nbentries = ReadIntFromBytes<uint16_t>( beg, end ); // beg is incremented
+        const int      diff      = distance( beg, end );
 
-        if( distance( beg, end ) < (nbentries * LSDStringLen) )
+        assert(diff > 0);
+        if(static_cast<unsigned int>(diff) < (nbentries * LSDStringLen))
         {
             stringstream sstr;
             sstr << "_ParseLSD(): Error, lsd file is too short for the nb of strings specified in the header!";

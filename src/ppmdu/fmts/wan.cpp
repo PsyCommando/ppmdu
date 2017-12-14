@@ -144,7 +144,7 @@ namespace filetypes
 
     /**************************************************************
     **************************************************************/
-    eSpriteImgType WAN_Parser::getSpriteType()const
+    eSpriteImgType WAN_Parser::getSpriteType()const //! #TODO: Rename this !!! Its really poorly named. Its not the sprite's type, but the sprite's image format.
     {
         auto        itRead   = m_rawdata.begin();
         sir0_header sir0head;
@@ -154,11 +154,16 @@ namespace filetypes
         wan_sub_header wanhead;
         wanhead.ReadFromContainer( itRead + sir0head.subheaderptr, m_rawdata.end() );
 
-        //Get the info on the pixel type
-        wan_img_data_info frmdat;
-        frmdat.ReadFromContainer( itRead + wanhead.ptr_imginfo, m_rawdata.end() );
+        if( wanhead.ptr_imginfo != 0 )
+        {
+            //Get the info on the pixel type
+            wan_img_data_info frmdat;
+            frmdat.ReadFromContainer( itRead + wanhead.ptr_imginfo, m_rawdata.end() );
 
-        return (frmdat.is256Colors == 1 )? eSpriteImgType::spr8bpp : eSpriteImgType::spr4bpp;
+            return (frmdat.is256Colors == 1 )? eSpriteImgType::spr8bpp : eSpriteImgType::spr4bpp;
+        }
+        else
+            return eSpriteImgType::sprnoimg;
     }
 
     /**************************************************************
@@ -195,13 +200,6 @@ namespace filetypes
         out_sprinf.Unk11           = m_wanImgDataInfo.unk11;
         out_sprinf.Unk12           = m_wanHeader.unk12;
 
-        if( m_paletteInfo.nullbytes != 0 )
-        {
-            cerr << "\nUm.. Woops? Null bytes at the end of the palette info weren't null ???\n";
-            //The null bytes at the end of the palette info weren't null! WTF do we do now ?
-            throw std::runtime_error("WAN_Parser::DoParse(): Null bytes at the end of the palette info weren't null ???");
-        }
-
         //Get meta-frames + meta-frame groups
         out_mfrms = ReadMetaFrameGroups( out_mtfgrps );
 
@@ -226,15 +224,30 @@ namespace filetypes
     **************************************************************/
     void WAN_Parser::ReadWanHeader()
     {
-        m_wanHeader     .ReadFromContainer( m_rawdata.begin() + m_sir0Header.subheaderptr, m_rawdata.end() );
-        m_wanAnimInfo   .ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_animinfo,  m_rawdata.end() );
-        m_wanImgDataInfo.ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_imginfo,   m_rawdata.end() );
+        m_wanHeader.ReadFromContainer( m_rawdata.begin() + m_sir0Header.subheaderptr, m_rawdata.end() );
+
+        if(m_wanHeader.ptr_animinfo != 0)
+            m_wanAnimInfo.ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_animinfo,  m_rawdata.end() );
+        else
+        {
+            clog << "WAN_Parser::ReadWanHeader(): sprite anim info data is missing!\n";
+        }
+
+        if(m_wanHeader.ptr_imginfo != 0)
+            m_wanImgDataInfo.ReadFromContainer( m_rawdata.begin() + m_wanHeader.ptr_imginfo,   m_rawdata.end() );
+        else
+        {
+            clog << "WAN_Parser::ReadWanHeader(): sprite image info data is missing!\n";
+        }
     }
 
     /**************************************************************
     **************************************************************/
     vector<gimg::colorRGB24> WAN_Parser::ReadPalette()
     {
+        if(m_wanHeader.ptr_imginfo == 0)
+            return vector<gimg::colorRGB24>();
+
         m_paletteInfo.ReadFromContainer( m_rawdata.begin() + m_wanImgDataInfo.ptrPal, m_rawdata.end() );
         unsigned int             nbcolors = (m_wanImgDataInfo.ptrPal - m_paletteInfo.ptrpal) / 4;
         vector<gimg::colorRGB24> palettecolors( nbcolors );
@@ -244,6 +257,13 @@ namespace filetypes
         std::for_each( (m_rawdata.begin() + m_paletteInfo.ptrpal), 
                        (m_rawdata.begin() + m_wanImgDataInfo.ptrPal), //The pointer points at the end of the palette
                         myparser );
+
+        if( m_paletteInfo.nullbytes != 0 )
+        {
+            cerr << "\nUm.. Woops? Null bytes at the end of the palette info weren't null ???\n";
+            //The null bytes at the end of the palette info weren't null! WTF do we do now ?
+            throw std::runtime_error("WAN_Parser::ReadPalette(): Null bytes at the end of the palette info weren't null ???");
+        }
 
         return std::move(palettecolors);
     }
@@ -627,7 +647,7 @@ namespace filetypes
         wanheadr.ReadFromContainer( itdatabeg + headr.subheaderptr, itdataend );
 
         //Check if the wan header pointers are invalid
-        if( wanheadr.spriteType >= 2 || 
+        if( wanheadr.spriteType >=  static_cast<uint16_t>(eSprTy::NbTypes) || 
             wanheadr.ptr_animinfo >= headr.subheaderptr || 
             wanheadr.ptr_imginfo >= headr.subheaderptr )
             return false;

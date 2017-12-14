@@ -16,7 +16,8 @@ Description:
 #include <ppmdu/pmd2/pmd2_scripts.hpp>
 #include <ppmdu/pmd2/pmd2_graphics.hpp>
 #include <ppmdu/pmd2/pmd2_audio.hpp>
-#include <ppmdu/pmd2/pmd2_asm_manip.hpp>
+#include <ppmdu/pmd2/pmd2_asm.hpp>
+#include <ppmdu/pmd2/pmd2_levels.hpp>
 
 //! #TODO: The gameloader header could be possibly more easily turned into an accessible
 //!         interface for a possible shared library. If the dependencies and implementation can be
@@ -24,6 +25,23 @@ Description:
 
 namespace pmd2
 {
+//
+//
+//
+    /*
+        EX_NoRomDataAvailable
+            Exception class sent out when there is no rom data found and a functionality requiring rom data was used!
+    */
+    class EX_NoRomDataAvailable : public std::runtime_error
+    {
+    public:
+        EX_NoRomDataAvailable( const std::string & msg):std::runtime_error(msg){}
+        EX_NoRomDataAvailable( const EX_NoRomDataAvailable & other ) = default;
+        EX_NoRomDataAvailable( EX_NoRomDataAvailable && other ) = default;
+        EX_NoRomDataAvailable & operator=(const EX_NoRomDataAvailable & other) = default;
+        EX_NoRomDataAvailable & operator=(EX_NoRomDataAvailable && other) = default;
+    };
+
 //======================================================================================
 //  GameDataLoader
 //======================================================================================
@@ -43,6 +61,9 @@ namespace pmd2
         GameDataLoader( const std::string & romroot, const std::string & pmd2confxmlfile );
         ~GameDataLoader();
 
+        //Load configuration
+        void AnalyseGame();
+
         //Set ROM Root Dir (Directory conatining arm9.bin, data, and overlay directory)
         void                SetRomRoot( const std::string & romroot );
         const std::string & GetRomRoot()const;
@@ -52,24 +73,26 @@ namespace pmd2
         inline eGameVersion  GetGameVersion()const {return MainPMD2ConfigWrapper::CfgInstance().GetGameVersion().version;}
 
         //Handles Loading the Game Data
-        void Load();
+        //void Init();
 
-        GameText         * LoadGameText();
-        GameScripts      * LoadScripts(const scriptprocoptions & options);
-        GameGraphics     * LoadGraphics();
-        GameStats        * LoadStats();
-        GameAudio        * LoadAudio();
-        PMD2_ASM_Manip   * LoadAsm();
+        GameText        * InitGameText();
+        GameScripts     * InitScripts(const scriptprocoptions & options);
+        GameLevels      * InitLevels(const lvlprocopts & options);
+        GameGraphics    * InitGraphics();
+        GameStats       * InitStats();
+        GameAudio       * InitAudio();
+        PMD2_ASM        * InitAsm();
 
-        //Handles Writing the Game Data
-        void Write();
+        //Handles Writing the Game Data back to the
+        //void DeInit();
 
-        void WriteGameText();
-        void WriteScripts();
-        void WriteGraphics();
-        void WriteStats();
-        void WriteAudio();
-        void WriteAsm();
+        void DeInitGameText();
+        void DeInitScripts();
+        void DeInitLevels();
+        void DeInitGraphics();
+        void DeInitStats();
+        void DeInitAudio();
+        //void DeInitAsm();
 
         /*
             Access to the sub-sections of the game's data
@@ -80,6 +103,10 @@ namespace pmd2
         //
         GameScripts             * GetScripts();
         const GameScripts       * GetScripts()const;
+
+        //
+        GameLevels              * GetLevels();
+        const GameLevels        * GetLevels()const;
 
         //
         GameGraphics            * GetGraphics();
@@ -94,20 +121,23 @@ namespace pmd2
         const GameAudio         * GetAudio()const;
 
         //
-        PMD2_ASM_Manip          * GetAsmManip();
-        const PMD2_ASM_Manip    * GetAsmManip()const;
+        PMD2_ASM                * GetAsm();
+        const PMD2_ASM          * GetAsm()const;
 
     private:
-        void AnalyseGame();
+        
         bool LoadConfigUsingARM9();
+        //Code common to all init methods!
+        void DoCommonInit(bool bcheckdata = true);
 
     private:
         std::shared_ptr<GameText>            m_text;
-        std::unique_ptr<GameScripts>         m_scripts;
+        std::shared_ptr<GameScripts>         m_scripts;
+        std::unique_ptr<GameLevels>          m_levels;
         std::unique_ptr<GameGraphics>        m_graphics;
         std::unique_ptr<GameStats>           m_stats;
         std::unique_ptr<GameAudio>           m_audio;
-        std::unique_ptr<PMD2_ASM_Manip>      m_asmmanip;
+        std::unique_ptr<PMD2_ASM>            m_asmmanip;
 
         std::string                          m_romroot;
         std::string                          m_datadiroverride; //Contains the name of the data directory if name non-default

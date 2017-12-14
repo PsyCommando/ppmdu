@@ -66,6 +66,17 @@ namespace utils
         };
         return std::equal( strA.begin(), strA.end(), strB.begin(), lambdacmpchar );
     }
+
+    /*
+        MakeLowerCase
+    */
+    inline std::string MakeLowerCase( const std::string & str, std::locale curloc = std::locale::classic() )
+    {
+        std::string result;
+        result.resize(str.size());
+        std::transform( str.begin(), str.end(), result.begin(), [&curloc](char c1){return std::tolower(c1,curloc);} );
+        return std::move(result);
+    }
 };
 
 #endif 

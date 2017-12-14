@@ -13,7 +13,7 @@ using namespace std;
 
 namespace filetypes
 {
-    static const ContentTy CnTy_BGP{"bgp"}; //Content ID handle
+    static const ContentTy CnTy_BGP{BGP_FileExt}; //Content ID handle
     static const size_t    PaletteByteLength = 64;//bytes
     static const size_t    PaletteNbColors   = 16;
     static const size_t    BGPTileNbPix      = 64; //pixels 8x8
@@ -219,14 +219,11 @@ namespace filetypes
                 break;  //When we hit a tile using the first null tile, that means nothing is left to copy !
 
             const auto & curtile = bgpimg.m_tiles   [tilemapdat.tileindex];
-            //const auto & curpal  = bgpimg.m_palettes[tilemapdat.palindex];
             auto       & outtile = target.getTile( cntouttiles );
 
             for( size_t cntpix = 0; cntpix < curtile.size(); ++cntpix )
-            {
                 outtile[cntpix] = curtile[cntpix].pixeldata + ( tilemapdat.palindex * PaletteNbColors ); //Get a color index in the 256 color palette
-            }
-
+            
             if( tilemapdat.hflip )
                 outtile.flipH();
 
@@ -254,15 +251,12 @@ namespace filetypes
             {
                 clog << "ExportBGP(): Invalid image format!!!!\n";
                 assert(false);
-                break;
             }
         };
         
         //Export the resulting 8bpp image
         if( !result )
-        {
             throw runtime_error( "ExportBGP(): Couldn't write PNG image to path specified \"" + outf + "\" !" );
-        }
     }
 
     BGP ImportBGP( const std::string & infile )
@@ -314,4 +308,64 @@ namespace filetypes
         assert(false);
         return move(target);
     }
+
+
+
+//========================================================================================================
+//  bgp_rule
+//========================================================================================================
+    /*
+        bgp_rule
+            Rule for identifying BPL content. With the ContentTypeHandler!
+    */
+    class bgp_rule : public IContentHandlingRule
+    {
+    public:
+        bgp_rule(){}
+        ~bgp_rule(){}
+
+        //Returns the value from the content type enum to represent what this container contains!
+        virtual cnt_t getContentType()const { return CnTy_BGP; }
+
+        //Returns an ID number identifying the rule. Its not the index in the storage array,
+        // because rules can me added and removed during exec. Thus the need for unique IDs.
+        //IDs are assigned on registration of the rule by the handler.
+        virtual cntRID_t getRuleID()const                  { return m_myID; }
+        virtual void              setRuleID( cntRID_t id ) { m_myID = id; }
+
+        //This method returns the content details about what is in-between "itdatabeg" and "itdataend".
+        virtual ContentBlock Analyse( const analysis_parameter & parameters )
+        {
+            //#TODO: Do something with this method, its just dumb and not accomplishing much right now! 
+            ContentBlock cb;
+
+            cb._startoffset          = 0;
+            cb._endoffset            = std::distance( parameters._itdatabeg, parameters._itdataend );
+            cb._rule_id_that_matched = getRuleID();
+            cb._type                 = getContentType();
+
+            return cb;
+        }
+
+        //This method is a quick boolean test to determine quickly if this content handling
+        // rule matches, without in-depth analysis.
+        virtual bool isMatch(  vector<uint8_t>::const_iterator   itdatabeg, 
+                               vector<uint8_t>::const_iterator   itdataend,
+                               const std::string    & filext )
+        {
+            return utils::CompareStrIgnoreCase(filext, BGP_FileExt);
+        }
+
+    private:
+        cntRID_t m_myID;
+    };
+
+//========================================================================================================
+//  bgp_rule_registrator
+//========================================================================================================
+    /*
+        bgp_rule_registrator
+            A small singleton that has for only task to register the bgp_rule!
+    */
+    RuleRegistrator<bgp_rule> RuleRegistrator<bgp_rule>::s_instance;
 };

@@ -22,7 +22,7 @@
   <!--absolute path to a xml file. -->
   <!--Or, a path relative to the current configuration file to another xml file.-->
   <!--External XML files must have opening and closing <PMD2> tags and follow the exact same layout as the main config file-->
-  
+    
   <!--=======================================================================-->
   <!--List of known Game Editions-->
   <!--=======================================================================-->
@@ -88,6 +88,8 @@
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
         <Block name="ScriptOpCodes"     beg="0x03C3D0" end="0x03CFC8"/>
+        <Block name="Objects"           beg="0x42C14" end="0x44618"/>
+        <Block name="CRoutines"         beg="0x405E8" end="0x41BD0"/>
       </Bin>
       <!-- overlay_0013 -->
       <Bin filepath="overlay/overlay_0013.bin" loadaddress="0x238A140">
@@ -104,6 +106,8 @@
       <!--#TODO-->
       <!-- arm9 -->
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
+        <!--<Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>-->
+        <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
         <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
         <Block name="Events"            beg="0xA5BE0" end="0xA715C"/>
       </Bin>
@@ -120,6 +124,7 @@
         <Block name="Entities"          beg="0xA9438" end="0xAA650"/>
         <Block name="Events"            beg="0xA689C" end="0xA7D0C"/>
         <Block name="ScriptVars"        beg="0x9EC44" end="0x9F374"/>
+        <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DD8E0">
@@ -303,7 +308,96 @@
     
   </StringIndexData>
   
-  <!--Append any external files to parse here!-->
+  <!--=======================================================================-->
+  <!--ASM Patches Constants-->
+  <!--=======================================================================-->
+  <!--Constants used within several utilities for generating the asm patches
+      and locating the appropriate patch files.-->
+  <ASMPatchesConstants>  
+    <!--*******************-->
+    <!--LooseBinFiles-->
+    <!--*******************-->
+    <!--List of where to write which file containing dumped hardcoded data for the patches to work with at runtime-->
+    <LooseBinFiles>
+      
+      <!--Explorers of Sky-->
+      <Game id="EoS_NA" id2="EoS_JP" id3="EoS_EU" >
+        <File srcdata="Events"      filepath="BALANCE/level_list.bin"   />
+        <File srcdata="Entities"    filepath="BALANCE/actor_list.bin"   />
+        <File srcdata="Objects"     filepath="BALANCE/object_list.bin"  />
+        <File srcdata="ScriptVars"  filepath="BALANCE/gvar_list.bin"    />
+        <File srcdata="CRoutines"   filepath="BALANCE/croutine_list.bin"/>
+      </Game>
+
+    </LooseBinFiles>
+    
+    
+    <!--*******************-->
+    <!--Patches directories-->
+    <!--*******************-->
+    <PatchesDir>
+      <!--Explorers of Sky-->
+      <Game id="EoS_JP" filepath="asm_patches/eos/jp" />
+      <Game id="EoS_NA" filepath="asm_patches/eos/na" />
+      <Game id="EoS_EU" filepath="asm_patches/eos/eu" />
+      <!--Explorers of Time-->
+      <!--Explorers of Darkness-->
+    </PatchesDir>
+    
+    <!--*******************-->
+    <!--Patches list-->
+    <!--*******************-->
+    <!--Patching steps for applying various asm patches on the game-->
+    <Patches>
+      
+      <!--###############################-->
+      <!--North American Explorers of Sky-->
+      <!--###############################-->
+      <Game id="EoS_NA">
+        
+        <!--Patching sequence for the level list loader-->
+        <Patch id="LvlLstLdr" >
+          <!--Include stub-->
+          <Include filename ="header_stub.asm"/>
+          <!--Open each binaries for processing and include the appropriate files-->
+          <!--The openfile statements will be appropriately generated based on the data in this file, and on the rom path!-->
+          <OpenBin filepath="arm9.bin">
+            <Include filename ="levellistloader_arm9.asm"/>
+          </OpenBin>
+          <OpenBin filepath="overlay/overlay_0011.bin">
+            <Include filename ="levellistloader_overlay11.asm"/>
+          </OpenBin>
+        </Patch>
+        
+        <!--Patching sequence for the actor list loader-->
+        <Patch id="ActorLoader" >
+          <!--Include stub-->
+          <Include filename ="header_stub.asm"/>
+          <!--Open each binaries for processing and include the appropriate files-->
+          <!--The openfile statements will be appropriately generated based on the data in this file, and on the rom path!-->
+          <OpenBin filepath="arm9.bin">
+            <Include filename ="actorlistloader_arm9.asm"/>
+          </OpenBin>
+          <OpenBin filepath="overlay/overlay_0011.bin">
+            <Include filename ="actorlistloader_overlay11.asm"/>
+          </OpenBin>
+        </Patch>
+        
+      </Game>
+      <!--###############################-->
+      <!--European Explorers of Sky-->
+      <!--###############################-->
+    
+      <!--###############################-->
+      <!--Japanese Explorers of Sky-->
+      <!--###############################-->
+    </Patches>
+
+  </ASMPatchesConstants>
+  
+  <!--=======================================================================-->
+  <!--Append any external config files to parse here!-->
+  <!--=======================================================================-->
   <External filepath="pmd2scriptdata.xml" />
 
 </PMD2>
