@@ -2081,12 +2081,12 @@ namespace DSE
 
     /*
     */
-    void BatchAudioLoader::LoadFromBlobFile(const std::string & blob)
+    void BatchAudioLoader::LoadFromBlobFile(const std::string & blob, bool matchbyname)
     {
 
         vector<uint8_t> filedata = utils::io::ReadFileToByteVector( blob );
 
-        BlobScanner<vector<uint8_t>::const_iterator> blobscan( filedata.begin(), filedata.end() );
+        BlobScanner<vector<uint8_t>::const_iterator> blobscan( filedata.begin(), filedata.end(), matchbyname);
         blobscan.Scan();
         auto foundpairs = blobscan.ListAllMatchingSMDLPairs();
 
@@ -2127,7 +2127,7 @@ namespace DSE
 
     /*
     */
-    void BatchAudioLoader::LoadSMDLSWDLSPairsFromBlob( const std::string & blob )
+    void BatchAudioLoader::LoadSMDLSWDLSPairsFromBlob( const std::string & blob, bool matchbyname )
     {
         Poco::Path blobpath(blob);
         if(blobpath.absolute().isDirectory())
@@ -2138,13 +2138,13 @@ namespace DSE
             {
                 if (dirit.path().isFile())
                 {
-                    LoadFromBlobFile(dirit.path().toString());
+                    LoadFromBlobFile(dirit.path().toString(), matchbyname);
                 }
                 ++dirit;
             }
         }
         else
-            LoadFromBlobFile(blob);
+            LoadFromBlobFile(blob, matchbyname);
 
     }
 

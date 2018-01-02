@@ -328,6 +328,15 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionNoConvertSamples, &GetInstance(), placeholders::_1 ),
         },
 
+        //match blob scanned containers by internal name
+        {
+            "nmatchoff",
+            0,
+            "Specifying this will make the program match pairs in a blob by order instead of by internal name! Needed for some games with strange naming conventions.",
+            "-nmatchoff",
+            std::bind(&CAudioUtil::ParseOptionMatchByName, &GetInstance(), placeholders::_1),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -372,6 +381,7 @@ namespace audioutil
         m_bUseLFOFx       = true;
         m_bMakeCvinfo     = false;
         m_bConvertSamples = true;
+        m_bmatchbyname    = true;
         m_nbloops         = 0;
         m_outtype         = eOutputType::SF2;
     }
@@ -773,6 +783,12 @@ namespace audioutil
     bool CAudioUtil::ParseOptionNoConvertSamples( const std::vector<std::string> & optdata )
     {
         return m_bConvertSamples = true;
+    }
+
+    bool CAudioUtil::ParseOptionMatchByName(const std::vector<std::string>& optdata)
+    {
+        m_bmatchbyname = false;
+        return true;
     }
 
 //------------------------------------------------
@@ -1461,7 +1477,7 @@ namespace audioutil
         else if (!m_bgmblobpath.empty())
         {
             for(const auto & blobpath : m_bgmblobpath)
-                bal.LoadSMDLSWDLSPairsFromBlob(blobpath);
+                bal.LoadSMDLSWDLSPairsFromBlob(blobpath, m_bmatchbyname);
         }
         else
             bal.LoadMatchedSMDLSWDLPairs( m_swdlpath, m_smdlpath );

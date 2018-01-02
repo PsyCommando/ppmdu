@@ -87,6 +87,8 @@ namespace audioutil
 
         bool ParseOptionNoConvertSamples( const std::vector<std::string> & optdata );
 
+        bool ParseOptionMatchByName(const std::vector<std::string> & optdata);
+
         //Execution
         void DetermineOperation();
         int  Execute           ();
@@ -180,6 +182,7 @@ namespace audioutil
         bool        m_bUseLFOFx;        //Whether LFO FX are processed
         bool        m_bMakeCvinfo;      //Whether we should export a blank cvinfo file!
         bool        m_bConvertSamples;  //Whether the samples should be converted to pcm16 when exporting
+        bool        m_bmatchbyname;     //Whether the containers inside a blob should be matched by internal name or simply matched by order in the blob.
         
         //bool        m_bForceMidiExp;    //Whether the user is forcing MIDI export.
 

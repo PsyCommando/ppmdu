@@ -95,7 +95,7 @@ Changelog:
           envelopes are logarithmic.
         + Still also trying to fix pitch issues with some samples.. But I got nothing..
 		
-- 0.37 (2017/12/) :
+- 0.37 (2017/12/14) :
 		- Added multi sf2 export for games that do not use a main bank! It will now default to one sf2 per midi for games with
 		  no main bank!
 		- Tweaked the -blobpath switch so now you can specify a directory of "blob" files to scan and export!
