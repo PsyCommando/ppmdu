@@ -1,3 +1,8 @@
+[![forthebadge](http://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/compatibility-club-penguin.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/built-with-science.svg)](http://forthebadge.com)
+[![forthebadge](http://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
+
 # Pokemon Mystery Dungeon Utilities
 Combined code for several utilities used to export and import things to and from the "Pokemon Mystery Dungeon : Explorers of" games on the NDS. 
 
