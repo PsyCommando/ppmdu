@@ -56,6 +56,8 @@ namespace pmd2
         inline bool operator!=( const toolkitversion_t& other )const { return !operator==(other); }
 
     };
+
+	extern const std::string PMD2ToolsetVersion;
     extern const toolkitversion_t PMD2ToolsetVersionStruct;
     toolkitversion_t ParseToolsetVerion( const std::string & verstxt );
 
