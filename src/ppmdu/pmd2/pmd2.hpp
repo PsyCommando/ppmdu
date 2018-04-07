@@ -44,11 +44,7 @@ namespace pmd2
     const std::string CommonXMLGameRegionAttrStr  = "gameRegion";
     const std::string CommonXMLToolVersionAttrStr = "libVersion";
 
-    /*
-        Current version string. Represents the version of the PPMDU library used.
-    */
-    const std::string PMD2ToolsetVersion = "0.2.0"; //! #TODO: Replace with something that takes care of incrementing this for us!
-    struct toolkitversion_t
+	struct toolkitversion_t
     { 
         unsigned int major, minor, patch; 
 

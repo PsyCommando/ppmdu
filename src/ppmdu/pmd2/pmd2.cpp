@@ -76,7 +76,12 @@ namespace pmd2
         "Spanish",
     }};
 
-    const toolkitversion_t PMD2ToolsetVersionStruct{0,1,0};
+	/*
+	Current version string. Represents the version of the PPMDU library used.
+	*/
+	const std::string PMD2ToolsetVersion = "0.2.0"; //! #TODO: Replace with something that takes care of incrementing this for us!
+
+    const toolkitversion_t PMD2ToolsetVersionStruct{0,2,0};
 
     /*
         Directories present in all versions of PMD2
