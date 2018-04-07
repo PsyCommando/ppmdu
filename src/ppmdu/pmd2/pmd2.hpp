@@ -43,8 +43,8 @@ namespace pmd2
     const std::string CommonXMLGameVersionAttrStr = "gameVersion";
     const std::string CommonXMLGameRegionAttrStr  = "gameRegion";
     const std::string CommonXMLToolVersionAttrStr = "libVersion";
-
-	struct toolkitversion_t
+    
+    struct toolkitversion_t
     { 
         unsigned int major, minor, patch; 
 
