@@ -38,7 +38,7 @@ namespace pmd2
     {
         pugixmlutils::AppendAttribute( destnode, CommonXMLGameVersionAttrStr, GetGameVersionName(ver) );
         pugixmlutils::AppendAttribute( destnode, CommonXMLGameRegionAttrStr,  GetGameRegionNames(reg) );
-        pugixmlutils::AppendAttribute( destnode, CommonXMLToolVersionAttrStr, PMD2ToolsetVersion );
+        pugixmlutils::AppendAttribute( destnode, CommonXMLToolVersionAttrStr, static_cast<std::string>(PMD2ToolsetVersionStruct) );
     }
 
     /*

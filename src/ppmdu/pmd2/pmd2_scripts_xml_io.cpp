@@ -407,7 +407,7 @@ namespace pmd2
             unsigned long                      nbunproc     = 0;
             unsigned long                      nberrors     = 0;
 
-            output << "== Script Compiler Report, PPMDU Toolset v" <<PMD2ToolsetVersion <<" ==\n";
+            output << "== Script Compiler Report, PPMDU Toolset v" <<PMD2ToolsetVersionStruct <<" ==\n";
             for( const compileentry_t & pair : m_results )
             {
                 if( !pair.second.bprocessed )
@@ -2083,7 +2083,7 @@ namespace pmd2
                 tkitver.minor != PMD2ToolsetVersionStruct.minor )
             {
                 stringstream sstr;
-                sstr << "GameScriptsXMLParser::HandleLoadXMLDoc() : XML data was exported with a different version of the library! Version " <<PMD2ToolsetVersion <<" can't parse version \"" <<toolsetver <<"\"!";
+                sstr << "GameScriptsXMLParser::HandleLoadXMLDoc() : XML data was exported with a different version of the library! Version " <<PMD2ToolsetVersionStruct <<" can't parse version \"" <<toolsetver <<"\"!";
                 if(m_preport)
                     m_preport->InsertError(m_curfilebasename, parentn.offset_debug(), sstr.str());
                 throw std::runtime_error(sstr.str());

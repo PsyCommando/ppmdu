@@ -10,7 +10,8 @@ Description:
 #include <cstdint>
 #include <array>
 #include <string>
-
+#include <sstream>
+#include <iosfwd>
 /*
     A macro for eventually exporting symbols through a DLL.
 */
@@ -26,8 +27,9 @@ Description:
     #define PPMDU_API
 #endif
 
-
-
+//Stream operator for toolkit version
+namespace pmd2 { struct toolkitversion_t; };
+std::ostream& operator<< (std::ostream& stream, const pmd2::toolkitversion_t & tkitver);
 
 namespace pmd2
 {
@@ -43,7 +45,11 @@ namespace pmd2
     const std::string CommonXMLGameVersionAttrStr = "gameVersion";
     const std::string CommonXMLGameRegionAttrStr  = "gameRegion";
     const std::string CommonXMLToolVersionAttrStr = "libVersion";
-    
+
+    /*
+        Toolset version struct
+            Meant to store the ppmdu lib's internal version, which differs from each utility's version.
+    */
     struct toolkitversion_t
     { 
         unsigned int major, minor, patch; 
@@ -55,11 +61,20 @@ namespace pmd2
         inline bool operator==( const toolkitversion_t& other )const { return major == other.major && minor == other.minor && patch == other.patch; }
         inline bool operator!=( const toolkitversion_t& other )const { return !operator==(other); }
 
-    };
+        operator std::string()const
+        {
+            std::stringstream converted;
+            converted << *this;
+            return converted.str();
+        }
 
-	extern const std::string PMD2ToolsetVersion;
-    extern const toolkitversion_t PMD2ToolsetVersionStruct;
+    };
     toolkitversion_t ParseToolsetVerion( const std::string & verstxt );
+
+    /*
+        Current version string. Represents the version of the PPMDU library used.
+    */
+    const toolkitversion_t PMD2ToolsetVersionStruct{0,2,0};
 
     /*******************************************************************************
         eGameVersion

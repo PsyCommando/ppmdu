@@ -1,5 +1,6 @@
 #include "pmd2.hpp"
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <utils/poco_wrapper.hpp>
 #include <iostream>
@@ -8,6 +9,12 @@
 #include <iterator>
 #include <algorithm>
 using namespace std;
+
+std::ostream& operator<< (std::ostream& stream, const pmd2::toolkitversion_t & tkitver)
+{
+    stream <<tkitver.major << "." << tkitver.minor << "." << tkitver.patch;
+    return stream;
+}
 
 namespace pmd2
 {
@@ -76,13 +83,6 @@ namespace pmd2
         "Spanish",
     }};
 
-    /*
-    Current version string. Represents the version of the PPMDU library used.
-    */
-    const std::string PMD2ToolsetVersion = "0.2.0"; //! #TODO: Replace with something that takes care of incrementing this for us!
-    
-    const toolkitversion_t PMD2ToolsetVersionStruct{0,2,0};
-    
     /*
         Directories present in all versions of PMD2
     */
