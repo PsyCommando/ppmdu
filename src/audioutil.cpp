@@ -464,6 +464,10 @@ namespace audioutil
             return (std::tolower(c1, curloc ) == std::tolower(c2, curloc ));
         };
 
+        //Pre-check to make sure we even have the same lengths
+        if (ext1.length() != ext2.length())
+            return false;
+
         //std::transform(ext1.begin(), ext1.end(), ext1.begin(), ::tolower);
         //std::transform(ext2.begin(), ext2.end(), ext2.begin(), ::tolower);
         //return ext1 == ext2;
@@ -1420,33 +1424,6 @@ namespace audioutil
         CreateOutputDir(stroutpath);
         DoExportLoader( bal, stroutpath );
         
-        //cout << "-------------------------------------------------------------\n" ;
-        //if( m_outtype == eOutputType::SF2 )
-        //{
-        //    cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
-        //}
-        //else if( m_outtype == eOutputType::DLS )
-        //{
-        //    cout << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
-        //    assert(false);
-        //}
-        //else if( m_outtype == eOutputType::XML )
-        //{
-        //    cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
-        //}
-        //else if( m_outtype == eOutputType::XML )
-        //{
-        //    cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportMIDIs( m_outputPath, m_convinfopath, m_nbloops );
-        //}
-        //else
-        //{
-        //    cout << "Output type is invalid!\n";
-        //    assert(false);
-        //}
-
         cout <<"..done\n";
 
         return 0;

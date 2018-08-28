@@ -1,7 +1,7 @@
 =======================================================
 ==  Baz the Poochyena's PMD:EoS/T/D - Audio Utility ==
 ======================================================
-Version	   : 0.36
+Version	   : 0.38
 Released   : 2015/10/13
 Written by : psy_commando (psycommando@gmail.com)
 
@@ -100,6 +100,9 @@ Changelog:
 		  no main bank!
 		- Tweaked the -blobpath switch so now you can specify a directory of "blob" files to scan and export!
 	      Works very well with Soma!
+		  
+- 0.38 (//) :
+		- Fixed oversight when comparing file extensions for DSE files. It would crash when comparing against file extensions longer than 3 characters.
 		
 
 
