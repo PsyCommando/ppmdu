@@ -617,7 +617,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
 
@@ -735,7 +735,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
@@ -788,7 +788,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
 
@@ -1003,10 +1003,10 @@ Example entry:
             <RemapedKey>38</RemapedKey>
           </Remap>
           
-          <!--0xB -  (smpl 0xBA )-->
+          <!--0xB - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0xC -  (smpl 0xBB )-->
           <Remap>
@@ -1272,7 +1272,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
 
@@ -1664,15 +1664,15 @@ Example entry:
             <OriginalKey>64</OriginalKey>
             <RemapedKey>64</RemapedKey>
           </Remap>
-          <!--0x3 -  (smpl 0x6 )-->
+          <!--0x3 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
             <RemapedKey>70</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0x47 )-->
+          <!--0x4 - Slap (smpl 0x47 )-->
           <Remap>
             <OriginalKey>71</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>28</RemapedKey>
           </Remap>
           <!--0x5 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -2088,7 +2088,7 @@ Example entry:
             <OriginalKey>64</OriginalKey>
             <RemapedKey>64</RemapedKey>
           </Remap>
-          <!--0x9 -  (smpl 0x6 )-->
+          <!--0x9 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
             <RemapedKey>70</RemapedKey>
@@ -2401,7 +2401,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Oboe  (smpl     0x81     0x82 )-->
@@ -2584,10 +2584,10 @@ Example entry:
             <OriginalKey>36</OriginalKey>
             <RemapedKey>36</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0xE )-->
+          <!--0x1 -  Handclap (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
           <!--0x2 - Shaker (smpl 0x45 )-->
           <Remap>
@@ -2614,10 +2614,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0023-->
+  <!--bgm0023 - Mt. Bristle -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0023</PairName>
+	<OutputName>0023 - Mt. Bristle</OutputName>
     <Programs>
       <!--0x3 Synth Brass  (smpl     0x262 )-->
       <Program>
@@ -2658,7 +2659,8 @@ Example entry:
       <!--0x54   (smpl     0xAD     0xAE )-->
       <Program>
         <DSEProgramID>84</DSEProgramID>
-        <MIDIPreset>84</MIDIPreset>
+        <MIDIPreset>105</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -2749,7 +2751,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0025 Apple Wood-->
+  <!--bgm0025 - Apple Wood-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0025</PairName>
@@ -2783,10 +2785,10 @@ Example entry:
         <MIDIPreset>73</MIDIPreset>
         <Transpose>-2</Transpose>
       </Program>
-      <!--0x34   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x34 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
@@ -3297,13 +3299,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
@@ -3860,13 +3862,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
@@ -4012,7 +4014,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
@@ -4639,15 +4641,15 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 -  (smpl 0x2C3 )-->
+          <!--0x0 - Wooden Block Hi (smpl 0x2C3 )-->
           <Remap>
             <OriginalKey>36</OriginalKey>
-            <RemapedKey>36</RemapedKey>
+            <RemapedKey>76</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x2C3 )-->
+          <!--0x1 - Wooden Block Hi (smpl 0x2C3 )-->
           <Remap>
             <OriginalKey>37</OriginalKey>
-            <RemapedKey>37</RemapedKey>
+            <RemapedKey>76</RemapedKey>
           </Remap>
           <!--0x2 - Shaker (smpl 0x45 )-->
           <Remap>
@@ -4794,7 +4796,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
@@ -5095,15 +5097,15 @@ Example entry:
             <OriginalKey>41</OriginalKey>
             <RemapedKey>41</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0xE )-->
+          <!--0x4 - Handclap (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
-          <!--0x5 -  (smpl 0xBA )-->
+          <!--0x5 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>33</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0x6 -  (smpl 0xBB )-->
           <Remap>
@@ -5245,10 +5247,10 @@ Example entry:
             <OriginalKey>54</OriginalKey>
             <RemapedKey>54</RemapedKey>
           </Remap>
-          <!--0x4 - Short Guiro  (smpl 0x6 )-->
+          <!--0x4 - Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>73</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x5 -  (smpl 0x2C2 )-->
           <Remap>
@@ -5578,10 +5580,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -5633,10 +5635,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -5788,7 +5790,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Oboe  (smpl     0x81 )-->
@@ -5811,7 +5813,7 @@ Example entry:
       <!--0x37 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>55</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x61 Brass  (smpl     0x262 )-->
@@ -6309,15 +6311,15 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 -  (smpl 0x2BE )-->
+          <!--0x0 - Crash Cymbals (smpl 0x2BE )-->
           <Remap>
             <OriginalKey>36</OriginalKey>
-            <RemapedKey>36</RemapedKey>
+            <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x2BE )-->
+          <!--0x1 - Crash Cymbals (smpl 0x2BE )-->
           <Remap>
             <OriginalKey>37</OriginalKey>
-            <RemapedKey>37</RemapedKey>
+            <RemapedKey>49</RemapedKey>
           </Remap>
           <!--0x2 -  Snare (smpl 0x3E )-->
           <Remap>
@@ -6364,7 +6366,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0064-->
+  <!--bgm0064 - SYS TITLE 02-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0064</PairName>
@@ -6434,13 +6436,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
@@ -6485,20 +6487,20 @@ Example entry:
             <OriginalKey>40</OriginalKey>
             <RemapedKey>40</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x2BE )-->
+          <!--0x1 - Crash Cymbals (smpl 0x2BE )-->
           <Remap>
             <OriginalKey>41</OriginalKey>
-            <RemapedKey>41</RemapedKey>
+            <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0x2BE )-->
+          <!--0x2 - Crash Cymbals (smpl 0x2BE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x3 -  (smpl 0x2BE )-->
+          <!--0x3 - Crash Cymbals (smpl 0x2BE )-->
           <Remap>
             <OriginalKey>45</OriginalKey>
-            <RemapedKey>45</RemapedKey>
+            <RemapedKey>49</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -6529,7 +6531,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x79  Timpani (smpl     0x7C )-->
@@ -6664,10 +6666,10 @@ Example entry:
         <MIDIPreset>47</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x20 Strings Ensemble2  (smpl     0x268 )-->
+      <!--0x20 Strings Ensemble  (smpl     0x268 )-->
       <Program>
         <DSEProgramID>32</DSEProgramID>
-        <MIDIPreset>50</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x21 String Ensemble1  (smpl     0x26A )-->
       <Program>
@@ -6678,7 +6680,7 @@ Example entry:
       <Program>
         <DSEProgramID>36</DSEProgramID>
         <MIDIPreset>53</MIDIPreset>
-        <Transpose>-1</Transpose>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x33  Recorder (smpl     0x270 )-->
       <Program>
@@ -6944,20 +6946,20 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 -  (smpl 0xE )-->
+          <!--0x0 - Handclap (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x44 )-->
+          <!--0x1 - Tiny Snare (smpl 0x44 )-->
           <Remap>
             <OriginalKey>45</OriginalKey>
-            <RemapedKey>45</RemapedKey>
+            <RemapedKey>38</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0xBA )-->
+          <!--0x2 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0x3 -  (smpl 0xAF )-->
           <Remap>
@@ -6989,15 +6991,15 @@ Example entry:
             <OriginalKey>91</OriginalKey>
             <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x9 -  (smpl 0x44 )-->
+          <!--0x9 - Tiny Snare  (smpl 0x44 )-->
           <Remap>
             <OriginalKey>98</OriginalKey>
-            <RemapedKey>98</RemapedKey>
+            <RemapedKey>38</RemapedKey>
           </Remap>
-          <!--0xA -  (smpl 0x44 )-->
+          <!--0xA - Tiny Snare (smpl 0x44 )-->
           <Remap>
             <OriginalKey>99</OriginalKey>
-            <RemapedKey>99</RemapedKey>
+            <RemapedKey>38</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -7419,10 +7421,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 -  (smpl 0xBA )-->
+          <!--0x0 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0x1 -  (smpl 0xBB )-->
           <Remap>
@@ -7684,10 +7686,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -7760,13 +7762,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
     </Programs>
@@ -8139,7 +8141,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x42  Brass (smpl     0x4 )-->
@@ -8194,10 +8196,10 @@ Example entry:
             <OriginalKey>52</OriginalKey>
             <RemapedKey>46</RemapedKey>
           </Remap>
-          <!--0x5 -  (smpl 0x6 )-->
+          <!--0x5 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x6 -  Open Triangle (smpl 0x65 )-->
           <Remap>
@@ -8250,13 +8252,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
@@ -8292,10 +8295,10 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>100</MIDIPreset>
       </Program>
-      <!--0x8   (smpl     0x268 )-->
+      <!--0x8 String Ensemble  (smpl     0x268 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
-        <MIDIPreset>8</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x9   (smpl     0x26A )-->
       <Program>
@@ -8330,10 +8333,10 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>100</MIDIPreset>
       </Program>
-      <!--0x8   (smpl     0x268 )-->
+      <!--0x8 String Ensemble  (smpl     0x268 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
-        <MIDIPreset>8</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x9   (smpl     0x26A )-->
       <Program>
@@ -8746,10 +8749,10 @@ Example entry:
             <OriginalKey>65</OriginalKey>
             <RemapedKey>54</RemapedKey>
           </Remap>
-          <!--0x6 -  (smpl 0x6 )-->
+          <!--0x6 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x7 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -9562,7 +9565,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x3D Trumpet  (smpl     0x85     0x9C     0x9D )-->
@@ -9716,10 +9719,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -9826,10 +9829,10 @@ Example entry:
         <DSEProgramID>4</DSEProgramID>
         <MIDIPreset>100</MIDIPreset>
       </Program>
-      <!--0x8   (smpl     0x268 )-->
+      <!--0x8 String Ensemble  (smpl     0x268 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
-        <MIDIPreset>8</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x9   (smpl     0x26A )-->
       <Program>
@@ -9897,10 +9900,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 -  (smpl 0xE )-->
+          <!--0x0 - Handclap (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
           <!--0x1 - Long Guiro  (smpl 0xBA )-->
           <Remap>
@@ -10053,10 +10056,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -10215,7 +10218,7 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Oboe  (smpl     0x81     0x82 )-->
@@ -10232,7 +10235,7 @@ Example entry:
       <!--0x37 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>55</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x38 Oboe  (smpl     0x81     0x82 )-->
@@ -10249,7 +10252,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0136-->
+  <!--bgm0136 - Beyond the Dream-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0136</PairName>
@@ -10278,10 +10281,11 @@ Example entry:
         <MIDIPreset>47</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x1B   (smpl     0x9B     0x86     0x87 )-->
+      <!--0x1B Electric Bass?  (smpl     0x9B     0x86     0x87 )-->
       <Program>
         <DSEProgramID>27</DSEProgramID>
-        <MIDIPreset>27</MIDIPreset>
+        <MIDIPreset>34</MIDIPreset>
+		<Transpose>-2</Transpose>
       </Program>
       <!--0x62 Sine Wave  (smpl     0xB8 )-->
       <Program>
@@ -10293,28 +10297,56 @@ Example entry:
         <DSEProgramID>99</DSEProgramID>
         <MIDIPreset>88</MIDIPreset>
       </Program>
-      <!--0x7B   (smpl     0x95 )-->
+      <!--0x7B Claves  (smpl     0x95 )-->
       <Program>
         <DSEProgramID>123</DSEProgramID>
-        <MIDIPreset>123</MIDIPreset>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+        <KeyRemaps>
+          <!--Claves(smpl 0x95)-->
+          <Remap>
+            <OriginalKey>58</OriginalKey>
+            <RemapedKey>75</RemapedKey>
+          </Remap>
+        </KeyRemaps>
       </Program>
-      <!--0x7C   (smpl     0x5E )-->
+      <!--0x7C Tambourine  (smpl     0x5E )-->
       <Program>
         <DSEProgramID>124</DSEProgramID>
-        <MIDIPreset>124</MIDIPreset>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+        <KeyRemaps>
+          <!--Tambourine(smpl 0x5E)-->
+          <Remap>
+            <OriginalKey>58</OriginalKey>
+            <RemapedKey>54</RemapedKey>
+          </Remap>
+        </KeyRemaps>
       </Program>
-      <!--0x7D   (smpl     0x45 )-->
+      <!--0x7D Shaker  (smpl     0x45 )-->
       <Program>
         <DSEProgramID>125</DSEProgramID>
-        <MIDIPreset>125</MIDIPreset>
+        <!-- Set to XG drumkit.. -->
+        <MIDIPreset>1</MIDIPreset>
+        <MIDIBank>127</MIDIBank>
+        <KeyRemaps>
+          <!--Shaker(smpl 0x45)-->
+          <Remap>
+            <OriginalKey>63</OriginalKey>
+            <RemapedKey>82</RemapedKey>
+          </Remap>
+        </KeyRemaps>
       </Program>
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0137-->
+  <!--bgm0137 - Air of Unease -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0137</PairName>
+	<OutputName>0137 - Air of Unease</OutputName>
     <Programs>
       <!--0x5 Marimba  (smpl     0x2D     0x2E )-->
       <Program>
@@ -10343,27 +10375,27 @@ Example entry:
         <DSEProgramID>32</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x34   (smpl     0x7E     0x7F     0x80 )-->
+      <!--0x34 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x35 Flute  (smpl     0x7E     0x7F     0x80 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>74</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
       </Program>
       <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
         <DSEProgramID>54</DSEProgramID>
         <MIDIPreset>71</MIDIPreset>
-        <Transpose>-1</Transpose>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x3F Tuba  (smpl     0xA9     0xAA     0xAB )-->
       <Program>
         <DSEProgramID>63</DSEProgramID>
         <MIDIPreset>59</MIDIPreset>
-        <Transpose>-1</Transpose>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -10467,15 +10499,15 @@ Example entry:
             <OriginalKey>38</OriginalKey>
             <RemapedKey>86</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0xE )-->
+          <!--0x2 - Handclap (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
-          <!--0x3 -  (smpl 0x44 )-->
+          <!--0x3 - Tiny Snare (smpl 0x44 )-->
           <Remap>
             <OriginalKey>45</OriginalKey>
-            <RemapedKey>45</RemapedKey>
+            <RemapedKey>38</RemapedKey>
           </Remap>
           <!--0x4 -  Open Hi-Hat? (smpl 0x2A)-->
           <Remap>
@@ -10573,10 +10605,10 @@ Example entry:
             <OriginalKey>42</OriginalKey>
             <RemapedKey>42</RemapedKey>
           </Remap>
-          <!--0x4 -  (smpl 0xBA )-->
+          <!--0x4 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0x5 -  (smpl 0xBB )-->
           <Remap>
@@ -10639,10 +10671,10 @@ Example entry:
         <DSEProgramID>64</DSEProgramID>
         <MIDIPreset>59</MIDIPreset>
       </Program>
-      <!--0x42 Strings Ensemble2  (smpl     0x268 )-->
+      <!--0x42 Strings Ensemble  (smpl     0x268 )-->
       <Program>
         <DSEProgramID>66</DSEProgramID>
-        <MIDIPreset>50</MIDIPreset>
+        <MIDIPreset>49</MIDIPreset>
       </Program>
       <!--0x79  Timpani (smpl     0x7C )-->
       <Program>
@@ -10662,10 +10694,10 @@ Example entry:
             <OriginalKey>42</OriginalKey>
             <RemapedKey>42</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x6 )-->
+          <!--0x1 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -10804,10 +10836,11 @@ Example entry:
   <Track>
     <PairName>bgm0143</PairName>
     <Programs>
-      <!--0x4   (smpl     0xA0     0x67 )-->
+      <!--0x4 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
-        <MIDIPreset>4</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
@@ -11103,10 +11136,10 @@ Example entry:
             <OriginalKey>36</OriginalKey>
             <RemapedKey>36</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x6 )-->
+          <!--0x1 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -11265,10 +11298,10 @@ Example entry:
             <OriginalKey>40</OriginalKey>
             <RemapedKey>40</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0xE )-->
+          <!--0x2 - Claps (smpl 0xE )-->
           <Remap>
             <OriginalKey>43</OriginalKey>
-            <RemapedKey>43</RemapedKey>
+            <RemapedKey>39</RemapedKey>
           </Remap>
           <!--0x3 - Shaker (smpl 0x45 )-->
           <Remap>
@@ -11509,10 +11542,10 @@ Example entry:
             <OriginalKey>65</OriginalKey>
             <RemapedKey>54</RemapedKey>
           </Remap>
-          <!--0x6 -  (smpl 0x6 )-->
+          <!--0x6 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x7 -  Crash Cymbals (smpl 0x17)-->
           <Remap>
@@ -11631,7 +11664,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0152-->
+  <!--bgm0152 - Iccle Forest-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0152</PairName>
@@ -11699,10 +11732,11 @@ Example entry:
         <MIDIPreset>41</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x4B   (smpl     0x79     0x7A )-->
+      <!--0x4B Pizzicato Strings  (smpl     0x79     0x7A )-->
       <Program>
         <DSEProgramID>75</DSEProgramID>
-        <MIDIPreset>75</MIDIPreset>
+        <MIDIPreset>46</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x79  Timpani (smpl     0x7C )-->
       <Program>
@@ -11727,10 +11761,10 @@ Example entry:
             <OriginalKey>49</OriginalKey>
             <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0x6 )-->
+          <!--0x2 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x3 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -11831,10 +11865,10 @@ Example entry:
             <OriginalKey>42</OriginalKey>
             <RemapedKey>42</RemapedKey>
           </Remap>
-          <!--0x2 -  (smpl 0xBA )-->
+          <!--0x2 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -11895,13 +11929,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x47 Violin or maybe Viola?  (smpl     0x51     0x4F     0x50 )-->
@@ -11944,10 +11978,10 @@ Example entry:
             <OriginalKey>42</OriginalKey>
             <RemapedKey>42</RemapedKey>
           </Remap>
-          <!--0x3 -  (smpl 0xBA )-->
+          <!--0x3 - Long Guiro (smpl 0xBA )-->
           <Remap>
             <OriginalKey>46</OriginalKey>
-            <RemapedKey>46</RemapedKey>
+            <RemapedKey>74</RemapedKey>
           </Remap>
           <!--0x4 - Short Guiro?  (smpl 0xBB )-->
           <Remap>
@@ -11969,10 +12003,10 @@ Example entry:
             <OriginalKey>54</OriginalKey>
             <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x8 -  (smpl 0x6 )-->
+          <!--0x8 - Maracas (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
@@ -12081,13 +12115,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x42 Horn  (smpl     0x259 )-->
@@ -12175,15 +12209,16 @@ Example entry:
         <DSEProgramID>31</DSEProgramID>
         <MIDIPreset>49</MIDIPreset>
       </Program>
-      <!--0x31   (smpl     0x1A     0x1B     0x1C )-->
+      <!--0x31 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>49</DSEProgramID>
-        <MIDIPreset>49</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Oboe  (smpl     0x81     0x82 )-->
@@ -12191,10 +12226,10 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>69</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x81     0x82 )-->
+      <!--0x35 Oboe  (smpl     0x81     0x82 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>69</MIDIPreset>
       </Program>
       <!--0x36 Bassoon  (smpl     0xA6     0xA7     0xA8 )-->
       <Program>
@@ -12206,6 +12241,7 @@ Example entry:
       <Program>
         <DSEProgramID>55</DSEProgramID>
         <MIDIPreset>71</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -12265,13 +12301,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x40 Tuba  (smpl     0x28F )-->
@@ -12369,13 +12405,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x47 Violin or maybe Viola?  (smpl     0x51     0x4F     0x50 )-->
@@ -12550,10 +12586,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x1 -  Crash Cymbals (smpl 0x17)-->
           <Remap>
@@ -12603,10 +12639,10 @@ Example entry:
         <MIDIBank>127</MIDIBank>
         <ForceChannel>10</ForceChannel>
         <KeyRemaps>
-          <!--0x0 Cabasa  (smpl 0x6 )-->
+          <!--0x0 Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>69</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x1 -  Mute Triangle (smpl 0x64 )-->
           <Remap>
@@ -12947,21 +12983,25 @@ Example entry:
       <Program>
         <DSEProgramID>91</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5C Sawtooth Wave  (smpl     0x6F     0x70 )-->
       <Program>
         <DSEProgramID>92</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5E Lead Thing (smpl     0x39 )-->
       <Program>
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>88</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
       <Program>
         <DSEProgramID>99</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -13049,13 +13089,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x41 Bassoon?  (smpl     0x93     0x94 )-->
@@ -13168,13 +13208,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x35 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
@@ -13265,13 +13306,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -13363,13 +13405,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x41 Bassoon?  (smpl     0x93 )-->
       <Program>
@@ -13391,10 +13434,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0171-->
+  <!--bgm0171 - A New World -->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0171</PairName>
+	<OutputName>0171 - A New World</OutputName>
     <Programs>
       <!--0x6 Vibraphone  (smpl     0xA0 )-->
       <Program>
@@ -13443,10 +13487,11 @@ Example entry:
         <MIDIPreset>73</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>73</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x41 Bassoon?  (smpl     0x93     0x94 )-->
       <Program>
@@ -13496,10 +13541,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0172-->
+  <!--bgm0172 - Thoughts For Friends-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0172</PairName>
+	<OutputName>0172 - Thoughts For Friends</OutputName>
     <Programs>
       <!--0x5 Marimba  (smpl     0x2D     0x2E )-->
       <Program>
@@ -13538,13 +13584,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -13581,20 +13628,23 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0173-->
+  <!--bgm0173 - Life Goes On!-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0173</PairName>
+	<OutputName>0173 - Life Goes On!</OutputName>
     <Programs>
-      <!--0x6   (smpl     0x67 )-->
+      <!--0x6 Vibraphone  (smpl     0x67 )-->
       <Program>
         <DSEProgramID>6</DSEProgramID>
-        <MIDIPreset>6</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x8   (smpl     0x67 )-->
+      <!--0x8 Vibraphone  (smpl     0x67 )-->
       <Program>
         <DSEProgramID>8</DSEProgramID>
-        <MIDIPreset>8</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x0B Harp ( smpl 0x21, 0x22 )-->
       <Program>
@@ -13627,34 +13677,36 @@ Example entry:
       <!--0x33 Flute  (smpl     0x1A     0x1B )-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
-      <!--0x34   (smpl     0x1A     0x1B )-->
+      <!--0x34 Flute  (smpl     0x1A     0x1B )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>52</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
-      <!--0x42   (smpl     0x291 )-->
+      <!--0x42 Trombone  (smpl     0x291 )-->
       <Program>
         <DSEProgramID>66</DSEProgramID>
-        <MIDIPreset>66</MIDIPreset>
+        <MIDIPreset>58</MIDIPreset>
       </Program>
       <!--0x43 Brass Section  (smpl     0x262 )-->
       <Program>
         <DSEProgramID>67</DSEProgramID>
         <MIDIPreset>62</MIDIPreset>
-        <Transpose>-1</Transpose>
       </Program>
       <!--0x47 Violin or maybe Viola?  (smpl     0x4F     0x50 )-->
       <Program>
         <DSEProgramID>71</DSEProgramID>
         <MIDIPreset>41</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
-      <!--0x49   (smpl     0x4F     0x50 )-->
+      <!--0x49 Violin or viola?  (smpl     0x4F     0x50 )-->
       <Program>
         <DSEProgramID>73</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>41</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings( smpl 0x78, 0x79, 0x7A, 0x7B )-->
       <Program>
@@ -13680,17 +13732,17 @@ Example entry:
             <OriginalKey>35</OriginalKey>
             <RemapedKey>49</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x2C3 )-->
+          <!--0x1 - Wooden Block Hi (smpl 0x2C3 )-->
           <Remap>
             <OriginalKey>53</OriginalKey>
-            <RemapedKey>53</RemapedKey>
+            <RemapedKey>76</RemapedKey>
           </Remap>
           <!--0x2 - Splash Cymbal?  (smpl 0x27E )-->
           <Remap>
             <OriginalKey>54</OriginalKey>
             <RemapedKey>55</RemapedKey>
           </Remap>
-          <!--0x3 -  (smpl 0x27E )-->
+          <!--0x3 - Splash Cymbal? (smpl 0x27E )-->
           <Remap>
             <OriginalKey>55</OriginalKey>
             <RemapedKey>55</RemapedKey>
@@ -13705,20 +13757,21 @@ Example entry:
             <OriginalKey>95</OriginalKey>
             <RemapedKey>83</RemapedKey>
           </Remap>
-          <!--0x6 -  (smpl 0x97 )-->
+          <!--0x6 - Jingle Bells (smpl 0x97 )-->
           <Remap>
             <OriginalKey>96</OriginalKey>
-            <RemapedKey>96</RemapedKey>
+            <RemapedKey>83</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0174-->
+  <!--bgm0174 - It's Not a Miracle-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0174</PairName>
+	<OutputName>0174 - It's Not a Miracle</OutputName>
     <Programs>
       <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
@@ -13772,10 +13825,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0175-->
+  <!--bgm0175 - A Message On the Wind-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0175</PairName>
+	<OutputName>0175 - A Message On the Wind</OutputName>
     <Programs>
       <!--0xA Music Box  (smpl     0x2F     0x30 )-->
       <Program>
@@ -13809,13 +13863,14 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x41 Bassoon?  (smpl     0x93     0x94 )-->
       <Program>
@@ -13836,7 +13891,6 @@ Example entry:
       <Program>
         <DSEProgramID>68</DSEProgramID>
         <MIDIPreset>62</MIDIPreset>
-        <Transpose>-1</Transpose>
       </Program>
       <!--0x48 Violin or maybe Viola? (smpl 0x51, 0x4F, 0x50)-->
       <Program>
@@ -13980,20 +14034,20 @@ Example entry:
             <OriginalKey>46</OriginalKey>
             <RemapedKey>74</RemapedKey>
           </Remap>
-          <!--0x2 - Short Guiro  (smpl 0x6 )-->
+          <!--0x2 - Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>47</OriginalKey>
-            <RemapedKey>73</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x3 - Shaker (smpl 0x45 )-->
           <Remap>
             <OriginalKey>51</OriginalKey>
             <RemapedKey>82</RemapedKey>
           </Remap>
-          <!--0x4 - Short Guiro  (smpl 0x6 )-->
+          <!--0x4 - Maracas  (smpl 0x6 )-->
           <Remap>
             <OriginalKey>69</OriginalKey>
-            <RemapedKey>73</RemapedKey>
+            <RemapedKey>70</RemapedKey>
           </Remap>
           <!--0x5 -  Crash Cymbals (smpl 0x17)-->
           <Remap>
@@ -14050,13 +14104,13 @@ Example entry:
       <!--0x33 Flute (smpl 0x1A, 0x1B, 0x1C)-->
       <Program>
         <DSEProgramID>51</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x34 Flute  (smpl     0x1A     0x1B     0x1C )-->
       <Program>
         <DSEProgramID>52</DSEProgramID>
-        <MIDIPreset>73</MIDIPreset>
+        <MIDIPreset>74</MIDIPreset>
         <Transpose>-1</Transpose>
       </Program>
       <!--0x47 Violin or maybe Viola?  (smpl     0x51     0x4F     0x50 )-->
@@ -14133,10 +14187,10 @@ Example entry:
   <Track>
     <PairName>bgm0178</PairName>
     <Programs>
-      <!--0x16   (smpl     0x28E )-->
+      <!--0x16 Distortion Guitar Low (smpl     0x28E )-->
       <Program>
         <DSEProgramID>22</DSEProgramID>
-        <MIDIPreset>22</MIDIPreset>
+        <MIDIPreset>30</MIDIPreset>
       </Program>
       <!--0x19 Synth Bass 1 ( smpl 0x5C )-->
       <Program>
@@ -14176,21 +14230,25 @@ Example entry:
       <Program>
         <DSEProgramID>91</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5C Sawtooth Wave  (smpl     0x6F     0x70 )-->
       <Program>
         <DSEProgramID>92</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5E Lead Thing (smpl     0x39 )-->
       <Program>
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>88</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
       <Program>
         <DSEProgramID>99</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -14585,6 +14643,7 @@ Example entry:
       <Program>
         <DSEProgramID>61</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings  (smpl     0x78     0x79 )-->
       <Program>
@@ -14596,16 +14655,19 @@ Example entry:
       <Program>
         <DSEProgramID>91</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5E Lead Thing (smpl     0x39 )-->
       <Program>
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>88</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
       <Program>
         <DSEProgramID>99</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -14675,6 +14737,7 @@ Example entry:
       <Program>
         <DSEProgramID>61</DSEProgramID>
         <MIDIPreset>57</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x4B Pizzicato Strings  (smpl     0x78     0x79 )-->
       <Program>
@@ -14686,16 +14749,19 @@ Example entry:
       <Program>
         <DSEProgramID>91</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x5E Lead Thing (smpl     0x39 )-->
       <Program>
         <DSEProgramID>94</DSEProgramID>
         <MIDIPreset>88</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x63 TriangleWave  (smpl     0xB9 )-->
       <Program>
         <DSEProgramID>99</DSEProgramID>
         <MIDIPreset>82</MIDIPreset>
+		<Transpose>-1</Transpose>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
