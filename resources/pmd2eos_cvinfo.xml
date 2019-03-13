@@ -10831,7 +10831,7 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0143-->
+  <!--bgm0143 - Limestone Cavern-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0143</PairName>
@@ -10869,10 +10869,10 @@ Example entry:
         <DSEProgramID>52</DSEProgramID>
         <MIDIPreset>69</MIDIPreset>
       </Program>
-      <!--0x35   (smpl     0x81     0x82 )-->
+      <!--0x35 Oboe  (smpl     0x81     0x82 )-->
       <Program>
         <DSEProgramID>53</DSEProgramID>
-        <MIDIPreset>53</MIDIPreset>
+        <MIDIPreset>69</MIDIPreset>
       </Program>
       <!--0x7F Drumkit-->
       <Program>
@@ -10901,25 +10901,28 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0144-->
+  <!--bgm0144 - Deep Limestone Cavern-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0144</PairName>
     <Programs>
-      <!--0x1   (smpl     0x2F     0x30 )-->
+      <!--0x1 Music Box  (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>1</DSEProgramID>
-        <MIDIPreset>1</MIDIPreset>
+        <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x2   (smpl     0x2F     0x30 )-->
+      <!--0x2 Music Box  (smpl     0x2F     0x30 )-->
       <Program>
         <DSEProgramID>2</DSEProgramID>
-        <MIDIPreset>2</MIDIPreset>
+        <MIDIPreset>11</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
-      <!--0x4   (smpl     0xA0     0x67 )-->
+      <!--0x4 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
         <DSEProgramID>4</DSEProgramID>
-        <MIDIPreset>4</MIDIPreset>
+        <MIDIPreset>12</MIDIPreset>
+        <Transpose>-1</Transpose>
       </Program>
       <!--0x6 Vibraphone  (smpl     0xA0     0x67 )-->
       <Program>
@@ -11083,7 +11086,7 @@ Example entry:
       <!--0x1F String Ensemble (smpl 0x49, 0x4A, 0x4B)-->
       <Program>
         <DSEProgramID>31</DSEProgramID>
-        <MIDIPreset>49</MIDIPreset>
+        <MIDIPreset>50</MIDIPreset>
       </Program>
       <!--0x3C Trumpet  (smpl     0x274 )-->
       <Program>
@@ -12091,10 +12094,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0156-->
+  <!--bgm0156 - Sky Peak Prairie-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0156</PairName>
+	<OutputName>0156 - Sky Peak Prairie</OutputName>
     <Programs>
       <!--0x5 Marimba  (smpl     0x2D     0x2E )-->
       <Program>
@@ -12165,20 +12169,21 @@ Example entry:
             <OriginalKey>62</OriginalKey>
             <RemapedKey>62</RemapedKey>
           </Remap>
-          <!--0x1 -  (smpl 0x3D )-->
+          <!--0x1 - Snare (smpl 0x3D )-->
           <Remap>
             <OriginalKey>66</OriginalKey>
-            <RemapedKey>66</RemapedKey>
+            <RemapedKey>38</RemapedKey>
           </Remap>
         </KeyRemaps>
       </Program>
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0157-->
+  <!--bgm0157 - Sky Peak Snowfield-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0157</PairName>
+	<OutputName>0157 - Sky Peak Snowfield</OutputName>
     <Programs>
       <!--0x9 Music Box  (smpl     0x2F     0x30 )-->
       <Program>
@@ -12266,10 +12271,11 @@ Example entry:
     </Programs>
   </Track>
   <!--==========================================================================-->
-  <!--bgm0158-->
+  <!--bgm0158 - Sky Peak Final Pass-->
   <!--==========================================================================-->
   <Track>
     <PairName>bgm0158</PairName>
+	<OutputName>0158 - Sky Peak Final Pass</OutputName>
     <Programs>
       <!--0x9 Music Box  (smpl     0x2F     0x30 )-->
       <Program>

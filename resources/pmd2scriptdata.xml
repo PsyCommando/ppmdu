@@ -1,10 +1,10 @@
 <PMD2>
   <!-- Contains reference data from the game -->
   <ScriptData>
-    
+
     <!--Common to all 3-->
     <Game id="EoS_NA" id2="EoS_EU" id3="EoS_JP">
-    
+
       <!--**********************************************-->
       <!--Game Variables Data-->
       <!--**********************************************-->
@@ -132,7 +132,7 @@
         <GameVar name="LOCAL2" type="6" unk1="0x7" memoffset="0x2" bitshift="0x0" unk3="0x1" unk4="0x0" />
         <GameVar name="LOCAL3" type="6" unk1="0x7" memoffset="0x2" bitshift="0x0" unk3="0x1" unk4="0x0" />
       </GameVariablesTableExtended>
-      
+
       <!--**********************************************-->
       <!--Objects List-->
       <!--**********************************************-->
@@ -695,7 +695,7 @@
         <Object _id="553"   unk1="11"   unk2="0"    unk3="0"  name="d28p34a3" />
         <Object _id="554"   unk1="11"   unk2="0"    unk3="0"  name="d30p33a5" />
       </ObjectsList>
-      
+
       <!--**********************************************-->
       <!--Face Names-->
       <!--**********************************************-->
@@ -723,7 +723,7 @@
         <Face>SPECIAL2</Face>
         <Face>SPECIAL3</Face>
       </FaceNames>
-      
+
       <!--**********************************************-->
       <!--Face Position Modes-->
       <!--**********************************************-->
@@ -738,10 +738,10 @@
         <Mode>Bottom_C_FaceR</Mode>
         <Mode>Bottom_L_FaceInw</Mode>
         <Mode>Bottom_R_FaceInw</Mode>
-        <Mode>Bottom_L_Center</Mode> 
-        <Mode>Bottom_R_Center</Mode>   
-        <Mode>Bottom_C_FaceL</Mode>    
-        <Mode>Bottom_L_FaceOutw</Mode> 
+        <Mode>Bottom_L_Center</Mode>
+        <Mode>Bottom_R_Center</Mode>
+        <Mode>Bottom_C_FaceL</Mode>
+        <Mode>Bottom_L_FaceOutw</Mode>
         <Mode>Bottom_R_FaceOutw</Mode>
         <Mode>Bottom_LC_FaceOutw</Mode>
         <Mode>Bottom_RC_FaceOutw</Mode>
@@ -757,7 +757,7 @@
         <Mode>Top_LC_FaceOutw</Mode>
         <Mode>Top_RC_FaceOutw</Mode>
       </FacePositionModes>
-      
+
       <!--**********************************************-->
       <!--Directions-->
       <!--**********************************************-->
@@ -772,7 +772,7 @@
         <Direction _id="7">Left</Direction>
         <Direction _id="8">DownLeft</Direction>
       </Directions>
-    
+
       <!--**********************************************-->
       <!--Common Routine Info(unionall.ssb routine names)-->
       <!--**********************************************-->
@@ -1480,72 +1480,75 @@
         <Routine id="699" unk1="10" name="BUBBLE_TEST"  />
         <Routine id="700" unk1="10" name="MAP_TEST"  />
       </CommonRoutineInfo>
-    
+
       <!--**********************************************-->
       <!--Menu IDs-->
       <!--**********************************************-->
       <MenuIds>
         <!--TODO-->
         <Menu id="1" name="PlayerName" />
-        
+
         <Menu id="4" name="TeamName" />
-        
+
         <Menu id="11" name="SaveMenu" />
         <Menu id="12" name="KangaskhanStorage" />
         <Menu id="13" name="Storage" />
-        
+
         <Menu id="15" name="DuskullBank" />
         <Menu id="16" name="TeamAssembly" />
-        
+
         <Menu id="18" name="KecleonShop" />
         <Menu id="19" name="KecleonWares" />
-      
+
         <Menu id="23" name="SwapShop" />
         <Menu id="24" name="SwapShop2" />
-        
+
         <Menu id="27" name="DayCare" />
-        
+
         <Menu id="29" name="JuiceBar" />
         <Menu id="30" name="JuiceBarPickItem" />
-        
+
         <Menu id="31" name="RecycleShop" />
-        
+
         <Menu id="33" name="Lottery" />
-        
+
         <Menu id="35" name="SOSMailPicker" />
-        
+
         <Menu id="39" name="JobBoard" />
         <Menu id="40" name="OutlawBoard" />
-        
+
         <Menu id="43" name="JobRewardText" />
-        
+
         <Menu id="48" name="PersonalityTest" />
-        
+
         <Menu id="54" name="DungeonResult?" />
-        
+
         <Menu id="60" name="GuildMiniGameScoreboard" />
-        
+
         <Menu id="67" name="DiaryBidoof" />
         <Menu id="68" name="DiarySunflora" />
         <Menu id="69" name="GuildFAQBoard" />
         <Menu id="70" name="DiaryBidoofSpEP" />
-        
+
         <!--<Menu id="" name="" />-->
       </MenuIds>
-      
+
       <!--**********************************************-->
       <!--Process Special IDs-->
       <!--**********************************************-->
       <ProcessSpecialIDs>
         <!--TODO-->
         <Special id="25" name="JumpToTitleScreen" />
+
+        <Special id="32" name="CountItemTypeInBag"  param_1="itemid" return="nbitems" />
         
         <Special id="37" name="AddTableItemToBag" />
         <Special id="39" name="AddTableItemToStorage" />
-        
+        <Special id="40" name="RemoveItemsTypeInBag"  param_1="itemid" />
+
         <Special id="56" name="IsBagFull" />
       </ProcessSpecialIDs>
-    
+
       <!--**********************************************-->
       <!--Sprite Effect IDs-->
       <!--**********************************************-->
@@ -1554,12 +1557,12 @@
         <Efect id="92" name="SweatDrop" />
       </SpriteEffectIDs>
     </Game>
-    
+
     <!--**********************************************-->
     <!-- #TODO Maybe place a list of aliases for the level names here? -->
     <!--**********************************************-->
-    
-    
+
+
     <!--********************************************************************************************************************-->
     <!--EoS NA ONLY-->
     <!--********************************************************************************************************************-->
@@ -2002,7 +2005,7 @@
         <Level _id="429" name="V39P02A"    mapty=" 6"  unk2="186" mapid="430" unk4="-1" />
         <Level _id="430" name="V39P03A"    mapty=" 6"  unk2="186" mapid="431" unk4="-1" />
       </LevelList>
-    
+
       <!--**********************************************-->
       <!--"Lives" Entities Table-->
       <!--**********************************************-->
@@ -2397,7 +2400,7 @@
         <Entity _id="385" name="NPC_PINPUKU"            type="5" entid=" 482" unk3="  0x0"  unk4="0x102" />
       </LivesEntityTable>
     </Game>
-    
+
     <!--********************************************************************************************************************-->
     <!--EoS EU ONLY-->
     <!--********************************************************************************************************************-->
@@ -2868,7 +2871,7 @@
         <Level _id="457" name="S05P02C4"   unk1=" 9"  unk2="185" mapid="459" unk4="-1" />
         <Level _id="458" name="S05P02C5"   unk1="95"  unk2=" 34" mapid=" 16" unk4="19" />
       </LevelList>
-    
+
       <!--**********************************************-->
       <!--"Lives" Entities Table-->
       <!--**********************************************-->
@@ -3262,7 +3265,7 @@
         <Entity _id="385" name="NPC_PINPUKU"            type="5" entid=" 482" unk3="  0x0"  unk4="0x102" />
       </LivesEntityTable>
     </Game>
-    
+
     <!--********************************************************************************************************************-->
     <!--EoS JP ONLY-->
     <!--********************************************************************************************************************-->
@@ -3710,7 +3713,7 @@
         <Level _id="434" name="V39P02A"    unk1=" 6"  unk2="186" mapid="436" unk4="-1" />
         <Level _id="435" name="V39P03A"    unk1="95"  unk2=" 34" mapid=" 16" unk4="19" />
       </LevelList>
-    
+
       <!--**********************************************-->
       <!--"Lives" Entities Table-->
       <!--**********************************************-->
@@ -4104,6 +4107,6 @@
         <Entity _id="385" name="NPC_PINPUKU"            type="5" entid=" 482" unk3="  0x0"  unk4="0x102" />
       </LivesEntityTable>
     </Game>
-  
+
   </ScriptData>
 </PMD2>
