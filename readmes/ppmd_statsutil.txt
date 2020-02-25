@@ -51,6 +51,8 @@ Changelog:
       of changing the method of handling multi-threading, since I forgot I was not checking for exceptions..
     * Added output of a compiler report file with all the issues encountered during script compilation.
     * Improved a lot the error output. It now shows the actual line the error is on, and an approximate positions of the error on the line.
+-0.23.3(2020/02/25):
+	* Added support for the Wii U virtual console roms for EoS. Both the european, and north american versions.
 
 ----------------------------------------------------------------------------------------------------
 License info:

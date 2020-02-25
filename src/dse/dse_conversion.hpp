@@ -181,7 +181,7 @@ namespace DSE
         /*
             Load from either a directory or single file blob files
         */
-        void LoadSMDLSWDLSPairsFromBlob( const std::string & blob );
+        void LoadSMDLSWDLSPairsFromBlob( const std::string & blob, bool matchbyname );
 
         /*
         */
@@ -190,7 +190,7 @@ namespace DSE
         /*
             Loads from a single blob file, no directory
         */
-        void LoadFromBlobFile(const std::string & blob);
+        void LoadFromBlobFile(const std::string & blob, bool matchbyname);
 
     //-----------------------------
     // Exporting Methods

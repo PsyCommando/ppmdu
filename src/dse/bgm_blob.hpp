@@ -38,8 +38,8 @@ namespace DSE
         static const size_t  OffsetDSECntFilename      = 32;
         static const size_t  FilenameLength            = 16;
         
-        BlobScanner( inputiterator beg, inputiterator end )
-            :m_srcbeg(beg), m_srcend(end)
+        BlobScanner( inputiterator beg, inputiterator end, bool matchbynames = true )
+            :m_srcbeg(beg), m_srcend(end), m_bmatchbyname(matchbynames)
         {}
 
         /*
@@ -112,25 +112,20 @@ namespace DSE
                 Scan();
 
             vector<pair<FoundContainer, FoundContainer>> matches;
-            for( const auto entry : m_toc )
-            {
-                if( entry._type == eDSEContainers::smdl )
-                {
-                    auto itfoundswdl = find_if( m_toc.begin(), m_toc.end(), [&]( const BlobScanner<_rndit>::FoundContainer & cn )->bool
-                    {
-                        if( cn._type == eDSEContainers::swdl )
-                        {
-                            if( PairNameMatches( entry._name, cn._name ) )
-                                return true;
-                        }
-                        return false;
-                    });
 
-                    if( itfoundswdl != m_toc.end() )
-                    {
-                        matches.push_back( move( make_pair( FoundContainer(*itfoundswdl), FoundContainer(entry) ) ) );
-                    }
+            auto ittocbeg = m_toc.begin();
+            auto ittocend = m_toc.end();
+
+            while (ittocbeg != ittocend)
+            {
+                if (ittocbeg->_type == eDSEContainers::smdl)
+                {
+                     auto itfoundswdl = MatchFoundPair(ittocbeg, ittocend);
+                     if( itfoundswdl != m_toc.end() )
+                         matches.push_back( move( make_pair( FoundContainer(*itfoundswdl), FoundContainer(*ittocbeg) ) ) );
                 }
+
+                ++ittocbeg;
             }
 
             return move(matches);
@@ -179,6 +174,11 @@ namespace DSE
             }
 
             return move(matches);
+        }
+
+        inline bool ShouldMatchByName()const
+        {
+            return m_bmatchbyname;
         }
 
     private:
@@ -238,10 +238,37 @@ namespace DSE
                 return name1.compare( name2 ) == 0;
         }
 
+        template<class _cntitty>
+            _cntitty MatchFoundPair(_cntitty itcur, _cntitty itend)
+        {
+            if (m_bmatchbyname)
+            {
+                return find_if( m_toc.begin(), m_toc.end(), [&]( const BlobScanner<_rndit>::FoundContainer & cn )->bool
+                    {
+                        if( cn._type == eDSEContainers::swdl )
+                        {
+                            if( PairNameMatches( itcur->_name, cn._name ) )
+                                return true;
+                        }
+                        return false;
+                    });
+            }
+            else if (itcur != itend) //Match the next one if not matching by name!
+            {
+                _cntitty itnext = itcur;
+                ++itnext;
+                if (itnext != itend && itnext->_type == eDSEContainers::swdl)
+                    return itnext;
+            }
+                
+            return itend;
+        }
+
     private:
         inputiterator               m_srcbeg;
         inputiterator               m_srcend;
         std::vector<FoundContainer> m_toc;
+        bool                        m_bmatchbyname;
     };
 };
 

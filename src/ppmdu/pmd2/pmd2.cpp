@@ -41,6 +41,8 @@ namespace pmd2
         //{ '\"', "\\x22" }, //Double quote
         { '\\', "\\\\" }, //Backslash
         { '\0', "\\0"  }, //Ending 0
+		{'\xBD', "\\xBD"}, //Male symbol
+		{'\xBE', "\\xBE"}, //Female symbol
     }};
 
     const std::unordered_map<char, std::string> CharactersToCommonEscapeCharactersXML
@@ -54,6 +56,8 @@ namespace pmd2
         { '\x85',   "&hellip;"  },
         { '\x8C',   "&OElig;"   },
         { 'é',      "&#xE9;"    },
+		{'\xBD',	"&#xBD;"	}, //Male symbol
+		{'\xBE',	"&#xBE;"	}, //Female symbol
         //!TODO: finish
     }};
 

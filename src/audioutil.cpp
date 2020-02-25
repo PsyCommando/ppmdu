@@ -328,6 +328,15 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionNoConvertSamples, &GetInstance(), placeholders::_1 ),
         },
 
+        //match blob scanned containers by internal name
+        {
+            "nmatchoff",
+            0,
+            "Specifying this will make the program match pairs in a blob by order instead of by internal name! Needed for some games with strange naming conventions.",
+            "-nmatchoff",
+            std::bind(&CAudioUtil::ParseOptionMatchByName, &GetInstance(), placeholders::_1),
+        },
+
         //#################################################
 
         //Redirect clog to file
@@ -372,6 +381,7 @@ namespace audioutil
         m_bUseLFOFx       = true;
         m_bMakeCvinfo     = false;
         m_bConvertSamples = true;
+        m_bmatchbyname    = true;
         m_nbloops         = 0;
         m_outtype         = eOutputType::SF2;
     }
@@ -453,6 +463,10 @@ namespace audioutil
         {
             return (std::tolower(c1, curloc ) == std::tolower(c2, curloc ));
         };
+
+        //Pre-check to make sure we even have the same lengths
+        if (ext1.length() != ext2.length())
+            return false;
 
         //std::transform(ext1.begin(), ext1.end(), ext1.begin(), ::tolower);
         //std::transform(ext2.begin(), ext2.end(), ext2.begin(), ::tolower);
@@ -773,6 +787,12 @@ namespace audioutil
     bool CAudioUtil::ParseOptionNoConvertSamples( const std::vector<std::string> & optdata )
     {
         return m_bConvertSamples = true;
+    }
+
+    bool CAudioUtil::ParseOptionMatchByName(const std::vector<std::string>& optdata)
+    {
+        m_bmatchbyname = false;
+        return true;
     }
 
 //------------------------------------------------
@@ -1404,33 +1424,6 @@ namespace audioutil
         CreateOutputDir(stroutpath);
         DoExportLoader( bal, stroutpath );
         
-        //cout << "-------------------------------------------------------------\n" ;
-        //if( m_outtype == eOutputType::SF2 )
-        //{
-        //    cout << "Exporting soundfont and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportSoundfontAndMIDIs( m_outputPath, m_nbloops, m_bBakeSamples );
-        //}
-        //else if( m_outtype == eOutputType::DLS )
-        //{
-        //    cout << "Exporting DLS and MIDI files to " <<m_outputPath <<"..\n";
-        //    assert(false);
-        //}
-        //else if( m_outtype == eOutputType::XML )
-        //{
-        //    cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportXMLAndMIDIs( m_outputPath, m_nbloops );
-        //}
-        //else if( m_outtype == eOutputType::XML )
-        //{
-        //    cout << "Exporting sample + instruments presets data and MIDI files to " <<m_outputPath <<"..\n";
-        //    bal.ExportMIDIs( m_outputPath, m_convinfopath, m_nbloops );
-        //}
-        //else
-        //{
-        //    cout << "Output type is invalid!\n";
-        //    assert(false);
-        //}
-
         cout <<"..done\n";
 
         return 0;
@@ -1461,7 +1454,7 @@ namespace audioutil
         else if (!m_bgmblobpath.empty())
         {
             for(const auto & blobpath : m_bgmblobpath)
-                bal.LoadSMDLSWDLSPairsFromBlob(blobpath);
+                bal.LoadSMDLSWDLSPairsFromBlob(blobpath, m_bmatchbyname);
         }
         else
             bal.LoadMatchedSMDLSWDLPairs( m_swdlpath, m_smdlpath );
