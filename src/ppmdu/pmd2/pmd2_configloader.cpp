@@ -107,8 +107,6 @@ namespace pmd2
 
 
         const string ATTR_ID        = "id";
-        const string ATTR_ID2       = "id2";
-        const string ATTR_ID3       = "id3";
 
         const string ATTR_GameCode  = "gamecode";
         const string ATTR_Version   = "version";
@@ -197,13 +195,9 @@ namespace pmd2
             using namespace ConfigXML;
             for( ; itatbeg != itatend; ++itatbeg )
             {
-                if( (itatbeg->name() == ATTR_ID ||
-                    itatbeg->name() == ATTR_ID2 ||
-                    itatbeg->name() == ATTR_ID3) &&
-                    itatbeg->value() == m_curversion.id )
-                {
-                    return true;
-                }
+				string curname = string(itatbeg->name());
+				if(curname.find(ATTR_ID) != string::npos && (m_curversion.id.compare(itatbeg->value()) == 0))
+					return true;
             }
             return false;
         }
@@ -387,10 +381,8 @@ namespace pmd2
 
             for( auto gamev : gamevernode.children(NODE_Game.c_str()) )
             {
-                xml_attribute id   = gamev.attribute(ATTR_ID.c_str());
-                xml_attribute id2  = gamev.attribute(ATTR_ID2.c_str());
-                if( id.value() == m_curversion.id || id2.value() == m_curversion.id )   //Ensure one of the compatible game ids matches the parser's!
-                    ParseLanguageList(gamev,ParseStringBlocks(gamev),m_lang);
+				if(MatchesCurrentVersionID(gamev.attributes_begin(), gamev.attributes_end()))
+					ParseLanguageList(gamev,ParseStringBlocks(gamev),m_lang);
             }
         }
 
@@ -402,7 +394,16 @@ namespace pmd2
             if(!binnode)
                 return;
 
-            xml_node foundver = binnode.find_child_by_attribute( NODE_Game.c_str(), ATTR_ID.c_str(), m_curversion.id.c_str() );
+			xml_node foundver;
+			for (auto gamev : binnode.children(NODE_Game.c_str()))
+			{
+				if (MatchesCurrentVersionID(gamev.attributes_begin(), gamev.attributes_end()))
+				{
+					foundver = gamev;
+					break;
+				}
+			}
+
             if( !foundver )
             {
                 throw std::runtime_error("ConfigXMLParser::ParseBinaries(): Couldn't find binary offsets for game version \"" + 

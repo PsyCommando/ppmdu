@@ -35,17 +35,19 @@
   <!--defaultlang = Language to use when exporting named files. For example pokemon data xml files will be named in english if this is "English"-->
   <!--issupported = Whether the game is supported by the program. Better not change those unless you made changes.-->
   <GameEditions>
-    <Game id="EoS_NA" gamecode="C2SE" version="EoS" region="NorthAmerica" arm9off14="0x271A" defaultlang="English"  issupported="true"/>
-    <Game id="EoD_NA" gamecode="YFYE" version="EoD" region="NorthAmerica" arm9off14="0x6AD6" defaultlang="English"  issupported="false"/>
-    <Game id="EoT_NA" gamecode="YFTE" version="EoT" region="NorthAmerica" arm9off14="0xE309" defaultlang="English"  issupported="false"/>
+    <Game id="EoS_NA"    gamecode="C2SE" version="EoS" region="NorthAmerica" arm9off14="0x271A" defaultlang="English"  issupported="true"/>
+    <Game id="EoSWVC_NA" gamecode="C2SE" version="EoS" region="NorthAmerica" arm9off14="0x0854" defaultlang="English"  issupported="true"/>
+    <Game id="EoD_NA"    gamecode="YFYE" version="EoD" region="NorthAmerica" arm9off14="0x6AD6" defaultlang="English"  issupported="false"/>
+    <Game id="EoT_NA"    gamecode="YFTE" version="EoT" region="NorthAmerica" arm9off14="0xE309" defaultlang="English"  issupported="false"/>
     
-    <Game id="EoS_EU" gamecode="C2SP" version="EoS" region="Europe"       arm9off14="0x64AF" defaultlang="English"  issupported="true"/>
-    <Game id="EoD_EU" gamecode="YFYP" version="EoD" region="Europe"       arm9off14="0xBB01" defaultlang="English"  issupported="false"/>
-    <Game id="EoT_EU" gamecode="YFTP" version="EoT" region="Europe"       arm9off14="0x725F" defaultlang="English"  issupported="false"/>
+    <Game id="EoS_EU"    gamecode="C2SP" version="EoS" region="Europe"       arm9off14="0x64AF" defaultlang="English"  issupported="true"/>
+    <Game id="EoSWVC_EU" gamecode="C2SP" version="EoS" region="Europe"       arm9off14="0x2773" defaultlang="English"  issupported="true"/>
+    <Game id="EoD_EU"    gamecode="YFYP" version="EoD" region="Europe"       arm9off14="0xBB01" defaultlang="English"  issupported="false"/>
+    <Game id="EoT_EU"    gamecode="YFTP" version="EoT" region="Europe"       arm9off14="0x725F" defaultlang="English"  issupported="false"/>
     
-    <Game id="EoS_JP" gamecode="C2SJ" version="EoS" region="Japan"        arm9off14="0x87B5" defaultlang="Japanese" issupported="false"/> 
-    <Game id="EoD_JP" gamecode="YFYJ" version="EoD" region="Japan"        arm9off14="0x30C6" defaultlang="Japanese" issupported="false"/>
-    <Game id="EoT_JP" gamecode="YFTJ" version="EoT" region="Japan"        arm9off14="0x09C7" defaultlang="Japanese" issupported="false"/>
+    <Game id="EoS_JP"    gamecode="C2SJ" version="EoS" region="Japan"        arm9off14="0x87B5" defaultlang="Japanese" issupported="false"/> 
+    <Game id="EoD_JP"    gamecode="YFYJ" version="EoD" region="Japan"        arm9off14="0x30C6" defaultlang="Japanese" issupported="false"/>
+    <Game id="EoT_JP"    gamecode="YFTJ" version="EoT" region="Japan"        arm9off14="0x09C7" defaultlang="Japanese" issupported="false"/>
   </GameEditions>
   
   <!--=======================================================================-->
@@ -70,12 +72,13 @@
   <!--=======================================================================-->
   <!--Various blocks in the binaries containing relevant data.-->
   <Binaries>
+  
     <!-- **************** -->
     <!-- Explorers of Sky -->
     <!-- **************** -->
     
     <!--NorthAmerica-->
-    <Game id="EoS_NA">
+    <Game id="EoS_NA" id2="EoSWVC_NA">
       <!-- arm9 -->
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
         <Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>
@@ -102,7 +105,7 @@
     </Game>
 
     <!--Europe-->
-    <Game id="EoS_EU">
+    <Game id="EoS_EU" id2="EoSWVC_EU">
       <!--#TODO-->
       <!-- arm9 -->
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
@@ -199,7 +202,7 @@
   <!--Various blocks of strings in the string files containing specific strings.-->
   <StringIndexData>
     <!--Explorers of Sky, North America-->
-    <Game id="EoS_NA">
+    <Game id="EoS_NA" id2="EoSWVC_NA">
       <Languages>
         <Language filename="text_e.str" name="English" locale="en-US" />
       </Languages>
@@ -267,7 +270,7 @@
     </Game>
     
     <!--Explorers of Sky, Europe-->
-    <Game id="EoS_EU">
+    <Game id="EoS_EU" id2="EoSWVC_EU">
       <Languages>
         <Language filename="text_e.str" name="English"  locale="en-US" />
         <Language filename="text_f.str" name="French"   locale="fr-FR" />
@@ -322,7 +325,7 @@
     <LooseBinFiles>
       
       <!--Explorers of Sky-->
-      <Game id="EoS_NA" id2="EoS_JP" id3="EoS_EU" >
+      <Game id="EoS_NA" id2="EoS_JP" id3="EoS_EU" id4="EoSWVC_NA" id5="EoSWVC_EU">
         <File srcdata="Events"      filepath="BALANCE/level_list.bin"   />
         <File srcdata="Entities"    filepath="BALANCE/actor_list.bin"   />
         <File srcdata="Objects"     filepath="BALANCE/object_list.bin"  />
@@ -338,9 +341,11 @@
     <!--*******************-->
     <PatchesDir>
       <!--Explorers of Sky-->
-      <Game id="EoS_JP" filepath="asm_patches/eos/jp" />
-      <Game id="EoS_NA" filepath="asm_patches/eos/na" />
-      <Game id="EoS_EU" filepath="asm_patches/eos/eu" />
+      <Game id="EoS_JP"    filepath="asm_patches/eos/jp" />
+      <Game id="EoS_NA"    filepath="asm_patches/eos/na" />
+      <Game id="EoS_EU"    filepath="asm_patches/eos/eu" />
+      <Game id="EoSWVC_NA" filepath="asm_patches/eos/wvcna" />
+      <Game id="EoSWVC_EU" filepath="asm_patches/eos/wvceu" />
       <!--Explorers of Time-->
       <!--Explorers of Darkness-->
     </PatchesDir>
