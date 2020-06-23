@@ -91,6 +91,12 @@
     <Filter Include="Source Files\utility">
       <UniqueIdentifier>{ce424d06-0270-4b0b-8fd4-2980287513f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Scripts\eos">
+      <UniqueIdentifier>{fc73a543-3e15-40af-ac20-bf979fb64e73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Scripts\eotd">
+      <UniqueIdentifier>{5e9d9fff-ef68-4328-8420-ea397f96bde6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
@@ -245,6 +251,9 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_asm.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\fmts\fixed.cpp">
+      <Filter>Source Files\ppmdu\file formats\DungeonData</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -415,6 +424,30 @@
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_levels.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_sky.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts\eos</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\15_bits_integers.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_version.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_time_darkness.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts\eotd</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_categories.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_parameters.hpp">
+      <Filter>Header Files\ppmdu\data formats\Scripts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\fmts\fixed.hpp">
+      <Filter>Header Files\ppmdu\file formats\DungeonData</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_fixed_data.hpp">
+      <Filter>Header Files\ppmdu\data formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

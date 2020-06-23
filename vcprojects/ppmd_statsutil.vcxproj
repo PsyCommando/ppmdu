@@ -120,6 +120,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\script_content.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\fmts\fixed.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\lsd.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\mappa.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\ssa.cpp" />
@@ -250,12 +251,20 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_fixed_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\script_content.hpp" />
+    <ClInclude Include="..\src\ppmdu\fmts\fixed.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\15_bits_integers.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_categories.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_sky.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_time_darkness.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_parameters.hpp" />
+    <ClInclude Include="..\src\ppmdu\pmd2\opcode_version.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_audio.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_asm_data.hpp" />
