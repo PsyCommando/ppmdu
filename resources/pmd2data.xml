@@ -112,7 +112,7 @@
         <!--<Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>-->
         <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
         <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
-        <Block name="Events"            beg="0xA5BE0" end="0xA715C"/>
+        <Block name="Events"            beg="0xA5BD8" end="0xA715C"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DCB80">
@@ -126,7 +126,7 @@
       <!-- arm9 -->
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
         <Block name="Entities"          beg="0xA9438" end="0xAA650"/>
-        <Block name="Events"            beg="0xA689C" end="0xA7D0C"/>
+        <Block name="Events"            beg="0xA6894" end="0xA7D04"/>
         <Block name="ScriptVars"        beg="0x9EC44" end="0x9F374"/>
         <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
       </Bin>
