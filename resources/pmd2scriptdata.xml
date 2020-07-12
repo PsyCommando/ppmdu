@@ -1219,9 +1219,8 @@
       <!--OpCodes-->
       <!--**********************************************-->
       <OpCodes>
-        <!-- The OpCodes with -1 params are variable length parameters. The first param is the length of param list.
-             The VarLength prefix to those OpCode's names was added by the author! In ROM they are called like their
-             non-variable length counterparts -->
+        <!-- The OpCodes with -1 params are variable length parameters.
+             The first param is the length of param list (not shown in this list!). -->
         <OpCode id="0x0"   name="Null"                                   params="0"  stringidx="-1" unk2="0"  unk3="0"  />
         <OpCode id="0x1"   name="back_ChangeGround"                      params="1"  stringidx="-1" unk2="0"  unk3="0"   >
           <Argument id="0" type="Level" name="level"/>
