@@ -1,0 +1,98 @@
+<PMD2>
+  <!-- Contains dungeon related information -->
+  <DungeonData>
+
+    <!--Common to all 3-->
+    <Game id="EoS_NA" id2="EoS_EU" id3="EoS_JP" id4="EoSWVC_NA" id5="EoSWVC_EU">
+
+      <!--**********************************************-->
+      <!--File names and types of the files in DUNGEON/dungeon.bin-->
+      <!--**********************************************-->
+      <!--Please note, that those names are NOT stored in the ROM! We basically just made them up.-->
+      <!--%d in the name patterns will be replaced with the file id.-->
+      <!--%i in the name patterns will be replaced with the relative file id in this set of entries.-->
+      <DungeonBinFiles>
+        <!--
+            By psy_commando:
+            * Files   0 to 169 seems to be **weird palette files**. (See below)
+            * Files 170 to 339 are SIR0-wrapped AT4PX compressed images.
+            * Files 340 to 679 are AT4PX compressed images.
+            * Files 680 to 849 are raw RGBX32 color palettes.
+            * Files 850 to 878 seems to be **weird palette files**, again. (See below)
+            * Files 879 to 936 are AT4PX compressed images.
+            * Files 937 to 965 are SIR0 wrapped PKDPX files.
+            * Files 966 to 994 are raw RGBX32 color palettes.
+            * File  995 is a raw image... possibly 4 bpp
+            * File  996 is some strange, SIR0 contained headerless data file..
+            * File  997 is a raw RGBX32 color palettes.
+            * File  998 is big headerless file with mainly zeros in it..
+            * File  999 is a raw RGBX32 color palettes.
+            * File 1000 is a SIR0 wrapped **weird data file**(see format below).
+            * File 1001 is a WTE file!
+            * File 1002 is a WTU file!
+            * File 1003 is a WTE file!
+            * File 1004 is a WTU file!
+            * File 1005 is a WTE file!
+            * File 1006 is a WTU file!
+            * Files 1007 to 1012 are WTE files!
+            * File 1013 is WTU file.
+            * Files 1014 to 1021 are WTE + WTU combos
+            * File 1022 is some kind of image file. It looks like a format I've seen before! No magic number, but has a 
+              header with a pointer to a bunch of sub-sections!
+            * File 1023 is a SIR0 wrapped file containing 2048 times the value 0xFF000000 !
+            * Files 1024 and 1025 are WTE files.
+            * Files 1026 and 1027 are BGP compressed images.
+            * File 1028 is a WAN sprite!
+            * File 1029 is a headerless file, with a lot of repeating values, and possibly image data near the end.
+            * File 1030 contains a raw RGBX32 color palette.
+            * File 1031 is a WTE file.
+            * File 1032 is a WTU file.
+            * File 1033 familiar format SIR0 wrapped, could contain image. not sure.
+            * File 1034 SIR0 wrapped image data ? Possibly raw RGBA pixels ?
+            * File 1035 SIR0 wrapped file.. Has a short header, made of 2 pointers. Has a pointer table at the end, and 
+              what seems to be a color palette ?
+        -->
+        <BinPackFile idxfirst="0"    idxlast="169"  type="DBIN_SIR0_DPLA"            name="dungeon%i.dpla"/>
+        <BinPackFile idxfirst="170"  idxlast="339"  type="DBIN_SIR0_AT4PX_DMA"       name="dungeon%i.dma"/>
+        <BinPackFile idxfirst="340"  idxlast="509"  type="DBIN_AT4PX_DPC"            name="dungeon%i.dpc"/>
+        <BinPackFile idxfirst="510"  idxlast="679"  type="DBIN_AT4PX_DPCI"           name="dungeon%i.dpci"/>
+        <BinPackFile idxfirst="680"  idxlast="849"  type="DPL"                       name="dungeon%i.dpl"/>
+        <BinPackFile idxfirst="850"  idxlast="878"  type="DBIN_SIR0_DPLA"            name="%d.dpla"/>
+        <BinPackFile idxfirst="879"  idxlast="936"  type="AT4PX"                     name="%d.at4px"/>
+        <BinPackFile idxfirst="937"  idxlast="965"  type="DBIN_PKDPX_SIR0"           name="%d.pkdpx.sir0"/>
+        <BinPackFile idxfirst="966"  idxlast="994"  type="DPL"                       name="%d.dpl"/>
+        <BinPackFile idxfirst="995"                 type="DBIN_RAW_IMAGE_4BPP"       name="%d.img"/>
+        <BinPackFile idxfirst="996"                 type="SIR0"                      name="%d.sir0"/>
+        <BinPackFile idxfirst="997"                 type="DPL"                       name="%d.dpl"/>
+        <BinPackFile idxfirst="998"                 type="UNKNOWN"                   name="%d.bin"/>
+        <BinPackFile idxfirst="999"                 type="DPL"                       name="%d.dpl"/>
+        <BinPackFile idxfirst="1000"                type="DBIN_SIR0_WEIRD_DATA_FILE" name="%d.sir0"/>
+        <BinPackFile idxfirst="1001"                type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1002"                type="WTU"                       name="%d.wtu"/>
+        <BinPackFile idxfirst="1003"                type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1004"                type="WTU"                       name="%d.wtu"/>
+        <BinPackFile idxfirst="1005"                type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1006"                type="WTU"                       name="%d.wtu"/>
+        <BinPackFile idxfirst="1007" idxlast="1012" type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1013"                type="WTU"                       name="%d.wtu"/>
+        <BinPackFile idxfirst="1014" idxlast="1021" type="DBIN_WTE_WTU"              name="%d.wtewtu"/>
+        <BinPackFile idxfirst="1022"                type="DBIN_IMAGE_1022"           name="%d.img1022"/>
+        <BinPackFile idxfirst="1023"                type="SIR0"                      name="%d.sir0"/>
+        <BinPackFile idxfirst="1024" idxlast="1025" type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1026" idxlast="1027" type="BGP"                       name="%d.bgp"/>
+        <!-- The WAN sprite can't be read by pmd_wan -->
+        <!--<BinPackFile idxfirst="1028"                type="WAN"                       name="%d.wan"/>-->
+        <BinPackFile idxfirst="1028"                type="UNKNOWN"                   name="%d.wan.bin"/>
+        <BinPackFile idxfirst="1029"                type="UNKNOWN"                   name="%d.bin"/>
+        <BinPackFile idxfirst="1030"                type="DPL"                       name="%d.dpl"/>
+        <BinPackFile idxfirst="1031"                type="WTE"                       name="%d.wte"/>
+        <BinPackFile idxfirst="1032"                type="WTU"                       name="%d.wtu"/>
+        <BinPackFile idxfirst="1033"                type="DBIN_SIR0_IMAGE_1033"      name="%d.img1033.sir0"/>
+        <BinPackFile idxfirst="1034"                type="DBIN_SIR0_IMAGE_1034"      name="%d.img1034.sir0"/>
+        <BinPackFile idxfirst="1035"                type="DBIN_SIR0_1035"            name="%d.unk.sir0"/>
+      </DungeonBinFiles>
+
+    </Game>
+
+  </DungeonData>
+</PMD2>
