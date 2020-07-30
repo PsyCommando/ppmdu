@@ -41,6 +41,12 @@ namespace pmd2
         Objects,            //Table containing info on all object sprite files the game can load.
         CommonRoutines,     //Table containing info on commmon routines
 
+        //Dungeons
+        DungeonsFloors,     //Table containing info on the dungeon data to use, and the amount of floors for a given a global dungeon id
+        DungeonsRestrict,   //Table containing details on what's allowed or not and misc limits in a given dungeon.
+        DungeonsSecTerrain, //Table containing what secondary terrain tiles to use for a given dungeon.
+        DungeonsWorldMapPos,//Table containing info on where to display a dungeon on any of the world map, or not.
+
         NbLocations,        //Must be last valid entry
         Invalid,   
     };
@@ -154,18 +160,6 @@ namespace pmd2
         eGameLanguages  defaultlang;
         bool            issupported;
     };
-
-    /*******************************************************************************
-        GameBinaryOffsetInfo
-            Offsets in the binaries, and their name.
-    *******************************************************************************/
-    //struct GameBinaryOffsetInfo
-    //{
-    //    std::string fpath;  //The path to the file containing the data
-    //    uint32_t    beg;
-    //    uint32_t    end;
-    //};
-
 
     /*******************************************************************************
         strbounds_t
@@ -508,18 +502,6 @@ namespace pmd2
             m_data.push_back(data);
         }
 
-
-        /*
-            PushEntryPair
-                Push a single entry pair
-        */
-        //template<typename _infwdit>
-        //    void PushEntryPair( std::string && name, dataentry_t && data )
-        //{
-        //    m_datastrlut.emplace(name, m_data.size() );
-        //    m_data.push_back(data);
-        //}
-
         /*
             PushEntriesPairs
                 Adds entries to the end of the current list.
@@ -663,7 +645,7 @@ namespace pmd2
         typedef NamedDataEntry<commonroutine_info>  commonroutines_t;
         typedef NamedDataEntry<std::string>         stringlut_t;
         typedef NamedDataEntry<object_info>         objinf_t;
-        
+
         inline const gvar_t             & GameVariables()const      {return m_gvars;}
         inline const gvar_t             & ExGameVariables()const    {return m_gvarsex;}
         inline const livesent_t         & LivesEnt()const           {return m_livesent;}

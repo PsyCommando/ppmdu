@@ -298,6 +298,7 @@ namespace filetypes
 
         /*
             Push a pointer to the end of the data vector, and add the offset it was written at to the list of pointers offset to encode automatically.
+            The value must exclude the SIR0 header length.
         */
         inline void pushpointer(uint32_t ptr)
         {

@@ -21,7 +21,7 @@ namespace pmd2 { namespace filetypes
 		typedef _init input_iterator;
 
         FixedBinParser( input_iterator itbeg, input_iterator itend )
-            :m_pathBalanceDir(pathBalanceDir), m_itbeg(itbeg), m_itcur(itbeg), m_itend(itend)
+            :m_itbeg(itbeg), m_itend(itend)
         {
 			m_lookuptable.reserve(512); //Pre-alloc the vector
 		}
@@ -47,8 +47,10 @@ namespace pmd2 { namespace filetypes
 		{
 			m_lookuptable.resize(0);
 			uint32_t entryptr = 0;
-			auto itcur = std::advance(m_itbeg, m_sir0hdr.subheaderptr);
-			auto itLutEnd = std::advance(m_itbeg, m_sir0hdr.ptrPtrOffsetLst);
+			auto itcur = m_itbeg;
+			std::advance(itcur, m_sir0hdr.subheaderptr);
+			auto itLutEnd = m_itbeg;
+			std::advance(itLutEnd, m_sir0hdr.ptrPtrOffsetLst);
 
 			while (itcur != itLutEnd && entryptr != 0xAAAAAAAA)
 			{
@@ -61,24 +63,37 @@ namespace pmd2 { namespace filetypes
 		void ParseEntries()
 		{
 			auto itFileBeg = m_itbeg;
-			auto itLutBeg = std::advance(m_itbeg, m_sir0hdr.subheaderptr);
+			auto itLutBeg = itFileBeg;
+			std::advance(itLutBeg, m_sir0hdr.subheaderptr);
 
 			for (size_t i = 0; i < m_lookuptable.size(); ++i)
 			{
 				size_t entryOffset = m_lookuptable[i];
 				size_t endOfEntryOffset = (i + 1 < m_lookuptable.size()) ? m_lookuptable[i + 1] : m_sir0hdr.subheaderptr;
-				ParseEntry(itFileBeg, itLutBeg, entryOffset, endOfEntryOffset)
+				ParseEntry(itFileBeg, itLutBeg, entryOffset, endOfEntryOffset);
 			}
 		}
 
 		template<class _init>
 			void ParseEntry(_init itFileBeg, _init itLutBeg, size_t entryOffset, size_t endOfEntryOffset)
 		{
-			auto itEntry = std::advance(itFileBeg, entryOffset);
+			auto itEntry = itFileBeg;
+			std::advance(itEntry, entryOffset);
 			uint16_t width = utils::ReadIntFromBytes<uint16_t>(itEntry, itLutBeg);
 			uint16_t height = utils::ReadIntFromBytes<uint16_t>(itEntry, itLutBeg);
 			uint16_t unk1 = utils::ReadIntFromBytes<uint16_t>(itEntry, itLutBeg);
-			m_db.AddEntry( width, height, unk1, DecodeLevelMap( itEntry, std::advance(itFileBeg, endOfEntryOffset), width, height) );
+			m_db.push_back(
+				stats::FixedDungeonFloorEntry(
+					width,
+					height,
+					unk1,
+					DecodeLevelMap(
+						itEntry,
+						utils::advAsMuchAsPossible(itFileBeg, itLutBeg, endOfEntryOffset),
+						width,
+						height)
+				)
+			);
 		}
 
 		template<class _init>
@@ -100,9 +115,8 @@ namespace pmd2 { namespace filetypes
 	private:
 		_init m_itbeg;
 		_init m_itend;
-		string m_pathBalanceDir;
 		vector<uint32_t> m_lookuptable;
-		filetypes::sir0_header m_sir0hdr;
+		::filetypes::sir0_header m_sir0hdr;
 		pmd2::stats::FixedDungeonDB m_db;
 	};
 
@@ -119,20 +133,16 @@ namespace pmd2 { namespace filetypes
 		{}
 
 		template<class _outit>
-			void Write(_outit & outit)
+			_outit Write(_outit & outit)
 		{
-
-
 			m_lut.resize(0);
-			m_writebuffer.resize(0);
-			auto itWrite = std::back_inserter(m_writebuffer);
-			m_sir0wrap.data() = m_writebuffer;
-
+			m_sir0wrap.Data().resize(0);
+			auto itWrite = std::back_inserter(m_sir0wrap.Data());
 
 			WriteEntries(itWrite);
-			WriteLuT(itWrite);
+			WriteLuT();
 			m_sir0wrap.Write(outit);
-			return outit
+			return outit;
 		}
 
 	private:
@@ -141,14 +151,14 @@ namespace pmd2 { namespace filetypes
 		{
 			for (auto entry : m_db)
 			{
-				WriteEntry(itwrite, entry.width, entry.height, 0, entry.m_floormap);
+				WriteEntry(itwrite, entry.width, entry.height, entry.unk1, entry.floormap);
 			}
 		}
 
 		template<class _outit>
 			void WriteEntry(_outit & itwrite, uint16_t width, uint16_t height, uint16_t unk1, const vector<uint8_t> & map)
 		{
-			m_lut.push_back(m_writebuffer.size());
+			m_lut.push_back(m_sir0wrap.Data().size());
 			itwrite = utils::WriteIntToBytes(width, itwrite);
 			itwrite = utils::WriteIntToBytes(height, itwrite);
 			itwrite = utils::WriteIntToBytes(unk1, itwrite);
@@ -157,11 +167,9 @@ namespace pmd2 { namespace filetypes
 
 		void WriteLuT()
 		{
-			m_sir0wrap.SetDataPointerOffset(m_writebuffer.size()); //Make the header point at the right place
+			m_sir0wrap.SetDataPointerOffset(m_sir0wrap.Data().size()); //Make the header point at the right place
 			for (uint32_t ptr : m_lut)
-			{
 				m_sir0wrap.pushpointer(ptr);
-			}
 		}
 
 		template<class _outit>
@@ -174,16 +182,14 @@ namespace pmd2 { namespace filetypes
 			{
 				uint8_t curval = *itRead;
 				size_t nbelems = std::count(itRead, itEnd, curval);
-				itRead = std::advance(itRead, nbelems);
+				itRead = utils::advAsMuchAsPossible(itRead, itEnd, nbelems);
 				itwrite = utils::WriteIntToBytes(curval, itwrite);
 				itwrite = utils::WriteIntToBytes((uint8_t)nbelems, itwrite);
 			}
 		}
 
 	private:
-		string m_pathBalanceDir;
 		vector<uint32_t> m_lut;
-		vector<uint8_t> m_writebuffer;
 		::filetypes::FixedSIR0DataWrapper<vector<uint8_t>> m_sir0wrap;
 		const pmd2::stats::FixedDungeonDB & m_db;
 	};
@@ -191,7 +197,7 @@ namespace pmd2 { namespace filetypes
 //
 // Function Defnition
 //
-	pmd2::stats::FixedDungeonDB ParseFixedDungeonFloorData(const std::string & pathBalanceDir)
+	stats::FixedDungeonDB ParseFixedDungeonFloorDataEoS(const std::string & pathBalanceDir)
 	{
 		stringstream sspathfixed;
 		sspathfixed << utils::TryAppendSlash(pathBalanceDir) << FixedDungeonData_FName;
@@ -209,6 +215,11 @@ namespace pmd2 { namespace filetypes
 		return FixedBinParser<vector<uint8_t>::const_iterator>(fdat.begin(), fdat.end()).Parse();
 	}
 
+	stats::FixedDungeonDB ParseFixedDungeonFloorDataEoTD(const std::string & pathBalanceDir)
+	{
+		throw std::runtime_error("ParseFixedDungeonFloorDataEoTD(): Unimplemented feature!");
+	}
+
 	void WriteFixedDungeonFloorDataEoS(const std::string & pathBalanceDir, const stats::FixedDungeonDB & floordat)
 	{
 		stringstream sspathfixed;
@@ -218,4 +229,7 @@ namespace pmd2 { namespace filetypes
 		ofstream fixedbin(path, std::ios::binary);
 		FixedBinWriter(floordat).Write(ostream_iterator<uint8_t>(fixedbin));
 	}
+    void WriteFixedDungeonFloorDataEoTD(const std::string & pathBalanceDir, const stats::FixedDungeonDB & floordat)
+    {
+    }
 }}

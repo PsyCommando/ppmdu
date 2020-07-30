@@ -32,7 +32,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <ObjectFileName>$(IntDir)/eat2dots/%(RelativeDir)</ObjectFileName>
-      <PreprocessorDefinitions>__WIN32</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN32;NOMINMAX</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

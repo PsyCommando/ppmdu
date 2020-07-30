@@ -53,6 +53,8 @@ Changelog:
     * Improved a lot the error output. It now shows the actual line the error is on, and an approximate positions of the error on the line.
 -0.23.3(2020/02/25):
 	* Added support for the Wii U virtual console roms for EoS. Both the european, and north american versions.
+-0.25 (2020/--/--):
+	* Added support for dungeon data export and import.
 
 ----------------------------------------------------------------------------------------------------
 License info:

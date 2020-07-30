@@ -40,7 +40,7 @@ namespace statsutil
 //------------------------------------------------
     const string CStatsUtil::Exe_Name            = "ppmd_statsutil.exe";
     const string CStatsUtil::Title               = "Game data importer/exporter";
-    const string CStatsUtil::Version             = "0.24";
+    const string CStatsUtil::Version             = "0.25";
     const string CStatsUtil::Short_Description   = "A utility to export and import various game statistics/data, such as pokemon stats.";
     const string CStatsUtil::Long_Description    = 
         "To export game data to XML, you have to append \"-e\" to the\ncommandline, followed with the option corresponding to what to export.\n"
@@ -169,6 +169,15 @@ namespace statsutil
             "-scripts",
             std::bind( &CStatsUtil::ParseOptionScripts, &GetInstance(), placeholders::_1 ),
         },
+        //Dungeons Data Only
+        {
+            "dungeons",
+            0,
+            "Specifying this will import or export only the game dungeons!",
+            "-dungeons",
+            std::bind(&CStatsUtil::ParseOptionDungeons, &GetInstance(), placeholders::_1),
+        },
+
 
         //Force a locale string
         {
@@ -302,6 +311,7 @@ namespace statsutil
         m_hndlItems       = false;
         m_hndlMoves       = false;
         m_hndlPkmn        = false;
+        m_hndlDungeons    = false;
         //m_langconf        = DefLangConfFile;
         m_pmd2cfg         = DefConfigFileName;
         m_flocalestr      = "";
@@ -395,6 +405,11 @@ namespace statsutil
     bool CStatsUtil::ParseOptionScripts( const std::vector<std::string> & optdata )
     {
         return m_hndlScripts = true;
+    }
+
+    bool CStatsUtil::ParseOptionDungeons(const std::vector<std::string> & optdata)
+    {
+        return m_hndlDungeons = true;
     }
 
     bool CStatsUtil::ParseOptionForceImport( const std::vector<std::string> & optdata )
@@ -1076,6 +1091,25 @@ namespace statsutil
             }
         }
 
+        if (m_hndlDungeons || bhandleall)
+        {
+            cout << "\nDungeon Data\n"
+                << "-----------------------------------\n";
+            Poco::Path dungeondir(frompath);
+            dungeondir.append(pmd2::GameStats::DefDungeonDir);
+
+            if (utils::isFolder(dungeondir.toString()))
+            {
+                pgamestats->ImportDungeons(dungeondir.toString());
+                pgamestats->WriteDungeons();
+            }
+            else
+            {
+                cout << "Failed to import dungeon data.. Subdirectory " << pmd2::GameStats::DefDungeonDir
+                    << " is missing from specified input directory.\n Skipping over...\n";
+            }
+        }
+
         if(m_hndlStrings || bhandleall)
         {
             cout <<"\nWriting out GameStrings\n"
@@ -1094,7 +1128,7 @@ namespace statsutil
         Poco::File  parentout  = outpath;
         GameStats * pgamestats = nullptr;
 
-        bool bhandleall = !m_hndlStrings && !m_hndlItems && !m_hndlMoves && !m_hndlPkmn && !m_hndlScripts;
+        bool bhandleall = !m_hndlStrings && !m_hndlItems && !m_hndlMoves && !m_hndlPkmn && !m_hndlScripts && !m_hndlDungeons;
 
         if( ! parentout.exists() )
         {
@@ -1132,7 +1166,7 @@ namespace statsutil
         }
 
         //Load game stats for the other elements as needed
-        if( m_hndlPkmn || m_hndlMoves || m_hndlItems || bhandleall )
+        if( m_hndlPkmn || m_hndlMoves || m_hndlItems || m_hndlDungeons || bhandleall )
         {
             cout <<"\nLoading Game Data..\n"
                  <<"---------------------------------\n";
@@ -1169,6 +1203,16 @@ namespace statsutil
             const string targetdir = Poco::Path(outpath).append(GameStats::DefItemsDir).toString();
             CreateDirIfDoesntExist(targetdir);
             pgamestats->ExportItems(targetdir);
+        }
+
+        if (m_hndlDungeons || bhandleall)
+        {
+            cout << "\nExporting Dungeon Data\n"
+                << "-----------------------------------\n";
+
+            const string targetdir = Poco::Path(outpath).append(GameStats::DefDungeonDir).toString();
+            CreateDirIfDoesntExist(targetdir);
+            pgamestats->ExportDungeons(targetdir);
         }
 
         return 0;

@@ -292,8 +292,25 @@ namespace pmd2
             slog()<<"<!>-GameDataLoader: Requested loading of asm data!\n";
             m_asmmanip.reset( new PMD2_ASM( m_romroot, MainPMD2ConfigWrapper::CfgInstance() ) );
         }
-        return m_asmmanip.get();
+        return GetAsm();
     }
+
+	//GameDungeons * GameDataLoader::InitDungeons()
+	//{
+	//	DoCommonInit();
+
+ //       //Need to load game text for this
+ //       if( !m_text )
+ //           InitGameText();
+
+	//	if (!m_dungeons)
+	//	{
+	//		slog()<<"<!>-GameDataLoader: Requested loading of dungeon data!\n";
+	//		m_dungeons.reset(new GameDungeons(m_romroot, MainPMD2ConfigWrapper::CfgInstance(), shared_ptr<GameText>(m_text)));
+	//	}
+
+	//	return GetDungeons();
+	//}
 
 // ======================== DeInit ========================
     //void GameDataLoader::DeInit()
@@ -434,6 +451,9 @@ namespace pmd2
 
     PMD2_ASM                * GameDataLoader::GetAsm()                                  { return m_asmmanip.get(); }
     const PMD2_ASM          * GameDataLoader::GetAsm() const                            { return m_asmmanip.get(); }
+
+	//GameDungeons			* GameDataLoader::GetDungeons()								{ return m_dungeons.get(); }
+	//const GameDungeons		* GameDataLoader::GetDungeons()const						{ return m_dungeons.get(); }
 
     //const ConfigLoader * GameDataLoader::GetConfig() const
     //{

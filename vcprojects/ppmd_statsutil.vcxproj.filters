@@ -91,11 +91,29 @@
     <Filter Include="Source Files\utility">
       <UniqueIdentifier>{ce424d06-0270-4b0b-8fd4-2980287513f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Scripts">
+      <UniqueIdentifier>{a7966768-5b9d-4bde-93ea-02d3b8acfa5d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\ppmdu\data formats\Scripts\eos">
       <UniqueIdentifier>{fc73a543-3e15-40af-ac20-bf979fb64e73}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\ppmdu\data formats\Scripts\eotd">
       <UniqueIdentifier>{5e9d9fff-ef68-4328-8420-ea397f96bde6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\data formats\Dungeons">
+      <UniqueIdentifier>{4a446d01-fbc9-46a9-9e36-970603bb953d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\data formats\Dungeons">
+      <UniqueIdentifier>{66382768-ed3e-4d16-b7ab-31efbe7b2e2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\GameDataAccess\Stats">
+      <UniqueIdentifier>{6cb2cbe6-cba5-403d-8f34-eae14deadc80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ppmdu\GameDataAccess\Config_loader">
+      <UniqueIdentifier>{51053834-e56a-45cf-b17f-2826026bc80d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ppmdu\GameDataAccess\Stats">
+      <UniqueIdentifier>{80f6ecf9-ca8f-4db7-b3e1-7fa84d5293ae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -255,6 +273,21 @@
     <ClCompile Include="..\src\ppmdu\fmts\fixed.cpp">
       <Filter>Source Files\ppmdu\file formats\DungeonData</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_fixed_data.cpp">
+      <Filter>Source Files\ppmdu\data formats\Dungeons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_rng_data.cpp">
+      <Filter>Source Files\ppmdu\data formats\Dungeons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\dungeons_data.cpp">
+      <Filter>Source Files\ppmdu\data formats\Dungeons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
+      <Filter>Source Files\ppmdu\GameDataAccess\Stats</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_data_xml.cpp">
+      <Filter>Source Files\ppmdu\data formats\Dungeons</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
@@ -347,9 +380,6 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
@@ -377,9 +407,6 @@
     <ClInclude Include="..\src\ppmdu\fmts\mappa.hpp">
       <Filter>Header Files\ppmdu\file formats\DungeonData</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp">
-      <Filter>Header Files\ppmdu\data formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <Filter>Header Files\ppmdu\file formats\PokemonData</Filter>
     </ClInclude>
@@ -393,9 +420,6 @@
       <Filter>Header Files\ppmdu\file formats\ItemData</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_gamedataio.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\whereami\src\whereami.h">
@@ -446,8 +470,23 @@
     <ClInclude Include="..\src\ppmdu\fmts\fixed.hpp">
       <Filter>Header Files\ppmdu\file formats\DungeonData</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_configloader.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess\Config_loader</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\dungeons_data.hpp">
+      <Filter>Header Files\ppmdu\data formats\Dungeons</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ppmdu\containers\dungeon_fixed_data.hpp">
-      <Filter>Header Files\ppmdu\data formats</Filter>
+      <Filter>Header Files\ppmdu\data formats\Dungeons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_rng_data.hpp">
+      <Filter>Header Files\ppmdu\data formats\Dungeons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
+      <Filter>Header Files\ppmdu\GameDataAccess\Stats</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_data_xml.hpp">
+      <Filter>Header Files\ppmdu\data formats\Dungeons</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -464,6 +503,9 @@
       <Filter>Resource Files</Filter>
     </Xml>
     <Xml Include="..\resources\pmd2scriptdata.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
+    <Xml Include="..\resources\pmd2dungeondata.xml">
       <Filter>Resource Files</Filter>
     </Xml>
   </ItemGroup>

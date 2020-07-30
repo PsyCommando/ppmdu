@@ -48,7 +48,7 @@ namespace pmd2
     /*
         GameDataLoader
             This identify what game the files being handled belongs to, and allows accessing all its data
-            without having to access to data through the filesystem. It also indexes all the game data for
+            without having to access the data through the filesystem. It also indexes all the game data for
             easy retrieval and editing.
 
             Its made up of separate modules that each handles their respective specialized field of data.

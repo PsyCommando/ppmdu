@@ -87,6 +87,7 @@
         <Block name="Events"            beg="0xA5488"   end="0xA68BC"/>
         <Block name="ItemTablesPtrs1"   beg="0xB0948"   end="0xB09B0"/>
         <Block name="SMDEventsFunTable" beg="0xB0B90"   end="0xB0D8C"/>
+        <Block name="DungeonsFloors"    beg="0x9E3A0"   end="0x9E670"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
@@ -113,11 +114,12 @@
         <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
         <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
         <Block name="Events"            beg="0xA5BD8" end="0xA715C"/>
+        <Block name="DungeonsFloors"    beg="0x9E924" end="0x9EBF4"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DCB80">
         <Block name="ScriptOpCodes" beg="0x3C470" end="0x3D068"/>
-		<Block name="Objects"       beg="0x42D5C" end="0x44808"/>
+		    <Block name="Objects"       beg="0x42D5C" end="0x44808"/>
       </Bin>
     </Game>
 

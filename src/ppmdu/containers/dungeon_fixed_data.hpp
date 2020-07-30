@@ -1,5 +1,5 @@
-#ifndef DUNGEON_RNG_DATA_HPP
-#define DUNGEON_RNG_DATA_HPP
+#ifndef DUNGEON_FIXED_DATA_HPP
+#define DUNGEON_FIXED_DATA_HPP
 /*
 dungeon_fixed_data.hpp
 2020/06/22
@@ -11,16 +11,17 @@ Description: Objects for storing and editing loaded fixed dungeon floor data fro
 
 namespace pmd2 {namespace stats
 {
-	//=====================================================================================
-	//  Fixed Dungeon Entry
-	//=====================================================================================
+//=====================================================================================
+//  Fixed Dungeon Entry
+//=====================================================================================
 
-		/*
+	/*
+		FixedDungeonFloorEntry
 			Contains details on a single fixed dungeon floor.
-		*/
-	class FixedDungeonFloorEntry
+			The dimensions of the floor, and what is on each tiles, plus some unknown value.
+	*/
+	struct FixedDungeonFloorEntry
 	{
-	public:
 		enum struct EDungeonTileType : uint8_t
 		{
 			FLOOR = 0x0,			//Generic room floor											0000 0000
@@ -31,22 +32,39 @@ namespace pmd2 {namespace stats
 
 
 		};
+
+		//Constructions + copy
+		FixedDungeonFloorEntry()
+			:width(0),height(0),unk1(0)
+		{}
+		FixedDungeonFloorEntry(uint16_t _width, uint16_t _heigth, uint16_t _unk1, std::vector<uint8_t> && _floormap);
+		FixedDungeonFloorEntry(const FixedDungeonFloorEntry & other);
+		FixedDungeonFloorEntry(FixedDungeonFloorEntry && moved);
+		FixedDungeonFloorEntry & operator=(const FixedDungeonFloorEntry & other);
+		FixedDungeonFloorEntry & operator=(FixedDungeonFloorEntry && other);
+		void CopyCtor(const FixedDungeonFloorEntry & other);
+		void MoveCtor(FixedDungeonFloorEntry && other);
+
+		//Tile access
+
+		//Vars
 		uint16_t width;
 		uint16_t height;
+		uint16_t unk1;
 
-		//Decompressed 2d floor map
-		std::vector<std::vector<EDungeonTileType>> m_floormap;
-	private:
+		//Decompressed 2d floor map, as a single array of tiles
+		std::vector<uint8_t> floormap;
 	};
 
-	//=====================================================================================
-	//  Fixed Dungeon DB
-	//=====================================================================================
+//=====================================================================================
+//  Fixed Dungeon DB
+//=====================================================================================
 
-		/*
+	/*
+		FixedDungeonDB
 			Contains details on all fixed dungeons in the pmd2 games.
 			Can be accessed as a container.
-		*/
+	*/
 	class FixedDungeonDB
 	{
 	public:
@@ -76,11 +94,9 @@ namespace pmd2 {namespace stats
 		const_iterator begin()const { return m_floorData.begin(); }
 		const_iterator end()const { return m_floorData.end(); }
 
+		//Data manipulation
 	public:
-		void AddEntry(uint16_t width, uint16_t height, uint16_t unk1, const vector<uint8_t>& floormap)
-		{
 
-		}
 
 	private:
 		std::vector<FixedDungeonFloorEntry> m_floorData;

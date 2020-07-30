@@ -22,12 +22,14 @@ namespace pmd2 { namespace filetypes{
     /*
         ParseFixedDungeonFloorData
     */
-    stats::FixedDungeonDB ParseFixedDungeonFloorData( const std::string & pathBalanceDir );
+	stats::FixedDungeonDB ParseFixedDungeonFloorDataEoS(const std::string & pathBalanceDir);
+	stats::FixedDungeonDB ParseFixedDungeonFloorDataEoTD(const std::string & pathBalanceDir);
 
     /*
         WriteFixedDungeonFloorDataEoS
     */
     void WriteFixedDungeonFloorDataEoS( const std::string & pathBalanceDir, const stats::FixedDungeonDB & floordat );
+    void WriteFixedDungeonFloorDataEoTD(const std::string & pathBalanceDir, const stats::FixedDungeonDB & floordat);
 }}
 
 #endif

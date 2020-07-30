@@ -5,6 +5,9 @@
 #include <ppmdu/fmts/m_level.hpp>
 #include <ppmdu/fmts/text_str.hpp>
 #include <ppmdu/fmts/item_p.hpp>
+#include <ppmdu/fmts/mappa.hpp>
+#include <ppmdu/fmts/fixed.hpp>
+#include <ppmdu/containers/dungeon_data_xml.hpp>
 #include <pugixml.hpp>
 #include <utils/parse_utils.hpp>
 #include <utils/library_wide.hpp>
@@ -42,10 +45,11 @@ namespace pmd2
     bool isImportAllDir( const std::string & directory )
     {
         //Check for one of the required directories
-        const string pkmndir = Poco::Path(directory).append(GameStats::DefPkmnDir ).makeDirectory().toString();
-        const string mvdir   = Poco::Path(directory).append(GameStats::DefItemsDir).makeDirectory().toString();
-        const string itemdir = Poco::Path(directory).append(GameStats::DefMvDir   ).makeDirectory().toString();
-        return ( utils::isFolder(pkmndir) || utils::isFolder(mvdir) || utils::isFolder(itemdir) );
+        const string pkmndir = Poco::Path(directory).append(GameStats::DefPkmnDir   ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).append(GameStats::DefItemsDir  ).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).append(GameStats::DefMvDir     ).makeDirectory().toString();
+		const string dungdir = Poco::Path(directory).append(GameStats::DefDungeonDir).makeDirectory().toString();
+        return ( utils::isFolder(pkmndir) || utils::isFolder(mvdir) || utils::isFolder(itemdir) || utils::isFolder(dungdir) );
     }
 
 
@@ -77,6 +81,7 @@ namespace pmd2
         _LoadGameStrings();
         _LoadPokemonAndMvData();
         _LoadItemData();
+		_LoadDungeonData();
     }
 
     void GameStats::Load( const std::string & rootdatafolder )
@@ -206,6 +211,10 @@ namespace pmd2
         LoadItems();
     }
 
+    void GameStats::LoadDungeons(const std::string & rootdatafolder)
+    {
+    }
+
     void GameStats::LoadItems()
     {
         if( m_gameVersion != eGameVersion::Invalid )
@@ -216,6 +225,10 @@ namespace pmd2
         }
         else
             throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
+    }
+
+    void GameStats::LoadDungeons()
+    {
     }
 
     void GameStats::_LoadItemData()
@@ -235,9 +248,61 @@ namespace pmd2
 
     void GameStats::_LoadDungeonData()
     {
-        cout<<"GameStats::_LoadDungeonData() : Not implemented yet !\n";
-        throw exception("Not Implemented!"); 
+        using namespace ::filetypes;
+        int nbMappas = (m_gameVersion == eGameVersion::EoS) ?
+            NB_MAPPA_PAIRS_EOS :
+            (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD) ?
+            NB_MAPPA_EOTD :
+            0;
+
+        //Make the path to the dungeon rng data
+        std::stringstream sstrbalpath;
+        sstrbalpath << utils::TryAppendSlash(m_dataFolder) << utils::TryAppendSlash(DirName_BALANCE);
+        std::string balancepath = sstrbalpath.str();
+
+        cout << "Loading dungeon data..\n";
+
+        //For each lists of mappa files for the given game version, load the corresponding file!
+        for (eMappaID id : MAPPA_FILES_VERSIONS_FOR_VERSIONS.at(m_gameVersion))
+        {
+            std::stringstream ssmapath;
+            ssmapath << balancepath << DEF_MAPPA_FILENAME_PREFIX << static_cast<char>(id) << DEF_MAPPA_FILENAME_SUFFIX;
+            const std::string mappa = ssmapath.str();
+
+            if (m_gameVersion == eGameVersion::EoS)
+            {
+                std::stringstream ssmappag;
+                ssmappag << balancepath << DEF_MAPPA_FILENAME_PREFIX << 'g' << static_cast<char>(id) << DEF_MAPPA_FILENAME_SUFFIX;
+                m_dungeonsData.AddMappa(id, LoadMappaSetEoS(mappa, ssmappag.str()));
+            }
+            else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
+                m_dungeonsData.AddMappa(id, LoadMappaSetEoTD(mappa));
+            else
+                throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
+        }
+
+        cout << "Loading dungeon fixed floor data..\n";
+        if (m_gameVersion == eGameVersion::EoS)
+            m_dungeonsData.FixedFloorData(ParseFixedDungeonFloorDataEoS(balancepath));
+        else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
+            m_dungeonsData.FixedFloorData(ParseFixedDungeonFloorDataEoTD(balancepath));
+        else
+            throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
     }
+
+  //  void GameStats::_LoadDungeonData()
+  //  {
+		//using namespace filetypes;
+  //      stringstream sstrDungeonDat;
+  //      sstrDungeonDat << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
+		//cout << "Loading dungeon data..\n";
+  //      if( m_gameVersion == eGameVersion::EoS )
+  //          m_dungeonData = std::move( ParseFixedDungeonFloorDataEoS(sstrDungeonDat.str()) );
+  //      else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
+  //          m_dungeonData = std::move( ParseFixedDungeonFloorDataEoTD(sstrDungeonDat.str()) );
+  //      else
+  //          throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
+  //  }
 
 //--------------------------------------------------------------
 //  Writing
@@ -249,6 +314,7 @@ namespace pmd2
         _WritePokemonAndMvData();
         _WriteItemData();
         _WriteGameStrings();
+		_WriteDungeonData();
     }
 
     void GameStats::Write( const std::string & rootdatafolder )
@@ -453,15 +519,82 @@ namespace pmd2
         else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
             WriteItemsDataEoTD( balancedirpath, m_itemsData );
         else
-        {
             throw runtime_error( "GameStats::_WriteItemData(): Unsuported game version !" );
+    }
+
+    void GameStats::WriteDungeons()
+    {
+        using namespace filetypes;
+        auto prevGameVer = m_gameVersion;
+
+        //Identify target game if we have no info
+        _EnsureStringsLoaded();
+
+        //Warn about game mismatch
+        if (prevGameVer != eGameVersion::Invalid && prevGameVer != m_gameVersion)
+        {
+            clog << "WARNING: Game version mismatch. The target game data directory is from a different game than the current item data!\n"
+                << "This will result in unforceen consequences! Continuing..\n";
         }
+
+        _WriteDungeonData();
+        _WriteGameStrings();
+    }
+    void GameStats::WriteDungeons(const std::string & rootdatafolder)
+    {
+        if (!rootdatafolder.empty())
+            setRomRootDir(rootdatafolder);
+
+        WriteDungeons();
     }
 
     void GameStats::_WriteDungeonData()
     {
-        throw exception("Not Implemented!"); //Not implemented yet !
+        using namespace ::filetypes;
+        std::stringstream sstrbalpath;
+        std::string balancepath;
+        sstrbalpath << utils::TryAppendSlash(m_dataFolder) << utils::TryAppendSlash(DirName_BALANCE);
+        balancepath = sstrbalpath.str();
+
+        cout << " <*>- Writing dungeon data to \"" << balancepath << "\"..\n";
+        //Write all mappas
+        for (const auto & p : m_dungeonsData)
+        {
+            const DungeonRNGDataSet & dung = p.second;
+            if (m_gameVersion == eGameVersion::EoS)
+                WriteMappaSetEoS(balancepath + dung.OriginalMappaName(), balancepath + dung.OriginalMappaGName(), dung);
+            else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
+                WriteMappaSetEoTD(balancepath + dung.OriginalMappaName(), dung);
+            else
+                throw runtime_error("GameStats::_WriteDungeonData(): Unsuported game version !");
+        }
+
+        cout << " <*>- Writing dungeon fixed floor data..\n";
+        if (m_gameVersion == eGameVersion::EoS)
+            WriteFixedDungeonFloorDataEoS(balancepath, m_dungeonsData.FixedFloorData());
+        else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
+            WriteFixedDungeonFloorDataEoTD(balancepath, m_dungeonsData.FixedFloorData());
+        else
+            throw runtime_error("GameStats::_WriteDungeonData(): Unsuported game version !");
     }
+
+  //  void GameStats::_WriteDungeonData()
+  //  {
+		//using namespace filetypes;
+
+  //      stringstream sstrDungeonDat;
+  //      sstrDungeonDat << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
+  //      const string balancedirpath = sstrDungeonDat.str();
+
+		//cout << " <*>- Writing dungeon data to \"" <<balancedirpath <<"\"..\n";
+
+  //      if( m_gameVersion == eGameVersion::EoS )
+  //          WriteDungeonDataEoS(balancedirpath, m_dungeonData);
+  //      else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
+  //          WriteDungeonDataEoTD(balancedirpath, m_dungeonData);
+  //      else
+  //          throw runtime_error( "GameStats::_WriteDungeonData(): Unsuported game version !" );
+  //  }
 
 
 //--------------------------------------------------------------
@@ -561,12 +694,36 @@ namespace pmd2
         cout<<" Done!\n";
     }
 
+    void GameStats::ExportDungeons(const std::string & directory)
+    {
+        if (!CheckStringsLoaded() || m_dungeonsData.empty())
+            throw runtime_error("No dungeon data to export, or the strings weren't loaded!!");
+
+        cout << " <*>- Exporting dungeons to XML..";
+        stats::WriteDungeonDataToXml(m_dungeonsData, directory, m_gameStrings.get(), MainPMD2ConfigWrapper::CfgInstance());
+        cout << " Done!\n";
+    }
+
+    void GameStats::ImportDungeons(const std::string & directory)
+    {
+        //Need game strings loaded for this !
+        _EnsureStringsLoaded();
+
+        if (m_gameVersion == eGameVersion::Invalid)
+            throw runtime_error("Game version is invalid, or was not determined. Cannot import item data and format it!");
+        cout << " <*>- Parsing dungeon XML data..";
+        pmd2::stats::ReadDungeonDataFromXml(directory, m_dungeonsData, m_gameStrings.get());
+        cout << " Done!\n";
+    }
+
+
     void GameStats::ExportAll( const std::string & directory )
     {
         cout<<"-- Exporting everything to XML --\n";
-        const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir ).makeDirectory().toString();
-        const string mvdir   = Poco::Path(directory).makeAbsolute().append(DefMvDir   ).makeDirectory().toString();
-        const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir).makeDirectory().toString();
+        const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir   ).makeDirectory().toString();
+        const string mvdir   = Poco::Path(directory).makeAbsolute().append(DefMvDir     ).makeDirectory().toString();
+        const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir  ).makeDirectory().toString();
+        const string dungdir = Poco::Path(directory).makeAbsolute().append(DefDungeonDir).makeDirectory().toString();
 
         if( m_pokemonStats.empty() && m_moveData1.empty() && m_itemsData.empty() )
             throw runtime_error( "No data to export!" );
@@ -603,6 +760,16 @@ namespace pmd2
         else
             cout<<" <!>- No item data to export, skipping..\n";
 
+        if (!m_dungeonsData.empty())
+        {
+            utils::DoCreateDirectory(dungdir);
+
+            cout << " <*>- Has dungeon data to export. Exporting to \"" << dungdir << "\"..\n  ";
+            ExportDungeons(dungdir);
+        }
+        else
+            cout << " <!>- No dungeon data to export, skipping..\n";
+
         cout<<"-- Export complete! --\n";
     }
 
@@ -610,14 +777,16 @@ namespace pmd2
     {
         using namespace utils;
         cout<<"-- Importing everything from XML --\n";
-        const string pkmndir = Poco::Path(directory).makeAbsolute().append(DefPkmnDir ).makeDirectory().toString();
-        const string mvdir   = Poco::Path(directory).makeAbsolute().append(DefMvDir   ).makeDirectory().toString();
-        const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir).makeDirectory().toString();
+        const string pkmndir    = Poco::Path(directory).makeAbsolute().append(DefPkmnDir   ).makeDirectory().toString();
+        const string mvdir      = Poco::Path(directory).makeAbsolute().append(DefMvDir     ).makeDirectory().toString();
+        const string itemdir    = Poco::Path(directory).makeAbsolute().append(DefItemsDir  ).makeDirectory().toString();
+        const string dungeonsdir= Poco::Path(directory).makeAbsolute().append(DefDungeonDir).makeDirectory().toString();
 
         //Check what we can import
-        bool importPokes = pathExists(pkmndir);
-        bool importMoves = pathExists(mvdir  );
-        bool importItems = pathExists(itemdir);
+        bool importPokes    = pathExists(pkmndir);
+        bool importMoves    = pathExists(mvdir  );
+        bool importItems    = pathExists(itemdir);
+        bool importDungeons = pathExists(dungeonsdir);
 
         if( !importPokes && !importMoves && !importItems )
         {
@@ -625,13 +794,14 @@ namespace pmd2
             sstrerr << "Couldn't find any expected data directories in specified directory!:\n"
                     << " - Expected \"" <<pkmndir <<"\", but no such directory exists!\n" 
                     << " - Expected \"" <<mvdir <<"\", but no such directory exists!\n" 
-                    << " - Expected \"" <<itemdir <<"\", but no such directory exists!\n";
+                    << " - Expected \"" <<itemdir <<"\", but no such directory exists!\n"
+                    << " - Expected \"" << dungeonsdir << "\", but no such directory exists!\n";
             const string strerr = sstrerr.str();
             clog <<strerr <<"\n";
             throw runtime_error( strerr );
         }
 
-        if( !m_pokemonStats.empty() || !m_moveData1.empty() || !m_itemsData.empty() )
+        if( !m_pokemonStats.empty() || !m_moveData1.empty() || !m_itemsData.empty() || !m_dungeonsData.empty() )
             cout <<"  <!>- WARNING: The data already loaded will be overwritten! Continuing happily..\n";
 
         //Need game strings loaded for this !
@@ -648,6 +818,8 @@ namespace pmd2
             ImportMoves(mvdir);
         if(importItems)
             ImportItems(itemdir);
+        if (importDungeons)
+            ImportDungeons(dungeonsdir);
 
         cout<<"-- Import complete! --\n";
     }

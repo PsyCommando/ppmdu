@@ -51,6 +51,7 @@ namespace statsutil
         bool ParseOptionLocaleStr  ( const std::vector<std::string> & optdata );
         bool ParseOptionLog        ( const std::vector<std::string> & optdata );
         bool ParseOptionScripts    ( const std::vector<std::string> & optdata );
+        bool ParseOptionDungeons   ( const std::vector<std::string> & optdata );
         bool ParseOptionConfig     ( const std::vector<std::string> & optdata );
         bool ParseOptionRomRoot    ( const std::vector<std::string> & optdata );
         bool ParseOptionThreads    ( const std::vector<std::string> & optdata );
@@ -166,6 +167,9 @@ namespace statsutil
 
             ImportAll,
             ExportAll,
+
+            ExportDungeons,
+            ImportDungeons,
         };
 
         //Variables
@@ -186,6 +190,7 @@ namespace statsutil
         bool        m_hndlMoves;      //If we handle only moves
         bool        m_hndlPkmn;       //If we handle only Pokemon
         bool        m_hndlScripts;    //If we handle only Scripts
+        bool        m_hndlDungeons;   //If we handle dungeons data
         eOpForce    m_force;          // 
         bool        m_shouldlog;      
         bool        m_escxml;         //Force escape sequences to be standard XML instead of C

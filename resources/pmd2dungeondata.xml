@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PMD2>
+  <DungeonData>
+        
+    
+    
+    <!-- Definition of all possible dungeon floor layouts -->
+    <FlooShapes>
+      <Shape>
+        <id>0</id>
+        
+      </Shape>
+    </FlooShapes>
+  </DungeonData>
+</PMD2>

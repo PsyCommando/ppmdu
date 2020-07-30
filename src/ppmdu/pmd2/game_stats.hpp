@@ -12,10 +12,10 @@ All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-//#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <ppmdu/containers/pokemon_stats.hpp>
 #include <ppmdu/containers/item_data.hpp>
 #include <ppmdu/containers/move_data.hpp>
+#include <ppmdu/containers/dungeons_data.hpp>
 #include <ppmdu/pmd2/pmd2_text.hpp>
 #include <string>
 #include <vector>
@@ -108,27 +108,30 @@ namespace pmd2
         /*
             If no path is specified, will use the last path used in either the constructor or in the function below
         */
-        void Load       ();
-        void LoadStrings();
-        void LoadPkmn   ();
-        void LoadMoves  ();
-        void LoadItems  ();
-        void Load       ( const std::string & rootdatafolder );
-        void LoadText   ( const std::string & rootdatafolder );
-        void LoadPkmn   ( const std::string & rootdatafolder );
-        void LoadMoves  ( const std::string & rootdatafolder );
-        void LoadItems  ( const std::string & rootdatafolder );
+        void Load           ();
+        void LoadStrings    ();
+        void LoadPkmn       ();
+        void LoadMoves      ();
+        void LoadItems      ();
+        void LoadDungeons   ();
+        void Load           ( const std::string & rootdatafolder );
+        void LoadText       ( const std::string & rootdatafolder );
+        void LoadPkmn       ( const std::string & rootdatafolder );
+        void LoadMoves      ( const std::string & rootdatafolder );
+        void LoadItems      ( const std::string & rootdatafolder );
+        void LoadDungeons   ( const std::string & rootdatafolder );
         
-        void Write       ();
-        void WritePkmn   ();
-        void WriteMoves  ();
-        void WriteText   (); 
-        void WriteItems  ();
-        void Write       ( const std::string & rootdatafolder );
-        void WritePkmn   ( const std::string & rootdatafolder );
-        void WriteMoves  ( const std::string & rootdatafolder );
-
-        void WriteItems  ( const std::string & rootdatafolder );
+        void Write          ();
+        void WritePkmn      ();
+        void WriteMoves     ();
+        void WriteText      (); 
+        void WriteItems     ();
+        void WriteDungeons  ();
+        void Write          ( const std::string & rootdatafolder );
+        void WritePkmn      ( const std::string & rootdatafolder );
+        void WriteMoves     ( const std::string & rootdatafolder );
+        void WriteItems     ( const std::string & rootdatafolder );
+        void WriteDungeons  ( const std::string & rootdatafolder );
 
         //Export
         /*
@@ -136,11 +139,12 @@ namespace pmd2
             folder the data is exported from !
             Unless everything was loaded!
         */
-        void ExportAll  ( const std::string & directory );
-        void ExportPkmn ( const std::string & directory );
-        void ExportMoves( const std::string & directory );
-        void ExportText ( const std::string & directory );
-        void ExportItems( const std::string & directory );
+        void ExportAll      (const std::string & directory);
+        void ExportPkmn     (const std::string & directory);
+        void ExportMoves    (const std::string & directory);
+        void ExportText     (const std::string & directory);
+        void ExportItems    (const std::string & directory);
+        void ExportDungeons (const std::string & directory);
 
         //Import
         /*
@@ -148,106 +152,15 @@ namespace pmd2
             folder where the data will be imported to ! This is
             to allow determining the target game version, nothing will be overwritten!
         */
-        void ImportAll  ( const std::string & directory );
-        void ImportPkmn ( const std::string & directory );
-        void ImportMoves( const std::string & directory );
-        void ImportText ( const std::string & directory );
-        void ImportItems( const std::string & directory );
+        void ImportAll      (const std::string & directory);
+        void ImportPkmn     (const std::string & directory);
+        void ImportMoves    (const std::string & directory);
+        void ImportText     (const std::string & directory);
+        void ImportItems    (const std::string & directory);
+        void ImportDungeons (const std::string & directory);
 
-        /*
-            Analyze the current data folder to find out what game, and language it is, 
-            and where are the correct strings located at.
-        */
-        //inline void AnalyzeGameDir()
-        //{
-        //    IdentifyGameVersion();
-        //    IdentifyGameLocaleStr();
-        //    //BuildListOfStringOffsets();
-        //    if( m_gameVersion == eGameVersion::Invalid )
-        //        throw std::runtime_error( "Couldn't identify the game's version. Some files might be missing..\n" );
-        //}
-        
-    public:
-        /*
-            Text Strings Access
-                Use those to get the correct string depending on the current game version.
-        */
-
-        //pokemon
-        //std::vector<std::string>::const_iterator GetPokemonNameBeg()const;
-        //std::vector<std::string>::const_iterator GetPokemonNameEnd()const;
-        //std::vector<std::string>::iterator       GetPokemonNameBeg();
-        //std::vector<std::string>::iterator       GetPokemonNameEnd();
-
-        //std::vector<std::string>::const_iterator GetPokemonCatBeg()const;
-        //std::vector<std::string>::const_iterator GetPokemonCatEnd()const;
-        //std::vector<std::string>::iterator       GetPokemonCatBeg();
-        //std::vector<std::string>::iterator       GetPokemonCatEnd();
-
-        ////moves
-        //std::vector<std::string>::const_iterator GetMoveNamesBeg()const;
-        //std::vector<std::string>::const_iterator GetMoveNamesEnd()const;
-        //std::vector<std::string>::iterator       GetMoveNamesBeg();
-        //std::vector<std::string>::iterator       GetMoveNamesEnd();
-
-        //std::vector<std::string>::const_iterator GetMoveDescBeg()const;
-        //std::vector<std::string>::const_iterator GetMoveDescEnd()const;
-        //std::vector<std::string>::iterator       GetMoveDescBeg();
-        //std::vector<std::string>::iterator       GetMoveDescEnd();
-
-        ////item
-        //std::vector<std::string>::const_iterator GetItemNamesBeg()const;
-        //std::vector<std::string>::const_iterator GetItemNamesEnd()const;
-        //std::vector<std::string>::iterator       GetItemNamesBeg();
-        //std::vector<std::string>::iterator       GetItemNamesEnd();
-
-        //std::vector<std::string>::const_iterator GetItemShortDescBeg()const;
-        //std::vector<std::string>::const_iterator GetItemShortDescEnd()const;
-        //std::vector<std::string>::iterator       GetItemShortDescBeg();
-        //std::vector<std::string>::iterator       GetItemShortDescEnd();
-
-        //std::vector<std::string>::const_iterator GetItemLongDescBeg()const;
-        //std::vector<std::string>::const_iterator GetItemLongDescEnd()const;
-        //std::vector<std::string>::iterator       GetItemLongDescBeg();
-        //std::vector<std::string>::iterator       GetItemLongDescEnd();
-
-        //std::vector<std::string>::const_iterator GetPortraitNamesBeg()const;
-        //std::vector<std::string>::const_iterator GetPortraitNamesEnd()const;
-        //std::vector<std::string>::iterator       GetPortraitNamesBeg();
-        //std::vector<std::string>::iterator       GetPortraitNamesEnd();
-
-        //std::string              & GetPokemonNameStr( uint16_t pkmnindex );
-        //inline const std::string & GetPokemonNameStr( uint16_t pkmnindex )const  { return const_cast<GameStats*>(this)->GetPokemonNameStr(pkmnindex); }
-        //std::string              & GetPkmnCatNameStr( uint16_t pkmnindex );
-        //inline const std::string & GetPkmnCatNameStr( uint16_t pkmnindex )const  { return const_cast<GameStats*>(this)->GetPkmnCatNameStr(pkmnindex); }
-
-        //std::string              & GetMoveNameStr   ( uint16_t moveindex );
-        //inline const std::string & GetMoveNameStr   ( uint16_t moveindex )const  { return const_cast<GameStats*>(this)->GetMoveNameStr(moveindex); }
-        //std::string              & GetMoveDexcStr   ( uint16_t moveindex );
-        //inline const std::string & GetMoveDexcStr   ( uint16_t moveindex )const  { return const_cast<GameStats*>(this)->GetMoveDexcStr(moveindex); }
-
-        //std::string              & GetAbilityNameStr( uint8_t abilityindex );
-        //inline const std::string & GetAbilityNameStr( uint8_t abilityindex )const{ return const_cast<GameStats*>(this)->GetAbilityNameStr(abilityindex); }
-        //std::string              & GetAbilityDescStr( uint8_t abilityindex );
-        //inline const std::string & GetAbilityDescStr( uint8_t abilityindex )const{ return const_cast<GameStats*>(this)->GetAbilityDescStr(abilityindex); }
-
-        //std::string              & GetTypeNameStr   ( uint8_t type );
-        //inline const std::string & GetTypeNameStr   ( uint8_t type )const        { return const_cast<GameStats*>(this)->GetTypeNameStr(type); }
-
-        //std::string              & GetItemNameStr   ( uint16_t itemindex );
-        //inline const std::string & GetItemNameStr   ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemNameStr(itemindex); }
-        //std::string              & GetItemSDescStr  ( uint16_t itemindex );      //Short Description
-        //inline const std::string & GetItemSDescStr  ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemSDescStr(itemindex); } //Short Description
-        //std::string              & GetItemLDescStr  ( uint16_t itemindex );      //Long Description
-        //inline const std::string & GetItemLDescStr  ( uint16_t itemindex )const  { return const_cast<GameStats*>(this)->GetItemLDescStr(itemindex); } //Long Description
-    
     private:
         bool CheckStringsLoaded()const;
-
-        //void IdentifyGameVersion     ();
-        //void IdentifyGameLocaleStr   ();
-        //void BuildListOfStringOffsets(); //Make a list of all the offsets to the interesting game strings blocks, using the data from the gamelang file, to avoid searching for everytimes the the getstring methods below is called
-
         void _LoadGameStrings();
         void _LoadPokemonAndMvData(); //Must be written together!
         //void _LoadMoveData   ();
@@ -259,11 +172,6 @@ namespace pmd2
         //void _WriteMoveData   ();
         void _WriteItemData   ();
         void _WriteDungeonData();
-
-        //inline strbounds_t strBounds( eStringBlocks what )const
-        //{
-        //    return m_strOffsets[static_cast<uint32_t>(what)];
-        //}
 
         //Call this to do a check whether game strings are loaded, and load them as needed!
         void _EnsureStringsLoaded();
@@ -284,6 +192,7 @@ namespace pmd2
         stats::MoveDB               m_moveData2; //For Explorers of Sky only
 
         //Level Data
+        stats::DungeonDB            m_dungeonsData;
 
         //Quiz Data
 

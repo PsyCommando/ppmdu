@@ -117,6 +117,10 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\ppmdu\containers\dungeons_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_data_xml.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_fixed_data.cpp" />
+    <ClCompile Include="..\src\ppmdu\containers\dungeon_rng_data.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp" />
     <ClCompile Include="..\src\ppmdu\containers\script_content.cpp" />
     <ClCompile Include="..\src\ppmdu\fmts\bg_list_data.cpp" />
@@ -251,7 +255,10 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\lib\zlib-1.2.8\zlib.h" />
+    <ClInclude Include="..\src\ppmdu\containers\dungeons_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_data_xml.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\dungeon_fixed_data.hpp" />
+    <ClInclude Include="..\src\ppmdu\containers\dungeon_rng_data.hpp" />
     <ClInclude Include="..\src\ppmdu\containers\script_content.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\fixed.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\lsd.hpp" />
@@ -259,7 +266,6 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <ClInclude Include="..\src\ppmdu\fmts\ssa.hpp" />
     <ClInclude Include="..\src\ppmdu\fmts\ssb.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\15_bits_integers.hpp" />
-    <ClInclude Include="..\src\ppmdu\pmd2\dungeon_rng_data.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\opcode_categories.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_sky.hpp" />
     <ClInclude Include="..\src\ppmdu\pmd2\opcode_definition_time_darkness.hpp" />
@@ -380,6 +386,7 @@ copy "$(SolutionDir)resources\pmd2scriptdata.xml" "$(OutDir)pmd2scriptdata.xml"
     <Xml Include="..\resources\pmd2data.xml">
       <SubType>Designer</SubType>
     </Xml>
+    <Xml Include="..\resources\pmd2dungeondata.xml" />
     <Xml Include="..\resources\pmd2scriptdata.xml">
       <SubType>Designer</SubType>
     </Xml>
