@@ -4,7 +4,6 @@
 pmd2_text.hpp
 */
 #include <ppmdu/pmd2/pmd2.hpp>
-//#include <ppmdu/pmd2/pmd2_langconf.hpp>
 #include <ppmdu/pmd2/pmd2_configloader.hpp>
 #include <string>
 #include <vector>
@@ -13,12 +12,6 @@ pmd2_text.hpp
 
 namespace pmd2
 {
-//
-//
-//(const std::string & src, eGameLanguages glang, const std::locale & loc)
-
-
-
 
 //==================================================================================
 //  StringAccessor
@@ -139,8 +132,6 @@ namespace pmd2
         {
             return m_cata.GetLanguage();
         }
-
-    private:
 
     private:
         StringsCatalog           m_cata;

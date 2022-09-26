@@ -862,7 +862,7 @@ namespace DSE
 
             ParsePlayNoteParam1( ev.params.front(), octmod, param2len, parsedkey );
 
-            //Special case for when the play note even is 0xF
+            //Special case for when the play note event is 0xF
             if( parsedkey > static_cast<uint8_t>(eNote::nbNotes) )
             {
                 clog <<"<!>- Event on track#" <<trkno << ", has key ID 0x" <<hex <<static_cast<short>(parsedkey) <<dec <<"! Unsupported!\n";
@@ -1577,16 +1577,11 @@ namespace DSE
                 }
             }
 
-
-            //cerr<<"Not implemented!\n";
-            //assert(false);
-
             //Iterate through events
             for( int cntev = 0; cntev < nbev; ++cntev )
             {
                 const MIDITimedBigMessage * ptrev = mtrack.GetEvent( cntev );
                 
-
                 if( ptrev != nullptr )
                 {
                     if( ptrev->IsEndOfTrack() )
@@ -1793,6 +1788,7 @@ namespace DSE
             using namespace jdksmidi;
             if( mev.IsKeySig() )
             {
+                //Don't do anything
             }
             else if( mev.IsControlChange() )
             {
@@ -1824,6 +1820,7 @@ namespace DSE
             }
             else if( mev.IsEndOfTrack() )
             {
+                //Don't do anything
             }
             else
             {
@@ -2062,18 +2059,25 @@ namespace DSE
                                TrkState                            & state,
                                MusicTrack                          & trk )
         {
+            ticks_t evtglobaltick = mev.GetTime(); //The global absolute tick of the event
+            uint8_t pan = static_cast<uint8_t>(mev.GetControllerValue());
+            InsertDSEEvent(trk, eTrkEventCodes::SetTrkPan, { pan });
         }
 
         void HandlePitchBend( const jdksmidi::MIDITimedBigMessage & mev,
                               TrkState                            & state,
                               MusicTrack                          & trk )
         {
+            ticks_t evtglobaltick = mev.GetTime(); //The global absolute tick of the event
         }
 
         void HandleProgramChange( const jdksmidi::MIDITimedBigMessage & mev,
                                   TrkState                            & state,
                                   MusicTrack                          & trk )
         {
+            ticks_t evtglobaltick = mev.GetTime(); //The global absolute tick of the event
+            uint8_t preset = static_cast<uint8_t>(mev.GetControllerValue());
+            InsertDSEEvent(trk, eTrkEventCodes::SetPreset, { preset });
         }
 
 

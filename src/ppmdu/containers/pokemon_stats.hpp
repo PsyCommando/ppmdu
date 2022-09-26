@@ -22,8 +22,8 @@ namespace pmd2 { namespace stats
 //  Typedefs
 //======================================================================================================
     //Self-documention
-    typedef uint16_t level_t;
-    typedef uint16_t moveid_t;
+    typedef uint16_t level_t;   //Represents a pokemon level number
+    typedef uint16_t moveid_t;  //Represents a pokemon move ID number
 
 //======================================================================================================
 //  Constants
@@ -192,6 +192,7 @@ namespace pmd2 { namespace stats
 
 
     /*
+        Pokemon learnable moveset data
     */
     struct PokeMoveSet
     {
@@ -408,17 +409,6 @@ namespace pmd2 { namespace stats
                                   std::vector<PokeStatsGrowth>       & out_growth );
 
         /*
-            Access a pokemon's name string.
-        */
-        //inline const std::string & PkmnName( uint16_t index )const;
-        //inline       std::string & PkmnName( uint16_t index );
-        /*
-            Access a pokemon's category string.
-        */
-        //inline const std::string & PkmnCat( uint16_t index )const;
-        //inline       std::string & PkmnCat( uint16_t index );
-
-        /*
             Copy this PokemonDB's data, and place it into the 3 components that makes it up.
                 - out_md     : The list of PokeMonsterData that will receive the appropriate data from the pdb!
                 - out_mvsets : The 2 lists of pokemon learnsets that will receive the appropriate data from the pdb!
@@ -427,6 +417,25 @@ namespace pmd2 { namespace stats
         void ExportComponents( std::vector<PokeMonsterData>       & out_md, 
                                pokeMvSets_t                       & out_mvsets, 
                                std::vector<PokeStatsGrowth>       & out_growth )const;
+
+        //Single operation export (ExportComponents() is faster for exporting all at once)
+        pokeMvSets_t ExportMovesest()const;
+        std::vector<PokeMonsterData> ExportMonsterData()const;
+        std::vector<PokeStatsGrowth> ExportStatsGrowth()const;
+
+        //Counts the amount of pokemon entries with a secondary gender entry (All regular pokemons, even gender unique or genderless, have 2 genders entries). 
+        // AKA regular pokemon entry, which excludes special entries for the actors!
+        uint32_t CountNbRegularPokemons()const;
+
+        //Counts the amount of special pokemon entries used by actors in cutscenes and misc things. Those have a single entry for a single gender in the data.
+        uint32_t CountNbSpecialPokemons()const; 
+
+        //Counts the amount of unique pokemons in the data (AKA consider each pokemon with 2 gender entries as a single pokemon. And adds the amount of special pokemons)
+        uint32_t CountNbUniquePokemons()const;
+
+        //Counts the amount of unique entries in the monster data file! 
+        //That means, each regular pokemon has 2 entries each (one for each genders even on genderless and gendeer unique pokes), and special pokemon have 1 each.
+        uint32_t CountNbUniqueMonsterDataEntries()const;
 
         inline const CPokemon & operator[]( uint16_t index )const { return m_pkmn[index]; }
         inline       CPokemon & operator[]( uint16_t index )      { return m_pkmn[index]; }
@@ -455,11 +464,6 @@ namespace pmd2 { namespace stats
         
         The code expercts the amount of name strings matches the amount of pokemon in the PokemonDB object !
     */
-    //void      ExportPokemonsToXML  ( const PokemonDB                         & src,
-    //                                 std::vector<std::string>::const_iterator  itbegnames,
-    //                                 std::vector<std::string>::const_iterator  itbegcat,
-    //                                 const std::string                       & destdir );
-
     void      ExportPokemonsToXML  ( const PokemonDB                         & src,
                                      const GameText                          * gtext,
                                      const std::string                       & destdir );
@@ -468,37 +472,9 @@ namespace pmd2 { namespace stats
         Read pokemon data from several xml files in a directory, into a PokemonDB.
         Also import string data from the xml files into the ranges specified by the 4 iterators.
     */
-    //void      ImportPokemonsFromXML( const std::string                  & srcdir, 
-    //                                 PokemonDB                          & out_pkdb,
-    //                                 std::vector<std::string>::iterator   itbegnames,
-    //                                 std::vector<std::string>::iterator   itendnames,
-    //                                 std::vector<std::string>::iterator   itbegcat,
-    //                                 std::vector<std::string>::iterator   itendcat );
-
     void      ImportPokemonsFromXML ( const std::string                 & srcdir, 
                                       PokemonDB                         & out_pkdb,
                                       GameText                          * inout_gtext );
-
-    /*
-        Export pokemon data to XML
-    */
-    //void ExportPokemonToXML( const CPokemon & src, const std::string & destfile );
-
-    /*
-        Export pokemon data to text file
-    */
-    //void ExportPokemonToText( const CPokemon & src, const std::string & destfile );
-
-    /*
-        Import pokemon data from XML file
-    */
-    //CPokemon ImportPokemonFromXML( const std::string & srcfile );
-
-    /*
-        Import pokemon data from text file
-    */
-    //CPokemon ImportPokemonFromText( const std::string & srcfile );
-
 };};
 
 #endif

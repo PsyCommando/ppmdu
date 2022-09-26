@@ -41,6 +41,8 @@ namespace filetypes
 
     extern const ContentTy CnTy_Kaomado; //Contetn ID db handle
 
+    typedef gimg::tiled_indexed_image<gimg::pixel_indexed_4bpp, gimg::colorRGB24> kao_img_t;
+
 //==================================================================
 // Structs
 //==================================================================

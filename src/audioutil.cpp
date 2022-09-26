@@ -152,7 +152,7 @@ namespace audioutil
             std::bind( &CAudioUtil::ParseOptionForceLoops, &GetInstance(), placeholders::_1 ),
         },
 
-        //ExportPMD2
+        //PMD2
         {
             "pmd2",
             0,
@@ -1380,7 +1380,7 @@ namespace audioutil
             clog<<"<!>- Warning: Commandline parameter GM specified, when building a SMDL the GM option does nothing!\n";
             
 
-        cout << "Exporting SMDL:\n"
+        cout << "Building SMDL:\n"
              << "\t\"" << inputfile.toString() <<"\"\n"
              << "To:\n"
              << "\t\"" << outputfile.getBaseName() <<"\"\n";

@@ -37,9 +37,6 @@
     <Filter Include="Source Files\typesupport">
       <UniqueIdentifier>{5c06f237-fe26-4e05-ab23-ec403204a907}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pugixml">
-      <UniqueIdentifier>{2f2241cc-f48a-4bc6-97c5-c103d2d97086}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\ppmdu\GameDataAccess">
       <UniqueIdentifier>{20b70962-0627-4577-b3f8-37bac9f42335}</UniqueIdentifier>
     </Filter>
@@ -164,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>

@@ -5,3 +5,5 @@
 "ExplorersOfSkyOriginal" "out_sprites"
 
 -e -tilesets "EoSRomRoot/data/MAP_BG/d01p11a.bpc"
+
+-e -pkspr "EoSRomRoot/data/MONSTER" "out_sprites"

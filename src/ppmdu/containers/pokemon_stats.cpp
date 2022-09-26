@@ -10,59 +10,45 @@ using namespace std;
 
 namespace pmd2{ namespace stats
 {
-    //static const std::string PKMN_NamesFile     = "pkmn_names.txt";
-    //static const std::string PKMN_AbilitiesFile = "pkmn_abilities.txt";
-    //static const std::string PKMN_IQGrpsFile    = "pkmn_iq.txt";
-    //static const std::string PKMN_TypesFile     = "pkmn_types.txt";
-    //static const std::string PKMN_MovesFile     = "pkmn_moves.txt";
-    //static const std::string ItemsFile          = "items.txt";
-
-//==========================================================================================
-//
-//==========================================================================================
     /*
+        Utility function to help prepare the exported pokemon data
     */
-    uint32_t PrepareExport( const PokemonDB              & pdb, 
-                            std::vector<PokeMonsterData> & out_md, 
-                            pokeMvSets_t                 & out_mvsets, 
-                            std::vector<PokeStatsGrowth> & out_growth )
+    uint32_t PrepareExport( const PokemonDB              & pdb,
+                            std::vector<PokeMonsterData> & out_md,
+                            pokeMvSets_t                 & out_mvsets,
+                            std::vector<PokeStatsGrowth> & out_growth)
     {
-        uint32_t offsetSpecialBeg = 0;
-
-        //#1 - Find the offset where the special entries begin
-        for( ; offsetSpecialBeg < pdb.size(); ++offsetSpecialBeg )
-        {
-            if( !pdb[offsetSpecialBeg].Has2GenderEntries() )
-                break;
-        }
-
         //#2 - Estimate and Allocate
-        const uint32_t nbRegulars = offsetSpecialBeg;
-        const uint32_t nbSpecials = pdb.size() - offsetSpecialBeg;
-        const uint32_t totalnb    = (nbRegulars * 2) + nbSpecials;
+        const uint32_t nbRegulars = pdb.CountNbRegularPokemons();
+        const uint32_t nbSpecials = pdb.size() - nbRegulars;
+        const uint32_t nbUniques = pdb.size();
+        const uint32_t totalnb = (nbRegulars * 2) + nbSpecials;
 
-        if( utils::LibWide().isLogOn() )
+        if (utils::LibWide().isLogOn())
         {
             clog << "Splitting PokemonDB..\n"
-                 << "\tNb of regular entries : " <<dec <<nbRegulars <<"\n"
-                 << "\tNb of special entries : " <<dec <<nbSpecials <<"\n"
-                 << "\tTotal                 : " <<dec <<totalnb    <<"\n";
+                << "\tNb of regular entries : " << dec << nbRegulars << "\n"
+                << "\tNb of special entries : " << dec << nbSpecials << "\n"
+                << "\tNb of unique pokemons : " << dec << nbUniques << "\n"
+                << "\tTotal                 : " << dec << totalnb << "\n";
         }
-        if( nbRegulars != filetypes::MonsterMD_DefNBRegulars )
+        if (nbRegulars != filetypes::MonsterMD_DefNBRegulars)
             clog << "WARNING: The amount of regular Pokemon  differs from PMD2:EoS's default value. Continuing happily.\n";
-        if( nbSpecials != filetypes::MonsterMD_DefNBSpecials )
+        if (nbSpecials != filetypes::MonsterMD_DefNBSpecials)
             clog << "WARNING: The amount of special Pokemon differs from PMD2:EoS's default value. Continuing happily.\n";
 
-        out_md.resize( totalnb );
-        out_mvsets.first.reserve( nbRegulars + nbSpecials );
-        out_mvsets.second.reserve( nbRegulars + nbSpecials );
-        out_growth.reserve( nbRegulars + nbSpecials );
+        out_md.resize(totalnb);
+        out_mvsets.first.reserve(nbUniques);
+        out_mvsets.second.reserve(nbUniques);
+        out_growth.reserve(nbUniques);
 
         return nbRegulars;
     }
 
-    /*
-    */
+//==========================================================================================
+//
+//==========================================================================================
+
     PokemonDB PokemonDB::BuildDB( std::vector<PokeMonsterData>       && md, 
                                   pokeMvSets_t                       && movesets, 
                                   std::vector<PokeStatsGrowth>       && growth )
@@ -192,6 +178,78 @@ namespace pmd2{ namespace stats
             if( !m_pkmn[i].StatsGrowth().empty() )
                 out_growth.push_back( m_pkmn[i].StatsGrowth() );
         }
+    }
+
+    pokeMvSets_t PokemonDB::ExportMovesest()const
+    {
+        uint32_t nbregularpokemons = CountNbRegularPokemons();
+        pokeMvSets_t mvsets;
+
+        //Reserve the destination
+        mvsets.first.reserve(size());
+        mvsets.second.reserve(size());
+
+        for (unsigned int i = 0; i < m_pkmn.size(); ++i)
+        {
+            if (!m_pkmn[i].MoveSet1().empty() || i == 0) //First entry is special
+                mvsets.first.push_back(m_pkmn[i].MoveSet1());
+            if (!m_pkmn[i].MoveSet2().empty() || i == 0) //First entry is special
+                mvsets.second.push_back(m_pkmn[i].MoveSet2());
+        }
+        return mvsets;
+    }
+
+    std::vector<PokeMonsterData> PokemonDB::ExportMonsterData()const
+    {
+        const uint32_t nbreg = CountNbRegularPokemons(); //Nb of regular pokemons
+        std::vector<PokeMonsterData> md;
+        md.resize(size());
+        for (unsigned int i = 0; i < m_pkmn.size(); ++i)
+        {
+            md[i] = m_pkmn[i].MonsterDataGender1();
+            if (i < nbreg)
+            {
+                //Handle secondary gender for regulars
+                md[i + m_pkmn.size()] = m_pkmn[i].MonsterDataGender2(); //Put the second gender entry in the secondary gender section!
+            }
+        }
+        return md;
+    }
+
+    std::vector<PokeStatsGrowth> PokemonDB::ExportStatsGrowth()const
+    {
+        std::vector<PokeStatsGrowth> growth;
+        growth.reserve(size());
+        for (unsigned int i = 0; i < m_pkmn.size(); ++i)
+        {
+            growth.push_back(m_pkmn[i].StatsGrowth());
+        }
+        return growth;
+    }
+
+    uint32_t PokemonDB::CountNbRegularPokemons() const
+    {
+        uint32_t offsetSpecialBeg = 0;
+        //Find the offset where the special monster entries begin
+        for (; offsetSpecialBeg < size() && (*this)[offsetSpecialBeg].Has2GenderEntries(); ++offsetSpecialBeg);
+        return offsetSpecialBeg;
+    }
+
+    uint32_t PokemonDB::CountNbSpecialPokemons() const
+    {
+        return size() - CountNbRegularPokemons();
+    }
+
+    uint32_t PokemonDB::CountNbUniquePokemons() const
+    {
+        return size();
+    }
+
+    uint32_t PokemonDB::CountNbUniqueMonsterDataEntries() const
+    {
+        const uint32_t nbreg = CountNbRegularPokemons();
+        const uint32_t nbspecials = size() - nbreg;
+        return (nbreg * 2) + nbspecials;
     }
 
 };};

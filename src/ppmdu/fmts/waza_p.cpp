@@ -658,6 +658,16 @@ namespace pmd2 { namespace filetypes
         return make_pair( ParseMoveData(pathOfBalanceDir), ParsePokemonLearnSets(pathOfBalanceDir) );
     }
 
+    void ParseMoveAndLearnsets(const std::string & pathOfBalanceDir, stats::MoveDB & out_movedata, stats::MoveDB * out_extramovedata, pokeMvSets_t & out_mvset)
+    {
+        combinedmovedat_t movdat = ParseMoveData(pathOfBalanceDir);
+        out_movedata = movdat.first;
+        if (out_extramovedata)
+            (*out_extramovedata) = movdat.second;
+        out_mvset = ParsePokemonLearnSets(pathOfBalanceDir);
+    }
+
+
     /*
         WriteMoveAndLearnsets
             Will write at least a "waza_p.bin" file. If all 2 learnsets and moves data lists are there, will 
@@ -668,46 +678,51 @@ namespace pmd2 { namespace filetypes
                                 const std::pair<stats::MoveDB,stats::MoveDB> & movedata, 
                                 const pokeMvSets_t                           & lvlupmvset )
     {
-        if( !utils::isFolder(pathOutBalanceDir) )
+        WriteMoveAndLearnsets(pathOutBalanceDir, movedata.first, &(movedata.second), lvlupmvset);
+    }
+
+    void WriteMoveAndLearnsets(const std::string & pathOutBalanceDir, const stats::MoveDB & movedata, const stats::MoveDB * extramovedata, const stats::pokeMvSets_t & lvlupmvset)
+    {
+        if (!utils::isFolder(pathOutBalanceDir))
         {
             ostringstream sstr;
-            sstr <<"ERROR: Invalid path \"" <<pathOutBalanceDir <<"\" is not a directory!";
+            sstr << "ERROR: Invalid path \"" << pathOutBalanceDir << "\" is not a directory!";
             string errorstr = sstr.str();
-            clog <<"WriteMoveAndLearnsets():" <<errorstr <<"\n";
+            clog << "WriteMoveAndLearnsets():" << errorstr << "\n";
             throw std::runtime_error(errorstr);
         }
 
-        stringstream sstrWaza1Path, 
-                     sstrWaza2Path;
+        stringstream sstrWaza1Path,
+            sstrWaza2Path;
 
-        sstrWaza1Path <<pathOutBalanceDir <<"/" <<WAZA_Fname;
-        sstrWaza2Path <<pathOutBalanceDir <<"/" <<WAZA2_Fname;
+        sstrWaza1Path << pathOutBalanceDir << "/" << WAZA_Fname;
+        sstrWaza2Path << pathOutBalanceDir << "/" << WAZA2_Fname;
 
         string waza1Path = sstrWaza1Path.str();
         string waza2Path = sstrWaza2Path.str();
 
 
-        if( !(lvlupmvset.first.empty()) && !(movedata.first.empty()) )
+        if (!(lvlupmvset.first.empty()) && !(movedata.empty()))
         {
-            WazaWriter wazaw1( lvlupmvset.first, movedata.first );
+            WazaWriter wazaw1(lvlupmvset.first, movedata);
 
-            if( !(lvlupmvset.second.empty()) && !(movedata.second.empty()) )
+            if (!lvlupmvset.second.empty() && extramovedata && !extramovedata->empty() )
             {
-                if( utils::LibWide().isLogOn() )
+                if (utils::LibWide().isLogOn())
                     clog << "Second learnset list and movedata list are present. Assuming game data is from Explorers of Sky! Writing waza_p2.bin file!\n";
-                WazaWriter wazaw2( lvlupmvset.second, movedata.second );
-                utils::io::WriteByteVectorToFile( waza1Path, wazaw1.Write() );
-                utils::io::WriteByteVectorToFile( waza2Path, wazaw2.Write() );
-                if( utils::LibWide().isLogOn() )
-                    clog << "Wrote \"" <<waza1Path <<"\" and \"" <<waza2Path <<"\" successfully!\n";
+                WazaWriter wazaw2(lvlupmvset.second, *extramovedata);
+                utils::io::WriteByteVectorToFile(waza1Path, wazaw1.Write());
+                utils::io::WriteByteVectorToFile(waza2Path, wazaw2.Write());
+                if (utils::LibWide().isLogOn())
+                    clog << "Wrote \"" << waza1Path << "\" and \"" << waza2Path << "\" successfully!\n";
             }
             else
             {
-                if( utils::LibWide().isLogOn() )
+                if (utils::LibWide().isLogOn())
                     clog << "Second learnset list and movedata list are NOT present. Assuming game data is from Explorers of Time/Darkness! Skipping on waza_p2.bin file!\n";
-                utils::io::WriteByteVectorToFile( waza1Path, wazaw1.Write() );
-                if( utils::LibWide().isLogOn() )
-                    clog << "Wrote \"" <<waza1Path <<"\" successfully!\n";
+                utils::io::WriteByteVectorToFile(waza1Path, wazaw1.Write());
+                if (utils::LibWide().isLogOn())
+                    clog << "Wrote \"" << waza1Path << "\" successfully!\n";
             }
         }
         else
@@ -715,7 +730,7 @@ namespace pmd2 { namespace filetypes
             stringstream sstr;
             sstr << "ERROR: Not enough data to write a waza_p.bin file!";
             string errorstr = sstr.str();
-            clog <<"WriteMoveAndLearnsets():" << errorstr <<"\n";
+            clog << "WriteMoveAndLearnsets():" << errorstr << "\n";
             throw std::runtime_error(errorstr);
         }
     }

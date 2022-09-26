@@ -12,20 +12,6 @@ Description:
 #include <string>
 #include <sstream>
 #include <iosfwd>
-/*
-    A macro for eventually exporting symbols through a DLL.
-*/
-#ifdef _WIN32
-    #if defined(PPMDU_DLL_IMPORT)
-        #define PPMDU_API __declspec(dllimport)
-    #elif defined(PPMDU_DLL_EXPORT)
-        #define PPMDU_API __declspec(dllexport)
-    #else
-        #define PPMDU_API
-    #endif // DEBUG
-#else//if //defined(__linux__)
-    #define PPMDU_API
-#endif
 
 //Stream operator for toolkit version
 namespace pmd2 { struct toolkitversion_t; };

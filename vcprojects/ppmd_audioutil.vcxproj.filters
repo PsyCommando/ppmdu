@@ -55,8 +55,8 @@
     <Filter Include="Source Files\typesupport">
       <UniqueIdentifier>{fd916fae-5f01-4e3b-a3e8-5eb086b5c0db}</UniqueIdentifier>
     </Filter>
-    <Filter Include="pugixml">
-      <UniqueIdentifier>{24e9ed29-f4ab-41b4-9e44-b5cf1c4291a2}</UniqueIdentifier>
+    <Filter Include="Pugixml">
+      <UniqueIdentifier>{fb27b7b8-7940-434e-8205-b5e9ec4f225c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -67,15 +67,6 @@
       <Filter>Header Files\ppmdu</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\at4px.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\pack_file.hpp">
@@ -90,25 +81,10 @@
     <ClInclude Include="..\src\ppmdu\fmts\sir0.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_filetypes.hpp">
       <Filter>Header Files\ppmdu\file formats</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_image_formats.hpp">
-      <Filter>Header Files\ppmdu\file formats</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\cmdline_util.hpp">
-      <Filter>Header Files\ppmdu\utility</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\config_io.hpp">
       <Filter>Header Files\ppmdu\utility</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\gbyteutils.hpp">
@@ -218,15 +194,6 @@
     <ClCompile Include="..\src\ppmdu\fmts\at4px.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pack_file.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
@@ -242,22 +209,10 @@
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2_filetypes.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\pmd2_image_formats.cpp">
-      <Filter>Source Files\ppmdu\file formats</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\cmdline_util.cpp">
-      <Filter>Source Files\ppmdu\utility</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\config_io.cpp">
       <Filter>Source Files\ppmdu\utility</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\gbyteutils.cpp">
@@ -322,9 +277,6 @@
     </ClCompile>
     <ClCompile Include="..\src\dse\dse_conversion.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
     </ClCompile>
     <ClCompile Include="..\src\dse\dse_prgmbank_xml_io.cpp">
       <Filter>Source Files\ppmdu\file formats\audio</Filter>

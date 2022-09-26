@@ -1,32 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1022
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_dopx", "vcprojects\ppmd_dopx.vcxproj", "{C7642210-DD89-423B-B267-6022A96A2C42}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_kaoutil", "vcprojects\ppmd_kaoutil.vcxproj", "{67F6DAA9-9544-4279-A417-09AEF1604226}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_packfileutil", "vcprojects\ppmd_packfileutil.vcxproj", "{2AD4869F-9126-4C8C-95B4-436CD4DB6E3B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_gfxcrunch", "vcprojects\ppmd_gfxcrunch.vcxproj", "{1088591B-EDBA-4713-926C-C8210D859C47}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_unpx", "vcprojects\ppmd_unpx.vcxproj", "{2AD9B0C6-B476-4690-92DE-40C3B7883B35}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F0B3A79F-E768-4EC8-81F2-6D783F8CFB50}"
 	ProjectSection(SolutionItems) = preProject
@@ -37,26 +22,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_palettetool", "vcprojects\ppmd_palettetool.vcxproj", "{92404EF0-4D5B-4935-B214-25675E244782}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_statsutil", "vcprojects\ppmd_statsutil.vcxproj", "{97D570C3-CCC6-44D3-B16C-66B4A13E6547}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_audioutil", "vcprojects\ppmd_audioutil.vcxproj", "{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmdu_utils_library", "ppmdu_utils_library.vcxproj", "{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ppmd_mapnybbler", "vcprojects\ppmd_mapnybbler.vcxproj", "{22D93F5F-A6A3-4ADE-91EF-FC79CCE40D6D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87} = {BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -212,26 +183,6 @@ Global
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.ActiveCfg = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|Win32.Build.0 = Release|Win32
 		{3AE3C7D3-69DE-4046-98A4-2DE7E014AD6A}.Release|x64.ActiveCfg = Release|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Debug|Win32.Build.0 = Debug|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Debug|x64.ActiveCfg = Debug|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Debug|x64.Build.0 = Debug|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release WinXP|Win32.ActiveCfg = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release WinXP|Win32.Build.0 = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release WinXP|x64.ActiveCfg = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release WinXP|x64.Build.0 = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_DLL|Win32.ActiveCfg = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_DLL|Win32.Build.0 = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_DLL|x64.ActiveCfg = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_DLL|x64.Build.0 = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_XP|Win32.ActiveCfg = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_XP|Win32.Build.0 = Release_XP|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_XP|x64.ActiveCfg = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release_XP|x64.Build.0 = Release_XP|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release|Win32.ActiveCfg = Release|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release|Win32.Build.0 = Release|Win32
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release|x64.ActiveCfg = Release|x64
-		{BC93D7D0-C0BF-45EF-8FAF-6ED2DD635D87}.Release|x64.Build.0 = Release|x64
 		{22D93F5F-A6A3-4ADE-91EF-FC79CCE40D6D}.Debug|Win32.ActiveCfg = Debug|Win32
 		{22D93F5F-A6A3-4ADE-91EF-FC79CCE40D6D}.Debug|Win32.Build.0 = Debug|Win32
 		{22D93F5F-A6A3-4ADE-91EF-FC79CCE40D6D}.Debug|x64.ActiveCfg = Debug|x64
@@ -255,5 +206,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9071512F-3650-411E-9596-3D7A58B24B48}
 	EndGlobalSection
 EndGlobal

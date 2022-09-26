@@ -314,7 +314,7 @@ private:
         WriteNodeWithValue( parent, PROP_EnvOn,             cursplit.envon );
         WriteNodeWithValue( parent, PROP_EnvMulti,          cursplit.env.envmulti );
 
-        stringstream sstrunkcv;
+        //stringstream sstrunkcv;
 
         //sstrunkcv <<hex <<showbase <<static_cast<uint16_t>(cursplit.unk37);
         //parent.append_child(PROP_EnvUnk19.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
@@ -377,7 +377,6 @@ private:
         WriteNodeWithValue( kgrpnode, NODE_KGrVcLow,  grp.vclow );
         WriteNodeWithValue( kgrpnode, NODE_KGrVcHi,   grp.vchigh );
     }
-
 
     void WriteWavInfo( const std::string & destdir )
     {
@@ -473,7 +472,6 @@ private:
         //infonode.append_child(PROP_EnvUnk22.c_str()).append_child(node_pcdata).set_value( sstrunkcv.str().c_str() );
         //sstrunkcv.str(string());
 
-        
         WriteNodeWithValue( infonode, PROP_EnvAtkVol,     winfo.atkvol );
         WriteNodeWithValue( infonode, PROP_EnvAtk,        winfo.attack );
         WriteNodeWithValue( infonode, PROP_EnvDecay,      winfo.decay );

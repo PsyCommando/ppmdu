@@ -20,7 +20,7 @@ using std::runtime_error;
 using namespace pugi;
 using namespace pugixmlutils;
 
-namespace pmd2::stats
+namespace pmd2 {namespace stats
 {
 //=====================================================
 // Constants
@@ -496,4 +496,4 @@ namespace pmd2::stats
         // TODO: insert return statement here
         return outdb;
     }
-}
+}}

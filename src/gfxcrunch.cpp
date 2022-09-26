@@ -222,6 +222,12 @@ namespace gfx_util
                 if( DetermineCntTy( decompbuff.begin(), decompbuff.end() )._type != CnTy_WAN )
                     continue; //skip this file if not a wan sprite
 
+                if (utils::LibWide().isLogOn())
+                {
+                    clog << "============================\n"
+                        << "== Parsing Sprite #" << setfill('0') << setw(3) << i << " ==\n"
+                        << "============================\n";
+                }
                 ParseASprite( decompbuff, out_table[i] );
             }
             //Skip anything else
@@ -266,7 +272,7 @@ namespace gfx_util
 //------------------------------------------------
     const string CGfxUtil::Exe_Name            = "ppmd_gfxcrunch.exe";
     const string CGfxUtil::Title               = "Baz the Poochyena's PMD:EoS/T/D GfxCrunch";
-    const string CGfxUtil::Version             = "0.13";
+    const string CGfxUtil::Version             = "0.14";
     const string CGfxUtil::Short_Description   = "A utility to unpack and re-pack pmd2 sprite!";
     const string CGfxUtil::Long_Description    = 
         "#TODO";                                    //#TODO
@@ -416,13 +422,13 @@ namespace gfx_util
             std::bind( &CGfxUtil::ParseOptionPokeNamesPath, &GetInstance(), placeholders::_1 ),
         },
         //Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.
-        {
-            "psprn",
-            1,
-            "Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.",
-            "-psprn \"PathToFile\"",
-            std::bind( &CGfxUtil::ParseOptionPokeSprNamesPath, &GetInstance(), placeholders::_1 ),
-        },
+        //{
+        //    "psprn",
+        //    1,
+        //    "Sets the path to the pokemon name file to use to name each pokemon's entry in the packed pokemon sprites file.",
+        //    "-psprn \"PathToFile\"",
+        //    std::bind( &CGfxUtil::ParseOptionPokeSprNamesPath, &GetInstance(), placeholders::_1 ),
+        //},
         //This compress the output, when re-building something. Only works with individual sprites and pack files containing sprites this far!
         {
             "pkdpx",
@@ -451,7 +457,7 @@ namespace gfx_util
         {
             "noresfix",
             0,
-            "If specified the program will not automatically fix resolution mismatch when building (a) sprite(s) from a folder!",
+            "If specified the program will not automatically fix resolution mismatch when building (a) sprite(s) from a folder! Basically, when resolutions don't match the expected format.",
             "-noresfix",
             std::bind( &CGfxUtil::ParseOptionNoResFix,  &GetInstance(), placeholders::_1 ),
         },
@@ -1976,7 +1982,7 @@ namespace gfx_util
 
                     if( pokesprnames.size() > i )
                     {
-                        sstr <<setw(4) <<setfill('0') <<i <<"_" << pokesprnames[i];
+                        sstr <<setw(4) <<setfill('0') <<i <<"_" << utils::CleanFilename(pokesprnames[i]);
                     }
                     else
                     {
@@ -2127,8 +2133,9 @@ namespace gfx_util
         Poco::Path inmonster(m_inputPath);
         Poco::Path outdir   (m_outputPath);
         inmonster.makeAbsolute().append(Monster_Dir).makeDirectory();
-        outdir.makeAbsolute().makeDirectory();
+        outdir = (outdir.makeAbsolute()).makeDirectory();
         Poco::File mnstrdir(inmonster);
+        Poco::File outputdir(outdir);
 
         auto gamedetails = pmd2::DetermineGameVersionAndLocale( m_inputPath );
         pmd2::ConfigLoader conf( gamedetails.first, gamedetails.second, m_pmd2cfg );
@@ -2161,7 +2168,8 @@ namespace gfx_util
             throw runtime_error(sstr.str());
         }
 
-
+        if(!outputdir.exists())
+            outputdir.createDirectory();
 
         //Make the pokemon name vector
         vector<string> pknames( strnamebounds.first, strnamebounds.second );
@@ -2171,10 +2179,10 @@ namespace gfx_util
         {
             Poco::Path outdirname( PackedPokemonSpritesFiles[i].name );
             Poco::Path outsubdir = outdir;
-            outsubdir.append( outdirname.getBaseName() ).makeDirectory();
+            outsubdir = (outsubdir.append( outdirname.getBaseName() )).makeDirectory();
             Poco::File outsubdirfile(outsubdir);
             
-            if( ! outsubdirfile.exists() )
+            if(! outsubdirfile.exists())
                 outsubdirfile.createDirectory();
 
             else if( !outsubdirfile.isDirectory() )
@@ -2186,6 +2194,7 @@ namespace gfx_util
 
             Poco::Path insprpath(inmonster);
             insprpath.append(PackedPokemonSpritesFiles[i].name).makeFile();
+            insprpath.setExtension("bin");
             Poco::File inspr(insprpath);
 
             if( ! inspr.exists() )

@@ -12,14 +12,29 @@ All wrongs reversed, no crappyrights :P
 */
 #include <ppmdu/pmd2/pmd2.hpp>
 #include <ppmdu/pmd2/pmd2_filetypes.hpp>
-#include <ppmdu/containers/pokemon_stats.hpp>
-#include <ppmdu/containers/item_data.hpp>
-#include <ppmdu/containers/move_data.hpp>
-#include <ppmdu/containers/dungeons_data.hpp>
 #include <ppmdu/pmd2/pmd2_text.hpp>
 #include <string>
 #include <vector>
 #include <map>
+
+//-------------------------------------------------------------
+// For apps that don't need all the stats stuff
+//-------------------------------------------------------------
+#ifndef PPMDU_NOSTATS
+    #include <ppmdu/containers/pokemon_stats.hpp>
+    #include <ppmdu/containers/item_data.hpp>
+    #include <ppmdu/containers/move_data.hpp>
+    #include <ppmdu/containers/dungeons_data.hpp>
+#else
+    namespace stats
+    {
+        class PokemonDB;
+        class ItemsDB;
+        class MoveDB;
+        class DungeonDB;
+    };
+#endif
+//-------------------------------------------------------------
 
 namespace pmd2
 { 
@@ -87,20 +102,20 @@ namespace pmd2
         GameStats( const std::string & pmd2rootdir, eGameVersion gvers, eGameRegion greg, std::shared_ptr<GameText> && gtext );
 
         //Accessors Pokemon Data
-        inline const stats::PokemonDB & Pkmn()const                                 { return m_pokemonStats; }
-        inline stats::PokemonDB       & Pkmn()                                      { return m_pokemonStats; }
-        inline void                     Pkmn( stats::PokemonDB       && newdata )   { m_pokemonStats = newdata; }
-        inline void                     Pkmn( const stats::PokemonDB &  newdata )   { m_pokemonStats = newdata; }
+        std::weak_ptr<const stats::PokemonDB>   Pkmn()const;
+        std::weak_ptr<stats::PokemonDB>         Pkmn();
+        void                     Pkmn(stats::PokemonDB       && newdata);
+        void                     Pkmn(const stats::PokemonDB &  newdata);
 
         //Accessors 
-        const stats::ItemsDB       & Items()const                               { return m_itemsData;    }
-        stats::ItemsDB             & Items()                                    { return m_itemsData;    }
-        void                         Items( stats::ItemsDB       && newdata )   { m_itemsData = newdata; }
-        void                         Items( const stats::ItemsDB &  newdata )   { m_itemsData = newdata; }
+        std::weak_ptr<const stats::ItemsDB> Items()const;
+        std::weak_ptr<stats::ItemsDB>       Items();
+        void                         Items(stats::ItemsDB       && newdata);
+        void                         Items(const stats::ItemsDB &  newdata);
 
         //Accessors
         void                setRomRootDir( const std::string & path ); //{ m_romrootdir = path; }
-        inline const std::string & getRomRootDir()const                      { return m_romrootdir; }
+        inline const std::string & getRomRootDir()const;
 
         //Accessors
 
@@ -183,16 +198,17 @@ namespace pmd2
         eGameVersion                m_gameVersion;
         eGameRegion                 m_gameRegion;
 
+        //#TODO: pimpl this, and use shared pointers instead so apps that only need one of these don't have to include a lot of useless crap!!
 
-        std::shared_ptr<GameText>   m_gameStrings;
-        stats::PokemonDB            m_pokemonStats;
-        stats::ItemsDB              m_itemsData;
+        std::shared_ptr<GameText>           m_gameStrings;
+        std::shared_ptr<stats::PokemonDB>   m_pokemonStats;
+        std::shared_ptr<stats::ItemsDB>     m_itemsData;
         //#TODO: Combine those two. The move DB should abstract game specific details!!
-        stats::MoveDB               m_moveData1;
-        stats::MoveDB               m_moveData2; //For Explorers of Sky only
+        std::shared_ptr<stats::MoveDB>      m_moveData1;
+        std::shared_ptr<stats::MoveDB>      m_moveData2; //For Explorers of Sky only
 
         //Level Data
-        stats::DungeonDB            m_dungeonsData;
+        std::shared_ptr<stats::DungeonDB>   m_dungeonsData;
 
         //Quiz Data
 

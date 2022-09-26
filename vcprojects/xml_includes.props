@@ -3,8 +3,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)lib\pugixml-1.6\src;$(IncludePath)</IncludePath>
-    <SourcePath>$(SolutionDir)lib\pugixml-1.6\src;$(SourcePath)</SourcePath>
+    <IncludePath>$(SolutionDir)lib\pugixml-1.10\src;$(IncludePath)</IncludePath>
+    <SourcePath>$(SolutionDir)lib\pugixml-1.10\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

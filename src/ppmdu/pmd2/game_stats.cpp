@@ -71,6 +71,54 @@ namespace pmd2
         m_dataFolder = Poco::Path(path).append(DirName_DefData).toString();
     }
 
+    //Pokemon Accessors 
+    std::weak_ptr<const stats::PokemonDB> GameStats::Pkmn()const
+    { 
+        return m_pokemonStats; 
+    }
+
+    std::weak_ptr<stats::PokemonDB> GameStats::Pkmn()
+    { 
+        return m_pokemonStats; 
+    }
+
+    void GameStats::Pkmn(stats::PokemonDB && newdata) 
+    {
+        m_pokemonStats.reset(new stats::PokemonDB(std::forward<stats::PokemonDB>(newdata)));
+    }
+
+    void GameStats::Pkmn(const stats::PokemonDB & newdata) 
+    { 
+        m_pokemonStats.reset(new stats::PokemonDB(newdata));
+    }
+
+    //Items Accessors
+    std::weak_ptr<const stats::ItemsDB> GameStats::Items()const
+    { 
+        return m_itemsData; 
+    }
+
+    std::weak_ptr<stats::ItemsDB> GameStats::Items()
+    { 
+        return m_itemsData; 
+    }
+
+    void GameStats::Items(stats::ItemsDB && newdata) 
+    { 
+        m_itemsData.reset(new stats::ItemsDB(std::forward<stats::ItemsDB>(newdata)));
+    }
+
+    void GameStats::Items(const stats::ItemsDB & newdata)
+    { 
+        m_itemsData.reset(new stats::ItemsDB(newdata));
+    }
+
+    //
+    const std::string & GameStats::getRomRootDir()const 
+    { 
+        return m_romrootdir; 
+    }
+
 //--------------------------------------------------------------
 //  Loading
 //--------------------------------------------------------------
@@ -162,13 +210,15 @@ namespace pmd2
 
         //Build all pokemon entries
         cout << " <*>-Building Pokemon database..\n";
-        m_pokemonStats = PokemonDB::BuildDB( ParsePokemonBaseData(sstrMd.str()),
-                                             std::move(allmovedat.second),
-                                             ParseLevelGrowthData(sstrGrowth.str()) );
+        m_pokemonStats.reset(
+            new PokemonDB(
+                PokemonDB::BuildDB( ParsePokemonBaseData(sstrMd.str()), std::move(allmovedat.second), ParseLevelGrowthData(sstrGrowth.str()) )
+            )
+        );
 
         //Set move data
-        m_moveData1 = std::move(allmovedat.first.first);
-        m_moveData2 = std::move(allmovedat.first.second);
+        m_moveData1.reset(new stats::MoveDB(std::move(allmovedat.first.first)));
+        m_moveData1.reset(new stats::MoveDB(std::move(allmovedat.first.second)));
         cout << "Done!\n";
     }
 
@@ -194,8 +244,8 @@ namespace pmd2
             auto allmovedat = ParseMoveAndLearnsets(sstrMovedat.str());
 
             //Set move data
-            m_moveData1 = std::move(allmovedat.first.first);
-            m_moveData2 = std::move(allmovedat.first.second);
+            m_moveData1.reset(new stats::MoveDB(std::move(allmovedat.first.first)));
+            m_moveData2.reset(new stats::MoveDB(std::move(allmovedat.first.second)));
 
             cout << " Done!\n";
         }
@@ -239,9 +289,9 @@ namespace pmd2
         cout << "Loading items data..\n";
 
         if( m_gameVersion == eGameVersion::EoS )
-            m_itemsData = std::move( ParseItemsDataEoS( sstrItemDat.str() ) );
+            m_itemsData.reset(new stats::ItemsDB(ParseItemsDataEoS( sstrItemDat.str())));
         else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
-            m_itemsData = std::move( ParseItemsDataEoTD( sstrItemDat.str() ) );
+            m_itemsData.reset(new stats::ItemsDB(ParseItemsDataEoTD(sstrItemDat.str())));
         else
             throw runtime_error("GameStats::LoadItems(): Unknown game version!");
     }
@@ -262,6 +312,9 @@ namespace pmd2
 
         cout << "Loading dungeon data..\n";
 
+        //Clear any existing data
+        m_dungeonsData.reset(new stats::DungeonDB());
+
         //For each lists of mappa files for the given game version, load the corresponding file!
         for (eMappaID id : MAPPA_FILES_VERSIONS_FOR_VERSIONS.at(m_gameVersion))
         {
@@ -273,36 +326,22 @@ namespace pmd2
             {
                 std::stringstream ssmappag;
                 ssmappag << balancepath << DEF_MAPPA_FILENAME_PREFIX << 'g' << static_cast<char>(id) << DEF_MAPPA_FILENAME_SUFFIX;
-                m_dungeonsData.AddMappa(id, LoadMappaSetEoS(mappa, ssmappag.str()));
+                m_dungeonsData->AddMappa(id, LoadMappaSetEoS(mappa, ssmappag.str()));
             }
             else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
-                m_dungeonsData.AddMappa(id, LoadMappaSetEoTD(mappa));
+                m_dungeonsData->AddMappa(id, LoadMappaSetEoTD(mappa));
             else
                 throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
         }
 
         cout << "Loading dungeon fixed floor data..\n";
         if (m_gameVersion == eGameVersion::EoS)
-            m_dungeonsData.FixedFloorData(ParseFixedDungeonFloorDataEoS(balancepath));
+            m_dungeonsData->FixedFloorData(ParseFixedDungeonFloorDataEoS(balancepath));
         else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
-            m_dungeonsData.FixedFloorData(ParseFixedDungeonFloorDataEoTD(balancepath));
+            m_dungeonsData->FixedFloorData(ParseFixedDungeonFloorDataEoTD(balancepath));
         else
             throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
     }
-
-  //  void GameStats::_LoadDungeonData()
-  //  {
-		//using namespace filetypes;
-  //      stringstream sstrDungeonDat;
-  //      sstrDungeonDat << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
-		//cout << "Loading dungeon data..\n";
-  //      if( m_gameVersion == eGameVersion::EoS )
-  //          m_dungeonData = std::move( ParseFixedDungeonFloorDataEoS(sstrDungeonDat.str()) );
-  //      else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
-  //          m_dungeonData = std::move( ParseFixedDungeonFloorDataEoTD(sstrDungeonDat.str()) );
-  //      else
-  //          throw runtime_error("GameStats::_LoadDungeonData(): Unknown game version!");
-  //  }
 
 //--------------------------------------------------------------
 //  Writing
@@ -365,7 +404,7 @@ namespace pmd2
         pokeMvSets_t            mvset;
         vector<PokeStatsGrowth> sgrowth;
         cout << " <*>-Building move, Pokemon data, and level-up data lists..\n";
-        m_pokemonStats.ExportComponents( md, mvset, sgrowth );
+        m_pokemonStats->ExportComponents( md, mvset, sgrowth );
 
         //Write stats growth
         cout << " <*>-Writing Pokemon stats growth file \"" <<fStatsGrowth <<"\"..\n";
@@ -373,18 +412,20 @@ namespace pmd2
 
         //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
         // movesets!
-        cout << " <*>-Writing move data file(s) to directory \"" <<fMoveData <<"\"..\n";
-        if( m_moveData1.empty() )
-        {
-            cout << "  <!>-Loading move data, as MoveDB had not been loaded..\n";
-            auto movedat = ParseMoveData(fMoveData);
-            cout << "  <!>-Load complete!\n";
-            filetypes::WriteMoveAndLearnsets( fMoveData, movedat, mvset );
-        }
-        else
-        {
-            filetypes::WriteMoveAndLearnsets( fMoveData, make_pair( m_moveData1, m_moveData2 ), mvset );
-        }
+        //cout << " <*>-Writing move data file(s) to directory \"" <<fMoveData <<"\"..\n";
+        //if( m_moveData1->empty() )
+        //{
+        //    cout << "  <!>-Loading move data, as MoveDB had not been loaded..\n";
+        //    auto movedat = ParseMoveData(fMoveData);
+        //    cout << "  <!>-Load complete!\n";
+        //    filetypes::WriteMoveAndLearnsets( fMoveData, movedat, mvset );
+        //}
+        //else
+        //{
+        //    filetypes::WriteMoveAndLearnsets( fMoveData, std::make_pair( *m_moveData1, *m_moveData2 ), mvset );
+        //}
+
+        WriteMoves();
 
         //Write monster data
         cout << " <*>-Writing Pokemon data file \"" <<fPokeData <<"\"..\n";
@@ -398,21 +439,25 @@ namespace pmd2
         using namespace filetypes;
         stringstream sstrMovedat;
         sstrMovedat << utils::TryAppendSlash(m_dataFolder) << DirName_BALANCE;
-        //stringstream sstrstrings;
-        //sstrstrings << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
-
-        const string fMoveData    = sstrMovedat.str();
-        //const string fStrings     = sstrstrings.str();
+        const string fMoveData = sstrMovedat.str();
 
         cout << "Writing moves Data..\n";
+        if (!m_moveData1 || (m_gameVersion == eGameVersion::EoS && !m_moveData2))
+            throw std::runtime_error("GameStats::WriteMoves(): No move data loaded!!");
 
         //Given the waza file contains both moves and learnsets, we have to load the move data and rewrite it as we modify the pokemon
         // movesets!
         cout << " <*>-Need to load partially Pokemon moveset data file(s) from directory \"" <<fMoveData <<"\"..\n";
-        auto mvset  = ParsePokemonLearnSets(fMoveData);
+        pokeMvSets_t mvset = m_pokemonStats->ExportMovesest();
+        if(mvset.first.empty())
+            mvset = ParsePokemonLearnSets(fMoveData);
 
-        cout << " <*>-Writing data to \"" <<fMoveData <<"\"..\n";
-        WriteMoveAndLearnsets( fMoveData, make_pair( MoveDB(m_moveData1), MoveDB(m_moveData2) ), mvset );
+        //Do actual writing
+        cout << " <*>-Writing move data to \"" <<fMoveData <<"\"..\n";
+        if(m_gameVersion == eGameVersion::EoS)
+            WriteMoveAndLearnsets( fMoveData, *m_moveData1, m_moveData2.get(), mvset );
+        else
+            WriteMoveAndLearnsets(fMoveData, *m_moveData1, nullptr, mvset);
 
         cout << " <*>-Writing game strings..\n";
         _WriteGameStrings();
@@ -424,7 +469,6 @@ namespace pmd2
     {
         if( !rootdatafolder.empty() )
             setRomRootDir(rootdatafolder);
-
         WriteMoves();
     }
 
@@ -444,7 +488,6 @@ namespace pmd2
         }
 
         _WriteGameStrings();
-
     }
 
     bool GameStats::CheckStringsLoaded()const
@@ -452,17 +495,9 @@ namespace pmd2
         return m_gameStrings && m_gameStrings->AreStringsLoaded();
     }
 
-    //void GameStats::WriteStrings( const std::string & rootdatafolder )
-    //{
-    //    if( !rootdatafolder.empty() )
-    //        setRomRootDir(rootdatafolder);
-
-    //    WriteStrings();
-    //}
-
     void GameStats::_WriteGameStrings()
     {
-        if( CheckStringsLoaded() )
+        if(CheckStringsLoaded())
             m_gameStrings->Write();
         else
         {
@@ -471,10 +506,6 @@ namespace pmd2
 #endif
             throw std::runtime_error("GameStats::_WriteGameStrings(): The GameText object is null! The text never was loaded properly!");
         }
-        //using namespace filetypes;
-        //stringstream sstr;
-        //sstr << utils::TryAppendSlash(m_dataFolder) << GameTextDirectory << "/" << m_gameTextFName;
-        //filetypes::WriteTextStrFile( sstr.str(), m_gameStrings, std::locale( m_gameLangLocale ) );
     }
     
     void GameStats::WriteItems()
@@ -482,7 +513,6 @@ namespace pmd2
         using namespace filetypes;
         auto prevGameVer = m_gameVersion;
 
-        //Identify target game if we have no info
         _EnsureStringsLoaded();
 
         //Warn about game mismatch
@@ -513,11 +543,13 @@ namespace pmd2
         const string balancedirpath = sstrItemdat.str();
 
         cout << " <*>- Writing item data to \"" <<balancedirpath <<"\"..\n";
+        if (!m_itemsData)
+            throw std::runtime_error("GameStats::_WriteItemData(): No item data loaded!");
 
         if( m_gameVersion == eGameVersion::EoS )
-            WriteItemsDataEoS( balancedirpath, m_itemsData );
+            WriteItemsDataEoS( balancedirpath, *m_itemsData );
         else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
-            WriteItemsDataEoTD( balancedirpath, m_itemsData );
+            WriteItemsDataEoTD( balancedirpath, *m_itemsData );
         else
             throw runtime_error( "GameStats::_WriteItemData(): Unsuported game version !" );
     }
@@ -527,7 +559,6 @@ namespace pmd2
         using namespace filetypes;
         auto prevGameVer = m_gameVersion;
 
-        //Identify target game if we have no info
         _EnsureStringsLoaded();
 
         //Warn about game mismatch
@@ -540,6 +571,7 @@ namespace pmd2
         _WriteDungeonData();
         _WriteGameStrings();
     }
+
     void GameStats::WriteDungeons(const std::string & rootdatafolder)
     {
         if (!rootdatafolder.empty())
@@ -557,8 +589,11 @@ namespace pmd2
         balancepath = sstrbalpath.str();
 
         cout << " <*>- Writing dungeon data to \"" << balancepath << "\"..\n";
+        if (!m_dungeonsData)
+            throw std::runtime_error("GameStats::_WriteDungeonData(): No dungeon data loaded!");
+
         //Write all mappas
-        for (const auto & p : m_dungeonsData)
+        for (const auto & p : *m_dungeonsData)
         {
             const DungeonRNGDataSet & dung = p.second;
             if (m_gameVersion == eGameVersion::EoS)
@@ -569,11 +604,12 @@ namespace pmd2
                 throw runtime_error("GameStats::_WriteDungeonData(): Unsuported game version !");
         }
 
+        //Write fixed floor
         cout << " <*>- Writing dungeon fixed floor data..\n";
         if (m_gameVersion == eGameVersion::EoS)
-            WriteFixedDungeonFloorDataEoS(balancepath, m_dungeonsData.FixedFloorData());
+            WriteFixedDungeonFloorDataEoS(balancepath, m_dungeonsData->FixedFloorData());
         else if (m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD)
-            WriteFixedDungeonFloorDataEoTD(balancepath, m_dungeonsData.FixedFloorData());
+            WriteFixedDungeonFloorDataEoTD(balancepath, m_dungeonsData->FixedFloorData());
         else
             throw runtime_error("GameStats::_WriteDungeonData(): Unsuported game version !");
     }
@@ -603,11 +639,11 @@ namespace pmd2
     void GameStats::ExportPkmn( const std::string & directory )
     {
         //cout<<"-- Exporting all Pokemon data to XML data --\n";
-        if( !CheckStringsLoaded() || m_pokemonStats.empty() )
+        if( !CheckStringsLoaded() || !m_pokemonStats || m_pokemonStats->empty() )
             throw runtime_error("ERROR: Tried to export an empty list of Pokemon ! Or with an empty string list!");
 
         cout<<" <*>- Writing Pokemon XML data..";
-        stats::ExportPokemonsToXML( m_pokemonStats, m_gameStrings.get(), directory );
+        stats::ExportPokemonsToXML( *m_pokemonStats, m_gameStrings.get(), directory );
         cout<<" Done!\n";
     }
 
@@ -617,44 +653,47 @@ namespace pmd2
         //Need game strings loaded for this !
         _EnsureStringsLoaded();
 
+        m_pokemonStats.reset(new stats::PokemonDB);
+
         cout<<" <*>- Parsing Pokemon XML data..";
-        stats::ImportPokemonsFromXML( directory, m_pokemonStats, m_gameStrings.get() );
+        stats::ImportPokemonsFromXML( directory, *m_pokemonStats, m_gameStrings.get() );
         cout<<" Done!\n";
     }
 
     void GameStats::ExportMoves( const std::string & directory )
     {
         //cout<<"-- Exporting all moves data to XML data --\n";
-        if( !CheckStringsLoaded() || m_moveData1.empty() )
+        if( !CheckStringsLoaded() || !m_moveData1 || m_moveData1->empty() )
             throw runtime_error("Move list(s) is/are empty. Or the game strings are not loaded!");
 
         cout << " <*>- Writing moves to XML data.. ";
         if( m_gameVersion == eGameVersion::EoS )
-            stats::ExportMovesToXML( m_moveData1, &m_moveData2, m_gameStrings.get(), directory );
+            stats::ExportMovesToXML( *m_moveData1, m_moveData2.get(), m_gameStrings.get(), directory );
         else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
-            stats::ExportMovesToXML( m_moveData1, nullptr, m_gameStrings.get(), directory );
+            stats::ExportMovesToXML( *m_moveData1, nullptr, m_gameStrings.get(), directory );
         cout << " Done!\n";
     }
 
     void GameStats::ImportMoves( const std::string & directory )
     {
-        //cout<<"-- Importing all moves data from XML data --\n";
         //Need game strings loaded for this !
         _EnsureStringsLoaded();
+
+        m_moveData1.reset(new stats::MoveDB);
+        m_moveData2.reset(new stats::MoveDB);
 
         cout<<" <*>- Parsing moves XML data..";
         if( m_gameVersion == eGameVersion::Invalid )
             throw runtime_error("Game version is invalid, or was not determined. Cannot import move data and format it!");
         else if( m_gameVersion == eGameVersion::EoS )
-            stats::ImportMovesFromXML( directory, m_moveData1, &m_moveData2, m_gameStrings.get() );
+            stats::ImportMovesFromXML( directory, *m_moveData1, m_moveData2.get(), m_gameStrings.get() );
         else if( m_gameVersion == eGameVersion::EoT || m_gameVersion == eGameVersion::EoD )
-            stats::ImportMovesFromXML( directory, m_moveData1, nullptr, m_gameStrings.get() );
+            stats::ImportMovesFromXML( directory, *m_moveData1, nullptr, m_gameStrings.get() );
         cout<<" Done!\n";
     }
 
     void GameStats::ExportText( const std::string & directory )
     {
-        //cout<<"-- Exporting all game strings to text file \"" <<file <<"\" --\n";
         if( !CheckStringsLoaded() )
             throw runtime_error( "GameStats::ExportText(): No string data to export !" );
 
@@ -665,7 +704,6 @@ namespace pmd2
 
     void GameStats::ImportText( const std::string & directory )
     {
-
         cout<<" <*>- Importing game text from \"" <<directory <<"\" ..";
         m_gameStrings->ImportText(directory);
         cout<<"Done importing strings!\n";
@@ -673,11 +711,11 @@ namespace pmd2
 
     void GameStats::ExportItems( const std::string & directory )
     {
-        if( !CheckStringsLoaded() ||  m_itemsData.empty() )
+        if( !CheckStringsLoaded() || !m_itemsData ||  m_itemsData->empty() )
             throw runtime_error( "No item data to export, or the strings weren't loaded!!" );
 
         cout<<" <*>- Exporting items to XML..";
-        stats::ExportItemsToXML( m_itemsData, m_gameStrings.get(), directory );
+        stats::ExportItemsToXML( *m_itemsData, m_gameStrings.get(), directory );
         cout << " Done!\n";
     }
 
@@ -690,17 +728,17 @@ namespace pmd2
             throw runtime_error("Game version is invalid, or was not determined. Cannot import item data and format it!");
 
         cout<<" <*>- Parsing items XML data..";
-        m_itemsData = std::move( stats::ImportItemsFromXML( directory, m_gameStrings.get() ) );
+        m_itemsData.reset(new stats::ItemsDB(stats::ImportItemsFromXML(directory, m_gameStrings.get())));
         cout<<" Done!\n";
     }
 
     void GameStats::ExportDungeons(const std::string & directory)
     {
-        if (!CheckStringsLoaded() || m_dungeonsData.empty())
+        if (!CheckStringsLoaded() || !m_dungeonsData || m_dungeonsData->empty())
             throw runtime_error("No dungeon data to export, or the strings weren't loaded!!");
 
         cout << " <*>- Exporting dungeons to XML..";
-        stats::WriteDungeonDataToXml(m_dungeonsData, directory, m_gameStrings.get(), MainPMD2ConfigWrapper::CfgInstance());
+        stats::WriteDungeonDataToXml(*m_dungeonsData, directory, m_gameStrings.get(), MainPMD2ConfigWrapper::CfgInstance());
         cout << " Done!\n";
     }
 
@@ -709,10 +747,12 @@ namespace pmd2
         //Need game strings loaded for this !
         _EnsureStringsLoaded();
 
+        m_dungeonsData.reset(new stats::DungeonDB);
+
         if (m_gameVersion == eGameVersion::Invalid)
             throw runtime_error("Game version is invalid, or was not determined. Cannot import item data and format it!");
         cout << " <*>- Parsing dungeon XML data..";
-        pmd2::stats::ReadDungeonDataFromXml(directory, m_dungeonsData, m_gameStrings.get());
+        pmd2::stats::ReadDungeonDataFromXml(directory, *m_dungeonsData, m_gameStrings.get());
         cout << " Done!\n";
     }
 
@@ -725,12 +765,17 @@ namespace pmd2
         const string itemdir = Poco::Path(directory).makeAbsolute().append(DefItemsDir  ).makeDirectory().toString();
         const string dungdir = Poco::Path(directory).makeAbsolute().append(DefDungeonDir).makeDirectory().toString();
 
-        if( m_pokemonStats.empty() && m_moveData1.empty() && m_itemsData.empty() )
+        //Make sure we have data at all to export
+        if( (!m_pokemonStats || m_pokemonStats->empty()) && 
+            (!m_moveData1    || m_moveData1->empty()) &&
+            (!m_itemsData    || m_itemsData->empty()) &&
+            (!m_dungeonsData || m_dungeonsData->empty()))
             throw runtime_error( "No data to export!" );
 
         _EnsureStringsLoaded();
 
-        if( !m_pokemonStats.empty() )
+        //Pokemon Stats
+        if( !m_pokemonStats->empty() )
         {
             utils::DoCreateDirectory(pkmndir);
 
@@ -740,7 +785,8 @@ namespace pmd2
         else
             cout<<" <!>- No item Pokemon data to export, skipping..\n";
 
-        if( !m_moveData1.empty() )
+        //Move data
+        if( !m_moveData1->empty() )
         {
             utils::DoCreateDirectory(mvdir);
 
@@ -750,7 +796,8 @@ namespace pmd2
         else
             cout<<" <!>- No move data to export, skipping..\n";
 
-        if( !m_itemsData.empty() )
+        //Move data extra
+        if( !m_itemsData->empty() )
         {
             utils::DoCreateDirectory(itemdir);
 
@@ -760,7 +807,8 @@ namespace pmd2
         else
             cout<<" <!>- No item data to export, skipping..\n";
 
-        if (!m_dungeonsData.empty())
+        //Dungeon data
+        if (!m_dungeonsData->empty())
         {
             utils::DoCreateDirectory(dungdir);
 
@@ -801,7 +849,11 @@ namespace pmd2
             throw runtime_error( strerr );
         }
 
-        if( !m_pokemonStats.empty() || !m_moveData1.empty() || !m_itemsData.empty() || !m_dungeonsData.empty() )
+        //Mention we're overwriting existing data
+        if( (m_pokemonStats && !m_pokemonStats->empty()) || 
+            (m_moveData1    && !m_moveData1->empty()) ||
+            (m_itemsData    && !m_itemsData->empty()) ||
+            (m_dungeonsData && !m_dungeonsData->empty()) )
             cout <<"  <!>- WARNING: The data already loaded will be overwritten! Continuing happily..\n";
 
         //Need game strings loaded for this !
@@ -823,225 +875,5 @@ namespace pmd2
 
         cout<<"-- Import complete! --\n";
     }
-
-//--------------------------------------------------------------
-//  Text Strings Access
-//--------------------------------------------------------------
-
-    //std::vector<std::string>::const_iterator GameStats::GetPokemonNameBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPokemonNameBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetPokemonNameEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPokemonNameEnd();
-    //}
-
-    //std::vector<std::string>::iterator GameStats::GetPokemonNameBeg()
-    //{
-    //    return (m_gameStrings.begin() + strBounds(eStringBlocks::PkmnNames).beg );
-    //}
-
-    //std::vector<std::string>::iterator GameStats::GetPokemonNameEnd()
-    //{
-    //    return (m_gameStrings.begin() + strBounds(eStringBlocks::PkmnNames).end );
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetPokemonCatBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPokemonCatBeg();
-    //}
-    //std::vector<std::string>::const_iterator GameStats::GetPokemonCatEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPokemonCatEnd();
-    //}
-    //std::vector<std::string>::iterator GameStats::GetPokemonCatBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PkmnCats).beg );
-    //}
-    //std::vector<std::string>::iterator GameStats::GetPokemonCatEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PkmnCats).end );
-    //}
-
-
-    //std::vector<std::string>::const_iterator GameStats::GetMoveNamesBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetMoveNamesBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetMoveNamesEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetMoveNamesEnd();
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetMoveNamesBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvNames).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetMoveNamesEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvNames).end );
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetMoveDescBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetMoveDescBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetMoveDescEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetMoveDescEnd();
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetMoveDescBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvDesc).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetMoveDescEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::MvDesc).end );
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemNamesBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemNamesBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemNamesEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemNamesEnd();
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemNamesBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemNames).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemNamesEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemNames).end );
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemShortDescBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemShortDescBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemShortDescEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemShortDescEnd();
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemShortDescBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescS).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemShortDescEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescS).end );
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemLongDescBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemLongDescBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetItemLongDescEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetItemLongDescEnd();
-    //}
-
-    ////Portraits
-    //std::vector<std::string>::const_iterator GameStats::GetPortraitNamesBeg()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPortraitNamesBeg();
-    //}
-
-    //std::vector<std::string>::const_iterator GameStats::GetPortraitNamesEnd()const
-    //{
-    //    return const_cast<GameStats*>(this)->GetPortraitNamesEnd();
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetPortraitNamesBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PortraitNames).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetPortraitNamesEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::PortraitNames).end );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemLongDescBeg()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescL).beg );
-    //}
-
-    //std::vector<std::string>::iterator       GameStats::GetItemLongDescEnd()
-    //{
-    //    return (m_gameStrings.begin() +strBounds(eStringBlocks::ItemDescL).end );
-    //}
-
-    //std::string & GameStats::GetPokemonNameStr( uint16_t pkmnindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::PkmnNames).beg + pkmnindex];
-    //}
-
-    //std::string & GameStats::GetPkmnCatNameStr( uint16_t pkmnindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::PkmnCats).beg + pkmnindex];
-    //}
-
-    //std::string & GameStats::GetMoveNameStr( uint16_t moveindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::MvNames).beg + moveindex];
-    //}
-
-    //std::string & GameStats::GetMoveDexcStr( uint16_t moveindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::MvDesc).beg + moveindex];
-    //}
-
-    //std::string & GameStats::GetAbilityNameStr( uint8_t abilityindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::AbilityNames).beg + abilityindex];
-    //}
-
-    //std::string & GameStats::GetAbilityDescStr( uint8_t abilityindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::AbilityDesc).beg + abilityindex];
-    //}
-
-    //std::string & GameStats::GetTypeNameStr( uint8_t type )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::TypeNames).beg + type];
-    //}
-
-    //std::string & GameStats::GetItemNameStr( uint16_t itemindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::ItemNames).beg + itemindex];
-    //}
-
-    //std::string & GameStats::GetItemSDescStr( uint16_t itemindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::ItemDescS).beg + itemindex];
-    //}
-
-    //std::string & GameStats::GetItemLDescStr( uint16_t itemindex )
-    //{
-    //    return m_gameStrings[strBounds(eStringBlocks::ItemDescL).beg + itemindex];
-    //}
-
-
-
-//--------------------------------------------------------------
-//  Misc
-//--------------------------------------------------------------
-
 
 };

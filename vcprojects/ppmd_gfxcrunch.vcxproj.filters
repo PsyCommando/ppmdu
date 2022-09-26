@@ -225,37 +225,10 @@
     <ClInclude Include="..\src\ppmdu\pmd2\pmd2_text.hpp">
       <Filter>Header Files\ppmdu\GameDataAccess</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\pmd2_scripts.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\pmd2\game_stats.hpp">
-      <Filter>Header Files\ppmdu\GameDataAccess</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\item_data.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\move_data.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\containers\pokemon_stats.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\integer_encoding.hpp">
       <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\item_p.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\m_level.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\monster_data.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\ppmdu\fmts\text_str.hpp">
-      <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ppmdu\fmts\waza_p.hpp">
       <Filter>Header Files\ppmdu\file formats\TempExtraForParsingText</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\parse_utils.hpp">
@@ -386,9 +359,6 @@
     <ClCompile Include="..\src\ppmdu\containers\sprite_io.cpp">
       <Filter>Source Files\ppmdu\data formats</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\pugixml-1.5\src\pugixml.cpp">
-      <Filter>pugixml</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\pmd2_fontdata.cpp">
       <Filter>Source Files\ppmdu\file formats</Filter>
     </ClCompile>
@@ -404,37 +374,7 @@
     <ClCompile Include="..\src\ppmdu\pmd2\pmd2.cpp">
       <Filter>Source Files\ppmdu\GameDataAccess</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\ppmdu\pmd2\game_stats.cpp">
-      <Filter>Source Files\ppmdu\GameDataAccess</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\containers\item_data.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\containers\item_data_xml_io.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\containers\move_data_xml_io.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\containers\pokemon_stats_xml_io.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\item_p.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\m_level.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\monster_data.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\ppmdu\fmts\text_str.cpp">
-      <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ppmdu\fmts\waza_p.cpp">
       <Filter>Source Files\ppmdu\file formats\TempExtraForParsingText</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\pugixml_utils.cpp">

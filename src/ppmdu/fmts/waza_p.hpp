@@ -70,15 +70,23 @@ namespace pmd2 { namespace filetypes
     */
     std::pair<combinedmovedat_t,stats::pokeMvSets_t> ParseMoveAndLearnsets( const std::string & pathOfBalanceDir );
 
+    void ParseMoveAndLearnsets(const std::string & pathOfBalanceDir, stats::MoveDB & out_movedata, stats::MoveDB * out_extramovedata, stats::pokeMvSets_t & out_mvset);
+
     /*
         WriteMoveAndLearnsets
             Will write at least a "waza_p.bin" file. If both the second learnsets and moves data lists are not empty, will 
             output an additional "waza_p2.bin" file!
 
     */
-    void WriteMoveAndLearnsets( const std::string                            & pathOutBalanceDir,
-                                const std::pair<stats::MoveDB,stats::MoveDB> & movedata, 
-                                const stats::pokeMvSets_t                & lvlupmvset );
+    void WriteMoveAndLearnsets( const std::string                               & pathOutBalanceDir,
+                                const std::pair<stats::MoveDB,stats::MoveDB>    & movedata, 
+                                const stats::pokeMvSets_t                       & lvlupmvset );
+
+
+    void WriteMoveAndLearnsets( const std::string           & pathOutBalanceDir,
+                                const stats::MoveDB         & movedata,
+                                const stats::MoveDB         * extramovedata,
+                                const stats::pokeMvSets_t   & lvlupmvset);
 
 };};
 

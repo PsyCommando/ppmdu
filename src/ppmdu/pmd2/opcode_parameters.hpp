@@ -1,4 +1,5 @@
 #pragma once
+#include <utils/parse_utils.hpp>
 #include <cstdint>
 #include <array>
 #include <string>

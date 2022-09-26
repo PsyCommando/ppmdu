@@ -246,6 +246,15 @@ namespace DSE
         */
         void ExportMIDIs( const std::string & destdir, const std::string & cvinfopath = "", int nbloops = 0 );
 
+    //-----------------------------
+    // Importing Methods
+    //-----------------------------
+        /*
+            ImportXMLAndMidi
+                Imports xml
+        */
+        void ImportXMLAndMidi(const std::string & srcdir);
+
     //
     //
     //
