@@ -624,32 +624,7 @@ namespace DSE
                     {
                         //Put a cue point to mark unsupported events and their parameters
                         if( ShouldMarkUnsupported() )
-                        {
-
-                            stringstream evmark;
-                            evmark << TXT_DSE_Event <<"_Chan:0x" <<hex <<uppercase <<trkno  
-                                   <<"_ID:0x" <<static_cast<unsigned short>(ev.evcode) <<nouppercase;
-
-                            //Then Write any parameters
-                            for( const auto & param : ev.params )
-                                evmark<< ", 0x"  <<hex <<uppercase  << static_cast<unsigned short>(param) <<nouppercase;
-
-                            const string mark = evmark.str();
-                            outtrack.PutTextEvent( state.ticks_, META_MARKER_TEXT, mark.c_str(), mark.size() );
-
-                            //Count unknown events
-                            auto itfound = m_unhandledEvList.find( ev.evcode );
-
-                            if( itfound != m_unhandledEvList.end() )
-                                itfound->second += 1;
-                            else
-                                m_unhandledEvList.insert( std::make_pair( ev.evcode, 1 ) );
-
-                            //if( ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk1) && ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetUnk2) )
-                            //{
-                            //    cout << "\tEvent ID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) << ", is unsupported ! Ignoring..\n" <<nouppercase <<dec;
-                            //}
-                        }
+                            HandleUnsupported(ev, trkno, state, mess, outtrack);
                     }
                 };
             }
@@ -659,6 +634,43 @@ namespace DSE
 
             //Event handling done, increment event counter
             state.eventno_ += 1;
+        }
+
+        /***********************************************************************************
+            HandleUnsupported
+                Handle the default handling for unsupported messages. Just put them in a 
+                wrapper event and output that.
+        ***********************************************************************************/
+        void HandleUnsupported(const DSE::TrkEvent           & ev,
+                               uint16_t                        trkno,
+                               TrkState                      & state,
+                               jdksmidi::MIDITimedBigMessage & mess,
+                               jdksmidi::MIDITrack           & outtrack)
+        {
+            using namespace jdksmidi;
+            stringstream evmark;
+            evmark << TXT_DSE_Event << "_Chan:0x" << hex << uppercase << trkno
+                << "_ID:0x" << static_cast<unsigned short>(ev.evcode) << nouppercase;
+
+            //Then Write any parameters
+            for (const auto & param : ev.params)
+                evmark << ", 0x" << hex << uppercase << static_cast<unsigned short>(param) << nouppercase;
+
+            const string mark = evmark.str();
+            outtrack.PutTextEvent(state.ticks_, META_MARKER_TEXT, mark.c_str(), mark.size());
+
+            //Count unknown events
+            auto itfound = m_unhandledEvList.find(ev.evcode);
+
+            if (itfound != m_unhandledEvList.end())
+                itfound->second += 1;
+            else
+                m_unhandledEvList.insert(std::make_pair(ev.evcode, 1));
+
+            //if( ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetSwdl) && ev.evcode != static_cast<uint8_t>(eTrkEventCodes::SetBank) )
+            //{
+            //    cout << "\tEvent ID: 0x" <<hex <<uppercase <<static_cast<unsigned short>(ev.evcode) << ", is unsupported ! Ignoring..\n" <<nouppercase <<dec;
+            //}
         }
 
         /***********************************************************************************
