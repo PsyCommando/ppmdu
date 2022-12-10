@@ -35,92 +35,94 @@ namespace DSE
             "FixedPause",
         },
 
-        //RepeatLastPause
+        //0x90 - RepeatLastPause
         { eTrkEventCodes::RepeatLastPause,  eTrkEventCodes::Invalid, 0, "RepeatLastPause" },
 
-        //AddToLastPause
+        //0x91 - AddToLastPause
         { eTrkEventCodes::AddToLastPause,   eTrkEventCodes::Invalid, 1, "AddToLastPause" },
 
-        //Pause8Bits
+        //0x92 - Pause8Bits
         { eTrkEventCodes::Pause8Bits,       eTrkEventCodes::Invalid, 1, "Pause8Bits" },
 
-        //Pause16Bits
+        //0x93 - Pause16Bits
         { eTrkEventCodes::Pause16Bits,      eTrkEventCodes::Invalid, 2, "Pause16Bits" },
 
-        //Pause24Bits
+        //0x94 - Pause24Bits
         { eTrkEventCodes::Pause24Bits,      eTrkEventCodes::Invalid, 3, "Pause24Bits" },
 
-        //EndOfTrack
+        //0x95 - PauseUntilNoteOff
+
+        //0x98 - EndOfTrack
         { eTrkEventCodes::EndOfTrack,       eTrkEventCodes::Invalid, 0, "EndOfTrack" },
 
-        //LoopPointSet
+        //0x99 - LoopPointSet
         { eTrkEventCodes::LoopPointSet,     eTrkEventCodes::Invalid, 0, "Loop" },
 
-        //Unk_0x9C
-        { eTrkEventCodes::Unk_0x9C,         eTrkEventCodes::Invalid, 1, "## Unk_0x9C ##" },
+        //0x9C - RepeatFrom
+        { eTrkEventCodes::RepeatFrom,       eTrkEventCodes::Invalid, 1, "RepeatFrom" },
 
-        //Unk_0x9D
-        { eTrkEventCodes::Unk_0x9D,         eTrkEventCodes::Invalid, 0, "## Unk_0x9D ##" },
+        //0x9D - RepeatSegment
+        { eTrkEventCodes::RepeatSegment,     eTrkEventCodes::Invalid, 0, "RepeatSegment" },
 
-        //Unk_0x9E
-        { eTrkEventCodes::Unk_0x9E,         eTrkEventCodes::Invalid, 0, "## Unk_0x9E ##" },
+        //0x9E - AfterRepeat
+        { eTrkEventCodes::AfterRepeat,      eTrkEventCodes::Invalid, 0, "AfterRepeat" },
 
-        //SetOctave
+        //0xA0 - SetOctave
         { eTrkEventCodes::SetOctave,        eTrkEventCodes::Invalid, 1, "SetOctave" },
 
-        //Unk_0xA1
-        { eTrkEventCodes::Unk_0xA1,         eTrkEventCodes::Invalid, 1, "## Unk_0xA1 ##" },
+        //0xA1 - AddOctave
+        { eTrkEventCodes::AddOctave,        eTrkEventCodes::Invalid, 1, "AddOctave" },
 
-        //SetTempo
+        //0xA4 - SetTempo
         { eTrkEventCodes::SetTempo,         eTrkEventCodes::Invalid, 1, "SetTempo" },
 
-        //Unk_0xA5
-        { eTrkEventCodes::Unk_0xA5,         eTrkEventCodes::Invalid, 1, "## Unk_0xA5 ##" },
+        //0xA5 - SetTempo2
+        { eTrkEventCodes::SetTempo2,         eTrkEventCodes::Invalid, 1, "SetTempo2" },
 
-        //Unk_0xA8
-        { eTrkEventCodes::Unk_0xA8,         eTrkEventCodes::Invalid, 2, "## Unk_0xA8 ##" },
+        //0xA8 - SetSwdlAndBank
+        { eTrkEventCodes::SetSwdlAndBank,   eTrkEventCodes::Invalid, 2, "SetSwdlAndBank" },
 
-        //SetUnk1
-        { eTrkEventCodes::SetUnk1,          eTrkEventCodes::Invalid, 1, "SetUnk1" },
+        //0xA9 - SetSwdl
+        { eTrkEventCodes::SetSwdl,          eTrkEventCodes::Invalid, 1, "SetSwdl" },
 
-        //SetUnk2
-        { eTrkEventCodes::SetUnk2,          eTrkEventCodes::Invalid, 1, "SetUnk" },
+        //0xAA - SetBank
+        { eTrkEventCodes::SetBank,          eTrkEventCodes::Invalid, 1, "SetBank" },
 
-        //SkipNextByte
+        //0xAB - SkipNextByte
         { eTrkEventCodes::SkipNextByte,     eTrkEventCodes::Invalid, 1, "SkipNextByte" },
 
-        //SetPreset
+        //0xAC - SetPreset
         { eTrkEventCodes::SetPreset,        eTrkEventCodes::Invalid, 1, "SetPreset" },
 
-        //Unk_0xAF 
-        { eTrkEventCodes::Unk_0xAF,         eTrkEventCodes::Invalid, 3, "## Unk_0xAF ##" },
+        //0xAF - FadeSongVolume 
+        { eTrkEventCodes::FadeSongVolume,   eTrkEventCodes::Invalid, 3, "FadeSongVolume" },
 
-        //Unk_0xB0
-        { eTrkEventCodes::Unk_0xB0,         eTrkEventCodes::Invalid, 0, "## Unk_0xB0 ##" },
+        //0xB0 - DisableEnvelope
+        { eTrkEventCodes::DisableEnvelope,  eTrkEventCodes::Invalid, 0, "DisableEnvelope" },
 
-        //Unk_0xB1
-        { eTrkEventCodes::Unk_0xB1,         eTrkEventCodes::Invalid, 1, "## Unk_0xB1 ##" },
+        //0xB1 - SetEnvAtkLvl
+        { eTrkEventCodes::SetEnvAtkLvl,     eTrkEventCodes::Invalid, 1, "SetEnvAtkLvl" },
 
-        //Unk_0xB2
-        { eTrkEventCodes::Unk_0xB2,         eTrkEventCodes::Invalid, 1, "## Unk_0xB2 ##" },
+        //0xB2 - SetEnvAtkTime
+        { eTrkEventCodes::SetEnvAtkTime,    eTrkEventCodes::Invalid, 1, "SetEnvAtkTime" },
 
-        //Unk_0xB3
-        { eTrkEventCodes::Unk_0xB3,         eTrkEventCodes::Invalid, 1, "## Unk_0xB3 ##" },
+        //0xB3 - SetEnvHold
+        { eTrkEventCodes::SetEnvHold,       eTrkEventCodes::Invalid, 1, "SetEnvHold" },
 
-        //Unk_0xB4
-        { eTrkEventCodes::Unk_0xB4,         eTrkEventCodes::Invalid, 2, "## Unk_0xB4 ##" },
+        //0xB4 - SetEnvDecSus
+        { eTrkEventCodes::SetEnvDecSus,     eTrkEventCodes::Invalid, 2, "SetEnvDecSus" },
 
-        //Unk_0xB5
-        { eTrkEventCodes::Unk_0xB5,         eTrkEventCodes::Invalid, 1, "## Unk_0xB5 ##" },
+        //0xB5 - SetEnvFade
+        { eTrkEventCodes::SetEnvFade,       eTrkEventCodes::Invalid, 1, "SetEnvFade" },
 
-        //Unk_0xB6
-        { eTrkEventCodes::Unk_0xB6,         eTrkEventCodes::Invalid, 1, "## Unk_0xB6 ##" },
+        //0xB6 - SetEnvRelease
+        { eTrkEventCodes::SetEnvRelease,    eTrkEventCodes::Invalid, 1, "SetEnvRelease" },
 
-        //Unk_0xBC
-        { eTrkEventCodes::Unk_0xBC,         eTrkEventCodes::Invalid, 1, "## Unk_0xBC ##" },
+        //0xBC - SetNoteVol
+        { eTrkEventCodes::SetNoteVol,       eTrkEventCodes::Invalid, 1, "SetNoteVol" },
 
-        //SetMod
-        { eTrkEventCodes::SetMod,           eTrkEventCodes::Invalid, 1, "SetMod" },
+        //0xBE - SetChanPan
+        { eTrkEventCodes::SetChanPan,       eTrkEventCodes::Invalid, 1, "SetChanPan" },
 
         //Unk_0xBF
         { eTrkEventCodes::Unk_0xBF,         eTrkEventCodes::Invalid, 1, "## Unk_0xBF ##" },
@@ -128,101 +130,101 @@ namespace DSE
         //Unk_0xC0
         { eTrkEventCodes::Unk_0xC0,         eTrkEventCodes::Invalid, 0, "## Unk_0xC0 ##" },
 
-        //Unk_0xC3
-        { eTrkEventCodes::Unk_0xC3,         eTrkEventCodes::Invalid, 1, "## Unk_0xC3 ##" },
+        //0xC3 - SetChanVol
+        { eTrkEventCodes::SetChanVol,       eTrkEventCodes::Invalid, 1, "SetChanVol" },
 
-        //SkipNext2Bytes1
+        //0xCB - SkipNext2Bytes1
         { eTrkEventCodes::SkipNext2Bytes1,  eTrkEventCodes::Invalid, 2, "SkipNext2Bytes" },
 
-        //Unk_0xD0
-        { eTrkEventCodes::Unk_0xD0,         eTrkEventCodes::Invalid, 1, "## Unk_0xD0 ##" },
+        //0xD0 - SetFTune
+        { eTrkEventCodes::SetFTune,         eTrkEventCodes::Invalid, 1, "SetFTune" },
 
-        //Unk_0xD1
-        { eTrkEventCodes::Unk_0xD1,         eTrkEventCodes::Invalid, 1, "## Unk_0xD1 ##" },
+        //0xD1 - AddFTune
+        { eTrkEventCodes::AddFTune,         eTrkEventCodes::Invalid, 1, "AddFTune" },
 
-        //Unk_0xD2
-        { eTrkEventCodes::Unk_0xD2,         eTrkEventCodes::Invalid, 1, "## Unk_0xD2 ##" },
+        //0xD2 - SetCTune
+        { eTrkEventCodes::SetCTune,         eTrkEventCodes::Invalid, 1, "SetCTune" },
 
-        //Unk_0xD3
-        { eTrkEventCodes::Unk_0xD3,         eTrkEventCodes::Invalid, 2, "## Unk_0xD3 ##" },
+        //0xD3 - AddCTune
+        { eTrkEventCodes::AddCTune,         eTrkEventCodes::Invalid, 2, "AddCTune" },
 
-        //Unk_0xD4
-        { eTrkEventCodes::Unk_0xD4,         eTrkEventCodes::Invalid, 3, "## Unk_0xD4 ##" },
+        //0xD4 - SweepTune
+        { eTrkEventCodes::SweepTune,        eTrkEventCodes::Invalid, 3, "SweepTune" },
 
-        //Unk_0xD5
-        { eTrkEventCodes::Unk_0xD5,         eTrkEventCodes::Invalid, 2, "## Unk_0xD5 ##" },
+        //0xD5 - SetRndNoteRng
+        { eTrkEventCodes::SetRndNoteRng,    eTrkEventCodes::Invalid, 2, "SetRndNoteRng" },
 
-        //Unk_0xD6
-        { eTrkEventCodes::Unk_0xD6,         eTrkEventCodes::Invalid, 2, "## Unk_0xD6 ##" },
+        //0xD6 - SetDetuneRng
+        { eTrkEventCodes::SetDetuneRng,     eTrkEventCodes::Invalid, 2, "SetDetuneRng" },
 
-        //PitchBend
-        { eTrkEventCodes::PitchBend,        eTrkEventCodes::Invalid, 2, "PitchBend" },
+        //0xD7 - SetPitchBend
+        { eTrkEventCodes::SetPitchBend,     eTrkEventCodes::Invalid, 2, "SetPitchBend" },
 
         //Unk_0xD8
         { eTrkEventCodes::Unk_0xD8,         eTrkEventCodes::Invalid, 2, "## Unk_0xD8 ##" },
 
-        //Unk_0xDB
-        { eTrkEventCodes::Unk_0xDB,         eTrkEventCodes::Invalid, 1, "## Unk_0xDB ##" },
+        //0xDB - SetPitchBendRng
+        { eTrkEventCodes::SetPitchBendRng,  eTrkEventCodes::Invalid, 1, "SetPitchBendRng" },
 
-        //Unk_0xDC
-        { eTrkEventCodes::Unk_0xDC,         eTrkEventCodes::Invalid, 5, "## Unk_0xDC ##" },
+        //0xDC - SetLFO1
+        { eTrkEventCodes::SetLFO1,          eTrkEventCodes::Invalid, 5, "SetLFO1" },
 
-        //Unk_0xDD
-        { eTrkEventCodes::Unk_0xDD,         eTrkEventCodes::Invalid, 4, "## Unk_0xDD ##" },
+        //0xDD - SetLFO1DelayFade
+        { eTrkEventCodes::SetLFO1DelayFade, eTrkEventCodes::Invalid, 4, "SetLFO1DelayFade" },
 
-        //Unk_0xDF
-        { eTrkEventCodes::Unk_0xDF,         eTrkEventCodes::Invalid, 1, "## Unk_0xDF ##" },
+        //0xDF - RouteLFO1ToPitch
+        { eTrkEventCodes::RouteLFO1ToPitch, eTrkEventCodes::Invalid, 1, "RouteLFO1ToPitch" },
 
-        //SetTrkVol
+        //0xE0 - SetTrkVol
         { eTrkEventCodes::SetTrkVol,        eTrkEventCodes::Invalid, 1, "SetVolume" },
 
-        //Unk_0xE1
-        { eTrkEventCodes::Unk_0xE1,         eTrkEventCodes::Invalid, 1, "## Unk_0xE1 ##" },
+        //0xE1 - AddTrkVol
+        { eTrkEventCodes::AddTrkVol,        eTrkEventCodes::Invalid, 1, "AddTrkVol" },
 
-        //Unk_0xE2
-        { eTrkEventCodes::Unk_0xE2,         eTrkEventCodes::Invalid, 3, "## Unk_0xE2 ##" },
+        //0xE2 - SweepTrackVol
+        { eTrkEventCodes::SweepTrackVol,    eTrkEventCodes::Invalid, 3, "SweepTrackVol" },
 
-        //SetExpress
+        //0xE3 - SetExpress
         { eTrkEventCodes::SetExpress,       eTrkEventCodes::Invalid, 1, "SetExpression" },
 
-        //Unk_0xE4
-        { eTrkEventCodes::Unk_0xE4,         eTrkEventCodes::Invalid, 5, "## Unk_0xE4 ##" },
+        //0xE4 - SetLFO2
+        { eTrkEventCodes::SetLFO2,          eTrkEventCodes::Invalid, 5, "SetLFO2" },
 
-        //Unk_0xE5
-        { eTrkEventCodes::Unk_0xE5,         eTrkEventCodes::Invalid, 4, "## Unk_0xE5 ##" },
+        //0xE5 - SetLFO2DelFade
+        { eTrkEventCodes::SetLFO2DelFade,   eTrkEventCodes::Invalid, 4, "SetLFO2DelFade" },
 
-        //Unk_0xE7
-        { eTrkEventCodes::Unk_0xE7,         eTrkEventCodes::Invalid, 1, "## Unk_0xE7 ##" },
+        //0xE7 - RouteLFO2ToVol
+        { eTrkEventCodes::RouteLFO2ToVol,   eTrkEventCodes::Invalid, 1, "RouteLFO2ToVol" },
 
-        //SetTrkPan
+        //0xE8 - SetTrkPan
         { eTrkEventCodes::SetTrkPan,        eTrkEventCodes::Invalid, 1, "SetPan" },
 
-        //Unk_0xE9
-        { eTrkEventCodes::Unk_0xE9,         eTrkEventCodes::Invalid, 1, "## Unk_0xE9 ##" },
+        //0xE9 - AddTrkPan
+        { eTrkEventCodes::AddTrkPan,        eTrkEventCodes::Invalid, 1, "AddTrkPan" },
 
-        //Unk_0xEA
-        { eTrkEventCodes::Unk_0xEA,         eTrkEventCodes::Invalid, 3, "## Unk_0xEA ##" },
+        //0xEA - SweepTrkPan
+        { eTrkEventCodes::SweepTrkPan,      eTrkEventCodes::Invalid, 3, "SweepTrkPan" },
 
-        //Unk_0xEC
-        { eTrkEventCodes::Unk_0xEC,         eTrkEventCodes::Invalid, 5, "## Unk_0xEC ##" },
+        //0xEC - SetLFO3
+        { eTrkEventCodes::SetLFO3,          eTrkEventCodes::Invalid, 5, "SetLFO3" },
 
-        //Unk_0xED
-        { eTrkEventCodes::Unk_0xED,         eTrkEventCodes::Invalid, 4, "## Unk_0xED ##" },
+        //0xED - SetLFO3DelFade
+        { eTrkEventCodes::SetLFO3DelFade,   eTrkEventCodes::Invalid, 4, "SetLFO3DelFade" },
 
-        //Unk_0xEF
-        { eTrkEventCodes::Unk_0xEF,         eTrkEventCodes::Invalid, 1, "## Unk_0xEF ##" },
+        //0xEF - RouteLFO3ToPan
+        { eTrkEventCodes::RouteLFO3ToPan,   eTrkEventCodes::Invalid, 1, "RouteLFO3ToPan" },
 
-        //Unk_0xF0
-        { eTrkEventCodes::Unk_0xF0,         eTrkEventCodes::Invalid, 5, "## Unk_0xF0 ##" },
+        //0xF0 - SetLFO
+        { eTrkEventCodes::SetLFO,           eTrkEventCodes::Invalid, 5, "SetLFO" },
 
-        //Unk_0xF1
-        { eTrkEventCodes::Unk_0xF1,         eTrkEventCodes::Invalid, 4, "## Unk_0xF1 ##" },
+        //0xF1 - SetLFODelFade
+        { eTrkEventCodes::SetLFODelFade,    eTrkEventCodes::Invalid, 4, "SetLFODelFade" },
 
-        //Unk_0xF2
-        { eTrkEventCodes::Unk_0xF2,         eTrkEventCodes::Invalid, 2, "## Unk_0xF2 ##" },
+        //0xF2 - SetLFOParam
+        { eTrkEventCodes::SetLFOParam,      eTrkEventCodes::Invalid, 2, "SetLFOParam" },
 
-        //Unk_0xF3
-        { eTrkEventCodes::Unk_0xF3,         eTrkEventCodes::Invalid, 3, "## Unk_0xF3 ##" },
+        //0xF3 - SetLFORoute
+        { eTrkEventCodes::SetLFORoute,      eTrkEventCodes::Invalid, 3, "SetLFORoute" },
 
         //Unk_0xF6
         { eTrkEventCodes::Unk_0xF6,         eTrkEventCodes::Invalid, 1, "## Unk_0xF6 ##" },

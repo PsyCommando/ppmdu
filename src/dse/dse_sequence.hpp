@@ -286,81 +286,85 @@ namespace DSE
         Pause8Bits      = 0x92, //Pause the track for specified duration (uses a uint8)
         Pause16Bits     = 0x93, //Pause the track for specified duration (uses a uint16)
         Pause24Bits     = 0x94, //Pause the track for specified duration (uses a uint24)
-        PauseUntilRel   = 0x95, //#TODO
+        PauseUntilRel   = 0x95, //Pause until the noteOff event for the last playing note is received. Will always wait at least as long as its check interval parameter.
 
         EndOfTrack      = 0x98, //Marks the end of the track. Also serve as padding.
         LoopPointSet    = 0x99, //Marks the location where the track should loop from.
 
-        Unk_0x9C        = 0x9C, //Unknown //#TODO
-        Unk_0x9D        = 0x9D, //Unknown //#TODO
-        Unk_0x9E        = 0x9E, //Unknown //#TODO
+        RepeatFrom      = 0x9C, //Marks the location any subsequent "RepeatSegment" events should repeat from, and indicates the amount of times to repeat.
+        RepeatSegment   = 0x9D, //Repeat the segment starting at the last "RepeatFrom" event. 
+        AfterRepeat     = 0x9E, //After the last "RepeatSegment" event has finished its repeats, playback will jump here.
 
         SetOctave       = 0xA0, //Sets the octave notes are currently played at.
-
-        Unk_0xA1        = 0xA1, //Unknown //#TODO
+        AddOctave       = 0xA1, //Adds the given value to the current octave.
 
         SetTempo        = 0xA4, //Sets the tempo of the track in BPM.
-        Unk_0xA5        = 0xA5, //Unknown //#TODO
+        SetTempo2       = 0xA5, //Also sets the tempo of the track in BPM.
 
-        Unk_0xA8        = 0xA8, //Unknown //#TODO
-        SetUnk1         = 0xA9, //Set that first unknown value from the track's header
-        SetUnk2         = 0xAA, //Set that second unknown value from the track's header
+        SetSwdlAndBank  = 0xA8, //Set both the swdl id and the bank id. First param is swdl, second is bank.
+        SetSwdl         = 0xA9, //Set that first unknown value from the track's header.
+        SetBank         = 0xAA, //Set that second unknown value from the track's header.
         SkipNextByte    = 0xAB, //Skip processing the next byte!
         SetPreset       = 0xAC, //Sets the instrument preset to use
 
-        Unk_0xAF        = 0xAF, //Unknown //#TODO
-        Unk_0xB0        = 0xB0, //Unknown //#TODO
-        Unk_0xB1        = 0xB1, //Unknown //#TODO
-        Unk_0xB2        = 0xB2, //Unknown //#TODO
-        Unk_0xB3        = 0xB3, //Unknown //#TODO
-        Unk_0xB4        = 0xB4, //Unknown //#TODO
-        Unk_0xB5        = 0xB5, //Unknown //#TODO
-        Unk_0xB6        = 0xB6, //Unknown //#TODO
+        FadeSongVolume  = 0xAF, //Sweep the song's volume. First arg is the rate, second is the target volume.
+        DisableEnvelope = 0xB0, //Disable envelope
+        SetEnvAtkLvl    = 0xB1, //Sets the enveloppe's attack parameter on the current program
+        SetEnvAtkTime   = 0xB2, //Set the envelope attack time parameter on the current program
+        SetEnvHold      = 0xB3, //Set envelope hold parameter on the current program
+        SetEnvDecSus    = 0xB4, //Set envelope decay and sustain on the current program
+        SetEnvFade      = 0xB5, //Set envelope fade parameter on current program
+        SetEnvRelease   = 0xB6, //Set envelope release parameter on current program
 
-        Unk_0xBC        = 0xBC, //Unknown //#TODO
+        SetNoteVol      = 0xBC, //SetNoteVolume (?) 
         
-        SetMod          = 0xBE, //Possibly set modulation ?
+        SetChanPan      = 0xBE, //Sets current channel panning
         Unk_0xBF        = 0xBF, //Unknown //#TODO
 
         Unk_0xC0        = 0xC0, //Unknown //#TODO
-        Unk_0xC3        = 0xC3, //Unknown //#TODO
+        SetChanVol      = 0xC3, //Sets current channel volume
 
         SkipNext2Bytes1 = 0xCB, 
 
-        Unk_0xD0        = 0xD0, //Unknown //#TODO
-        Unk_0xD1        = 0xD1, //Unknown //#TODO
-        Unk_0xD2        = 0xD2, //Unknown //#TODO
-        Unk_0xD3        = 0xD3, //Unknown //#TODO
-        Unk_0xD4        = 0xD4, //Unknown //#TODO
-        Unk_0xD5        = 0xD5, //Unknown //#TODO
-        Unk_0xD6        = 0xD6, //Unknown //#TODO
-        PitchBend       = 0xD7, //Pitch bend
-        Unk_0xD8        = 0xD8, //Unknown //#TODO
-        Unk_0xDB        = 0xDB, //Unknown purpose. Used in bgmM0000.smd
-        Unk_0xDC        = 0xDC, //Unknown //#TODO
-        Unk_0xDD        = 0xDD, //Unknown //#TODO
-        Unk_0xDF        = 0xDF,
+        SetFTune        = 0xD0, //Sets fine tune
+        AddFTune        = 0xD1, //Adds value to current fine tune
+        SetCTune        = 0xD2, //Sets coarse tune
+        AddCTune        = 0xD3, //Adds value to current coarse tune
+        SweepTune       = 0xD4, //Interpolate between the given tune values
+        SetRndNoteRng   = 0xD5, //Sets random notes range
+        SetDetuneRng    = 0xD6, //Sets detune range
+        SetPitchBend    = 0xD7, //Sets the pitch bend
+        Unk_0xD8        = 0xD8, //Unknown, possibly changes unused paramter? //#TODO
+
+        SetPitchBendRng = 0xDB, //Set the bend range for pitch bending
+
+        //LFO control
+        SetLFO1         = 0xDC, //Sets LFO rate, depth, and waveform
+        SetLFO1DelayFade= 0xDD, //Sets the LFO effect delay, and fade out
+
+        RouteLFO1ToPitch= 0xDF, //Route the LFO1 output to note pitch if set to > 0
 
         SetTrkVol       = 0xE0, //Sets primary track volume.
-        Unk_0xE1        = 0xE1, //Unknown //#TODO
-        Unk_0xE2        = 0xE2, //Unknown //#TODO
+        AddTrkVol       = 0xE1, //Adds value to track volume
+        SweepTrackVol   = 0xE2, //Interpolate track volume to to the specified value at the specified rate
         SetExpress      = 0xE3, //Sets secondary volume control. AKA expression or GM CC#11.
-        Unk_0xE4        = 0xE4, //Unknown //#TODO
-        Unk_0xE5        = 0xE5, //Unknown //#TODO
-        Unk_0xE7        = 0xE7, //Unknown //#TODO
+        SetLFO2         = 0xE4, //Sets LFO rate, depth, and waveform
+        SetLFO2DelFade  = 0xE5, //Sets the LFO effect delay, and fade out
+
+        RouteLFO2ToVol  = 0xE7, //Route the LFO2 output to volume if set to > 0
         SetTrkPan       = 0xE8, //Sets the panning of the track.
-        Unk_0xE9        = 0xE9, //Unknown //#TODO
-        Unk_0xEA        = 0xEA, //Unknown //#TODO
+        AddTrkPan       = 0xE9, //Adds value to track panning.
+        SweepTrkPan     = 0xEA, //Interpolate the track's panning value to the specified value at the specified rate
 
-        Unk_0xEC        = 0xEC, //Unknown //#TODO
-        Unk_0xED        = 0xED, //Unknown //#TODO
+        SetLFO3         = 0xEC, //Sets LFO rate, depth, and waveform.
+        SetLFO3DelFade  = 0xED, //Sets the LFO effect delay, and fade out
 
-        Unk_0xEF        = 0xEF, //Unknown //#TODO
+        RouteLFO3ToPan  = 0xEF, //Routes the LFO3 output to the track panning value if > 0
 
-        Unk_0xF0        = 0xF0, //Unknown //#TODO
-        Unk_0xF1        = 0xF1, //Unknown //#TODO
-        Unk_0xF2        = 0xF2, //Unknown //#TODO
-        Unk_0xF3        = 0xF3, //Unknown //#TODO
+        SetLFO          = 0xF0, //Sets LFO rate, depth, and waveform
+        SetLFODelFade   = 0xF1, //Sets the LFO effect delay, and fade out
+        SetLFOParam     = 0xF2, //Sets the LFO's parameter and its value
+        SetLFORoute     = 0xF3, //Set what LFO is routed to what, and whether its enabled
 
         Unk_0xF6        = 0xF6, //Unknown //#TODO
 

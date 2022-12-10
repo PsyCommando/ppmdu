@@ -487,6 +487,7 @@ namespace DSE
                 {
                     //
                     case eTrkEventCodes::SetTempo:
+                    case eTrkEventCodes::SetTempo2:
                     {
                         mess.SetTempo( ConvertTempoToMicrosecPerQuarterNote(ev.params.front()) );
                         mess.SetTime(state.ticks_);
@@ -499,6 +500,15 @@ namespace DSE
                         if( newoctave > DSE_MaxOctave )
                             clog << "New octave value set is too high !" <<static_cast<unsigned short>(newoctave) <<"\n";
                         state.octave_ = newoctave; 
+                        break;
+                    }
+                    case eTrkEventCodes::AddOctave:
+                    {
+                        int8_t newoctave = ev.params.front();
+                        newoctave += state.octave_;
+                        if (newoctave > DSE_MaxOctave)
+                            clog << "New octave value set is too high !" << static_cast<unsigned short>(newoctave) << "\n";
+                        state.octave_ = newoctave;
                         break;
                     }
                     case eTrkEventCodes::SetExpress:
@@ -517,18 +527,22 @@ namespace DSE
                     }
                     case eTrkEventCodes::SetTrkPan:
                     {
+                        assert(false); //#TODO: Need to track pan for the whole channel + track
                         mess.SetControlChange( trkchan, jdksmidi::C_PAN, ev.params.front() );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
                         break;
                     }
-                    case eTrkEventCodes::SetPreset:
+                    case eTrkEventCodes::SetChanPan:
                     {
+                        assert(false); //#TODO: Need to track pan for the whole channel + track
+                        //Set the channel pan
+                        mess.SetControlChange(trkchan, jdksmidi::C_PAN, ev.params.front());
                         mess.SetTime(state.ticks_);
-                        HandleSetPreset( ev, trkno, trkchan, state, mess, outtrack );
+                        outtrack.PutEvent( mess );
                         break;
                     }
-                    case eTrkEventCodes::PitchBend: //################### FIXME LATER ######################
+                    case eTrkEventCodes::SetPitchBend: //################### FIXME LATER ######################
                     {
                         //NOTE: Pitch bend's range is implementation specific in MIDI. Though PMD2's pitch bend range may vary per program split
                         mess.SetPitchBend( trkchan, ( static_cast<int16_t>(ev.params.front() << 8) | static_cast<int16_t>(ev.params.back() ) ) );
@@ -536,32 +550,8 @@ namespace DSE
                         outtrack.PutEvent( mess );
                         break;
                     }
-                    case eTrkEventCodes::SetMod:
+                    case eTrkEventCodes::SetPitchBendRng:
                     {
-                        //This is possibly modulation.
-                        mess.SetControlChange( trkchan, jdksmidi::C_MODULATION, ev.params.front() );
-                        //mess.SetControlChange( trkchan, 33, ev.params.front() );
-                        mess.SetTime(state.ticks_);
-                        outtrack.PutEvent( mess );
-                        break;
-                    }
-                    case eTrkEventCodes::Unk_0xDB:
-                    {
-#if 0
-                        //Possibly Portamento time!
-                        //First turn on or off portamento
-                        MIDITimedBigMessage pmsg;
-                        uint8_t portastate = (ev.params.front() > 0 )? 127 : 0;
-                        pmsg.SetControlChange( trkchan, jdksmidi::C_PORTA,      portastate );
-                        pmsg.SetTime(state.ticks_);
-                        outtrack.PutEvent( pmsg );
-
-                        //Then set portamento time
-                        mess.SetControlChange( trkchan, jdksmidi::C_PORTA_TIME, ev.params.front() );
-                        mess.SetTime(state.ticks_);
-                        outtrack.PutEvent( mess );
-#else
-
                         MIDITimedBigMessage rpn1msg;
                         MIDITimedBigMessage rpn2msg;
                         //0x0 0x0 is pitch bend range
@@ -576,7 +566,6 @@ namespace DSE
                         mess.SetControlChange( trkchan, jdksmidi::C_DATA_ENTRY, ev.params.front() );
                         mess.SetTime(state.ticks_);
                         outtrack.PutEvent( mess );
-#endif
                         break;
                     }
                     case eTrkEventCodes::LoopPointSet:
@@ -599,6 +588,26 @@ namespace DSE
                         //Mark the loop position
                         state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid re-processing the loop marker
                         m_beflooptrkstates[trkno] = state;                 //Save the track state
+                        break;
+                    }
+
+                    //------------------ Repeat segment events ------------------
+                    case eTrkEventCodes::RepeatFrom:
+                    {
+                        //#TODO: Will require some special implementation
+                        assert(false);
+                        break;
+                    }
+                    case eTrkEventCodes::RepeatSegment:
+                    {
+                        //#TODO: Will require some special implementation
+                        assert(false);
+                        break;
+                    }
+                    case eTrkEventCodes::AfterRepeat:
+                    {
+                        //#TODO: Will require some special implementation
+                        assert(false);
                         break;
                     }
 
@@ -1969,13 +1978,13 @@ namespace DSE
 
                         //If we have a 0xAA or 0xA9 event, write their value to the meta-data, as those are track-wide 90% of the time
                         //!#TODO: Allow the user to input the value of those events/meta-data entries manually!
-                        if( dsev.evcode == static_cast<uint8_t>(eTrkEventCodes::SetUnk1) && 
+                        if( dsev.evcode == static_cast<uint8_t>(eTrkEventCodes::SetSwdl) && 
                             dsev.params.size() == 1 && 
                             dsemeta.unk1 == 0 )
                         {
                             dsemeta.unk1 = dsev.params.front();
                         }
-                        else if( dsev.evcode == static_cast<uint8_t>(eTrkEventCodes::SetUnk2) && 
+                        else if( dsev.evcode == static_cast<uint8_t>(eTrkEventCodes::SetBank) && 
                                  dsev.params.size() == 1 && 
                                  dsemeta.unk2 == 0 )
                         {
