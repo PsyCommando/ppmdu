@@ -401,6 +401,38 @@ namespace DSE
         }
 
         /***********************************************************************************
+            HandleSoundBank
+                Handle all events for setting the sound bank, and swdl to use.
+        ***********************************************************************************/
+        void HandleSoundBank(const DSE::TrkEvent           & ev,
+                             uint16_t                        trkno,
+                             uint8_t                         trkchan,
+                             TrkState                      & state,
+                             jdksmidi::MIDITimedBigMessage & mess,
+                             jdksmidi::MIDITrack           & outtrack)
+        {
+#if 1
+            HandleUnsupported(ev, trkno, state, mess, outtrack); //#TODO: Properly support those!
+#else
+            using namespace jdksmidi;
+            const DSE::eTrkEventCodes code = static_cast<DSE::eTrkEventCodes>(ev.evcode);
+
+            if (code == eTrkEventCodes::SetSwdlAndBank)
+            {
+                assert(false); //#TODO: Implement this
+            }
+            else if (code == eTrkEventCodes::SetSwdl)
+            {
+                assert(false); //#TODO: Implement this
+            }
+            else if (code == eTrkEventCodes::SetBank)
+            {
+                assert(false); //#TODO: Implement this
+            }
+#endif
+        }
+
+        /***********************************************************************************
             HandlePauses
                 Handle all pause events.
         ***********************************************************************************/
@@ -588,6 +620,22 @@ namespace DSE
                         //Mark the loop position
                         state.looppoint_          = (state.eventno_ + 1);  //Add one to avoid re-processing the loop marker
                         m_beflooptrkstates[trkno] = state;                 //Save the track state
+                        break;
+                    }
+
+                    //------------------ Program bank related events ------------------
+                    case eTrkEventCodes::SetPreset:
+                    {
+                        mess.SetTime(state.ticks_);
+                        HandleSetPreset(ev, trkno, trkchan, state, mess, outtrack);
+                        break;
+                    }
+                    case eTrkEventCodes::SetSwdlAndBank:
+                    case eTrkEventCodes::SetSwdl:
+                    case eTrkEventCodes::SetBank:
+                    {
+                        mess.SetTime(state.ticks_);
+                        HandleSoundBank(ev, trkno, trkchan, state, mess, outtrack);
                         break;
                     }
 
