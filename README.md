@@ -1,3 +1,6 @@
+# Moved to a New Repository!
+Since I basically can't build the project on recent MSVC, I decided to port the build system over to cmake instead. The current build system is a frankeinstein mess of hacks and failed experiments to circumvent various ancient bugs with older versions of Visual Studio. And now I can't be assed anymore to try to maintain that mess. So I'm going to archive this repository and any new development will happen on the new repository: https://github.com/PsyCommando/ppmdu_2
+
 [![forthebadge](http://forthebadge.com/images/badges/60-percent-of-the-time-works-every-time.svg)](http://forthebadge.com)
 [![forthebadge](http://forthebadge.com/images/badges/compatibility-club-penguin.svg)](http://forthebadge.com)
 [![forthebadge](http://forthebadge.com/images/badges/built-with-science.svg)](http://forthebadge.com)
