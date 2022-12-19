@@ -45,7 +45,7 @@
     <Game id="EoD_EU"    gamecode="YFYP" version="EoD" region="Europe"       arm9off14="0xBB01" defaultlang="English"  issupported="false"/>
     <Game id="EoT_EU"    gamecode="YFTP" version="EoT" region="Europe"       arm9off14="0x725F" defaultlang="English"  issupported="false"/>
     
-    <Game id="EoS_JP"    gamecode="C2SJ" version="EoS" region="Japan"        arm9off14="0x87B5" defaultlang="Japanese" issupported="false"/> 
+    <Game id="EoS_JP"    gamecode="C2SJ" version="EoS" region="Japan"        arm9off14="0x87B5" defaultlang="Japanese" issupported="false"/>
     <Game id="EoD_JP"    gamecode="YFYJ" version="EoD" region="Japan"        arm9off14="0x30C6" defaultlang="Japanese" issupported="false"/>
     <Game id="EoT_JP"    gamecode="YFTJ" version="EoT" region="Japan"        arm9off14="0x09C7" defaultlang="Japanese" issupported="false"/>
   </GameEditions>
@@ -72,7 +72,6 @@
   <!--=======================================================================-->
   <!--Various blocks in the binaries containing relevant data.-->
   <Binaries>
-  
     <!-- **************** -->
     <!-- Explorers of Sky -->
     <!-- **************** -->
@@ -87,12 +86,33 @@
         <Block name="Events"            beg="0xA5488"   end="0xA68BC"/>
         <Block name="ItemTablesPtrs1"   beg="0xB0948"   end="0xB09B0"/>
         <Block name="SMDEventsFunTable" beg="0xB0B90"   end="0xB0D8C"/>
+        <!--#TODO: probably not really part of arm9, it's only in memory anyway. -->
+        <Pointer name="GameStateValues"  beg="0xAF6B8"/>
+        <Pointer name="LanguageInfoData" beg="0xAFCE8"/>
+        <Pointer name="GameMode"         beg="0xAFF70"/>
+        <Pointer name="NotifyNote"       beg="0xAFEF8"/>
+        <Pointer name="DebugSpecialEpisodeType" beg="0x2AB4AC"/>
+        <Block name="GameVarsValues"    beg="0x2AB0AC" end="0x2AB360"/>
+        <Fn name="DebugPrint"           beg="0xC240"/>
+        <Fn name="DebugPrint2"          beg="0xC30C"/>
+        <Fn name="SaveScriptVariableValue"  beg="0x4B820"/>
+        <Fn name="SaveScriptVariableValueWithOffset" beg="0x4B988"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DC240">
-        <Block name="ScriptOpCodes"     beg="0x03C3D0" end="0x03CFC8"/>
-        <Block name="Objects"           beg="0x42C14" end="0x44618"/>
-        <Block name="CRoutines"         beg="0x405E8" end="0x41BD0"/>
+        <Block name="ScriptOpCodes"             beg="0x03C3D0" end="0x03CFC8"/>
+        <Block name="Objects"                   beg="0x42C14" end="0x44618"/>
+        <Block name="CRoutines"                 beg="0x405E8" end="0x41BD0"/>
+        <Block name="GroundStatePntrs"          beg="0x48AB4" end="0x48AC8"/>
+        <Pointer name="GroundStateMap"          beg="0x48A80"/>
+        <Pointer name="UnionallRAMAddress"      beg="0x48A64"/>
+        <Fn name="FuncThatCallsCommandParsing"  beg="0xF24"/>
+        <Fn name="ScriptCommandParsing"         beg="0x1B24"/>
+        <Fn name="GroundMainLoop"               beg="0xC534"/>
+        <Fn name="ScriptStationLoadTalk"        beg="0x91A4"/>
+        <Fn name="StationLoadHanger"            beg="0x8994"/>
+        <Fn name="SsbLoad1"                     beg="0x9B10"/>
+        <Fn name="SsbLoad2"                     beg="0x84BC"/>
       </Bin>
       <!-- overlay_0013 -->
       <Bin filepath="overlay/overlay_0013.bin" loadaddress="0x238A140">
@@ -111,13 +131,33 @@
       <Bin filepath="arm9.bin" loadaddress="0x2000000">
         <!--<Block name="ScriptVars"        beg="0x9D870"   end="0x9DFA0"/>-->
         <!--<Block name="ScriptVarsLocals"  beg="0x9CECC"   end="0x9CF0C"/>-->
-        <Block name="Entities"          beg="0xA8890" end="0xA9AA8"/>
-        <Block name="Events"            beg="0xA5BD8" end="0xA715C"/>
+        <Block name="Entities"           beg="0xA8890" end="0xA9AA8"/>
+        <Block name="Events"             beg="0xA5BD8" end="0xA715C"/>
+        <!--#TODO: probably not really part of arm9, it's only in memory anyway. -->
+        <Block name="GameVarsValues"     beg="0x2AB9EC" end="0x2ABCA0"/>
+        <Pointer name="GameStateValues"  beg="0xAFF70"/>
+        <Pointer name="LanguageInfoData" beg="0xB05A8"/>
+        <Pointer name="GameMode"         beg="0xB088C"/>
+        <Pointer name="NotifyNote"       beg="0xB0814"/>
+        <Pointer name="DebugSpecialEpisodeType" beg="0x2ABDEC"/>
+        <Fn name="DebugPrint"            beg="0xC2C8"/>
+        <Fn name="DebugPrint2"           beg="0xC284"/>
+        <Fn name="SaveScriptVariableValue"  beg="0x4BB58"/>
+        <Fn name="SaveScriptVariableValueWithOffset" beg="0x4BCC0"/>
       </Bin>
       <!-- overlay_0011 -->
       <Bin filepath="overlay/overlay_0011.bin" loadaddress="0x22DCB80">
-        <Block name="ScriptOpCodes" beg="0x3C470" end="0x3D068"/>
-		<Block name="Objects"       beg="0x42D5C" end="0x44808"/>
+        <Block name="ScriptOpCodes"             beg="0x3C470" end="0x3D068"/>
+        <Block name="GroundStatePntrs"          beg="0x48CB4" end="0x48CC8"/>
+        <Pointer name="GroundStateMap"          beg="0x48C80"/>
+        <Pointer name="UnionallRAMAddress"      beg="0x48C64"/>
+        <Fn name="FuncThatCallsCommandParsing"  beg="0xF24"/>
+        <Fn name="ScriptCommandParsing"         beg="0x1B24"/>
+        <Fn name="GroundMainLoop"               beg="0xC534"/>
+        <Fn name="ScriptStationLoadTalk"        beg="0x91A4"/>
+        <Fn name="StationLoadHanger"            beg="0x8994"/>
+        <Fn name="SsbLoad1"                     beg="0x9B10"/>
+        <Fn name="SsbLoad2"                     beg="0x84BC"/>
       </Bin>
     </Game>
 
@@ -341,11 +381,11 @@
     <!--*******************-->
     <PatchesDir>
       <!--Explorers of Sky-->
-      <Game id="EoS_JP"    filepath="asm_patches/eos/jp" />
-      <Game id="EoS_NA"    filepath="asm_patches/eos/na" />
-      <Game id="EoS_EU"    filepath="asm_patches/eos/eu" />
-      <Game id="EoSWVC_NA" filepath="asm_patches/eos/wvcna" />
-      <Game id="EoSWVC_EU" filepath="asm_patches/eos/wvceu" />
+      <Game id="EoS_JP"    filepath="asm_patches" stubpath="header_stub_jp.asm" />
+      <Game id="EoS_NA"    filepath="asm_patches" stubpath="header_stub_na.asm" />
+      <Game id="EoS_EU"    filepath="asm_patches" stubpath="header_stub_eu.asm" />
+      <Game id="EoSWVC_NA" filepath="asm_patches" stubpath="header_stub_wvcna.asm" />
+      <Game id="EoSWVC_EU" filepath="asm_patches" stubpath="header_stub_wvceu.asm" />
       <!--Explorers of Time-->
       <!--Explorers of Darkness-->
     </PatchesDir>
@@ -355,48 +395,30 @@
     <!--*******************-->
     <!--Patching steps for applying various asm patches on the game-->
     <Patches>
-      
       <!--###############################-->
-      <!--North American Explorers of Sky-->
+      <!--Explorers of Sky-->
       <!--###############################-->
-      <Game id="EoS_NA">
-        
-        <!--Patching sequence for the level list loader-->
-        <Patch id="LvlLstLdr" >
-          <!--Include stub-->
-          <Include filename ="header_stub.asm"/>
-          <!--Open each binaries for processing and include the appropriate files-->
-          <!--The openfile statements will be appropriately generated based on the data in this file, and on the rom path!-->
-          <OpenBin filepath="arm9.bin">
-            <Include filename ="levellistloader_arm9.asm"/>
-          </OpenBin>
-          <OpenBin filepath="overlay/overlay_0011.bin">
-            <Include filename ="levellistloader_overlay11.asm"/>
-          </OpenBin>
-        </Patch>
-        
+      <Game id="EoS_NA" id2="EoS_EU" id3="EoS_JP" id4="EoSWVC_NA" id5="EoSWVC_EU">
+        <!-- for JP the cmn_eos_jp.asm needs to be implemented to actually work! -->
+
         <!--Patching sequence for the actor list loader-->
-        <Patch id="ActorLoader" >
-          <!--Include stub-->
-          <Include filename ="header_stub.asm"/>
+        <!-- and -->
+        <!--Patching sequence for the level list loader-->
+        <!-- Both merged together, because they can no longer be applied separate from another -->
+        <Patch id="ActorAndLevelLoader" >
           <!--Open each binaries for processing and include the appropriate files-->
           <!--The openfile statements will be appropriately generated based on the data in this file, and on the rom path!-->
           <OpenBin filepath="arm9.bin">
-            <Include filename ="actorlistloader_arm9.asm"/>
+            <Include filename ="pmd2_asm_mods/src/levellistloader_arm9.asm"/>
+            <Include filename ="pmd2_asm_mods/src/actorlistloader_arm9.asm"/>
           </OpenBin>
           <OpenBin filepath="overlay/overlay_0011.bin">
-            <Include filename ="actorlistloader_overlay11.asm"/>
+            <Include filename ="pmd2_asm_mods/src/levellistloader_overlay11.asm"/>
+            <Include filename ="pmd2_asm_mods/src/actorlistloader_overlay11.asm"/>
           </OpenBin>
         </Patch>
         
       </Game>
-      <!--###############################-->
-      <!--European Explorers of Sky-->
-      <!--###############################-->
-    
-      <!--###############################-->
-      <!--Japanese Explorers of Sky-->
-      <!--###############################-->
     </Patches>
 
   </ASMPatchesConstants>
@@ -405,5 +427,6 @@
   <!--Append any external config files to parse here!-->
   <!--=======================================================================-->
   <External filepath="pmd2scriptdata.xml" />
+  <External filepath="pmd2dungeondata.xml" />
 
 </PMD2>
